@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { Plus } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import { Button } from "@/components/ui/button";
 import { useCan } from "@/hooks/api/access";
 
@@ -54,10 +55,15 @@ export default function CoursesPage() {
         transition={{ duration: 0.22, ease: "easeOut" }}
       >
         <Tabs defaultValue="catalog" className="flex min-h-0 flex-1 flex-col gap-4">
-          <TabsList>
-            <TabsTrigger value="catalog">Course Catalog</TabsTrigger>
-            <TabsTrigger value="my-learning">My Learning</TabsTrigger>
-          </TabsList>
+          <PageTabsToolbar
+            tabsDensity="labeled"
+            tabs={
+              <TabsList>
+                <TabsTrigger value="catalog">Course Catalog</TabsTrigger>
+                <TabsTrigger value="my-learning">My Learning</TabsTrigger>
+              </TabsList>
+            }
+          />
           <TabsContent value="catalog" className="mt-0 flex min-h-0 flex-1 flex-col">
             <CourseCatalog canManage={canManage} />
           </TabsContent>

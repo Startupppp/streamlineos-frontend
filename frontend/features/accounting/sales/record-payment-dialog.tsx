@@ -70,7 +70,7 @@ function AllocationRow({ index, register, onRemove }: AllocationRowProps) {
         type="number"
         step="0.01"
         min="0.01"
-        className="h-8 text-xs flex-1"
+        className="text-xs flex-1"
         placeholder="Amount"
         {...register(`allocations.${index}.amount`)}
       />
@@ -78,7 +78,7 @@ function AllocationRow({ index, register, onRemove }: AllocationRowProps) {
         type="button"
         variant="ghost"
         size="icon"
-        className="h-7 w-7 shrink-0"
+        className="w-7 shrink-0"
         onClick={handleRemove}
       >
         <Trash2 className="h-3.5 w-3.5" />
@@ -187,7 +187,7 @@ export function RecordPaymentDialog({
                 type="number"
                 step="0.01"
                 min="0.01"
-                className="h-8 text-sm"
+                className="text-sm"
                 {...form.register("amount", { valueAsNumber: true })}
               />
               {form.formState.errors.amount && (
@@ -202,7 +202,7 @@ export function RecordPaymentDialog({
               <DatePicker
                 value={form.watch("paymentDate")}
                 onChange={handleDateChange}
-                className="h-8 text-sm w-full"
+                className="text-sm w-full"
               />
             </div>
           </div>
@@ -213,7 +213,7 @@ export function RecordPaymentDialog({
               value={form.watch("paymentMethod")}
               onValueChange={handleMethodChange}
             >
-              <SelectTrigger className="h-8 text-sm">
+              <SelectTrigger className="text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -232,7 +232,7 @@ export function RecordPaymentDialog({
             </Label>
             <Input
               id="referenceNumber"
-              className="h-8 text-sm"
+              className="text-sm"
               placeholder="e.g. TXN-12345"
               {...form.register("referenceNumber")}
             />
@@ -268,7 +268,7 @@ export function RecordPaymentDialog({
             type="button"
             variant="outline"
             size="sm"
-            className="h-7 text-xs gap-1"
+            className="text-xs gap-1"
             onClick={handleAddAllocation}
           >
             <Plus className="h-3 w-3" />

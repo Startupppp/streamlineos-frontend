@@ -108,7 +108,7 @@ export default function ReceiptsPage() {
   const filterBar = (
     <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
       <Select value={vendorParam} onValueChange={handleVendorChange}>
-        <SelectTrigger className="h-8 min-w-0 flex-1 max-w-xs text-xs">
+        <SelectTrigger className="min-w-0 flex-1 max-w-xs text-xs">
           <SelectValue placeholder="All vendors" />
         </SelectTrigger>
         <SelectContent className="max-h-72">

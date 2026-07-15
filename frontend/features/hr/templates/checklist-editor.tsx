@@ -66,13 +66,13 @@ export function ChecklistEditor({ items, onChange }: ChecklistEditorProps) {
             placeholder="Task title"
             value={item.title}
             onChange={(e) => handleChange(item.id, { title: e.target.value })}
-            className="h-8 flex-1 min-w-0"
+            className="flex-1 min-w-0"
           />
           <Select
             value={item.assigneeRole}
             onValueChange={(v) => handleChange(item.id, { assigneeRole: v as ChecklistItem["assigneeRole"] })}
           >
-            <SelectTrigger className="h-8 w-28 shrink-0">
+            <SelectTrigger className="w-28 shrink-0">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -89,7 +89,7 @@ export function ChecklistEditor({ items, onChange }: ChecklistEditorProps) {
               max={365}
               value={item.dueOffsetDays}
               onChange={(e) => handleChange(item.id, { dueOffsetDays: Number(e.target.value) })}
-              className="h-8 w-16 text-center"
+              className="w-16 text-center"
             />
           </div>
           <div className="flex items-center gap-1 shrink-0">
@@ -104,7 +104,7 @@ export function ChecklistEditor({ items, onChange }: ChecklistEditorProps) {
             type="button"
             variant="ghost"
             size="icon"
-            className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
+            className="w-7 shrink-0 text-muted-foreground hover:text-destructive"
             onClick={() => handleRemove(item.id)}
           >
             <Trash2 className="h-3.5 w-3.5" />

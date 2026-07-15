@@ -67,14 +67,14 @@ export function FormBuilder({ form, onSave, isPending, readOnly = false }: FormB
             value={name}
             onChange={handleNameChange}
             placeholder="e.g. Bug Report Form"
-            className="h-8 text-sm"
+            className="text-sm"
             readOnly={readOnly}
           />
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs">Type</Label>
           <Select value={type} onValueChange={handleTypeChange} disabled={readOnly}>
-            <SelectTrigger className="h-8 text-sm">
+            <SelectTrigger className="text-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

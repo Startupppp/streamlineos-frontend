@@ -38,7 +38,7 @@ export function ReportShell({
           <LoadingButton
             variant="outline"
             size="sm"
-            className="h-8 text-xs gap-1.5"
+            className="text-xs gap-1.5"
             isPending={exportPending}
             loadingText="Exporting…"
             onClick={onExport}

@@ -51,7 +51,7 @@ export function StepInviteLaunch({ data, onChangeInvitees, onBack }: StepInviteL
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="teammate@company.com"
-          className="h-8 text-sm flex-1"
+          className="text-sm flex-1"
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
@@ -60,7 +60,7 @@ export function StepInviteLaunch({ data, onChangeInvitees, onBack }: StepInviteL
           }}
         />
         <Select value={role} onValueChange={setRole}>
-          <SelectTrigger className="h-8 w-28 text-sm">
+          <SelectTrigger className="w-28 text-sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

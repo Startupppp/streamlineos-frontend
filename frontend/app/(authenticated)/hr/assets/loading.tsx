@@ -8,7 +8,7 @@ export default function HrAssetsLoading() {
     <PageWrapper
       title="Assets"
       subtitle="Manage company assets and assignments"
-      actions={<Skeleton className="h-8 w-28 rounded-md" />}
+      actions={<Skeleton className="h-4 w-28 rounded-md" />}
     >
       <div className="space-y-4">
         <div className="grid gap-3 md:grid-cols-4">
@@ -19,7 +19,7 @@ export default function HrAssetsLoading() {
                   <Skeleton className="h-3.5 w-20" />
                   <Skeleton className="h-4 w-4 rounded" />
                 </div>
-                <Skeleton className="h-7 w-12" />
+                <Skeleton className="h-12 w-12" />{" "}
               </CardContent>
             </Card>
           ))}

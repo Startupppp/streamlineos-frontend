@@ -151,8 +151,8 @@ export default function IssuesPage() {
 
   const filterBar = (
     <div className="flex w-full min-w-0 items-center gap-2">
-      <DatePicker value={fromDate ?? ""} onChange={handleFromDateChange} placeholder="Pick a date" className="h-8 text-xs w-36" />
-      <DatePicker value={toDate ?? ""} onChange={handleToDateChange} placeholder="Pick a date" className="h-8 text-xs w-36" />
+      <DatePicker value={fromDate ?? ""} onChange={handleFromDateChange} placeholder="Pick a date" className="text-xs w-36" />
+      <DatePicker value={toDate ?? ""} onChange={handleToDateChange} placeholder="Pick a date" className="text-xs w-36" />
     </div>
   );
 

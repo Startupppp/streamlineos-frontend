@@ -119,7 +119,7 @@ function MappingForm({
               <FormLabel className="text-[11px]">Component (optional)</FormLabel>
               <Select value={field.value} onValueChange={field.onChange}>
                 <FormControl>
-                  <SelectTrigger className="h-8 text-xs">
+                  <SelectTrigger className="text-xs">
                     <SelectValue placeholder="None" />
                   </SelectTrigger>
                 </FormControl>
@@ -143,7 +143,7 @@ function MappingForm({
             <FormItem>
               <FormLabel className="text-[11px]">Category (optional)</FormLabel>
               <FormControl>
-                <Input {...field} className="h-8 text-xs" placeholder="e.g. EARNINGS" />
+                <Input {...field} className="text-xs" placeholder="e.g. EARNINGS" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -156,7 +156,7 @@ function MappingForm({
             <FormItem>
               <FormLabel className="text-[11px]">Ledger Name</FormLabel>
               <FormControl>
-                <Input {...field} className="h-8 text-xs" placeholder="e.g. Salary Expense" />
+                <Input {...field} className="text-xs" placeholder="e.g. Salary Expense" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -169,7 +169,7 @@ function MappingForm({
             <FormItem>
               <FormLabel className="text-[11px]">Cost Center Source (optional)</FormLabel>
               <FormControl>
-                <Input {...field} className="h-8 text-xs" placeholder="e.g. department" />
+                <Input {...field} className="text-xs" placeholder="e.g. department" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -182,17 +182,17 @@ function MappingForm({
             <FormItem>
               <FormLabel className="text-[11px]">Notes (optional)</FormLabel>
               <FormControl>
-                <Input {...field} className="h-8 text-xs" />
+                <Input {...field} className="text-xs" />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
         <div className="flex gap-2 pt-1">
-          <Button type="submit" size="sm" className="h-7 text-xs" disabled={create.isPending || update.isPending}>
+          <Button type="submit" size="sm" className="text-xs" disabled={create.isPending || update.isPending}>
             {editing ? "Update" : "Add Mapping"}
           </Button>
-          <Button type="button" variant="ghost" size="sm" className="h-7 text-xs" onClick={onCancel}>
+          <Button type="button" variant="ghost" size="sm" className="text-xs" onClick={onCancel}>
             Cancel
           </Button>
         </div>
@@ -259,7 +259,7 @@ export function AccountingMappingsSheet({ open: externalOpen, onOpenChange: exte
     <Sheet open={open} onOpenChange={handleOpenChange}>
       {!isControlled && canManage && (
         <SheetTrigger asChild>
-          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
+          <Button variant="outline" size="sm" className="gap-1.5 text-xs">
             <Settings className="h-3.5 w-3.5" />
             Manage Mappings
           </Button>
@@ -324,7 +324,7 @@ export function AccountingMappingsSheet({ open: externalOpen, onOpenChange: exte
           )}
 
           {canManage && !showForm && mappings.length > 0 && (
-            <Button variant="outline" size="sm" className="h-8 text-xs" onClick={handleAddNew}>
+            <Button variant="outline" size="sm" className="text-xs" onClick={handleAddNew}>
               Add Mapping
             </Button>
           )}

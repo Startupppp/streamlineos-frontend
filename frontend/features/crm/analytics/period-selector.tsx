@@ -61,7 +61,7 @@ export function PeriodSelector({ period, onPeriodChange }: PeriodSelectorProps) 
           data-period={opt.value}
           variant={period === opt.value ? "default" : "outline"}
           size="sm"
-          className="h-7 text-xs px-3"
+          className="text-xs px-3"
           onClick={handleClick}
         >
           {opt.label}

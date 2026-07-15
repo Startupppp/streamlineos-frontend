@@ -94,7 +94,7 @@ export function EmailPanel({ form, onSubmit, isPending, onCancel, emailTemplates
           <div className="flex items-center gap-2">
             <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
             <Select onValueChange={onApplyTemplate}>
-              <SelectTrigger className="h-8 text-xs flex-1">
+              <SelectTrigger className="text-xs flex-1">
                 <SelectValue placeholder="Use a template…" />
               </SelectTrigger>
               <SelectContent>

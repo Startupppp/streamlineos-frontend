@@ -128,13 +128,13 @@ function HolidayItem({
       )}
       {canManage && (
         <div className="flex gap-1 shrink-0">
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleEditClick}>
+          <Button variant="ghost" size="icon" className="w-7" onClick={handleEditClick}>
             <Pencil className="h-3.5 w-3.5" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
+            className="w-7 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
             onClick={handleDeleteClick}
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -233,7 +233,7 @@ function CalendarView({
         </h3>
         {monthHolidays.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center bg-muted/20 rounded-lg border border-border">
-            <CalendarDays className="h-8 w-8 text-muted-foreground/40 mb-2" />
+            <CalendarDays className="w-8 text-muted-foreground/40 mb-2" />
             <p className="text-muted-foreground text-sm">No holidays in {format(viewDate, "MMMM")}</p>
             {canManage && (
               <Button variant="ghost" size="sm" className="mt-2" onClick={onAdd}>
@@ -305,15 +305,15 @@ function ListView({
           placeholder="Search holidays..."
           value={search}
           onChange={handleSearchChange}
-          className="h-8 text-sm max-w-xs"
+          className="text-sm max-w-xs"
         />
-        <Button variant="outline" size="sm" className="h-8 text-xs" onClick={handleSortToggle}>
+        <Button variant="outline" size="sm" className="text-xs" onClick={handleSortToggle}>
           Date {sortDir === "asc" ? "↑" : "↓"}
         </Button>
       </div>
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center bg-muted/20 rounded-lg border border-border">
-          <List className="h-8 w-8 text-muted-foreground/40 mb-2" />
+          <List className="w-8 text-muted-foreground/40 mb-2" />
           <p className="text-muted-foreground text-sm font-medium">
             {search ? "No holidays match your search" : "No holidays for this period"}
           </p>
@@ -407,7 +407,7 @@ function UpcomingView({
   if (upcoming.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center bg-muted/20 rounded-lg border border-border">
-        <Clock className="h-8 w-8 text-muted-foreground/40 mb-2" />
+        <Clock className="w-8 text-muted-foreground/40 mb-2" />
         <p className="text-muted-foreground text-sm font-medium">No upcoming holidays</p>
         {canManage && (
           <Button size="sm" className="mt-3" onClick={onAdd}>
@@ -444,7 +444,7 @@ function UpcomingView({
 function LocationView() {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center bg-muted/20 rounded-lg border border-border">
-      <Globe className="h-8 w-8 text-muted-foreground/40 mb-2" />
+      <Globe className="w-8 text-muted-foreground/40 mb-2" />
       <p className="text-sm font-medium text-muted-foreground">Location-based holidays not yet configured</p>
       <p className="text-xs text-muted-foreground mt-1 max-w-xs">
         Assign offices or regions to employees in Org settings to group holidays by location.
@@ -563,7 +563,7 @@ export default function HolidaysPage() {
         <div className="flex gap-2 flex-wrap items-center">
           {showYearFilter && (
             <Select value={String(yearFilter)} onValueChange={handleYearFilterChange}>
-              <SelectTrigger className="h-8 text-xs w-28">
+              <SelectTrigger className="text-xs w-28">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -597,7 +597,7 @@ export default function HolidaysPage() {
             })}
           </div>
           {canManage && (
-            <Button onClick={handleCreateClick} size="sm" className="h-8">
+            <Button onClick={handleCreateClick} size="sm" className="">
               <Plus className="h-3.5 w-3.5 mr-1.5" /> Add Holiday
             </Button>
           )}
@@ -690,7 +690,7 @@ export default function HolidaysPage() {
                     <FormItem>
                       <FormLabel>Date</FormLabel>
                       <FormControl>
-                        <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+                        <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

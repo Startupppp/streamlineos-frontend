@@ -108,7 +108,7 @@ export function PricebookFormSheet({
                   <FormItem>
                     <FormLabel>Name</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="e.g. Standard Pricing" className="h-8" />
+                      <Input {...field} placeholder="e.g. Standard Pricing" className="" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

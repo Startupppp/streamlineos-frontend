@@ -6,10 +6,10 @@ export default function IncidentsLoading() {
     <PageWrapper title="Incidents" subtitle="Track incidents and SLA compliance">
       <div className="px-4 pb-4 space-y-3">
         <div className="flex items-center gap-2">
-          <Skeleton className="h-7 w-44 rounded-md" />
-          <Skeleton className="h-7 w-32 rounded-md" />
-          <Skeleton className="h-7 w-28 rounded-md" />
-          <Skeleton className="h-7 w-24 rounded-md ml-auto" />
+          <Skeleton className="h-8 w-44 rounded-md" />
+          <Skeleton className="h-8 w-32 rounded-md" />
+          <Skeleton className="h-8 w-28 rounded-md" />
+          <Skeleton className="h-8 w-24 rounded-md ml-auto" />
         </div>
         <div className="grid grid-cols-3 gap-2">
           {Array.from({ length: 12 }).map((_, i) => (

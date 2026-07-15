@@ -6,7 +6,7 @@ export default function ThreePlLoading() {
     <PageWrapper
       title="3PL Connections"
       subtitle="Manage third-party logistics provider connections"
-      actions={<Skeleton className="h-8 w-32" />}
+      actions={<Skeleton className="h-4 w-32" />}
     >
       <div className="space-y-2">
         {Array.from({ length: 12 }).map((_, i) => (

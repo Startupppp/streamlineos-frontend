@@ -147,7 +147,7 @@ export function FormDetailPage({ projectId, formId }: FormDetailPageProps) {
           <Button
             size="sm"
             variant="outline"
-            className="h-8 text-xs"
+            className="text-xs"
             onClick={handlePreviewOpen}
           >
             Preview / Fill
@@ -156,7 +156,7 @@ export function FormDetailPage({ projectId, formId }: FormDetailPageProps) {
             <Button
               size="sm"
               variant="outline"
-              className="h-8 text-xs text-destructive hover:text-destructive border-destructive/30"
+              className="text-xs text-destructive hover:text-destructive border-destructive/30"
               onClick={handleDeleteOpen}
             >
               Delete

@@ -112,7 +112,7 @@ function NewCycleCountSheet({
           <div className="space-y-1.5">
             <Label htmlFor="cc-warehouse" className="text-xs font-semibold text-foreground/80">Warehouse *</Label>
             <Select value={warehouseId || "none"} onValueChange={handleWarehouseChange}>
-              <SelectTrigger id="cc-warehouse" className="h-8 text-sm">
+              <SelectTrigger id="cc-warehouse" className="text-sm">
                 <SelectValue placeholder="Select warehouse" />
               </SelectTrigger>
               <SelectContent>
@@ -131,7 +131,7 @@ function NewCycleCountSheet({
               onValueChange={handleLocationChange}
               disabled={!warehouseId}
             >
-              <SelectTrigger id="cc-location" className="h-8 text-sm">
+              <SelectTrigger id="cc-location" className="text-sm">
                 <SelectValue placeholder="All locations" />
               </SelectTrigger>
               <SelectContent>
@@ -146,7 +146,7 @@ function NewCycleCountSheet({
           <div className="space-y-1.5">
             <Label htmlFor="cc-category" className="text-xs font-semibold text-foreground/80">Category (optional)</Label>
             <Select value={categoryId || "none"} onValueChange={handleCategoryChange}>
-              <SelectTrigger id="cc-category" className="h-8 text-sm">
+              <SelectTrigger id="cc-category" className="text-sm">
                 <SelectValue placeholder="All categories" />
               </SelectTrigger>
               <SelectContent>
@@ -262,7 +262,7 @@ export function CycleCountsClient() {
       header: "",
       headerClassName: "w-[60px]",
       cell: (row) => (
-        <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
+        <Button variant="ghost" size="icon" className="w-7" asChild>
           <Link href={`/inventory/cycle-counts/${row.id}`}>
             <Eye className="h-3.5 w-3.5" aria-hidden="true" />
           </Link>
@@ -273,7 +273,7 @@ export function CycleCountsClient() {
 
   const filtersRow = (
     <Select value={statusFilter} onValueChange={handleStatusChange}>
-      <SelectTrigger className="h-8 w-[160px] text-xs">
+      <SelectTrigger className="w-[160px] text-xs">
         <SelectValue placeholder="All statuses" />
       </SelectTrigger>
       <SelectContent>

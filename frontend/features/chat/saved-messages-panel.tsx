@@ -35,7 +35,7 @@ function SavedMessageCard({
   return (
     <div className="group px-4 py-3 hover:bg-muted/30 transition-colors border-b border-border/20 last:border-0">
       <div className="flex items-start gap-3">
-        <Avatar className="h-7 w-7 shrink-0 mt-0.5 border border-border/30">
+        <Avatar className="w-7 shrink-0 mt-0.5 border border-border/30">
           <AvatarImage src={resolveImageUrl(item.message.sender?.image)} />
           <AvatarFallback className="text-[8px] font-bold bg-muted text-muted-foreground">
             {getInitials(senderName)}

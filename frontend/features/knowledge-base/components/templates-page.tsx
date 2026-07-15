@@ -90,7 +90,7 @@ function TemplateCard({
             size="sm"
             onClick={handleUseClick}
             disabled={isCreating}
-            className="h-7 text-xs"
+            className="text-xs"
           >
             {isCreating ? (
               <KbLoader2Icon className="h-3 w-3 animate-spin" />
@@ -104,7 +104,7 @@ function TemplateCard({
               variant="ghost"
               onClick={handleDeleteClick}
               disabled={deleteTemplate.isPending}
-              className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+              className="w-7 p-0 text-muted-foreground hover:text-destructive"
               aria-label="Delete template"
             >
               {deleteTemplate.isPending ? (
@@ -167,7 +167,7 @@ function StarterCard({ template, onUse, isCreating }: StarterCardProps) {
         variant="outline"
         onClick={handleUseClick}
         disabled={isCreating}
-        className="h-7 text-xs shrink-0"
+        className="text-xs shrink-0"
       >
         {isCreating ? (
           <KbLoader2Icon className="h-3 w-3 animate-spin" />
@@ -276,7 +276,7 @@ export default function TemplatesPage() {
           {!isLoading && isError && (
             <EmptyState
               illustration={
-                <KbLayoutTemplateIcon className="h-8 w-8 text-muted-foreground/40" />
+                <KbLayoutTemplateIcon className="w-8 text-muted-foreground/40" />
               }
               title="Could not load templates"
               description="There was a problem fetching page templates."
@@ -287,7 +287,7 @@ export default function TemplatesPage() {
           {!isLoading && !isError && templates.length === 0 && (
             <EmptyState
               illustration={
-                <KbLayoutTemplateIcon className="h-8 w-8 text-muted-foreground/40" />
+                <KbLayoutTemplateIcon className="w-8 text-muted-foreground/40" />
               }
               title="No saved templates yet"
               description="Save a page as a template to reuse its structure across your wiki."

@@ -137,7 +137,7 @@ export function ProjectMoreMenu({
               value={query}
               onChange={handleQueryChange}
               placeholder="Search tools…"
-              className="h-8 border-border/60 bg-background/60 pl-7 text-xs"
+              className="border-border/60 bg-background/60 pl-7 text-xs"
               autoFocus
             />
           </div>

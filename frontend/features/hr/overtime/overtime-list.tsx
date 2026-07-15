@@ -97,7 +97,7 @@ export function OvertimeList({ canManage }: Props) {
               <Button
                 size="sm"
                 variant="outline"
-                className="h-7 text-xs"
+                className="text-xs"
                 onClick={() => handleApprove(req.id)}
                 disabled={approve.isPending || reject.isPending}
               >
@@ -106,7 +106,7 @@ export function OvertimeList({ canManage }: Props) {
               <Button
                 size="sm"
                 variant="outline"
-                className="h-7 text-xs text-destructive hover:text-destructive"
+                className="text-xs text-destructive hover:text-destructive"
                 onClick={() => handleReject(req.id)}
                 disabled={approve.isPending || reject.isPending}
               >

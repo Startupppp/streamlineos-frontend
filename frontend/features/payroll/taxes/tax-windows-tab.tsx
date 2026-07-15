@@ -157,7 +157,7 @@ export function TaxWindowsTab() {
         isLoading={isLoading}
         minWidth="720px"
         toolbar={
-          <Button size="sm" className="h-7 text-xs gap-1" onClick={handleAddClick}>
+          <Button size="sm" className="text-xs gap-1" onClick={handleAddClick}>
             <Plus className="h-3.5 w-3.5" />
             Add Window
           </Button>

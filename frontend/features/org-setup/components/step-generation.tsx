@@ -274,7 +274,7 @@ export function StepGeneration({ data }: StepGenerationProps) {
               size="sm"
               variant="outline"
               onClick={runSetup}
-              className="h-7 text-xs gap-1"
+              className="text-xs gap-1"
             >
               <RefreshCw className="h-3 w-3" /> Try again
             </Button>

@@ -165,7 +165,7 @@ export function SystemAccountMapDialog({
             value={form.watch("accountId")}
             onValueChange={handleAccountChange}
           >
-            <SelectTrigger className="h-8 text-xs">
+            <SelectTrigger className="text-xs">
               <SelectValue placeholder="Select account" />
             </SelectTrigger>
             <SelectContent>
@@ -241,7 +241,7 @@ export function PolicyDialog({
               value={form.watch("recordType")}
               onValueChange={handleRecordTypeChange}
             >
-              <SelectTrigger className="h-8 text-xs">
+              <SelectTrigger className="text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

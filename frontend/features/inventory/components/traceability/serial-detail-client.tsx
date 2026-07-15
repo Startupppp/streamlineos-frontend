@@ -139,7 +139,7 @@ export function SerialDetailClient({ serialId }: SerialDetailClientProps) {
             <Button
               variant="outline"
               size="sm"
-              className="h-7 text-xs gap-1"
+              className="text-xs gap-1"
               onClick={handleToggleTraceability}
               {...traceHoverHandlers}
             >

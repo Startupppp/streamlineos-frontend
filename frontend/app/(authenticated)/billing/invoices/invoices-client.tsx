@@ -77,7 +77,7 @@ function InvoiceActionsCell({ inv, onUpdateStatus, onDelete }: InvoiceActionsCel
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="More options">
+        <Button variant="ghost" size="icon" className="w-7" aria-label="More options">
           <MoreHorizontal className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>

@@ -266,7 +266,7 @@ export function InterviewFormSheet({
       }}
     >
       <SheetTrigger asChild>
-        <Button size="sm" className="gap-1.5 h-8">
+        <Button size="sm" className="gap-1.5">
           <Plus className="h-3.5 w-3.5" />
           Schedule Interview
         </Button>
@@ -353,7 +353,7 @@ export function InterviewFormSheet({
             colorClass="bg-violet-100 text-violet-600 dark:bg-violet-950/40 dark:text-violet-400"
           >
             <Select value={jobPostingId} onValueChange={setJobPostingId}>
-              <SelectTrigger className="h-8">
+              <SelectTrigger className="">
                 <SelectValue placeholder="Select position..." />
               </SelectTrigger>
               <SelectContent className="w-[var(--radix-select-trigger-width)] max-h-[200px] overflow-y-auto">
@@ -379,7 +379,7 @@ export function InterviewFormSheet({
                 value={scheduledAt}
                 min={new Date().toISOString().slice(0, 16)}
                 onChange={handleScheduledAtChange}
-                className="h-8"
+                className=""
               />
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
@@ -388,7 +388,7 @@ export function InterviewFormSheet({
                     Format
                   </label>
                   <Select value={format_} onValueChange={handleFormatChange}>
-                    <SelectTrigger className="h-8">
+                    <SelectTrigger className="">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -411,7 +411,7 @@ export function InterviewFormSheet({
                     step={15}
                     value={duration}
                     onChange={handleDurationChange}
-                    className="h-8"
+                    className=""
                   />
                 </div>
               </div>
@@ -426,7 +426,7 @@ export function InterviewFormSheet({
                     placeholder="https://meet.google.com/..."
                     value={meetLink}
                     onChange={handleMeetLinkChange}
-                    className="h-8"
+                    className=""
                   />
                 </div>
               )}
@@ -530,7 +530,7 @@ export function InterviewFormSheet({
 
           <div className="space-y-2">
             <div className="flex items-center gap-2 mb-1">
-              <div className="h-7 w-7 rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 flex items-center justify-center shrink-0">
+              <div className="w-7 rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 flex items-center justify-center shrink-0">
                 <Bell className="h-3.5 w-3.5" />
               </div>
               <span className="text-sm font-semibold text-foreground">

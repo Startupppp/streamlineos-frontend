@@ -283,11 +283,11 @@ function StockSummaryContent() {
               value={search}
               onChange={handleSearchChange}
               placeholder="Search products, SKU…"
-              className="h-8 w-full min-w-0 pl-8 text-xs"
+              className="w-full min-w-0 pl-8 text-xs"
             />
           </div>
           <Select value={warehouseParam} onValueChange={handleWarehouseChange}>
-            <SelectTrigger className="h-8 w-[160px] min-w-0 text-xs shrink-0">
+            <SelectTrigger className="w-[160px] min-w-0 text-xs shrink-0">
               <SelectValue placeholder="All warehouses" />
             </SelectTrigger>
             <SelectContent>
@@ -302,7 +302,7 @@ function StockSummaryContent() {
           <Button
             variant="outline"
             size="sm"
-            className="h-8 text-xs ml-auto shrink-0"
+            className="text-xs ml-auto shrink-0"
             onClick={handleExportClick}
             disabled={filtered.length === 0}
             aria-label="Export stock summary as CSV"

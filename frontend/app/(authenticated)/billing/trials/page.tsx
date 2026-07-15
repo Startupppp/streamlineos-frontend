@@ -67,7 +67,7 @@ export default function TrialsPage() {
         <TrialPageSkeleton />
       ) : isError ? (
         <div className="flex flex-col items-center justify-center flex-1 py-16 gap-3">
-          <AlertTriangle className="h-8 w-8 text-muted-foreground/40" />
+          <AlertTriangle className="w-8 text-muted-foreground/40" />
           <p className="text-sm text-muted-foreground">
             Failed to load subscription info
           </p>

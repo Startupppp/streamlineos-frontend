@@ -208,7 +208,7 @@ export function TemplateUpsertSheet({ open, onClose, template }: TemplateUpsertS
                     <FormLabel className="text-xs font-semibold uppercase tracking-wider">Kind</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange} disabled={isEdit}>
                       <FormControl>
-                        <SelectTrigger className="h-8">
+                        <SelectTrigger className="">
                           <SelectValue />
                         </SelectTrigger>
                       </FormControl>
@@ -231,7 +231,7 @@ export function TemplateUpsertSheet({ open, onClose, template }: TemplateUpsertS
                       <FormLabel className="text-xs font-semibold uppercase tracking-wider">Letter Type</FormLabel>
                       <Select value={field.value ?? ""} onValueChange={field.onChange}>
                         <FormControl>
-                          <SelectTrigger className="h-8">
+                          <SelectTrigger className="">
                             <SelectValue placeholder="Select type" />
                           </SelectTrigger>
                         </FormControl>
@@ -255,7 +255,7 @@ export function TemplateUpsertSheet({ open, onClose, template }: TemplateUpsertS
                 <FormItem>
                   <FormLabel className="text-xs font-semibold uppercase tracking-wider">Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Template name" className="h-8" {...field} />
+                    <Input placeholder="Template name" className="" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

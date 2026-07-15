@@ -185,7 +185,7 @@ export default function PageCover({
         size="sm"
         onClick={handlePickImage}
         disabled={uploading}
-        className="h-7 text-xs w-full"
+        className="text-xs w-full"
       >
         <KbImageIcon className="h-3 w-3 mr-1" />
         {uploading ? "Uploading…" : "Upload image"}
@@ -238,12 +238,12 @@ export default function PageCover({
             <Button
               size="sm"
               variant="secondary"
-              className="h-7 text-xs"
+              className="text-xs"
               onClick={handleCancelReposition}
             >
               Cancel
             </Button>
-            <Button size="sm" className="h-7 text-xs" onClick={handleSaveReposition}>
+            <Button size="sm" className="text-xs" onClick={handleSaveReposition}>
               Save position
             </Button>
           </div>
@@ -257,7 +257,7 @@ export default function PageCover({
             <Button
               size="sm"
               variant="secondary"
-              className="h-7 text-xs"
+              className="text-xs"
               onClick={handleStartReposition}
             >
               <MoveVertical className="mr-1 h-3 w-3" />

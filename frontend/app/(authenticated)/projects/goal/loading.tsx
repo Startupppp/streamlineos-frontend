@@ -12,13 +12,13 @@ export default function GoalsLoading() {
     <PageWrapper
       title="Goals & OKRs"
       subtitle="Track company, team, and individual objectives and their key results"
-      actions={<Skeleton className="h-8 w-28 rounded-md" />}
+      actions={<Skeleton className="h-4 w-28 rounded-md" />}
       filters={
         <div className={PM_TOOLBAR}>
-          <Skeleton className="h-8 w-full max-w-sm rounded-md" />
+          <Skeleton className="h-4 w-full max-w-sm rounded-md" />{" "}
           <div className="flex gap-2">
-            <Skeleton className="h-8 w-[130px] rounded-md" />
-            <Skeleton className="h-8 w-[140px] rounded-md" />
+            <Skeleton className="h-8 w-[130px] rounded-md" />{" "}
+            <Skeleton className="h-8 w-[140px] rounded-md" />{" "}
           </div>
         </div>
       }

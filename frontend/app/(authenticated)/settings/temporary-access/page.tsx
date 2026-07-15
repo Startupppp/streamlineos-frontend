@@ -166,7 +166,7 @@ function TemporaryAccessContent() {
               </div>
             ) : active.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 text-center">
-                <Timer className="h-8 w-8 text-muted-foreground/30 mb-2" />
+                <Timer className="w-8 text-muted-foreground/30 mb-2" />
                 <p className="text-sm font-medium">No active assignments</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   Grant a time-limited role to get started
@@ -268,7 +268,7 @@ function AssignmentRow({
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+          className="w-7 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
           onClick={handleRevoke}
           disabled={isRevoking}
           aria-label="Revoke access"
@@ -377,7 +377,7 @@ function GrantTempAccessDialog({
               Employee
             </Label>
             <Select value={userId} onValueChange={handleUserChange}>
-              <SelectTrigger id="ta-user" className="h-8">
+              <SelectTrigger id="ta-user" className="">
                 <SelectValue placeholder="Select employee…" />
               </SelectTrigger>
               <SelectContent>
@@ -398,7 +398,7 @@ function GrantTempAccessDialog({
               Role
             </Label>
             <Select value={roleId} onValueChange={handleRoleChange}>
-              <SelectTrigger id="ta-role" className="h-8">
+              <SelectTrigger id="ta-role" className="">
                 <SelectValue placeholder="Select role…" />
               </SelectTrigger>
               <SelectContent>
@@ -422,7 +422,7 @@ function GrantTempAccessDialog({
               id="ta-expires"
               type="datetime-local"
               min={minDate}
-              className="h-8"
+              className=""
               aria-invalid={Boolean(errors.expiresAt)}
               {...register("expiresAt")}
             />
@@ -442,7 +442,7 @@ function GrantTempAccessDialog({
             </Label>
             <Input
               id="ta-reason"
-              className="h-8"
+              className=""
               placeholder="e.g. Covering annual leave"
               {...register("reason")}
             />

@@ -119,7 +119,7 @@ export function ReceiptEditSheet({ expense, open, onOpenChange }: ReceiptEditShe
       <form className="space-y-4" onSubmit={form.handleSubmit(handleSubmit)} noValidate>
         <div className="space-y-1.5">
           <Label className="text-xs">Merchant</Label>
-          <Input {...form.register("merchant")} className="h-8 text-sm" placeholder="Merchant name" />
+          <Input {...form.register("merchant")} className="text-sm" placeholder="Merchant name" />
           {form.formState.errors.merchant && (
             <p className="text-xs text-destructive">{form.formState.errors.merchant.message}</p>
           )}
@@ -135,7 +135,7 @@ export function ReceiptEditSheet({ expense, open, onOpenChange }: ReceiptEditShe
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs">Receipt Number</Label>
-          <Input {...form.register("receiptNumber")} className="h-8 text-sm" placeholder="INV-001" />
+          <Input {...form.register("receiptNumber")} className="text-sm" placeholder="INV-001" />
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs">Tax Amount</Label>
@@ -144,7 +144,7 @@ export function ReceiptEditSheet({ expense, open, onOpenChange }: ReceiptEditShe
             type="number"
             step="0.01"
             min="0"
-            className="h-8 text-sm"
+            className="text-sm"
             placeholder="0.00"
           />
         </div>

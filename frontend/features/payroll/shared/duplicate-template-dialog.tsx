@@ -81,7 +81,7 @@ export function DuplicateTemplateDialog({
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 py-2">
           <div className="space-y-1">
             <Label htmlFor="dup-name" className="text-xs font-medium">Name *</Label>
-            <Input id="dup-name" {...register("name")} className="h-8 text-sm" />
+            <Input id="dup-name" {...register("name")} className="text-sm" />
             {errors.name && (
               <p className="text-xs text-destructive">{errors.name.message}</p>
             )}
@@ -89,7 +89,7 @@ export function DuplicateTemplateDialog({
 
           <div className="space-y-1">
             <Label htmlFor="dup-desc" className="text-xs font-medium">Description</Label>
-            <Input id="dup-desc" {...register("description")} className="h-8 text-sm" />
+            <Input id="dup-desc" {...register("description")} className="text-sm" />
           </div>
 
           <DialogFooter className="pt-2">

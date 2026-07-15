@@ -1,6 +1,10 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PmPageShell, PmPanel, PM_TOOLBAR } from "@/features/projects/shared/pm-chrome";
+import {
+  PmPageShell,
+  PmPanel,
+  PM_TOOLBAR,
+} from "@/features/projects/shared/pm-chrome";
 import { cn } from "@/lib/utils";
 
 export default function TimelineLoading() {
@@ -21,7 +25,7 @@ export default function TimelineLoading() {
           </div>
           {Array.from({ length: 12 }).map((_, i) => (
             <div key={i} className="flex items-center gap-3 py-1.5">
-              <Skeleton className="h-7 w-28 shrink-0 rounded-md sm:w-40" />
+              <Skeleton className="h-4 w-28 shrink-0 rounded-md sm:w-40" />{" "}
               <Skeleton
                 className="h-7 rounded-md"
                 style={{

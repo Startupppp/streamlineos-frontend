@@ -11,7 +11,7 @@ export default function TimesheetApprovalsLoading() {
       <div className="rounded-lg border border-border overflow-hidden">
         <Skeleton className="h-9 w-full" />
         {Array.from({ length: 12 }).map((_, i) => (
-          <Skeleton key={i} className="h-8 w-full mt-px" />
+          <Skeleton key={i} className="h-4 w-full mt-px" />
         ))}
       </div>
     </div>

@@ -147,7 +147,7 @@ export default function SkillsPage() {
     return (
       <PageWrapper title="Skills Matrix" subtitle="Track team competencies">
         <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
-          <AlertCircle className="h-8 w-8 text-destructive" />
+          <AlertCircle className="w-8 text-destructive" />
           <div>
             <p className="text-sm font-medium text-foreground">Failed to load skills</p>
             <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
@@ -178,7 +178,7 @@ export default function SkillsPage() {
     >
       {!skills?.length ? (
         <EmptyState
-          illustration={<BookOpen className="h-8 w-8 text-muted-foreground" />}
+          illustration={<BookOpen className="w-8 text-muted-foreground" />}
           title="No skills recorded yet"
           description="Add your skills to build the organization's competency map."
           action={{ label: "Add Skill", onClick: handleOpenSheet }}
@@ -208,7 +208,7 @@ export default function SkillsPage() {
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                         <BookOpen className="h-3.5 w-3.5 text-primary" />
                       </div>
                       <h3 className="text-sm font-semibold text-foreground leading-tight">{name}</h3>

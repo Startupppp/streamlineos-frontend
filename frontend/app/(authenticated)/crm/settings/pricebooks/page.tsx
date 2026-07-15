@@ -227,7 +227,7 @@ export default function PricebooksPage() {
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 text-xs gap-1.5"
+          className="text-xs gap-1.5"
           onClick={() => handleEntriesRow(pb)}
         >
           <List className="h-3.5 w-3.5" />
@@ -323,7 +323,7 @@ export default function PricebooksPage() {
                 placeholder="Search pricebooks..."
                 value={search}
                 onChange={handleSearchChange}
-                className="h-8 w-full pl-8 text-xs"
+                className="w-full pl-8 text-xs"
               />
             </div>
           </div>

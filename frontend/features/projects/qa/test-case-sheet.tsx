@@ -190,7 +190,7 @@ export function TestCaseSheet({
               <Label className="text-[11px]">Title *</Label>
               <Input
                 {...form.register("title")}
-                className="h-8 text-[11px]"
+                className="text-[11px]"
                 placeholder="Test case title"
               />
               {form.formState.errors.title && (
@@ -207,7 +207,7 @@ export function TestCaseSheet({
                   value={form.watch("suiteId")}
                   onValueChange={(v) => form.setValue("suiteId", v)}
                 >
-                  <SelectTrigger className="h-8 text-[11px]">
+                  <SelectTrigger className="text-[11px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -226,7 +226,7 @@ export function TestCaseSheet({
                   value={form.watch("priority")}
                   onValueChange={handlePriorityChange}
                 >
-                  <SelectTrigger className="h-8 text-[11px]">
+                  <SelectTrigger className="text-[11px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -245,7 +245,7 @@ export function TestCaseSheet({
                   value={form.watch("automationStatus")}
                   onValueChange={handleAutomationStatusChange}
                 >
-                  <SelectTrigger className="h-8 text-[11px]">
+                  <SelectTrigger className="text-[11px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -259,7 +259,7 @@ export function TestCaseSheet({
                 <Label className="text-[11px]">Component</Label>
                 <Input
                   {...form.register("component")}
-                  className="h-8 text-[11px]"
+                  className="text-[11px]"
                   placeholder="e.g. Auth"
                 />
               </div>
@@ -295,19 +295,19 @@ export function TestCaseSheet({
                 <div key={field.id} className="grid grid-cols-[1fr_1fr_auto] gap-1.5 items-start">
                   <Input
                     {...form.register(`steps.${idx}.action`)}
-                    className="h-8 text-[10px]"
+                    className="text-[10px]"
                     placeholder={`Step ${idx + 1} action`}
                   />
                   <Input
                     {...form.register(`steps.${idx}.expected`)}
-                    className="h-8 text-[10px]"
+                    className="text-[10px]"
                     placeholder="Expected result"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                    className="w-7 text-muted-foreground hover:text-destructive"
                     onClick={() => remove(idx)}
                   >
                     <Trash2 className="h-3 w-3" />
@@ -334,7 +334,7 @@ export function TestCaseSheet({
                 onChange={(v) => form.setValue("linkedTicketId", v)}
                 placeholder="Link a ticket…"
                 allowClear
-                className="h-8 text-[11px]"
+                className="text-[11px]"
               />
             </div>
           </form>

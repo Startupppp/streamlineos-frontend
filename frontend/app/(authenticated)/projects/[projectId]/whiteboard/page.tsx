@@ -292,7 +292,7 @@ export default function WhiteboardPage({
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8 shrink-0 mt-0.5 hidden md:inline-flex"
+        className="w-8 shrink-0 mt-0.5 hidden md:inline-flex"
         onClick={handleToggleList}
         aria-label={listCollapsed ? "Show boards panel" : "Hide boards panel"}
       >

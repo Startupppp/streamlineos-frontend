@@ -119,7 +119,7 @@ export function ExpiringDocumentsTable({
 
   const emptyState = (
     <EmptyState
-      illustration={<AlertTriangle className="h-8 w-8 text-emerald-500" />}
+      illustration={<AlertTriangle className="w-8 text-emerald-500" />}
       title="No expiring items"
       description="All documents and certifications are up to date within the selected window."
       compact

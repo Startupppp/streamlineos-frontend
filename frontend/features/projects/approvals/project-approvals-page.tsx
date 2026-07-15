@@ -99,7 +99,7 @@ function RequestApprovalMenuButton({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button size="sm" className="h-8 gap-1.5 text-xs" {...hoverHandlers}>
+        <Button size="sm" className="gap-1.5 text-xs" {...hoverHandlers}>
           <PlusIcon ref={iconRef} size={14} />
           Request approval
           <ChevronDownIcon size={12} className="ml-0.5 opacity-70" />
@@ -140,7 +140,7 @@ function ApprovalActions({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Approval actions" {...hoverHandlers}>
+        <Button variant="ghost" size="icon" className="w-7" aria-label="Approval actions" {...hoverHandlers}>
           <EllipsisIcon ref={iconRef} size={16} />
         </Button>
       </DropdownMenuTrigger>
@@ -385,7 +385,7 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
     <div className={cn(PM_TOOLBAR, "w-full")}>
       <div className="flex flex-wrap items-center gap-2">
         <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="h-8 w-40 text-xs">
+          <SelectTrigger className="w-40 text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -395,7 +395,7 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
           </SelectContent>
         </Select>
         <Select value={entityType} onValueChange={setEntityType}>
-          <SelectTrigger className="h-8 w-40 text-xs">
+          <SelectTrigger className="w-40 text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

@@ -77,7 +77,7 @@ export function QueueTab() {
     <div className="space-y-6">
       <div className="flex items-center gap-2 flex-wrap">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="h-8 w-36 text-xs">
+          <SelectTrigger className="w-36 text-xs">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -89,7 +89,7 @@ export function QueueTab() {
           </SelectContent>
         </Select>
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="h-8 w-44 text-xs">
+          <SelectTrigger className="w-44 text-xs">
             <SelectValue placeholder="Category" />
           </SelectTrigger>
           <SelectContent>

@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Clock, CheckCircle2, XCircle, ArrowRight, UserCheck } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -162,16 +163,21 @@ export default function ApprovalsPage() {
         transition={{ duration: 0.22, ease: "easeOut" }}
         className="flex min-h-0 flex-1 flex-col"
       >
-        <Tabs defaultValue="pending" className="flex min-h-0 flex-1 flex-col">
-          <TabsList className="mb-4 shrink-0">
-            <TabsTrigger value="pending" className="gap-1.5">
-              Pending
-              {inbox.length > 0 && (
-                <Badge variant="secondary" className="text-[10px] h-4 px-1.5 leading-none">{inbox.length}</Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="acted">Acted</TabsTrigger>
-          </TabsList>
+        <Tabs defaultValue="pending" className="flex min-h-0 flex-1 flex-col gap-4">
+          <PageTabsToolbar
+            tabsDensity="labeled"
+            tabs={
+              <TabsList>
+                <TabsTrigger value="pending" className="gap-1.5">
+                  Pending
+                  {inbox.length > 0 && (
+                    <Badge variant="secondary" className="text-[10px] h-4 px-1.5 leading-none">{inbox.length}</Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="acted">Acted</TabsTrigger>
+              </TabsList>
+            }
+          />
 
           <TabsContent value="pending" className="flex min-h-0 flex-1 flex-col">
             <InstanceList

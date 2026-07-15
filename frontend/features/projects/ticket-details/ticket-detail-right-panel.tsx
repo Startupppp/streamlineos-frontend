@@ -101,7 +101,7 @@ export function TicketDetailRightPanel({
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
+              className="w-7 shrink-0 text-muted-foreground hover:text-foreground"
               onClick={onToggleCollapse}
               aria-label="Collapse details panel"
             >

@@ -154,7 +154,7 @@ const WorkflowCard = memo(function WorkflowCard({
               asChild
               size="icon"
               variant="ghost"
-              className="h-7 w-7"
+              className="w-7"
               title="Edit in Builder"
             >
               <Link href={`/workflows/${workflow.id}/builder`}>
@@ -164,7 +164,7 @@ const WorkflowCard = memo(function WorkflowCard({
             <Button
               size="icon"
               variant="ghost"
-              className="h-7 w-7"
+              className="w-7"
               title="Duplicate"
               onClick={onDuplicate}
             >
@@ -173,7 +173,7 @@ const WorkflowCard = memo(function WorkflowCard({
             <Button
               size="icon"
               variant="ghost"
-              className="h-7 w-7 text-destructive hover:text-destructive"
+              className="w-7 text-destructive hover:text-destructive"
               title="Delete"
               onClick={onDelete}
             >
@@ -416,7 +416,7 @@ export default function WorkflowsPage() {
             />
           </div>
           <Select value={statusFilter} onValueChange={handleStatusChange}>
-            <SelectTrigger className="h-8 w-[140px] text-sm">
+            <SelectTrigger className="w-[140px] text-sm">
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>

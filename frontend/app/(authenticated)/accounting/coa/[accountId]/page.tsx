@@ -414,7 +414,7 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
                   </div>
                 ) : journalEntries.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-10 px-6 text-center">
-                    <BookOpen className="h-8 w-8 text-muted-foreground/40 mb-2" />
+                    <BookOpen className="w-8 text-muted-foreground/40 mb-2" />
                     <p className="text-sm text-muted-foreground">
                       No journal entries yet.
                     </p>

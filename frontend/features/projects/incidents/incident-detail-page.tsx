@@ -56,14 +56,14 @@ function IncidentActions({
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
     <div className="flex items-center gap-2">
-      <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={onEdit}>
+      <Button size="sm" variant="outline" className="text-[11px]" onClick={onEdit}>
         <Pencil className="h-3.5 w-3.5 mr-1" />
         Edit
       </Button>
       <Button
         size="sm"
         variant="outline"
-        className="h-7 text-[11px] text-destructive border-destructive/30 hover:bg-destructive/5"
+        className="text-[11px] text-destructive border-destructive/30 hover:bg-destructive/5"
         onClick={onDelete}
         {...hoverHandlers}
       >

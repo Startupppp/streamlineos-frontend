@@ -247,7 +247,7 @@ export function OffersTab({ candidateId }: Props) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7 text-destructive"
+                      className="w-7 text-destructive"
                       onClick={() => setDeleteConfirmId(offer.id)}
                     >
                       <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -309,7 +309,7 @@ export function OffersTab({ candidateId }: Props) {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="h-7 text-xs"
+                        className="text-xs"
                         onClick={() => handleSubmitForApproval(offer.id)}
                         disabled={submitForApproval.isPending}
                       >
@@ -324,7 +324,7 @@ export function OffersTab({ candidateId }: Props) {
                       <>
                         <Button
                           size="sm"
-                          className="h-7 text-xs"
+                          className="text-xs"
                           onClick={() => setApprovalAction({ offer, action: "approve" })}
                         >
                           <svg className="mr-1.5 h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -335,7 +335,7 @@ export function OffersTab({ candidateId }: Props) {
                         <Button
                           size="sm"
                           variant="destructive"
-                          className="h-7 text-xs"
+                          className="text-xs"
                           onClick={() => setApprovalAction({ offer, action: "reject" })}
                         >
                           <svg className="mr-1.5 h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -349,7 +349,7 @@ export function OffersTab({ candidateId }: Props) {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-7 text-xs"
+                      className="text-xs"
                       onClick={() => setHistoryOffer(offer)}
                     >
                       History
@@ -359,7 +359,7 @@ export function OffersTab({ candidateId }: Props) {
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="h-7 text-xs"
+                        className="text-xs"
                         onClick={() => handleCopyOfferLink(offer.acceptanceToken!)}
                       >
                         Copy Offer Link
@@ -373,7 +373,7 @@ export function OffersTab({ candidateId }: Props) {
                           value={offer.offerStatus}
                           onValueChange={(v) => handleStatusChange(offer.id, v as CandidateOffer["offerStatus"])}
                         >
-                          <SelectTrigger className="h-8 text-xs w-36">
+                          <SelectTrigger className="text-xs w-36">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -412,11 +412,11 @@ export function OffersTab({ candidateId }: Props) {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">Joining Date</label>
-                <DatePicker value={joiningDate ?? ""} onChange={(v) => setJoiningDate(v)} placeholder="Pick a date" className="h-8 text-sm" />
+                <DatePicker value={joiningDate ?? ""} onChange={(v) => setJoiningDate(v)} placeholder="Pick a date" className="text-sm" />
               </div>
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">Valid Until</label>
-                <DatePicker value={validUntil ?? ""} onChange={(v) => setValidUntil(v)} placeholder="Pick a date" className="h-8 text-sm" />
+                <DatePicker value={validUntil ?? ""} onChange={(v) => setValidUntil(v)} placeholder="Pick a date" className="text-sm" />
               </div>
             </div>
             <div className="space-y-1.5">

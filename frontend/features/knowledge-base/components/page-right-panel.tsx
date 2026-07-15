@@ -78,7 +78,7 @@ export default function PageRightPanel({
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7"
+          className="w-7"
           onClick={handleToggle}
           aria-label={collapsed ? "Open details panel" : "Close details panel"}
         >

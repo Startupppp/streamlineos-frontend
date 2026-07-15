@@ -184,7 +184,7 @@ export default function InterviewerPerformancePage() {
             </Link>
           </Button>
           <Select value={String(days)} onValueChange={handlePeriodChange}>
-            <SelectTrigger className="h-8 w-40 text-xs">
+            <SelectTrigger className="w-40 text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -232,7 +232,7 @@ export default function InterviewerPerformancePage() {
 
         {isError ? (
           <div className="flex flex-col items-center justify-center gap-3 py-12">
-            <AlertCircle className="h-8 w-8 text-destructive/60" />
+            <AlertCircle className="w-8 text-destructive/60" />
             <p className="text-sm text-muted-foreground">Failed to load performance data.</p>
             <Button variant="outline" size="sm" onClick={handleRetry}>Try again</Button>
           </div>

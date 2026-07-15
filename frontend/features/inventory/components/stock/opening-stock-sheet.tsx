@@ -152,7 +152,7 @@ const LineRow = memo(function LineRow({
               <ProductVariantCombobox
                 value={field.value}
                 onChange={field.onChange}
-                className="h-8 text-xs"
+                className="text-xs"
               />
             )}
           />
@@ -168,7 +168,7 @@ const LineRow = memo(function LineRow({
             name={`lines.${index}.warehouseId`}
             render={({ field }) => (
               <Select value={field.value} onValueChange={handleWarehouseChange}>
-                <SelectTrigger className="h-8 text-xs">
+                <SelectTrigger className="text-xs">
                   <SelectValue placeholder="Select warehouse…" />
                 </SelectTrigger>
                 <SelectContent>
@@ -197,7 +197,7 @@ const LineRow = memo(function LineRow({
                 onValueChange={handleLocationChange}
                 disabled={!warehouseId}
               >
-                <SelectTrigger className="h-8 text-xs">
+                <SelectTrigger className="text-xs">
                   <SelectValue placeholder={!warehouseId ? "Select warehouse first" : "Select location…"} />
                 </SelectTrigger>
                 <SelectContent>
@@ -225,7 +225,7 @@ const LineRow = memo(function LineRow({
             min="0.0001"
             step="any"
             placeholder="Enter quantity"
-            className="h-8 text-xs"
+            className="text-xs"
             {...register(`lines.${index}.qty`)}
           />
           {lineErrors?.qty && (
@@ -240,7 +240,7 @@ const LineRow = memo(function LineRow({
             min="0"
             step="any"
             placeholder="0.00"
-            className="h-8 text-xs"
+            className="text-xs"
             {...register(`lines.${index}.unitCost`)}
           />
           {lineErrors?.unitCost && (

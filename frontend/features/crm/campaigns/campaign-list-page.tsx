@@ -183,7 +183,7 @@ export function CampaignListPage() {
       subtitle="Track lead sources and ROI"
       filters={
         <Select value={statusFilter} onValueChange={handleStatusChange}>
-          <SelectTrigger className="h-8 text-xs w-36">
+          <SelectTrigger className="text-xs w-36">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

@@ -264,7 +264,7 @@ export function VaultDocumentList({ candidateId }: VaultDocumentListProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 text-muted-foreground hover:text-destructive transition-colors duration-200"
+                  className="w-7 text-muted-foreground hover:text-destructive transition-colors duration-200"
                   aria-label={`Delete ${doc.filename}`}
                   onClick={() => handleRequestDelete(doc.id)}
                 >

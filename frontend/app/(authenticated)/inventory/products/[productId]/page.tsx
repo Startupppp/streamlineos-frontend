@@ -109,7 +109,7 @@ function VariantEditCell({ variant, onEdit }: VariantEditCellProps) {
     <Button
       variant="ghost"
       size="icon"
-      className="h-7 w-7"
+      className="w-7"
       onClick={handleClick}
       aria-label={`Edit variant ${variant.name}`}
     >

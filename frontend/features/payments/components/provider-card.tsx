@@ -40,7 +40,7 @@ export function ProviderCard({ catalogEntry, provider, selected, onSelect, onCon
     >
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
-          <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+          <div className="w-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
             <Icon className="h-4 w-4 text-foreground" />
           </div>
           <p className="text-sm font-semibold text-foreground truncate">{catalogEntry.displayName}</p>
@@ -65,7 +65,7 @@ export function ProviderCard({ catalogEntry, provider, selected, onSelect, onCon
           type="button"
           size="sm"
           variant="outline"
-          className="h-7 text-xs self-start"
+          className="text-xs self-start"
           disabled={isConnecting}
           onClick={(e) => {
             e.stopPropagation();

@@ -65,7 +65,7 @@ export function VaultTab(props: VaultTabProps) {
       <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
         <CardHeader className="p-4 pb-3 flex flex-row items-center justify-between border-b border-border">
           <div className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
+            <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
               <FolderLock
                 className="h-3.5 w-3.5 text-primary"
                 aria-hidden="true"
@@ -83,7 +83,7 @@ export function VaultTab(props: VaultTabProps) {
           <Button
             variant="outline"
             size="sm"
-            className="h-7 text-xs gap-1.5"
+            className="text-xs gap-1.5"
             onClick={handleToggleUpload}
           >
             <Upload className="h-3 w-3" />

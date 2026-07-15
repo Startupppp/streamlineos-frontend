@@ -161,7 +161,7 @@ export function ExpiryClient() {
         <div className="flex w-full min-w-0 items-center gap-2">
           <span className="text-xs text-muted-foreground shrink-0">Expiring within</span>
           <Select value={days} onValueChange={handleDaysChange}>
-            <SelectTrigger className="h-8 text-xs w-[110px]">
+            <SelectTrigger className="text-xs w-[110px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

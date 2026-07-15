@@ -186,7 +186,7 @@ function DirectReportsSection({ employeeId }: { employeeId: string }) {
       <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-3">
-            <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
+            <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
               <Users className="h-3.5 w-3.5 text-primary" />
             </div>
             <h3 className="text-sm font-semibold text-foreground">
@@ -208,7 +208,7 @@ function DirectReportsSection({ employeeId }: { employeeId: string }) {
     <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
       <CardContent className="p-4">
         <div className="flex items-center gap-2 mb-3">
-          <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
+          <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
             <Users className="h-3.5 w-3.5 text-primary" />
           </div>
           <h3 className="text-sm font-semibold text-foreground">
@@ -225,7 +225,7 @@ function DirectReportsSection({ employeeId }: { employeeId: string }) {
               href={`/hr/employees/${r.id}`}
               className="flex items-center gap-2.5 hover:bg-muted/60 rounded-lg p-2 transition-colors duration-200"
             >
-              <Avatar className="h-7 w-7 shrink-0">
+              <Avatar className="w-7 shrink-0">
                 <AvatarImage src={resolveImageUrl(r.image)} />
                 <AvatarFallback className="text-xs bg-muted text-muted-foreground font-bold">
                   {(r.name ?? "?")[0]?.toUpperCase() ?? "?"}
@@ -259,7 +259,7 @@ function ManagerScorecardSection({ employeeId }: { employeeId: string }) {
     <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
       <CardContent className="p-4">
         <div className="flex items-center gap-2 mb-4">
-          <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
+          <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
             <BarChart2 className="h-3.5 w-3.5 text-primary" />
           </div>
           <h3 className="text-sm font-semibold text-foreground">
@@ -378,7 +378,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 gap-1.5"
+              className="gap-1.5"
               onClick={handleBack}
             >
               <ArrowLeft className="h-3.5 w-3.5" />
@@ -388,7 +388,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 gap-1.5"
+                className="gap-1.5"
                 asChild
               >
                 <a
@@ -404,7 +404,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
+                className="gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
                 onClick={handleTerminateClick}
                 disabled={terminateMutation.isPending}
               >
@@ -562,7 +562,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                 <div className="flex items-center shrink-0 border-l border-border pl-5 divide-x divide-border">
                   {Array.from({ length: 8 }).map((_, i) => (
                     <div key={i} className="text-center px-4 space-y-1.5">
-                      <Skeleton className="h-8 w-10 mx-auto" />
+                      <Skeleton className="h-10 w-10 mx-auto" />
                       <Skeleton className="h-3 w-14" />
                     </div>
                   ))}
@@ -635,7 +635,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                 <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-2 mb-3">
-                      <div className="h-7 w-7 rounded-lg bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center">
+                      <div className="w-7 rounded-lg bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center">
                         <Tag className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
                       </div>
                       <h3 className="text-sm font-semibold text-foreground">
@@ -664,7 +664,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                 <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-2 mb-3">
-                      <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
                         <Briefcase className="h-3.5 w-3.5 text-primary" />
                       </div>
                       <h3 className="text-sm font-semibold text-foreground">
@@ -683,7 +683,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                 <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-2 mb-3">
-                      <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
                         <FileCheck className="h-3.5 w-3.5 text-primary" />
                       </div>
                       <h3 className="text-sm font-semibold text-foreground">

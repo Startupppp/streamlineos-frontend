@@ -268,7 +268,7 @@ export function FeedbucketAiPanel({
                 loadingText="Re-analyzing…"
                 onClick={handleReAnalyzeClick}
                 aria-label="Re-analyze with AI"
-                className="h-7 px-2 text-xs gap-1"
+                className="px-2 text-xs gap-1"
               >
                 <RefreshCw className="h-3 w-3" aria-hidden />
                 Re-analyze
@@ -280,7 +280,7 @@ export function FeedbucketAiPanel({
                 isPending={isAnalyzing}
                 loadingText="Analyzing…"
                 onClick={handleAnalyzeClick}
-                className="h-8 gap-1.5"
+                className="gap-1.5"
               >
                 <Sparkles className="h-3.5 w-3.5" aria-hidden />
                 Analyze with AI

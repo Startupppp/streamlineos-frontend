@@ -316,7 +316,7 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
             <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
               <CardHeader className="pb-3 border-b px-5 pt-4">
                 <div className="flex items-center gap-2.5">
-                  <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                     <FileCode className="h-3.5 w-3.5 text-primary" />
                   </div>
                   <div>
@@ -343,7 +343,7 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
                         onValueChange={field.onChange}
                       >
                         <FormControl>
-                          <SelectTrigger className="h-8">
+                          <SelectTrigger className="">
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
@@ -371,7 +371,7 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
                         <Input
                           placeholder="e.g. Software Engineer Offer Letter"
                           autoFocus
-                          className="h-8"
+                          className=""
                           {...field}
                         />
                       </FormControl>
@@ -390,7 +390,7 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
             <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
               <CardHeader className="pb-3 border-b px-5 pt-4">
                 <div className="flex items-center gap-2.5">
-                  <div className="h-7 w-7 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                  <div className="w-7 rounded-lg bg-muted flex items-center justify-center shrink-0">
                     <FileCode className="h-3.5 w-3.5 text-muted-foreground" />
                   </div>
                   <div>

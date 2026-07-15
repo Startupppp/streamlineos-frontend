@@ -66,7 +66,7 @@ export default function SkillsMatrixPage() {
     return (
       <PageWrapper title="Skills Matrix" subtitle="Cross-reference of employees and their skill levels across the org">
         <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
-          <AlertCircle className="h-8 w-8 text-destructive" />
+          <AlertCircle className="w-8 text-destructive" />
           <div>
             <p className="text-sm font-medium text-foreground">Failed to load skills matrix</p>
             <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>

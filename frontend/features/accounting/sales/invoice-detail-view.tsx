@@ -55,7 +55,9 @@ const PAYMENT_COLUMNS: DataTableColumn<Payment>[] = [
     key: "method",
     header: "Method",
     cell: (p) => (
-      <span className="text-xs capitalize">{p.paymentMethod.replace(/_/g, " ")}</span>
+      <span className="text-xs capitalize">
+        {p.paymentMethod.replace(/_/g, " ")}
+      </span>
     ),
   },
   {
@@ -95,7 +97,11 @@ function PaymentsTable({ payments }: PaymentsTableProps) {
       columns={PAYMENT_COLUMNS}
       getRowKey={getPaymentRowKey}
       emptyState={
-        <EmptyState illustrationPreset="expenses" title="No payments recorded" compact />
+        <EmptyState
+          illustrationPreset="expenses"
+          title="No payments recorded"
+          compact
+        />
       }
     />
   );
@@ -155,13 +161,15 @@ interface LinkedCreditNotesProps {
 }
 
 function LinkedCreditNotes({ clientId, invoiceId }: LinkedCreditNotesProps) {
-  const creditNotesQuery = useCreditNotes(clientId !== null ? { clientId } : {});
+  const creditNotesQuery = useCreditNotes(
+    clientId !== null ? { clientId } : {},
+  );
   const linked = (creditNotesQuery.data?.items ?? []).filter(
     (cn) => cn.invoiceId === invoiceId,
   );
 
   if (creditNotesQuery.isLoading) {
-    return <Skeleton className="h-8 w-full" />;
+    return <Skeleton className="h-4 w-full" />;
   }
 
   if (linked.length === 0) {
@@ -186,7 +194,10 @@ interface CollectionPanelProps {
 }
 
 function CollectionPanel({ invoice }: CollectionPanelProps) {
-  const balance = Math.max(0, Number(invoice.total) - Number(invoice.amountPaid ?? "0"));
+  const balance = Math.max(
+    0,
+    Number(invoice.total) - Number(invoice.amountPaid ?? "0"),
+  );
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">
@@ -242,7 +253,7 @@ export function InvoiceDetailSkeleton() {
           </div>
           <div className="p-4 space-y-3">
             {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-8 w-full" />
+              <Skeleton key={i} className="h-4 w-full" />
             ))}
           </div>
         </div>
@@ -375,26 +386,36 @@ export function InvoiceDetailContent({ invoiceId }: InvoiceDetailContentProps) {
               <p className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground mb-0.5">
                 Customer
               </p>
-              <p className="text-sm font-medium">{invoice.client?.name ?? "—"}</p>
+              <p className="text-sm font-medium">
+                {invoice.client?.name ?? "—"}
+              </p>
             </div>
             <div>
               <p className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground mb-0.5">
                 Invoice Date
               </p>
-              <p className="text-sm tabular-nums">{formatDate(invoice.createdAt)}</p>
+              <p className="text-sm tabular-nums">
+                {formatDate(invoice.createdAt)}
+              </p>
             </div>
             <div>
               <p className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground mb-0.5">
                 Due Date
               </p>
-              <p className="text-sm tabular-nums">{formatDate(invoice.dueDate)}</p>
+              <p className="text-sm tabular-nums">
+                {formatDate(invoice.dueDate)}
+              </p>
             </div>
             <div>
               <p className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground mb-0.5">
                 Total
               </p>
               <p className="text-sm font-semibold tabular-nums">
-                <Money value={Number(invoice.total)} currency={invoice.currency} compact />
+                <Money
+                  value={Number(invoice.total)}
+                  currency={invoice.currency}
+                  compact
+                />
               </p>
             </div>
             <div>
@@ -438,14 +459,22 @@ export function InvoiceDetailContent({ invoiceId }: InvoiceDetailContentProps) {
             <div className="flex items-center gap-8 text-xs text-muted-foreground">
               <span>Subtotal</span>
               <span className="tabular-nums font-medium text-foreground w-24 text-right">
-                <Money value={Number(invoice.subtotal)} currency={invoice.currency} compact />
+                <Money
+                  value={Number(invoice.subtotal)}
+                  currency={invoice.currency}
+                  compact
+                />
               </span>
             </div>
             {invoice.taxAmount && Number(invoice.taxAmount) > 0 && (
               <div className="flex items-center gap-8 text-xs text-muted-foreground">
                 <span>Tax ({invoice.taxRate ?? 0}%)</span>
                 <span className="tabular-nums font-medium text-foreground w-24 text-right">
-                  <Money value={Number(invoice.taxAmount)} currency={invoice.currency} compact />
+                  <Money
+                    value={Number(invoice.taxAmount)}
+                    currency={invoice.currency}
+                    compact
+                  />
                 </span>
               </div>
             )}
@@ -453,14 +482,23 @@ export function InvoiceDetailContent({ invoiceId }: InvoiceDetailContentProps) {
               <div className="flex items-center gap-8 text-xs text-muted-foreground">
                 <span>Discount</span>
                 <span className="tabular-nums font-medium text-foreground w-24 text-right">
-                  −<Money value={Number(invoice.discount)} currency={invoice.currency} compact />
+                  −
+                  <Money
+                    value={Number(invoice.discount)}
+                    currency={invoice.currency}
+                    compact
+                  />
                 </span>
               </div>
             )}
             <div className="flex items-center gap-8 text-sm font-semibold border-t border-border pt-1.5 mt-0.5">
               <span>Total</span>
               <span className="tabular-nums w-24 text-right">
-                <Money value={Number(invoice.total)} currency={invoice.currency} compact />
+                <Money
+                  value={Number(invoice.total)}
+                  currency={invoice.currency}
+                  compact
+                />
               </span>
             </div>
           </div>
@@ -478,7 +516,10 @@ export function InvoiceDetailContent({ invoiceId }: InvoiceDetailContentProps) {
             <h2 className="text-sm font-semibold">Linked Credit Notes</h2>
           </div>
           <div className="p-1">
-            <LinkedCreditNotes clientId={invoice.clientId} invoiceId={invoice.id} />
+            <LinkedCreditNotes
+              clientId={invoice.clientId}
+              invoiceId={invoice.id}
+            />
           </div>
         </div>
 

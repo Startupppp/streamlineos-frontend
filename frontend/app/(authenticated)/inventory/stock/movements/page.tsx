@@ -349,7 +349,7 @@ export default function MovementsPage() {
         <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
           <div className="hidden sm:flex min-w-0 flex-row flex-nowrap items-center gap-2">
             <Select value={txnTypeFilter} onValueChange={handleTypeChange}>
-              <SelectTrigger className="h-8 text-xs w-[150px]">
+              <SelectTrigger className="text-xs w-[150px]">
                 <SelectValue placeholder="All types" />
               </SelectTrigger>
               <SelectContent>
@@ -362,7 +362,7 @@ export default function MovementsPage() {
               </SelectContent>
             </Select>
             <Select value={dirFilter} onValueChange={handleDirChange}>
-              <SelectTrigger className="h-8 text-xs w-[120px]">
+              <SelectTrigger className="text-xs w-[120px]">
                 <SelectValue placeholder="Direction" />
               </SelectTrigger>
               <SelectContent>
@@ -372,7 +372,7 @@ export default function MovementsPage() {
               </SelectContent>
             </Select>
             <Select value={warehouseParam} onValueChange={handleWarehouseChange}>
-              <SelectTrigger className="h-8 text-xs w-[140px]">
+              <SelectTrigger className="text-xs w-[140px]">
                 <SelectValue placeholder="All warehouses" />
               </SelectTrigger>
               <SelectContent>
@@ -385,7 +385,7 @@ export default function MovementsPage() {
               </SelectContent>
             </Select>
             <Select value={datePreset} onValueChange={handleDatePresetChange}>
-              <SelectTrigger className="h-8 text-xs w-[130px]">
+              <SelectTrigger className="text-xs w-[130px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -400,7 +400,7 @@ export default function MovementsPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 text-xs text-muted-foreground gap-1.5"
+                className="text-xs text-muted-foreground gap-1.5"
                 onClick={handleResetFilters}
               >
                 Clear filters

@@ -70,7 +70,7 @@ export function PolicyScopesEditor({ value, onChange, disabled }: Props) {
             onValueChange={(v) => { if (isScopeType(v)) handleTypeChange(index, v); }}
             disabled={disabled}
           >
-            <SelectTrigger className="h-8 text-xs w-44 shrink-0">
+            <SelectTrigger className="text-xs w-44 shrink-0">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -89,7 +89,7 @@ export function PolicyScopesEditor({ value, onChange, disabled }: Props) {
                 ? "Applies to entire org"
                 : `Enter ${SCOPE_TYPE_LABELS[row.scopeType]} ID/code`
             }
-            className="h-8 text-xs flex-1"
+            className="text-xs flex-1"
             disabled={disabled || row.scopeType === "organization"}
             readOnly={row.scopeType === "organization"}
           />
@@ -97,7 +97,7 @@ export function PolicyScopesEditor({ value, onChange, disabled }: Props) {
             type="button"
             variant="ghost"
             size="icon"
-            className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
+            className="w-8 shrink-0 text-muted-foreground hover:text-destructive"
             onClick={() => handleRemove(index)}
             disabled={disabled || value.length === 1}
           >
@@ -109,7 +109,7 @@ export function PolicyScopesEditor({ value, onChange, disabled }: Props) {
         type="button"
         variant="outline"
         size="sm"
-        className="h-7 text-xs gap-1"
+        className="text-xs gap-1"
         onClick={handleAdd}
         disabled={disabled}
       >

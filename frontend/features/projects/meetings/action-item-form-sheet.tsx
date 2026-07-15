@@ -113,7 +113,7 @@ export function ActionItemFormSheet({
               <FormField control={form.control} name="title" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Title</FormLabel>
-                  <FormControl><Input {...field} placeholder="Action item title" className="h-8 text-sm" /></FormControl>
+                  <FormControl><Input {...field} placeholder="Action item title" className="text-sm" /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
@@ -129,7 +129,7 @@ export function ActionItemFormSheet({
                   <FormItem>
                     <FormLabel>Assignee</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl><SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Unassigned" /></SelectTrigger></FormControl>
+                      <FormControl><SelectTrigger className="text-sm"><SelectValue placeholder="Unassigned" /></SelectTrigger></FormControl>
                       <SelectContent>
                         <SelectItem value={NONE_SENTINEL}>Unassigned</SelectItem>
                         {projectMembers.map((m) => (
@@ -144,7 +144,7 @@ export function ActionItemFormSheet({
                   <FormItem>
                     <FormLabel>Status</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl><SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger></FormControl>
+                      <FormControl><SelectTrigger className="text-sm"><SelectValue /></SelectTrigger></FormControl>
                       <SelectContent>
                         <SelectItem value="open">Open</SelectItem>
                         <SelectItem value="in_progress">In Progress</SelectItem>
@@ -160,7 +160,7 @@ export function ActionItemFormSheet({
                 <FormItem>
                   <FormLabel>Due Date (optional)</FormLabel>
                   <FormControl>
-                    <DatePicker value={field.value} onChange={field.onChange} placeholder="Select due date" className="h-8 text-sm" />
+                    <DatePicker value={field.value} onChange={field.onChange} placeholder="Select due date" className="text-sm" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

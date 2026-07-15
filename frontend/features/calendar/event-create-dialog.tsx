@@ -646,7 +646,7 @@ export function EventCreateDialog({
             <Button
               variant="outline"
               size="sm"
-              className="h-8 text-xs px-3 font-normal text-muted-foreground hover:text-foreground"
+              className="text-xs px-3 font-normal text-muted-foreground hover:text-foreground"
               onClick={handleClose}
               disabled={isPending}
             >
@@ -654,7 +654,7 @@ export function EventCreateDialog({
             </Button>
             <Button
               size="sm"
-              className="h-8 text-xs px-4 font-medium"
+              className="text-xs px-4 font-medium"
               onClick={handleSave}
               disabled={isPending || !form.title.trim()}
             >

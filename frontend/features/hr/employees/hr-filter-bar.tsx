@@ -66,7 +66,7 @@ export function HrFilterBar({
       </div>
 
       <Select value={deptFilter} onValueChange={onDeptChange}>
-        <SelectTrigger className="h-8 w-[130px] text-xs">
+        <SelectTrigger className="w-[130px] text-xs">
           <SelectValue placeholder="Department" />
         </SelectTrigger>
         <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -80,7 +80,7 @@ export function HrFilterBar({
       </Select>
 
       <Select value={statusFilter} onValueChange={handleStatusChange}>
-        <SelectTrigger className="h-8 w-[120px] text-xs">
+        <SelectTrigger className="w-[120px] text-xs">
           <SelectValue />
         </SelectTrigger>
         <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -91,7 +91,7 @@ export function HrFilterBar({
       </Select>
 
       <Select value={roleFilter} onValueChange={handleRoleChange}>
-        <SelectTrigger className="h-8 w-[120px] text-xs">
+        <SelectTrigger className="w-[120px] text-xs">
           <SelectValue />
         </SelectTrigger>
         <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -111,7 +111,7 @@ export function HrFilterBar({
         <Button
           variant="ghost"
           size="sm"
-          className="h-8 px-2 gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors duration-200"
+          className="px-2 gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors duration-200"
           onClick={onClearFilters}
           aria-label="Clear filters"
         >

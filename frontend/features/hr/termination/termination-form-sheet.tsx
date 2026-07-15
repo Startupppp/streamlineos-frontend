@@ -259,7 +259,7 @@ export function TerminationFormSheet({
           <Label className="text-sm font-medium">
             Effective Date <span className="text-rose-500">*</span>
           </Label>
-          <DatePicker value={effectiveDate ?? ""} onChange={onEffectiveDateChange} placeholder="Pick a date" className="h-8 text-sm" fromDate={new Date()} />
+          <DatePicker value={effectiveDate ?? ""} onChange={onEffectiveDateChange} placeholder="Pick a date" className="text-sm" fromDate={new Date()} />
           <p className="text-[11px] text-muted-foreground">
             Must be today or a future date.
           </p>

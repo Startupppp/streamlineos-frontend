@@ -85,7 +85,7 @@ export function PageMetadataSheetTrigger({ onClick }: PageMetadataSheetTriggerPr
     <Button
       variant="ghost"
       size="icon"
-      className="h-8 w-8"
+      className="w-8"
       onClick={onClick}
       aria-label="Page settings"
     >

@@ -71,7 +71,7 @@ export function AIScoreButton({
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 px-2 text-xs gap-1"
+            className="px-2 text-xs gap-1"
             onClick={handleCompactClick}
             disabled={scoreMutation.isPending || !featureEnabled}
             title={

@@ -55,11 +55,11 @@ function RosterCard({ roster, canManage }: RosterCardProps) {
             {roster.status}
           </Badge>
           {canManage && roster.status === "DRAFT" && (
-            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={handlePublish} disabled={publishRoster.isPending}>
+            <Button size="sm" variant="outline" className="text-xs" onClick={handlePublish} disabled={publishRoster.isPending}>
               Publish
             </Button>
           )}
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleToggle}>
+          <Button variant="ghost" size="icon" className="w-7" onClick={handleToggle}>
             {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </Button>
         </div>

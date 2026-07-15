@@ -72,7 +72,7 @@ function SequenceRow({
         <Input
           value={state.prefix}
           onChange={handlePrefixChange}
-          className="h-8 w-24 text-xs"
+          className="w-24 text-xs"
         />
       </TableCell>
       <TableCell>
@@ -80,7 +80,7 @@ function SequenceRow({
           type="number"
           value={state.padding}
           onChange={handlePaddingChange}
-          className="h-8 w-16 text-xs text-right"
+          className="w-16 text-xs text-right"
           min={1}
         />
       </TableCell>
@@ -102,7 +102,7 @@ function SequenceRow({
         <Button
           size="sm"
           variant="outline"
-          className="h-7 text-xs"
+          className="text-xs"
           onClick={handleSave}
           disabled={!isDirty || isSaving || !!state.nextNumberError}
         >
@@ -142,7 +142,7 @@ export function NumberSequencesCard() {
         {isLoading ? (
           <div className="p-4 space-y-2">
             {Array.from({ length: 4 }).map(function renderSkeleton(_, i) {
-              return <Skeleton key={i} className="h-8 w-full" />;
+              return <Skeleton key={i} className="h-4 w-full" />;
             })}
           </div>
         ) : (

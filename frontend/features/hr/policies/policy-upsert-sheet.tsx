@@ -164,7 +164,7 @@ export function PolicyUpsertSheet({ open, onOpenChange, policy }: Props) {
                     disabled={isEdit || isActive}
                   >
                     <FormControl>
-                      <SelectTrigger className="h-8 text-sm">
+                      <SelectTrigger className="text-sm">
                         <SelectValue />
                       </SelectTrigger>
                     </FormControl>
@@ -189,7 +189,7 @@ export function PolicyUpsertSheet({ open, onOpenChange, policy }: Props) {
                   <FormControl>
                     <Input
                       placeholder="e.g. Standard Leave Policy"
-                      className="h-8 text-sm"
+                      className="text-sm"
                       {...field}
                       disabled={isActive}
                     />
@@ -230,7 +230,7 @@ export function PolicyUpsertSheet({ open, onOpenChange, policy }: Props) {
                   <FormItem>
                     <FormLabel className={LABEL_CLASS}>Effective From</FormLabel>
                     <FormControl>
-                      <Input type="date" className="h-8 text-sm" {...field} disabled={isActive} />
+                      <Input type="date" className="text-sm" {...field} disabled={isActive} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -243,7 +243,7 @@ export function PolicyUpsertSheet({ open, onOpenChange, policy }: Props) {
                   <FormItem>
                     <FormLabel className={LABEL_CLASS}>Effective To</FormLabel>
                     <FormControl>
-                      <Input type="date" className="h-8 text-sm" {...field} disabled={isActive} />
+                      <Input type="date" className="text-sm" {...field} disabled={isActive} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -261,7 +261,7 @@ export function PolicyUpsertSheet({ open, onOpenChange, policy }: Props) {
                       type="number"
                       min={0}
                       max={9999}
-                      className="h-8 text-sm"
+                      className="text-sm"
                       value={field.value}
                       onChange={(e) => field.onChange(e.target.value === "" ? 0 : parseInt(e.target.value, 10))}
                       onBlur={field.onBlur}

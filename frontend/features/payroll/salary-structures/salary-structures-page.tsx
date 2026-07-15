@@ -110,7 +110,7 @@ const TemplateCard = memo(function TemplateCard({ template, index, onEdit, onDel
         <Button
           size="sm"
           variant="ghost"
-          className="h-8 px-3 text-xs gap-1.5"
+          className="px-3 text-xs gap-1.5"
           onClick={handleEdit}
         >
           <Pencil className="h-3 w-3" />
@@ -119,7 +119,7 @@ const TemplateCard = memo(function TemplateCard({ template, index, onEdit, onDel
         <Button
           size="sm"
           variant="ghost"
-          className="h-8 px-3 text-xs gap-1.5 text-destructive hover:text-destructive"
+          className="px-3 text-xs gap-1.5 text-destructive hover:text-destructive"
           onClick={handleDelete}
         >
           <Trash2 className="h-3 w-3" />

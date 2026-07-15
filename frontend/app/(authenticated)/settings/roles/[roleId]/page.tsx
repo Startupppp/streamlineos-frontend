@@ -104,7 +104,7 @@ function RoleEditorContent() {
                 </div>
               </div>
 
-              <Separator orientation="vertical" className="h-8 hidden sm:block" />
+              <Separator orientation="vertical" className="hidden sm:block" />
 
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -118,7 +118,7 @@ function RoleEditorContent() {
                 </div>
               </div>
 
-              <Separator orientation="vertical" className="h-8 hidden sm:block" />
+              <Separator orientation="vertical" className="hidden sm:block" />
 
               <div className="flex items-center gap-2">
                 <Users className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -136,7 +136,7 @@ function RoleEditorContent() {
 
               {role.isSystem && (
                 <>
-                  <Separator orientation="vertical" className="h-8 hidden sm:block" />
+                  <Separator orientation="vertical" className="hidden sm:block" />
                   <Badge variant="outline" className="text-[11px]">
                     System role
                   </Badge>
@@ -185,12 +185,12 @@ function RoleEditorSkeleton({ onBack }: RoleEditorSkeletonProps) {
                 <div className="h-2.5 w-8 rounded bg-muted animate-pulse" />
                 <div className="h-4 w-24 rounded bg-muted animate-pulse" />
               </div>
-              <Separator orientation="vertical" className="h-8 hidden sm:block" />
+              <Separator orientation="vertical" className="hidden sm:block" />
               <div className="space-y-1.5">
                 <div className="h-2.5 w-12 rounded bg-muted animate-pulse" />
                 <div className="h-4 w-28 rounded bg-muted animate-pulse" />
               </div>
-              <Separator orientation="vertical" className="h-8 hidden sm:block" />
+              <Separator orientation="vertical" className="hidden sm:block" />
               <div className="space-y-1.5">
                 <div className="h-2.5 w-14 rounded bg-muted animate-pulse" />
                 <div className="h-4 w-6 rounded bg-muted animate-pulse" />
@@ -206,7 +206,7 @@ function RoleEditorSkeleton({ onBack }: RoleEditorSkeletonProps) {
               <div className="h-3 w-48 rounded bg-muted animate-pulse" />
             </div>
             <div className="flex items-center gap-2">
-              <div className="h-8 w-24 rounded bg-muted animate-pulse" />
+              <div className="w-24 rounded bg-muted animate-pulse" />
             </div>
           </div>
           <Separator />

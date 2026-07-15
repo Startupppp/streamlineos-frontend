@@ -140,7 +140,7 @@ function LogDetailSheet({ log, onClose }: { log: AuditLogRow; onClose: () => voi
           </DetailField>
           <DetailField label="User">
             <div className="flex items-center gap-2.5">
-              <Avatar className="h-7 w-7">
+              <Avatar className="w-7">
                 <AvatarImage src={resolveImageUrl(log.userImage)} />
                 <AvatarFallback className="text-[10px]">{getInitials(log.userName)}</AvatarFallback>
               </Avatar>
@@ -242,7 +242,7 @@ const AUDIT_LOG_COLUMNS: DataTableColumn<AuditLogRow>[] = [
     key: "details",
     header: "",
     cell: () => (
-      <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="View details">
+      <Button variant="ghost" size="icon" className="w-7" aria-label="View details">
         <Info className="h-3.5 w-3.5 text-muted-foreground" />
       </Button>
     ),
@@ -355,7 +355,7 @@ export default function AuditLogPage() {
       <div className="flex flex-col gap-1 min-w-[160px] flex-1">
         <p className="text-[11px] font-medium text-muted-foreground">Action</p>
         <Select value={actionFilter} onValueChange={handleActionFilter}>
-          <SelectTrigger className="h-8 text-sm w-full">
+          <SelectTrigger className="text-sm w-full">
             <SelectValue placeholder="All actions" />
           </SelectTrigger>
           <SelectContent>
@@ -369,7 +369,7 @@ export default function AuditLogPage() {
       <div className="flex flex-col gap-1 min-w-[130px] flex-1">
         <p className="text-[11px] font-medium text-muted-foreground">Entity Type</p>
         <Select value={targetTypeFilter} onValueChange={handleTargetTypeFilter}>
-          <SelectTrigger className="h-8 text-sm w-full">
+          <SelectTrigger className="text-sm w-full">
             <SelectValue placeholder="All types" />
           </SelectTrigger>
           <SelectContent>
@@ -389,7 +389,7 @@ export default function AuditLogPage() {
         <DatePicker value={dateTo} onChange={handleDateTo} placeholder="To date" className="w-full" />
       </div>
       {hasActiveFilters && (
-        <Button variant="ghost" size="sm" onClick={resetFilters} className="h-8 text-sm self-end">
+        <Button variant="ghost" size="sm" onClick={resetFilters} className="text-sm self-end">
           Clear
         </Button>
       )}
@@ -407,7 +407,7 @@ export default function AuditLogPage() {
         onChange={handleGoToPageChange}
         onKeyDown={handleGoToPageKeyDown}
         placeholder="—"
-        className="h-8 w-14 text-xs text-center"
+        className="w-14 text-xs text-center"
         aria-label="Go to page"
       />
     </div>
@@ -417,7 +417,7 @@ export default function AuditLogPage() {
     <div className="flex items-center gap-2">
       <span className="text-[12px] text-muted-foreground">Rows per page</span>
       <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
-        <SelectTrigger className="h-8 w-[64px] text-xs">
+        <SelectTrigger className="w-[64px] text-xs">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

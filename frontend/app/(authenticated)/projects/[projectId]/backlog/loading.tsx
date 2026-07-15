@@ -4,10 +4,10 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 export default function BacklogLoading() {
   const filterBar = (
     <div className="flex items-center gap-2 w-full">
-      <Skeleton className="h-7 w-48 rounded-md" />
-      <Skeleton className="h-7 w-24 rounded-md" />
-      <Skeleton className="h-7 w-24 rounded-md" />
-      <Skeleton className="h-7 w-24 rounded-md" />
+      <Skeleton className="h-8 w-48 rounded-md" />
+      <Skeleton className="h-8 w-24 rounded-md" />
+      <Skeleton className="h-8 w-24 rounded-md" />
+      <Skeleton className="h-8 w-24 rounded-md" />
     </div>
   );
 

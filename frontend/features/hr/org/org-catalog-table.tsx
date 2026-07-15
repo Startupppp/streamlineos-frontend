@@ -119,7 +119,7 @@ function UpsertDialog({
               value={name}
               onChange={handleNameChange}
               placeholder={`${title} name`}
-              className="h-8 text-sm"
+              className="text-sm"
               autoFocus
             />
           </div>
@@ -134,7 +134,7 @@ function UpsertDialog({
               value={code}
               onChange={handleCodeChange}
               placeholder="Short code"
-              className="h-8 text-sm font-mono"
+              className="text-sm font-mono"
             />
           </div>
           <DialogFooter className="pt-1">
@@ -220,11 +220,11 @@ export function OrgCatalogTable<T extends CatalogItem>({
             value={search}
             onChange={handleSearch}
             placeholder={`Search ${title.toLowerCase()}s...`}
-            className="h-8 pl-8 text-sm"
+            className="pl-8 text-sm"
           />
         </div>
         {canManage && (
-          <Button size="sm" className="h-8 gap-1.5" onClick={handleCreate}>
+          <Button size="sm" className="gap-1.5" onClick={handleCreate}>
             <Plus className="h-3.5 w-3.5" />
             Add {title}
           </Button>
@@ -279,7 +279,7 @@ export function OrgCatalogTable<T extends CatalogItem>({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7 shrink-0"
+                          className="w-7 shrink-0"
                         >
                           <MoreHorizontal className="h-3.5 w-3.5" />
                         </Button>

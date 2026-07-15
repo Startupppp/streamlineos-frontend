@@ -272,7 +272,7 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
             icon={FileText}
             title="Change Requests"
             actions={
-              <Button size="sm" className="h-7 text-[11px]" onClick={handleOpenCrSheet}>
+              <Button size="sm" className="text-[11px]" onClick={handleOpenCrSheet}>
                 <Plus className="mr-1 h-3.5 w-3.5" />
                 Submit Request
               </Button>

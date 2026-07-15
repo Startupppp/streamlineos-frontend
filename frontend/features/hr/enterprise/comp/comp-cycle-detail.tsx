@@ -152,7 +152,7 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
                   <div className="flex items-center gap-2">
                     <Input
                       type="number"
-                      className="h-8 w-28 text-xs"
+                      className="w-28 text-xs"
                       placeholder="Calibrated $"
                       value={calibrateValue[r.id] ?? ""}
                       onChange={(e) => setCalibrateValue((prev) => ({ ...prev, [r.id]: e.target.value }))}
@@ -160,7 +160,7 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
                     <LoadingButton
                       size="sm"
                       variant="outline"
-                      className="h-7 text-xs"
+                      className="text-xs"
                       isPending={calibratingId === r.id}
                       onClick={() => handleCalibrate(r)}
                     >

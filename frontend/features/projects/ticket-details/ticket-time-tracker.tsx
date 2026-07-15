@@ -137,17 +137,17 @@ export function TicketTimeTracker({ ticketId, projectId, timeSpent }: TicketTime
           <span>{formatElapsed(elapsed)}</span>
         </div>
         {!running ? (
-          <Button size="sm" variant="outline" className="h-7 text-xs px-3 gap-1" onClick={handleStart}>
+          <Button size="sm" variant="outline" className="text-xs px-3 gap-1" onClick={handleStart}>
             <Play className="h-3 w-3" />Start
           </Button>
         ) : (
           <>
-            <Button size="sm" variant="outline" className="h-7 text-xs px-3 gap-1" onClick={handleStop}>
+            <Button size="sm" variant="outline" className="text-xs px-3 gap-1" onClick={handleStop}>
               <Square className="h-3 w-3" />Stop
             </Button>
             <Button
               size="sm"
-              className="h-7 text-xs px-3"
+              className="text-xs px-3"
               onClick={handleSaveTimer}
               disabled={logTime.isPending}
             >
@@ -162,7 +162,7 @@ export function TicketTimeTracker({ ticketId, projectId, timeSpent }: TicketTime
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="What did you work on? (optional)"
-          className="h-8 text-xs mb-2"
+          className="text-xs mb-2"
         />
       )}
 
@@ -175,17 +175,17 @@ export function TicketTimeTracker({ ticketId, projectId, timeSpent }: TicketTime
             placeholder="Hours"
             value={manualHours}
             onChange={(e) => setManualHours(e.target.value)}
-            className="h-8 text-xs w-24"
+            className="text-xs w-24"
           />
           <Input
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Description (optional)"
-            className="h-8 text-xs flex-1"
+            className="text-xs flex-1"
           />
           <Button
             size="sm"
-            className="h-7 text-xs px-3 shrink-0"
+            className="text-xs px-3 shrink-0"
             onClick={handleLogManual}
             disabled={logTime.isPending}
           >

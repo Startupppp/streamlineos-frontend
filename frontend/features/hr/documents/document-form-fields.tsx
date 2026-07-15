@@ -258,7 +258,7 @@ export function DocumentFormFields({
             type="button"
             variant="outline"
             size="icon"
-            className="h-8 w-8 shrink-0"
+            className="w-8 shrink-0"
             onClick={onAddTag}
             disabled={!tagInput.trim()}
             aria-label="Add tag"
@@ -297,11 +297,11 @@ export function DocumentFormFields({
             <div className="space-y-0.5">
               <FormLabel className="flex items-center gap-2 text-sm font-medium cursor-pointer">
                 {field.value ? (
-                  <div className="h-7 w-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/40 flex items-center justify-center">
+                  <div className="w-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/40 flex items-center justify-center">
                     <Globe className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                   </div>
                 ) : (
-                  <div className="h-7 w-7 rounded-lg bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center">
+                  <div className="w-7 rounded-lg bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center">
                     <Shield className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
                   </div>
                 )}

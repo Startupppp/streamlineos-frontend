@@ -219,7 +219,7 @@ function ExpiryReportContent() {
       filters={
         <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
           <Select value={withinDaysParam} onValueChange={handleWithinDaysChange}>
-            <SelectTrigger className="h-8 w-[160px] min-w-0 text-xs shrink-0">
+            <SelectTrigger className="w-[160px] min-w-0 text-xs shrink-0">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -232,7 +232,7 @@ function ExpiryReportContent() {
           </Select>
 
           <Select value={statusParam || "all"} onValueChange={handleStatusChange}>
-            <SelectTrigger className="h-8 w-[160px] min-w-0 text-xs shrink-0">
+            <SelectTrigger className="w-[160px] min-w-0 text-xs shrink-0">
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>
@@ -246,7 +246,7 @@ function ExpiryReportContent() {
           </Select>
 
           <Select value={warehouseParam || "all"} onValueChange={handleWarehouseChange}>
-            <SelectTrigger className="h-8 w-[180px] min-w-0 text-xs shrink-0">
+            <SelectTrigger className="w-[180px] min-w-0 text-xs shrink-0">
               <SelectValue placeholder="All warehouses" />
             </SelectTrigger>
             <SelectContent>
@@ -262,7 +262,7 @@ function ExpiryReportContent() {
           <Button
             variant="outline"
             size="sm"
-            className="h-8 text-xs ml-auto shrink-0"
+            className="text-xs ml-auto shrink-0"
             onClick={handleExportClick}
             disabled={items.length === 0}
             aria-label="Export expiry report as CSV"

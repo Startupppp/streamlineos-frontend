@@ -240,7 +240,7 @@ export function IncentivesTab() {
       <div className="flex flex-1 min-h-0 flex-col gap-0 pt-3">
         <div className="flex items-center gap-2 flex-wrap mb-3">
           <Select value={istatus} onValueChange={handleStatusChange}>
-            <SelectTrigger className="h-8 text-sm w-40">
+            <SelectTrigger className="text-sm w-40">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

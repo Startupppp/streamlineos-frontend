@@ -122,11 +122,11 @@ function CommentRow({ comment, replies, pageId, onReply }: CommentRowProps) {
                   size="sm"
                   onClick={handleSaveEdit}
                   disabled={updateComment.isPending}
-                  className="h-7 text-xs"
+                  className="text-xs"
                 >
                   Save
                 </Button>
-                <Button size="sm" variant="ghost" onClick={handleCancelEdit} className="h-7 text-xs">
+                <Button size="sm" variant="ghost" onClick={handleCancelEdit} className="text-xs">
                   Cancel
                 </Button>
               </div>
@@ -245,7 +245,7 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
                     <Skeleton className="h-6 w-6 rounded-full shrink-0" />
                     <div className="flex-1 space-y-1">
                       <Skeleton className="h-3 w-24" />
-                      <Skeleton className="h-8 w-full" />
+                      <Skeleton className="h-4 w-full" />
                     </div>
                   </div>
                 ))}
@@ -308,7 +308,7 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
             <Button
               onClick={handlePost}
               disabled={!newContent.trim() || createComment.isPending}
-              className="h-8"
+              className=""
             >
               {createComment.isPending ? (
                 <KbLoader2Icon className="h-4 w-4 animate-spin" />

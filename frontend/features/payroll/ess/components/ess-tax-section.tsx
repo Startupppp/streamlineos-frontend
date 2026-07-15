@@ -143,7 +143,7 @@ function TaxDeclarationSheet({ open, onClose, financialYear, currentRegime, curr
                           min="0"
                           step="0.01"
                           placeholder="0"
-                          className="h-8 text-sm"
+                          className="text-sm"
                           {...field}
                           value={field.value ?? ""}
                         />
@@ -171,7 +171,7 @@ function TaxDeclarationSheet({ open, onClose, financialYear, currentRegime, curr
 function TaxSkeleton() {
   return (
     <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-      <Skeleton className="h-8 w-full rounded-md" />
+      <Skeleton className="h-9 w-full rounded-md" />
       <div className="space-y-2 mt-2">
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="flex items-center justify-between">
@@ -214,7 +214,7 @@ export function EssTaxSection() {
           Tax Declaration
         </h2>
         {windowOpen && (
-          <Button size="sm" variant="outline" className="h-7 text-xs gap-1.5" onClick={handleOpen}>
+          <Button size="sm" variant="outline" className="text-xs gap-1.5" onClick={handleOpen}>
             <Edit className="h-3 w-3" />
             {declaration ? "Edit" : "Submit"} Declaration
           </Button>

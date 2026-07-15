@@ -44,13 +44,13 @@ export default function NewInvoiceLoading() {
             {Array.from({ length: 12 }).map((_, i) => (
               <div key={i} className="space-y-2">
                 <Skeleton className="h-3 w-20" />
-                <Skeleton className="h-8 w-full rounded-md" />
+                <Skeleton className="h-9 w-full rounded-md" />
               </div>
             ))}
           </div>
           <div className="space-y-2">
             <Skeleton className="h-3 w-32" />
-            <Skeleton className="h-8 w-full rounded-md" />
+            <Skeleton className="h-9 w-full rounded-md" />
           </div>
         </div>
 

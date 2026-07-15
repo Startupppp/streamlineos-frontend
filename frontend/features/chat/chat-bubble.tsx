@@ -335,7 +335,7 @@ export function ChatBubble({
       {!isOwn && (
         <div className="w-7 shrink-0 self-end">
           {showSender ? (
-            <Avatar className="h-7 w-7 border border-border/30 shadow-sm">
+            <Avatar className="w-7 border border-border/30 shadow-sm">
               <AvatarImage src={resolveImageUrl(message.sender?.image)} />
               <AvatarFallback className="text-[8px] font-bold bg-muted text-muted-foreground">
                 {getInitials(senderName)}
@@ -713,7 +713,7 @@ export function ChatBubble({
                     <button
                       key={emoji}
                       onClick={() => handleQuickReact(emoji)}
-                      className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-muted/60 text-base transition-colors"
+                      className="w-7 flex items-center justify-center rounded-lg hover:bg-muted/60 text-base transition-colors"
                       aria-label={`React with ${emoji}`}
                     >
                       {emoji}

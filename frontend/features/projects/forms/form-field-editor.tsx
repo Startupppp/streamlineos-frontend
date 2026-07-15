@@ -87,7 +87,7 @@ export function FormFieldEditor({ fields, onChange }: FormFieldEditorProps) {
           onRemove={handleRemove}
         />
       ))}
-      <Button type="button" variant="outline" size="sm" className="h-7 text-xs w-full" onClick={handleAdd}>
+      <Button type="button" variant="outline" size="sm" className="text-xs w-full" onClick={handleAdd}>
         <Plus className="h-3.5 w-3.5 mr-1" />
         Add Field
       </Button>
@@ -141,10 +141,10 @@ const FieldRow = memo(function FieldRow({
           value={field.label}
           onChange={(e) => onLabelChange(index, e.target.value)}
           placeholder="Field label"
-          className="h-8 text-sm flex-1 min-w-0"
+          className="text-sm flex-1 min-w-0"
         />
         <Select value={field.type} onValueChange={handleTypeChange}>
-          <SelectTrigger className="h-8 w-36 text-xs shrink-0">
+          <SelectTrigger className="w-36 text-xs shrink-0">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -159,7 +159,7 @@ const FieldRow = memo(function FieldRow({
         </div>
         <Button
           type="button" variant="ghost" size="icon"
-          className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
+          className="w-7 shrink-0 text-muted-foreground hover:text-destructive"
           onClick={() => onRemove(index)} aria-label="Remove field"
         >
           <X className="h-3.5 w-3.5" />

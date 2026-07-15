@@ -332,7 +332,7 @@ export default function NewInvoicePage() {
                       Description
                     </Label>
                     <Input
-                      className="h-8 text-sm"
+                      className="text-sm"
                       placeholder="Description"
                       aria-label={`Description for item ${idx + 1}`}
                       {...register(`items.${idx}.description`)}
@@ -343,7 +343,7 @@ export default function NewInvoicePage() {
                       HSN/SAC
                     </Label>
                     <Input
-                      className="h-8 text-sm"
+                      className="text-sm"
                       placeholder="HSN/SAC"
                       aria-label={`HSN or SAC for item ${idx + 1}`}
                       {...register(`items.${idx}.hsnSacCode`)}
@@ -354,7 +354,7 @@ export default function NewInvoicePage() {
                       Qty
                     </Label>
                     <Input
-                      className="h-8 text-sm md:text-right"
+                      className="text-sm md:text-right"
                       type="number"
                       min={1}
                       placeholder="1"
@@ -369,7 +369,7 @@ export default function NewInvoicePage() {
                       Rate
                     </Label>
                     <Input
-                      className="h-8 text-sm md:text-right"
+                      className="text-sm md:text-right"
                       type="number"
                       min={0}
                       step="0.01"
@@ -395,7 +395,7 @@ export default function NewInvoicePage() {
                           }
                         >
                           <SelectTrigger
-                            className="h-8 text-sm"
+                            className="text-sm"
                             aria-label={`GST rate for item ${idx + 1}`}
                           >
                             <SelectValue placeholder="0%" />
@@ -459,7 +459,7 @@ export default function NewInvoicePage() {
                     value={posField.value ?? ""}
                     onValueChange={handlePlaceOfSupplyChange}
                   >
-                    <SelectTrigger id="place-of-supply" className="h-8 text-sm">
+                    <SelectTrigger id="place-of-supply" className="text-sm">
                       <SelectValue placeholder="Select state" />
                     </SelectTrigger>
                     <SelectContent>
@@ -500,7 +500,7 @@ export default function NewInvoicePage() {
               </Label>
               <Input
                 id="customer-gstin"
-                className="h-8 text-sm"
+                className="text-sm"
                 placeholder="22AAAAA0000A1Z5"
                 {...register("customerGstin")}
               />
@@ -516,7 +516,7 @@ export default function NewInvoicePage() {
               </Label>
               <Input
                 id="supplier-gstin"
-                className="h-8 text-sm"
+                className="text-sm"
                 placeholder="22AAAAA0000A1Z5"
                 {...register("supplierGstin")}
               />
@@ -580,7 +580,7 @@ export default function NewInvoicePage() {
                 type="number"
                 min={0}
                 step="0.01"
-                className="h-8 text-sm"
+                className="text-sm"
                 {...register("discount", { valueAsNumber: true })}
               />
               {errors.discount?.message && (
@@ -612,7 +612,7 @@ export default function NewInvoicePage() {
               </Label>
               <Input
                 id="currency"
-                className="h-8 text-sm"
+                className="text-sm"
                 placeholder="INR"
                 {...register("currency")}
               />
@@ -625,7 +625,7 @@ export default function NewInvoicePage() {
             <Input
               id="notes"
               placeholder="e.g. Payment due within 30 days. Bank: HDFC, A/C: 1234567890"
-              className="h-8 text-sm"
+              className="text-sm"
               {...register("notes")}
             />
           </div>
@@ -670,7 +670,7 @@ function LineItemRemoveButton({
       type="button"
       variant="ghost"
       size="icon"
-      className="h-7 w-7 text-muted-foreground hover:text-destructive"
+      className="w-7 text-muted-foreground hover:text-destructive"
       onClick={handleClick}
       disabled={disabled}
       aria-label={`Remove item ${idx + 1}`}

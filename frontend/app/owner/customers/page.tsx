@@ -12,7 +12,7 @@ export default function CustomersPage() {
       />
 
       <div className="rounded-2xl border border-border bg-card p-12 text-center">
-        <Building2 className="h-8 w-8 text-slate-300 mx-auto mb-1.5" />
+        <Building2 className="w-8 text-slate-300 mx-auto mb-1.5" />
         <p className="text-[14px] text-slate-600 font-medium">No customers yet.</p>
       </div>
     </div>

@@ -49,7 +49,7 @@ function RuleActions({ rule, onEdit, onDeactivate }: RuleActionsProps) {
       <Button
         variant="ghost"
         size="icon"
-        className="h-7 w-7"
+        className="w-7"
         onClick={handleEdit}
         aria-label="Edit rule"
       >
@@ -59,7 +59,7 @@ function RuleActions({ rule, onEdit, onDeactivate }: RuleActionsProps) {
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7 text-destructive hover:text-destructive"
+          className="w-7 text-destructive hover:text-destructive"
           onClick={handleDeactivate}
           aria-label="Deactivate rule"
         >

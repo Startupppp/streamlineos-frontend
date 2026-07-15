@@ -88,7 +88,7 @@ export default function ReceiptInboxPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-7 text-xs"
+                  className="text-xs"
                   onClick={handlePrev}
                   disabled={page === 1}
                 >
@@ -97,7 +97,7 @@ export default function ReceiptInboxPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-7 text-xs"
+                  className="text-xs"
                   onClick={handleNext}
                   disabled={page >= totalPages}
                 >

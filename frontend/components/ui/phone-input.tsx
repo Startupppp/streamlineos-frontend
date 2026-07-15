@@ -95,7 +95,7 @@ const CountrySelect = ({
         <Button
           type="button"
           variant="outline"
-          className="flex h-8 gap-1 rounded-e-none rounded-s-lg border border-input border-r-0 bg-card px-3 focus:z-10"
+          className="flex h-9 gap-1 rounded-e-none rounded-s-lg border border-input border-r-0 bg-card px-3 focus:z-10 outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring"
           disabled={disabled}
         >
           <FlagComponent

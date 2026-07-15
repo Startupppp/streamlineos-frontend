@@ -41,7 +41,7 @@ export const CopyButton = memo(function CopyButton({
       type="button"
       variant="ghost"
       size="icon"
-      className="h-7 w-7 shrink-0"
+      className="w-7 shrink-0"
       onClick={handleCopy}
       aria-label={`Copy ${label.toLowerCase()}`}
     >
@@ -118,7 +118,7 @@ export const ConnectionRow = memo(function ConnectionRow({
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 text-destructive hover:text-destructive"
+            className="w-7 text-destructive hover:text-destructive"
             onClick={handleDelete}
             aria-label="Delete connection"
           >
@@ -146,7 +146,7 @@ export const ConnectionRow = memo(function ConnectionRow({
               type="button"
               variant="ghost"
               size="icon"
-              className="h-7 w-7 shrink-0"
+              className="w-7 shrink-0"
               onClick={handleToggleReveal}
               aria-label={revealed ? "Hide secret" : "Reveal secret"}
             >

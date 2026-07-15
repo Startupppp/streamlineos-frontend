@@ -206,10 +206,10 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
           placeholder="Search incidents..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="h-8 w-44 text-[11px]"
+          className="w-44 text-[11px]"
         />
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="h-8 w-36 text-[11px]">
+          <SelectTrigger className="w-36 text-[11px]">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -222,7 +222,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
           </SelectContent>
         </Select>
         <Select value={severityFilter} onValueChange={setSeverityFilter}>
-          <SelectTrigger className="h-8 w-28 text-[11px]">
+          <SelectTrigger className="w-28 text-[11px]">
             <SelectValue placeholder="Severity" />
           </SelectTrigger>
           <SelectContent>
@@ -245,7 +245,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
       filters={filtersBar}
       actions={
         canManage ? (
-          <Button size="sm" className="h-7 text-[11px]" onClick={handleNew}>
+          <Button size="sm" className="text-[11px]" onClick={handleNew}>
             <Plus className="h-3.5 w-3.5 mr-1" />
             New Incident
           </Button>

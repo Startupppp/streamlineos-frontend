@@ -55,7 +55,7 @@ function NumberField({
           <FormControl>
             <Input
               type="number"
-              className="h-8 text-xs"
+              className="text-xs"
               value={(field.value as number) ?? 0}
               onChange={(e) => field.onChange(Number(e.target.value))}
               disabled={disabled}
@@ -126,7 +126,7 @@ function SelectField({
             disabled={disabled}
           >
             <FormControl>
-              <SelectTrigger className="h-8 text-xs">
+              <SelectTrigger className="text-xs">
                 <SelectValue />
               </SelectTrigger>
             </FormControl>

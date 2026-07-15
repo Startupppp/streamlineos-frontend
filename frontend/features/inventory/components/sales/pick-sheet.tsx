@@ -125,7 +125,7 @@ export function PickSheet({ open, onOpenChange, soId, lines }: PickSheetProps) {
                   value={field.value ? String(field.value) : ""}
                   onValueChange={(val) => handleWarehouseChange(val, field.onChange)}
                 >
-                  <SelectTrigger className="h-8 text-sm">
+                  <SelectTrigger className="text-sm">
                     <SelectValue placeholder="Select…" />
                   </SelectTrigger>
                   <SelectContent>
@@ -155,7 +155,7 @@ export function PickSheet({ open, onOpenChange, soId, lines }: PickSheetProps) {
                   onValueChange={(val) => field.onChange(Number(val))}
                   disabled={!watchedWarehouseId}
                 >
-                  <SelectTrigger className="h-8 text-sm">
+                  <SelectTrigger className="text-sm">
                     <SelectValue placeholder="Select…" />
                   </SelectTrigger>
                   <SelectContent>
@@ -189,7 +189,7 @@ export function PickSheet({ open, onOpenChange, soId, lines }: PickSheetProps) {
                   type="number"
                   min="0"
                   step="0.001"
-                  className="h-8 text-xs text-right"
+                  className="text-xs text-right"
                   {...form.register(`lines.${idx}.quantityPicked`, { valueAsNumber: true })}
                 />
               </div>

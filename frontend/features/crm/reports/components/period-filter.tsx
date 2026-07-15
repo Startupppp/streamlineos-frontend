@@ -26,7 +26,7 @@ export function PeriodFilter({ period, onPeriodChange }: PeriodFilterProps) {
           data-period={opt.value}
           variant={period === opt.value ? "default" : "outline"}
           size="sm"
-          className="h-7 text-xs px-3"
+          className="text-xs px-3"
           onClick={handleButtonClick}
         >
           {opt.label}

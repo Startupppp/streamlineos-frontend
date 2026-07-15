@@ -116,7 +116,7 @@ export function ColumnColorPicker({
             value={nativeColorValue}
             onChange={handleNativeColorChange}
             aria-label="Pick custom color"
-            className="h-8 w-8 shrink-0 cursor-pointer rounded border border-input bg-card p-0.5"
+            className="w-8 shrink-0 cursor-pointer rounded border border-input bg-card p-0.5"
           />
           <Input
             value={displayHex}
@@ -124,7 +124,7 @@ export function ColumnColorPicker({
             onBlur={handleHexBlur}
             onKeyDown={handleHexKeyDown}
             placeholder="#3b82f6"
-            className="h-8 flex-1 font-mono text-xs"
+            className="flex-1 font-mono text-xs"
             maxLength={7}
             spellCheck={false}
             aria-label="Hex color value"

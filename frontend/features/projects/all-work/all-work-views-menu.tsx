@@ -4,11 +4,27 @@ import { useState, useCallback, useTransition } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { Bookmark, BookmarkCheck, ChevronDown, Pin, PinOff, Trash2, Users, Lock } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Bookmark,
+  BookmarkCheck,
+  ChevronDown,
+  Pin,
+  PinOff,
+  Trash2,
+  Users,
+  Lock,
+} from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { SaveViewDialog, type SaveViewMeta } from "@/features/projects/views/save-view-dialog";
+import {
+  SaveViewDialog,
+  type SaveViewMeta,
+} from "@/features/projects/views/save-view-dialog";
 import {
   useWorkspaceViews,
   useCreateWorkspaceView,
@@ -32,7 +48,9 @@ const FILTER_KEYS = [
   "dueDateTo",
 ] as const;
 
-function buildCurrentFilters(searchParams: ReturnType<typeof useSearchParams>): Record<string, string> {
+function buildCurrentFilters(
+  searchParams: ReturnType<typeof useSearchParams>,
+): Record<string, string> {
   const result: Record<string, string> = {};
   for (const key of FILTER_KEYS) {
     const val = searchParams.get(key);
@@ -82,8 +100,15 @@ interface ViewRowProps {
   onDelete: (view: ProjectView) => void;
 }
 
-function ViewRow({ view, currentUserId, onApply, onTogglePin, onDelete }: ViewRowProps) {
-  const isOwner = !view.createdBy || !currentUserId || view.createdBy === currentUserId;
+function ViewRow({
+  view,
+  currentUserId,
+  onApply,
+  onTogglePin,
+  onDelete,
+}: ViewRowProps) {
+  const isOwner =
+    !view.createdBy || !currentUserId || view.createdBy === currentUserId;
   const isShared = view.visibility === "shared";
 
   function handleApply(e: React.MouseEvent) {
@@ -106,13 +131,25 @@ function ViewRow({ view, currentUserId, onApply, onTogglePin, onDelete }: ViewRo
       role="button"
       tabIndex={0}
       onClick={handleApply}
-      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onApply(view); } }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onApply(view);
+        }
+      }}
       className="group flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-xs hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:bg-accent transition-colors"
     >
       <span className="flex-1 truncate font-medium">{view.name}</span>
 
-      <span className="shrink-0 text-muted-foreground group-hover:text-accent-foreground" title={isShared ? "Shared" : "Personal"}>
-        {isShared ? <Users className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
+      <span
+        className="shrink-0 text-muted-foreground group-hover:text-accent-foreground"
+        title={isShared ? "Shared" : "Personal"}
+      >
+        {isShared ? (
+          <Users className="h-3 w-3" />
+        ) : (
+          <Lock className="h-3 w-3" />
+        )}
       </span>
 
       {isOwner && (
@@ -123,7 +160,11 @@ function ViewRow({ view, currentUserId, onApply, onTogglePin, onDelete }: ViewRo
             title={view.isPinned ? "Unpin" : "Pin"}
             className="shrink-0 rounded p-0.5 text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-foreground transition-opacity"
           >
-            {view.isPinned ? <PinOff className="h-3 w-3" /> : <Pin className="h-3 w-3" />}
+            {view.isPinned ? (
+              <PinOff className="h-3 w-3" />
+            ) : (
+              <Pin className="h-3 w-3" />
+            )}
           </button>
           <button
             type="button"
@@ -144,7 +185,10 @@ interface AllWorkViewsMenuProps {
   hasActiveFilters: boolean;
 }
 
-export function AllWorkViewsMenu({ activeView, hasActiveFilters }: AllWorkViewsMenuProps) {
+export function AllWorkViewsMenu({
+  activeView,
+  hasActiveFilters,
+}: AllWorkViewsMenuProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -199,9 +243,12 @@ export function AllWorkViewsMenu({ activeView, hasActiveFilters }: AllWorkViewsM
     setOpen(false);
   }, []);
 
-  const handleSaveNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSaveName(e.target.value);
-  }, []);
+  const handleSaveNameChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setSaveName(e.target.value);
+    },
+    [],
+  );
 
   const handleSaveView = useCallback(
     (meta?: SaveViewMeta) => {
@@ -238,7 +285,7 @@ export function AllWorkViewsMenu({ activeView, hasActiveFilters }: AllWorkViewsM
           <PopoverTrigger asChild>
             <Button
               variant="outline"
-              className="h-8 shrink-0 gap-1 bg-card border-border px-2.5 text-xs font-normal shadow-xs"
+              className="shrink-0 gap-1 bg-card border-border px-2.5 text-xs font-normal shadow-xs"
             >
               <BookmarkCheck className="h-3.5 w-3.5 shrink-0" />
               <span>Views</span>
@@ -249,7 +296,7 @@ export function AllWorkViewsMenu({ activeView, hasActiveFilters }: AllWorkViewsM
             {isLoading && (
               <div className="space-y-1 p-1">
                 {Array.from({ length: 3 }).map((_, i) => (
-                  <Skeleton key={i} className="h-7 w-full rounded" />
+                  <Skeleton key={i} className="h-4 w-full rounded" />
                 ))}
               </div>
             )}
@@ -279,7 +326,9 @@ export function AllWorkViewsMenu({ activeView, hasActiveFilters }: AllWorkViewsM
             )}
             {hasActiveFilters && (
               <>
-                <div className={cn("border-t border-border", hasViews && "mt-1")} />
+                <div
+                  className={cn("border-t border-border", hasViews && "mt-1")}
+                />
                 <button
                   type="button"
                   onClick={handleOpenSave}

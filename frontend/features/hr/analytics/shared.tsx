@@ -85,7 +85,7 @@ export function SectionSkeleton({ rows = 8 }: { rows?: number }) {
       <CardContent className="space-y-3 p-4">
         <Skeleton className="h-4 w-32" />
         {Array.from({ length: rows }).map((_, i) => (
-          <Skeleton key={i} className="h-8 w-full" />
+          <Skeleton key={i} className="h-4 w-full" />
         ))}
       </CardContent>
     </Card>

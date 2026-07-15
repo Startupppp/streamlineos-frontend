@@ -81,7 +81,7 @@ export function ReferralsTab({ candidateId }: Props) {
         </p>
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetTrigger asChild>
-            <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs">
+            <Button size="sm" variant="outline" className="gap-1.5 text-xs">
               <Plus className="h-3.5 w-3.5" />
               Record Referral
             </Button>
@@ -146,7 +146,7 @@ export function ReferralsTab({ candidateId }: Props) {
                     </Badge>
                   )}
                   {r.bonusEligible && !r.bonusPaidAt && (
-                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => handleMarkPaid(r.id)} disabled={updateReferral.isPending}>
+                    <Button size="sm" variant="outline" className="text-xs" onClick={() => handleMarkPaid(r.id)} disabled={updateReferral.isPending}>
                       Mark paid
                     </Button>
                   )}

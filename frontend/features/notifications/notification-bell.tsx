@@ -4,7 +4,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Inbox } from "lucide-react";
-import { BellIcon, BellRingIcon, CheckCheckIcon } from "@animateicons/react/lucide";
+import {
+  BellIcon,
+  BellRingIcon,
+  CheckCheckIcon,
+} from "@animateicons/react/lucide";
 import {
   Popover,
   PopoverContent,
@@ -107,7 +111,7 @@ function PopoverSkeleton() {
     <div className="space-y-0.5 px-1">
       {[1, 2, 3].map((i) => (
         <div key={i} className="flex items-start gap-2.5 px-2 py-2">
-          <Skeleton className="h-7 w-7 rounded-md shrink-0" />
+          <Skeleton className="h-7 w-7 rounded-md shrink-0" />{" "}
           <div className="flex-1 space-y-1">
             <Skeleton className="h-3 w-32" />
             <Skeleton className="h-2.5 w-full max-w-40" />
@@ -191,8 +195,16 @@ export function NotificationBell() {
         <button
           type="button"
           aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ""}`}
-          onMouseEnter={enableHoverOpen ? handleHoverEnter : bellAnimated.hoverHandlers.onMouseEnter}
-          onMouseLeave={enableHoverOpen ? handleHoverLeave : bellAnimated.hoverHandlers.onMouseLeave}
+          onMouseEnter={
+            enableHoverOpen
+              ? handleHoverEnter
+              : bellAnimated.hoverHandlers.onMouseEnter
+          }
+          onMouseLeave={
+            enableHoverOpen
+              ? handleHoverLeave
+              : bellAnimated.hoverHandlers.onMouseLeave
+          }
           className="relative h-8 w-8 rounded-lg flex items-center justify-center text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
         >
           {unreadCount > 0 ? (
@@ -236,7 +248,7 @@ export function NotificationBell() {
             <PopoverSkeleton />
           ) : isError ? (
             <div className="flex flex-col items-center justify-center py-8 text-center px-4">
-              <Inbox className="h-8 w-8 text-muted-foreground/30 mb-2" />
+              <Inbox className="w-8 text-muted-foreground/30 mb-2" />
               <p className="text-sm font-medium text-foreground">
                 Couldn&apos;t load notifications
               </p>
@@ -249,7 +261,7 @@ export function NotificationBell() {
             </div>
           ) : recentNotifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center px-4">
-              <Inbox className="h-8 w-8 text-muted-foreground/30 mb-2" />
+              <Inbox className="w-8 text-muted-foreground/30 mb-2" />
               <p className="text-sm font-medium text-foreground">
                 You&apos;re all caught up
               </p>

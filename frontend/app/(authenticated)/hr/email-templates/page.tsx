@@ -275,7 +275,7 @@ function EmailTemplatesContent() {
     return (
       <PageWrapper title="Email Templates" subtitle="Manage HR email templates">
         <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
-          <AlertCircle className="h-8 w-8 text-destructive" />
+          <AlertCircle className="w-8 text-destructive" />
           <div>
             <p className="text-sm font-medium text-foreground">Failed to load email templates</p>
             <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
@@ -291,7 +291,7 @@ function EmailTemplatesContent() {
       title="Email Templates"
       subtitle="Manage reusable email templates for HR communications"
       actions={
-        <Button size="sm" className="h-8 gap-1.5" onClick={handleOpenSheet}>
+        <Button size="sm" className="gap-1.5" onClick={handleOpenSheet}>
           <Plus className="h-3.5 w-3.5" />
           New Template
         </Button>

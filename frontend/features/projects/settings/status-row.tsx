@@ -307,7 +307,7 @@ export const StatusRow = memo(function StatusRow({
           onValueChange={handleTypeChange}
           disabled={updateState.isPending}
         >
-          <SelectTrigger className="h-8 w-[118px] shrink-0 text-[11px]">
+          <SelectTrigger className="w-[118px] shrink-0 text-[11px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

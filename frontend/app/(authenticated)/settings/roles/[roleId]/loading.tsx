@@ -19,12 +19,12 @@ export default function RoleEditorLoading() {
                 <Skeleton className="h-2.5 w-8" />
                 <Skeleton className="h-4 w-24" />
               </div>
-              <Separator orientation="vertical" className="h-8 hidden sm:block" />
+              <Separator orientation="vertical" className="hidden sm:block" />
               <div className="space-y-1.5">
                 <Skeleton className="h-2.5 w-12" />
                 <Skeleton className="h-4 w-28" />
               </div>
-              <Separator orientation="vertical" className="h-8 hidden sm:block" />
+              <Separator orientation="vertical" className="hidden sm:block" />
               <div className="space-y-1.5">
                 <Skeleton className="h-2.5 w-14" />
                 <Skeleton className="h-4 w-6" />
@@ -39,7 +39,7 @@ export default function RoleEditorLoading() {
               <Skeleton className="h-5 w-40" />
               <Skeleton className="h-3 w-48" />
             </div>
-            <Skeleton className="h-8 w-24" />
+            <Skeleton className="h-4 w-24" />
           </div>
           <Separator />
           <div className="divide-y divide-border/30">

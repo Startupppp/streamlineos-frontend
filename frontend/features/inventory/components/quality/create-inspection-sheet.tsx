@@ -100,7 +100,7 @@ export function CreateInspectionSheet({ open, onOpenChange }: Props) {
               Source <span className="font-normal text-muted-foreground">(optional)</span>
             </Label>
             <Input
-              className="h-8 text-xs"
+              className="text-xs"
               placeholder="e.g. GRN-001, manual"
               {...form.register("source")}
             />

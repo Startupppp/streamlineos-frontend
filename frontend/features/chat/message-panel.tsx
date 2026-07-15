@@ -966,7 +966,7 @@ export function MessagePanel({
             <Button
               variant="ghost"
               size="icon"
-              className={cn("h-8 w-8 rounded-lg", showInfoPanel && "bg-muted")}
+              className={cn("w-8 rounded-lg", showInfoPanel && "bg-muted")}
               onClick={onToggleInfo}
               aria-label="Toggle member info"
             >

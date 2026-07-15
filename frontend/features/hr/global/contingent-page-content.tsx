@@ -55,7 +55,7 @@ function CertificateViewer({ contractId }: { contractId: number }) {
       <Button
         variant="ghost"
         size="sm"
-        className="h-7 text-xs gap-1"
+        className="text-xs gap-1"
         onClick={() => setEnabled(true)}
       >
         <FileText className="h-3 w-3" />
@@ -134,18 +134,18 @@ export function ContingentPageContent() {
               </div>
               <ContractStatusBadge status={contract.status} />
               <div className="flex items-center gap-1">
-                <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => handleOpenEdit(contract)}>Edit</Button>
+                <Button variant="ghost" size="sm" className="text-xs" onClick={() => handleOpenEdit(contract)}>Edit</Button>
                 {contract.contractType === "intern" && contract.status !== "ended" && (
                   <CertificateViewer contractId={contract.id} />
                 )}
                 {["contractor", "consultant", "intern", "temporary", "agency", "freelancer"].includes(contract.contractType) &&
                   contract.status === "active" && (
-                    <Button variant="ghost" size="sm" className="h-7 text-xs text-primary hover:text-primary/80" onClick={() => setConvertContractId(contract.id)}>
+                    <Button variant="ghost" size="sm" className="text-xs text-primary hover:text-primary/80" onClick={() => setConvertContractId(contract.id)}>
                       Convert
                     </Button>
                   )}
                 {contract.status === "active" && (
-                  <Button variant="ghost" size="sm" className="h-7 text-xs text-red-600 hover:text-red-700" onClick={() => setEndContractId(contract.id)}>
+                  <Button variant="ghost" size="sm" className="text-xs text-red-600 hover:text-red-700" onClick={() => setEndContractId(contract.id)}>
                     End
                   </Button>
                 )}

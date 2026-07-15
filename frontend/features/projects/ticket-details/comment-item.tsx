@@ -232,7 +232,7 @@ function CommentItemComponent({
                 size="sm"
                 variant="ghost"
                 onClick={handleCancelEdit}
-                className="h-7 px-2 text-xs"
+                className="px-2 text-xs"
                 disabled={isSavingEdit}
               >
                 <X className="h-3 w-3 mr-1" />
@@ -242,7 +242,7 @@ function CommentItemComponent({
                 size="sm"
                 onClick={handleSaveEdit}
                 disabled={!editText.trim() || isSavingEdit}
-                className="h-7 px-2 text-xs"
+                className="px-2 text-xs"
               >
                 {isSavingEdit ? (
                   <Loader2 className="h-3 w-3 mr-1 animate-spin" />
@@ -362,7 +362,7 @@ function CommentItemComponent({
                 size="sm"
                 variant="ghost"
                 onClick={onCancelReply}
-                className="h-7 px-2 text-xs"
+                className="px-2 text-xs"
               >
                 Cancel
               </Button>
@@ -370,7 +370,7 @@ function CommentItemComponent({
                 size="sm"
                 onClick={handleReplySubmitClick}
                 disabled={!replyText.trim() || isReplyPending}
-                className="h-7 px-2 text-xs"
+                className="px-2 text-xs"
               >
                 {isReplyPending ? (
                   <Loader2 className="h-3 w-3 mr-1 animate-spin" />

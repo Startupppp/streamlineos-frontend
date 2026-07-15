@@ -165,7 +165,7 @@ function SlowMovingReportContent() {
       filters={
         <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
           <Select value={daysParam} onValueChange={handleDaysChange}>
-            <SelectTrigger className="h-8 w-[180px] min-w-0 text-xs shrink-0">
+            <SelectTrigger className="w-[180px] min-w-0 text-xs shrink-0">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -179,7 +179,7 @@ function SlowMovingReportContent() {
           <Button
             variant="outline"
             size="sm"
-            className="h-8 text-xs ml-auto shrink-0"
+            className="text-xs ml-auto shrink-0"
             onClick={handleExportClick}
             disabled={items.length === 0}
             aria-label="Export slow-moving report as CSV"

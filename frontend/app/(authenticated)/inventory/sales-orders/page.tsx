@@ -138,7 +138,7 @@ const columns: DataTableColumn<SalesOrderListItem>[] = [
     key: "actions",
     header: "",
     cell: (so) => (
-      <Button variant="ghost" size="sm" className="h-7 text-xs" asChild>
+      <Button variant="ghost" size="sm" className="text-xs" asChild>
         <Link href={`/inventory/sales-orders/${so.id}`}>View</Link>
       </Button>
     ),

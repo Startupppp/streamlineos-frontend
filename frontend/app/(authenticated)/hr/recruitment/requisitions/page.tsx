@@ -111,8 +111,8 @@ function RequisitionCardSkeleton() {
       <div className="flex items-center justify-between pt-2 border-t border-border/60">
         <Skeleton className="h-3 w-28" />
         <div className="flex gap-2">
-          <Skeleton className="h-7 w-16 rounded-lg" />
-          <Skeleton className="h-7 w-24 rounded-lg" />
+          <Skeleton className="h-4 w-16 rounded-lg" />
+          <Skeleton className="h-4 w-24 rounded-lg" />
         </div>
       </div>
     </div>
@@ -401,7 +401,7 @@ function CreateRequisitionSheet({ open, onClose }: CreateRequisitionSheetProps) 
                 <FormItem>
                   <FormLabel>Target Hire Date</FormLabel>
                   <FormControl>
-                    <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+                    <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -522,7 +522,7 @@ function RequisitionCard({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                className="w-7 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
               >
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
@@ -606,7 +606,7 @@ function RequisitionCard({
               <Button
                 size="sm"
                 variant="outline"
-                className="h-7 text-xs"
+                className="text-xs"
                 onClick={handleSubmitClick}
                 disabled={isSubmitting}
               >
@@ -619,7 +619,7 @@ function RequisitionCard({
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-7 text-xs border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-500/30 dark:text-emerald-300 dark:hover:bg-emerald-500/10"
+                  className="text-xs border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-500/30 dark:text-emerald-300 dark:hover:bg-emerald-500/10"
                   onClick={handleApproveClick}
                   disabled={isApproving}
                 >
@@ -629,7 +629,7 @@ function RequisitionCard({
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-7 text-xs border-rose-200 text-rose-700 hover:bg-rose-50 dark:border-rose-500/30 dark:text-rose-300 dark:hover:bg-rose-500/10"
+                  className="text-xs border-rose-200 text-rose-700 hover:bg-rose-50 dark:border-rose-500/30 dark:text-rose-300 dark:hover:bg-rose-500/10"
                   onClick={handleRejectClick}
                 >
                   <XCircle className="mr-1 h-3 w-3" />
@@ -640,7 +640,7 @@ function RequisitionCard({
             {req.status === "APPROVED" && (
               <Button
                 size="sm"
-                className="h-7 text-xs"
+                className="text-xs"
                 onClick={handleConvertToJob}
                 disabled={isConverting || alreadyConverted}
               >

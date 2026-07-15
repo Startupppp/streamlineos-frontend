@@ -321,17 +321,17 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
                   onChange={handleTitleChange}
                   placeholder="New story title..."
                   aria-label={`Add new story to ${epic.title}`}
-                  className="h-8 min-w-0 flex-1 border-border/70 bg-background/60 text-xs backdrop-blur-sm"
+                  className="min-w-0 flex-1 border-border/70 bg-background/60 text-xs backdrop-blur-sm"
                   onKeyDown={handleTitleKeyDown}
                 />
-                <Button size="sm" className="h-7 px-2.5 text-xs" onClick={handleAddStory} disabled={!newStoryTitle.trim()}>
+                <Button size="sm" className="px-2.5 text-xs" onClick={handleAddStory} disabled={!newStoryTitle.trim()}>
                   <Plus className="mr-1 h-3.5 w-3.5" />
                   Add
                 </Button>
                 {unlinkedStories.length > 0 ? (
                   <Popover open={linkOpen} onOpenChange={setLinkOpen}>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" size="sm" className="h-7 border-border/70 bg-background/60 px-2.5 text-xs backdrop-blur-sm">
+                      <Button variant="outline" size="sm" className=" border-border/70 bg-background/60 px-2.5 text-xs backdrop-blur-sm">
                         <Link2 className="mr-1 h-3.5 w-3.5" />
                         Link
                       </Button>

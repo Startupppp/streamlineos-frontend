@@ -117,7 +117,7 @@ export function CreateProgramSheet({ open, onOpenChange }: Props) {
                   Program Name
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. Safety & Compliance 2026" className="h-8 text-sm" {...field} />
+                  <Input placeholder="e.g. Safety & Compliance 2026" className="text-sm" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -157,7 +157,7 @@ export function CreateProgramSheet({ open, onOpenChange }: Props) {
                   </FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger className="h-8 text-sm">
+                      <SelectTrigger className="text-sm">
                         <SelectValue />
                       </SelectTrigger>
                     </FormControl>
@@ -182,7 +182,7 @@ export function CreateProgramSheet({ open, onOpenChange }: Props) {
                   </FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger className="h-8 text-sm">
+                      <SelectTrigger className="text-sm">
                         <SelectValue />
                       </SelectTrigger>
                     </FormControl>
@@ -209,7 +209,7 @@ export function CreateProgramSheet({ open, onOpenChange }: Props) {
                     Start Date
                   </FormLabel>
                   <FormControl>
-                    <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+                    <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -226,7 +226,7 @@ export function CreateProgramSheet({ open, onOpenChange }: Props) {
                     <span className="normal-case font-normal text-muted-foreground tracking-normal">(optional)</span>
                   </FormLabel>
                   <FormControl>
-                    <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+                    <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -244,7 +244,7 @@ export function CreateProgramSheet({ open, onOpenChange }: Props) {
                   <span className="normal-case font-normal text-muted-foreground tracking-normal">(optional)</span>
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. Conference Room A, Floor 3" className="h-8 text-sm" {...field} />
+                  <Input placeholder="e.g. Conference Room A, Floor 3" className="text-sm" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -261,7 +261,7 @@ export function CreateProgramSheet({ open, onOpenChange }: Props) {
                   <span className="normal-case font-normal text-muted-foreground tracking-normal">(optional)</span>
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="https://meet.google.com/..." className="h-8 text-sm" {...field} />
+                  <Input placeholder="https://meet.google.com/..." className="text-sm" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -278,7 +278,7 @@ export function CreateProgramSheet({ open, onOpenChange }: Props) {
                   <span className="normal-case font-normal text-muted-foreground tracking-normal">(optional)</span>
                 </FormLabel>
                 <FormControl>
-                  <Input type="number" min={1} placeholder="e.g. 30" className="h-8 text-sm" {...field} />
+                  <Input type="number" min={1} placeholder="e.g. 30" className="text-sm" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

@@ -151,7 +151,7 @@ export default function LearningPathsPage() {
     return (
       <PageWrapper title="Learning Paths" subtitle="Structured learning programs">
         <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
-          <AlertCircle className="h-8 w-8 text-destructive" />
+          <AlertCircle className="w-8 text-destructive" />
           <div>
             <p className="text-sm font-medium text-foreground">Failed to load learning paths</p>
             <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
@@ -179,7 +179,7 @@ export default function LearningPathsPage() {
       {!paths?.length ? (
         <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
           <EmptyState
-            illustration={<GraduationCap className="h-8 w-8 text-muted-foreground" />}
+            illustration={<GraduationCap className="w-8 text-muted-foreground" />}
             title="No learning paths available"
             description="Create structured learning programs to support career development."
           />
@@ -198,7 +198,7 @@ export default function LearningPathsPage() {
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2 min-w-0">
-                      <div className="h-7 w-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/40 flex items-center justify-center shrink-0">
+                      <div className="w-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/40 flex items-center justify-center shrink-0">
                         <GraduationCap className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                       </div>
                       <h3 className="text-sm font-semibold text-foreground leading-tight truncate">

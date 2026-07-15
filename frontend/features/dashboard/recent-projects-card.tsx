@@ -54,7 +54,7 @@ export const RecentProjectsCard = memo(function RecentProjectsCard({ projects, i
               <Link key={project.id} href={`/projects/${project.id}`}>
                 <div className="flex items-center justify-between p-2 rounded-lg border border-border hover:bg-muted/50 hover:border-primary/30 transition-colors cursor-pointer">
                   <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <div className="w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                       <Folder className="h-4 w-4 text-primary" aria-hidden="true" />
                     </div>
                     <div>

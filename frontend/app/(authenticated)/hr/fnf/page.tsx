@@ -157,7 +157,7 @@ function FnfCard({ item, onMarkPaid, isPending }: FnfCardProps) {
             <Button
               size="sm"
               variant="outline"
-              className="h-7 text-xs shrink-0 gap-1.5 duration-200"
+              className="text-xs shrink-0 gap-1.5 duration-200"
               onClick={handleMarkPaid}
               disabled={isPending}
             >
@@ -320,7 +320,7 @@ function FnfContent() {
       subtitle="Manage full and final settlements for separated employees"
       badge={`${items?.length ?? 0} settlements`}
       actions={
-        <Button size="sm" onClick={handleOpenSheet} className="h-8 gap-1.5">
+        <Button size="sm" onClick={handleOpenSheet} className="gap-1.5">
           <Plus className="h-3.5 w-3.5" />
           New Settlement
         </Button>

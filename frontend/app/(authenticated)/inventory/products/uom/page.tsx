@@ -315,12 +315,12 @@ function UomPageInner() {
           value={search}
           onChange={handleSearchChange}
           placeholder="Search units..."
-          className="h-8 w-full min-w-0 pl-8 text-xs"
+          className="w-full min-w-0 pl-8 text-xs"
         />
       </div>
       <div className="hidden min-w-0 items-center gap-2 sm:flex">
         <Select value={statusParam} onValueChange={handleStatusChange}>
-          <SelectTrigger className="h-8 w-[140px] text-xs">
+          <SelectTrigger className="w-[140px] text-xs">
             <SelectValue placeholder="All" />
           </SelectTrigger>
           <SelectContent>

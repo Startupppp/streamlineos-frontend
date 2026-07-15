@@ -206,7 +206,7 @@ export function PIPTab() {
               <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-2 min-w-0">
-                    <Avatar className="h-7 w-7 shrink-0">
+                    <Avatar className="w-7 shrink-0">
                       <AvatarImage src={resolveImageUrl(pip.user?.image ?? null)} />
                       <AvatarFallback className="text-[9px] bg-primary/10 text-primary">{pip.user?.name?.[0] ?? "?"}</AvatarFallback>
                     </Avatar>
@@ -231,7 +231,7 @@ export function PIPTab() {
                     </Badge>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-7 w-7"><MoreHorizontal className="h-3.5 w-3.5" /></Button>
+                        <Button variant="ghost" size="icon" className="w-7"><MoreHorizontal className="h-3.5 w-3.5" /></Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => handleOpenEdit(pip)}>
@@ -351,17 +351,17 @@ export function PIPTab() {
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Start Date <span className="text-destructive">*</span></label>
-            <DatePicker value={startDate ?? ""} onChange={handleStartDateChange} disabled={!!editingPip} placeholder="Pick a date" className="h-8 text-sm" />
+            <DatePicker value={startDate ?? ""} onChange={handleStartDateChange} disabled={!!editingPip} placeholder="Pick a date" className="text-sm" />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">End Date <span className="text-destructive">*</span></label>
-            <DatePicker value={endDate ?? ""} onChange={handleEndDateChange} placeholder="Pick a date" className="h-8 text-sm" />
+            <DatePicker value={endDate ?? ""} onChange={handleEndDateChange} placeholder="Pick a date" className="text-sm" />
           </div>
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <label className="text-sm font-medium">Objectives <span className="text-destructive">*</span></label>
-            <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={addObjective}>
+            <Button type="button" variant="outline" size="sm" className="text-xs" onClick={addObjective}>
               <Plus className="h-3 w-3 mr-1" />Add
             </Button>
           </div>
@@ -376,9 +376,9 @@ export function PIPTab() {
                     </Button>
                   )}
                 </div>
-                <Input placeholder="Goal / objective" value={obj.objective} onChange={(e) => updateObjectiveField(idx, "objective", e.target.value)} className="h-8 text-xs" />
-                <Input placeholder="Success metric" value={obj.metric} onChange={(e) => updateObjectiveField(idx, "metric", e.target.value)} className="h-8 text-xs" />
-                <DatePicker value={obj.deadline ?? ""} onChange={(v) => updateObjectiveField(idx, "deadline", v)} placeholder="Pick a date" className="h-8 text-xs" />
+                <Input placeholder="Goal / objective" value={obj.objective} onChange={(e) => updateObjectiveField(idx, "objective", e.target.value)} className="text-xs" />
+                <Input placeholder="Success metric" value={obj.metric} onChange={(e) => updateObjectiveField(idx, "metric", e.target.value)} className="text-xs" />
+                <DatePicker value={obj.deadline ?? ""} onChange={(v) => updateObjectiveField(idx, "deadline", v)} placeholder="Pick a date" className="text-xs" />
               </div>
             ))}
           </div>

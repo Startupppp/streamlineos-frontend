@@ -233,12 +233,12 @@ export default function StockLevelsPage() {
           placeholder="Search product or SKU…"
           value={searchInput}
           onChange={handleSearchChange}
-          className="h-8 w-full pl-8 text-xs"
+          className="w-full pl-8 text-xs"
         />
       </div>
       <div className="flex min-w-0 flex-row flex-nowrap items-center gap-2">
         <Select value={warehouseParam} onValueChange={handleWarehouseChange}>
-          <SelectTrigger className="h-8 text-xs w-[160px]">
+          <SelectTrigger className="text-xs w-[160px]">
             <SelectValue placeholder="All warehouses" />
           </SelectTrigger>
           <SelectContent>
@@ -252,7 +252,7 @@ export default function StockLevelsPage() {
         </Select>
         {warehouseId && locationsData.length > 0 && (
           <Select value={locationParam} onValueChange={handleLocationChange}>
-            <SelectTrigger className="h-8 text-xs w-[160px]">
+            <SelectTrigger className="text-xs w-[160px]">
               <SelectValue placeholder="All locations" />
             </SelectTrigger>
             <SelectContent>
@@ -266,7 +266,7 @@ export default function StockLevelsPage() {
           </Select>
         )}
         <Select value={stockStatusParam} onValueChange={handleStockStatusChange}>
-          <SelectTrigger className="h-8 text-xs w-[160px]">
+          <SelectTrigger className="text-xs w-[160px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -302,7 +302,7 @@ export default function StockLevelsPage() {
           <div className="flex items-center gap-2">
             {viewToggle}
             {canAdjust && (
-              <Button variant="outline" size="sm" className="h-8 text-xs" onClick={handleOpenOpeningStock}>
+              <Button variant="outline" size="sm" className="text-xs" onClick={handleOpenOpeningStock}>
                 Opening Stock
               </Button>
             )}
@@ -357,7 +357,7 @@ export default function StockLevelsPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-7 text-xs"
+                    className="text-xs"
                     disabled={page <= 1}
                     onClick={handlePrevPage}
                   >
@@ -366,7 +366,7 @@ export default function StockLevelsPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-7 text-xs"
+                    className="text-xs"
                     disabled={page >= totalPages}
                     onClick={handleNextPage}
                   >

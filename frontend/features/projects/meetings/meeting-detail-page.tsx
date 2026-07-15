@@ -38,7 +38,7 @@ function DeleteMeetingButton({ onClick }: { onClick: () => void }) {
     <Button
       size="sm"
       variant="outline"
-      className="h-8 gap-1.5 text-xs text-destructive hover:text-destructive"
+      className="gap-1.5 text-xs text-destructive hover:text-destructive"
       onClick={onClick}
       {...hoverHandlers}
     >
@@ -133,7 +133,7 @@ export function MeetingDetailPage({ projectId, meetingId }: MeetingDetailPagePro
       actions={
         canManage ? (
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={handleOpenEdit}>
+            <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={handleOpenEdit}>
               <Pencil className="h-3.5 w-3.5" /> Edit
             </Button>
             <DeleteMeetingButton onClick={handleOpenDelete} />

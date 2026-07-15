@@ -313,7 +313,7 @@ export function BulkActionsBar({
         <div className="h-4 w-px bg-border" />
 
         <Select onValueChange={handleBulkStatus}>
-          <SelectTrigger className="h-8 w-[120px] text-xs">
+          <SelectTrigger className="w-[120px] text-xs">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -324,7 +324,7 @@ export function BulkActionsBar({
         </Select>
 
         <Select onValueChange={handleBulkPriority}>
-          <SelectTrigger className="h-8 w-[100px] text-xs">
+          <SelectTrigger className="w-[100px] text-xs">
             <SelectValue placeholder="Priority" />
           </SelectTrigger>
           <SelectContent>
@@ -335,7 +335,7 @@ export function BulkActionsBar({
         </Select>
 
         <Select onValueChange={handleBulkAssign}>
-          <SelectTrigger className="h-8 w-[130px] text-xs">
+          <SelectTrigger className="w-[130px] text-xs">
             <SelectValue placeholder="Assign" />
           </SelectTrigger>
           <SelectContent>
@@ -347,7 +347,7 @@ export function BulkActionsBar({
           </SelectContent>
         </Select>
 
-        <Button variant="outline" size="sm" className="h-7 text-xs" onClick={handleExport}>
+        <Button variant="outline" size="sm" className="text-xs" onClick={handleExport}>
           <Download className="h-3 w-3 mr-1" /> Export
         </Button>
 
@@ -357,14 +357,14 @@ export function BulkActionsBar({
           <Button
             variant="destructive"
             size="sm"
-            className="h-7 text-xs"
+            className="text-xs"
             onClick={handleOpenDeleteDialog}
           >
             <Trash2 className="h-3 w-3 mr-1" /> Delete
           </Button>
         )}
 
-        <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={onClearSelection}>
+        <Button variant="ghost" size="sm" className="text-xs" onClick={onClearSelection}>
           <X className="h-3 w-3" />
         </Button>
       </div>

@@ -91,13 +91,13 @@ export function ReviewEditor({ sections, onChange }: ReviewEditorProps) {
               placeholder="Section title"
               value={section.title}
               onChange={(e) => handleSectionTitle(section.id, e.target.value)}
-              className="h-8 flex-1 text-sm font-medium"
+              className="flex-1 text-sm font-medium"
             />
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+              className="w-7 text-muted-foreground hover:text-destructive"
               onClick={() => handleRemoveSection(section.id)}
             >
               <Trash2 className="h-3.5 w-3.5" />
@@ -110,13 +110,13 @@ export function ReviewEditor({ sections, onChange }: ReviewEditorProps) {
                   placeholder="Question"
                   value={q.text}
                   onChange={(e) => handleChangeQuestion(section.id, q.id, { text: e.target.value })}
-                  className="h-8 flex-1"
+                  className="flex-1"
                 />
                 <Select
                   value={q.type}
                   onValueChange={(v) => handleChangeQuestion(section.id, q.id, { type: v as ReviewQuestion["type"] })}
                 >
-                  <SelectTrigger className="h-8 w-32 shrink-0">
+                  <SelectTrigger className="w-32 shrink-0">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -137,7 +137,7 @@ export function ReviewEditor({ sections, onChange }: ReviewEditorProps) {
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                  className="w-7 text-muted-foreground hover:text-destructive"
                   onClick={() => handleRemoveQuestion(section.id, q.id)}
                 >
                   <Trash2 className="h-3.5 w-3.5" />

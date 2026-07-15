@@ -59,7 +59,7 @@ function HeaderIconLink({
       <TooltipTrigger asChild>
         <Link
           href={href}
-          className="h-8 w-8 rounded-lg flex items-center justify-center text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
+          className="w-8 rounded-lg flex items-center justify-center text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
           aria-label={label}
         >
           {children}

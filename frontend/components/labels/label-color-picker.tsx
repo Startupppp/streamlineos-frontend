@@ -136,7 +136,7 @@ export function LabelColorPicker({
             onBlur={handleHexBlur}
             onKeyDown={handleHexKeyDown}
             placeholder="#6366f1"
-            className="h-8 flex-1 font-mono text-xs"
+            className="flex-1 font-mono text-xs"
             maxLength={7}
             spellCheck={false}
             aria-label="Hex color value"

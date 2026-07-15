@@ -151,7 +151,7 @@ export default function SignupPage() {
     return (
       <div className="w-full max-w-sm text-center animate-fade-up">
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-50">
-          <CheckCircle2 className="h-7 w-7 text-green-600" />
+          <CheckCircle2 className="w-7 text-green-600" />
         </div>
         <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
           Check your email

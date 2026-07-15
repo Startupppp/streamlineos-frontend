@@ -420,7 +420,7 @@ export function SprintPlanningPanel({
                     size="sm"
                     onClick={handleBulkAdd}
                     disabled={isMutating}
-                    className="h-7 text-xs gap-1"
+                    className="text-xs gap-1"
                     aria-label={`Add ${selectedBacklog.size} selected tickets to sprint`}
                   >
                     <Plus className="h-3.5 w-3.5" aria-hidden />
@@ -453,7 +453,7 @@ export function SprintPlanningPanel({
 
                 <div className="flex gap-1.5 flex-wrap">
                   <Select value={backlogFilters.filterPriority} onValueChange={backlogFilters.setFilterPriority}>
-                    <SelectTrigger className="h-8 text-xs w-[90px]" aria-label="Filter by priority">
+                    <SelectTrigger className="text-xs w-[90px]" aria-label="Filter by priority">
                       <SelectValue placeholder="Priority" />
                     </SelectTrigger>
                     <SelectContent>
@@ -465,7 +465,7 @@ export function SprintPlanningPanel({
                   </Select>
 
                   <Select value={backlogFilters.filterType} onValueChange={backlogFilters.setFilterType}>
-                    <SelectTrigger className="h-8 text-xs w-[80px]" aria-label="Filter by type">
+                    <SelectTrigger className="text-xs w-[80px]" aria-label="Filter by type">
                       <SelectValue placeholder="Type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -477,7 +477,7 @@ export function SprintPlanningPanel({
                   </Select>
 
                   <Select value={backlogFilters.filterStatus} onValueChange={backlogFilters.setFilterStatus}>
-                    <SelectTrigger className="h-8 text-xs w-[80px]" aria-label="Filter by status">
+                    <SelectTrigger className="text-xs w-[80px]" aria-label="Filter by status">
                       <SelectValue placeholder="Status" />
                     </SelectTrigger>
                     <SelectContent>
@@ -490,7 +490,7 @@ export function SprintPlanningPanel({
 
                   {backlogFilters.assigneeOptions.length > 0 && (
                     <Select value={backlogFilters.filterAssignee} onValueChange={backlogFilters.setFilterAssignee}>
-                      <SelectTrigger className="h-8 text-xs w-[90px]" aria-label="Filter by assignee">
+                      <SelectTrigger className="text-xs w-[90px]" aria-label="Filter by assignee">
                         <SelectValue placeholder="Assignee" />
                       </SelectTrigger>
                       <SelectContent>
@@ -508,7 +508,7 @@ export function SprintPlanningPanel({
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-7 text-xs gap-1 px-2"
+                      className="text-xs gap-1 px-2"
                       onClick={backlogFilters.clearFilters}
                       aria-label="Clear all filters"
                     >
@@ -546,7 +546,7 @@ export function SprintPlanningPanel({
                     {provided.placeholder}
                     {backlogFilters.filtered.length === 0 && (
                       <div className="flex flex-col items-center justify-center py-10 gap-2 text-muted-foreground">
-                        <PackageOpen className="h-8 w-8 opacity-40" aria-hidden />
+                        <PackageOpen className="w-8 opacity-40" aria-hidden />
                         <p className="text-xs text-center">
                           {backlogFilters.hasActiveFilters
                             ? "No tickets match the active filters"
@@ -582,7 +582,7 @@ export function SprintPlanningPanel({
                     size="sm"
                     onClick={handleBulkRemove}
                     disabled={isMutating}
-                    className="h-7 text-xs gap-1"
+                    className="text-xs gap-1"
                     aria-label={`Remove ${selectedSprint.size} selected tickets from sprint`}
                   >
                     <Minus className="h-3.5 w-3.5" aria-hidden />
@@ -604,7 +604,7 @@ export function SprintPlanningPanel({
                   >
                     {sprintTickets.length === 0 && !snapshot.isDraggingOver && (
                       <div className="flex flex-col items-center justify-center min-h-[180px] gap-2 text-muted-foreground">
-                        <ArrowLeftRight className="h-8 w-8 opacity-30" aria-hidden />
+                        <ArrowLeftRight className="w-8 opacity-30" aria-hidden />
                         <p className="text-xs text-center px-4">
                           Drag tickets here or select tickets from backlog
                         </p>

@@ -101,7 +101,7 @@ function ScenarioCard({ scenario, canManage, onEdit, onDelete }: ScenarioCardPro
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 text-xs text-destructive hover:text-destructive"
+              className="text-xs text-destructive hover:text-destructive"
               onClick={handleDelete}
             >
               Delete

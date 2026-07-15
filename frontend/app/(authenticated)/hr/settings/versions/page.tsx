@@ -84,7 +84,7 @@ export default function VersionHistoryPage() {
       <div className="px-4 sm:px-6 py-4 space-y-4">
         <div className="flex flex-wrap items-center gap-2">
           <Select value={entity} onValueChange={(v) => { setEntity(v as VersionEntity); setQueriedId(null); }}>
-            <SelectTrigger className="h-8 text-xs w-36">
+            <SelectTrigger className="text-xs w-36">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -97,10 +97,10 @@ export default function VersionHistoryPage() {
             placeholder="Enter ID..."
             value={idInput}
             onChange={(e) => setIdInput(e.target.value)}
-            className="h-8 text-xs w-32"
+            className="text-xs w-32"
             onKeyDown={(e) => { if (e.key === "Enter") handleSearch(); }}
           />
-          <Button size="sm" className="h-8 text-xs" onClick={handleSearch}>
+          <Button size="sm" className="text-xs" onClick={handleSearch}>
             Load
           </Button>
         </div>
@@ -143,7 +143,7 @@ export default function VersionHistoryPage() {
                     <LoadingButton
                       size="sm"
                       variant="outline"
-                      className="h-7 text-xs"
+                      className="text-xs"
                       isPending={activate.isPending}
                       onClick={() => handleActivate(item.id)}
                     >

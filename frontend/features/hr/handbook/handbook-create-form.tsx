@@ -57,7 +57,7 @@ export function HandbookCreateForm({
           value={values.title}
           onChange={onTitleChange}
           maxLength={100}
-          className="h-8"
+          className=""
         />
         <p className="text-[11px] text-muted-foreground">
           Min 2 chars, max 100 chars — no consecutive spaces or special characters
@@ -73,7 +73,7 @@ export function HandbookCreateForm({
           value={values.version}
           onChange={onVersionChange}
           maxLength={20}
-          className="h-8"
+          className=""
         />
         <p className="text-[11px] text-muted-foreground">Format: 1.0, v1.0, 2024-01, 1.0.0-beta</p>
       </div>
@@ -116,7 +116,7 @@ export function HandbookCreateForm({
               value={values.documentUrl}
               onChange={onDocumentUrlChange}
               type="url"
-              className="h-8"
+              className=""
             />
             <p className="text-[11px] text-muted-foreground">Must start with https://</p>
           </div>

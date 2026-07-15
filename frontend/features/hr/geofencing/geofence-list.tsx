@@ -68,7 +68,7 @@ export function GeofenceList({ canManage, onEdit }: Props) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7"
+                  className="w-7"
                   onClick={() => onEdit(fence)}
                   aria-label={`Edit ${fence.name}`}
                 >
@@ -77,7 +77,7 @@ export function GeofenceList({ canManage, onEdit }: Props) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 text-destructive hover:text-destructive"
+                  className="w-7 text-destructive hover:text-destructive"
                   onClick={() => handleDelete(fence.id)}
                   disabled={deleteFence.isPending}
                 >

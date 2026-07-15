@@ -30,15 +30,15 @@ export function EmployeesLoadingSkeleton() {
       subtitle="Manage your company directory and employee access"
       actions={
         <div className="flex items-center gap-2">
-          <Skeleton className="h-8 w-24 rounded-md" />
-          <Skeleton className="h-8 w-32 rounded-md" />
+          <Skeleton className="h-4 w-24 rounded-md" />{" "}
+          <Skeleton className="h-4 w-32 rounded-md" />
         </div>
       }
       filters={
         <div className="flex items-center gap-2 w-full flex-wrap">
-          <Skeleton className="h-8 w-[200px] rounded-md" />
-          <Skeleton className="h-8 w-[130px] rounded-md" />
-          <Skeleton className="h-8 w-[120px] rounded-md" />
+          <Skeleton className="h-8 w-[200px] rounded-md" />{" "}
+          <Skeleton className="h-8 w-[130px] rounded-md" />{" "}
+          <Skeleton className="h-8 w-[120px] rounded-md" />{" "}
           <Skeleton className="h-8 w-[120px] rounded-md" />
         </div>
       }
@@ -55,7 +55,7 @@ export function EmployeesLoadingSkeleton() {
               <CardContent className="p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Skeleton className="h-7 w-7 rounded-lg" />
+                    <Skeleton className="h-7 w-7 rounded-lg" />{" "}
                     <Skeleton className="h-4 w-24" />
                   </div>
                   <Skeleton className="h-3 w-8" />
@@ -86,7 +86,7 @@ export function EmployeesLoadingSkeleton() {
               className="flex items-center gap-8 px-4 py-3.5 border-b last:border-0"
             >
               <div className="flex items-center gap-3 min-w-[220px]">
-                <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+                <Skeleton className="h-8 w-8 rounded-full shrink-0" />{" "}
                 <div className="space-y-1.5">
                   <Skeleton className="h-3.5 w-32" />
                   <Skeleton className="h-3 w-20" />
@@ -98,16 +98,16 @@ export function EmployeesLoadingSkeleton() {
               <Skeleton className="h-5 w-16 rounded-full hidden lg:block" />
               <Skeleton className="h-5 w-10 rounded-full hidden xl:block" />
               <Skeleton className="h-4 w-12 hidden xl:block" />
-              <Skeleton className="h-7 w-10 rounded-md ml-auto" />
+              <Skeleton className="h-10 w-10 rounded-md ml-auto" />{" "}
             </div>
           ))}
           <div className="flex items-center justify-between px-4 py-3 border-t">
-            <Skeleton className="h-8 w-36 rounded-md" />
+            <Skeleton className="h-4 w-36 rounded-md" />{" "}
             <div className="flex items-center gap-2">
               <Skeleton className="h-4 w-20" />
-              <Skeleton className="h-8 w-28 rounded-md" />
+              <Skeleton className="h-4 w-28 rounded-md" />{" "}
             </div>
-            <Skeleton className="h-8 w-20 rounded-md" />
+            <Skeleton className="h-4 w-20 rounded-md" />{" "}
           </div>
         </CardContent>
       </Card>

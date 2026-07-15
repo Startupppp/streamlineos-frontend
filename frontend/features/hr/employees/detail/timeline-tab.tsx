@@ -44,7 +44,7 @@ export function EmployeeTimelineTab({ userId }: Props) {
   if (!employment) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
-        <AlertCircle className="h-8 w-8 text-muted-foreground mb-3" />
+        <AlertCircle className="w-8 text-muted-foreground mb-3" />
         <p className="text-sm text-muted-foreground">No employment record found for this employee.</p>
       </div>
     );
@@ -55,7 +55,7 @@ export function EmployeeTimelineTab({ userId }: Props) {
   if (entries.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
-        <Clock className="h-8 w-8 text-muted-foreground mb-3" />
+        <Clock className="w-8 text-muted-foreground mb-3" />
         <p className="text-sm font-medium text-foreground">No timeline events yet</p>
         <p className="text-xs text-muted-foreground mt-1">Changes and events will appear here as they occur.</p>
       </div>

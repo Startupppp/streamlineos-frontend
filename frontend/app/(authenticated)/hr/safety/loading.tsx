@@ -4,7 +4,7 @@ export default function HrSafetyLoading() {
   return (
     <div className="flex flex-col gap-4 p-6">
       <Skeleton className="h-10 w-64" />
-      <Skeleton className="h-8 w-full" />
+      <Skeleton className="h-4 w-full" />
       {Array.from({ length: 12 }).map((_, i) => (
         <Skeleton key={i} className="h-12 w-full" />
       ))}

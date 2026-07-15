@@ -85,7 +85,7 @@ function RecurringBillRowActions({ template, onEdit }: RowActionsProps) {
     <AlertDialog>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-7 w-7">
+          <Button variant="ghost" size="icon" className="w-7">
             <span className="sr-only">Actions</span>
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -263,7 +263,7 @@ export default function RecurringBillsPage() {
       }
       filters={
         <Select value={isActiveFilter} onValueChange={handleActiveFilterChange}>
-          <SelectTrigger className="h-8 w-[140px] text-xs">
+          <SelectTrigger className="w-[140px] text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

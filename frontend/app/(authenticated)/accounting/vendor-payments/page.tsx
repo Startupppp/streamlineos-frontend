@@ -132,7 +132,7 @@ export default function VendorPaymentsPage() {
       }
       filters={
         <Select value={vendorFilter} onValueChange={handleVendorFilterChange}>
-          <SelectTrigger className="h-8 w-[180px] text-xs">
+          <SelectTrigger className="w-[180px] text-xs">
             <SelectValue placeholder="All vendors" />
           </SelectTrigger>
           <SelectContent>

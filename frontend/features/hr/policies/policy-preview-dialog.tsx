@@ -62,7 +62,7 @@ export function PolicyPreviewDialog({ policyId, open, onOpenChange }: Props) {
               </Label>
               <Input
                 type="date"
-                className="h-8 text-xs"
+                className="text-xs"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
               />

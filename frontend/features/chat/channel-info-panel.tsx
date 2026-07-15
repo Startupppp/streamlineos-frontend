@@ -320,7 +320,7 @@ export function ChannelInfoPanel({
                 <Input
                   value={editName}
                   onChange={handleEditNameChange}
-                  className="h-8 text-[13px] bg-muted/30"
+                  className="text-[13px] bg-muted/30"
                 />
               </div>
               <div>
@@ -331,7 +331,7 @@ export function ChannelInfoPanel({
                   value={editDesc}
                   onChange={handleEditDescChange}
                   placeholder="Add a description..."
-                  className="h-8 text-[13px] bg-muted/30"
+                  className="text-[13px] bg-muted/30"
                 />
               </div>
               <div className="flex gap-2">
@@ -600,7 +600,7 @@ export function ChannelInfoPanel({
                             })
                           }
                           disabled={muteChannel.isPending}
-                          className="h-7 px-2 rounded-lg border border-border/50 text-[11px] font-medium hover:bg-muted/40 transition-colors disabled:opacity-50"
+                          className="px-2 rounded-lg border border-border/50 text-[11px] font-medium hover:bg-muted/40 transition-colors disabled:opacity-50"
                         >
                           {opt.label}
                         </button>

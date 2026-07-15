@@ -223,7 +223,7 @@ function EntriesTab() {
             value={from}
             onChange={handleFromChange}
             placeholder="Pick a date"
-            className="h-8 text-xs w-[150px]"
+            className="text-xs w-[150px]"
           />
         </div>
         <div className="flex items-center gap-1.5">
@@ -238,11 +238,11 @@ function EntriesTab() {
             value={to}
             onChange={handleToChange}
             placeholder="Pick a date"
-            className="h-8 text-xs w-[150px]"
+            className="text-xs w-[150px]"
           />
         </div>
         <Select value={sourceType} onValueChange={handleSourceTypeChange}>
-          <SelectTrigger className="h-8 w-[140px] text-xs">
+          <SelectTrigger className="w-[140px] text-xs">
             <SelectValue placeholder="All sources" />
           </SelectTrigger>
           <SelectContent>
@@ -254,7 +254,7 @@ function EntriesTab() {
           </SelectContent>
         </Select>
         <Select value={statusFilter} onValueChange={handleStatusChange}>
-          <SelectTrigger className="h-8 w-[160px] text-xs">
+          <SelectTrigger className="w-[160px] text-xs">
             <SelectValue placeholder="All statuses" />
           </SelectTrigger>
           <SelectContent>

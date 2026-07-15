@@ -87,7 +87,7 @@ export function CredentialsTab({ providerKey, environment, credential }: Credent
         {credential?.hasSecret && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button size="sm" variant="outline" className="h-7 text-xs gap-1.5 text-muted-foreground">
+              <Button size="sm" variant="outline" className="text-xs gap-1.5 text-muted-foreground">
                 <Unlink className="h-3 w-3" /> Disconnect
               </Button>
             </AlertDialogTrigger>
@@ -114,7 +114,7 @@ export function CredentialsTab({ providerKey, environment, credential }: Credent
           value={keyId}
           onChange={(e) => setKeyId(e.target.value)}
           placeholder={credential?.maskedKeyHint ? `Currently ****${credential.maskedKeyHint.slice(-4)}` : "rzp_test_..."}
-          className="h-8 text-sm font-mono"
+          className="text-sm font-mono"
         />
       </div>
 
@@ -126,7 +126,7 @@ export function CredentialsTab({ providerKey, environment, credential }: Credent
           value={secret}
           onChange={(e) => setSecret(e.target.value)}
           placeholder={credential?.hasSecret ? "Saved — enter a new value to replace" : "Enter key secret"}
-          className="h-8 text-sm font-mono"
+          className="text-sm font-mono"
         />
       </div>
 
@@ -138,11 +138,11 @@ export function CredentialsTab({ providerKey, environment, credential }: Credent
           value={webhookSecret}
           onChange={(e) => setWebhookSecret(e.target.value)}
           placeholder={credential?.hasWebhookSecret ? "Saved — enter a new value to replace" : "Enter webhook secret"}
-          className="h-8 text-sm font-mono"
+          className="text-sm font-mono"
         />
       </div>
 
-      <Button size="sm" className="h-8 text-xs gap-1.5" onClick={handleSave} disabled={save.isPending}>
+      <Button size="sm" className="text-xs gap-1.5" onClick={handleSave} disabled={save.isPending}>
         <KeyRound className="h-3.5 w-3.5" />
         Save {environment} credentials
       </Button>

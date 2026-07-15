@@ -19,7 +19,7 @@ export default function TerminationLoading() {
               </div>
               <Skeleton className="h-3 w-48" />
             </div>
-            <Skeleton className="h-7 w-24 rounded-md" />
+            <Skeleton className="h-8 w-24 rounded-md" />
           </div>
         ))}
       </div>

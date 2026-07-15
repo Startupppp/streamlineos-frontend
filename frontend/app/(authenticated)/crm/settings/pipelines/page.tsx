@@ -176,7 +176,7 @@ export default function PipelinesPage() {
                 {allPipelines.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full gap-2 p-4">
                     <p className="text-xs text-muted-foreground text-center">No pipelines yet</p>
-                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={handleOpenCreate}>
+                    <Button size="sm" variant="outline" className="text-xs" onClick={handleOpenCreate}>
                       <Plus className="h-3 w-3 mr-1" />
                       New Pipeline
                     </Button>

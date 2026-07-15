@@ -316,13 +316,13 @@ export default function DealsPage() {
           value={searchInput}
           onChange={handleSearchChange}
           placeholder="Search deals..."
-          className="h-8 w-full pl-8 text-xs"
+          className="w-full pl-8 text-xs"
           aria-label="Search deals"
         />
       </div>
       <div className="hidden sm:flex items-center gap-2">
         <Select value={stageFromUrl ?? "all"} onValueChange={handleStageFilterChange}>
-          <SelectTrigger className="h-8 w-[140px] text-xs">
+          <SelectTrigger className="w-[140px] text-xs">
             <SelectValue placeholder="All stages" />
           </SelectTrigger>
           <SelectContent>
@@ -334,7 +334,7 @@ export default function DealsPage() {
         </Select>
         {assigneeOptions.length > 0 && (
           <Select value={assigneeFilter ?? "all"} onValueChange={handleAssigneeFilterChange}>
-            <SelectTrigger className="h-8 w-[140px] text-xs">
+            <SelectTrigger className="w-[140px] text-xs">
               <SelectValue placeholder="All assignees" />
             </SelectTrigger>
             <SelectContent>
@@ -350,7 +350,7 @@ export default function DealsPage() {
         <Button
           variant={view === "table" ? "secondary" : "ghost"}
           size="icon"
-          className="h-8 w-8 rounded-r-none border-r border-border"
+          className="w-8 rounded-r-none border-r border-border"
           onClick={handleViewTable}
           aria-label="Table view"
         >
@@ -359,14 +359,14 @@ export default function DealsPage() {
         <Button
           variant={view === "kanban" ? "secondary" : "ghost"}
           size="icon"
-          className="h-8 w-8 rounded-l-none"
+          className="w-8 rounded-l-none"
           onClick={handleViewKanban}
           aria-label="Kanban view"
         >
           <LayoutGrid className="h-3.5 w-3.5" />
         </Button>
       </div>
-      <Button variant="outline" size="sm" className="h-8 text-xs shrink-0" onClick={handleExport}>
+      <Button variant="outline" size="sm" className="text-xs shrink-0" onClick={handleExport}>
         <Download className="h-3.5 w-3.5 mr-1.5" />
         Export
       </Button>

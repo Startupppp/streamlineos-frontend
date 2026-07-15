@@ -19,7 +19,11 @@ interface ExtractTasksCardProps {
   requiredPlan: Plan | null;
 }
 
-export function ExtractTasksCard({ projectId, featureEnabled, requiredPlan }: ExtractTasksCardProps) {
+export function ExtractTasksCard({
+  projectId,
+  featureEnabled,
+  requiredPlan,
+}: ExtractTasksCardProps) {
   const [text, setText] = useState("");
   const mutation = useExtractTasks(projectId);
   const result = mutation.data;
@@ -30,9 +34,12 @@ export function ExtractTasksCard({ projectId, featureEnabled, requiredPlan }: Ex
     mutation.mutate({ text: text.trim() });
   }, [text, mutation]);
 
-  const handleTextChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setText(e.target.value);
-  }, []);
+  const handleTextChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setText(e.target.value);
+    },
+    [],
+  );
 
   const items = useMemo<SuggestedTaskListItem[]>(() => {
     if (!result) return [];
@@ -65,7 +72,7 @@ export function ExtractTasksCard({ projectId, featureEnabled, requiredPlan }: Ex
           onClick={handleRun}
           disabled={!featureEnabled || !text.trim()}
           isPending={mutation.isPending}
-          className="h-8 w-full gap-1.5 text-xs"
+          className="w-full gap-1.5 text-xs"
           {...hoverHandlers}
         >
           {result ? (
@@ -83,9 +90,9 @@ export function ExtractTasksCard({ projectId, featureEnabled, requiredPlan }: Ex
 
       {mutation.isPending ? (
         <div className="space-y-1.5 py-1">
-          <Skeleton className="h-8 w-full rounded-lg" />
-          <Skeleton className="h-8 w-full rounded-lg" />
-          <Skeleton className="h-8 w-full rounded-lg" />
+          <Skeleton className="h-10 w-full rounded-lg" />{" "}
+          <Skeleton className="h-10 w-full rounded-lg" />{" "}
+          <Skeleton className="h-10 w-full rounded-lg" />
         </div>
       ) : null}
 
@@ -98,7 +105,9 @@ export function ExtractTasksCard({ projectId, featureEnabled, requiredPlan }: Ex
       {result ? (
         <div className="border-t border-border/60 pt-1">
           {result.tasks.length === 0 ? (
-            <p className="text-[13px] text-muted-foreground">No actionable tasks found in the text.</p>
+            <p className="text-[13px] text-muted-foreground">
+              No actionable tasks found in the text.
+            </p>
           ) : (
             <SuggestedTaskList items={items} projectId={projectId} />
           )}

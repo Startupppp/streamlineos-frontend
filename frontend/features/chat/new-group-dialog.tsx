@@ -187,7 +187,7 @@ export function NewGroupDialog({
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 rounded-lg"
+            className="w-7 rounded-lg"
             title="New Channel"
             aria-label="New Channel"
           >
@@ -275,7 +275,7 @@ export function NewGroupDialog({
                   value={name}
                   onChange={handleNameChange}
                   placeholder="e.g. design-team"
-                  className="h-8 border-border/30 bg-muted/30 pl-9"
+                  className="border-border/30 bg-muted/30 pl-9"
                   autoFocus
                 />
               </div>
@@ -290,7 +290,7 @@ export function NewGroupDialog({
                 value={description}
                 onChange={handleDescriptionChange}
                 placeholder="What's this channel about?"
-                className="h-8 border-border/30 bg-muted/30"
+                className="border-border/30 bg-muted/30"
               />
             </div>
 

@@ -119,7 +119,7 @@ export function MarkBatchPaidDialog({
             value={txnRef}
             onChange={(e) => onTxnRefChange(e.target.value)}
             placeholder="e.g. NEFT0012345678"
-            className="h-8"
+            className=""
           />
         </div>
         <DialogFooter>

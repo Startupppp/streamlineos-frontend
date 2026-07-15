@@ -50,7 +50,7 @@ export const ApplicationsTab = memo(function ApplicationsTab({
     <Card>
       <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">
         <CardTitle className="text-sm">Applications</CardTitle>
-        <Button size="sm" variant="outline" className="h-7 text-xs" onClick={handleClick}>
+        <Button size="sm" variant="outline" className="text-xs" onClick={handleClick}>
           <Briefcase className="h-3 w-3 mr-1" />Apply to Job
         </Button>
       </CardHeader>

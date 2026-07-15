@@ -351,7 +351,7 @@ export default function ReviewsPage() {
             <Button
               size="sm"
               variant="outline"
-              className="h-7 text-xs text-emerald-700 border-emerald-200 hover:bg-emerald-50 dark:text-emerald-300 dark:border-emerald-500/30 dark:hover:bg-emerald-500/10"
+              className="text-xs text-emerald-700 border-emerald-200 hover:bg-emerald-50 dark:text-emerald-300 dark:border-emerald-500/30 dark:hover:bg-emerald-500/10"
               onClick={makeApproveHandler(review)}
             >
               Approve
@@ -359,7 +359,7 @@ export default function ReviewsPage() {
             <Button
               size="sm"
               variant="outline"
-              className="h-7 text-xs text-red-700 border-red-200 hover:bg-red-50 dark:text-red-300 dark:border-red-500/30 dark:hover:bg-red-500/10"
+              className="text-xs text-red-700 border-red-200 hover:bg-red-50 dark:text-red-300 dark:border-red-500/30 dark:hover:bg-red-500/10"
               onClick={makeRejectHandler(review)}
             >
               Reject
@@ -375,7 +375,7 @@ export default function ReviewsPage() {
       <PageWrapper title="Reviews">
         <EmptyState
           illustration={
-            <KbLockIcon className="h-8 w-8 text-muted-foreground/40" />
+            <KbLockIcon className="w-8 text-muted-foreground/40" />
           }
           title="Access restricted"
           description="You don't have permission to view knowledge base reviews."
@@ -388,7 +388,7 @@ export default function ReviewsPage() {
   const filters = (
     <>
       <Select value={statusFilter} onValueChange={handleStatusChange}>
-        <SelectTrigger className="h-8 text-xs w-[130px]">
+        <SelectTrigger className="text-xs w-[130px]">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent>
@@ -399,7 +399,7 @@ export default function ReviewsPage() {
         </SelectContent>
       </Select>
       <Select value={typeFilter} onValueChange={handleTypeChange}>
-        <SelectTrigger className="h-8 text-xs w-[130px]">
+        <SelectTrigger className="text-xs w-[130px]">
           <SelectValue placeholder="Type" />
         </SelectTrigger>
         <SelectContent>
@@ -427,7 +427,7 @@ export default function ReviewsPage() {
         {isError ? (
           <EmptyState
             illustration={
-              <KbAlertCircleIcon className="h-8 w-8 text-muted-foreground/40" />
+              <KbAlertCircleIcon className="w-8 text-muted-foreground/40" />
             }
             title="Failed to load reviews"
             description="An error occurred while fetching reviews."
@@ -443,7 +443,7 @@ export default function ReviewsPage() {
             emptyState={
               <EmptyState
                 illustration={
-                  <KbClipboardCheckIcon className="h-8 w-8 text-muted-foreground/40" />
+                  <KbClipboardCheckIcon className="w-8 text-muted-foreground/40" />
                 }
                 title="No reviews"
                 description={

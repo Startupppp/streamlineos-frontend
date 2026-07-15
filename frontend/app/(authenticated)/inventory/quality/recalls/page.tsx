@@ -98,7 +98,7 @@ function CreateRecallDialog({
       <form className="space-y-4" onSubmit={form.handleSubmit(handleSubmit)}>
         <div className="space-y-1.5">
           <Label className="text-xs">Title *</Label>
-          <Input className="h-8 text-xs" placeholder="e.g. Batch contamination recall" {...form.register("title")} />
+          <Input className="text-xs" placeholder="e.g. Batch contamination recall" {...form.register("title")} />
           {form.formState.errors.title && (
             <p className="text-[10px] text-destructive">{form.formState.errors.title.message}</p>
           )}
@@ -112,15 +112,15 @@ function CreateRecallDialog({
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs">Severity <span className="text-muted-foreground">(opt.)</span></Label>
-          <Input className="h-8 text-xs" placeholder="e.g. High, Medium, Low" {...form.register("severity")} />
+          <Input className="text-xs" placeholder="e.g. High, Medium, Low" {...form.register("severity")} />
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs">Lot IDs <span className="text-muted-foreground">(comma-separated)</span></Label>
-          <Input className="h-8 text-xs" placeholder="e.g. 1, 2, 3" {...form.register("lotIdsRaw")} />
+          <Input className="text-xs" placeholder="e.g. 1, 2, 3" {...form.register("lotIdsRaw")} />
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs">Serial IDs <span className="text-muted-foreground">(comma-separated)</span></Label>
-          <Input className="h-8 text-xs" placeholder="e.g. 10, 11, 12" {...form.register("serialIdsRaw")} />
+          <Input className="text-xs" placeholder="e.g. 10, 11, 12" {...form.register("serialIdsRaw")} />
         </div>
       </form>
     </AppDialog>

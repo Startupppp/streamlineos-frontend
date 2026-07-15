@@ -4,10 +4,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function MyTicketsLoading() {
   const filterBar = (
     <div className="flex items-center gap-2 w-full">
-      <Skeleton className="h-7 w-48 rounded-md" />
-      <Skeleton className="h-7 w-24 rounded-md" />
-      <Skeleton className="h-7 w-24 rounded-md" />
-      <Skeleton className="h-7 w-24 rounded-md" />
+      <Skeleton className="h-8 w-48 rounded-md" />
+      <Skeleton className="h-8 w-24 rounded-md" />
+      <Skeleton className="h-8 w-24 rounded-md" />
+      <Skeleton className="h-8 w-24 rounded-md" />
     </div>
   );
 

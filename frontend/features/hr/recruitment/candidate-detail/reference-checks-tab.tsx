@@ -138,7 +138,7 @@ export function ReferenceChecksTab({ candidateId }: Props) {
         </p>
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetTrigger asChild>
-            <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs">
+            <Button size="sm" variant="outline" className="gap-1.5 text-xs">
               <Plus className="h-3.5 w-3.5" />
               Add Reference
             </Button>
@@ -319,7 +319,7 @@ const ReferenceCheckCard = memo(function ReferenceCheckCard({
 
           <div className="flex items-center gap-1.5 shrink-0">
             <Select value={status} onValueChange={handleStatusChange} disabled={updateCheck.isPending}>
-              <SelectTrigger className="h-8 text-xs w-[118px]">
+              <SelectTrigger className="text-xs w-[118px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -333,7 +333,7 @@ const ReferenceCheckCard = memo(function ReferenceCheckCard({
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors duration-200"
+              className="w-7 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors duration-200"
               disabled={deleteCheck.isPending}
               onClick={handleDelete}
               aria-label="Remove reference"

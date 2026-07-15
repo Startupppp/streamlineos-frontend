@@ -42,7 +42,7 @@ export default function MagicLinkPage() {
     return (
       <div className="w-full max-w-sm text-center">
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10">
-          <XCircle className="h-7 w-7 text-destructive" />
+          <XCircle className="w-7 text-destructive" />
         </div>
         <h1 className="text-xl font-semibold tracking-tight">Link expired</h1>
         <p className="mt-2 text-sm text-muted-foreground">{errorMessage}</p>

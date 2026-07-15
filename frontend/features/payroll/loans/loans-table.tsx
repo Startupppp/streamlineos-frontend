@@ -124,7 +124,7 @@ export function LoansTable() {
       )}
       <div className="flex items-center gap-2 mb-3">
         <Select value={statusFilter} onValueChange={handleStatusChange}>
-          <SelectTrigger className="h-8 w-44 text-[12px]">
+          <SelectTrigger className="w-44 text-[12px]">
             <SelectValue placeholder="All statuses" />
           </SelectTrigger>
           <SelectContent>

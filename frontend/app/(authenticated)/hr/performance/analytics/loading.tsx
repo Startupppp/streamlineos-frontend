@@ -4,17 +4,23 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 
 export default function PerformanceAnalyticsLoading() {
   return (
-    <PageWrapper title="Performance Analytics" subtitle="Insights across reviews, ratings, and goals">
+    <PageWrapper
+      title="Performance Analytics"
+      subtitle="Insights across reviews, ratings, and goals"
+    >
       <div className="space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           {Array.from({ length: 10 }).map((_, i) => (
-            <Card key={i} className="bg-card border border-border rounded-xl shadow-sm">
+            <Card
+              key={i}
+              className="bg-card border border-border rounded-xl shadow-sm"
+            >
               <CardContent className="p-5 space-y-3">
                 <div className="flex justify-between">
                   <Skeleton className="h-4 w-24" />
                   <Skeleton className="h-9 w-9 rounded-lg" />
                 </div>
-                <Skeleton className="h-8 w-16" />
+                <Skeleton className="h-4 w-16" />{" "}
               </CardContent>
             </Card>
           ))}

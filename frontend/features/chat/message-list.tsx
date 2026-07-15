@@ -207,7 +207,7 @@ export function MessageList({
           <div className="py-4 px-3 sm:px-5 max-w-[900px] mx-auto w-full min-w-0 space-y-5">
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className={`flex items-start gap-3 ${i % 3 === 2 ? "flex-row-reverse" : ""}`}>
-                <div className="h-8 w-8 rounded-full bg-muted animate-pulse shrink-0" />
+                <div className="w-8 rounded-full bg-muted animate-pulse shrink-0" />
                 <div className="space-y-1.5 max-w-[60%]">
                   <div className="h-3 w-20 rounded bg-muted animate-pulse" />
                   <div className={`h-10 rounded-xl bg-muted animate-pulse ${i % 3 === 2 ? "w-40" : "w-56"}`} />
@@ -229,7 +229,7 @@ export function MessageList({
                   size="sm"
                   onClick={handleFetchNextPage}
                   disabled={isFetchingNextPage}
-                  className="h-7 text-[12px] rounded-full px-4"
+                  className="text-[12px] rounded-full px-4"
                 >
                   {isFetchingNextPage ? (
                     <>

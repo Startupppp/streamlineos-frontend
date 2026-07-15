@@ -233,17 +233,17 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
         backHref="/crm/settings/automations"
         actions={
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="h-8 text-xs" onClick={handleToggleTestPanel}>
+            <Button variant="outline" size="sm" className="text-xs" onClick={handleToggleTestPanel}>
               <FlaskConical className="h-3.5 w-3.5 mr-1.5" />
               Test
             </Button>
             {!isNew && (
-              <Button variant="outline" size="sm" className="h-8 text-xs" onClick={handleToggleHistory}>
+              <Button variant="outline" size="sm" className="text-xs" onClick={handleToggleHistory}>
                 <History className="h-3.5 w-3.5 mr-1.5" />
                 History
               </Button>
             )}
-            <LoadingButton size="sm" className="h-8 text-xs" onClick={handleSave} isPending={isPending} loadingText="Saving...">
+            <LoadingButton size="sm" className="text-xs" onClick={handleSave} isPending={isPending} loadingText="Saving...">
               Save
             </LoadingButton>
           </div>
@@ -255,7 +255,7 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
               <div className="space-y-1">
                 <Label className="text-xs">Automation Name</Label>
                 <Input
-                  className="h-8 text-sm"
+                  className="text-sm"
                   placeholder="e.g. Notify team on hot lead"
                   value={state.name}
                   onChange={handleNameChange}
@@ -303,7 +303,7 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-7 text-xs w-full border-dashed"
+                    className="text-xs w-full border-dashed"
                     onClick={handleAddCondition}
                   >
                     <Plus className="h-3 w-3 mr-1" /> Add Condition
@@ -376,7 +376,7 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-7 text-xs flex-1 border-dashed"
+                    className="text-xs flex-1 border-dashed"
                     onClick={handleAddActionNode}
                   >
                     <Plus className="h-3 w-3 mr-1" /> Add Action
@@ -384,7 +384,7 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-7 text-xs border-dashed border-amber-300 text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-500/10"
+                    className="text-xs border-dashed border-amber-300 text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-500/10"
                     onClick={handleAddWaitNode}
                   >
                     <Plus className="h-3 w-3 mr-1" /> Wait
@@ -392,7 +392,7 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-7 text-xs border-dashed border-primary/30 text-primary hover:bg-primary/5"
+                    className="text-xs border-dashed border-primary/30 text-primary hover:bg-primary/5"
                     onClick={handleAddBranchNode}
                   >
                     <Plus className="h-3 w-3 mr-1" /> Branch
@@ -400,7 +400,7 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-7 text-xs border-dashed border-red-300 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10"
+                    className="text-xs border-dashed border-red-300 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10"
                     onClick={handleAddExitNode}
                   >
                     <Plus className="h-3 w-3 mr-1" /> Exit
@@ -435,26 +435,26 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
                   {testPayload.map((row, i) => (
                     <div key={i} className="flex gap-1.5">
                       <Input
-                        className="h-8 text-xs"
+                        className="text-xs"
                         placeholder="key"
                         value={row.key}
                         onChange={(e) => setTestPayload((p) => p.map((r, idx) => idx === i ? { ...r, key: e.target.value } : r))}
                       />
                       <Input
-                        className="h-8 text-xs"
+                        className="text-xs"
                         placeholder="value"
                         value={row.value}
                         onChange={(e) => setTestPayload((p) => p.map((r, idx) => idx === i ? { ...r, value: e.target.value } : r))}
                       />
                     </div>
                   ))}
-                  <Button variant="outline" size="sm" className="h-7 text-xs w-full" onClick={handleAddTestPayloadRow}>
+                  <Button variant="outline" size="sm" className="text-xs w-full" onClick={handleAddTestPayloadRow}>
                     <Plus className="h-3 w-3 mr-1" /> Row
                   </Button>
                 </div>
                 <Button
                   size="sm"
-                  className="h-8 text-xs w-full"
+                  className="text-xs w-full"
                   onClick={handleRunTest}
                   disabled={testRule.isPending}
                 >

@@ -250,7 +250,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
         </PopoverTrigger>
         <PopoverContent className="z-[110] w-52 p-0" align="start">
           <Command>
-            <CommandInput placeholder="Search members…" className="h-8 text-xs" />
+            <CommandInput placeholder="Search members…" className="text-xs" />
             <CommandList className="max-h-48">
               <CommandEmpty className="py-2 text-center text-xs text-muted-foreground">No members found.</CommandEmpty>
               <CommandGroup>
@@ -301,7 +301,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
               onChange={handleEstimateChange}
               onKeyDown={handleEstimateKeyDown}
               placeholder="0"
-              className="h-8 text-xs"
+              className="text-xs"
               autoFocus
             />
             <button
@@ -331,7 +331,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
             <p className="py-2 text-center text-xs text-muted-foreground">No labels available.</p>
           ) : (
             <Command>
-              <CommandInput placeholder="Search labels…" className="h-8 text-xs" />
+              <CommandInput placeholder="Search labels…" className="text-xs" />
               <CommandList className="max-h-40">
                 <CommandEmpty className="py-2 text-center text-xs text-muted-foreground">No labels found.</CommandEmpty>
                 <CommandGroup>

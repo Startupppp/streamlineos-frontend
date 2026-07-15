@@ -87,7 +87,7 @@ function CopyButton({ value }: { value: string }) {
     });
   }, [value]);
   return (
-    <Button type="button" variant="outline" size="sm" onClick={handleCopy} className="h-7 gap-1">
+    <Button type="button" variant="outline" size="sm" onClick={handleCopy} className="gap-1">
       {copied ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5" />}
       {copied ? "Copied" : "Copy"}
     </Button>
@@ -165,7 +165,7 @@ export default function ServiceAccountsPage() {
                     <Skeleton className="h-4 w-32" />
                     <Skeleton className="h-3 w-48" />
                   </div>
-                  <Skeleton className="h-8 w-20" />
+                  <Skeleton className="h-4 w-20" />
                 </div>
               ))}
             </CardContent>
@@ -212,7 +212,7 @@ export default function ServiceAccountsPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="h-7 gap-1 text-xs"
+                      className="gap-1 text-xs"
                       onClick={() => handleRotate(sa.id)}
                       disabled={rotateMutation.isPending}
                     >
@@ -222,7 +222,7 @@ export default function ServiceAccountsPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="h-7 gap-1 text-xs text-destructive hover:text-destructive border-destructive/30"
+                      className="gap-1 text-xs text-destructive hover:text-destructive border-destructive/30"
                       onClick={() => deleteMutation.mutate(sa.id)}
                       disabled={deleteMutation.isPending}
                     >

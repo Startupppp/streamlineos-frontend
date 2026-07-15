@@ -59,7 +59,7 @@ export const WfhBalancesCard = memo(function WfhBalancesCard() {
     <Card className="rounded-2xl border border-border border-l-4 border-l-violet-500 bg-card shadow-sm overflow-hidden">
       <CardHeader className="pb-3 pt-5">
         <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-          <div className="h-7 w-7 rounded-lg bg-violet-100 dark:bg-violet-950/40 flex items-center justify-center">
+          <div className="w-7 rounded-lg bg-violet-100 dark:bg-violet-950/40 flex items-center justify-center">
             <Home className="h-4 w-4 text-violet-600 dark:text-violet-400" />
           </div>
           WFH Balance

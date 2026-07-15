@@ -64,7 +64,7 @@ export function MeetingNotesSection({ meeting, projectId, canManage }: MeetingNo
         <div className="flex items-center justify-between gap-2">
           <h3 className="text-sm font-semibold text-foreground">Notes</h3>
           {canManage && dirty ? (
-            <LoadingButton size="sm" className="h-7 text-xs" onClick={handleSave} isPending={updateMeeting.isPending} loadingText="Saving…">
+            <LoadingButton size="sm" className="text-xs" onClick={handleSave} isPending={updateMeeting.isPending} loadingText="Saving…">
               Save Notes
             </LoadingButton>
           ) : null}

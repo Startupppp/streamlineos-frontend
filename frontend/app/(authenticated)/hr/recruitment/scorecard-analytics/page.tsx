@@ -192,7 +192,7 @@ export default function ScorecardAnalyticsPage() {
               <div className="space-y-2">
                 {stats.map((s) => (
                   <div key={s.interviewerId} className="flex items-center gap-3 rounded-lg border px-3 py-2.5">
-                    <Avatar className="h-8 w-8 shrink-0">
+                    <Avatar className="w-8 shrink-0">
                       <AvatarFallback className="text-xs">{initials(s.name, s.email)}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">

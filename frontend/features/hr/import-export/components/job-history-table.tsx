@@ -148,7 +148,7 @@ export function JobHistoryTable({ entity }: JobHistoryTableProps) {
         isLoading={isLoading}
         emptyState={
           <div className="flex flex-col items-center justify-center py-10 text-center gap-2">
-            <AlertCircle className="h-8 w-8 text-muted-foreground/40" />
+            <AlertCircle className="w-8 text-muted-foreground/40" />
             <p className="text-sm text-muted-foreground">No import history yet</p>
           </div>
         }

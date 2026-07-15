@@ -143,7 +143,7 @@ export function ReportsHubClient() {
             placeholder="Search reports…"
             value={search}
             onChange={handleSearchChange}
-            className="h-8 pl-8 text-sm w-[220px]"
+            className="pl-8 text-sm w-[220px]"
           />
         </div>
       }

@@ -209,7 +209,7 @@ export function SelfEditProfileForm({
                 id="image"
                 {...register("image")}
                 placeholder="https://…"
-                className="h-8 text-sm"
+                className="text-sm"
               />
               {errors.image && (
                 <p className="text-xs text-destructive">
@@ -285,7 +285,7 @@ export function SelfEditProfileForm({
               <Input
                 {...newSkillRegistration}
                 placeholder="Add a skill…"
-                className="h-8 text-sm flex-1"
+                className="text-sm flex-1"
                 onChange={handleSkillInputChange}
                 onKeyDown={handleSkillKeyDown}
               />
@@ -293,7 +293,7 @@ export function SelfEditProfileForm({
                 type="button"
                 size="sm"
                 variant="outline"
-                className="h-8 gap-1"
+                className="gap-1"
                 onClick={addSkill}
               >
                 <Plus className="h-3.5 w-3.5" />
@@ -382,7 +382,7 @@ const SocialField = ({
         id={id}
         {...rest}
         placeholder={placeholder}
-        className="h-8 text-sm"
+        className="text-sm"
       />
     </div>
     {error && <p className="text-xs text-destructive mt-0.5 pl-9">{error}</p>}

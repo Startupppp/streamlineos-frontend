@@ -86,7 +86,7 @@ function TrashRow({ page }: { page: KbPage }) {
             variant="ghost"
             onClick={handleRestore}
             disabled={restore.isPending}
-            className="h-7 text-xs gap-1"
+            className="text-xs gap-1"
           >
             <KbRotateCcwIcon className="h-3 w-3" />
             Restore
@@ -96,7 +96,7 @@ function TrashRow({ page }: { page: KbPage }) {
             variant="ghost"
             onClick={handleDeleteForeverClick}
             disabled={hardDelete.isPending}
-            className="h-7 text-xs gap-1 text-destructive hover:text-destructive"
+            className="text-xs gap-1 text-destructive hover:text-destructive"
           >
             <KbTrash2Icon className="h-3 w-3" />
             Delete forever
@@ -185,7 +185,7 @@ export default function TrashPage() {
         {!isLoading && isError && (
           <EmptyState
             illustration={
-              <KbTrash2Icon className="h-8 w-8 text-muted-foreground/40" />
+              <KbTrash2Icon className="w-8 text-muted-foreground/40" />
             }
             title="Could not load trash"
             description="There was a problem fetching deleted pages."
@@ -195,7 +195,7 @@ export default function TrashPage() {
         {!isLoading && !isError && pages.length === 0 && (
           <EmptyState
             illustration={
-              <KbTrash2Icon className="h-8 w-8 text-muted-foreground/40" />
+              <KbTrash2Icon className="w-8 text-muted-foreground/40" />
             }
             title="Trash is empty"
             description="Deleted pages will appear here and can be restored or permanently removed."

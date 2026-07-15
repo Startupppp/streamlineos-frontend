@@ -47,7 +47,12 @@ export function InputsPageContent() {
   const [showUnlockConfirm, setShowUnlockConfirm] = useState(false);
   const [adjDialogOpen, setAdjDialogOpen] = useState(false);
 
-  const { data: periodsData, isLoading, error, refetch } = usePayrollInputPeriods({ limit: 100 });
+  const {
+    data: periodsData,
+    isLoading,
+    error,
+    refetch,
+  } = usePayrollInputPeriods({ limit: 100 });
   const createPeriod = useCreatePayrollInputPeriod();
   const buildPeriod = useBuildPayrollInputPeriod();
   const lockPeriod = useLockPayrollInputPeriod();
@@ -100,7 +105,7 @@ export function InputsPageContent() {
         <Button
           variant="outline"
           size="sm"
-          className="h-8 text-xs gap-1"
+          className="text-xs gap-1"
           onClick={() => setShowCreateConfirm(true)}
         >
           <Calendar className="h-3.5 w-3.5" />
@@ -111,7 +116,7 @@ export function InputsPageContent() {
         <LoadingButton
           variant="outline"
           size="sm"
-          className="h-8 text-xs gap-1"
+          className="text-xs gap-1"
           isPending={buildPeriod.isPending || isBuilding}
           loadingText="Building..."
           onClick={handleBuild}
@@ -123,7 +128,7 @@ export function InputsPageContent() {
       {currentPeriod?.status === "built" && (
         <LoadingButton
           size="sm"
-          className="h-8 text-xs gap-1"
+          className="text-xs gap-1"
           isPending={lockPeriod.isPending}
           onClick={() => setShowLockConfirm(true)}
         >
@@ -135,7 +140,7 @@ export function InputsPageContent() {
         <Button
           variant="outline"
           size="sm"
-          className="h-8 text-xs gap-1 text-amber-700 border-amber-300 hover:bg-amber-50 dark:text-amber-300 dark:border-amber-500/30 dark:hover:bg-amber-500/10"
+          className="text-xs gap-1 text-amber-700 border-amber-300 hover:bg-amber-50 dark:text-amber-300 dark:border-amber-500/30 dark:hover:bg-amber-500/10"
           onClick={() => setShowUnlockConfirm(true)}
         >
           <LockOpen className="h-3.5 w-3.5" />
@@ -151,14 +156,19 @@ export function InputsPageContent() {
       subtitle="Capture and lock HR data for payroll processing"
       actions={actions}
       filters={
-        <MonthPicker value={month} onChange={setMonth} yearRange={[-1, 0]} className="w-44" />
+        <MonthPicker
+          value={month}
+          onChange={setMonth}
+          yearRange={[-1, 0]}
+          className="w-44"
+        />
       }
     >
       {isLoading && (
         <div className="space-y-3">
           <div className="flex gap-3">
-            <Skeleton className="h-8 w-24" />
-            <Skeleton className="h-8 w-32" />
+            <Skeleton className="h-4 w-24" />{" "}
+            <Skeleton className="h-4 w-32" />{" "}
           </div>
           <Skeleton className="h-48 w-full rounded-md" />
         </div>
@@ -178,12 +188,18 @@ export function InputsPageContent() {
                 )}
                 {currentPeriod.builtAt && (
                   <span className="text-muted-foreground text-xs">
-                    Built {new Date(currentPeriod.builtAt).toLocaleDateString("en-IN")}
+                    Built{" "}
+                    {new Date(currentPeriod.builtAt).toLocaleDateString(
+                      "en-IN",
+                    )}
                   </span>
                 )}
                 {currentPeriod.lockedAt && (
                   <span className="text-muted-foreground text-xs">
-                    Locked {new Date(currentPeriod.lockedAt).toLocaleDateString("en-IN")}
+                    Locked{" "}
+                    {new Date(currentPeriod.lockedAt).toLocaleDateString(
+                      "en-IN",
+                    )}
                   </span>
                 )}
               </div>
@@ -191,7 +207,9 @@ export function InputsPageContent() {
               {!isBuilt && currentPeriod.status !== "building" && (
                 <div className="border border-dashed border-border rounded-lg p-6 text-center">
                   <p className="text-sm text-muted-foreground mb-3">
-                    Period is open. Click <strong>Build Inputs</strong> to snapshot attendance, leave, overtime, reimbursements, and deductions for {formatPeriodLabel(month)}.
+                    Period is open. Click <strong>Build Inputs</strong> to
+                    snapshot attendance, leave, overtime, reimbursements, and
+                    deductions for {formatPeriodLabel(month)}.
                   </p>
                 </div>
               )}
@@ -213,7 +231,8 @@ export function InputsPageContent() {
           ) : (
             <div className="border border-dashed border-border rounded-lg p-10 text-center">
               <p className="text-sm text-muted-foreground mb-4">
-                No input period found for <strong>{formatPeriodLabel(month)}</strong>.
+                No input period found for{" "}
+                <strong>{formatPeriodLabel(month)}</strong>.
               </p>
               <Button
                 variant="outline"
@@ -233,12 +252,16 @@ export function InputsPageContent() {
           <AlertDialogHeader>
             <AlertDialogTitle>Open payroll input period?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will create an input period for <strong>{formatPeriodLabel(month)}</strong>. You can then build and lock HR data for payroll.
+              This will create an input period for{" "}
+              <strong>{formatPeriodLabel(month)}</strong>. You can then build
+              and lock HR data for payroll.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleCreatePeriod}>Open Period</AlertDialogAction>
+            <AlertDialogAction onClick={handleCreatePeriod}>
+              Open Period
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -248,12 +271,18 @@ export function InputsPageContent() {
           <AlertDialogHeader>
             <AlertDialogTitle>Lock this period?</AlertDialogTitle>
             <AlertDialogDescription>
-              Locking <strong>{formatPeriodLabel(month)}</strong> will prevent further changes. Leave ledger entries for this period will be marked as locked. Any subsequent HR changes will create adjustments for the next cycle.
+              Locking <strong>{formatPeriodLabel(month)}</strong> will prevent
+              further changes. Leave ledger entries for this period will be
+              marked as locked. Any subsequent HR changes will create
+              adjustments for the next cycle.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleLock} className="bg-primary text-primary-foreground">
+            <AlertDialogAction
+              onClick={handleLock}
+              className="bg-primary text-primary-foreground"
+            >
               Lock Period
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -265,12 +294,18 @@ export function InputsPageContent() {
           <AlertDialogHeader>
             <AlertDialogTitle>Unlock this period?</AlertDialogTitle>
             <AlertDialogDescription>
-              Unlocking will allow changes to be made to <strong>{formatPeriodLabel(month)}</strong>. This action is audited. Payroll processing that has already consumed this period may be affected.
+              Unlocking will allow changes to be made to{" "}
+              <strong>{formatPeriodLabel(month)}</strong>. This action is
+              audited. Payroll processing that has already consumed this period
+              may be affected.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleUnlock} className="bg-amber-600 text-white hover:bg-amber-700">
+            <AlertDialogAction
+              onClick={handleUnlock}
+              className="bg-amber-600 text-white hover:bg-amber-700"
+            >
               Unlock Period
             </AlertDialogAction>
           </AlertDialogFooter>

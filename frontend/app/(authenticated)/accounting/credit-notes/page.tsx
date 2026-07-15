@@ -101,7 +101,7 @@ function CreditNoteRowActions({ credit, onApply, canManage }: RowActionsProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-7 w-7">
+        <Button variant="ghost" size="icon" className="w-7">
           <MoreHorizontal className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
@@ -253,7 +253,7 @@ export default function CreditNotesPage() {
       filters={
         <div className="flex flex-wrap items-center gap-2">
           <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
-            <SelectTrigger className="h-8 w-[140px] text-xs">
+            <SelectTrigger className="w-[140px] text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -265,7 +265,7 @@ export default function CreditNotesPage() {
             </SelectContent>
           </Select>
           <Input
-            className="h-8 w-[180px] text-xs"
+            className="w-[180px] text-xs"
             placeholder="Search customer…"
             value={customerSearch}
             onChange={handleCustomerSearchChange}

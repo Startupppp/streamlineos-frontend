@@ -214,7 +214,7 @@ export function WorkLogFilterActions({
               variant="outline"
               role="combobox"
               aria-expanded={employeeSearchOpen}
-              className="h-8 w-[170px] justify-between font-normal text-xs border-border"
+              className="w-[170px] justify-between font-normal text-xs border-border"
             >
               <span className="flex items-center gap-1.5 truncate">
                 <Users className="h-3 w-3 text-muted-foreground shrink-0" />
@@ -234,7 +234,7 @@ export function WorkLogFilterActions({
                 placeholder="Search employee..."
                 value={employeeSearch}
                 onValueChange={setEmployeeSearch}
-                className="h-8 text-xs"
+                className="text-xs"
               />
               <CommandList>
                 <CommandEmpty className="text-xs py-3">No employee found.</CommandEmpty>
@@ -271,7 +271,7 @@ export function WorkLogFilterActions({
 
       <Sheet onOpenChange={handleSheetOpen}>
         <SheetTrigger asChild>
-          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs border-border relative">
+          <Button variant="outline" size="sm" className="gap-1.5 text-xs border-border relative">
             <SlidersHorizontal className="h-3 w-3" />
             <span className="hidden sm:inline">Filters</span>
             {activeFilterCount > 0 && (
@@ -380,7 +380,7 @@ export function WorkLogFilterActions({
                       variant="outline"
                       role="combobox"
                       aria-expanded={sheetPickerOpen}
-                      className="h-8 w-full justify-between rounded-md border border-input bg-card px-3 font-normal text-sm shadow-xs"
+                      className="w-full justify-between rounded-md border border-input bg-card px-3 font-normal text-sm shadow-xs"
                     >
                       <span className="flex items-center gap-1.5 truncate">
                         <Users className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
@@ -395,7 +395,7 @@ export function WorkLogFilterActions({
                         placeholder="Search employee..."
                         value={sheetPickerSearch}
                         onValueChange={setSheetPickerSearch}
-                        className="h-8 text-xs"
+                        className="text-xs"
                       />
                       <CommandList>
                         <CommandEmpty className="text-xs py-3">No employee found.</CommandEmpty>
@@ -437,7 +437,7 @@ export function WorkLogFilterActions({
       </Sheet>
 
       {isAdminOrCeo && (
-        <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs border-border" onClick={onExport}>
+        <Button variant="outline" size="sm" className="gap-1.5 text-xs border-border" onClick={onExport}>
           <Download className="h-3 w-3" />
           <span className="hidden sm:inline">Export</span>
         </Button>

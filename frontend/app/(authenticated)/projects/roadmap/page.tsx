@@ -9,8 +9,9 @@ import { ExternalLink, MessageSquare, Megaphone, Plus, Sparkles } from "lucide-r
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { RequireModule } from "@/components/auth/require-module";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import { RoadmapTab } from "@/features/projects/roadmap/roadmap-tab";
 import { FeedbackTab } from "@/features/projects/roadmap/feedback-tab";
 import { ChangelogTab } from "@/features/projects/roadmap/changelog-tab";
@@ -30,10 +31,6 @@ export default function RoadmapPage() {
   const [activeTab, setActiveTab] = useState<RoadmapTabValue>("roadmap");
   const [roadmapCreateOpen, setRoadmapCreateOpen] = useState(false);
   const [changelogCreateOpen, setChangelogCreateOpen] = useState(false);
-
-  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setSearch(e.target.value);
-  }
 
   function handleTabChange(value: string) {
     if (value === "roadmap" || value === "feedback" || value === "changelog") {
@@ -62,7 +59,7 @@ export default function RoadmapPage() {
   const actions = (
     <div className="flex items-center gap-2">
       {orgId ? (
-        <Button asChild variant="outline" size="sm" className="h-8">
+        <Button asChild variant="outline" size="sm">
           <Link href={`/roadmap/${orgId}`} target="_blank" rel="noopener noreferrer">
             <ExternalLink className="h-3.5 w-3.5" />
             Public board
@@ -70,13 +67,13 @@ export default function RoadmapPage() {
         </Button>
       ) : null}
       {activeTab === "roadmap" ? (
-        <Button size="sm" className="h-8" onClick={handleOpenRoadmapCreate}>
+        <Button size="sm" onClick={handleOpenRoadmapCreate}>
           <Plus className="h-3.5 w-3.5" />
           New Item
         </Button>
       ) : null}
       {activeTab === "changelog" ? (
-        <Button size="sm" className="h-8" onClick={handleOpenChangelogCreate}>
+        <Button size="sm" onClick={handleOpenChangelogCreate}>
           <Plus className="h-3.5 w-3.5" />
           New Entry
         </Button>
@@ -100,31 +97,34 @@ export default function RoadmapPage() {
         >
           <PmPageShell>
             <PmSection index={0} className={cn(PM_FILL_SECTION, "gap-3")}>
-              <TabsList className="shrink-0">
-                <TabsTrigger value="roadmap" className="gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5" />
-                  Roadmap
-                </TabsTrigger>
-                <TabsTrigger value="feedback" className="gap-1.5">
-                  <MessageSquare className="h-3.5 w-3.5" />
-                  Feedback
-                </TabsTrigger>
-                <TabsTrigger value="changelog" className="gap-1.5">
-                  <Megaphone className="h-3.5 w-3.5" />
-                  Changelog
-                </TabsTrigger>
-              </TabsList>
-
-              {showSearch ? (
-                <div className="flex flex-wrap items-center gap-3 shrink-0">
-                  <Input
-                    placeholder="Search…"
-                    value={search}
-                    onChange={handleSearchChange}
-                    className="h-8 w-full text-xs sm:w-56 border-input bg-card"
-                  />
-                </div>
-              ) : null}
+              <PageTabsToolbar
+                tabsDensity="labeled"
+                tabs={
+                  <TabsList className="shrink-0">
+                    <TabsTrigger value="roadmap" className="gap-1.5">
+                      <Sparkles className="h-3.5 w-3.5" />
+                      Roadmap
+                    </TabsTrigger>
+                    <TabsTrigger value="feedback" className="gap-1.5">
+                      <MessageSquare className="h-3.5 w-3.5" />
+                      Feedback
+                    </TabsTrigger>
+                    <TabsTrigger value="changelog" className="gap-1.5">
+                      <Megaphone className="h-3.5 w-3.5" />
+                      Changelog
+                    </TabsTrigger>
+                  </TabsList>
+                }
+                search={
+                  showSearch ? (
+                    <SearchInput
+                      placeholder="Search…"
+                      value={search}
+                      onValueChange={setSearch}
+                    />
+                  ) : null
+                }
+              />
 
               <TabsContent value="roadmap" className="mt-0">
                 <RoadmapTab

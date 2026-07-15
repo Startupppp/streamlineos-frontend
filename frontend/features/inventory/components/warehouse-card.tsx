@@ -107,7 +107,7 @@ export const WarehouseCard = memo(function WarehouseCard({ warehouse }: { wareho
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-7 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
+                  className="text-xs gap-1.5 text-muted-foreground hover:text-foreground"
                   onClick={handleSetDefault}
                   disabled={setDefault.isPending}
                   aria-label={`Set ${warehouse.name} as default warehouse`}

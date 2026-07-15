@@ -225,7 +225,7 @@ function FeatureFlagsContent() {
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 gap-1.5 text-muted-foreground hover:text-destructive"
+            className="gap-1.5 text-muted-foreground hover:text-destructive"
             onClick={() => handleArchive(flag)}
             disabled={archiveFlag.isPending}
             aria-label={`Archive ${flag.name}`}

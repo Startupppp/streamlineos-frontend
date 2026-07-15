@@ -123,7 +123,7 @@ export function LoadCreateSheet({ open, onOpenChange }: LoadCreateSheetProps) {
           <Input
             id="load-name"
             placeholder="e.g. Morning run batch"
-            className="h-8 text-sm"
+            className="text-sm"
             {...form.register("name")}
           />
         </div>
@@ -157,7 +157,7 @@ export function LoadCreateSheet({ open, onOpenChange }: LoadCreateSheetProps) {
                   value={form.watch(`members.${index}.type`)}
                   onValueChange={(v) => handleMemberTypeChange(index, v)}
                 >
-                  <SelectTrigger className="h-8 text-xs">
+                  <SelectTrigger className="text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -176,7 +176,7 @@ export function LoadCreateSheet({ open, onOpenChange }: LoadCreateSheetProps) {
                       type={form.watch(`members.${index}.type`)}
                       value={field.value}
                       onChange={field.onChange}
-                      className="h-8 text-xs"
+                      className="text-xs"
                     />
                   )}
                 />
@@ -190,7 +190,7 @@ export function LoadCreateSheet({ open, onOpenChange }: LoadCreateSheetProps) {
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 shrink-0"
+                className="w-7 shrink-0"
                 onClick={() => handleRemoveMember(index)}
               >
                 <Trash2 className="h-3.5 w-3.5 text-destructive" />

@@ -153,7 +153,7 @@ export function ActivityFilters({
           variant="ghost"
           size="sm"
           onClick={onClear}
-          className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground"
+          className="px-2 text-xs text-muted-foreground hover:text-foreground"
         >
           <X className="h-3 w-3 mr-1" />
           Clear

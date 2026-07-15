@@ -172,11 +172,11 @@ export function CreateProjectDialog({ open, onOpenChange, defaultName, onSubmit,
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Start Date</Label>
-              <DatePicker value={startDate ?? ""} onChange={handleStartDateChange} placeholder="Pick a date" className="h-8 text-sm" />
+              <DatePicker value={startDate ?? ""} onChange={handleStartDateChange} placeholder="Pick a date" className="text-sm" />
             </div>
             <div className="space-y-1.5">
               <Label>End Date</Label>
-              <DatePicker value={endDate ?? ""} onChange={handleEndDateChange} placeholder="Pick a date" className="h-8 text-sm" />
+              <DatePicker value={endDate ?? ""} onChange={handleEndDateChange} placeholder="Pick a date" className="text-sm" />
             </div>
           </div>
         </div>

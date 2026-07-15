@@ -99,7 +99,7 @@ export function QuoteTemplateFormSheet({
                   <FormItem>
                     <FormLabel>Name</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="e.g. Standard Quote Template" className="h-8" />
+                      <Input {...field} placeholder="e.g. Standard Quote Template" className="" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

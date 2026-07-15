@@ -88,7 +88,7 @@ export function LetterEmailEditor({
             value={subject ?? ""}
             onChange={(e) => onSubjectChange(e.target.value)}
             placeholder="Email / letter subject"
-            className="h-8"
+            className=""
           />
         </div>
       )}
@@ -107,7 +107,7 @@ export function LetterEmailEditor({
               placeholder="Search tokens..."
               value={search}
               onChange={handleSearchChange}
-              className="h-8 pl-8 text-xs"
+              className="pl-8 text-xs"
             />
           </div>
           <div className="max-h-32 overflow-y-auto space-y-1.5">

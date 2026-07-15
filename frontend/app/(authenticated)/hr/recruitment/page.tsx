@@ -156,7 +156,7 @@ export default function RecruitmentCommandCenterPage() {
       actions={
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button size="sm" className="h-8 gap-1.5 text-xs">
+            <Button size="sm" className="gap-1.5 text-xs">
               <PlusIcon className="h-3.5 w-3.5" />
               Create
             </Button>
@@ -218,7 +218,7 @@ export default function RecruitmentCommandCenterPage() {
                       href="/hr/recruitment/candidates/intake"
                       className="flex items-center gap-3 px-5 py-3 hover:bg-muted/40 transition-colors duration-150 group"
                     >
-                      <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 text-[11px] font-bold text-primary">
+                      <div className="w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 text-[11px] font-bold text-primary">
                         {c.firstName?.[0]}
                         {c.lastName?.[0]}
                       </div>
@@ -243,7 +243,7 @@ export default function RecruitmentCommandCenterPage() {
                 >
                   {interviewsToday.slice(0, 5).map((interview) => (
                     <div key={interview.id} className="flex items-center gap-3 px-5 py-3">
-                      <div className="h-8 w-8 rounded-full bg-violet-100 dark:bg-violet-950/30 flex items-center justify-center shrink-0 text-[11px] font-bold text-violet-700 dark:text-violet-300">
+                      <div className="w-8 rounded-full bg-violet-100 dark:bg-violet-950/30 flex items-center justify-center shrink-0 text-[11px] font-bold text-violet-700 dark:text-violet-300">
                         {interview.candidate?.firstName?.[0]}
                         {interview.candidate?.lastName?.[0]}
                       </div>
@@ -271,7 +271,7 @@ export default function RecruitmentCommandCenterPage() {
                       href="/hr/recruitment/jobs"
                       className="flex items-center gap-3 px-5 py-3 hover:bg-muted/40 transition-colors duration-150 group"
                     >
-                      <div className="h-8 w-8 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
+                      <div className="w-8 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
                         <Briefcase className="h-4 w-4 text-amber-600" />
                       </div>
                       <div className="flex-1 min-w-0">

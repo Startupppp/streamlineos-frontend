@@ -130,7 +130,7 @@ export function CampaignsTab() {
     <div className="space-y-4">
       {canManage && (
         <div className="flex justify-end">
-          <Button size="sm" className="h-8 gap-1.5" onClick={() => setSheetOpen(true)}>
+          <Button size="sm" className="gap-1.5" onClick={() => setSheetOpen(true)}>
             <Plus className="h-3.5 w-3.5" />
             New Campaign
           </Button>
@@ -139,7 +139,7 @@ export function CampaignsTab() {
 
       {(!campaigns || campaigns.length === 0) ? (
         <div className="flex flex-col items-center justify-center py-16 rounded-lg border border-dashed border-border bg-muted/20">
-          <Megaphone className="h-8 w-8 text-muted-foreground mb-3" />
+          <Megaphone className="w-8 text-muted-foreground mb-3" />
           <p className="text-sm font-medium text-foreground">No campaigns yet</p>
         </div>
       ) : (
@@ -175,7 +175,7 @@ export function CampaignsTab() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                      className="w-7 text-muted-foreground hover:text-foreground"
                       onClick={() => handleEdit(c)}
                     >
                       <span className="text-xs">✏</span>
@@ -183,7 +183,7 @@ export function CampaignsTab() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                      className="w-7 text-muted-foreground hover:text-destructive"
                       onClick={() => setDeleteId(c.id)}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -208,7 +208,7 @@ export function CampaignsTab() {
         <div className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="camp-name" className="text-xs font-medium">Name</Label>
-            <Input id="camp-name" placeholder="Campaign name" value={name} onChange={handleNameChange} className="h-8 text-sm" />
+            <Input id="camp-name" placeholder="Campaign name" value={name} onChange={handleNameChange} className="text-sm" />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="camp-desc" className="text-xs font-medium">Description</Label>
@@ -217,17 +217,17 @@ export function CampaignsTab() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="camp-start" className="text-xs font-medium">Starts At</Label>
-              <Input id="camp-start" type="datetime-local" value={startsAt} onChange={handleStartsChange} className="h-8 text-sm" />
+              <Input id="camp-start" type="datetime-local" value={startsAt} onChange={handleStartsChange} className="text-sm" />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="camp-end" className="text-xs font-medium">Ends At</Label>
-              <Input id="camp-end" type="datetime-local" value={endsAt} onChange={handleEndsChange} className="h-8 text-sm" />
+              <Input id="camp-end" type="datetime-local" value={endsAt} onChange={handleEndsChange} className="text-sm" />
             </div>
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">Status</Label>
             <Select value={status} onValueChange={(v) => setStatus(v as HrCampaign["status"])}>
-              <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="draft">Draft</SelectItem>
                 <SelectItem value="active">Active</SelectItem>

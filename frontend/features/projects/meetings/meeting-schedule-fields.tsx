@@ -18,7 +18,7 @@ export function MeetingScheduleFields() {
             <FormItem>
               <FormLabel>Start <span className="text-destructive">*</span></FormLabel>
               <FormControl>
-                <Input {...field} type="datetime-local" className="h-8 text-sm" />
+                <Input {...field} type="datetime-local" className="text-sm" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -31,7 +31,7 @@ export function MeetingScheduleFields() {
             <FormItem>
               <FormLabel>End</FormLabel>
               <FormControl>
-                <Input {...field} type="datetime-local" className="h-8 text-sm" />
+                <Input {...field} type="datetime-local" className="text-sm" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -47,7 +47,7 @@ export function MeetingScheduleFields() {
             <FormItem>
               <FormLabel>Duration (min)</FormLabel>
               <FormControl>
-                <Input {...field} type="number" min="1" placeholder="30" className="h-8 text-sm" />
+                <Input {...field} type="number" min="1" placeholder="30" className="text-sm" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -60,7 +60,7 @@ export function MeetingScheduleFields() {
             <FormItem>
               <FormLabel>Timezone</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="UTC" className="h-8 text-sm" />
+                <Input {...field} placeholder="UTC" className="text-sm" />
               </FormControl>
               <FormMessage />
             </FormItem>

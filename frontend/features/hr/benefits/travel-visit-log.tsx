@@ -30,7 +30,7 @@ function VisitLogEntry({ log }: { log: TravelVisitLog }) {
   return (
     <div className="flex gap-3 pb-4 border-b border-border/40 last:border-0 last:pb-0">
       <div className="relative flex flex-col items-center">
-        <div className="h-7 w-7 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+        <div className="w-7 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
           <MapPin className="h-3.5 w-3.5 text-primary" />
         </div>
       </div>
@@ -106,7 +106,7 @@ export function TravelVisitLog({ travelRequestId }: Props) {
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-foreground">Field Visit Log</p>
-        <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={handleOpenSheet}>
+        <Button size="sm" variant="outline" className="text-xs gap-1" onClick={handleOpenSheet}>
           <Plus className="h-3 w-3" />
           Log Visit
         </Button>

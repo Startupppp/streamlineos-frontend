@@ -157,7 +157,7 @@ export function WorkflowUpsertSheet({ open, onOpenChange, editDefinition }: Prop
                 <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">Process Type</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value} disabled={isEdit}>
                   <FormControl>
-                    <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
                   </FormControl>
                   <SelectContent>
                     {HR_WORKFLOW_OBJECT_TYPES.map((t) => (
@@ -177,7 +177,7 @@ export function WorkflowUpsertSheet({ open, onOpenChange, editDefinition }: Prop
               <FormItem>
                 <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. Standard Leave Approval" className="h-8 text-sm" {...field} />
+                  <Input placeholder="e.g. Standard Leave Approval" className="text-sm" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -232,7 +232,7 @@ export function WorkflowUpsertSheet({ open, onOpenChange, editDefinition }: Prop
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <p className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">Approval Steps</p>
-              <Button type="button" variant="outline" size="sm" onClick={handleAddStep} className="h-7 text-xs gap-1">
+              <Button type="button" variant="outline" size="sm" onClick={handleAddStep} className="text-xs gap-1">
                 <Plus className="h-3 w-3" />Add Step
               </Button>
             </div>
@@ -249,7 +249,7 @@ export function WorkflowUpsertSheet({ open, onOpenChange, editDefinition }: Prop
                       render={({ field: f }) => (
                         <FormItem>
                           <FormControl>
-                            <Input placeholder="Step name" className="h-8 text-xs" {...f} />
+                            <Input placeholder="Step name" className="text-xs" {...f} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -260,7 +260,7 @@ export function WorkflowUpsertSheet({ open, onOpenChange, editDefinition }: Prop
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 shrink-0 text-destructive"
+                    className="w-7 shrink-0 text-destructive"
                     onClick={() => remove(index)}
                     disabled={fields.length === 1}
                   >
@@ -277,7 +277,7 @@ export function WorkflowUpsertSheet({ open, onOpenChange, editDefinition }: Prop
                         <FormLabel className="text-[10px] font-medium text-muted-foreground">Approver</FormLabel>
                         <Select onValueChange={f.onChange} value={f.value}>
                           <FormControl>
-                            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                            <SelectTrigger className="text-xs"><SelectValue /></SelectTrigger>
                           </FormControl>
                           <SelectContent>
                             {HR_WORKFLOW_APPROVER_TYPES.map((t) => (
@@ -297,7 +297,7 @@ export function WorkflowUpsertSheet({ open, onOpenChange, editDefinition }: Prop
                         <FormLabel className="text-[10px] font-medium text-muted-foreground">Mode</FormLabel>
                         <Select onValueChange={f.onChange} value={f.value}>
                           <FormControl>
-                            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                            <SelectTrigger className="text-xs"><SelectValue /></SelectTrigger>
                           </FormControl>
                           <SelectContent>
                             {STEP_MODES.map((m) => (
@@ -321,7 +321,7 @@ export function WorkflowUpsertSheet({ open, onOpenChange, editDefinition }: Prop
                           type="number"
                           min={1}
                           placeholder="e.g. 48"
-                          className="h-8 text-xs"
+                          className="text-xs"
                           value={f.value ?? ""}
                           onChange={(e) => f.onChange(e.target.value ? parseInt(e.target.value, 10) : undefined)}
                         />

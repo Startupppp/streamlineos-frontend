@@ -413,7 +413,7 @@ export default function NewJournalEntryPage() {
                   <FormItem>
                     <FormLabel>Entry date</FormLabel>
                     <FormControl>
-                      <DatePicker id="entry-date" value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+                      <DatePicker id="entry-date" value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

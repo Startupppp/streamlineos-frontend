@@ -48,7 +48,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
       <PageWrapper title="Space" backHref={KB_SPACES}>
         <EmptyState
           illustration={
-            <KbLayoutGridIcon className="h-8 w-8 text-muted-foreground/40" />
+            <KbLayoutGridIcon className="w-8 text-muted-foreground/40" />
           }
           title="Could not load space"
           description="There was a problem fetching this space."
@@ -109,7 +109,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
           {spacePageNodes.length === 0 && !treeLoading ? (
             <EmptyState
               illustration={
-                <KbLayoutGridIcon className="h-8 w-8 text-muted-foreground/40" />
+                <KbLayoutGridIcon className="w-8 text-muted-foreground/40" />
               }
               title="No pages in this space yet"
               description="Assign pages from Page settings"

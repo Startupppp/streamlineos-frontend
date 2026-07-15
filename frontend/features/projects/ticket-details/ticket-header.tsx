@@ -69,7 +69,7 @@ export function TicketHeader({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                    className="w-7 text-muted-foreground hover:text-destructive"
                     aria-label="Delete ticket"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -81,10 +81,10 @@ export function TicketHeader({
                     This cannot be undone.
                   </p>
                   <div className="flex justify-end gap-2">
-                    <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setDeleteOpen(false)}>
+                    <Button variant="outline" size="sm" className="text-xs" onClick={() => setDeleteOpen(false)}>
                       Cancel
                     </Button>
-                    <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={onDelete} disabled={isDeleting}>
+                    <Button variant="destructive" size="sm" className="text-xs" onClick={onDelete} disabled={isDeleting}>
                       {isDeleting ? "Deleting..." : "Delete"}
                     </Button>
                   </div>

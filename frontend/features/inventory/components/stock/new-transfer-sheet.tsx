@@ -412,7 +412,7 @@ export function NewTransferSheet({ open, onOpenChange }: { open: boolean; onOpen
                 <Label className="text-[13px] font-medium">
                   Lines <span className="text-destructive">*</span>
                 </Label>
-                <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={handleAddLine}>
+                <Button type="button" variant="outline" size="sm" className="text-xs" onClick={handleAddLine}>
                   <Plus className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
                   Add line
                 </Button>

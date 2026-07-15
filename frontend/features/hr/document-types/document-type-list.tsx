@@ -62,7 +62,7 @@ export function DocumentTypeList({
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="h-7 w-7 p-0 hover:bg-muted transition-colors duration-200"
+                    className="w-7 p-0 hover:bg-muted transition-colors duration-200"
                     onClick={handleEdit}
                     aria-label={`Edit ${dt.name}`}
                   >
@@ -77,7 +77,7 @@ export function DocumentTypeList({
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors duration-200"
+                      className="w-7 p-0 text-muted-foreground hover:text-destructive hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors duration-200"
                       onClick={handleDeactivate}
                       aria-label={`Deactivate ${dt.name}`}
                     >
@@ -92,7 +92,7 @@ export function DocumentTypeList({
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-7 w-7 p-0 text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-colors duration-200"
+                      className="w-7 p-0 text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-colors duration-200"
                       onClick={handleReactivate}
                       aria-label={`Reactivate ${dt.name}`}
                     >

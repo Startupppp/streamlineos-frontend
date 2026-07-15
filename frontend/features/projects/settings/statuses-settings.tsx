@@ -149,7 +149,7 @@ export function StatusesSettings({ projectId }: { projectId: number }) {
                 animate={{ opacity: 1 }}
                 className="flex flex-col items-center gap-2 py-8 text-center"
               >
-                <Columns3 className="h-8 w-8 text-muted-foreground/30" />
+                <Columns3 className="w-8 text-muted-foreground/30" />
                 <p className="text-sm text-muted-foreground">
                   No statuses configured
                 </p>
@@ -204,7 +204,7 @@ export function StatusesSettings({ projectId }: { projectId: number }) {
                   <div className="space-y-1">
                     <label className="text-xs text-muted-foreground">Category</label>
                     <Select value={type} onValueChange={handleTypeChange}>
-                      <SelectTrigger className="h-8 text-sm">
+                      <SelectTrigger className="text-sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -229,7 +229,7 @@ export function StatusesSettings({ projectId }: { projectId: number }) {
                     disabled={!name.trim()}
                     isPending={createState.isPending}
                     loadingText="Creating…"
-                    className="h-7 text-xs"
+                    className="text-xs"
                   >
                     Create
                   </LoadingButton>
@@ -238,7 +238,7 @@ export function StatusesSettings({ projectId }: { projectId: number }) {
                     variant="ghost"
                     onClick={handleCancelForm}
                     disabled={createState.isPending}
-                    className="h-7 text-xs"
+                    className="text-xs"
                   >
                     Cancel
                   </Button>

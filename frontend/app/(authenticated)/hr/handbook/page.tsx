@@ -336,9 +336,9 @@ function HandbookContent() {
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-8 w-16" />
-            <Skeleton className="h-8 w-20" />
-            <Skeleton className="h-8 w-16" />
+            <Skeleton className="h-4 w-16" />
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-4 w-16" />
           </div>
           <div className="space-y-2">
             {Array.from({ length: 10 }).map((_, i) => (
@@ -374,7 +374,7 @@ function HandbookContent() {
       subtitle="Manage and publish handbook versions"
       badge={`${versions?.length ?? 0} versions`}
       actions={
-        <Button size="sm" className="h-8 gap-1.5" onClick={handleNewVersionClick}>
+        <Button size="sm" className="gap-1.5" onClick={handleNewVersionClick}>
           <Plus className="h-3.5 w-3.5" />
           New Version
         </Button>
@@ -425,7 +425,7 @@ function HandbookContent() {
                 )}
               </div>
               {!isFiltered && (
-                <Button size="sm" className="h-8 gap-1.5 mt-1" onClick={handleNewVersionClick}>
+                <Button size="sm" className="gap-1.5 mt-1" onClick={handleNewVersionClick}>
                   <Plus className="h-3.5 w-3.5" />
                   New Version
                 </Button>

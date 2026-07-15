@@ -513,7 +513,7 @@ export default function ReportsPage() {
               <div className="space-y-1.5">
                 <Label className="text-xs">Entity</Label>
                 <Select value={entity} onValueChange={handleEntitySelectChange}>
-                  <SelectTrigger className="h-8 text-xs">
+                  <SelectTrigger className="text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -554,11 +554,11 @@ export default function ReportsPage() {
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
                   <Label className="text-xs">Date From</Label>
-                  <DatePicker value={dateFrom ?? ""} onChange={handleDateFromChange} placeholder="Pick a date" className="h-8 text-xs" />
+                  <DatePicker value={dateFrom ?? ""} onChange={handleDateFromChange} placeholder="Pick a date" className="text-xs" />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Date To</Label>
-                  <DatePicker value={dateTo ?? ""} onChange={handleDateToChange} placeholder="Pick a date" className="h-8 text-xs" />
+                  <DatePicker value={dateTo ?? ""} onChange={handleDateToChange} placeholder="Pick a date" className="text-xs" />
                 </div>
               </div>
 

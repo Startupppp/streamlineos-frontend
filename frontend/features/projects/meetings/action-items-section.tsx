@@ -83,7 +83,7 @@ const ActionItemRow = memo(function ActionItemRow({
             <Button
               size="sm"
               variant="ghost"
-              className="h-7 gap-1 text-xs text-muted-foreground hover:text-foreground"
+              className="gap-1 text-xs text-muted-foreground hover:text-foreground"
               onClick={handleConvertClick}
               disabled={convertPending}
               title="Convert to task"
@@ -93,7 +93,7 @@ const ActionItemRow = memo(function ActionItemRow({
           ) : null}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Action item menu">
+              <Button variant="ghost" size="icon" className="w-7" aria-label="Action item menu">
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -177,7 +177,7 @@ export function ActionItemsSection({
           ) : null}
         </h3>
         {canManage ? (
-          <Button size="sm" variant="outline" className="h-7 gap-1.5 text-xs" onClick={handleOpenCreate}>
+          <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={handleOpenCreate}>
             <Plus className="h-3.5 w-3.5" /> Add
           </Button>
         ) : null}

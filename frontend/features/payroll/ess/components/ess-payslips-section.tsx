@@ -36,7 +36,7 @@ function PayslipRowSkeleton() {
       </div>
       <div className="flex items-center gap-3">
         <Skeleton className="h-4 w-16" />
-        <Skeleton className="h-7 w-24 rounded-md" />
+        <Skeleton className="h-8 w-24 rounded-md" />
       </div>
     </div>
   );
@@ -74,7 +74,7 @@ const DownloadButton = memo(function DownloadButton({ payslip }: DownloadButtonP
     <Button
       variant="outline"
       size="sm"
-      className="h-7 text-xs gap-1.5"
+      className="text-xs gap-1.5"
       onClick={handleDownload}
       disabled={loading}
     >
@@ -106,7 +106,7 @@ export function EssPayslipsSection() {
         </h2>
         {years.length > 0 && (
           <Select value={yearFilter} onValueChange={setYearFilter}>
-            <SelectTrigger className="h-8 text-xs w-28">
+            <SelectTrigger className="text-xs w-28">
               <SelectValue placeholder="All years" />
             </SelectTrigger>
             <SelectContent>
@@ -141,7 +141,7 @@ export function EssPayslipsSection() {
                 className="flex items-center justify-between py-3 px-4 border-b border-border last:border-0 hover:bg-muted/30 transition-colors"
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="h-8 w-8 rounded-md bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center shrink-0">
+                  <div className="w-8 rounded-md bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center shrink-0">
                     <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div className="min-w-0">

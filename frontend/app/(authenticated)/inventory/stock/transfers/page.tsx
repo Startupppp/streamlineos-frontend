@@ -107,7 +107,7 @@ function buildTransferColumns(
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 px-2 text-[11px] text-primary hover:text-primary/80"
+          className="px-2 text-[11px] text-primary hover:text-primary/80"
           onClick={(e) => { e.stopPropagation(); onView(row.id); }}
           aria-label={`View transfer ${row.referenceNumber}`}
         >
@@ -224,7 +224,7 @@ export default function TransfersPage() {
       filters={
         <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
           <Select value={statusParam} onValueChange={handleStatusChange}>
-            <SelectTrigger className="h-8 w-[140px] text-xs">
+            <SelectTrigger className="w-[140px] text-xs">
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>
@@ -242,7 +242,7 @@ export default function TransfersPage() {
               placeholder="From warehouse"
               searchPlaceholder="Search warehouses…"
               emptyText="No warehouses found"
-              className="h-8 text-xs"
+              className="text-xs"
             />
           </div>
           <div className="w-[160px]">
@@ -253,7 +253,7 @@ export default function TransfersPage() {
               placeholder="To warehouse"
               searchPlaceholder="Search warehouses…"
               emptyText="No warehouses found"
-              className="h-8 text-xs"
+              className="text-xs"
             />
           </div>
           <DateRangePicker
@@ -264,7 +264,7 @@ export default function TransfersPage() {
             className="w-[180px]"
           />
           {hasActiveFilters && (
-            <Button variant="ghost" size="sm" className="h-8 text-xs gap-1" onClick={handleClearFilters}>
+            <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={handleClearFilters}>
               <X className="h-3.5 w-3.5" aria-hidden="true" />
               Clear filters
             </Button>
@@ -272,7 +272,7 @@ export default function TransfersPage() {
         </div>
       }
       actions={
-        <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={handleOpenSheet}>
+        <Button size="sm" className="gap-1.5 text-xs" onClick={handleOpenSheet}>
           <Plus className="h-3.5 w-3.5" aria-hidden="true" />New Transfer
         </Button>
       }

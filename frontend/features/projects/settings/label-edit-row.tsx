@@ -36,7 +36,7 @@ function SaveLabelButton({
     <LoadingButton
       type="button"
       size="sm"
-      className="h-8 gap-1.5 text-xs"
+      className="gap-1.5 text-xs"
       onClick={onClick}
       disabled={disabled}
       isPending={isPending}
@@ -57,7 +57,7 @@ function CancelLabelButton({ onClick }: { onClick: () => void }) {
       type="button"
       size="sm"
       variant="outline"
-      className="h-8 gap-1.5 text-xs"
+      className="gap-1.5 text-xs"
       onClick={onClick}
       {...hoverHandlers}
     >
@@ -138,7 +138,7 @@ export function LabelEditRow({
           value={name}
           onChange={handleNameChange}
           onKeyDown={handleNameKeyDown}
-          className="h-8 text-sm"
+          className="text-sm"
           placeholder="Label name"
           autoFocus
           aria-label="Label name"

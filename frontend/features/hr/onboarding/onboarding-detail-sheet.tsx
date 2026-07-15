@@ -365,7 +365,7 @@ export function EmployeeDocumentsTab({ onBack, onContinue }: EmployeeDocumentsTa
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <div className="h-7 w-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/40 flex items-center justify-center">
+              <div className="w-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/40 flex items-center justify-center">
                 <FileText className="h-3.5 w-3.5 text-emerald-700 dark:text-emerald-400" />
               </div>
               <p className="text-sm font-semibold text-foreground">Document Checklist</p>
@@ -475,7 +475,7 @@ export function EmployeeDocumentsTab({ onBack, onContinue }: EmployeeDocumentsTa
                     <Button
                       size="sm"
                       variant="outline"
-                      className="h-7 text-xs shrink-0 gap-1.5 duration-200"
+                      className="text-xs shrink-0 gap-1.5 duration-200"
                       onClick={() => handleOpenUpload(docType, submission)}
                       aria-label={`Upload ${docType.name}`}
                     >

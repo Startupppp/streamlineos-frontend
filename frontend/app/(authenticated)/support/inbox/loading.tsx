@@ -48,7 +48,7 @@ export default function SupportInboxLoading() {
             </div>
             <div className="flex items-center gap-2">
               <Skeleton className="h-5 w-14 rounded-full" />
-              <Skeleton className="h-7 w-28 rounded-md" />
+              <Skeleton className="h-8 w-28 rounded-md" />
             </div>
           </div>
         </div>

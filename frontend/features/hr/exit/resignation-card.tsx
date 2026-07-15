@@ -161,7 +161,7 @@ export function ResignationCard({
               <Button
                 size="sm"
                 variant="outline"
-                className="h-7 text-xs gap-1.5 duration-200"
+                className="text-xs gap-1.5 duration-200"
                 onClick={() => onHrApprove(r.id)}
               >
                 <CheckCircle2 className="h-3 w-3" />
@@ -170,7 +170,7 @@ export function ResignationCard({
               <Button
                 size="sm"
                 variant="outline"
-                className="h-7 text-xs gap-1.5 duration-200 text-rose-600 hover:text-rose-600 border-rose-200 hover:bg-rose-50 dark:border-rose-800 dark:hover:bg-rose-950/30"
+                className="text-xs gap-1.5 duration-200 text-rose-600 hover:text-rose-600 border-rose-200 hover:bg-rose-50 dark:border-rose-800 dark:hover:bg-rose-950/30"
                 onClick={() => onHrReject(r.id)}
               >
                 <XCircle className="h-3 w-3" />
@@ -184,7 +184,7 @@ export function ResignationCard({
               <Button
                 size="sm"
                 variant="outline"
-                className="h-7 text-xs gap-1.5 duration-200"
+                className="text-xs gap-1.5 duration-200"
                 onClick={() => onCeoApprove(r.id)}
               >
                 <CheckCircle2 className="h-3 w-3" />
@@ -193,7 +193,7 @@ export function ResignationCard({
               <Button
                 size="sm"
                 variant="outline"
-                className="h-7 text-xs gap-1.5 duration-200 text-rose-600 hover:text-rose-600 border-rose-200 hover:bg-rose-50 dark:border-rose-800 dark:hover:bg-rose-950/30"
+                className="text-xs gap-1.5 duration-200 text-rose-600 hover:text-rose-600 border-rose-200 hover:bg-rose-50 dark:border-rose-800 dark:hover:bg-rose-950/30"
                 onClick={() => onCeoReject(r.id)}
               >
                 <XCircle className="h-3 w-3" />
@@ -206,7 +206,7 @@ export function ResignationCard({
             <Button
               size="sm"
               variant="outline"
-              className="h-7 text-xs gap-1.5 duration-200"
+              className="text-xs gap-1.5 duration-200"
               onClick={handleWithdraw}
             >
               <Undo2 className="h-3 w-3" />
@@ -231,7 +231,7 @@ export function ResignationCard({
             <Button
               size="sm"
               variant="ghost"
-              className="h-7 w-7 p-0 duration-200"
+              className="w-7 p-0 duration-200"
               aria-label="View generated resignation letter"
               onClick={handleViewLetter}
               title="View generated resignation letter"
@@ -243,7 +243,7 @@ export function ResignationCard({
           <Button
             size="sm"
             variant="ghost"
-            className="h-7 w-7 p-0 duration-200"
+            className="w-7 p-0 duration-200"
             aria-label={isExpanded ? "Collapse progress" : "Expand progress"}
             onClick={handleToggle}
           >

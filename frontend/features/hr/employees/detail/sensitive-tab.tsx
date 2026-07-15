@@ -44,7 +44,7 @@ function MaskedField({
       {editMode ? (
         <Input
           {...register(fieldName)}
-          className="h-8 text-sm font-mono"
+          className="text-sm font-mono"
           placeholder={`Enter ${label}`}
         />
       ) : (
@@ -59,7 +59,7 @@ function MaskedField({
             )}
           </span>
           {value && (
-            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={handleToggle}>
+            <Button variant="ghost" size="icon" className="w-8 shrink-0" onClick={handleToggle}>
               {revealed ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
             </Button>
           )}
@@ -105,7 +105,7 @@ export function EmployeeSensitiveTab({ userId }: Props) {
   if (!canView) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
-        <Shield className="h-8 w-8 text-muted-foreground mb-3" />
+        <Shield className="w-8 text-muted-foreground mb-3" />
         <p className="text-sm font-medium text-foreground">Access Restricted</p>
         <p className="text-xs text-muted-foreground mt-1">You don&apos;t have permission to view sensitive employee data.</p>
       </div>
@@ -125,7 +125,7 @@ export function EmployeeSensitiveTab({ userId }: Props) {
   if (!employment) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
-        <AlertCircle className="h-8 w-8 text-muted-foreground mb-3" />
+        <AlertCircle className="w-8 text-muted-foreground mb-3" />
         <p className="text-sm text-muted-foreground">No employment record found.</p>
       </div>
     );
@@ -149,7 +149,7 @@ export function EmployeeSensitiveTab({ userId }: Props) {
         <CardContent className="p-4 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="h-7 w-7 rounded-lg bg-rose-100 dark:bg-rose-950/40 flex items-center justify-center">
+              <div className="w-7 rounded-lg bg-rose-100 dark:bg-rose-950/40 flex items-center justify-center">
                 <Shield className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400" />
               </div>
               <div>
@@ -161,11 +161,11 @@ export function EmployeeSensitiveTab({ userId }: Props) {
               <div className="flex items-center gap-2">
                 {editMode ? (
                   <>
-                    <Button type="button" variant="ghost" size="sm" className="h-7 text-xs" onClick={handleCancel}>Cancel</Button>
-                    <LoadingButton type="submit" size="sm" className="h-7 text-xs" isPending={updateMutation.isPending}>Save</LoadingButton>
+                    <Button type="button" variant="ghost" size="sm" className="text-xs" onClick={handleCancel}>Cancel</Button>
+                    <LoadingButton type="submit" size="sm" className="text-xs" isPending={updateMutation.isPending}>Save</LoadingButton>
                   </>
                 ) : (
-                  <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={handleEnableEdit}>Edit</Button>
+                  <Button type="button" variant="outline" size="sm" className="text-xs" onClick={handleEnableEdit}>Edit</Button>
                 )}
               </div>
             )}

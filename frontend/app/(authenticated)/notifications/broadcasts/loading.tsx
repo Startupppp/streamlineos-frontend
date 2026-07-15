@@ -16,7 +16,7 @@ export default function BroadcastsLoading() {
               <Skeleton className="h-3 w-full max-w-xs" />
               <Skeleton className="h-2.5 w-28" />
             </div>
-            <Skeleton className="h-7 w-14 rounded-md shrink-0" />
+            <Skeleton className="h-8 w-14 rounded-md shrink-0" />
           </div>
         ))}
       </div>

@@ -48,7 +48,7 @@ export function FontSizeInput() {
         size="icon-sm"
         aria-label="Decrease font size"
         onClick={handleDecrement}
-        className="h-8 w-5 shrink-0 p-0"
+        className="w-5 shrink-0 p-0"
       >
         <ChevronDown className="size-3" />
       </Button>
@@ -59,14 +59,14 @@ export function FontSizeInput() {
         min={MIN_SIZE}
         max={MAX_SIZE}
         aria-label="Font size"
-        className="h-8 w-10 rounded-md border border-border bg-transparent text-center text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+        className="w-10 rounded-md border border-border bg-transparent text-center text-xs focus:outline-none focus:ring-1 focus:ring-ring"
       />
       <Button
         variant="ghost"
         size="icon-sm"
         aria-label="Increase font size"
         onClick={handleIncrement}
-        className="h-8 w-5 shrink-0 p-0"
+        className="w-5 shrink-0 p-0"
       >
         <ChevronUp className="size-3" />
       </Button>

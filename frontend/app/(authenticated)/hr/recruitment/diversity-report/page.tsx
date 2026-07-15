@@ -153,11 +153,11 @@ export default function DiversityReportPage() {
       <div className="flex flex-wrap items-end gap-3 mb-6 p-4 rounded-lg border bg-card">
         <div className="flex flex-col gap-1">
           <Label className="text-xs">From Date</Label>
-          <DatePicker value={pendingFilters.from ?? ""} onChange={handleFromChange} placeholder="Pick a date" className="h-8 text-xs w-36" />
+          <DatePicker value={pendingFilters.from ?? ""} onChange={handleFromChange} placeholder="Pick a date" className="text-xs w-36" />
         </div>
         <div className="flex flex-col gap-1">
           <Label className="text-xs">To Date</Label>
-          <DatePicker value={pendingFilters.to ?? ""} onChange={handleToChange} placeholder="Pick a date" className="h-8 text-xs w-36" />
+          <DatePicker value={pendingFilters.to ?? ""} onChange={handleToChange} placeholder="Pick a date" className="text-xs w-36" />
         </div>
         <div className="flex flex-col gap-1">
           <Label className="text-xs">Departments</Label>
@@ -166,7 +166,7 @@ export default function DiversityReportPage() {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 text-xs min-w-[140px] justify-between"
+                className="text-xs min-w-[140px] justify-between"
               >
                 {pendingFilters.departmentIds.length === 0
                   ? "All Departments"
@@ -190,14 +190,14 @@ export default function DiversityReportPage() {
           </DropdownMenu>
         </div>
         <div className="flex items-end gap-2">
-          <Button size="sm" className="h-8 text-xs" onClick={handleApply}>
+          <Button size="sm" className="text-xs" onClick={handleApply}>
             Apply Filters
           </Button>
           {hasActiveFilters && (
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 text-xs"
+              className="text-xs"
               onClick={handleReset}
             >
               Reset

@@ -183,7 +183,7 @@ export default function AdjustmentsPage() {
       title="Stock Adjustments"
       subtitle={subtitle}
       actions={
-        <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={handleOpenSheet}>
+        <Button size="sm" className="gap-1.5 text-xs" onClick={handleOpenSheet}>
           <Plus className="h-3.5 w-3.5" aria-hidden="true" />
           New Adjustment
         </Button>
@@ -191,7 +191,7 @@ export default function AdjustmentsPage() {
       filters={
         <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
           <Select value={reasonFilter} onValueChange={handleReasonChange}>
-            <SelectTrigger className="h-8 w-[160px] text-xs">
+            <SelectTrigger className="w-[160px] text-xs">
               <SelectValue placeholder="All reasons" />
             </SelectTrigger>
             <SelectContent>
@@ -202,7 +202,7 @@ export default function AdjustmentsPage() {
             </SelectContent>
           </Select>
           <Select value={statusFilter} onValueChange={handleStatusChange}>
-            <SelectTrigger className="h-8 w-[160px] text-xs">
+            <SelectTrigger className="w-[160px] text-xs">
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>

@@ -61,7 +61,7 @@ export function PolicyVersionHistory({ policy, canManage }: Props) {
             <LoadingButton
               variant="outline"
               size="sm"
-              className="h-7 text-xs"
+              className="text-xs"
               isPending={createVersion.isPending}
               onClick={handleCreateVersion}
             >
@@ -71,7 +71,7 @@ export function PolicyVersionHistory({ policy, canManage }: Props) {
           {policy.status === "draft" && (
             <LoadingButton
               size="sm"
-              className="h-7 text-xs"
+              className="text-xs"
               isPending={activate.isPending}
               onClick={handleActivate}
             >
@@ -82,7 +82,7 @@ export function PolicyVersionHistory({ policy, canManage }: Props) {
             <LoadingButton
               variant="outline"
               size="sm"
-              className="h-7 text-xs text-muted-foreground"
+              className="text-xs text-muted-foreground"
               isPending={archive.isPending}
               onClick={handleArchive}
             >

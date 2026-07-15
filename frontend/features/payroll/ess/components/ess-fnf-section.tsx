@@ -74,7 +74,7 @@ export function EssFnfSection() {
             <Button
               variant="outline"
               size="sm"
-              className="h-7 text-xs gap-1.5"
+              className="text-xs gap-1.5"
               onClick={handleDownloadStatement}
               disabled={downloading}
             >

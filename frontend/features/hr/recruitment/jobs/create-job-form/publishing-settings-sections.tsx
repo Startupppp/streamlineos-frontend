@@ -57,7 +57,7 @@ export function Section9({ form }: SectionProps) {
             name="applicationDeadline"
             control={control}
             render={({ field }) => (
-              <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+              <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
             )}
           />
         </Field>

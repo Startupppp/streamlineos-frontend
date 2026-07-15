@@ -168,7 +168,7 @@ export function MembersSelector({
                   placeholder="Search by name or email..."
                   value={searchQuery}
                   onChange={handleSearchChange}
-                  className="h-8 mb-2"
+                  className="mb-2"
                   aria-label="Search team members"
                 />
                 <div className="max-h-[200px] overflow-y-auto space-y-0.5">

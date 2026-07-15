@@ -75,7 +75,7 @@ export function SidebarAssigneeSection({
         value=""
         onChange={handleAddAssignee}
         placeholder="+ Add assignee"
-        className="h-8 text-xs w-full"
+        className="text-xs w-full"
       />
     </div>
   );

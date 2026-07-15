@@ -232,7 +232,7 @@ export function AssignmentRuleSheet({
                     <FormLabel>Type</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {ASSIGNMENT_TYPES.map((t) => (
@@ -262,7 +262,7 @@ export function AssignmentRuleSheet({
                     <div key={cf.id} className="flex items-center gap-2">
                       <FormField control={form.control} name={`conditions.${i}.field`} render={({ field }) => (
                         <Select onValueChange={field.onChange} value={field.value}>
-                          <SelectTrigger className="h-8 w-28 text-xs"><SelectValue placeholder="Field" /></SelectTrigger>
+                          <SelectTrigger className="w-28 text-xs"><SelectValue placeholder="Field" /></SelectTrigger>
                           <SelectContent>
                             {CONDITION_FIELDS.map((f) => (
                               <SelectItem key={f.value} value={f.value} className="text-xs">{f.label}</SelectItem>
@@ -272,7 +272,7 @@ export function AssignmentRuleSheet({
                       )} />
                       <FormField control={form.control} name={`conditions.${i}.operator`} render={({ field }) => (
                         <Select onValueChange={field.onChange} value={field.value}>
-                          <SelectTrigger className="h-8 w-24 text-xs"><SelectValue placeholder="Op" /></SelectTrigger>
+                          <SelectTrigger className="w-24 text-xs"><SelectValue placeholder="Op" /></SelectTrigger>
                           <SelectContent>
                             {OPERATORS.map((o) => (
                               <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
@@ -281,14 +281,14 @@ export function AssignmentRuleSheet({
                         </Select>
                       )} />
                       <FormField control={form.control} name={`conditions.${i}.value`} render={({ field }) => (
-                        <Input {...field} className="h-8 text-xs flex-1" placeholder="Value" />
+                        <Input {...field} className="text-xs flex-1" placeholder="Value" />
                       )} />
                       {conditionFields.length > 1 && (
                         <Button
                           type="button"
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 text-destructive shrink-0"
+                          className="w-8 text-destructive shrink-0"
                           onClick={() => removeCondition(i)}
                           aria-label="Remove condition"
                         >
@@ -387,7 +387,7 @@ export function AssignmentRuleSheet({
                             type="button"
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-destructive shrink-0"
+                            className="w-8 text-destructive shrink-0"
                             onClick={() => removeMember(i)}
                             aria-label="Remove member"
                           >
@@ -427,7 +427,7 @@ export function AssignmentRuleSheet({
                     <FormLabel>Territory</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value ?? ""}>
                       <FormControl>
-                        <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Select territory" /></SelectTrigger>
+                        <SelectTrigger className="text-sm"><SelectValue placeholder="Select territory" /></SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {territories.map((t) => (

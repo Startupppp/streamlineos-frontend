@@ -42,13 +42,13 @@ export function TicketDetailActions({ onDelete, isDeleting }: TicketDetailAction
         <p className="text-sm font-medium text-destructive mb-1">Delete Ticket</p>
         <p className="text-xs text-muted-foreground mb-3">This cannot be undone.</p>
         <div className="flex justify-end gap-2">
-          <Button variant="outline" size="sm" className="h-7 text-xs" onClick={handleCancelDelete}>
+          <Button variant="outline" size="sm" className="text-xs" onClick={handleCancelDelete}>
             Cancel
           </Button>
           <Button
             variant="destructive"
             size="sm"
-            className="h-7 text-xs"
+            className="text-xs"
             onClick={handleDeleteConfirm}
             disabled={isDeleting}
           >

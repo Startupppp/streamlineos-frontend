@@ -87,7 +87,7 @@ function CriterionRow({ criterion, onUpdate, onRemove, canRemove }: CriterionRow
       <Button
         variant="ghost"
         size="icon"
-        className={cn("h-8 w-7 text-destructive opacity-0 group-hover:opacity-100 transition-opacity", !canRemove && "invisible")}
+        className={cn("w-7 text-destructive opacity-0 group-hover:opacity-100 transition-opacity", !canRemove && "invisible")}
         onClick={handleRemoveClick}
         aria-label="Remove criterion"
         disabled={!canRemove}
@@ -259,7 +259,7 @@ function TemplateCard({ template, onEdit, onDelete }: TemplateCardProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7"
+            className="w-7"
             onClick={handleEdit}
             aria-label="Edit template"
           >
@@ -271,7 +271,7 @@ function TemplateCard({ template, onEdit, onDelete }: TemplateCardProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 text-destructive hover:text-destructive"
+            className="w-7 text-destructive hover:text-destructive"
             onClick={handleDelete}
             aria-label="Delete template"
           >

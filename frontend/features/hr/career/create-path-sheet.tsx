@@ -119,7 +119,7 @@ export function CreatePathSheet({ open, onOpenChange }: Props) {
                   Name
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. Engineering Track" className="h-8 text-sm" {...field} />
+                  <Input placeholder="e.g. Engineering Track" className="text-sm" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -157,7 +157,7 @@ export function CreatePathSheet({ open, onOpenChange }: Props) {
                   <span className="normal-case font-normal text-muted-foreground tracking-normal">(optional)</span>
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. Engineering" className="h-8 text-sm" {...field} />
+                  <Input placeholder="e.g. Engineering" className="text-sm" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -169,7 +169,7 @@ export function CreatePathSheet({ open, onOpenChange }: Props) {
               <span className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
                 Career Levels
               </span>
-              <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={handleAddLevel} type="button">
+              <Button variant="outline" size="sm" className="text-xs gap-1" onClick={handleAddLevel} type="button">
                 <Plus className="h-3.5 w-3.5" />
                 Add Level
               </Button>
@@ -191,7 +191,7 @@ export function CreatePathSheet({ open, onOpenChange }: Props) {
                       render={({ field: f }) => (
                         <FormItem>
                           <FormControl>
-                            <Input placeholder="Level title" className="h-8 text-sm" {...f} />
+                            <Input placeholder="Level title" className="text-sm" {...f} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -202,7 +202,7 @@ export function CreatePathSheet({ open, onOpenChange }: Props) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
+                      className="w-7 shrink-0 text-muted-foreground hover:text-destructive"
                       onClick={() => remove(idx)}
                       type="button"
                     >
@@ -220,7 +220,7 @@ export function CreatePathSheet({ open, onOpenChange }: Props) {
                         Skills
                       </FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. Leadership, SQL" className="h-8 text-sm" {...f} />
+                        <Input placeholder="e.g. Leadership, SQL" className="text-sm" {...f} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -236,7 +236,7 @@ export function CreatePathSheet({ open, onOpenChange }: Props) {
                         Requirements
                       </FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. 3+ years exp" className="h-8 text-sm" {...f} />
+                        <Input placeholder="e.g. 3+ years exp" className="text-sm" {...f} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

@@ -254,10 +254,10 @@ export default function BudgetsListPage() {
             value={fiscalYear}
             onChange={handleFiscalYearChange}
             placeholder="Fiscal year (e.g. 2025-26)"
-            className="h-8 w-[200px] text-xs"
+            className="w-[200px] text-xs"
           />
           <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
-            <SelectTrigger className="h-8 w-[180px] text-xs">
+            <SelectTrigger className="w-[180px] text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -325,7 +325,7 @@ export default function BudgetsListPage() {
                   <Input
                     {...field}
                     placeholder="e.g. FY 2025-26 Operating Budget"
-                    className="h-8 text-sm"
+                    className="text-sm"
                   />
                   <FormMessage />
                 </FormItem>
@@ -341,7 +341,7 @@ export default function BudgetsListPage() {
                   <Input
                     {...field}
                     placeholder="e.g. 2025-26"
-                    className="h-8 text-sm"
+                    className="text-sm"
                   />
                   <FormMessage />
                 </FormItem>
@@ -355,7 +355,7 @@ export default function BudgetsListPage() {
                 <FormItem>
                   <FormLabel>Period Type</FormLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger className="h-8 text-sm">
+                    <SelectTrigger className="text-sm">
                       <SelectValue placeholder="Select period type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -380,7 +380,7 @@ export default function BudgetsListPage() {
                 <FormItem>
                   <FormLabel>Dimension Type</FormLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger className="h-8 text-sm">
+                    <SelectTrigger className="text-sm">
                       <SelectValue placeholder="Select dimension" />
                     </SelectTrigger>
                     <SelectContent>

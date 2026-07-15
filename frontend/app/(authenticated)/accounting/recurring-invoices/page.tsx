@@ -94,7 +94,7 @@ function TemplateRowActions({ template, onEdit }: RowActionsProps) {
     <AlertDialog>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-7 w-7">
+          <Button variant="ghost" size="icon" className="w-7">
             <span className="sr-only">Actions</span>
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
               <circle cx="12" cy="5" r="1.5" />
@@ -257,7 +257,7 @@ export default function RecurringInvoicesPage() {
       }
       filters={
         <Select value={activeFilter} onValueChange={handleActiveFilterChange}>
-          <SelectTrigger className="h-8 w-[140px] text-xs">
+          <SelectTrigger className="w-[140px] text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

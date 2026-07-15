@@ -99,7 +99,7 @@ export function AskOsConversationList({
         <div className="flex flex-1 items-center gap-1.5 rounded-lg border border-input bg-background px-2.5">
           <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
           <input type="text" value={search} onChange={handleSearchChange} placeholder="Search conversations…"
-            className="h-8 flex-1 bg-transparent text-xs focus-visible:outline-none" />
+            className="flex-1 bg-transparent text-xs focus-visible:outline-none" />
         </div>
         <button type="button" onClick={onNewChat} aria-label="New chat"
           className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted">
@@ -111,7 +111,7 @@ export function AskOsConversationList({
         <div className="overscroll-contain py-1">
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
-            <MessageCircle className="h-8 w-8 text-muted-foreground/40" />
+            <MessageCircle className="w-8 text-muted-foreground/40" />
             <p className="text-xs text-muted-foreground">{search ? "No matches" : "No conversations yet"}</p>
           </div>
         ) : (

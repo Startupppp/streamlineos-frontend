@@ -138,7 +138,7 @@ function PublicationsTable({ channelId, statusFilter, showRetry }: PublicationsT
           <Button
             size="sm"
             variant="outline"
-            className="h-7 text-xs gap-1.5"
+            className="text-xs gap-1.5"
             onClick={handleRetryAll}
             disabled={retryMutation.isPending}
           >

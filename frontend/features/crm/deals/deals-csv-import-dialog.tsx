@@ -341,7 +341,7 @@ export function DealsCsvImportDialog({ onSuccess }: { onSuccess?: () => void }) 
 
         {isParsing && (
           <div className="flex flex-col items-center justify-center py-12">
-            <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-3" />
+            <div className="w-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-3" />
             <p className="text-sm text-muted-foreground">
               Parsing {fileName}...
             </p>

@@ -121,7 +121,7 @@ export function PaymentTermsSection({ terms, canManage }: PaymentTermsSectionPro
         <CardHeader className="pb-2 flex flex-row items-center justify-between">
           <CardTitle className="text-sm font-semibold">Payment Terms</CardTitle>
           {canManage && (
-            <Button size="sm" className="h-7 text-xs" onClick={handleOpenAdd}>Add term</Button>
+            <Button size="sm" className="text-xs" onClick={handleOpenAdd}>Add term</Button>
           )}
         </CardHeader>
         <CardContent className="p-0">

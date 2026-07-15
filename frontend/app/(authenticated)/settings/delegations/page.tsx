@@ -181,7 +181,7 @@ function DelegationsContent() {
               <DelegationSkeletons count={2} />
             ) : !received?.length ? (
               <div className="flex flex-col items-center justify-center py-10 text-center">
-                <ArrowLeftRight className="h-8 w-8 text-muted-foreground/30 mb-2" />
+                <ArrowLeftRight className="w-8 text-muted-foreground/30 mb-2" />
                 <p className="text-sm font-medium">No delegations received</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   Permissions delegated to you will appear here
@@ -218,7 +218,7 @@ function DelegationsContent() {
               <DelegationSkeletons count={2} />
             ) : !activeGiven.length && !inactiveGiven.length ? (
               <div className="flex flex-col items-center justify-center py-10 text-center">
-                <ArrowLeftRight className="h-8 w-8 text-muted-foreground/30 mb-2" />
+                <ArrowLeftRight className="w-8 text-muted-foreground/30 mb-2" />
                 <p className="text-sm font-medium">No delegations granted</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   Delegate permissions to share access with colleagues
@@ -338,7 +338,7 @@ function DelegationRow({
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+          className="w-7 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
           onClick={handleRevoke}
           disabled={isRevoking}
           aria-label="Revoke delegation"
@@ -483,7 +483,7 @@ function GrantDelegationSheet({
               Delegate to
             </Label>
             <Select value={delegateeId} onValueChange={handleDelegateeChange}>
-              <SelectTrigger id="del-to" className="h-8">
+              <SelectTrigger id="del-to" className="">
                 <SelectValue placeholder="Select team member…" />
               </SelectTrigger>
               <SelectContent>
@@ -516,7 +516,7 @@ function GrantDelegationSheet({
                   placeholder="Search permissions…"
                   value={permSearch}
                   onChange={(e) => setPermSearch(e.target.value)}
-                  className="h-8 text-xs"
+                  className="text-xs"
                 />
               </div>
               <ScrollArea className="flex-1">
@@ -553,7 +553,7 @@ function GrantDelegationSheet({
                 id="del-start"
                 type="datetime-local"
                 min={today}
-                className="h-8"
+                className=""
                 aria-invalid={Boolean(errors.startsAt)}
                 {...register("startsAt")}
               />
@@ -571,7 +571,7 @@ function GrantDelegationSheet({
                 id="del-end"
                 type="datetime-local"
                 min={today}
-                className="h-8"
+                className=""
                 aria-invalid={Boolean(errors.endsAt)}
                 {...register("endsAt")}
               />
@@ -592,7 +592,7 @@ function GrantDelegationSheet({
             </Label>
             <Input
               id="del-reason"
-              className="h-8"
+              className=""
               placeholder="e.g. Covering annual leave"
               {...register("reason")}
             />

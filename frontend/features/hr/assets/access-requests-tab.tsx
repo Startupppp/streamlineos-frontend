@@ -150,7 +150,7 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
             </p>
           </div>
           {canManage && (
-            <Button size="sm" variant="outline" className="h-7 text-xs gap-1.5" onClick={handleOpenCreate}>
+            <Button size="sm" variant="outline" className="text-xs gap-1.5" onClick={handleOpenCreate}>
               <Plus className="h-3 w-3" />
               Request Access
             </Button>
@@ -166,7 +166,7 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
                 className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl border border-border bg-card hover:bg-muted/30 transition-colors duration-200"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  <div className="w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                     <Shield className="h-4 w-4 text-primary" />
                   </div>
                   <div className="min-w-0">
@@ -233,7 +233,7 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
               placeholder="e.g. GitHub, Jira, AWS Console"
               value={systemName}
               onChange={handleSystemNameChange}
-              className="h-8"
+              className=""
             />
           </div>
           <div className="space-y-1.5">
@@ -242,7 +242,7 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
               placeholder="e.g. Read, Write, Admin"
               value={accessLevel}
               onChange={handleAccessLevelChange}
-              className="h-8"
+              className=""
             />
           </div>
           <LoadingButton

@@ -371,7 +371,7 @@ export function CommandCenterPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 gap-1 text-xs"
+                        className="gap-1 text-xs"
                         asChild
                       >
                         <Link href="/projects/my-work">
@@ -416,7 +416,7 @@ export function CommandCenterPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-7 gap-1 text-xs text-muted-foreground"
+                          className="gap-1 text-xs text-muted-foreground"
                           onClick={handleOpenWizard}
                         >
                           New
@@ -425,7 +425,7 @@ export function CommandCenterPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 gap-1 text-xs"
+                        className="gap-1 text-xs"
                         asChild
                       >
                         <Link href="/projects/all">

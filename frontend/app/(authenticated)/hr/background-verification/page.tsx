@@ -237,7 +237,7 @@ function buildBgvColumns(
             <>
               <Button
                 size="sm"
-                className="h-7 gap-1 text-xs"
+                className="gap-1 text-xs"
                 onClick={(e) => {
                   e.stopPropagation();
                   onUpdateStatus(bgv.id, "PASSED");
@@ -250,7 +250,7 @@ function buildBgvColumns(
               <Button
                 size="sm"
                 variant="outline"
-                className="h-7 gap-1 text-xs"
+                className="gap-1 text-xs"
                 onClick={(e) => {
                   e.stopPropagation();
                   onUpdateStatus(bgv.id, "FAILED");
@@ -265,7 +265,7 @@ function buildBgvColumns(
           <Button
             size="sm"
             variant="ghost"
-            className="h-7 w-7 p-0"
+            className="w-7 p-0"
             onClick={(e) => {
               e.stopPropagation();
               onOpenEdit(bgv);
@@ -360,7 +360,7 @@ function BGVContent() {
       subtitle="Initiate, track employee background checks, and view candidate compliance"
       badge={`${items?.length ?? 0} checks`}
       actions={
-        <Button size="sm" className="h-8 gap-1.5" onClick={handleOpenSheet}>
+        <Button size="sm" className="gap-1.5" onClick={handleOpenSheet}>
           <Plus className="h-3.5 w-3.5" />
           Initiate BGV
         </Button>

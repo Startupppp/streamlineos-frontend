@@ -107,7 +107,7 @@ function PermissionsContent() {
         subtitle="Read-only overview of built-in permissions per system role"
       >
         <div className="flex flex-1 flex-col items-center justify-center gap-3 py-20 text-center">
-          <ShieldOff className="h-8 w-8 text-muted-foreground" />
+          <ShieldOff className="w-8 text-muted-foreground" />
           <div>
             <p className="text-sm font-medium">No roles found</p>
             <p className="text-xs text-muted-foreground mt-0.5">

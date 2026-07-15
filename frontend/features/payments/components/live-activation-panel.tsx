@@ -52,7 +52,7 @@ export function LiveActivationPanel({ providerKey }: { providerKey: string }) {
 
       <AlertDialog>
         <AlertDialogTrigger asChild>
-          <Button size="sm" disabled={!readiness.readyForLive} className="h-8 text-xs">
+          <Button size="sm" disabled={!readiness.readyForLive} className="text-xs">
             Activate live payments
           </Button>
         </AlertDialogTrigger>
@@ -71,7 +71,7 @@ export function LiveActivationPanel({ providerKey }: { providerKey: string }) {
               value={confirmText}
               onChange={(e) => setConfirmText(e.target.value)}
               placeholder={CONFIRM_PHRASE}
-              className="h-8 text-sm font-mono"
+              className="text-sm font-mono"
             />
           </div>
           <AlertDialogFooter>

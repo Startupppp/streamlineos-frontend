@@ -204,7 +204,7 @@ export function VendorStatementReport() {
               Vendor
             </label>
             <Select value={vendorId ? String(vendorId) : ""} onValueChange={handleVendorChange}>
-              <SelectTrigger id="vs-vendor" className="h-8 w-[200px] text-sm">
+              <SelectTrigger id="vs-vendor" className="w-[200px] text-sm">
                 <SelectValue placeholder="Select vendor…" />
               </SelectTrigger>
               <SelectContent>

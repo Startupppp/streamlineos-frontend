@@ -67,11 +67,11 @@ function TemplateCard({
       </div>
       {canManage && (
         <div className="flex items-center gap-1.5 pt-1">
-          <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={onPreview}>
+          <Button variant="outline" size="sm" className="text-xs gap-1" onClick={onPreview}>
             <Eye className="h-3 w-3" />
             Preview
           </Button>
-          <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={onEdit}>
+          <Button variant="outline" size="sm" className="text-xs gap-1" onClick={onEdit}>
             <Pencil className="h-3 w-3" />
             Edit
           </Button>
@@ -79,7 +79,7 @@ function TemplateCard({
             <Button
               variant="outline"
               size="sm"
-              className="h-7 text-xs gap-1 text-destructive hover:text-destructive"
+              className="text-xs gap-1 text-destructive hover:text-destructive"
               onClick={onDelete}
             >
               <Trash2 className="h-3 w-3" />

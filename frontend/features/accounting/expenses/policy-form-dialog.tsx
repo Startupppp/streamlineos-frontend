@@ -66,7 +66,7 @@ export function PolicyFormDialog({
             <Label className="text-xs">Policy name *</Label>
             <Input
               {...form.register("name")}
-              className="h-8 text-sm"
+              className="text-sm"
               placeholder="Travel expenses"
             />
             {form.formState.errors.name && (
@@ -82,7 +82,7 @@ export function PolicyFormDialog({
                 type="number"
                 step="0.01"
                 min="0"
-                className="h-8 text-sm"
+                className="text-sm"
                 placeholder="5000"
               />
             </div>
@@ -93,7 +93,7 @@ export function PolicyFormDialog({
                 type="number"
                 step="0.01"
                 min="0"
-                className="h-8 text-sm"
+                className="text-sm"
                 placeholder="500"
               />
             </div>
@@ -104,7 +104,7 @@ export function PolicyFormDialog({
                 type="number"
                 step="0.01"
                 min="0"
-                className="h-8 text-sm"
+                className="text-sm"
                 placeholder="2000"
               />
             </div>

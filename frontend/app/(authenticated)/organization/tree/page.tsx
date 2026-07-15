@@ -259,7 +259,7 @@ export default function OrgTreePage() {
           )}
           {!isLoading && !isError && filtered.length === 0 && (
             <div className="min-h-[260px] flex flex-col items-center justify-center gap-3 text-center px-6">
-              <Building2 className="h-8 w-8 text-muted-foreground/40" />
+              <Building2 className="w-8 text-muted-foreground/40" />
               <p className="text-sm font-medium text-foreground">
                 {search ? "No results match your search." : "No business units found"}
               </p>

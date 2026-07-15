@@ -122,7 +122,7 @@ function InvoiceRowActions({ invoice, onRecordPayment }: InvoiceRowActionsProps)
     <AlertDialog>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-7 w-7">
+          <Button variant="ghost" size="icon" className="w-7">
             <span className="sr-only">Actions</span>
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -363,7 +363,7 @@ export default function AccountingInvoicesPage() {
 
         <div className="flex flex-wrap items-center gap-3">
           <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
-            <SelectTrigger className="h-8 w-[160px] border-input bg-card text-xs">
+            <SelectTrigger className="w-[160px] border-input bg-card text-xs">
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>
@@ -379,13 +379,13 @@ export default function AccountingInvoicesPage() {
             value={dateFrom}
             onChange={handleDateFromChange}
             placeholder="From date"
-            className="h-8 w-[130px] text-xs"
+            className="w-[130px] text-xs"
           />
           <DatePicker
             value={dateTo}
             onChange={handleDateToChange}
             placeholder="To date"
-            className="h-8 w-[130px] text-xs"
+            className="w-[130px] text-xs"
           />
         </div>
 

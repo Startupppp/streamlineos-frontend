@@ -336,7 +336,7 @@ export function FilterCommandMenu({
         <Button
           variant="outline"
           size="sm"
-          className="relative h-8 shrink-0 gap-1.5 bg-card px-2.5 text-xs font-normal shadow-xs data-[state=open]:border-primary data-[state=open]:focus-visible:border-primary"
+          className="relative shrink-0 gap-1.5 bg-card px-2.5 text-xs font-normal shadow-xs data-[state=open]:border-primary data-[state=open]:focus-visible:border-primary"
         >
           <ListFilter className="h-3.5 w-3.5 shrink-0" />
           <span>Add filter</span>
@@ -381,7 +381,7 @@ export function FilterCommandMenu({
                 shouldFilter={false}
                 className={cn(
                   "h-auto shrink-0",
-                  "[&_[cmdk-input-wrapper]]:h-8 [&_[cmdk-input-wrapper]]:gap-1.5 [&_[cmdk-input-wrapper]]:border-border [&_[cmdk-input-wrapper]]:px-2",
+                  "[&_[cmdk-input-wrapper]]:h-9 [&_[cmdk-input-wrapper]]:gap-1.5 [&_[cmdk-input-wrapper]]:border-border [&_[cmdk-input-wrapper]]:px-2",
                   "[&_[cmdk-input-wrapper]]:transition-[background-color,box-shadow] [&_[cmdk-input-wrapper]]:duration-150 [&_[cmdk-input-wrapper]]:ease-out",
                   "[&_[cmdk-input-wrapper]:focus-within]:bg-primary/[0.04]",
                   "[&_[cmdk-input-wrapper]:focus-within]:shadow-[inset_0_-1px_0_0] [&_[cmdk-input-wrapper]:focus-within]:shadow-primary/40",
@@ -390,7 +390,7 @@ export function FilterCommandMenu({
               >
                 <CommandInput
                   placeholder="Filter by..."
-                  className="h-8 text-xs"
+                  className="text-xs"
                   value={search}
                   onValueChange={handleSearchChange}
                 />

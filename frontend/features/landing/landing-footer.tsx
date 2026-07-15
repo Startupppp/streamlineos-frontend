@@ -121,7 +121,7 @@ function SocialLink({
       whileHover={{ scale: 1.08, y: -2 }}
       whileTap={{ scale: 0.95 }}
       transition={{ type: "spring", stiffness: 400, damping: 20 }}
-      className="h-8 w-8 rounded-lg bg-slate-100 hover:bg-blue-50 inline-flex items-center justify-center text-slate-500 hover:text-blue-600 transition-colors"
+      className="w-8 rounded-lg bg-slate-100 hover:bg-blue-50 inline-flex items-center justify-center text-slate-500 hover:text-blue-600 transition-colors"
     >
       <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
         <path d={d} />

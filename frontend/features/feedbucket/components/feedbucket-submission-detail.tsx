@@ -248,7 +248,7 @@ export function FeedbucketSubmissionDetail({ submissionId }: FeedbucketSubmissio
           <div className="space-y-1">
             <p className="text-xs text-muted-foreground">Status</p>
             <Select value={submission.status} onValueChange={handleStatusChange}>
-              <SelectTrigger className="h-8 text-sm">
+              <SelectTrigger className="text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -264,7 +264,7 @@ export function FeedbucketSubmissionDetail({ submissionId }: FeedbucketSubmissio
               value={submission.priority ?? "none"}
               onValueChange={handlePriorityChange}
             >
-              <SelectTrigger className="h-8 text-sm">
+              <SelectTrigger className="text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

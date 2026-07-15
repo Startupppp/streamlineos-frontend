@@ -88,7 +88,7 @@ function SuccessIcon() {
       {shouldReduceMotion ? (
         <div className="relative flex h-14 w-14 items-center justify-center rounded-full border border-emerald-500/20 bg-card shadow-sm">
           <CheckCircle2
-            className="h-7 w-7 text-emerald-600"
+            className="w-7 text-emerald-600"
             strokeWidth={1.75}
             aria-hidden="true"
           />
@@ -99,7 +99,7 @@ function SuccessIcon() {
           className="relative flex h-14 w-14 items-center justify-center rounded-full border border-emerald-500/20 bg-card shadow-sm"
         >
           <CheckCircle2
-            className="h-7 w-7 text-emerald-600"
+            className="w-7 text-emerald-600"
             strokeWidth={1.75}
             aria-hidden="true"
           />
@@ -309,7 +309,7 @@ function VerifyEmailForm() {
       <AuthStatusShell>
         <AuthStatusSection className="text-center">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-destructive/20 bg-destructive/5">
-            <XCircle className="h-7 w-7 text-destructive" aria-hidden="true" />
+            <XCircle className="w-7 text-destructive" aria-hidden="true" />
           </div>
           <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
             Verification failed

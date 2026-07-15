@@ -70,7 +70,7 @@ export function ChatSearchDialog({ open, onOpenChange, onSelectChannel }: ChatSe
         <div className="max-h-[400px] overflow-y-auto py-2">
           {debouncedQuery.trim().length < (tab === "messages" ? 2 : 1) ? (
             <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
-              <Search className="h-8 w-8 mb-2 opacity-30" />
+              <Search className="w-8 mb-2 opacity-30" />
               <p className="text-[12px]">Type to search</p>
             </div>
           ) : tab === "messages" ? (
@@ -83,7 +83,7 @@ export function ChatSearchDialog({ open, onOpenChange, onSelectChannel }: ChatSe
                   onClick={() => msg.channel?.id && handleSelectChannel(msg.channel.id)}
                   className="w-full flex items-start gap-3 px-4 py-3 hover:bg-muted/40 text-left transition-colors"
                 >
-                  <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                  <div className="w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
                     <MessageSquare className="h-4 w-4 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -107,7 +107,7 @@ export function ChatSearchDialog({ open, onOpenChange, onSelectChannel }: ChatSe
                   onClick={() => handleSelectChannel(ch.id)}
                   className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/40 text-left transition-colors"
                 >
-                  <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                  <div className="w-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
                     <Hash className="h-4 w-4 text-muted-foreground" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -126,7 +126,7 @@ export function ChatSearchDialog({ open, onOpenChange, onSelectChannel }: ChatSe
             ) : (
               userResults?.map(u => (
                 <div key={u.id} className="flex items-center gap-3 px-4 py-3">
-                  <Avatar className="h-8 w-8 border border-border/30">
+                  <Avatar className="w-8 border border-border/30">
                     <AvatarFallback className="text-[10px] font-bold bg-muted text-muted-foreground">
                       {u.name?.slice(0, 2).toUpperCase() ?? "U"}
                     </AvatarFallback>

@@ -191,7 +191,7 @@ export function ReviewsTab() {
             <TabsTrigger value="COMPLETED" className="text-[11px] px-3">Completed</TabsTrigger>
           </TabsList>
         </Tabs>
-        <Button size="sm" className="h-8 gap-1.5" onClick={handleOpenSheet}>
+        <Button size="sm" className="gap-1.5" onClick={handleOpenSheet}>
           <Plus className="h-3.5 w-3.5" />New Review
         </Button>
       </div>
@@ -255,7 +255,7 @@ export function ReviewsTab() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Avatar className="h-7 w-7 shrink-0">
+                    <Avatar className="w-7 shrink-0">
                       <AvatarImage src={resolveImageUrl(review.user?.image ?? null)} />
                       <AvatarFallback className="text-[10px] font-semibold bg-primary/10 text-primary">
                         {review.user?.name?.[0] ?? "?"}
@@ -275,7 +275,7 @@ export function ReviewsTab() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-7 text-xs w-full border border-border/60 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 dark:hover:bg-emerald-950/20 dark:hover:text-emerald-400 transition-colors duration-200"
+                      className="text-xs w-full border border-border/60 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 dark:hover:bg-emerald-950/20 dark:hover:text-emerald-400 transition-colors duration-200"
                       onClick={() => handleComplete(review.id)}
                     >
                       <CheckCircle2 className="h-3 w-3 mr-1.5" />Mark Complete
@@ -344,11 +344,11 @@ export function ReviewsTab() {
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Period Start</label>
-            <DatePicker value={periodStart ?? ""} onChange={handlePeriodStartChange} placeholder="Pick a date" className="h-8 text-sm" />
+            <DatePicker value={periodStart ?? ""} onChange={handlePeriodStartChange} placeholder="Pick a date" className="text-sm" />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Period End</label>
-            <DatePicker value={periodEnd ?? ""} onChange={handlePeriodEndChange} placeholder="Pick a date" className="h-8 text-sm" />
+            <DatePicker value={periodEnd ?? ""} onChange={handlePeriodEndChange} placeholder="Pick a date" className="text-sm" />
           </div>
         </div>
         {employeeId && periodStart && periodEnd && (

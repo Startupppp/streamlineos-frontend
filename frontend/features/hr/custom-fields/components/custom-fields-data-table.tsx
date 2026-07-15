@@ -104,10 +104,10 @@ export function CustomFieldsDataTable({ entityType, fields }: CustomFieldsDataTa
       headerClassName: "w-20",
       cell: (row) => (
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditClick(row)}>
+          <Button variant="ghost" size="icon" className="w-7" onClick={() => handleEditClick(row)}>
             <Pencil className="h-3.5 w-3.5" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete(row.id)}>
+          <Button variant="ghost" size="icon" className="w-7 text-destructive" onClick={() => handleDelete(row.id)}>
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
         </div>

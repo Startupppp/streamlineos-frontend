@@ -268,7 +268,7 @@ export default function OrgChartPage() {
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
-              className="h-8 pl-8 text-xs w-48"
+              className="pl-8 text-xs w-48"
               placeholder="Search members…"
               value={search}
               onChange={handleSearchChange}
@@ -356,7 +356,7 @@ export default function OrgChartPage() {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
                         <Building2 className="h-3.5 w-3.5 text-primary" />
                       </div>
                       <h3 className="text-sm font-semibold text-foreground">{name}</h3>

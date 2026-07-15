@@ -172,7 +172,7 @@ export function AddChannelMembersDialog({
                     >
                       {selected && <Check className="h-3 w-3" />}
                     </div>
-                    <Avatar className="h-7 w-7 shrink-0">
+                    <Avatar className="w-7 shrink-0">
                       <AvatarImage src={resolveImageUrl(user.image)} />
                       <AvatarFallback className="text-[9px]">
                         {getInitials(user.name)}
@@ -206,7 +206,7 @@ export function AddChannelMembersDialog({
                 <Input
                   readOnly
                   value={inviteUrl ?? ""}
-                  className="h-8 text-[12px] bg-muted/30 border-border/30 flex-1 truncate"
+                  className="text-[12px] bg-muted/30 border-border/30 flex-1 truncate"
                   onFocus={(e) => e.currentTarget.select()}
                 />
                 <Button

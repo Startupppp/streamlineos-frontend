@@ -44,10 +44,10 @@ export function ComplianceCalendar() {
       <div className="flex items-center justify-between">
         <p className="text-sm font-semibold text-foreground">{monthLabel}</p>
         <div className="flex items-center gap-1">
-          <Button variant="outline" size="icon" className="h-7 w-7" onClick={handlePrev}>
+          <Button variant="outline" size="icon" className="w-7" onClick={handlePrev}>
             <ChevronLeft className="h-3.5 w-3.5" />
           </Button>
-          <Button variant="outline" size="icon" className="h-7 w-7" onClick={handleNext}>
+          <Button variant="outline" size="icon" className="w-7" onClick={handleNext}>
             <ChevronRight className="h-3.5 w-3.5" />
           </Button>
         </div>
@@ -61,7 +61,7 @@ export function ComplianceCalendar() {
         </div>
       ) : events.length === 0 ? (
         <EmptyState
-          illustration={<Calendar className="h-8 w-8 text-muted-foreground" />}
+          illustration={<Calendar className="w-8 text-muted-foreground" />}
           title="No compliance events"
           description={`No expiries in ${monthLabel}.`}
           compact

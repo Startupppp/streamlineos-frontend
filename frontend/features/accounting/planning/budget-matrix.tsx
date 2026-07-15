@@ -228,7 +228,7 @@ export function BudgetMatrix({ budget, readOnly = false }: BudgetMatrixProps) {
               value={note}
               onChange={handleNoteChange}
               placeholder="Describe this revision…"
-              className="h-8 text-sm"
+              className="text-sm"
             />
           </div>
           <LoadingButton

@@ -131,7 +131,7 @@ export const CalendarMonthYearPicker = memo(function CalendarMonthYearPicker({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7"
+                className="w-7"
                 aria-label="Previous year"
                 onClick={handlePrevYear}
               >
@@ -148,7 +148,7 @@ export const CalendarMonthYearPicker = memo(function CalendarMonthYearPicker({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7"
+                className="w-7"
                 aria-label="Next year"
                 onClick={handleNextYear}
               >
@@ -183,7 +183,7 @@ export const CalendarMonthYearPicker = memo(function CalendarMonthYearPicker({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7"
+                className="w-7"
                 aria-label="Previous years"
                 onClick={handlePrevYearRange}
               >
@@ -195,7 +195,7 @@ export const CalendarMonthYearPicker = memo(function CalendarMonthYearPicker({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7"
+                className="w-7"
                 aria-label="Next years"
                 onClick={handleNextYearRange}
               >

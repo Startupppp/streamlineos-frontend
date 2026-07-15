@@ -51,7 +51,7 @@ export function HrEmployeeTable({
         const initials = getInitials(user);
         return (
           <Link href={`/hr/employees/${user.id}`} className="flex items-center gap-3">
-            <Avatar className="h-8 w-8 shrink-0">
+            <Avatar className="w-8 shrink-0">
               <AvatarImage src={resolveImageUrl(user.image)} alt="" />
               <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
                 {initials}
@@ -143,7 +143,7 @@ export function HrEmployeeTable({
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7"
+              className="w-7"
               aria-label={`Edit ${displayName}`}
               title={`Edit ${displayName}`}
               asChild
@@ -156,7 +156,7 @@ export function HrEmployeeTable({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                className="w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
                 aria-label={`Terminate ${displayName}`}
                 title={`Terminate ${displayName}`}
                 onClick={handleTerminateClick}

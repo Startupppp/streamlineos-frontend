@@ -239,7 +239,7 @@ export default function DocumentsPage() {
         subtitle="Centralized repository for all HR documents, contracts, and policy files."
       >
         <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
-          <AlertCircle className="h-8 w-8 text-destructive" />
+          <AlertCircle className="w-8 text-destructive" />
           <div>
             <p className="text-sm font-medium text-foreground">Failed to load documents</p>
             <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
@@ -280,26 +280,26 @@ export default function DocumentsPage() {
       </div>
 
       {canManageDocs && (
-        <Button variant="outline" size="sm" className="gap-1.5 h-8" onClick={handleOpenLetterGen}>
+        <Button variant="outline" size="sm" className="gap-1.5" onClick={handleOpenLetterGen}>
           <Mail className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">Generate Letter</span>
         </Button>
       )}
-      <Button variant="outline" size="sm" className="gap-1.5 h-8" asChild>
+      <Button variant="outline" size="sm" className="gap-1.5" asChild>
         <Link href="/hr/documents/templates">
           <LayoutTemplate className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">Templates</span>
         </Link>
       </Button>
-      <Button variant="outline" size="sm" className="gap-1.5 h-8" onClick={handleOpenNewFolder}>
+      <Button variant="outline" size="sm" className="gap-1.5" onClick={handleOpenNewFolder}>
         <FolderPlus className="h-3.5 w-3.5" />
         <span className="hidden sm:inline">New Folder</span>
       </Button>
-      <Button variant="outline" size="sm" className="gap-1.5 h-8" onClick={handleOpenUpload}>
+      <Button variant="outline" size="sm" className="gap-1.5" onClick={handleOpenUpload}>
         <Upload className="h-3.5 w-3.5" />
         <span className="hidden sm:inline">Upload</span>
       </Button>
-      <Button size="sm" className="gap-1.5 h-8" asChild>
+      <Button size="sm" className="gap-1.5" asChild>
         <Link href="/hr/documents/editor/new">
           <FilePlus2 className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">Create Document</span>
@@ -417,7 +417,7 @@ function RichDocumentRow({ doc, onDelete, isDeletePending }: RichDocumentRowProp
   return (
     <div className="flex items-center justify-between p-2.5 rounded-xl border border-border bg-card hover:bg-muted/30 transition-colors duration-200">
       <div className="flex items-center gap-2.5 min-w-0">
-        <div className="h-7 w-7 rounded-lg bg-muted flex items-center justify-center shrink-0">
+        <div className="w-7 rounded-lg bg-muted flex items-center justify-center shrink-0">
           <FileText className="h-3.5 w-3.5 text-muted-foreground" />
         </div>
         <div className="min-w-0">
@@ -446,7 +446,7 @@ function RichDocumentRow({ doc, onDelete, isDeletePending }: RichDocumentRowProp
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7 text-muted-foreground hover:text-foreground"
+          className="w-7 text-muted-foreground hover:text-foreground"
           asChild
         >
           <Link href={`/hr/documents/editor/${doc.id}`} aria-label="Edit document">
@@ -456,7 +456,7 @@ function RichDocumentRow({ doc, onDelete, isDeletePending }: RichDocumentRowProp
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7 text-muted-foreground hover:text-rose-600"
+          className="w-7 text-muted-foreground hover:text-rose-600"
           onClick={handleDelete}
           disabled={isDeletePending}
           aria-label="Delete document"
@@ -504,7 +504,7 @@ function RichDocumentsSection() {
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
+            <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
               <FileText className="h-3.5 w-3.5 text-primary" />
             </div>
             <h3 className="text-sm font-semibold text-foreground">Created Documents</h3>

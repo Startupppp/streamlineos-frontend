@@ -268,11 +268,11 @@ export default function KnowledgeBasePage() {
       contentClassName="flex flex-col min-h-0 px-4 sm:px-6"
       actions={
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="h-8 gap-1.5" onClick={handleToggleConversations} aria-pressed={conversationsOpen}>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={handleToggleConversations} aria-pressed={conversationsOpen}>
             <MessageSquare className="h-4 w-4" />
             Conversations
           </Button>
-          <Button variant="outline" size="sm" className="h-8 gap-1.5" onClick={handleSourcesClick}>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={handleSourcesClick}>
             {uploadSource.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <BookOpenTextIcon size={16} />}
             Sources
           </Button>

@@ -218,7 +218,7 @@ export default function CustomFieldsPage() {
       <PageWrapper title="Custom Fields" subtitle="Loading...">
         <div className="space-y-6">
           <div className="flex gap-1">
-            {[1, 2, 3].map((i) => <Skeleton key={i} className="h-8 w-20" />)}
+            {[1, 2, 3].map((i) => <Skeleton key={i} className="h-4 w-20" />)}
           </div>
           <div className="space-y-3">
             {[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 w-full" />)}

@@ -191,7 +191,7 @@ const GrnLineRow = memo(function GrnLineRow({ meta, index, control }: GrnLineRow
               <FormItem>
                 <FormLabel className="text-xs">Expiry date</FormLabel>
                 <FormControl>
-                  <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+                  <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -204,7 +204,7 @@ const GrnLineRow = memo(function GrnLineRow({ meta, index, control }: GrnLineRow
               <FormItem>
                 <FormLabel className="text-xs">Manufacture date</FormLabel>
                 <FormControl>
-                  <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+                  <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
                 </FormControl>
                 <FormMessage />
               </FormItem>

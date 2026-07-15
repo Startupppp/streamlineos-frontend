@@ -151,7 +151,7 @@ function ReferrerRow({ id, name, email, status, referralCount }: { id: number; n
       </div>
       <div className="flex items-center gap-2 shrink-0">
         <Badge variant={status === "ACTIVE" ? "secondary" : "destructive"} className="text-[10px]">{status}</Badge>
-        <Button variant="outline" size="sm" className="h-7 text-xs" onClick={handleToggle} disabled={updateStatus.isPending}>
+        <Button variant="outline" size="sm" className="text-xs" onClick={handleToggle} disabled={updateStatus.isPending}>
           {status === "ACTIVE" ? "Block" : "Unblock"}
         </Button>
       </div>

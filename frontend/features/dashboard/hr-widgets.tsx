@@ -52,7 +52,7 @@ export function LeavesTodayWidget() {
       <ul className="space-y-2.5 overflow-y-auto max-h-60">
         {leaves.map((l: LeaveToday) => (
           <li key={l.id} className="flex items-center gap-2.5">
-            <Avatar className="h-7 w-7">
+            <Avatar className="w-7">
               <AvatarImage src={resolveImageUrl(l.employeeImage)} />
               <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
                 {l.employeeName?.[0]}
@@ -88,7 +88,7 @@ export function UpcomingHolidaysWidget() {
       <ul className="space-y-2.5">
         {holidays.map((h: UpcomingHoliday) => (
           <li key={h.id} className="flex items-center gap-2.5">
-            <div className="h-8 w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
+            <div className="w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
               <CalendarHeart className="h-4 w-4 text-emerald-600" />
             </div>
             <div className="flex-1 min-w-0">
@@ -169,7 +169,7 @@ export function BirthdaysWidget() {
       <ul className="space-y-2.5 overflow-y-auto max-h-60">
         {entries.map((b: BirthdayEntry) => (
           <li key={b.id} className="flex items-center gap-2.5">
-            <Avatar className="h-7 w-7">
+            <Avatar className="w-7">
               <AvatarImage src={resolveImageUrl(b.image)} />
               <AvatarFallback className="text-[10px] bg-pink-500/10 text-pink-600">
                 {b.name?.[0]}

@@ -78,7 +78,7 @@ export function TurnIntoDropdown() {
           variant="ghost"
           size="sm"
           aria-label="Turn into"
-          className="h-8 gap-1 px-2 text-xs font-normal"
+          className="gap-1 px-2 text-xs font-normal"
         >
           <span className="max-w-[80px] truncate">{currentLabel}</span>
           <ChevronDown className="size-3 opacity-60" />

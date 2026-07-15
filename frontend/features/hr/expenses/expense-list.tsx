@@ -104,7 +104,7 @@ export function AdminExpenseList({
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 text-xs gap-1.5 mt-1"
+                className="text-xs gap-1.5 mt-1"
                 onClick={onShowAll}
               >
                 Show All Claims
@@ -148,7 +148,7 @@ export function AdminExpenseList({
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 text-xs gap-1.5"
+                className="text-xs gap-1.5"
                 disabled={pagination.page <= 1}
                 onClick={handlePrevious}
               >
@@ -160,7 +160,7 @@ export function AdminExpenseList({
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 text-xs gap-1.5"
+                className="text-xs gap-1.5"
                 disabled={pagination.page >= totalPages}
                 onClick={handleNext}
               >
@@ -351,7 +351,7 @@ export function MemberExpenseList({
             <Button
               variant="outline"
               size="sm"
-              className="h-7 text-xs gap-1.5 text-primary border-primary/30 hover:bg-primary/10"
+              className="text-xs gap-1.5 text-primary border-primary/30 hover:bg-primary/10"
               onClick={handleResubmit}
             >
               Resubmit
@@ -363,7 +363,7 @@ export function MemberExpenseList({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-primary hover:text-primary/80 hover:bg-primary/10"
+              className="w-8 text-primary hover:text-primary/80 hover:bg-primary/10"
               onClick={handleEdit}
               aria-label="Edit"
             >
@@ -375,7 +375,7 @@ export function MemberExpenseList({
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            className="w-8 text-muted-foreground hover:text-foreground"
             onClick={handleView}
             aria-label="View"
           >
@@ -405,7 +405,7 @@ export function MemberExpenseList({
         <Button
           variant="outline"
           size="sm"
-          className="h-8 text-xs gap-1.5 mt-1"
+          className="text-xs gap-1.5 mt-1"
           onClick={onShowAll}
         >
           Show All Claims
@@ -413,7 +413,7 @@ export function MemberExpenseList({
       ) : (
         <Button
           size="sm"
-          className="h-8 text-xs gap-1.5 mt-1"
+          className="text-xs gap-1.5 mt-1"
           onClick={onCreateNew}
         >
           <Plus className="h-3.5 w-3.5" />

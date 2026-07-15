@@ -145,7 +145,7 @@ export function ColorButtons() {
             variant="ghost"
             size="icon-sm"
             aria-label="Text color"
-            className="h-8 w-8 shrink-0 flex-col gap-0 p-0"
+            className="w-8 shrink-0 flex-col gap-0 p-0"
           >
             <Baseline className="size-3.5" />
             <span
@@ -164,7 +164,7 @@ export function ColorButtons() {
             variant="ghost"
             size="icon-sm"
             aria-label="Highlight color"
-            className="h-8 w-8 shrink-0 flex-col gap-0 p-0"
+            className="w-8 shrink-0 flex-col gap-0 p-0"
           >
             <Highlighter className="size-3.5" />
             <span

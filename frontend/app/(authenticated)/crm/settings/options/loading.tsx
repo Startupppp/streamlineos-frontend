@@ -10,11 +10,11 @@ export default function OptionsLoading() {
       <div className="flex gap-4">
         <div className="hidden md:flex flex-col w-48 shrink-0 gap-0.5">
           {Array.from({ length: 12 }).map((_, i) => (
-            <Skeleton key={i} className="h-8 w-full rounded-md" />
+            <Skeleton key={i} className="h-9 w-full rounded-md" />
           ))}
         </div>
         <div className="flex-1 space-y-2">
-          <Skeleton className="h-8 w-40 rounded-md" />
+          <Skeleton className="h-4 w-40 rounded-md" />{" "}
           {Array.from({ length: 12 }).map((_, i) => (
             <Skeleton key={i} className="h-9 w-full rounded-md" />
           ))}

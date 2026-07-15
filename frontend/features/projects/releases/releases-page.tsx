@@ -69,7 +69,7 @@ interface ReleasesPageProps {
 function NewReleaseButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
-    <Button size="sm" className="h-7 gap-1 text-[11px]" onClick={onClick} {...hoverHandlers}>
+    <Button size="sm" className="gap-1 text-[11px]" onClick={onClick} {...hoverHandlers}>
       <PlusIcon ref={iconRef} size={14} />
       New Release
     </Button>
@@ -89,7 +89,7 @@ function DeleteReleaseButton({ onClick }: { onClick: () => void }) {
     <Button
       size="icon"
       variant="ghost"
-      className="h-7 w-7 text-destructive hover:text-destructive"
+      className="w-7 text-destructive hover:text-destructive"
       onClick={handleClick}
       aria-label="Delete release"
       {...hoverHandlers}
@@ -218,7 +218,7 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
             <Button
               size="icon"
               variant="ghost"
-              className="h-7 w-7"
+              className="w-7"
               onClick={(e) => {
                 e.stopPropagation();
                 handleOpenEdit(r);

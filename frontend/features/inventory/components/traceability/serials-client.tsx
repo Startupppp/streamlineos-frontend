@@ -189,11 +189,11 @@ export function SerialsClient() {
               placeholder="Search serial or product…"
               value={search}
               onChange={handleSearchChange}
-              className="h-8 w-full pl-8 text-xs"
+              className="w-full pl-8 text-xs"
             />
           </div>
           <Select value={status} onValueChange={handleStatusChange}>
-            <SelectTrigger className="h-8 text-xs w-[140px]">
+            <SelectTrigger className="text-xs w-[140px]">
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>

@@ -47,7 +47,7 @@ function AgentSkillsRow({ userId, label, skills, isAvailable, onEdit }: AgentSki
           )}
         </div>
       </div>
-      <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={handleEdit} aria-label={`Edit skills for ${label}`}>
+      <Button variant="ghost" size="icon" className="w-7 shrink-0" onClick={handleEdit} aria-label={`Edit skills for ${label}`}>
         <Pencil className="h-3.5 w-3.5" />
       </Button>
     </div>

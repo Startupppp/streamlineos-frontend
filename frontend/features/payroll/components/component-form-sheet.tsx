@@ -131,12 +131,12 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label htmlFor="comp-name" className="text-xs font-medium">Name *</Label>
-                <Input id="comp-name" {...register("name")} className="h-8 text-sm" />
+                <Input id="comp-name" {...register("name")} className="text-sm" />
                 {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
               </div>
               <div className="space-y-1">
                 <Label htmlFor="comp-code" className="text-xs font-medium">Code *</Label>
-                <Input id="comp-code" {...register("code")} className="h-8 text-sm font-mono uppercase" />
+                <Input id="comp-code" {...register("code")} className="text-sm font-mono uppercase" />
                 {errors.code && <p className="text-xs text-destructive">{errors.code.message}</p>}
               </div>
             </div>
@@ -145,7 +145,7 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
               <div className="space-y-1">
                 <Label className="text-xs font-medium">Type *</Label>
                 <Select value={watch("type")} onValueChange={handleTypeChange}>
-                  <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {COMPONENT_TYPES.map((t) => (
                       <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
@@ -156,7 +156,7 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
               <div className="space-y-1">
                 <Label className="text-xs font-medium">Calc. Method *</Label>
                 <Select value={watch("calcMethod")} onValueChange={handleCalcMethodChange}>
-                  <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {CALC_METHODS.map((m) => (
                       <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
@@ -169,26 +169,26 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
             {calcMethod === "FIXED" && (
               <div className="space-y-1">
                 <Label htmlFor="comp-amount" className="text-xs font-medium">Fixed Amount</Label>
-                <Input id="comp-amount" {...register("amount")} className="h-8 text-sm font-mono" placeholder="e.g. 5000" />
+                <Input id="comp-amount" {...register("amount")} className="text-sm font-mono" placeholder="e.g. 5000" />
               </div>
             )}
             {(calcMethod === "PERCENT_OF_BASIC" || calcMethod === "PERCENT_OF_GROSS") && (
               <div className="space-y-1">
                 <Label htmlFor="comp-percent" className="text-xs font-medium">Percentage (%)</Label>
-                <Input id="comp-percent" {...register("percent")} className="h-8 text-sm font-mono" placeholder="e.g. 12" />
+                <Input id="comp-percent" {...register("percent")} className="text-sm font-mono" placeholder="e.g. 12" />
               </div>
             )}
             {calcMethod === "FORMULA" && (
               <div className="space-y-1">
                 <Label htmlFor="comp-formula" className="text-xs font-medium">Formula</Label>
-                <Input id="comp-formula" {...register("formula")} className="h-8 text-sm font-mono" placeholder="e.g. basic * 0.12" />
+                <Input id="comp-formula" {...register("formula")} className="text-sm font-mono" placeholder="e.g. basic * 0.12" />
                 <p className="text-[10px] text-muted-foreground">{FORMULA_HELP}</p>
               </div>
             )}
 
             <div className="space-y-1">
               <Label htmlFor="comp-sort" className="text-xs font-medium">Sort Order</Label>
-              <Input id="comp-sort" {...register("sortOrder")} className="h-8 text-sm w-24" placeholder="0" />
+              <Input id="comp-sort" {...register("sortOrder")} className="text-sm w-24" placeholder="0" />
             </div>
 
             <div className="space-y-0 pt-1">

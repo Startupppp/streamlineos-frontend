@@ -71,7 +71,7 @@ export const ViewSwitcher = memo(function ViewSwitcher({
   return (
     <div className={cn("flex min-w-0 items-center", className)}>
       <div
-        className="relative hidden h-8 items-center gap-0.5 rounded-lg border border-border/50 bg-background/50 p-0.5 shadow-inner backdrop-blur-md sm:inline-flex"
+        className="relative hidden h-9 items-center gap-1 rounded-lg border border-border bg-card p-1 sm:inline-flex"
         role="tablist"
         aria-label="Board view"
       >
@@ -89,7 +89,7 @@ export const ViewSwitcher = memo(function ViewSwitcher({
               aria-selected={active}
               onClick={handleClick}
               className={cn(
-                "relative z-10 inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium",
+                "relative z-10 inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium leading-none",
                 "transition-colors duration-150",
                 active
                   ? "text-foreground"
@@ -112,7 +112,7 @@ export const ViewSwitcher = memo(function ViewSwitcher({
 
       <Select value={activeView} onValueChange={handleSelectChange}>
         <SelectTrigger
-          className="h-8 w-[128px] shrink-0 bg-card text-xs sm:hidden"
+          className="w-[128px] shrink-0 text-xs sm:hidden"
           aria-label="Select view"
         >
           <SelectValue />

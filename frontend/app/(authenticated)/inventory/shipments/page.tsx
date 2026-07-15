@@ -296,7 +296,7 @@ function ShipmentsPageInner() {
               placeholder="Leave blank for direct shipment"
               value={newSoId}
               onChange={handleSoIdChange}
-              className="h-8 text-sm"
+              className="text-sm"
             />
           </div>
           <div className="space-y-1.5">

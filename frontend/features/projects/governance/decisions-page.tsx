@@ -48,7 +48,7 @@ const DEC_STATUS_STYLE: Record<DecisionStatus, string> = {
 function NewDecisionButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
-    <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={onClick} {...hoverHandlers}>
+    <Button size="sm" className="gap-1.5 text-xs" onClick={onClick} {...hoverHandlers}>
       <PlusIcon ref={iconRef} size={14} />
       New Decision
     </Button>
@@ -70,7 +70,7 @@ function DecisionRowActions({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Decision actions" {...hoverHandlers}>
+        <Button variant="ghost" size="icon" className="w-7" aria-label="Decision actions" {...hoverHandlers}>
           <EllipsisIcon ref={iconRef} size={14} />
         </Button>
       </DropdownMenuTrigger>
@@ -233,7 +233,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
         <div className={cn(PM_TOOLBAR, "sm:justify-start")}>
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="h-8 w-40 text-xs">
+              <SelectTrigger className="w-40 text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -245,13 +245,13 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
               </SelectContent>
             </Select>
             <Input
-              className="h-8 w-52 text-xs"
+              className="w-52 text-xs"
               placeholder="Search decisions..."
               value={search}
               onChange={handleSearchChange}
             />
             {isFiltered ? (
-              <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={handleClearFilters}>
+              <Button size="sm" variant="ghost" className="text-xs" onClick={handleClearFilters}>
                 Clear
               </Button>
             ) : null}

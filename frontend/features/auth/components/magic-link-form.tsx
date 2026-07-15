@@ -45,13 +45,13 @@ export function MagicLinkForm({
             placeholder="you@company.com"
             value={email}
             onChange={onEmailChange}
-            className="h-8 text-sm"
+            className="text-sm"
             autoFocus
           />
           <Button
             type="button"
             size="sm"
-            className="h-8 shrink-0"
+            className="shrink-0"
             disabled={!email || isPending}
             onClick={onSend}
           >

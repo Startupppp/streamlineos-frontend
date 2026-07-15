@@ -273,7 +273,7 @@ export function CandidateCard({
       <div className="px-3 pb-3 flex items-center gap-2" onClick={handleStopPropagation}>
         <AIScoreCandidateButton candidateId={candidate.id} compact />
         <Select value={candidate.status ?? "NEW"} onValueChange={handleStatusChange}>
-          <SelectTrigger className="h-8 flex-1 text-xs bg-muted/40 border-border/50">
+          <SelectTrigger className="flex-1 text-xs bg-muted/40 border-border/50">
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="w-[var(--radix-select-trigger-width)]">

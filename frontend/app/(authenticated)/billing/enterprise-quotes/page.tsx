@@ -330,7 +330,7 @@ function NewQuoteSheet({
                 <FormItem>
                   <FormLabel>Valid Until</FormLabel>
                   <FormControl>
-                    <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+                    <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

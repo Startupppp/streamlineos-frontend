@@ -46,9 +46,9 @@ const BranchRow = memo(function BranchRow({ branch, branchIndex, nodeId, onUpdat
     <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/10 px-3 py-2">
       <div className="flex flex-1 items-center gap-2 min-w-0">
         <span className="text-[10px] font-medium text-muted-foreground w-4 shrink-0">{branchIndex + 1}</span>
-        <Input className="h-8 text-xs flex-1 min-w-0" placeholder="field" value={branch.condition.field} onChange={handleFieldChange} />
+        <Input className="text-xs flex-1 min-w-0" placeholder="field" value={branch.condition.field} onChange={handleFieldChange} />
         <Select value={branch.condition.operator} onValueChange={handleOperatorChange}>
-          <SelectTrigger className="h-8 text-xs w-[100px] shrink-0">
+          <SelectTrigger className="text-xs w-[100px] shrink-0">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -57,7 +57,7 @@ const BranchRow = memo(function BranchRow({ branch, branchIndex, nodeId, onUpdat
             ))}
           </SelectContent>
         </Select>
-        <Input className="h-8 text-xs flex-1 min-w-0" placeholder="value" value={branch.condition.value} onChange={handleValueChange} />
+        <Input className="text-xs flex-1 min-w-0" placeholder="value" value={branch.condition.value} onChange={handleValueChange} />
       </div>
       {canRemove && (
         <Button

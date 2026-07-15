@@ -44,13 +44,13 @@ function DetailSkeleton() {
           </div>
         </div>
         <div className="order-2 space-y-4 bg-card px-4 pb-4 pt-2 md:hidden">
-          <Skeleton className="h-8 w-3/4" />
+          <Skeleton className="h-4 w-3/4" />
           <Skeleton className="h-40 w-full rounded-lg" />
           <Skeleton className="h-24 w-full rounded-lg" />
         </div>
         <ScrollArea hideScrollbar className="order-2 hidden min-h-0 flex-1 md:order-1 md:flex">
           <div className="space-y-4 bg-card px-4 pb-4 pt-2 md:px-6 md:pb-5 md:pt-2">
-            <Skeleton className="h-8 w-3/4" />
+            <Skeleton className="h-4 w-3/4" />
             <Skeleton className="h-40 w-full rounded-lg" />
             <Skeleton className="h-24 w-full rounded-lg" />
           </div>

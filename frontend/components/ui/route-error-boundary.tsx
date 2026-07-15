@@ -26,7 +26,7 @@ export function RouteErrorBoundary({
     >
       <div className="bg-destructive/10 p-4 rounded-full">
         <AlertTriangle
-          className="h-8 w-8 text-destructive"
+          className="w-8 text-destructive"
           aria-hidden="true"
         />
       </div>

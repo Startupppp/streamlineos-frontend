@@ -69,12 +69,12 @@ export function BenefitPlanCard({ plan, enrolled, onEnroll, onWaive, onEdit, isA
 
         <div className="flex items-center gap-2">
           {!isAdmin && onEnroll && !enrolled && (
-            <Button size="sm" className="h-7 text-xs" onClick={onEnroll} disabled={isPending}>
+            <Button size="sm" className="text-xs" onClick={onEnroll} disabled={isPending}>
               Enroll
             </Button>
           )}
           {!isAdmin && onWaive && enrolled && (
-            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={onWaive} disabled={isPending}>
+            <Button size="sm" variant="outline" className="text-xs" onClick={onWaive} disabled={isPending}>
               Waive
             </Button>
           )}
@@ -82,7 +82,7 @@ export function BenefitPlanCard({ plan, enrolled, onEnroll, onWaive, onEdit, isA
             <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 text-[10px] dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">Enrolled</Badge>
           )}
           {isAdmin && onEdit && (
-            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={onEdit}>
+            <Button size="sm" variant="outline" className="text-xs" onClick={onEdit}>
               Edit
             </Button>
           )}

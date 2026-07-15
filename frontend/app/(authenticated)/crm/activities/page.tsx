@@ -174,7 +174,7 @@ function ActivitiesContent() {
       title="Activities"
       subtitle="Track calls, emails, meetings, and tasks across your pipeline"
       actions={
-        <Button onClick={handleOpenDialog} size="sm" className="h-8 px-3 text-xs gap-1.5">
+        <Button onClick={handleOpenDialog} size="sm" className="px-3 text-xs gap-1.5">
           <Plus className="h-3.5 w-3.5" />
           Log Activity
         </Button>
@@ -260,7 +260,7 @@ function ActivitiesContent() {
                     size="sm"
                     onClick={handlePrev}
                     disabled={page <= 1}
-                    className="h-7 px-3 text-xs"
+                    className="px-3 text-xs"
                   >
                     Previous
                   </Button>
@@ -269,7 +269,7 @@ function ActivitiesContent() {
                     size="sm"
                     onClick={handleNext}
                     disabled={page >= totalPages}
-                    className="h-7 px-3 text-xs"
+                    className="px-3 text-xs"
                   >
                     Next
                   </Button>

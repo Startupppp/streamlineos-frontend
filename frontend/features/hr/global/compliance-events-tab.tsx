@@ -84,7 +84,7 @@ export function ComplianceEventsTab() {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-7 text-xs"
+                  className="text-xs"
                   disabled={markDone.isPending}
                   onClick={() => handleMarkDone(event.id)}
                 >

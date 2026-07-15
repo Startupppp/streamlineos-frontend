@@ -140,7 +140,7 @@ export function CategoryEditSheet({
                       </span>
                     </div>
                     <FormControl>
-                      <Input className="h-8" placeholder="e.g. Electronics" maxLength={CATEGORY_NAME_MAX} {...field} />
+                      <Input className="" placeholder="e.g. Electronics" maxLength={CATEGORY_NAME_MAX} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

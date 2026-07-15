@@ -14,7 +14,7 @@ export default function ChatLoading() {
               <Skeleton className="h-7 w-7 rounded-md" />
             </div>
           </div>
-          <Skeleton className="h-8 w-full rounded-md" />
+          <Skeleton className="h-9 w-full rounded-md" />
         </div>
 
         <div className="flex-1 overflow-hidden p-2 space-y-1">

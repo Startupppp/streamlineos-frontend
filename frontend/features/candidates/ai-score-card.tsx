@@ -104,7 +104,7 @@ export const AiScoreCard = memo(function AiScoreCard({
           </div>
         ) : (
           <div className="py-4 text-center">
-            <Sparkles className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
+            <Sparkles className="w-8 text-muted-foreground/30 mx-auto mb-2" />
             <p className="text-xs text-muted-foreground">
               Click &quot;Generate&quot; to score this candidate with AI.
             </p>

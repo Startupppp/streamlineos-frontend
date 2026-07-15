@@ -93,7 +93,7 @@ export function MessagesTab({
           <div className="flex-1 space-y-1">
             <Label className="text-xs text-muted-foreground">Channel</Label>
             <Select value={channel} onValueChange={(v) => setChannel(v as MessageChannel)}>
-              <SelectTrigger className="h-8 text-xs">
+              <SelectTrigger className="text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -106,7 +106,7 @@ export function MessagesTab({
             <div className="flex-[2] space-y-1">
               <Label className="text-xs text-muted-foreground">Subject</Label>
               <Input
-                className="h-8 text-xs"
+                className="text-xs"
                 placeholder="Subject"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}

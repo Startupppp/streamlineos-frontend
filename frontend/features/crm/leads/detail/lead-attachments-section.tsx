@@ -94,7 +94,7 @@ export function LeadAttachmentsSection({ leadId }: LeadAttachmentsSectionProps) 
           <Button
             variant="outline"
             size="sm"
-            className="h-7 gap-1.5 text-xs"
+            className="gap-1.5 text-xs"
             onClick={handleUploadClick}
             disabled={uploadMutation.isPending}
           >

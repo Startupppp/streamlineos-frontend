@@ -98,7 +98,7 @@ function RejectInline({
       <Button
         size="sm"
         variant="outline"
-        className="h-8 gap-1 text-xs border-rose-200 text-rose-600 hover:bg-rose-50 dark:border-rose-500/30 dark:text-rose-400 dark:hover:bg-rose-500/10"
+        className="gap-1 text-xs border-rose-200 text-rose-600 hover:bg-rose-50 dark:border-rose-500/30 dark:text-rose-400 dark:hover:bg-rose-500/10"
         onClick={handleExpand}
       >
         <XCircle className="h-3.5 w-3.5" />
@@ -110,7 +110,7 @@ function RejectInline({
   return (
     <div className="flex items-center gap-1.5">
       <Input
-        className="h-8 text-xs"
+        className="text-xs"
         placeholder="Reason for rejection..."
         value={reason}
         onChange={handleReasonChange}
@@ -118,13 +118,13 @@ function RejectInline({
       />
       <Button
         size="sm"
-        className="h-7 text-xs shrink-0 bg-rose-600 hover:bg-rose-700 text-white"
+        className="text-xs shrink-0 bg-rose-600 hover:bg-rose-700 text-white"
         onClick={handleConfirm}
         disabled={!reason.trim() || isRejecting}
       >
         Confirm
       </Button>
-      <Button size="sm" variant="ghost" className="h-7 text-xs shrink-0" onClick={handleCancel}>
+      <Button size="sm" variant="ghost" className="text-xs shrink-0" onClick={handleCancel}>
         Cancel
       </Button>
     </div>
@@ -211,7 +211,7 @@ const TravelApprovalCard = memo(function TravelApprovalCard({
               {section === "manager" ? (
                 <Button
                   size="sm"
-                  className="h-8 gap-1 text-xs"
+                  className="gap-1 text-xs"
                   onClick={handleManagerApprove}
                   disabled={isManagerApproving}
                 >
@@ -221,7 +221,7 @@ const TravelApprovalCard = memo(function TravelApprovalCard({
               ) : (
                 <Button
                   size="sm"
-                  className="h-8 gap-1 text-xs"
+                  className="gap-1 text-xs"
                   onClick={handleFinanceApprove}
                   disabled={isFinanceApproving}
                 >

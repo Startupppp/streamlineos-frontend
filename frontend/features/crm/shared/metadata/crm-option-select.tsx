@@ -35,7 +35,7 @@ export function CrmOptionSelect({
 
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className={cn("h-8 text-xs", className)}>
+      <SelectTrigger className={cn("text-xs", className)}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>

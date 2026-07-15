@@ -107,7 +107,7 @@ export function WebhooksTab({ providerKey, environment }: { providerKey: string;
             <code className="flex-1 truncate text-[11px] bg-background border border-border rounded px-2 py-1.5 font-mono">
               {generatedUrl}
             </code>
-            <Button size="icon" variant="outline" className="h-7 w-7 shrink-0" onClick={() => handleCopy(generatedUrl)}>
+            <Button size="icon" variant="outline" className="w-7 shrink-0" onClick={() => handleCopy(generatedUrl)}>
               <Copy className="h-3 w-3" />
             </Button>
           </div>
@@ -117,7 +117,7 @@ export function WebhooksTab({ providerKey, environment }: { providerKey: string;
             Credentials. Verification happens automatically the first time a real event arrives.
           </p>
         )}
-        <Button size="sm" variant="outline" className="h-7 text-xs gap-1.5" onClick={handleGenerate} disabled={generate.isPending}>
+        <Button size="sm" variant="outline" className="text-xs gap-1.5" onClick={handleGenerate} disabled={generate.isPending}>
           <ShieldCheck className="h-3 w-3" />
           {generatedUrl ? "Regenerate" : "Generate endpoint"}
         </Button>

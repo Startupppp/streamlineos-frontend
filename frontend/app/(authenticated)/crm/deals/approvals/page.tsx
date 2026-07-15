@@ -66,7 +66,7 @@ function ApprovalRowActions({ item, onApprove, onReject }: ApprovalRowActionsPro
             <Button
               size="sm"
               variant="ghost"
-              className="h-7 text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300"
+              className="text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300"
               onClick={handleApproveClick}
             >
               <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
@@ -75,7 +75,7 @@ function ApprovalRowActions({ item, onApprove, onReject }: ApprovalRowActionsPro
             <Button
               size="sm"
               variant="ghost"
-              className="h-7 text-xs text-destructive hover:text-destructive"
+              className="text-xs text-destructive hover:text-destructive"
               onClick={handleRejectClick}
             >
               <XCircle className="h-3.5 w-3.5 mr-1" />
@@ -268,7 +268,7 @@ export default function DealApprovalsPage() {
   const filterBar = (
     <div className="flex w-full min-w-0 items-center gap-2">
       <Select value={statusFilter} onValueChange={handleFilterChange}>
-        <SelectTrigger className="h-8 text-xs w-[160px]">
+        <SelectTrigger className="text-xs w-[160px]">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

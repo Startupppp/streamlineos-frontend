@@ -230,7 +230,7 @@ export function ChannelSidebar({
           <button
             type="button"
             onClick={onClick}
-            className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+            className="w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
             aria-label={label}
           >
             {icon}
@@ -265,7 +265,7 @@ export function ChannelSidebar({
               <button
                 type="button"
                 onClick={handleOpenChatSearch}
-                className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                className="w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
                 aria-label="Search"
                 title="Search"
               >
@@ -274,7 +274,7 @@ export function ChannelSidebar({
               <button
                 type="button"
                 onClick={handleOpenBrowse}
-                className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                className="w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
                 aria-label="Browse public channels"
                 title="Browse Channels"
               >
@@ -535,7 +535,7 @@ export function ChannelSidebar({
               aria-label="Set status"
             >
               <div className="relative shrink-0">
-                <Avatar className="h-7 w-7 border border-border/30">
+                <Avatar className="w-7 border border-border/30">
                   <AvatarImage src={resolveImageUrl(session?.user?.image)} />
                   <AvatarFallback className="text-[9px] font-semibold bg-primary/10 text-primary">
                     {session?.user?.name?.charAt(0)?.toUpperCase() ?? "U"}

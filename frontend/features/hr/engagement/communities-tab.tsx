@@ -56,7 +56,7 @@ function CommunityCard({ community, currentUserId }: CommunityCardProps) {
           <Button
             size="sm"
             variant="outline"
-            className="h-7 text-xs gap-1 px-2.5"
+            className="text-xs gap-1 px-2.5"
             onClick={handleLeave}
             disabled={leave.isPending}
           >
@@ -66,7 +66,7 @@ function CommunityCard({ community, currentUserId }: CommunityCardProps) {
         ) : (
           <Button
             size="sm"
-            className="h-7 text-xs px-2.5"
+            className="text-xs px-2.5"
             onClick={handleJoin}
             disabled={join.isPending}
           >
@@ -145,7 +145,7 @@ export function CommunitiesTab({ currentUserId }: { currentUserId: string }) {
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <Button size="sm" className="h-8 gap-1.5" onClick={() => setSheetOpen(true)}>
+        <Button size="sm" className="gap-1.5" onClick={() => setSheetOpen(true)}>
           <Plus className="h-3.5 w-3.5" />
           New Community
         </Button>
@@ -153,7 +153,7 @@ export function CommunitiesTab({ currentUserId }: { currentUserId: string }) {
 
       {(!communities || communities.length === 0) ? (
         <div className="flex flex-col items-center justify-center py-16 rounded-lg border border-dashed border-border bg-muted/20">
-          <Users className="h-8 w-8 text-muted-foreground mb-3" />
+          <Users className="w-8 text-muted-foreground mb-3" />
           <p className="text-sm font-medium text-foreground">No communities yet</p>
           <p className="text-xs text-muted-foreground mt-1">Create a community to bring people together</p>
         </div>
@@ -182,7 +182,7 @@ export function CommunitiesTab({ currentUserId }: { currentUserId: string }) {
               placeholder="e.g. Book Club, Running Team"
               value={name}
               onChange={handleNameChange}
-              className="h-8 text-sm"
+              className="text-sm"
             />
           </div>
           <div className="space-y-1.5">

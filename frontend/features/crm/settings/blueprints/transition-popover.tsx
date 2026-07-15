@@ -152,7 +152,7 @@ export function TransitionPopover({
           onChange={handleFieldInputChange}
           onKeyDown={handleFieldKeyDown}
           placeholder="field_name → Enter"
-          className="h-8 text-xs"
+          className="text-xs"
         />
       </div>
 
@@ -209,7 +209,7 @@ export function TransitionPopover({
       <div className="flex items-center gap-2">
         <LoadingButton
           size="sm"
-          className="h-7 text-xs flex-1"
+          className="text-xs flex-1"
           onClick={handleSave}
           isPending={isSaving}
           loadingText="Saving…"
@@ -220,7 +220,7 @@ export function TransitionPopover({
           <LoadingButton
             size="sm"
             variant="destructive"
-            className="h-7 text-xs"
+            className="text-xs"
             onClick={handleDelete}
             isPending={deleteTransition.isPending}
             loadingText="…"

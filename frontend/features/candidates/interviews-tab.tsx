@@ -58,7 +58,7 @@ const InterviewRow = memo(function InterviewRow({
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 text-xs gap-1"
+            className="text-xs gap-1"
             onClick={handleToggle}
           >
             <ClipboardCheck className="h-3.5 w-3.5" />
@@ -97,7 +97,7 @@ export const InterviewsTab = memo(function InterviewsTab({
     <Card>
       <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">
         <CardTitle className="text-sm">Interviews</CardTitle>
-        <Button size="sm" variant="outline" className="h-7 text-xs" onClick={handleScheduleClick}>
+        <Button size="sm" variant="outline" className="text-xs" onClick={handleScheduleClick}>
           <Calendar className="h-3 w-3 mr-1" />Schedule
         </Button>
       </CardHeader>

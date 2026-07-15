@@ -78,7 +78,7 @@ export function PageWrapper({
           >
             {leading}
             {!leading && backHref && (
-              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 mt-0.5" aria-label="Back" asChild>
+              <Button variant="ghost" size="icon" className="w-8 shrink-0 mt-0.5" aria-label="Back" asChild>
                 <Link href={backHref}>
                   <ArrowLeft className="h-4 w-4" />
                 </Link>
@@ -123,7 +123,7 @@ export function PageWrapper({
             <div className={cn("px-4 sm:px-6 pb-2", mobileFiltersClass, filtersClassName)}>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="h-8 text-xs gap-1.5">
+                  <Button variant="outline" className="text-xs gap-1.5">
                     <SlidersHorizontal className="h-4 w-4" />
                     Filters
                   </Button>

@@ -184,7 +184,7 @@ export function LeadDetailSheet({
                     variant="outline"
                     size="sm"
                     onClick={handleEditLead}
-                    className="h-8 text-xs gap-1.5"
+                    className="text-xs gap-1.5"
                   >
                     <Edit3 className="h-3.5 w-3.5" />
                     Edit
@@ -253,7 +253,7 @@ export function LeadDetailSheet({
                 <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                   {lead.email && (
                     <div className="flex items-center gap-2.5 text-sm">
-                      <div className="h-7 w-7 rounded-md bg-muted/50 flex items-center justify-center shrink-0">
+                      <div className="w-7 rounded-md bg-muted/50 flex items-center justify-center shrink-0">
                         <Mail className="h-3.5 w-3.5 text-muted-foreground" />
                       </div>
                       <a
@@ -266,7 +266,7 @@ export function LeadDetailSheet({
                   )}
                   {lead.phone && (
                     <div className="flex items-center gap-2.5 text-sm">
-                      <div className="h-7 w-7 rounded-md bg-muted/50 flex items-center justify-center shrink-0">
+                      <div className="w-7 rounded-md bg-muted/50 flex items-center justify-center shrink-0">
                         <Phone className="h-3.5 w-3.5 text-muted-foreground" />
                       </div>
                       <a
@@ -279,7 +279,7 @@ export function LeadDetailSheet({
                   )}
                   {lead.city && (
                     <div className="flex items-center gap-2.5 text-sm">
-                      <div className="h-7 w-7 rounded-md bg-muted/50 flex items-center justify-center shrink-0">
+                      <div className="w-7 rounded-md bg-muted/50 flex items-center justify-center shrink-0">
                         <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
                       </div>
                       <span>{lead.city}</span>
@@ -287,7 +287,7 @@ export function LeadDetailSheet({
                   )}
                   {lead.source && (
                     <div className="flex items-center gap-2.5 text-sm">
-                      <div className="h-7 w-7 rounded-md bg-muted/50 flex items-center justify-center shrink-0">
+                      <div className="w-7 rounded-md bg-muted/50 flex items-center justify-center shrink-0">
                         <Target className="h-3.5 w-3.5 text-muted-foreground" />
                       </div>
                       <span className="capitalize">

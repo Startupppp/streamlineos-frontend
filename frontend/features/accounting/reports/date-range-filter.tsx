@@ -28,7 +28,7 @@ export function DateRangeFilter({
           value={from}
           onChange={onFromChange}
           placeholder="Start date"
-          className="h-8 w-[140px] text-sm"
+          className="w-[140px] text-sm"
         />
       </div>
       <div className="flex flex-col gap-1">
@@ -40,7 +40,7 @@ export function DateRangeFilter({
           value={to}
           onChange={onToChange}
           placeholder="End date"
-          className="h-8 w-[140px] text-sm"
+          className="w-[140px] text-sm"
         />
       </div>
     </div>

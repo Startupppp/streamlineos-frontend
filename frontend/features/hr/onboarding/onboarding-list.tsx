@@ -62,7 +62,7 @@ export function OnboardingList() {
       <div className="flex items-center justify-center w-full gap-3">
         <Button
           size="sm"
-          className="h-8 gap-1.5"
+          className="gap-1.5"
           onClick={() => setInitiateOpen(true)}
           aria-label="Initiate onboarding for an employee"
         >
@@ -157,7 +157,7 @@ export function OnboardingList() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="h-7 text-xs gap-1.5 shrink-0 duration-200"
+                      className="text-xs gap-1.5 shrink-0 duration-200"
                       asChild
                     >
                       <Link href={`/hr/onboarding/${row.userId}`} aria-label={`View ${row.userName} onboarding`}>

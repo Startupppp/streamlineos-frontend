@@ -190,7 +190,7 @@ function buildPlanColumns(
         <Button
           size="sm"
           variant="ghost"
-          className="h-7 text-xs"
+          className="text-xs"
           onClick={(e) => { e.stopPropagation(); onEdit(plan); }}
         >
           Edit
@@ -272,7 +272,7 @@ function buildClaimColumns(
           <Button
             size="sm"
             variant="ghost"
-            className="h-7 text-xs"
+            className="text-xs"
             onClick={(e) => { e.stopPropagation(); onReview(claim); }}
           >
             Review
@@ -310,7 +310,7 @@ function PlansAdminTab({ canManage }: { canManage: boolean }) {
     <div className="space-y-4">
       {canManage && (
         <div className="flex justify-end">
-          <Button size="sm" className="h-8 gap-1.5" onClick={handleNew}>
+          <Button size="sm" className="gap-1.5" onClick={handleNew}>
             <Plus className="h-3.5 w-3.5" />
             New Plan
           </Button>
@@ -363,7 +363,7 @@ function ClaimsDashboardTab({ canManage }: { canManage: boolean }) {
     <div className="space-y-4">
       <div className="flex items-center gap-3">
         <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
-          <SelectTrigger className="h-8 w-40 text-xs">
+          <SelectTrigger className="w-40 text-xs">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>

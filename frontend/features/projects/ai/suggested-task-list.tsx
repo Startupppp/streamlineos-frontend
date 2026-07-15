@@ -192,7 +192,7 @@ export function SuggestedTaskList({ items, projectId }: SuggestedTaskListProps) 
         size="sm"
         onClick={handleCreate}
         disabled={selected.size === 0 || isCreating}
-        className="h-8 gap-1.5 text-xs"
+        className="gap-1.5 text-xs"
       >
         {isCreating && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
         Create {selected.size > 0 ? selected.size : ""} selected task{selected.size !== 1 ? "s" : ""}

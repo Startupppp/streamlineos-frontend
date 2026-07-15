@@ -160,7 +160,7 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
         type="number"
         min={0}
         aria-label="Planned budget in rupees"
-        className="h-8 text-sm w-36"
+        className="text-sm w-36"
         value={newBudget}
         onChange={handleBudgetInputChange}
         placeholder={String(budget?.plannedBudget ?? "")}

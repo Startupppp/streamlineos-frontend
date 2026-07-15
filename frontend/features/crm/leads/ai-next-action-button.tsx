@@ -60,7 +60,7 @@ export function AINextActionButton({
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 px-2 text-xs gap-1"
+            className="px-2 text-xs gap-1"
             onClick={handleCompactClick}
             disabled={actionMutation.isPending}
           >

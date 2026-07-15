@@ -107,7 +107,7 @@ export default function PageIconPicker({
             <button
               key={emoji}
               data-emoji={emoji}
-              className="h-8 w-8 flex items-center justify-center text-lg rounded hover:bg-muted transition-colors"
+              className="w-8 flex items-center justify-center text-lg rounded hover:bg-muted transition-colors"
               aria-label={emoji}
               onClick={handleSelectEmoji}
             >

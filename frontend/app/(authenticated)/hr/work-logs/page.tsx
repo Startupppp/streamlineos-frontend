@@ -452,7 +452,7 @@ export default function WorkLogsPage() {
           <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
             <CardContent className="py-12">
               <div className="flex flex-col items-center justify-center text-center gap-2">
-                <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+                <div className="w-8 rounded-full bg-muted flex items-center justify-center">
                   <Loader2 className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <p className="text-sm text-muted-foreground">
@@ -471,7 +471,7 @@ export default function WorkLogsPage() {
                 aria-label="Loading work logs"
               >
                 <Loader2
-                  className="h-8 w-8 animate-spin text-muted-foreground"
+                  className="w-8 animate-spin text-muted-foreground"
                   aria-hidden="true"
                 />
                 <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
@@ -493,7 +493,7 @@ export default function WorkLogsPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-8 mt-1"
+                  className="mt-1"
                   onClick={handleRetryWorkLogs}
                 >
                   Try Again
@@ -516,7 +516,7 @@ export default function WorkLogsPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-8 gap-1.5 mt-1"
+                  className="gap-1.5 mt-1"
                   onClick={handleClearSearch}
                 >
                   Clear Search

@@ -94,7 +94,7 @@ function RuleRow({ rule, dragHandleProps, onToggle, onEdit, onDeleteRequest }: R
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7"
+              className="w-7"
               onClick={handleEdit}
               aria-label="Edit rule"
               {...editIcon.hoverHandlers}
@@ -104,7 +104,7 @@ function RuleRow({ rule, dragHandleProps, onToggle, onEdit, onDeleteRequest }: R
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 text-destructive"
+              className="w-7 text-destructive"
               onClick={handleDelete}
               aria-label="Delete rule"
               {...deleteIcon.hoverHandlers}
@@ -177,7 +177,7 @@ function PreviewPanel() {
               value={score}
               onChange={handleScoreChange}
               placeholder="85"
-              className="h-8 text-xs"
+              className="text-xs"
             />
           </div>
           <div>
@@ -186,7 +186,7 @@ function PreviewPanel() {
               value={city}
               onChange={handleCityChange}
               placeholder="Mumbai"
-              className="h-8 text-xs"
+              className="text-xs"
             />
           </div>
         </div>

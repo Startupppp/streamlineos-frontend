@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import {
   Users,
   TrendingDown,
@@ -230,22 +231,24 @@ function AnalyticsContent() {
           onValueChange={handleSectionChange}
           className="flex min-h-0 flex-1 flex-col gap-4"
         >
-          <TabsList>
-            {SECTION_TABS.map(({ value, label, icon: Icon }) => (
-              <TabsTrigger key={value} value={value} className="gap-1.5">
-                <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-                {label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <DateRangeSelector value={dateRange} onChange={setDateRange} />
-          </div>
+          <PageTabsToolbar
+            tabsDensity="labeled"
+            tabs={
+              <TabsList>
+                {SECTION_TABS.map(({ value, label, icon: Icon }) => (
+                  <TabsTrigger key={value} value={value} className="gap-1.5">
+                    <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                    {label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            }
+            filters={<DateRangeSelector value={dateRange} onChange={setDateRange} />}
+          />
 
           <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden flex min-h-0 flex-1 flex-col">
             <div className="flex items-center gap-2 px-4 py-3 border-b border-border shrink-0">
-              <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
+              <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
                 <BarChart3
                   className="h-3.5 w-3.5 text-primary"
                   aria-hidden="true"

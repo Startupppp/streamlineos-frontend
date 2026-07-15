@@ -154,7 +154,7 @@ export function CreateTicketFromCalendarDialog({
                   <FormLabel className="text-xs font-medium">Project</FormLabel>
                   <FormControl>
                     {projectsLoading ? (
-                      <Skeleton className="h-8 w-full" />
+                      <Skeleton className="h-4 w-full" />
                     ) : projects.length === 0 ? (
                       <div className="flex flex-col items-start gap-1 py-2 text-xs text-muted-foreground">
                         <span>No projects found.</span>
@@ -168,7 +168,7 @@ export function CreateTicketFromCalendarDialog({
                       </div>
                     ) : (
                       <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger className="h-8 text-xs">
+                        <SelectTrigger className="text-xs">
                           <SelectValue placeholder="Select a project" />
                         </SelectTrigger>
                         <SelectContent>
@@ -199,7 +199,7 @@ export function CreateTicketFromCalendarDialog({
                     <Input
                       {...field}
                       placeholder="Ticket title"
-                      className="h-8 text-sm"
+                      className="text-sm"
                       autoFocus
                     />
                   </FormControl>
@@ -215,7 +215,7 @@ export function CreateTicketFromCalendarDialog({
                 <FormItem className="gap-1">
                   <FormLabel className="text-xs font-medium">Due date</FormLabel>
                   <FormControl>
-                    <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+                    <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
                   </FormControl>
                   <FormMessage className="text-xs" />
                 </FormItem>
@@ -230,7 +230,7 @@ export function CreateTicketFromCalendarDialog({
                   <FormLabel className="text-xs font-medium">Priority</FormLabel>
                   <FormControl>
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className="h-8 text-xs">
+                      <SelectTrigger className="text-xs">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -252,7 +252,7 @@ export function CreateTicketFromCalendarDialog({
           <Button
             variant="outline"
             size="sm"
-            className="h-8 text-xs"
+            className="text-xs"
             onClick={() => handleOpenChange(false)}
             disabled={isPending}
           >
@@ -260,7 +260,7 @@ export function CreateTicketFromCalendarDialog({
           </Button>
           <Button
             size="sm"
-            className="h-8 text-xs"
+            className="text-xs"
             onClick={form.handleSubmit(handleSubmit)}
             disabled={isPending || projects.length === 0}
           >

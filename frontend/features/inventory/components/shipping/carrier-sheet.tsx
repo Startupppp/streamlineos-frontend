@@ -124,7 +124,7 @@ export function CarrierSheet({ open, onOpenChange, carrier }: CarrierSheetProps)
           <Input
             id="carrier-name"
             placeholder="DHL Express"
-            className="h-8 text-sm"
+            className="text-sm"
             {...form.register("name")}
           />
           {form.formState.errors.name && (
@@ -137,7 +137,7 @@ export function CarrierSheet({ open, onOpenChange, carrier }: CarrierSheetProps)
           <Input
             id="carrier-code"
             placeholder="DHL"
-            className="h-8 text-sm"
+            className="text-sm"
             {...form.register("code")}
           />
           {form.formState.errors.code && (
@@ -150,7 +150,7 @@ export function CarrierSheet({ open, onOpenChange, carrier }: CarrierSheetProps)
           <Input
             id="carrier-tracking-url"
             placeholder="https://track.carrier.com/{tracking}"
-            className="h-8 text-sm"
+            className="text-sm"
             {...form.register("trackingUrlTemplate")}
           />
           <p className="text-[10px] text-muted-foreground">Use {"{tracking}"} as placeholder</p>

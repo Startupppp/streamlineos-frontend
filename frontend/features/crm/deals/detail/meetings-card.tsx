@@ -29,7 +29,7 @@ interface DeleteMeetingButtonProps {
 function DeleteMeetingButton({ meetingId, onDelete }: DeleteMeetingButtonProps) {
   const handleClick = useCallback(() => onDelete(meetingId), [meetingId, onDelete]);
   return (
-    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive shrink-0" onClick={handleClick}>
+    <Button variant="ghost" size="icon" className="w-7 text-muted-foreground hover:text-destructive shrink-0" onClick={handleClick}>
       <Trash2 className="h-3.5 w-3.5" />
     </Button>
   );

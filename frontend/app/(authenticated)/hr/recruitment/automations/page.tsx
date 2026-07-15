@@ -136,7 +136,7 @@ function AutomationCard({ auto, onToggle, onSetDeleteId, isTogglePending }: Auto
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 text-xs"
+              className="text-xs"
               onClick={handleToggle}
               disabled={isTogglePending}
             >
@@ -145,7 +145,7 @@ function AutomationCard({ auto, onToggle, onSetDeleteId, isTogglePending }: Auto
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 text-destructive"
+              className="w-7 text-destructive"
               onClick={handleDelete}
             >
               <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

@@ -72,7 +72,7 @@ export function CreatePipelineDialog({
               <FormItem>
                 <FormLabel className="text-xs">Name</FormLabel>
                 <FormControl>
-                  <Input {...field} onChange={handleNameChange} placeholder="Sales Pipeline" className="h-8 text-sm" />
+                  <Input {...field} onChange={handleNameChange} placeholder="Sales Pipeline" className="text-sm" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -82,7 +82,7 @@ export function CreatePipelineDialog({
                 <FormLabel className="text-xs">Type</FormLabel>
                 <Select value={field.value} onValueChange={field.onChange}>
                   <FormControl>
-                    <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
                   </FormControl>
                   <SelectContent>
                     {PIPELINE_TYPES.map((t) => (
@@ -97,7 +97,7 @@ export function CreatePipelineDialog({
               <FormItem>
                 <FormLabel className="text-xs">Key</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="sales-pipeline" className="h-8 text-sm font-mono" />
+                  <Input {...field} placeholder="sales-pipeline" className="text-sm font-mono" />
                 </FormControl>
                 <FormMessage />
               </FormItem>

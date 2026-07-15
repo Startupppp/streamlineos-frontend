@@ -153,7 +153,7 @@ export function PlanUpsertSheet({ open, onOpenChange, plan }: Props) {
             defaultValue={form.getValues("category")}
             onValueChange={(v) => form.setValue("category", v as PlanFormValues["category"])}
           >
-            <SelectTrigger className="h-8 text-sm">
+            <SelectTrigger className="text-sm">
               <SelectValue placeholder="Select category" />
             </SelectTrigger>
             <SelectContent>
@@ -170,7 +170,7 @@ export function PlanUpsertSheet({ open, onOpenChange, plan }: Props) {
             defaultValue={form.getValues("status") ?? "draft"}
             onValueChange={(v) => form.setValue("status", v as PlanFormValues["status"])}
           >
-            <SelectTrigger className="h-8 text-sm">
+            <SelectTrigger className="text-sm">
               <SelectValue placeholder="Select status" />
             </SelectTrigger>
             <SelectContent>

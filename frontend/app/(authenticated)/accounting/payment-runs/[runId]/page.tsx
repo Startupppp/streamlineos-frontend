@@ -148,7 +148,7 @@ function ItemAmountCell({
         <Input
           value={editValue}
           onChange={handleEditValueChange}
-          className="h-8 text-sm"
+          className="text-sm"
           type="number"
           step="0.01"
           min="0.01"

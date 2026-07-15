@@ -330,7 +330,7 @@ export default function TaxReportsPage() {
           type="date"
           value={from}
           onChange={handleFromChange}
-          className="h-8 w-36 text-xs"
+          className="w-36 text-xs"
         />
       </div>
       <div className="flex flex-col gap-1">
@@ -342,7 +342,7 @@ export default function TaxReportsPage() {
           type="date"
           value={to}
           onChange={handleToChange}
-          className="h-8 w-36 text-xs"
+          className="w-36 text-xs"
         />
       </div>
       <div className="flex flex-col gap-1">
@@ -355,7 +355,7 @@ export default function TaxReportsPage() {
           value={rate}
           onChange={handleRateChange}
           placeholder="All rates"
-          className="h-8 w-28 text-xs"
+          className="w-28 text-xs"
         />
       </div>
     </div>
@@ -368,12 +368,12 @@ export default function TaxReportsPage() {
       backHref="/accounting/taxes"
       actions={
         activeTab === "output" ? (
-          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={handleExportOutput}>
+          <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={handleExportOutput}>
             <Download className="h-3.5 w-3.5" />
             Export CSV
           </Button>
         ) : activeTab === "input" ? (
-          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={handleExportInput}>
+          <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={handleExportInput}>
             <Download className="h-3.5 w-3.5" />
             Export CSV
           </Button>

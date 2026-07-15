@@ -158,7 +158,7 @@ export default function HrPoliciesPage() {
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7"
+            className="w-7"
             onClick={() => setPreviewPolicyId(row.id)}
           >
             <Eye className="h-3.5 w-3.5" />
@@ -167,7 +167,7 @@ export default function HrPoliciesPage() {
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7"
+              className="w-7"
               onClick={() => handleOpenEdit(row)}
             >
               <Pencil className="h-3.5 w-3.5" />
@@ -200,13 +200,13 @@ export default function HrPoliciesPage() {
             <LoadingButton
               variant="outline"
               size="sm"
-              className="h-8 text-xs"
+              className="text-xs"
               isPending={seed.isPending}
               onClick={handleSeedDefaults}
             >
               Seed Defaults
             </LoadingButton>
-            <Button size="sm" className="h-8 text-xs gap-1" onClick={handleOpenCreate}>
+            <Button size="sm" className="text-xs gap-1" onClick={handleOpenCreate}>
               <Plus className="h-3.5 w-3.5" />
               New Policy
             </Button>
@@ -221,7 +221,7 @@ export default function HrPoliciesPage() {
               placeholder="Search policies..."
               value={search}
               onChange={handleSearchChange}
-              className="h-8 text-xs pl-8 w-52"
+              className="text-xs pl-8 w-52"
             />
           </div>
           <Select
@@ -231,7 +231,7 @@ export default function HrPoliciesPage() {
               setPage(1);
             }}
           >
-            <SelectTrigger className="h-8 text-xs w-40">
+            <SelectTrigger className="text-xs w-40">
               <SelectValue placeholder="All Types" />
             </SelectTrigger>
             <SelectContent>
@@ -250,7 +250,7 @@ export default function HrPoliciesPage() {
               setPage(1);
             }}
           >
-            <SelectTrigger className="h-8 text-xs w-32">
+            <SelectTrigger className="text-xs w-32">
               <SelectValue placeholder="All Status" />
             </SelectTrigger>
             <SelectContent>
@@ -302,13 +302,13 @@ export default function HrPoliciesPage() {
                 <LoadingButton
                   variant="outline"
                   size="sm"
-                  className="h-8 text-xs"
+                  className="text-xs"
                   isPending={seed.isPending}
                   onClick={handleSeedDefaults}
                 >
                   Seed Defaults
                 </LoadingButton>
-                <Button size="sm" className="h-8 text-xs gap-1" onClick={handleOpenCreate}>
+                <Button size="sm" className="text-xs gap-1" onClick={handleOpenCreate}>
                   <Plus className="h-3.5 w-3.5" />
                   New Policy
                 </Button>

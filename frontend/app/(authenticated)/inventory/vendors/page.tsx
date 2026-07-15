@@ -68,7 +68,7 @@ function VendorRowActions({ vendor }: { vendor: InventoryVendor }) {
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7"
+          className="w-7"
           aria-label={`Actions for ${vendor.name}`}
           {...ellipsisHover}
         >
@@ -246,7 +246,7 @@ export default function VendorsListPage() {
           value={search}
           onChange={handleSearchChange}
           placeholder="Search vendors…"
-          className="h-8 w-full min-w-0 pl-8 text-xs"
+          className="w-full min-w-0 pl-8 text-xs"
         />
       </div>
       <Select value={activeParam} onValueChange={handleActiveChange}>

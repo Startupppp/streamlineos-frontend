@@ -3,14 +3,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 export function DetailActionSkeleton() {
   return (
     <div className="flex gap-2">
-      <Skeleton className="h-8 w-20" />
-      <Skeleton className="h-8 w-24" />
+      <Skeleton className="h-4 w-20" />
+      <Skeleton className="h-4 w-24" />
     </div>
   );
 }
 
 export function ListActionSkeleton() {
-  return <Skeleton className="h-8 w-20" />;
+  return <Skeleton className="h-4 w-20" />;
 }
 
 export function ListFilterSkeleton({ count = 2 }: { count?: number }) {

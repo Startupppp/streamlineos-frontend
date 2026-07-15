@@ -77,7 +77,7 @@ function ApprovalCard({
           <div className="flex items-center gap-2 shrink-0">
             <Button
               size="sm"
-              className="h-8 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
               onClick={handleApprove}
             >
               Approve
@@ -85,7 +85,7 @@ function ApprovalCard({
             <Button
               size="sm"
               variant="outline"
-              className="h-8 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-500/30 dark:hover:bg-red-500/10"
+              className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-500/30 dark:hover:bg-red-500/10"
               onClick={handleReject}
             >
               Reject

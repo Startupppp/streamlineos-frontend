@@ -92,7 +92,7 @@ function VariableCard({ variable, index, onDelete }: VariableCardProps) {
             <Button
               size="icon"
               variant="ghost"
-              className="h-8 w-8 text-destructive hover:text-destructive shrink-0"
+              className="w-8 text-destructive hover:text-destructive shrink-0"
               onClick={handleDelete}
               aria-label="Delete variable"
             >

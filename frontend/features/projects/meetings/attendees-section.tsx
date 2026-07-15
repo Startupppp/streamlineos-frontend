@@ -13,7 +13,7 @@ import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/
 import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 import type { MeetingAttendee, ProjectMemberRecord } from "@/types/projects";
 
-const FIELD_CLASS = "h-8 w-full text-xs bg-card border-border shadow-xs";
+const FIELD_CLASS = "w-full text-xs bg-card border-border shadow-xs";
 
 interface AttendeesSectionProps {
   projectId: number;

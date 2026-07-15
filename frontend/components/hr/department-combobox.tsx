@@ -192,7 +192,7 @@ export function DepartmentCombobox({
             value={search}
             onChange={handleSearchChange}
             onKeyDown={handleSearchKeyDown}
-            className="h-8"
+            className=""
           />
         </div>
         <ScrollArea className="max-h-[240px]">

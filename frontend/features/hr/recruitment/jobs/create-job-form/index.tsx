@@ -238,17 +238,17 @@ export function CreateJobForm({ job }: CreateJobFormProps) {
             />
             <div className="w-px h-5 bg-border/60 shrink-0" />
             {isEdit ? (
-              <Button size="sm" onClick={handleSaveDraft} disabled={isPending} className="h-8 gap-1.5">
+              <Button size="sm" onClick={handleSaveDraft} disabled={isPending} className="gap-1.5">
                 <Save className="h-3.5 w-3.5" />
                 Save Changes
               </Button>
             ) : (
               <>
-                <Button variant="outline" size="sm" onClick={handleSaveDraft} disabled={isPending} className="h-8 gap-1.5">
+                <Button variant="outline" size="sm" onClick={handleSaveDraft} disabled={isPending} className="gap-1.5">
                   <Save className="h-3.5 w-3.5" />
                   Save Draft
                 </Button>
-                <Button size="sm" onClick={handlePublish} disabled={isPending} className="h-8 gap-1.5">
+                <Button size="sm" onClick={handlePublish} disabled={isPending} className="gap-1.5">
                   <Send className="h-3.5 w-3.5" />
                   Publish Job
                 </Button>
@@ -279,7 +279,7 @@ export function CreateJobForm({ job }: CreateJobFormProps) {
             size="sm"
             disabled={activeStep === 0}
             onClick={handlePrev}
-            className="h-8 gap-1.5"
+            className="gap-1.5"
           >
             <ChevronLeft className="h-3.5 w-3.5" />
             Previous
@@ -290,12 +290,12 @@ export function CreateJobForm({ job }: CreateJobFormProps) {
           </span>
 
           {isLastStep ? (
-            <Button size="sm" onClick={handlePublish} disabled={isPending} className="h-8 gap-1.5">
+            <Button size="sm" onClick={handlePublish} disabled={isPending} className="gap-1.5">
               <Send className="h-3.5 w-3.5" />
               {isEdit ? "Save Changes" : "Publish Job"}
             </Button>
           ) : (
-            <Button size="sm" onClick={handleNext} className="h-8 gap-1.5">
+            <Button size="sm" onClick={handleNext} className="gap-1.5">
               Next
               <ChevronRight className="h-3.5 w-3.5" />
             </Button>

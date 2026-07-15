@@ -287,7 +287,7 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
                         <Command shouldFilter={false}>
                           <CommandInput
                             placeholder="Search by name or email…"
-                            className="h-8 text-xs"
+                            className="text-xs"
                             value={managerSearch}
                             onValueChange={handleManagerSearchChange}
                           />

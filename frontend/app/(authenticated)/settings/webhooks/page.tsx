@@ -349,7 +349,7 @@ function WebhookCard({ webhook: wh, onCopyUrl, onToggle, onDelete }: WebhookCard
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7"
+                className="w-7"
                 onClick={handleToggleClick}
                 aria-label={wh.isActive ? "Disable webhook" : "Enable webhook"}
               >
@@ -360,7 +360,7 @@ function WebhookCard({ webhook: wh, onCopyUrl, onToggle, onDelete }: WebhookCard
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 text-destructive hover:text-destructive"
+                className="w-7 text-destructive hover:text-destructive"
                 onClick={handleDeleteClick}
                 aria-label="Delete webhook"
               >

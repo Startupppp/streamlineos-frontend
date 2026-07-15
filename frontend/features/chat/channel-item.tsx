@@ -84,7 +84,7 @@ export function ChannelItem({
                 name={channel.name}
                 avatarUrl={channel.avatarUrl}
                 otherMember={otherMember}
-                className="h-8 w-8"
+                className="w-8"
                 iconClassName="h-3.5 w-3.5"
               />
               {isOnline && (

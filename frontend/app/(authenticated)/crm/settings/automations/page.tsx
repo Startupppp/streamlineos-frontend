@@ -127,7 +127,7 @@ function buildColumns(
           <div onClick={handleActionsClick}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground">
+                <Button variant="ghost" size="icon" className="w-7 text-muted-foreground hover:text-foreground">
                   <MoreHorizontal className="h-3.5 w-3.5" />
                 </Button>
               </DropdownMenuTrigger>
@@ -248,7 +248,7 @@ export default function AutomationsPage() {
         title="Automations"
         subtitle="Trigger actions automatically based on CRM events"
         actions={
-          <Button onClick={handleCreate} className="h-8 text-xs px-3">
+          <Button onClick={handleCreate} className="text-xs px-3">
             <Plus className="h-3.5 w-3.5 mr-1.5" />
             New Automation
           </Button>

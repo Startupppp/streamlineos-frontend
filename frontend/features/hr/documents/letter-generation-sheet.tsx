@@ -132,7 +132,7 @@ export function LetterGenerationSheet({ open, onOpenChange, employees, onSaved }
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Letter Template <span className="text-destructive">*</span></label>
           <Select value={templateId} onValueChange={setTemplateId}>
-            <SelectTrigger className="h-8">
+            <SelectTrigger className="">
               <SelectValue placeholder="Select template..." />
             </SelectTrigger>
             <SelectContent>
@@ -153,15 +153,15 @@ export function LetterGenerationSheet({ open, onOpenChange, employees, onSaved }
               placeholder="Variable name"
               value={extraKey}
               onChange={handleExtraKeyChange}
-              className="h-8 text-xs"
+              className="text-xs"
             />
             <Input
               placeholder="Value"
               value={extraVal}
               onChange={handleExtraValChange}
-              className="h-8 text-xs"
+              className="text-xs"
             />
-            <Button size="sm" variant="outline" className="h-8 shrink-0" onClick={handleAddExtra}>
+            <Button size="sm" variant="outline" className="shrink-0" onClick={handleAddExtra}>
               Add
             </Button>
           </div>

@@ -267,7 +267,7 @@ export default function DocumentTypesPage() {
     return (
       <PageWrapper title="Document Types" subtitle="Configure required onboarding documents">
         <div className="flex flex-1 flex-col items-center justify-center text-center gap-3">
-          <AlertCircle className="h-8 w-8 text-destructive" />
+          <AlertCircle className="w-8 text-destructive" />
           <div>
             <p className="text-sm font-medium text-foreground">Failed to load document types</p>
             <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>

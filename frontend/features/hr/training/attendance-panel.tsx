@@ -106,7 +106,7 @@ export function AttendancePanel({ programId, canManage }: Props) {
               <Button
                 size="sm"
                 variant="outline"
-                className="h-7 text-xs text-emerald-700 border-emerald-200 hover:bg-emerald-50 dark:text-emerald-400 dark:border-emerald-500/30 dark:hover:bg-emerald-500/10"
+                className="text-xs text-emerald-700 border-emerald-200 hover:bg-emerald-50 dark:text-emerald-400 dark:border-emerald-500/30 dark:hover:bg-emerald-500/10"
                 onClick={() => handleMarkAttended(attendee.userId)}
                 disabled={markAttendance.isPending}
               >
@@ -115,7 +115,7 @@ export function AttendancePanel({ programId, canManage }: Props) {
               <Button
                 size="sm"
                 variant="outline"
-                className="h-7 text-xs text-red-700 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-500/30 dark:hover:bg-red-500/10"
+                className="text-xs text-red-700 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-500/30 dark:hover:bg-red-500/10"
                 onClick={() => handleMarkAbsent(attendee.userId)}
                 disabled={markAttendance.isPending}
               >

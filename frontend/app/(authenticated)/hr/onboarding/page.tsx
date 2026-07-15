@@ -27,7 +27,7 @@ function ProbationEntryCard() {
       </p>
       <Card className="rounded-lg border border-border bg-card shadow-sm hover:shadow-md transition-shadow overflow-hidden">
         <CardContent className="p-4 flex items-start gap-3">
-          <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center shrink-0">
+          <div className="w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center shrink-0">
             <ShieldCheck className="h-3.5 w-3.5 text-blue-700 dark:text-blue-400" />
           </div>
           <div className="flex-1 min-w-0">
@@ -35,7 +35,7 @@ function ProbationEntryCard() {
             <p className="text-xs text-muted-foreground mt-0.5 mb-3">
               View employees due for probation confirmation or extension.
             </p>
-            <Button size="sm" variant="outline" className="h-7 text-xs gap-1.5 duration-200" asChild>
+            <Button size="sm" variant="outline" className="text-xs gap-1.5 duration-200" asChild>
               <Link href="/hr/onboarding/probation">View Reviews</Link>
             </Button>
           </div>
@@ -54,7 +54,7 @@ function HrDocumentsTab() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Card className="rounded-lg border border-border bg-card shadow-sm hover:shadow-md transition-shadow overflow-hidden">
           <CardContent className="p-4 flex items-start gap-3">
-            <div className="h-7 w-7 rounded-lg bg-violet-100 dark:bg-violet-950/40 flex items-center justify-center shrink-0">
+            <div className="w-7 rounded-lg bg-violet-100 dark:bg-violet-950/40 flex items-center justify-center shrink-0">
               <Settings className="h-3.5 w-3.5 text-violet-700 dark:text-violet-400" />
             </div>
             <div className="flex-1 min-w-0">
@@ -62,7 +62,7 @@ function HrDocumentsTab() {
               <p className="text-xs text-muted-foreground mt-0.5 mb-3">
                 Define which documents employees must submit during onboarding.
               </p>
-              <Button size="sm" variant="outline" className="h-7 text-xs gap-1.5 duration-200" asChild>
+              <Button size="sm" variant="outline" className="text-xs gap-1.5 duration-200" asChild>
                 <Link href="/hr/document-types">Configure Types</Link>
               </Button>
             </div>
@@ -71,7 +71,7 @@ function HrDocumentsTab() {
 
         <Card className="rounded-lg border border-border bg-card shadow-sm hover:shadow-md transition-shadow overflow-hidden">
           <CardContent className="p-4 flex items-start gap-3">
-            <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center shrink-0">
+            <div className="w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center shrink-0">
               <ClipboardCheck className="h-3.5 w-3.5 text-blue-700 dark:text-blue-400" />
             </div>
             <div className="flex-1 min-w-0">
@@ -79,7 +79,7 @@ function HrDocumentsTab() {
               <p className="text-xs text-muted-foreground mt-0.5 mb-3">
                 View and approve documents submitted by employees during onboarding.
               </p>
-              <Button size="sm" variant="outline" className="h-7 text-xs gap-1.5 duration-200" asChild>
+              <Button size="sm" variant="outline" className="text-xs gap-1.5 duration-200" asChild>
                 <Link href="/hr/document-review">Review Submissions</Link>
               </Button>
             </div>
@@ -104,7 +104,7 @@ export default function OnboardingPage() {
       noInternalScroll={!isHROrCEO}
       actions={
         isHROrCEO ? (
-          <Button variant="ghost" size="sm" asChild className="h-8 gap-1.5">
+          <Button variant="ghost" size="sm" asChild className="gap-1.5">
             <Link href="/hr">
               <ArrowLeft className="h-3.5 w-3.5" />
               Back to Employees

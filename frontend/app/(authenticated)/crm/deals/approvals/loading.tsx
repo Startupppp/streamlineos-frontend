@@ -5,7 +5,7 @@ export default function DealApprovalsLoading() {
   const tabsFilter = (
     <div className="flex items-center gap-1">
       {Array.from({ length: 10 }).map((_, i) => (
-        <Skeleton key={i} className="h-7 w-20 rounded-md" />
+        <Skeleton key={i} className="h-8 w-20 rounded-md" />
       ))}
     </div>
   );
@@ -32,8 +32,8 @@ export default function DealApprovalsLoading() {
               <Skeleton className="h-5 w-16 rounded-full" />
               <Skeleton className="h-3 w-20" />
               <div className="flex items-center gap-1.5 ml-auto">
-                <Skeleton className="h-7 w-20 rounded-md" />
-                <Skeleton className="h-7 w-20 rounded-md" />
+                <Skeleton className="h-8 w-20 rounded-md" />
+                <Skeleton className="h-8 w-20 rounded-md" />
               </div>
             </div>
           ))}

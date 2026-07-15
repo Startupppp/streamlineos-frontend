@@ -161,7 +161,7 @@ function ProductRowActions({ product }: { product: InventoryProduct }) {
     <AlertDialog open={alertOpen} onOpenChange={handleAlertOpenChange}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-7 w-7" {...ellipsisHover}>
+          <Button variant="ghost" size="icon" className="w-7" {...ellipsisHover}>
             <EllipsisIcon ref={ellipsisRef} size={14} />
             <span className="sr-only">Product actions</span>
           </Button>
@@ -397,7 +397,7 @@ function ProductsPageInner() {
           value={search}
           onChange={handleSearchChange}
           placeholder="Search products by name, SKU, or barcode..."
-          className="h-8 w-full min-w-0 pl-8 text-xs"
+          className="w-full min-w-0 pl-8 text-xs"
         />
       </div>
       <div className="hidden min-w-0 flex-[2] flex-row flex-nowrap items-center gap-2 sm:flex">

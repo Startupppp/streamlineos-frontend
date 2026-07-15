@@ -95,7 +95,7 @@ function CreditNoteItemRow({
       </div>
       <div className="space-y-1.5">
         <Input
-          className="h-8 text-sm"
+          className="text-sm"
           placeholder="Description"
           {...register(`items.${index}.description`)}
         />
@@ -110,7 +110,7 @@ function CreditNoteItemRow({
           <Label className="text-[10px] text-muted-foreground">Qty</Label>
           <Input
             type="number"
-            className="h-8 text-sm"
+            className="text-sm"
             placeholder="1"
             {...register(`items.${index}.quantity`)}
           />
@@ -119,7 +119,7 @@ function CreditNoteItemRow({
           <Label className="text-[10px] text-muted-foreground">Rate</Label>
           <Input
             type="number"
-            className="h-8 text-sm"
+            className="text-sm"
             placeholder="0.00"
             {...register(`items.${index}.rate`)}
           />
@@ -130,7 +130,7 @@ function CreditNoteItemRow({
             value={watch(`items.${index}.gstRate`)}
             onValueChange={handleGstRateChange}
           >
-            <SelectTrigger className="h-8 text-sm">
+            <SelectTrigger className="text-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -244,7 +244,7 @@ export function CreditNoteFormSheet({ open, onOpenChange }: CreditNoteFormSheetP
             <Input
               id="clientId"
               type="number"
-              className="h-8 text-sm"
+              className="text-sm"
               placeholder="Client ID"
               {...form.register("clientId")}
             />
@@ -256,7 +256,7 @@ export function CreditNoteFormSheet({ open, onOpenChange }: CreditNoteFormSheetP
             <Input
               id="invoiceId"
               type="number"
-              className="h-8 text-sm"
+              className="text-sm"
               placeholder="Invoice ID"
               {...form.register("invoiceId")}
             />
@@ -272,7 +272,7 @@ export function CreditNoteFormSheet({ open, onOpenChange }: CreditNoteFormSheetP
               value={form.watch("currency")}
               onValueChange={(v) => form.setValue("currency", v, { shouldValidate: true })}
             >
-              <SelectTrigger id="currency" className="h-8 text-sm">
+              <SelectTrigger id="currency" className="text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -289,7 +289,7 @@ export function CreditNoteFormSheet({ open, onOpenChange }: CreditNoteFormSheetP
             </Label>
             <Input
               id="reason"
-              className="h-8 text-sm"
+              className="text-sm"
               placeholder="e.g. Return, overcharge"
               {...form.register("reason")}
             />

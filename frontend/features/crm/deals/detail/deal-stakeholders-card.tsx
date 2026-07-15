@@ -127,7 +127,7 @@ export function DealStakeholdersCard({ dealId }: DealStakeholdersCardProps) {
           <Users className="h-4 w-4" />
           Stakeholders
         </CardTitle>
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleStartAdding}>
+        <Button variant="ghost" size="icon" className="w-7" onClick={handleStartAdding}>
           <Plus className="h-3.5 w-3.5" />
         </Button>
       </CardHeader>
@@ -174,10 +174,10 @@ export function DealStakeholdersCard({ dealId }: DealStakeholdersCardProps) {
               </Select>
             </div>
             <div className="flex gap-2">
-              <Button size="sm" className="h-7" onClick={handleAdd} disabled={createStakeholder.isPending}>
+              <Button size="sm" className="" onClick={handleAdd} disabled={createStakeholder.isPending}>
                 Add
               </Button>
-              <Button size="sm" variant="ghost" className="h-7" onClick={handleCancel}>
+              <Button size="sm" variant="ghost" className="" onClick={handleCancel}>
                 Cancel
               </Button>
             </div>

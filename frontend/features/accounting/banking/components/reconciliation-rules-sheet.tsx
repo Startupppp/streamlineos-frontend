@@ -192,7 +192,7 @@ export function ReconciliationRulesSheet({ bankAccountId, open, onOpenChange }: 
           </>
         ) : rules.length === 0 && !addingRule ? (
           <div className="flex flex-col items-center justify-center py-10 text-center">
-            <AlertCircle className="h-8 w-8 text-muted-foreground mb-2" />
+            <AlertCircle className="w-8 text-muted-foreground mb-2" />
             <p className="text-sm font-medium">No rules yet</p>
             <p className="text-xs text-muted-foreground mt-1">
               Add a rule to auto-match transactions on import.
@@ -279,7 +279,7 @@ export function ReconciliationRulesSheet({ bankAccountId, open, onOpenChange }: 
                   placeholder="e.g. Bank charges"
                   value={form.name}
                   onChange={handleNameChange}
-                  className="h-8 text-xs"
+                  className="text-xs"
                 />
               </div>
               <div className="space-y-1">
@@ -290,7 +290,7 @@ export function ReconciliationRulesSheet({ bankAccountId, open, onOpenChange }: 
                   placeholder="10"
                   value={form.priority}
                   onChange={handlePriorityChange}
-                  className="h-8 text-xs"
+                  className="text-xs"
                 />
               </div>
             </div>
@@ -315,7 +315,7 @@ export function ReconciliationRulesSheet({ bankAccountId, open, onOpenChange }: 
                     value={cond.field}
                     onValueChange={(v) => handleConditionChange(i, "field", v)}
                   >
-                    <SelectTrigger className="h-8 w-[110px] text-xs">
+                    <SelectTrigger className="w-[110px] text-xs">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -330,7 +330,7 @@ export function ReconciliationRulesSheet({ bankAccountId, open, onOpenChange }: 
                     value={cond.op}
                     onValueChange={(v) => handleConditionChange(i, "op", v)}
                   >
-                    <SelectTrigger className="h-8 w-[110px] text-xs">
+                    <SelectTrigger className="w-[110px] text-xs">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -345,14 +345,14 @@ export function ReconciliationRulesSheet({ bankAccountId, open, onOpenChange }: 
                     placeholder="Value"
                     value={cond.value}
                     onChange={(e) => handleConditionChange(i, "value", e.target.value)}
-                    className="h-8 text-xs flex-1"
+                    className="text-xs flex-1"
                   />
                   {form.conditions.length > 1 && (
                     <Button
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 shrink-0"
+                      className="w-8 shrink-0"
                       onClick={() => handleRemoveCondition(i)}
                     >
                       <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
@@ -365,7 +365,7 @@ export function ReconciliationRulesSheet({ bankAccountId, open, onOpenChange }: 
             <div className="space-y-1">
               <Label className="text-xs">Action</Label>
               <Select value={form.actionType} onValueChange={handleActionTypeChange}>
-                <SelectTrigger className="h-8 text-xs">
+                <SelectTrigger className="text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

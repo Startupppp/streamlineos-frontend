@@ -219,7 +219,7 @@ export function WorkLogEntryRow({
               <Link2 className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
               <Input
                 placeholder="Link (optional) — paste URL to doc, PR, sheet, or file"
-                className={cn("h-8 text-xs", linkError && "border-destructive focus-visible:ring-destructive")}
+                className={cn("text-xs", linkError && "border-destructive focus-visible:ring-destructive")}
                 type="url"
                 value={workLink}
                 onChange={(e) => {
@@ -251,14 +251,14 @@ export function WorkLogEntryRow({
 
         {hasUnsavedChanges && !readOnly && (
           <div className="flex items-center gap-2">
-            <Button size="sm" className="h-8 text-xs gap-1.5" onClick={handleSave} disabled={isSaving}>
+            <Button size="sm" className="text-xs gap-1.5" onClick={handleSave} disabled={isSaving}>
               {isSaving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
               Save
             </Button>
             <Button
               size="sm"
               variant="ghost"
-              className="h-8 text-xs text-muted-foreground"
+              className="text-xs text-muted-foreground"
               onClick={handleDiscard}
               disabled={isSaving}
             >

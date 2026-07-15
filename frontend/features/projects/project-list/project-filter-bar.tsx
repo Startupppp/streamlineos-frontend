@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, type ChangeEvent } from "react";
-import { Search, X, LayoutGrid, List } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { useCallback } from "react";
+import { LayoutGrid, List } from "lucide-react";
+import { SearchInput } from "@/components/ui/search-input";
 import {
   Select,
   SelectContent,
@@ -37,16 +37,6 @@ export function ProjectFilterBar({
   viewMode,
   onViewModeChange,
 }: ProjectFilterBarProps) {
-  const handleSearchInputChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => onSearchChange(e.target.value),
-    [onSearchChange],
-  );
-
-  const handleClearSearch = useCallback(
-    () => onSearchChange(""),
-    [onSearchChange],
-  );
-
   const handleStatusValueChange = useCallback(
     (value: string) => {
       if (
@@ -63,32 +53,17 @@ export function ProjectFilterBar({
 
   return (
     <div className="flex w-full min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
-      <div className="relative min-w-0 flex-1 sm:max-w-[240px]">
-        <Search
-          className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground"
-          aria-hidden="true"
-        />
-        <Input
+      <div className="min-w-0 flex-1 sm:max-w-[240px]">
+        <SearchInput
           placeholder="Search projects…"
           value={search}
-          onChange={handleSearchInputChange}
-          className="h-8 border-input bg-card pl-8 pr-7 text-xs"
+          onValueChange={onSearchChange}
           aria-label="Search projects"
         />
-        {search ? (
-          <button
-            type="button"
-            onClick={handleClearSearch}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
-            aria-label="Clear search"
-          >
-            <X className="h-3.5 w-3.5" />
-          </button>
-        ) : null}
       </div>
 
       <Select value={status} onValueChange={handleStatusValueChange}>
-        <SelectTrigger className="h-8 w-full border-input bg-card text-xs sm:w-[132px]">
+        <SelectTrigger className="w-full text-xs sm:w-[132px]">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -103,7 +78,6 @@ export function ProjectFilterBar({
         value={viewMode}
         options={VIEW_OPTIONS}
         onChange={onViewModeChange}
-        size="sm"
         className="ml-auto shrink-0"
       />
     </div>

@@ -84,7 +84,7 @@ export function CalendarView({ tickets, onTicketClick, projectId }: CalendarView
       <div className="flex shrink-0 items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-1.5">
           <Select value={String(month)} onValueChange={handleMonthChange}>
-            <SelectTrigger className="h-8 w-[120px] text-xs">
+            <SelectTrigger className="w-[120px] text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -94,7 +94,7 @@ export function CalendarView({ tickets, onTicketClick, projectId }: CalendarView
             </SelectContent>
           </Select>
           <Select value={String(year)} onValueChange={handleYearChange}>
-            <SelectTrigger className="h-8 w-[80px] text-xs">
+            <SelectTrigger className="w-[80px] text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -105,13 +105,13 @@ export function CalendarView({ tickets, onTicketClick, projectId }: CalendarView
           </Select>
         </div>
         <div className="flex items-center gap-1">
-          <Button variant="outline" size="icon" className="h-8 w-8" onClick={handlePrevMonth} aria-label="Previous month">
+          <Button variant="outline" size="icon" onClick={handlePrevMonth} aria-label="Previous month">
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size="sm" className="h-8" onClick={handleTodayClick}>
+          <Button variant="outline" size="sm" onClick={handleTodayClick}>
             Today
           </Button>
-          <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleNextMonth} aria-label="Next month">
+          <Button variant="outline" size="icon" onClick={handleNextMonth} aria-label="Next month">
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>

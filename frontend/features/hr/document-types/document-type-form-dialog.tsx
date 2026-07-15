@@ -168,7 +168,7 @@ export function DocumentTypeFormDialog({
         <Input
           placeholder="e.g. National ID / Aadhaar Card"
           {...form.register("name")}
-          className="h-8"
+          className=""
           aria-label="Document type name"
         />
         {form.formState.errors.name && (
@@ -262,7 +262,7 @@ export function DocumentTypeFormDialog({
           step="1"
           placeholder="Auto-assigned if empty"
           {...form.register("sortOrder")}
-          className="h-8"
+          className=""
           aria-label="Sort order"
         />
         {form.formState.errors.sortOrder && (

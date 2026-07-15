@@ -52,7 +52,7 @@ export function ReceiptCard({ item }: ReceiptCardProps) {
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 px-2 text-xs gap-1"
+          className="px-2 text-xs gap-1"
           onClick={handleOpenEdit}
         >
           <Pencil className="h-3.5 w-3.5" />

@@ -55,7 +55,7 @@ export function PublicChannelRow({
           <Button
             variant="outline"
             size="sm"
-            className="h-7 text-[12px]"
+            className="text-[12px]"
             onClick={(e) => { e.stopPropagation(); handleLeave(); }}
             disabled={leavingId === channel.id}
           >
@@ -64,7 +64,7 @@ export function PublicChannelRow({
         ) : (
           <Button
             size="sm"
-            className="h-7 text-[12px]"
+            className="text-[12px]"
             onClick={(e) => { e.stopPropagation(); handleJoin(); }}
             disabled={joiningId === channel.id}
           >

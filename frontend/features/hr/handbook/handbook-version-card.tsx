@@ -117,7 +117,7 @@ export function HandbookVersionCard({
             <Button
               size="sm"
               variant="ghost"
-              className="h-8 w-8 p-0 hover:bg-muted transition-colors duration-200"
+              className="w-8 p-0 hover:bg-muted transition-colors duration-200"
               onClick={handleEdit}
               disabled={isUpdating}
               aria-label="Edit version"
@@ -129,7 +129,7 @@ export function HandbookVersionCard({
             <Button
               size="sm"
               variant="outline"
-              className="h-8 text-xs gap-1.5 transition-colors duration-200"
+              className="text-xs gap-1.5 transition-colors duration-200"
               onClick={handlePublish}
               disabled={isUpdating}
             >
@@ -140,7 +140,7 @@ export function HandbookVersionCard({
             <Button
               size="sm"
               variant="outline"
-              className="h-8 text-xs gap-1.5 transition-colors duration-200"
+              className="text-xs gap-1.5 transition-colors duration-200"
               onClick={handleUnpublish}
               disabled={isUpdating}
             >
@@ -151,7 +151,7 @@ export function HandbookVersionCard({
           <Button
             size="sm"
             variant="ghost"
-            className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 transition-colors duration-200"
+            className="w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 transition-colors duration-200"
             onClick={handleDelete}
             aria-label="Delete version"
           >

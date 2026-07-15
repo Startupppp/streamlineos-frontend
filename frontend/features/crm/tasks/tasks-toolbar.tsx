@@ -124,7 +124,7 @@ export function TasksToolbar({
       </Select>
 
       {hasFilters && (
-        <Button variant="ghost" size="sm" className="h-8 text-[11px] px-2" onClick={onClearFilters}>
+        <Button variant="ghost" size="sm" className="text-[11px] px-2" onClick={onClearFilters}>
           <X className="h-3 w-3 mr-1" />
           Clear
         </Button>

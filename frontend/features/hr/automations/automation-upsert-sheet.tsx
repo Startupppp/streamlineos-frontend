@@ -318,7 +318,7 @@ export function AutomationUpsertSheet({ rule, onClose }: Props) {
                     placeholder="value"
                     className="text-xs"
                   />
-                  <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeCondition(idx)}>
+                  <Button type="button" variant="ghost" size="icon" className="w-8" onClick={() => removeCondition(idx)}>
                     <X className="h-3.5 w-3.5" />
                   </Button>
                 </div>
@@ -359,7 +359,7 @@ export function AutomationUpsertSheet({ rule, onClose }: Props) {
                           </Select>
                         )}
                       />
-                      <Button type="button" variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => removeAction(idx)}>
+                      <Button type="button" variant="ghost" size="icon" className="w-7 shrink-0" onClick={() => removeAction(idx)}>
                         <X className="h-3.5 w-3.5" />
                       </Button>
                     </div>

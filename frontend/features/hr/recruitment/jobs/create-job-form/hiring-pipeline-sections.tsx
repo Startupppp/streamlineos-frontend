@@ -166,7 +166,7 @@ export function Section8({ form }: SectionProps) {
         <div className="space-y-1.5 mt-2">
           <div className="flex items-center justify-between">
             <Label className="text-xs font-semibold text-foreground/80">Screening Questions</Label>
-            <Button type="button" size="sm" variant="outline" className="h-7 gap-1.5 text-xs" onClick={handleAddQuestion}>
+            <Button type="button" size="sm" variant="outline" className="gap-1.5 text-xs" onClick={handleAddQuestion}>
               <Plus className="h-3 w-3" />
               Add question
             </Button>

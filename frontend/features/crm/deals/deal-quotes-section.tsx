@@ -166,7 +166,7 @@ function QuoteRow({ quote, dealId, onDeleteRequest }: QuoteRowProps) {
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 px-2 text-xs shrink-0"
+            className="px-2 text-xs shrink-0"
             disabled={updateStatus.isPending}
           >
             Actions
@@ -275,7 +275,7 @@ export function DealQuotesSection({ dealId }: DealQuotesSectionProps) {
               size="sm"
               onClick={handleCreateQuote}
               disabled={createQuote.isPending}
-              className="h-7 text-xs"
+              className="text-xs"
             >
               {createQuote.isPending ? (
                 <Loader2 className="h-3 w-3 mr-1 animate-spin" />

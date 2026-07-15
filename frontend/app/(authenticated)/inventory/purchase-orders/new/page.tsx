@@ -83,7 +83,7 @@ function PoLineVariantCell({ index, control, variants, onVariantChangeAt }: PoLi
       name={`lines.${index}.productVariantId`}
       render={({ field }) => (
         <Select value={field.value} onValueChange={handleVariantSelect}>
-          <SelectTrigger className="h-8 text-xs">
+          <SelectTrigger className="text-xs">
             <SelectValue placeholder="Select product" />
           </SelectTrigger>
           <SelectContent className="max-h-72">
@@ -228,7 +228,7 @@ export default function NewPurchaseOrderPage() {
           control={form.control}
           name={`lines.${row._index}.quantity`}
           render={({ field: f }) => (
-            <Input type="number" min="0.0001" step="1" className="h-8 text-right tabular-nums text-xs" {...f} />
+            <Input type="number" min="0.0001" step="1" className="text-right tabular-nums text-xs" {...f} />
           )}
         />
       ),
@@ -243,7 +243,7 @@ export default function NewPurchaseOrderPage() {
           control={form.control}
           name={`lines.${row._index}.unitCost`}
           render={({ field: f }) => (
-            <Input type="number" min="0" step="0.01" className="h-8 text-right tabular-nums text-xs" {...f} />
+            <Input type="number" min="0" step="0.01" className="text-right tabular-nums text-xs" {...f} />
           )}
         />
       ),
@@ -258,7 +258,7 @@ export default function NewPurchaseOrderPage() {
           control={form.control}
           name={`lines.${row._index}.taxRate`}
           render={({ field: f }) => (
-            <Input type="number" min="0" max="100" step="0.01" className="h-8 text-right tabular-nums text-xs" {...f} />
+            <Input type="number" min="0" max="100" step="0.01" className="text-right tabular-nums text-xs" {...f} />
           )}
         />
       ),
@@ -284,7 +284,7 @@ export default function NewPurchaseOrderPage() {
             type="button"
             variant="ghost"
             size="icon"
-            className="h-7 w-7"
+            className="w-7"
             onClick={handleRemove}
             disabled={fields.length === 1}
             aria-label={`Remove line ${row._index + 1}`}
@@ -363,7 +363,7 @@ export default function NewPurchaseOrderPage() {
                   <FormItem>
                     <FormLabel>Order date *</FormLabel>
                     <FormControl>
-                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -376,7 +376,7 @@ export default function NewPurchaseOrderPage() {
                   <FormItem>
                     <FormLabel>Expected delivery</FormLabel>
                     <FormControl>
-                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

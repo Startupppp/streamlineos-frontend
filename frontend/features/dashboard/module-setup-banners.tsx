@@ -100,7 +100,7 @@ function ModuleSetupBanner({ checklist }: { checklist: ModuleChecklist }) {
       className="rounded-xl border border-border bg-card shadow-sm overflow-hidden"
     >
       <div className="px-4 py-3 flex items-center justify-between gap-3">
-        <div className={cn("h-8 w-8 rounded-md flex items-center justify-center shrink-0", tone.bg)}>
+        <div className={cn("w-8 rounded-md flex items-center justify-center shrink-0", tone.bg)}>
           <Icon className={cn("h-4 w-4", tone.text)} aria-hidden="true" />
         </div>
         <div className="flex-1 min-w-0">
@@ -115,7 +115,7 @@ function ModuleSetupBanner({ checklist }: { checklist: ModuleChecklist }) {
             type="button"
             onClick={() => setIsOpen((prev) => !prev)}
             aria-label={isOpen ? "Collapse checklist" : "Expand checklist"}
-            className="h-7 w-7 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            className="w-7 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
           >
             {isOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
           </button>
@@ -124,7 +124,7 @@ function ModuleSetupBanner({ checklist }: { checklist: ModuleChecklist }) {
             onClick={handleDismiss}
             disabled={dismissChecklist.isPending}
             aria-label={`Dismiss ${label} checklist`}
-            className="h-7 w-7 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            className="w-7 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
           >
             <X className="h-3.5 w-3.5" />
           </button>

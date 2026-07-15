@@ -149,7 +149,7 @@ function AnnouncementCard({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                    className="w-7 text-muted-foreground hover:text-foreground"
                     onClick={handleEdit}
                   >
                     <Pencil className="h-3.5 w-3.5" />
@@ -157,7 +157,7 @@ function AnnouncementCard({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                    className="w-7 text-muted-foreground hover:text-destructive"
                     onClick={handleDelete}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -393,7 +393,7 @@ function AnnouncementsContent() {
         canManage ? (
           <Button
             size="sm"
-            className="h-8 gap-1.5"
+            className="gap-1.5"
             onClick={handleNewClick}
           >
             <Plus className="h-3.5 w-3.5" />
@@ -529,7 +529,7 @@ function AnnouncementsContent() {
               placeholder="Announcement title"
               value={formData.title}
               onChange={handleTitleChange}
-              className="h-8 text-sm"
+              className="text-sm"
             />
           </div>
 
@@ -549,7 +549,7 @@ function AnnouncementsContent() {
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">Target Audience</Label>
             <Select value={formData.targetType} onValueChange={handleTargetTypeChange}>
-              <SelectTrigger className="h-8 text-sm">
+              <SelectTrigger className="text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -564,7 +564,7 @@ function AnnouncementsContent() {
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">Status</Label>
             <Select value={formData.status} onValueChange={handleStatusChange}>
-              <SelectTrigger className="h-8 text-sm">
+              <SelectTrigger className="text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -584,7 +584,7 @@ function AnnouncementsContent() {
               type="datetime-local"
               value={formData.publishAt ?? ""}
               onChange={handlePublishAtChange}
-              className="h-8 text-sm"
+              className="text-sm"
             />
           </div>
 
@@ -597,7 +597,7 @@ function AnnouncementsContent() {
               type="datetime-local"
               value={formData.expiresAt ?? ""}
               onChange={handleExpiresAtChange}
-              className="h-8 text-sm"
+              className="text-sm"
             />
           </div>
 

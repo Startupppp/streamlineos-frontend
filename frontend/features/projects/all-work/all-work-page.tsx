@@ -6,6 +6,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { User } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { BulkActionBar } from "@/features/projects/backlog/bulk-action-bar";
@@ -17,7 +18,6 @@ import {
   PmPanel,
   PmSection,
   PM_FILL_PANEL,
-  PM_TOOLBAR,
 } from "@/features/projects/shared/pm-chrome";
 import {
   pmSnappy,
@@ -137,44 +137,46 @@ export function AllWorkPage() {
       subtitle={subtitleText}
       noInternalScroll
       contentClassName="!p-0"
-      filters={
-        <div className={PM_TOOLBAR}>
-          <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
-            <AllWorkViewSwitcher activeView={view} onViewChange={handleViewChangeWithReset} />
-            <AllWorkViewsMenu activeView={view} hasActiveFilters={hasActiveFilters} />
-            <button
-              type="button"
-              onClick={handleScopeToggle}
-              aria-label={
-                scopeMine
-                  ? "Showing my tickets – click to show all"
-                  : "Show only my tickets"
-              }
-              title={scopeMine ? "Showing my tickets" : "Show only my tickets"}
-              className={cn(
-                "flex h-8 w-8 shrink-0 items-center justify-center rounded-md border transition-colors duration-150",
-                scopeMine
-                  ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                  : "border-input bg-card text-muted-foreground hover:bg-primary/5 hover:text-foreground",
-              )}
-            >
-              <User className="h-3.5 w-3.5" />
-            </button>
-          </div>
-          <div className="min-w-0 flex-1 sm:flex sm:justify-end">
-            <TicketFilterBar
-              members={deduplicatedMembers}
-              projectOptions={projectOptions}
-              showTypeFilter
-              showSprintFilter={false}
-              showAssigneeFilter
-            />
-          </div>
-        </div>
-      }
     >
       <PmPageShell className="min-h-0 flex-1 gap-0 overflow-hidden" withGlow>
-        <PmSection index={0} className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <PmSection index={0} className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden px-3 pt-2 sm:px-4">
+          <PageTabsToolbar
+            tabsDensity="icons"
+            tabs={
+              <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
+                <AllWorkViewSwitcher activeView={view} onViewChange={handleViewChangeWithReset} />
+                <AllWorkViewsMenu activeView={view} hasActiveFilters={hasActiveFilters} />
+                <button
+                  type="button"
+                  onClick={handleScopeToggle}
+                  aria-label={
+                    scopeMine
+                      ? "Showing my tickets – click to show all"
+                      : "Show only my tickets"
+                  }
+                  title={scopeMine ? "Showing my tickets" : "Show only my tickets"}
+                  className={cn(
+                    "flex h-9 w-9 shrink-0 items-center justify-center rounded-md border transition-colors duration-150",
+                    scopeMine
+                      ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                      : "border-input bg-card text-muted-foreground hover:bg-primary/5 hover:text-foreground",
+                  )}
+                >
+                  <User className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            }
+            filters={
+              <TicketFilterBar
+                members={deduplicatedMembers}
+                projectOptions={projectOptions}
+                showTypeFilter
+                showSprintFilter={false}
+                showAssigneeFilter
+              />
+            }
+          />
+
           {isLoading ? (
             <PmPanel solid className="mx-3 mb-2 mt-2 flex-1 overflow-auto sm:mx-4">
               <div className="py-2">

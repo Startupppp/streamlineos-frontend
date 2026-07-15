@@ -118,7 +118,7 @@ export function EditProjectSheet({ open, onOpenChange, project }: EditProjectShe
                   <FormItem>
                     <FormLabel>Project Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g. Website Redesign" className="h-8" {...field} />
+                      <Input placeholder="e.g. Website Redesign" className="" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -152,7 +152,7 @@ export function EditProjectSheet({ open, onOpenChange, project }: EditProjectShe
                     <FormLabel>Status</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger className="h-8">
+                        <SelectTrigger className="">
                           <SelectValue />
                         </SelectTrigger>
                       </FormControl>

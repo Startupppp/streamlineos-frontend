@@ -83,7 +83,7 @@ export function WorkLogMonthGroup({
       >
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
-            <div className="h-7 w-7 rounded-lg bg-muted/60 flex items-center justify-center shrink-0">
+            <div className="w-7 rounded-lg bg-muted/60 flex items-center justify-center shrink-0">
               {isCollapsed ? (
                 <ChevronRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
               ) : (

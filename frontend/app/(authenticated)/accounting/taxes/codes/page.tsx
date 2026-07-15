@@ -213,7 +213,7 @@ export default function TaxCodesPage() {
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 text-xs"
+            className="text-xs"
             onClick={(e) => {
               e.stopPropagation();
               handleEditRow(row);

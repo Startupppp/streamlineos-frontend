@@ -126,7 +126,7 @@ export function DelegationSettings({ open, onOpenChange }: Props) {
                       value={field.value}
                       onChange={field.onChange}
                       placeholder="Search for delegate…"
-                      className="h-8 text-xs"
+                      className="text-xs"
                     />
                   </FormControl>
                   <FormMessage />
@@ -142,7 +142,7 @@ export function DelegationSettings({ open, onOpenChange }: Props) {
                   <FormLabel className="text-xs">Process Type (leave blank for all)</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="All types" /></SelectTrigger>
+                      <SelectTrigger className="text-xs"><SelectValue placeholder="All types" /></SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="">All types</SelectItem>
@@ -162,7 +162,7 @@ export function DelegationSettings({ open, onOpenChange }: Props) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs">Starts At</FormLabel>
-                    <FormControl><Input type="date" className="h-8 text-xs" {...field} /></FormControl>
+                    <FormControl><Input type="date" className="text-xs" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -173,7 +173,7 @@ export function DelegationSettings({ open, onOpenChange }: Props) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs">Ends At</FormLabel>
-                    <FormControl><Input type="date" className="h-8 text-xs" {...field} /></FormControl>
+                    <FormControl><Input type="date" className="text-xs" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

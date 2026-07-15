@@ -173,7 +173,7 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
           <form id="bug-form" onSubmit={form.handleSubmit(handleSubmit)} className="px-5 py-4 space-y-4">
             <div className="space-y-1.5">
               <Label className="text-[11px]">Title *</Label>
-              <Input {...form.register("title")} className="h-8 text-[11px]" placeholder="Short bug description" />
+              <Input {...form.register("title")} className="text-[11px]" placeholder="Short bug description" />
               {form.formState.errors.title && (
                 <p className="text-[10px] text-destructive">{form.formState.errors.title.message}</p>
               )}
@@ -195,7 +195,7 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
               <div className="space-y-1.5">
                 <Label className="text-[11px]">Severity</Label>
                 <Select value={form.watch("severity")} onValueChange={handleSeverityChange}>
-                  <SelectTrigger className="h-8 text-[11px]"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="text-[11px]"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {SEVERITIES.map((s) => (
                       <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>
@@ -206,7 +206,7 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
               <div className="space-y-1.5">
                 <Label className="text-[11px]">Priority</Label>
                 <Select value={form.watch("priority")} onValueChange={handlePriorityChange}>
-                  <SelectTrigger className="h-8 text-[11px]"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="text-[11px]"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {PRIORITIES.map((p) => (
                       <SelectItem key={p} value={p} className="capitalize">{p}</SelectItem>
@@ -217,7 +217,7 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
               <div className="space-y-1.5">
                 <Label className="text-[11px]">Status</Label>
                 <Select value={form.watch("status")} onValueChange={handleStatusChange}>
-                  <SelectTrigger className="h-8 text-[11px]"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="text-[11px]"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {STATUSES.map((s) => (
                       <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>
@@ -246,11 +246,11 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-[11px]">Environment</Label>
-                <Input {...form.register("environment")} className="h-8 text-[11px]" placeholder="e.g. Production" />
+                <Input {...form.register("environment")} className="text-[11px]" placeholder="e.g. Production" />
               </div>
               <div className="space-y-1.5">
                 <Label className="text-[11px]">Browser / Device</Label>
-                <Input {...form.register("browserDevice")} className="h-8 text-[11px]" placeholder="e.g. Chrome 124" />
+                <Input {...form.register("browserDevice")} className="text-[11px]" placeholder="e.g. Chrome 124" />
               </div>
             </div>
 
@@ -264,7 +264,7 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
                   onChange={(v) => form.setValue("assigneeId", v ?? "none")}
                   allowUnassigned
                   placeholder="Unassigned"
-                  className="h-8 text-[11px]"
+                  className="text-[11px]"
                 />
               </div>
               <div className="space-y-1.5">
@@ -276,7 +276,7 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
                   onChange={(v) => form.setValue("qaOwnerId", v ?? "none")}
                   allowUnassigned
                   placeholder="Unassigned"
-                  className="h-8 text-[11px]"
+                  className="text-[11px]"
                 />
               </div>
             </div>
@@ -290,7 +290,7 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
                   onChange={(v) => form.setValue("affectedReleaseId", v)}
                   placeholder="Select release…"
                   allowClear
-                  className="h-8 text-[11px]"
+                  className="text-[11px]"
                 />
               </div>
               <div className="space-y-1.5">
@@ -301,7 +301,7 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
                   onChange={(v) => form.setValue("fixedReleaseId", v)}
                   placeholder="Select release…"
                   allowClear
-                  className="h-8 text-[11px]"
+                  className="text-[11px]"
                 />
               </div>
               <div className="space-y-1.5">
@@ -313,7 +313,7 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
                   onChange={(v) => form.setValue("linkedTicketId", v)}
                   placeholder="Link a ticket…"
                   allowClear
-                  className="h-8 text-[11px]"
+                  className="text-[11px]"
                 />
               </div>
             </div>

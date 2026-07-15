@@ -244,7 +244,7 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
 
       {membersQuery.isError ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
-          <AlertTriangle className="h-8 w-8 text-muted-foreground" />
+          <AlertTriangle className="w-8 text-muted-foreground" />
           <div>
             <p className="text-sm font-medium text-foreground">
               Couldn&apos;t load members
@@ -450,7 +450,7 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
                       role="listitem"
                       className="flex items-center gap-3 rounded-md border border-border/50 px-3 py-2"
                     >
-                      <Avatar className="h-8 w-8">
+                      <Avatar className="w-8">
                         <AvatarImage
                           src={user.image ?? undefined}
                           alt={user.name ?? ""}

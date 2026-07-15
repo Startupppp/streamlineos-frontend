@@ -170,11 +170,11 @@ export function TemplatesPageContent() {
           value={searchInput}
           onChange={handleSearchChange}
           placeholder="Search templates…"
-          className="h-8 pl-8 text-sm w-48"
+          className="pl-8 text-sm w-48"
         />
       </div>
       <Select value={category} onValueChange={handleCategoryChange}>
-        <SelectTrigger className="h-8 text-sm w-44">
+        <SelectTrigger className="text-sm w-44">
           <SelectValue placeholder="Category" />
         </SelectTrigger>
         <SelectContent>
@@ -186,7 +186,7 @@ export function TemplatesPageContent() {
         </SelectContent>
       </Select>
       <Select value={complexity} onValueChange={handleComplexityChange}>
-        <SelectTrigger className="h-8 text-sm w-40">
+        <SelectTrigger className="text-sm w-40">
           <SelectValue placeholder="Complexity" />
         </SelectTrigger>
         <SelectContent>
@@ -255,7 +255,7 @@ export function TemplatesPageContent() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-7 text-xs"
+                      className="text-xs"
                       onClick={() => handlePreviewOpen(template)}
                     >
                       Preview
@@ -263,7 +263,7 @@ export function TemplatesPageContent() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-7 text-xs"
+                      className="text-xs"
                       onClick={() => handleDuplicateOpen(template)}
                     >
                       Duplicate
@@ -272,7 +272,7 @@ export function TemplatesPageContent() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 text-xs text-destructive hover:text-destructive"
+                        className="text-xs text-destructive hover:text-destructive"
                         onClick={() => handleDeleteOpen(template)}
                       >
                         Delete
@@ -280,7 +280,7 @@ export function TemplatesPageContent() {
                     )}
                     <Button
                       size="sm"
-                      className="h-7 text-xs ml-auto"
+                      className="text-xs ml-auto"
                       onClick={() => handleUseInSetup(template)}
                     >
                       Use in Setup

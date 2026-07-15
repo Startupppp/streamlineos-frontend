@@ -114,7 +114,7 @@ export function AccommodationSheet({ open, onOpenChange }: Props) {
                   <FormLabel>Type</FormLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
                     <FormControl>
-                      <SelectTrigger className="h-8">
+                      <SelectTrigger className="">
                         <SelectValue />
                       </SelectTrigger>
                     </FormControl>

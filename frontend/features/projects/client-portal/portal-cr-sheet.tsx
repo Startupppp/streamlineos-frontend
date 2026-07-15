@@ -83,7 +83,7 @@ export function PortalCrSheet({ projectId, open, onOpenChange }: PortalCrSheetPr
               <Label className="text-[11px]">Title *</Label>
               <Input
                 {...form.register("title")}
-                className="h-8 text-[11px]"
+                className="text-[11px]"
                 placeholder="What needs to change?"
               />
               {form.formState.errors.title && (

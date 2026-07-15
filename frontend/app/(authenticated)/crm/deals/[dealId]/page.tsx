@@ -268,7 +268,7 @@ export default function DealDetailPage({
         <div className="space-y-6">
           <div className="flex flex-wrap gap-1 p-2 rounded-lg bg-muted/30 border border-border">
             {Array.from({ length: 10 }).map((_, i) => (
-              <Skeleton key={i} className="h-7 w-20 rounded-lg" />
+              <Skeleton key={i} className="h-4 w-20 rounded-lg" />
             ))}
           </div>
           <div className="grid gap-6 lg:grid-cols-5">

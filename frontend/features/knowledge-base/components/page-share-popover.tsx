@@ -69,7 +69,7 @@ export default function PageSharePopover({ page }: PageSharePopoverProps) {
       <Tooltip delayDuration={0}>
         <TooltipTrigger asChild>
           <PopoverTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Share page">
+            <Button variant="ghost" size="icon" className="w-8" aria-label="Share page">
               <KbShare2Icon className="h-4 w-4" />
             </Button>
           </PopoverTrigger>
@@ -115,7 +115,7 @@ export default function PageSharePopover({ page }: PageSharePopoverProps) {
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="h-7 px-2 shrink-0 text-xs"
+                  className="px-2 shrink-0 text-xs"
                   onClick={handleCopyLink}
                 >
                   <KbCopyIcon className="h-3 w-3 mr-1" />

@@ -42,7 +42,7 @@ export function ProjectPagination({ page, totalPages, onPageChange }: ProjectPag
       <Button
         variant="ghost"
         size="icon"
-        className="h-7 w-7"
+        className="w-7"
         disabled={page <= 1}
         onClick={() => onPageChange(page - 1)}
         aria-label="Previous page"
@@ -63,7 +63,7 @@ export function ProjectPagination({ page, totalPages, onPageChange }: ProjectPag
             key={p}
             variant={p === page ? "default" : "ghost"}
             size="icon"
-            className="h-7 w-7 text-xs"
+            className="w-7 text-xs"
             onClick={() => onPageChange(p)}
             aria-current={p === page ? "page" : undefined}
             aria-label={`Page ${p}`}
@@ -76,7 +76,7 @@ export function ProjectPagination({ page, totalPages, onPageChange }: ProjectPag
       <Button
         variant="ghost"
         size="icon"
-        className="h-7 w-7"
+        className="w-7"
         disabled={page >= totalPages}
         onClick={() => onPageChange(page + 1)}
         aria-label="Next page"

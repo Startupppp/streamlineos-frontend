@@ -57,7 +57,7 @@ function PolicyRowActions({ policy, onEdit, onDeleteRequest }: PolicyRowActionsP
       <Button
         variant="ghost"
         size="icon"
-        className="h-7 w-7"
+        className="w-7"
         onClick={handleEdit}
         aria-label="Edit"
       >
@@ -66,7 +66,7 @@ function PolicyRowActions({ policy, onEdit, onDeleteRequest }: PolicyRowActionsP
       <Button
         variant="ghost"
         size="icon"
-        className="h-7 w-7 text-destructive"
+        className="w-7 text-destructive"
         onClick={handleDeleteRequest}
         aria-label="Delete"
         {...deleteIcon.hoverHandlers}

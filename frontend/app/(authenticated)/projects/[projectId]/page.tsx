@@ -86,7 +86,7 @@ function AnimatedToolbarIconButton({ onClick, ariaLabel, Icon }: AnimatedToolbar
       variant="outline"
       size="icon"
       onClick={onClick}
-      className="h-8 w-8 shrink-0 border-border/70 bg-background/60 backdrop-blur-sm"
+      className="w-8 shrink-0 border-border/70 bg-background/60 backdrop-blur-sm"
       aria-label={ariaLabel}
       {...hoverHandlers}
     >
@@ -558,7 +558,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-8 w-8 shrink-0 border-border/70 bg-background/60 backdrop-blur-sm"
+                    className="w-8 shrink-0 border-border/70 bg-background/60 backdrop-blur-sm"
                     aria-label="Export tickets"
                   >
                     <Download className="h-3.5 w-3.5" />
@@ -586,7 +586,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
                   setSaveViewName("");
                   setSaveViewOpen(true);
                 }}
-                className="h-8 w-8 shrink-0 border-border/70 bg-background/60 backdrop-blur-sm"
+                className="w-8 shrink-0 border-border/70 bg-background/60 backdrop-blur-sm"
                 aria-label="Save view"
               >
                 <Bookmark className="h-3.5 w-3.5" />

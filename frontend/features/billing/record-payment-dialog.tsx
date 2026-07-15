@@ -151,7 +151,7 @@ export function RecordPaymentDialog({
               placeholder={`Max: ${fmt(Math.max(0, outstanding))}`}
               value={form.amount}
               onChange={handleAmountChange}
-              className="h-8 text-sm"
+              className="text-sm"
               autoFocus
             />
           </div>
@@ -173,7 +173,7 @@ export function RecordPaymentDialog({
               onValueChange={handleMethodChange}
             >
               <SelectTrigger
-                className="h-8 text-xs"
+                className="text-xs"
                 aria-label="Payment method"
               >
                 <SelectValue />
@@ -204,7 +204,7 @@ export function RecordPaymentDialog({
               placeholder="UTR, cheque #, etc."
               value={form.referenceNumber}
               onChange={handleRefChange}
-              className="h-8 text-sm"
+              className="text-sm"
             />
           </div>
           <div className="space-y-1">
@@ -216,7 +216,7 @@ export function RecordPaymentDialog({
               placeholder="Optional"
               value={form.notes}
               onChange={handleNotesChange}
-              className="h-8 text-sm"
+              className="text-sm"
             />
           </div>
         </div>

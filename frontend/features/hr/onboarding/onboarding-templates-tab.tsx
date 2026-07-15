@@ -130,7 +130,7 @@ function CreateTemplateSheet({ open, onOpenChange }: { open: boolean; onOpenChan
               type="button"
               size="sm"
               variant="outline"
-              className="h-7 text-xs gap-1"
+              className="text-xs gap-1"
               onClick={() => setSteps((prev) => [...prev, emptyStep()])}
             >
               <Plus className="h-3 w-3" /> Add step
@@ -162,7 +162,7 @@ function CreateTemplateSheet({ open, onOpenChange }: { open: boolean; onOpenChan
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <Select value={step.ownerRole} onValueChange={(v) => updateStep(i, { ownerRole: v })}>
-                    <SelectTrigger className="h-8 text-xs">
+                    <SelectTrigger className="text-xs">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -177,7 +177,7 @@ function CreateTemplateSheet({ open, onOpenChange }: { open: boolean; onOpenChan
                     value={step.dueOffsetDays}
                     onChange={(e) => updateStep(i, { dueOffsetDays: Math.max(0, Number(e.target.value) || 0) })}
                     placeholder="Due (days after joining)"
-                    className="h-8 text-xs"
+                    className="text-xs"
                   />
                 </div>
                 <div className="flex items-center gap-4">
@@ -214,7 +214,7 @@ export function OnboardingTemplatesTab() {
           Reusable onboarding plans with steps, owners, and due dates. Department-specific plans are applied
           automatically when launching onboarding for an employee in that department.
         </p>
-        <Button size="sm" className="h-8 gap-1.5 shrink-0" onClick={() => setSheetOpen(true)}>
+        <Button size="sm" className="gap-1.5 shrink-0" onClick={() => setSheetOpen(true)}>
           <Plus className="h-3.5 w-3.5" /> New Plan
         </Button>
       </div>

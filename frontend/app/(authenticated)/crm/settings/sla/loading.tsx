@@ -16,7 +16,7 @@ export default function SlaLoading() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <Skeleton className="h-5 w-5 rounded" />
-                  <Skeleton className="h-7 w-12" />
+                  <Skeleton className="h-12 w-12" />
                 </div>
                 <Skeleton className="h-3 w-28 mt-2" />
               </CardContent>

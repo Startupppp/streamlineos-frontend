@@ -123,10 +123,10 @@ export function ComponentsPageContent() {
         value={searchInput}
         onChange={handleSearchChange}
         placeholder="Search components…"
-        className="h-8 w-48 text-xs"
+        className="w-48 text-xs"
       />
       <Select value={typeFilter || "all"} onValueChange={handleTypeChange}>
-        <SelectTrigger className="h-8 w-44 text-xs">
+        <SelectTrigger className="w-44 text-xs">
           <SelectValue placeholder="All types" />
         </SelectTrigger>
         <SelectContent>
@@ -137,7 +137,7 @@ export function ComponentsPageContent() {
         </SelectContent>
       </Select>
       <Select value={activeFilter || "all"} onValueChange={handleActiveChange}>
-        <SelectTrigger className="h-8 w-32 text-xs">
+        <SelectTrigger className="w-32 text-xs">
           <SelectValue placeholder="All status" />
         </SelectTrigger>
         <SelectContent>

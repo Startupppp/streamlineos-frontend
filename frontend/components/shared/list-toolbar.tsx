@@ -1,8 +1,7 @@
 "use client";
 
-import { ReactNode, ChangeEvent } from "react";
-import { Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import type { ReactNode } from "react";
+import { SearchInput } from "@/components/ui/search-input";
 import { cn } from "@/lib/utils";
 
 interface ListToolbarProps {
@@ -22,10 +21,6 @@ export function ListToolbar({
   actions,
   className,
 }: ListToolbarProps) {
-  const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
-    onSearchChange?.(e.target.value);
-  };
-
   return (
     <div
       className={cn(
@@ -33,24 +28,24 @@ export function ListToolbar({
         className,
       )}
     >
-      <div className="flex flex-1 min-w-0 items-center gap-2 flex-wrap">
-        {onSearchChange !== undefined && (
-          <div className="relative flex-1 min-w-[200px] max-w-md">
-            <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+        {onSearchChange !== undefined ? (
+          <div className="min-w-[200px] max-w-md flex-1">
+            <SearchInput
               value={search ?? ""}
-              onChange={handleSearchChange}
+              onValueChange={onSearchChange}
               placeholder={searchPlaceholder}
-              className="h-8 border-input bg-card pl-9 text-sm"
             />
           </div>
-        )}
-        {filters && <div className="flex items-center gap-2 flex-wrap">{filters}</div>}
+        ) : null}
+        {filters ? (
+          <div className="flex flex-wrap items-center gap-2">{filters}</div>
+        ) : null}
       </div>
 
-      {actions && (
-        <div className="flex items-center gap-2 shrink-0">{actions}</div>
-      )}
+      {actions ? (
+        <div className="flex shrink-0 items-center gap-2">{actions}</div>
+      ) : null}
     </div>
   );
 }

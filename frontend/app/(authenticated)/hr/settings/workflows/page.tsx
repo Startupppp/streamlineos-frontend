@@ -113,7 +113,7 @@ export default function WorkflowSettingsPage() {
       filters={
         <div className="flex items-center gap-2 flex-wrap">
           <Select value={filterObjectType} onValueChange={(v) => setFilterObjectType(v as HrWorkflowObjectType | "all")}>
-            <SelectTrigger className="h-8 text-xs w-48">
+            <SelectTrigger className="text-xs w-48">
               <SelectValue placeholder="All types" />
             </SelectTrigger>
             <SelectContent>
@@ -124,7 +124,7 @@ export default function WorkflowSettingsPage() {
             </SelectContent>
           </Select>
           <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v as HrWorkflowStatus | "all")}>
-            <SelectTrigger className="h-8 text-xs w-36">
+            <SelectTrigger className="text-xs w-36">
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>
@@ -203,7 +203,7 @@ export default function WorkflowSettingsPage() {
                   {canManage && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0">
+                        <Button variant="ghost" size="icon" className="w-7 shrink-0">
                           <Settings2 className="h-3.5 w-3.5" />
                         </Button>
                       </DropdownMenuTrigger>

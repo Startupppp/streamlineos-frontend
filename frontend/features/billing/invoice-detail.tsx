@@ -342,7 +342,7 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
       <PageWrapper title="Invoice">
         <div className="flex flex-col items-center justify-center flex-1 h-full min-h-[400px] gap-4 text-center">
           <div className="rounded-full bg-destructive/10 p-4">
-            <AlertCircle className="h-8 w-8 text-destructive" />
+            <AlertCircle className="w-8 text-destructive" />
           </div>
           <div>
             <p className="font-semibold text-foreground">

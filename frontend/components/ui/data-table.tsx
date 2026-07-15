@@ -11,11 +11,11 @@ import {
   getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUp, ArrowDown, ArrowUpDown, Search } from "lucide-react";
+import { ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { DataTablePagination } from "@/components/shared/data-table-pagination";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import {
   Table,
   TableBody,
@@ -234,8 +234,8 @@ export function DataTable<T>({
   const pSize = isServerPagination ? serverPag!.pageSize : clientPageSize;
   const showPagination = pagination !== undefined && totalPages > 1;
 
-  function handleSearchInputChange(e: React.ChangeEvent<HTMLInputElement>) {
-    search?.onChange(e.target.value);
+  function handleSearchChange(value: string) {
+    search?.onChange(value);
   }
 
   function handlePageChange(nextPage: number) {
@@ -248,16 +248,13 @@ export function DataTable<T>({
       {(search !== undefined || toolbar !== undefined) && (
         <div className="shrink-0 flex items-center justify-between gap-2 border-b border-border bg-card bg-muted/40 px-2 py-1.5">
           {search !== undefined ? (
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={search.value}
-                onChange={handleSearchInputChange}
-                placeholder={search.placeholder ?? "Search…"}
-                aria-label={search.placeholder ?? "Search"}
-                className="h-8 w-56 pl-7 text-xs"
-              />
-            </div>
+            <SearchInput
+              value={search.value}
+              onValueChange={handleSearchChange}
+              placeholder={search.placeholder ?? "Search…"}
+              aria-label={search.placeholder ?? "Search"}
+              className="w-56"
+            />
           ) : (
             <div />
           )}
@@ -284,7 +281,7 @@ export function DataTable<T>({
                         <TableHead
                           key={header.id}
                           className={cn(
-                            "text-[10px] uppercase tracking-wider font-bold px-2 py-1.5",
+                            "text-sm font-medium px-2 py-2",
                             header.column.columnDef.meta?.headerClassName,
                           )}
                         >
@@ -308,10 +305,10 @@ export function DataTable<T>({
               </TableHeader>
               <TableBody>
                 {Array.from({ length: 12 }).map((_, i) => (
-                  <TableRow key={i} className="h-8 hover:bg-transparent">
+                  <TableRow key={i} className="h-10 hover:bg-transparent">
                     {columnDefs.map((_, j) => (
-                      <TableCell key={j} className="px-2 py-1">
-                        <Skeleton className="h-3 w-full" />
+                      <TableCell key={j} className="px-2 py-2 text-sm">
+                        <Skeleton className="h-3.5 w-full" />
                       </TableCell>
                     ))}
                   </TableRow>
@@ -344,7 +341,7 @@ export function DataTable<T>({
                         <TableHead
                           key={header.id}
                           className={cn(
-                            "text-[10px] uppercase tracking-wider font-bold px-2 py-1.5",
+                            "text-sm font-medium px-2 py-2",
                             header.column.columnDef.meta?.headerClassName,
                           )}
                           aria-sort={
@@ -378,7 +375,7 @@ export function DataTable<T>({
                   <TableRow
                     key={row.id}
                     className={cn(
-                      "h-8 hover:bg-muted/30 transition-colors",
+                      "h-10 hover:bg-muted/30 transition-colors",
                       onRowClick && "cursor-pointer",
                       rowClassName?.(row.original, rowIndex),
                     )}
@@ -389,7 +386,7 @@ export function DataTable<T>({
                       <TableCell
                         key={cell.id}
                         className={cn(
-                          "px-2 py-1 text-[11px]",
+                          "px-2 py-2 text-sm",
                           cell.column.columnDef.meta?.className,
                         )}
                       >
@@ -449,7 +446,7 @@ export function DataTableSkeleton({
         </TableHeader>
         <TableBody>
           {Array.from({ length: rows }).map((_, rowIdx) => (
-            <TableRow key={rowIdx} className="h-8 hover:bg-transparent">
+            <TableRow key={rowIdx} className="h-10 hover:bg-transparent">
               {Array.from({ length: columns }).map((_, colIdx) => (
                 <TableCell key={colIdx} className="px-2 py-1">
                   <Skeleton className="h-3 w-full" />

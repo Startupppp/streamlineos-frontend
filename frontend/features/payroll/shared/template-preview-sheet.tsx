@@ -82,7 +82,7 @@ export function TemplatePreviewSheet({
                 value={ctcInput}
                 onChange={handleCtcChange}
                 placeholder="1200000"
-                className="h-8 text-sm font-mono"
+                className="text-sm font-mono"
               />
             </div>
             <Button onClick={handlePreview} disabled={preview.isPending} size="sm">

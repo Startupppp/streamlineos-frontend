@@ -65,7 +65,7 @@ function TemplatesGridSkeleton() {
           <Skeleton className="h-3 w-full" />
           <Skeleton className="h-3 w-3/4" />
           <div className="flex gap-2 pt-1">
-            <Skeleton className="h-8 flex-1" />
+            <Skeleton className="flex-1" />
             <Skeleton className="h-8 w-8" />
           </div>
         </div>

@@ -193,7 +193,7 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
                   value={releaseDateValue ?? ""}
                   onChange={handleReleaseDateChange}
                   placeholder="Pick a date"
-                  className="h-8 text-sm"
+                  className="text-sm"
                 />
               </div>
             </div>

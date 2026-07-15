@@ -114,19 +114,19 @@ function AddOptionRow({ type, sortOrder, onCancel }: AddRowProps) {
         value={label}
         onChange={handleLabelChange}
         placeholder="Label"
-        className="h-8 text-xs w-32 shrink-0"
+        className="text-xs w-32 shrink-0"
         autoFocus
       />
       <Input
         value={key}
         onChange={handleKeyChange}
         placeholder="key"
-        className="h-8 text-xs font-mono w-28 shrink-0"
+        className="text-xs font-mono w-28 shrink-0"
       />
       <CrmColorPicker value={color} onChange={handleColorChange} />
       <LoadingButton
         size="sm"
-        className="h-7 text-xs px-2"
+        className="text-xs px-2"
         isPending={createOption.isPending}
         loadingText="Saving…"
         onClick={handleSave}
@@ -134,7 +134,7 @@ function AddOptionRow({ type, sortOrder, onCancel }: AddRowProps) {
       >
         Save
       </LoadingButton>
-      <Button variant="ghost" size="sm" className="h-7 text-xs px-2" onClick={onCancel}>
+      <Button variant="ghost" size="sm" className="text-xs px-2" onClick={onCancel}>
         Cancel
       </Button>
     </div>
@@ -219,7 +219,7 @@ function OptionRow({ option, showTerminal, onDeleteRequest }: OptionRowProps) {
         key={option.label}
         defaultValue={option.label}
         onBlur={handleLabelBlur}
-        className="h-8 text-xs w-32 shrink-0 border-transparent hover:border-input focus:border-input bg-transparent"
+        className="text-xs w-32 shrink-0 border-transparent hover:border-input focus:border-input bg-transparent"
       />
       <span className="font-mono text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground shrink-0">
         {option.key}
@@ -379,7 +379,7 @@ export default function CrmOptionsPage() {
             <div className="flex-1 min-w-0 space-y-3">
               <div className="md:hidden">
                 <Select value={selectedType} onValueChange={handleMobileTypeSelect}>
-                  <SelectTrigger className="h-8 text-xs">
+                  <SelectTrigger className="text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -399,7 +399,7 @@ export default function CrmOptionsPage() {
                     {sortedOptions.length}
                   </Badge>
                 </div>
-                <Button size="sm" className="h-7 text-xs" onClick={handleShowAdd} disabled={showAdd}>
+                <Button size="sm" className="text-xs" onClick={handleShowAdd} disabled={showAdd}>
                   <Plus className="h-3 w-3 mr-1" />
                   Add
                 </Button>

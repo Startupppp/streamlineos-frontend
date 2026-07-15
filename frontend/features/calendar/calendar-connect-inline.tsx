@@ -92,7 +92,7 @@ export function CalendarConnectInline() {
           type="button"
           variant="outline"
           size="sm"
-          className="h-8 gap-1.5 text-xs"
+          className="gap-1.5 text-xs"
           onClick={handleConnectGoogle}
           disabled={pending !== null}
         >
@@ -107,7 +107,7 @@ export function CalendarConnectInline() {
           type="button"
           variant="outline"
           size="sm"
-          className="h-8 gap-1.5 text-xs"
+          className="gap-1.5 text-xs"
           onClick={handleConnectOutlook}
           disabled={pending !== null}
         >

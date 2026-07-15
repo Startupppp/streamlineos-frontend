@@ -236,7 +236,7 @@ export function PermissionMatrix({
         </div>
       ) : grantsQuery.isError ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 py-12 text-center">
-          <AlertTriangle className="h-8 w-8 text-muted-foreground" />
+          <AlertTriangle className="w-8 text-muted-foreground" />
           <div>
             <p className="text-sm font-medium text-foreground">
               Couldn&apos;t load permissions

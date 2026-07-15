@@ -18,7 +18,7 @@ export default async function AccessDeniedPage({ searchParams }: AccessDeniedPag
       <Card className="max-w-md w-full border-slate-200/80 shadow-[0_18px_44px_-18px_rgba(30,64,175,0.18)]">
         <CardContent className="p-8 sm:p-10 text-center space-y-6">
           <div className="mx-auto h-14 w-14 rounded-2xl bg-red-50 ring-1 ring-red-200/60 flex items-center justify-center">
-            <ShieldAlert className="h-7 w-7 text-red-500" aria-hidden="true" />
+            <ShieldAlert className="w-7 text-red-500" aria-hidden="true" />
           </div>
 
           <div className="space-y-2">

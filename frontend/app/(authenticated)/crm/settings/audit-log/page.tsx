@@ -122,7 +122,7 @@ export default function CrmAuditLogPage() {
       filters={
         <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
           <Select value={entityType} onValueChange={handleEntityTypeChange}>
-            <SelectTrigger className="h-8 w-36 text-xs">
+            <SelectTrigger className="w-36 text-xs">
               <SelectValue placeholder="Entity Type" />
             </SelectTrigger>
             <SelectContent>
@@ -137,7 +137,7 @@ export default function CrmAuditLogPage() {
           </Select>
 
           <Select value={action} onValueChange={handleActionChange}>
-            <SelectTrigger className="h-8 w-36 text-xs">
+            <SelectTrigger className="w-36 text-xs">
               <SelectValue placeholder="Action" />
             </SelectTrigger>
             <SelectContent>
@@ -154,13 +154,13 @@ export default function CrmAuditLogPage() {
           </Select>
 
           <div className="flex items-center gap-1.5">
-            <DatePicker value={fromDate ?? ""} onChange={handleFromDateChange} placeholder="Pick a date" className="h-8 w-36 text-xs" />
+            <DatePicker value={fromDate ?? ""} onChange={handleFromDateChange} placeholder="Pick a date" className="w-36 text-xs" />
             <span className="text-xs text-muted-foreground">to</span>
-            <DatePicker value={toDate ?? ""} onChange={handleToDateChange} placeholder="Pick a date" className="h-8 w-36 text-xs" />
+            <DatePicker value={toDate ?? ""} onChange={handleToDateChange} placeholder="Pick a date" className="w-36 text-xs" />
           </div>
 
           {hasActiveFilters && (
-            <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={handleClearFilters}>
+            <Button variant="ghost" size="sm" className="text-xs" onClick={handleClearFilters}>
               Clear filters
             </Button>
           )}

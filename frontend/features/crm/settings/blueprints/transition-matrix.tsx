@@ -71,7 +71,7 @@ export function TransitionMatrix({ blueprint, stages }: TransitionMatrixProps) {
   if (isLoading) {
     return (
       <div className="space-y-2">
-        {[0, 1, 2].map((i) => <Skeleton key={i} className="h-8 w-full" />)}
+        {[0, 1, 2].map((i) => <Skeleton key={i} className="h-4 w-full" />)}
       </div>
     );
   }

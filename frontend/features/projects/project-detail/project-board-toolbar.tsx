@@ -40,7 +40,7 @@ function AnimatedToolbarIconButton({ onClick, ariaLabel, Icon }: AnimatedToolbar
       variant="outline"
       size="icon"
       onClick={onClick}
-      className={cn("h-8 w-8 shrink-0", PM_CONTROL)}
+      className={cn("shrink-0", PM_CONTROL)}
       aria-label={ariaLabel}
       {...hoverHandlers}
     >
@@ -121,7 +121,7 @@ export function ProjectBoardToolbar({
               <Button
                 variant="outline"
                 size="icon"
-                className={cn("h-8 w-8 shrink-0", PM_CONTROL)}
+                className={cn("shrink-0", PM_CONTROL)}
                 aria-label="Export tickets"
               >
                 <Download className="h-3.5 w-3.5" />
@@ -147,7 +147,7 @@ export function ProjectBoardToolbar({
             variant="outline"
             size="icon"
             onClick={handleSaveViewClick}
-            className={cn("h-8 w-8 shrink-0", PM_CONTROL)}
+            className={cn("shrink-0", PM_CONTROL)}
             aria-label="Save view"
           >
             <Bookmark className="h-3.5 w-3.5" />
@@ -190,7 +190,7 @@ export function ProjectBoardToolbar({
           <Button
             variant="outline"
             size="icon"
-            className={cn("h-8 w-8 shrink-0 sm:hidden", PM_CONTROL)}
+            className={cn("shrink-0 sm:hidden", PM_CONTROL)}
             aria-label="More board actions"
           >
             <Ellipsis className="h-3.5 w-3.5" />

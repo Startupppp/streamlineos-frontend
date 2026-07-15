@@ -219,7 +219,7 @@ export function IncidentSheet({
               <Label className="text-[11px]">Title *</Label>
               <Input
                 {...form.register("title")}
-                className="h-8 text-[11px]"
+                className="text-[11px]"
                 placeholder="Short incident summary"
               />
               {form.formState.errors.title && (
@@ -248,7 +248,7 @@ export function IncidentSheet({
                   value={form.watch("severity")}
                   onValueChange={handleSeverityChange}
                 >
-                  <SelectTrigger className="h-8 text-[11px]">
+                  <SelectTrigger className="text-[11px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -266,7 +266,7 @@ export function IncidentSheet({
                   value={form.watch("status")}
                   onValueChange={handleStatusChange}
                 >
-                  <SelectTrigger className="h-8 text-[11px]">
+                  <SelectTrigger className="text-[11px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -284,7 +284,7 @@ export function IncidentSheet({
               <Label className="text-[11px]">Impact</Label>
               <Input
                 {...form.register("impact")}
-                className="h-8 text-[11px]"
+                className="text-[11px]"
                 placeholder="Who / what is affected?"
               />
             </div>
@@ -298,7 +298,7 @@ export function IncidentSheet({
                 onChange={(v) => form.setValue("ownerId", v ?? "")}
                 allowUnassigned
                 placeholder="Unassigned"
-                className="h-8 text-[11px]"
+                className="text-[11px]"
               />
             </div>
 
@@ -308,7 +308,7 @@ export function IncidentSheet({
                 <Input
                   {...form.register("detectedAt")}
                   type="datetime-local"
-                  className="h-8 text-[11px]"
+                  className="text-[11px]"
                 />
               </div>
               <div className="space-y-1.5">
@@ -316,7 +316,7 @@ export function IncidentSheet({
                 <Input
                   {...form.register("responseDueAt")}
                   type="datetime-local"
-                  className="h-8 text-[11px]"
+                  className="text-[11px]"
                 />
               </div>
               <div className="space-y-1.5">
@@ -324,7 +324,7 @@ export function IncidentSheet({
                 <Input
                   {...form.register("resolutionDueAt")}
                   type="datetime-local"
-                  className="h-8 text-[11px]"
+                  className="text-[11px]"
                 />
               </div>
             </div>
@@ -338,7 +338,7 @@ export function IncidentSheet({
                 onChange={(v) => form.setValue("linkedTicketId", v)}
                 placeholder="Link a ticket…"
                 allowClear
-                className="h-8 text-[11px]"
+                className="text-[11px]"
               />
             </div>
           </form>

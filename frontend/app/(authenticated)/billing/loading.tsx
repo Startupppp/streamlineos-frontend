@@ -17,7 +17,7 @@ export default function BillingLoading() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-2">
                     <Skeleton className="h-4 w-24" />
-                    <Skeleton className="h-7 w-20" />
+                    <Skeleton className="h-4 w-20" />
                     <Skeleton className="h-3 w-16" />
                   </div>
                   <Skeleton className="h-12 w-12 rounded-lg" />
@@ -31,7 +31,7 @@ export default function BillingLoading() {
           {Array.from({ length: 12 }).map((_, i) => (
             <div key={i} className="rounded-lg border border-border bg-card px-4 py-3 space-y-2">
               <Skeleton className="h-3 w-16" />
-              <Skeleton className="h-7 w-10" />
+              <Skeleton className="h-10 w-10" />
             </div>
           ))}
         </div>

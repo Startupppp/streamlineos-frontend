@@ -140,7 +140,7 @@ export default function SequencesPage() {
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+            className="w-7 text-muted-foreground hover:text-foreground"
             onClick={() => handleOpenEdit(seq)}
           >
             <Pencil className="h-3.5 w-3.5" />
@@ -148,7 +148,7 @@ export default function SequencesPage() {
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+            className="w-7 text-muted-foreground hover:text-destructive"
             onClick={() => handleDeleteRequest(seq.id)}
           >
             <Trash2 className="h-3.5 w-3.5" />

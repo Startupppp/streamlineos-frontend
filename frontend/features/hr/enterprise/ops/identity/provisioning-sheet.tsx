@@ -93,7 +93,7 @@ export function ProvisioningSheet({ open, onOpenChange }: ProvisioningSheetProps
                   <FormItem>
                     <FormLabel>System Name</FormLabel>
                     <FormControl>
-                      <Input className="h-8" placeholder="e.g. GitHub, Jira, AWS" {...field} />
+                      <Input className="" placeholder="e.g. GitHub, Jira, AWS" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -107,7 +107,7 @@ export function ProvisioningSheet({ open, onOpenChange }: ProvisioningSheetProps
                     <FormLabel>Action</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
-                        <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className=""><SelectValue /></SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="grant">Grant</SelectItem>
@@ -127,7 +127,7 @@ export function ProvisioningSheet({ open, onOpenChange }: ProvisioningSheetProps
                     <FormLabel>Triggered By</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
-                        <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className=""><SelectValue /></SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="joiner">Joiner</SelectItem>

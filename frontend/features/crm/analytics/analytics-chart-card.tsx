@@ -47,7 +47,7 @@ export function AnalyticsChartCard<T extends object>({ title, data, filename, ch
       <Card className="shadow-sm h-full">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-medium">{title}</CardTitle>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleDownload} aria-label="Download">
+          <Button variant="ghost" size="icon" className="w-7" onClick={handleDownload} aria-label="Download">
             <Download className="h-3.5 w-3.5" />
           </Button>
         </CardHeader>

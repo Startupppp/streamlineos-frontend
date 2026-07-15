@@ -75,7 +75,7 @@ function CreditRowActions({ credit, onViewDetail, onApply }: CreditRowActionsPro
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-7 w-7">
+        <Button variant="ghost" size="icon" className="w-7">
           <MoreHorizontal className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
@@ -310,7 +310,7 @@ export default function VendorCreditsPage() {
       filters={
         <div className="flex flex-wrap items-center gap-2">
           <Select value={vendorFilter} onValueChange={handleVendorFilterChange}>
-            <SelectTrigger className="h-8 w-[180px] text-xs">
+            <SelectTrigger className="w-[180px] text-xs">
               <SelectValue placeholder="All vendors" />
             </SelectTrigger>
             <SelectContent>
@@ -323,7 +323,7 @@ export default function VendorCreditsPage() {
             </SelectContent>
           </Select>
           <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
-            <SelectTrigger className="h-8 w-[140px] text-xs">
+            <SelectTrigger className="w-[140px] text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

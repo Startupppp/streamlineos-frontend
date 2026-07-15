@@ -75,7 +75,7 @@ export function ShiftTemplatesTab({ canManage, onEdit }: Props) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7"
+                  className="w-7"
                   onClick={() => onEdit(shift)}
                   aria-label={`Edit ${shift.name}`}
                 >
@@ -84,7 +84,7 @@ export function ShiftTemplatesTab({ canManage, onEdit }: Props) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 text-destructive hover:text-destructive"
+                  className="w-7 text-destructive hover:text-destructive"
                   onClick={() => handleDelete(shift.id)}
                   disabled={deleteShift.isPending}
                 >

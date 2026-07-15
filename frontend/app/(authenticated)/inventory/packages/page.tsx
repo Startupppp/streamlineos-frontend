@@ -173,7 +173,7 @@ function PackagesPageInner() {
   const filtersRow = (
     <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
       <Select value={statusParam || "all"} onValueChange={handleStatusChange}>
-        <SelectTrigger className="h-8 min-w-0 w-[160px] text-xs">
+        <SelectTrigger className="min-w-0 w-[160px] text-xs">
           <SelectValue placeholder="All statuses" />
         </SelectTrigger>
         <SelectContent>
@@ -270,7 +270,7 @@ function PackagesPageInner() {
               placeholder="Leave blank if unassigned"
               value={newShipmentId}
               onChange={handleShipmentIdChange}
-              className="h-8 text-sm"
+              className="text-sm"
             />
           </div>
         </div>

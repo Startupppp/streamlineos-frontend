@@ -67,12 +67,12 @@ export function AddStageRow({
         onChange={handleLabelChange}
         onKeyDown={handleKeyDown}
         placeholder="Stage name…"
-        className="h-8 text-xs flex-1"
+        className="text-xs flex-1"
       />
       <LoadingButton
         type="button"
         size="sm"
-        className="h-7 text-xs px-2.5"
+        className="text-xs px-2.5"
         isPending={createStage.isPending}
         loadingText="Adding..."
         onClick={handleAdd}

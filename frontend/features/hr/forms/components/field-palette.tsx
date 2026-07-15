@@ -23,7 +23,7 @@ export function FieldPalette({ onAddField }: FieldPaletteProps) {
               type="button"
               variant="ghost"
               size="sm"
-              className="h-8 justify-start text-xs font-normal text-left px-2"
+              className="justify-start text-xs font-normal text-left px-2"
               onClick={() => onAddField(type)}
             >
               <span className="w-full">{meta.label}</span>

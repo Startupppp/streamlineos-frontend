@@ -43,7 +43,7 @@ export function NewProjectDialog({
   return (
     <>
       {trigger ?? (
-        <Button size="sm" className="gap-1.5 h-8" onClick={handleTriggerClick} {...hoverHandlers}>
+        <Button size="sm" className="gap-1.5" onClick={handleTriggerClick} {...hoverHandlers}>
           <PlusIcon ref={iconRef} size={14} />
           New Project
         </Button>

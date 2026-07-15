@@ -110,7 +110,7 @@ export function AdminExpenseItem({
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+              className="w-7 text-muted-foreground hover:text-foreground"
               onClick={handleViewReceiptBtn}
               aria-label="View receipt"
             >
@@ -119,7 +119,7 @@ export function AdminExpenseItem({
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+              className="w-7 text-muted-foreground hover:text-foreground"
               onClick={handleDownloadReceipt}
               aria-label="Download receipt"
             >
@@ -232,7 +232,7 @@ export function AdminExpenseItem({
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 text-xs gap-1.5"
+                className="text-xs gap-1.5"
                 onClick={onRejectCancel}
               >
                 Cancel
@@ -240,7 +240,7 @@ export function AdminExpenseItem({
               <Button
                 size="sm"
                 variant="destructive"
-                className="h-8 text-xs gap-1.5"
+                className="text-xs gap-1.5"
                 disabled={!rejectionReason}
                 onClick={handleConfirmReject}
               >
@@ -253,14 +253,14 @@ export function AdminExpenseItem({
             <Button
               variant="outline"
               size="sm"
-              className="h-8 text-xs gap-1.5 text-rose-600 border-rose-200 hover:bg-rose-50 dark:text-rose-400 dark:border-rose-800 dark:hover:bg-rose-950/30"
+              className="text-xs gap-1.5 text-rose-600 border-rose-200 hover:bg-rose-50 dark:text-rose-400 dark:border-rose-800 dark:hover:bg-rose-950/30"
               onClick={handleStartReject}
             >
               Reject
             </Button>
             <Button
               size="sm"
-              className="h-8 text-xs gap-1.5"
+              className="text-xs gap-1.5"
               onClick={handleApproveExpense}
               disabled={isPending}
             >

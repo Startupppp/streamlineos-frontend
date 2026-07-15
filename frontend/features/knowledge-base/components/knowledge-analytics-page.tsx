@@ -130,7 +130,7 @@ const GapTableRow = memo(function GapTableRow({
       <Button
         size="sm"
         variant="ghost"
-        className="h-7 px-2 text-xs gap-1 shrink-0"
+        className="px-2 text-xs gap-1 shrink-0"
         onClick={handleClick}
         disabled={isCreating || !row.query}
       >
@@ -189,7 +189,7 @@ export default function KnowledgeAnalyticsPage() {
       <PageWrapper title="Analytics">
         <EmptyState
           illustration={
-            <KbLockIcon className="h-8 w-8 text-muted-foreground/40" />
+            <KbLockIcon className="w-8 text-muted-foreground/40" />
           }
           title="Access restricted"
           description="You don't have permission to view knowledge base analytics."

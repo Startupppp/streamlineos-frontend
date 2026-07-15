@@ -278,7 +278,7 @@ export default function CandidatesPage() {
                 <Button
                   size="sm"
                   variant="destructive"
-                  className="h-8 gap-1.5 text-xs"
+                  className="gap-1.5 text-xs"
                   onClick={handleOpenBulkReject}
                 >
                   <XCircle className="h-3.5 w-3.5" /> Reject
@@ -287,7 +287,7 @@ export default function CandidatesPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-8 gap-1.5 text-xs"
+                    className="gap-1.5 text-xs"
                     onClick={handleOpenCompare}
                   >
                     <GitCompare className="h-3.5 w-3.5" /> Compare
@@ -296,7 +296,7 @@ export default function CandidatesPage() {
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="h-8 text-xs"
+                  className="text-xs"
                   onClick={handleClearSelection}
                 >
                   Clear
@@ -306,7 +306,7 @@ export default function CandidatesPage() {
             <Button
               variant="outline"
               size="sm"
-              className="h-8 gap-1.5 text-xs"
+              className="gap-1.5 text-xs"
               onClick={handleSelectAll}
             >
               <CheckSquare className="h-3.5 w-3.5" />
@@ -318,7 +318,7 @@ export default function CandidatesPage() {
             <Button
               size="sm"
               variant="outline"
-              className="h-8 gap-1.5 text-xs"
+              className="gap-1.5 text-xs"
               asChild
             >
               <Link href="/hr/recruitment/candidates/import">
@@ -327,7 +327,7 @@ export default function CandidatesPage() {
             </Button>
             <Button
               size="sm"
-              className="h-8 gap-1.5 text-xs"
+              className="gap-1.5 text-xs"
               onClick={handleOpenAddSheet}
             >
               <Plus className="h-3.5 w-3.5" /> Add Candidate

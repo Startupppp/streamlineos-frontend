@@ -271,7 +271,7 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
             {!file ? (
               <div className="pl-8 cursor-pointer min-h-[92px]" onClick={handleClickUploadArea}>
                 <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 p-6 transition-colors hover:border-primary/50 hover:bg-primary/5">
-                  <FileSpreadsheet className="h-8 w-8 text-muted-foreground/50 mb-2" />
+                  <FileSpreadsheet className="w-8 text-muted-foreground/50 mb-2" />
                   <p className="text-sm font-medium text-foreground">Click to upload</p>
                   <p className="text-xs text-muted-foreground mt-1">CSV — Max 5MB</p>
                 </div>
@@ -279,12 +279,12 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
             ) : (
               <div className="pl-8 min-h-[92px]">
                 <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
-                  <FileText className="h-8 w-8 text-primary shrink-0" />
+                  <FileText className="w-8 text-primary shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{file.name}</p>
                     <p className="text-xs text-muted-foreground">{(file.size / 1024).toFixed(1)} KB</p>
                   </div>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={resetState} aria-label="Remove file">
+                  <Button variant="ghost" size="icon" className="w-7 shrink-0" onClick={resetState} aria-label="Remove file">
                     <X className="h-4 w-4" />
                   </Button>
                 </div>

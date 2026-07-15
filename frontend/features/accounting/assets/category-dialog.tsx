@@ -118,7 +118,7 @@ export function CategoryDialog({ open, onOpenChange, editing }: CategoryDialogPr
               value={String(form.watch("assetAccountId") || "")}
               onValueChange={(v) => form.setValue("assetAccountId", Number(v))}
             >
-              <SelectTrigger className="h-8 text-sm">
+              <SelectTrigger className="text-sm">
                 <SelectValue placeholder="Select account" />
               </SelectTrigger>
               <SelectContent>
@@ -136,7 +136,7 @@ export function CategoryDialog({ open, onOpenChange, editing }: CategoryDialogPr
               value={String(form.watch("depreciationExpenseAccountId") || "")}
               onValueChange={(v) => form.setValue("depreciationExpenseAccountId", Number(v))}
             >
-              <SelectTrigger className="h-8 text-sm">
+              <SelectTrigger className="text-sm">
                 <SelectValue placeholder="Select account" />
               </SelectTrigger>
               <SelectContent>
@@ -154,7 +154,7 @@ export function CategoryDialog({ open, onOpenChange, editing }: CategoryDialogPr
               value={String(form.watch("accumulatedDepreciationAccountId") || "")}
               onValueChange={(v) => form.setValue("accumulatedDepreciationAccountId", Number(v))}
             >
-              <SelectTrigger className="h-8 text-sm">
+              <SelectTrigger className="text-sm">
                 <SelectValue placeholder="Select account" />
               </SelectTrigger>
               <SelectContent>
@@ -172,7 +172,7 @@ export function CategoryDialog({ open, onOpenChange, editing }: CategoryDialogPr
               value={form.watch("defaultMethod")}
               onValueChange={handleDefaultMethodChange}
             >
-              <SelectTrigger className="h-8 text-sm">
+              <SelectTrigger className="text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

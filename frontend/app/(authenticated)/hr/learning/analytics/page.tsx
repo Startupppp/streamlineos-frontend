@@ -249,7 +249,7 @@ export default function LearningAnalyticsPage() {
                 <Card className="bg-card border border-border rounded-lg shadow-sm">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-2 mb-4">
-                      <div className="h-7 w-7 rounded-lg bg-muted flex items-center justify-center">
+                      <div className="w-7 rounded-lg bg-muted flex items-center justify-center">
                         <BarChart3 className="h-3.5 w-3.5 text-foreground" aria-hidden="true" />
                       </div>
                       <h2 className="text-sm font-semibold text-foreground">
@@ -306,7 +306,7 @@ export default function LearningAnalyticsPage() {
                 <Card className="bg-card border border-border rounded-lg shadow-sm">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-2 mb-4">
-                      <div className="h-7 w-7 rounded-lg bg-muted flex items-center justify-center">
+                      <div className="w-7 rounded-lg bg-muted flex items-center justify-center">
                         <BookOpen className="h-3.5 w-3.5 text-foreground" aria-hidden="true" />
                       </div>
                       <h2 className="text-sm font-semibold text-foreground">

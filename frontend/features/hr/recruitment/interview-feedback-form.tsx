@@ -125,7 +125,7 @@ export function InterviewFeedbackForm({ interview, open, onOpenChange }: Intervi
     >
       <div className="space-y-2">
         <div className="flex items-center gap-2 mb-1">
-          <div className="h-7 w-7 rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 flex items-center justify-center shrink-0">
+          <div className="w-7 rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 flex items-center justify-center shrink-0">
             <Star className="h-3.5 w-3.5" />
           </div>
           <span className="text-sm font-semibold text-foreground">Overall Rating</span>
@@ -165,13 +165,13 @@ export function InterviewFeedbackForm({ interview, open, onOpenChange }: Intervi
 
       <div className="space-y-2">
         <div className="flex items-center gap-2 mb-1">
-          <div className="h-7 w-7 rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 flex items-center justify-center shrink-0">
+          <div className="w-7 rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 flex items-center justify-center shrink-0">
             <ClipboardList className="h-3.5 w-3.5" />
           </div>
           <span className="text-sm font-semibold text-foreground">Decision</span>
         </div>
         <Select value={result} onValueChange={handleResultChange}>
-          <SelectTrigger className="h-8">
+          <SelectTrigger className="">
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -192,7 +192,7 @@ export function InterviewFeedbackForm({ interview, open, onOpenChange }: Intervi
       <div className="space-y-2">
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-lg bg-violet-100 text-violet-600 dark:bg-violet-950/40 dark:text-violet-400 flex items-center justify-center shrink-0">
+            <div className="w-7 rounded-lg bg-violet-100 text-violet-600 dark:bg-violet-950/40 dark:text-violet-400 flex items-center justify-center shrink-0">
               <BarChart3 className="h-3.5 w-3.5" />
             </div>
             <span className="text-sm font-semibold text-foreground">Scoring Rubric</span>
@@ -205,7 +205,7 @@ export function InterviewFeedbackForm({ interview, open, onOpenChange }: Intervi
               type="button"
               variant="ghost"
               size="sm"
-              className="h-7 gap-1.5 text-xs"
+              className="gap-1.5 text-xs"
               onClick={handleAddCategory}
             >
               <Plus className="h-3 w-3" />
@@ -225,7 +225,7 @@ export function InterviewFeedbackForm({ interview, open, onOpenChange }: Intervi
                     value={entry.category}
                     onChange={(e) => handleCategoryNameChange(index, e.target.value)}
                     placeholder="Category name"
-                    className="h-8 text-xs font-medium flex-1"
+                    className="text-xs font-medium flex-1"
                   />
                   <div className="flex items-center gap-1 shrink-0">
                     <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
@@ -253,7 +253,7 @@ export function InterviewFeedbackForm({ interview, open, onOpenChange }: Intervi
                   value={entry.comment ?? ""}
                   onChange={(e) => handleRubricCommentChange(index, e.target.value)}
                   placeholder="Notes for this category..."
-                  className="h-8 text-xs"
+                  className="text-xs"
                 />
               </div>
             </div>
@@ -263,7 +263,7 @@ export function InterviewFeedbackForm({ interview, open, onOpenChange }: Intervi
 
       <div className="space-y-2">
         <div className="flex items-center gap-2 mb-1">
-          <div className="h-7 w-7 rounded-lg bg-emerald-100 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 flex items-center justify-center shrink-0">
+          <div className="w-7 rounded-lg bg-emerald-100 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 flex items-center justify-center shrink-0">
             <MessageSquare className="h-3.5 w-3.5" />
           </div>
           <span className="text-sm font-semibold text-foreground">Overall Feedback</span>

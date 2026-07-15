@@ -137,7 +137,7 @@ export const CandidateSheet = memo(function CandidateSheet({
             <div className="overflow-hidden rounded-2xl border border-border border-l-4 border-l-blue-400 bg-card shadow-sm">
               <div className="px-4 py-3">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="h-7 w-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                  <div className="w-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
                     <User className="h-3.5 w-3.5" />
                   </div>
                   <span className="text-sm font-semibold text-foreground">Contact</span>
@@ -160,7 +160,7 @@ export const CandidateSheet = memo(function CandidateSheet({
             <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 border-l-violet-400">
               <div className="px-4 py-3">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="h-7 w-7 rounded-lg bg-violet-100 text-violet-600 dark:bg-violet-950/40 dark:text-violet-400 flex items-center justify-center shrink-0">
+                  <div className="w-7 rounded-lg bg-violet-100 text-violet-600 dark:bg-violet-950/40 dark:text-violet-400 flex items-center justify-center shrink-0">
                     <Briefcase className="h-3.5 w-3.5" />
                   </div>
                   <span className="text-sm font-semibold text-foreground">Application</span>
@@ -184,7 +184,7 @@ export const CandidateSheet = memo(function CandidateSheet({
               <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 border-l-amber-400">
                 <div className="px-4 py-3">
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="h-7 w-7 rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 flex items-center justify-center shrink-0">
+                    <div className="w-7 rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 flex items-center justify-center shrink-0">
                       <Star className="h-3.5 w-3.5" />
                     </div>
                     <span className="text-sm font-semibold text-foreground">Rating</span>
@@ -238,7 +238,7 @@ export const CandidateSheet = memo(function CandidateSheet({
               <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 border-l-border">
                 <div className="px-4 py-3">
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="h-7 w-7 rounded-lg bg-muted text-muted-foreground dark:bg-slate-800/60 dark:text-slate-400 flex items-center justify-center shrink-0">
+                    <div className="w-7 rounded-lg bg-muted text-muted-foreground dark:bg-slate-800/60 dark:text-slate-400 flex items-center justify-center shrink-0">
                       <StickyNote className="h-3.5 w-3.5" />
                     </div>
                     <span className="text-sm font-semibold text-foreground">Notes</span>

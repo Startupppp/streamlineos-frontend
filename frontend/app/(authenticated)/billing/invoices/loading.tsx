@@ -20,7 +20,7 @@ export default function InvoicesLoading() {
                 <Skeleton className="h-4 w-4 rounded" />
               </CardHeader>
               <CardContent>
-                <Skeleton className="h-7 w-24 mb-1" />
+                <Skeleton className="h-4 w-24 mb-1" />{" "}
                 <Skeleton className="h-3 w-16" />
               </CardContent>
             </Card>

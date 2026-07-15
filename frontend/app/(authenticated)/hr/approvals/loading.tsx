@@ -6,8 +6,8 @@ export default function ApprovalsLoading() {
       <Skeleton className="h-8 w-48" />
       <Skeleton className="h-4 w-72" />
       <div className="flex gap-2 mt-4">
-        <Skeleton className="h-8 w-24 rounded-full" />
-        <Skeleton className="h-8 w-20 rounded-full" />
+        <Skeleton className="h-24 w-24 rounded-full" />
+        <Skeleton className="h-20 w-20 rounded-full" />
       </div>
       <div className="space-y-2 mt-4">
         {Array.from({ length: 12 }).map((_, i) => (

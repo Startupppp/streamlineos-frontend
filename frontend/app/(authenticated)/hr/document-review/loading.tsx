@@ -29,7 +29,7 @@ export default function DocumentReviewLoading() {
                 <Skeleton className="h-2 w-full rounded-full" />
               </div>
               <Skeleton className="h-5 w-24 rounded-full" />
-              <Skeleton className="h-7 w-20 rounded-md" />
+              <Skeleton className="h-8 w-20 rounded-md" />
             </div>
           ))}
         </CardContent>

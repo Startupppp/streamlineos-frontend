@@ -100,7 +100,7 @@ function SetupPasswordContent() {
   if (isValidating) {
     return (
       <div className="w-full max-w-sm text-center">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
+        <Loader2 className="w-8 animate-spin text-blue-600 mx-auto mb-4" />
         <p className="text-sm text-muted-foreground">Verifying your setup link...</p>
       </div>
     );
@@ -212,7 +212,7 @@ function SetupPasswordContent() {
 
 export default function SetupPasswordPage() {
   return (
-    <Suspense fallback={<div className="w-full max-w-sm text-center"><Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto" /></div>}>
+    <Suspense fallback={<div className="w-full max-w-sm text-center"><Loader2 className="w-8 animate-spin text-blue-600 mx-auto" /></div>}>
       <SetupPasswordContent />
     </Suspense>
   );

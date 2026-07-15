@@ -333,7 +333,7 @@ export default function GoalsPage() {
               <div className="space-y-1.5">
                 <Label className="text-sm font-medium">Type</Label>
                 <Select value={form.type} onValueChange={handleTypeChange}>
-                  <SelectTrigger className="h-8 text-sm">
+                  <SelectTrigger className="text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -346,18 +346,18 @@ export default function GoalsPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-sm font-medium">Start Date *</Label>
-                  <DatePicker value={form.startDate} onChange={handleStartDateChange} placeholder="Pick a date" className="h-8 text-sm" />
+                  <DatePicker value={form.startDate} onChange={handleStartDateChange} placeholder="Pick a date" className="text-sm" />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-sm font-medium">End Date *</Label>
-                  <DatePicker value={form.endDate} onChange={handleEndDateChange} placeholder="Pick a date" className="h-8 text-sm" />
+                  <DatePicker value={form.endDate} onChange={handleEndDateChange} placeholder="Pick a date" className="text-sm" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-sm font-medium">Target Value</Label>
                   <Input
-                    className="h-8 text-sm"
+                    className="text-sm"
                     value={form.targetValue}
                     onChange={handleTargetValueChange}
                     placeholder="e.g. 100"
@@ -366,7 +366,7 @@ export default function GoalsPage() {
                 <div className="space-y-1.5">
                   <Label className="text-sm font-medium">Unit</Label>
                   <Input
-                    className="h-8 text-sm"
+                    className="text-sm"
                     value={form.unit}
                     onChange={handleUnitChange}
                     placeholder="e.g. %"

@@ -152,7 +152,7 @@ export const DailyHistoryTable = memo(function DailyHistoryTable() {
       <CardHeader className="pb-3 pt-5 px-5">
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <div className="h-7 w-7 rounded-lg bg-muted flex items-center justify-center shrink-0">
+            <div className="w-7 rounded-lg bg-muted flex items-center justify-center shrink-0">
               <ClipboardList className="h-3.5 w-3.5 text-muted-foreground" />
             </div>
             Daily History
@@ -162,7 +162,7 @@ export const DailyHistoryTable = memo(function DailyHistoryTable() {
             <Button
               variant="outline"
               size="sm"
-              className="h-8 gap-1.5 text-xs"
+              className="gap-1.5 text-xs"
               disabled={logs.length === 0}
               onClick={handleDownloadClick}
             >
@@ -183,7 +183,7 @@ export const DailyHistoryTable = memo(function DailyHistoryTable() {
           emptyState={
             <EmptyState
               illustration={
-                <ClipboardList className="h-8 w-8 text-muted-foreground" />
+                <ClipboardList className="w-8 text-muted-foreground" />
               }
               title="No attendance records"
               description="Your attendance history will appear here."

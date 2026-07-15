@@ -60,7 +60,7 @@ export function AIEnrichLeadButton({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-7 text-xs gap-1">
+        <Button variant="ghost" size="sm" className="text-xs gap-1">
           <Sparkles className="h-3 w-3 text-primary" />
           Enrich
         </Button>

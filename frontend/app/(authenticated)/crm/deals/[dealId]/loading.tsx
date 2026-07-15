@@ -21,7 +21,7 @@ export default function DealDetailLoading() {
       <div className="space-y-6">
         <div className="flex flex-wrap items-center gap-1 p-2 rounded-xl bg-muted/30 border border-border/50">
           {Array.from({ length: 12 }).map((_, i) => (
-            <Skeleton key={i} className="h-7 w-24 rounded-lg" />
+            <Skeleton key={i} className="h-4 w-24 rounded-lg" />
           ))}
         </div>
 
@@ -86,7 +86,7 @@ export default function DealDetailLoading() {
               <CardContent>
                 <div className="grid grid-cols-2 gap-2">
                   {Array.from({ length: 12 }).map((_, i) => (
-                    <Skeleton key={i} className="h-8 w-full rounded-md" />
+                    <Skeleton key={i} className="h-9 w-full rounded-md" />
                   ))}
                 </div>
               </CardContent>

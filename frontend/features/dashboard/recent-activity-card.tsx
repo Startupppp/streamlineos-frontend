@@ -85,7 +85,7 @@ export const RecentActivityCard = memo(function RecentActivityCard({ items, isLo
                         </div>
                       </div>
                       {item.assignee && (
-                        <Avatar className="h-8 w-8 flex-shrink-0">
+                        <Avatar className="w-8 flex-shrink-0">
                           <AvatarImage src={resolveImageUrl(item.assignee.image)} />
                           <AvatarFallback className="text-[10px]">
                             {getInitials(null, item.assignee.firstName, item.assignee.lastName)}

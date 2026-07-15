@@ -244,7 +244,7 @@ function DocCard({ doc, canReview, onApprove, onRequestReupload }: DocCardProps)
               <Button
                 size="sm"
                 variant="outline"
-                className="h-7 gap-1.5 text-xs flex-1 border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950/40 transition-colors duration-200"
+                className="gap-1.5 text-xs flex-1 border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950/40 transition-colors duration-200"
                 onClick={handleApproveClick}
                 aria-label={`Approve ${doc.documentTypeName}`}
               >
@@ -254,7 +254,7 @@ function DocCard({ doc, canReview, onApprove, onRequestReupload }: DocCardProps)
               <Button
                 size="sm"
                 variant="outline"
-                className="h-7 gap-1.5 text-xs flex-1 transition-colors duration-200"
+                className="gap-1.5 text-xs flex-1 transition-colors duration-200"
                 onClick={handleReuploadClick}
                 aria-label={`Request re-upload for ${doc.documentTypeName}`}
               >
@@ -451,7 +451,7 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-7 gap-1.5 text-xs shrink-0"
+                  className="gap-1.5 text-xs shrink-0"
                   onClick={handleOpenUploadSheet}
                 >
                   <Upload className="h-3 w-3" />
@@ -567,7 +567,7 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
                 Document Type <span className="text-destructive">*</span>
               </Label>
               <Select value={uploadDocTypeId} onValueChange={setUploadDocTypeId}>
-                <SelectTrigger className="h-8">
+                <SelectTrigger className="">
                   <SelectValue placeholder="Select document type" />
                 </SelectTrigger>
                 <SelectContent className="w-[var(--radix-select-trigger-width)]">

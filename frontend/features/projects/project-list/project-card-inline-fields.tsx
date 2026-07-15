@@ -87,7 +87,7 @@ export const InlineProjectTitle = memo(function InlineProjectTitle({
             value={value}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
-            className="h-8 text-sm"
+            className="text-sm"
             placeholder="Project name"
           />
           <LoadingButton

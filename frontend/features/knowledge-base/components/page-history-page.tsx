@@ -230,7 +230,7 @@ export default function PageHistoryPage({ pageId }: PageHistoryPageProps) {
           <div className="flex-1 min-w-0 flex flex-col min-h-0">
             {!selectedVersionNumber ? (
               <div className="flex flex-col items-center justify-center h-full min-h-[20rem] border border-dashed border-border rounded-xl bg-card gap-3">
-                <KbClockIcon className="h-8 w-8 text-muted-foreground/40" />
+                <KbClockIcon className="w-8 text-muted-foreground/40" />
                 <p className="text-sm text-muted-foreground">Select a version to preview</p>
               </div>
             ) : (

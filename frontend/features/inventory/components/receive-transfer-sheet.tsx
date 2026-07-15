@@ -115,7 +115,7 @@ function ReceiveTransferForm({
             max={ld.line.quantity}
             value={ld.input.quantityReceived}
             onChange={handleChange}
-            className="h-8 w-20 text-xs"
+            className="w-20 text-xs"
           />
         );
       },
@@ -133,7 +133,7 @@ function ReceiveTransferForm({
             placeholder="Optional"
             value={ld.input.notes}
             onChange={handleChange}
-            className="h-8 text-xs"
+            className="text-xs"
           />
         );
       },
@@ -145,7 +145,7 @@ function ReceiveTransferForm({
       <SheetBody className="space-y-4 px-6 py-4">
         <div className="flex items-center justify-between">
           <span className="text-[13px] font-medium">Line Items</span>
-          <Button variant="outline" size="sm" className="h-7 text-xs" onClick={handleReceiveAll}>
+          <Button variant="outline" size="sm" className="text-xs" onClick={handleReceiveAll}>
             Receive All
           </Button>
         </div>

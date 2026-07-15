@@ -59,13 +59,13 @@ export function SurveyEditor({ questions, onChange }: SurveyEditorProps) {
               placeholder="Question text"
               value={q.text}
               onChange={(e) => handleChange(q.id, { text: e.target.value })}
-              className="h-8 flex-1"
+              className="flex-1"
             />
             <Select
               value={q.type}
               onValueChange={(v) => handleChange(q.id, { type: v as SurveyQuestion["type"] })}
             >
-              <SelectTrigger className="h-8 w-36 shrink-0">
+              <SelectTrigger className="w-36 shrink-0">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -86,7 +86,7 @@ export function SurveyEditor({ questions, onChange }: SurveyEditorProps) {
               type="button"
               variant="ghost"
               size="icon"
-              className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
+              className="w-7 shrink-0 text-muted-foreground hover:text-destructive"
               onClick={() => handleRemove(q.id)}
             >
               <Trash2 className="h-3.5 w-3.5" />
@@ -100,7 +100,7 @@ export function SurveyEditor({ questions, onChange }: SurveyEditorProps) {
                 onChange={(e) =>
                   handleChange(q.id, { options: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })
                 }
-                className="h-8 text-xs"
+                className="text-xs"
               />
             </div>
           )}

@@ -68,7 +68,7 @@ function MemberRow({ member, selected, onToggle }: RowProps) {
         selected ? "bg-primary/10 ring-1 ring-primary/30" : "hover:bg-muted",
       )}
     >
-      <Avatar className="h-7 w-7 shrink-0">
+      <Avatar className="w-7 shrink-0">
         <AvatarImage src={resolveImageUrl(member.image)} />
         <AvatarFallback className="text-[10px]">{getInitials(name)}</AvatarFallback>
       </Avatar>
@@ -132,7 +132,7 @@ export function MemberMultiSelect({
           value={search}
           onChange={handleSearchChange}
           placeholder={placeholder}
-          className="h-8 pl-8 text-sm"
+          className="pl-8 text-sm"
         />
       </div>
 

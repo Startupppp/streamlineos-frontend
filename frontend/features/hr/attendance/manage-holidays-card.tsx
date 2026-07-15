@@ -176,7 +176,7 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
       <CardHeader className="pb-3 pt-5">
         <div className="flex items-center justify-between gap-3">
           <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <div className="h-7 w-7 rounded-lg bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center shrink-0">
+            <div className="w-7 rounded-lg bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center shrink-0">
               <PartyPopper className="h-4 w-4 text-amber-600 dark:text-amber-400" />
             </div>
             Company Holidays
@@ -223,7 +223,7 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
               className="bg-background h-8 text-sm"
             />
           </div>
-          <Button type="submit" disabled={addMutation.isPending} size="sm" className="gap-1.5 h-8 duration-200">
+          <Button type="submit" disabled={addMutation.isPending} size="sm" className="gap-1.5 duration-200">
             {addMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
             Add Holiday
           </Button>
@@ -251,7 +251,7 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
                           value={editState.name}
                           onChange={handleEditNameChange}
                           placeholder="Holiday name"
-                          className="h-8 text-sm"
+                          className="text-sm"
                         />
                         <DatePicker
                           value={editState.date}
@@ -263,13 +263,13 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
                         value={editState.message}
                         onChange={handleEditMessageChange}
                         placeholder="Message (optional)"
-                        className="h-8 text-sm"
+                        className="text-sm"
                       />
                       <div className="flex gap-2">
                         <Button
                           type="button"
                           size="sm"
-                          className="h-7 text-xs px-3 gap-1 duration-200"
+                          className="text-xs px-3 gap-1 duration-200"
                           onClick={handleEditSave}
                           disabled={updateMutation.isPending}
                         >
@@ -284,7 +284,7 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="h-7 text-xs px-3 gap-1 duration-200"
+                          className="text-xs px-3 gap-1 duration-200"
                           onClick={handleEditCancel}
                           disabled={updateMutation.isPending}
                         >
@@ -307,7 +307,7 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
                           type="button"
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7 text-muted-foreground hover:text-foreground duration-200"
+                          className="w-7 text-muted-foreground hover:text-foreground duration-200"
                           onClick={makeEditStartHandler(h)}
                           disabled={deleteMutation.isPending || updateMutation.isPending}
                           aria-label={`Edit ${h.name}`}
@@ -318,7 +318,7 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
                           type="button"
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7 text-muted-foreground hover:text-destructive duration-200"
+                          className="w-7 text-muted-foreground hover:text-destructive duration-200"
                           onClick={makeDeleteHandler(h.id)}
                           disabled={deleteMutation.isPending || updateMutation.isPending}
                           aria-label={`Remove ${h.name}`}
@@ -333,7 +333,7 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
             </ul>
           ) : (
             <div className="flex flex-col items-center justify-center py-8 rounded-xl border border-dashed border-border gap-3">
-              <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+              <div className="w-8 rounded-full bg-muted flex items-center justify-center">
                 <PartyPopper className="h-4 w-4 text-muted-foreground" />
               </div>
               <p className="text-sm text-muted-foreground">No holidays added yet. Add one above.</p>

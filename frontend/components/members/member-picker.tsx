@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn, resolveImageUrl } from "@/lib/utils";
+import { FIELD_CONTROL_CLASS } from "@/components/ui/field-control";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { useProjectMembers } from "@/hooks/api/projects/projects";
 import {
@@ -99,8 +100,10 @@ function filterMembers(members: MemberOption[], search: string, excludeUserId?: 
   );
 }
 
-const TRIGGER_CLASS =
-  "h-8 w-full justify-start gap-2 rounded-md border border-input bg-card px-3 text-sm font-medium shadow-xs";
+const TRIGGER_CLASS = cn(
+  FIELD_CONTROL_CLASS,
+  "w-full justify-start gap-2 px-3 font-medium",
+);
 
 function MemberAvatar({ member, className }: { member: MemberOption; className?: string }) {
   return (
@@ -178,7 +181,7 @@ export function MemberPicker(props: MemberPickerProps) {
             <Command shouldFilter={false}>
               <CommandInput
                 placeholder="Search members…"
-                className="h-8 text-xs"
+                className="text-xs"
                 value={search}
                 onValueChange={handleSearchChange}
               />
@@ -244,7 +247,7 @@ export function MemberPicker(props: MemberPickerProps) {
         <Command shouldFilter={false}>
           <CommandInput
             placeholder="Search members…"
-            className="h-8 text-xs"
+            className="text-xs"
             value={search}
             onValueChange={handleSearchChange}
           />

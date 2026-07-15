@@ -33,7 +33,7 @@ export default function MyPayrollLoading() {
                         <Skeleton className="h-3 w-20" />
                       </div>
                     </div>
-                    <Skeleton className="h-7 w-24 rounded-md" />
+                    <Skeleton className="h-8 w-24 rounded-md" />
                   </div>
                 ))}
               </div>

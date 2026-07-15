@@ -190,7 +190,7 @@ function WebhookCard({
           onClick={handleSendTest}
           disabled={sendTest.isPending}
           aria-label="Send test webhook"
-          className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
+          className="w-7 flex items-center justify-center rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
           {...sendHoverHandlers}
         >
           <SendIcon ref={sendIconRef} size={14} className="text-muted-foreground" />
@@ -199,7 +199,7 @@ function WebhookCard({
           type="button"
           onClick={handleToggle}
           aria-label={expanded ? "Hide deliveries" : "Show deliveries"}
-          className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-muted transition-colors"
+          className="w-7 flex items-center justify-center rounded-lg hover:bg-muted transition-colors"
           {...chevronHoverHandlers}
         >
           <motion.div animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
@@ -211,7 +211,7 @@ function WebhookCard({
             <button
               type="button"
               aria-label="Delete webhook"
-              className="h-7 w-7 flex items-center justify-center rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+              className="w-7 flex items-center justify-center rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
             >
               <Trash2 className="h-3.5 w-3.5" />
             </button>
@@ -404,7 +404,7 @@ export default function WebhooksPage({ params }: PageProps) {
                       <FormControl>
                         <Input
                           placeholder="https://example.com/webhook"
-                          className="h-8 text-sm font-mono"
+                          className="text-sm font-mono"
                           {...field}
                         />
                       </FormControl>
@@ -464,7 +464,7 @@ export default function WebhooksPage({ params }: PageProps) {
                         <Input
                           placeholder="Used to sign payloads"
                           type="password"
-                          className="h-8 text-sm font-mono"
+                          className="text-sm font-mono"
                           {...field}
                         />
                       </FormControl>

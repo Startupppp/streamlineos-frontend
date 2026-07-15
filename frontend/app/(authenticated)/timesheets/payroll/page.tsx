@@ -130,7 +130,7 @@ export default function TimesheetPayrollPage() {
         <Button
           variant="outline"
           size="sm"
-          className="h-8 text-xs gap-1.5"
+          className="text-xs gap-1.5"
           onClick={handleMappingOpen}
         >
           <Settings2 className="h-3.5 w-3.5" />
@@ -140,7 +140,7 @@ export default function TimesheetPayrollPage() {
       {canExport && (
         <Button
           size="sm"
-          className="h-8 text-xs gap-1.5"
+          className="text-xs gap-1.5"
           onClick={handleExportOpen}
           disabled={!canDoExport || summaryLoading}
         >

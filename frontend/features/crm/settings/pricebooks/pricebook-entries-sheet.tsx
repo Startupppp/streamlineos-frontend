@@ -168,7 +168,7 @@ export function PricebookEntriesSheet({
                             type="number"
                             min="1"
                             placeholder="123"
-                            className="h-8 text-xs"
+                            className="text-xs"
                           />
                         </FormControl>
                         <FormMessage />
@@ -187,7 +187,7 @@ export function PricebookEntriesSheet({
                             type="number"
                             min="0"
                             placeholder="1000"
-                            className="h-8 text-xs"
+                            className="text-xs"
                           />
                         </FormControl>
                         <FormMessage />
@@ -206,7 +206,7 @@ export function PricebookEntriesSheet({
                             type="number"
                             min="1"
                             placeholder="1"
-                            className="h-8 text-xs"
+                            className="text-xs"
                           />
                         </FormControl>
                         <FormMessage />
@@ -219,7 +219,7 @@ export function PricebookEntriesSheet({
                   size="sm"
                   isPending={upsertEntry.isPending}
                   loadingText="Adding..."
-                  className="h-8 text-xs"
+                  className="text-xs"
                 >
                   Add Entry
                 </LoadingButton>

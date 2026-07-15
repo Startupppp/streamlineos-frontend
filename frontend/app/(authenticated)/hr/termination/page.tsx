@@ -323,7 +323,7 @@ export default function TerminationPage() {
     return (
       <PageWrapper title="Termination Management" subtitle="Manage employee terminations">
         <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
-          <AlertCircle className="h-8 w-8 text-destructive" />
+          <AlertCircle className="w-8 text-destructive" />
           <div>
             <p className="text-sm font-medium text-foreground">Failed to load terminations</p>
             <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
@@ -341,7 +341,7 @@ export default function TerminationPage() {
       badge={`${(terminations ?? []).length} records`}
       actions={
         isHR || isCEO ? (
-          <Button size="sm" onClick={handleCreateOpen} className="h-8 gap-1.5">
+          <Button size="sm" onClick={handleCreateOpen} className="gap-1.5">
             <Plus className="h-3.5 w-3.5" />
             New Termination
           </Button>

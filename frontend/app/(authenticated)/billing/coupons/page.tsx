@@ -276,7 +276,7 @@ function CreateCouponSheet({ open, onOpenChange }: CreateCouponSheetProps) {
                 <FormItem>
                   <FormLabel>Expires At (optional)</FormLabel>
                   <FormControl>
-                    <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+                    <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -426,7 +426,7 @@ export default function CouponsPage() {
       cell: (coupon) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-7 w-7">
+            <Button variant="ghost" size="icon" className="w-7">
               <MoreHorizontal className="h-3.5 w-3.5" />
             </Button>
           </DropdownMenuTrigger>

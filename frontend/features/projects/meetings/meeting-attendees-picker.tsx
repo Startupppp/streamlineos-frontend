@@ -84,7 +84,7 @@ export function MeetingAttendeePicker({
           placeholder="+ Add attendee…"
           searchPlaceholder="Search members…"
           emptyText="No members available."
-          className="h-8 w-full text-xs bg-card border-border"
+          className="w-full text-xs bg-card border-border"
         />
       )}
     </div>

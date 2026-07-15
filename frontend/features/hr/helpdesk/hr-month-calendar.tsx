@@ -15,7 +15,11 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import {
   useHrCalendar,
@@ -29,8 +33,18 @@ import {
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const MONTH_NAMES = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
 export function HrMonthCalendar() {
@@ -85,7 +99,7 @@ export function HrMonthCalendar() {
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7"
+            className="w-7"
             onClick={() => setCurrentMonth((d) => subMonths(d, 1))}
             aria-label="Previous month"
           >
@@ -97,7 +111,7 @@ export function HrMonthCalendar() {
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7"
+            className="w-7"
             onClick={() => setCurrentMonth((d) => addMonths(d, 1))}
             aria-label="Next month"
           >
@@ -134,7 +148,7 @@ export function HrMonthCalendar() {
       {isLoading ? (
         <div className="grid grid-cols-7 gap-1">
           {Array.from({ length: 35 }).map((_, i) => (
-            <Skeleton key={i} className="aspect-square w-full rounded-md" />
+            <Skeleton key={i} className="h-8 aspect-square w-full rounded-md" />
           ))}
         </div>
       ) : (
@@ -151,7 +165,10 @@ export function HrMonthCalendar() {
           </div>
           <div className="grid grid-cols-7 auto-rows-[minmax(80px,auto)]">
             {paddingDays.map((i) => (
-              <div key={`pad-${i}`} className="border-r border-b border-border last:border-r-0 bg-muted/20" />
+              <div
+                key={`pad-${i}`}
+                className="border-r border-b border-border last:border-r-0 bg-muted/20"
+              />
             ))}
             {calendarDays.map((day, idx) => {
               const dateStr = format(day, "yyyy-MM-dd");

@@ -130,7 +130,7 @@ export function NewDMDialog({
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 rounded-lg"
+            className="w-7 rounded-lg"
             title="New Direct Message"
             aria-label="New Direct Message"
           >
@@ -167,7 +167,7 @@ export function NewDMDialog({
             ))}
             {filteredUsers.length === 0 && !isLoading && (
               <div className="text-center py-10">
-                <Users className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
+                <Users className="w-8 text-muted-foreground/30 mx-auto mb-2" />
                 <p className="text-[13px] text-muted-foreground">
                   No users found
                 </p>

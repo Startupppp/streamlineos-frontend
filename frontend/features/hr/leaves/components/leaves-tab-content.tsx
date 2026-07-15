@@ -102,7 +102,7 @@ function LeaveBalanceDonut({ balances, allowedNames }: { balances: LeaveBalance[
     <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-          <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
+          <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
             <TrendingUp
               className="h-3.5 w-3.5 text-primary"
               aria-hidden="true"
@@ -209,7 +209,7 @@ function LeaveCalendarWidget({
     <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-          <div className="h-7 w-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/40 flex items-center justify-center">
+          <div className="w-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/40 flex items-center justify-center">
             <CalendarDays
               className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400"
               aria-hidden="true"
@@ -336,7 +336,7 @@ function RequestActionCell({
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7"
+            className="w-7"
             aria-label="Actions"
           >
             <MoreVertical className="h-4 w-4" />
@@ -740,7 +740,7 @@ export function LeavesTabContent({
         <CardHeader className="pb-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <div className="h-7 w-7 rounded-lg bg-muted flex items-center justify-center">
+              <div className="w-7 rounded-lg bg-muted flex items-center justify-center">
                 <History
                   className="h-3.5 w-3.5 text-muted-foreground"
                   aria-hidden="true"
@@ -752,7 +752,7 @@ export function LeavesTabContent({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 gap-1.5 text-xs text-muted-foreground"
+                className="gap-1.5 text-xs text-muted-foreground"
                 aria-label="Filter requests"
               >
                 <Filter className="h-3.5 w-3.5" />
@@ -762,7 +762,7 @@ export function LeavesTabContent({
                 variant="ghost"
                 size="sm"
                 onClick={handleExportExcel}
-                className="h-8 gap-1.5 text-xs text-muted-foreground"
+                className="gap-1.5 text-xs text-muted-foreground"
                 aria-label="Export to Excel"
               >
                 <Download className="h-3.5 w-3.5" />

@@ -165,7 +165,7 @@ export function RuleSheet({ open, onOpenChange, editing, entityType, rulesCount,
                     <FormLabel className="text-xs">Entity Type</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange} disabled={!!editing}>
                       <FormControl>
-                        <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="text-xs"><SelectValue /></SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {ENTITY_TABS.map((e) => (
@@ -185,7 +185,7 @@ export function RuleSheet({ open, onOpenChange, editing, entityType, rulesCount,
                     <FormLabel className="text-xs">Field</FormLabel>
                     <FormControl>
                       <>
-                        <Input {...field} list="crm-fields-datalist" placeholder="e.g. email" className="h-8 text-xs" />
+                        <Input {...field} list="crm-fields-datalist" placeholder="e.g. email" className="text-xs" />
                         <datalist id="crm-fields-datalist">
                           {fields.map((f) => <option key={f} value={f} />)}
                         </datalist>
@@ -209,7 +209,7 @@ export function RuleSheet({ open, onOpenChange, editing, entityType, rulesCount,
                     <FormLabel className="text-xs">Rule Type</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
-                        <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="text-xs"><SelectValue /></SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {RULE_TYPE_GROUPS.map((group) => (
@@ -241,7 +241,7 @@ export function RuleSheet({ open, onOpenChange, editing, entityType, rulesCount,
                     <FormItem>
                       <FormLabel className="text-xs">Regex Pattern</FormLabel>
                       <FormControl>
-                        <Input {...field} value={field.value ?? ""} placeholder="^[A-Z]{3}$" className="h-8 text-xs" />
+                        <Input {...field} value={field.value ?? ""} placeholder="^[A-Z]{3}$" className="text-xs" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -257,7 +257,7 @@ export function RuleSheet({ open, onOpenChange, editing, entityType, rulesCount,
                     <FormItem>
                       <FormLabel className="text-xs">{watchedRuleType.includes("min") ? "Minimum value" : "Maximum value"}</FormLabel>
                       <FormControl>
-                        <Input {...field} type="number" value={field.value ?? ""} placeholder="0" className="h-8 text-xs" />
+                        <Input {...field} type="number" value={field.value ?? ""} placeholder="0" className="text-xs" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -274,7 +274,7 @@ export function RuleSheet({ open, onOpenChange, editing, entityType, rulesCount,
                       <FormItem>
                         <FormLabel className="text-xs">Condition Field</FormLabel>
                         <FormControl>
-                          <Input {...field} value={field.value ?? ""} placeholder="status" className="h-8 text-xs" />
+                          <Input {...field} value={field.value ?? ""} placeholder="status" className="text-xs" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -287,7 +287,7 @@ export function RuleSheet({ open, onOpenChange, editing, entityType, rulesCount,
                       <FormItem>
                         <FormLabel className="text-xs">Condition Value</FormLabel>
                         <FormControl>
-                          <Input {...field} value={field.value ?? ""} placeholder="qualified" className="h-8 text-xs" />
+                          <Input {...field} value={field.value ?? ""} placeholder="qualified" className="text-xs" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -300,7 +300,7 @@ export function RuleSheet({ open, onOpenChange, editing, entityType, rulesCount,
                 <FormItem>
                   <FormLabel className="text-xs">Pipeline</FormLabel>
                   <Select value={watchedPipelineId ?? ""} onValueChange={handlePipelineChange}>
-                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select pipeline…" /></SelectTrigger>
+                    <SelectTrigger className="text-xs"><SelectValue placeholder="Select pipeline…" /></SelectTrigger>
                     <SelectContent>
                       {pipelines.map((p) => (
                         <SelectItem key={p.id} value={p.id} className="text-xs">{p.name}</SelectItem>
@@ -347,7 +347,7 @@ export function RuleSheet({ open, onOpenChange, editing, entityType, rulesCount,
                       <FormLabel className="text-xs">Pipeline scope (optional)</FormLabel>
                       <Select value={field.value ?? ""} onValueChange={(v) => { field.onChange(v || null); form.setValue("stageKey", null); }}>
                         <FormControl>
-                          <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Any pipeline" /></SelectTrigger>
+                          <SelectTrigger className="text-xs"><SelectValue placeholder="Any pipeline" /></SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="" className="text-xs">Any pipeline</SelectItem>
@@ -397,7 +397,7 @@ export function RuleSheet({ open, onOpenChange, editing, entityType, rulesCount,
                   <FormItem>
                     <FormLabel className="text-xs">Custom error message (optional)</FormLabel>
                     <FormControl>
-                      <Input {...field} value={field.value ?? ""} placeholder="This field is required" className="h-8 text-xs" />
+                      <Input {...field} value={field.value ?? ""} placeholder="This field is required" className="text-xs" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

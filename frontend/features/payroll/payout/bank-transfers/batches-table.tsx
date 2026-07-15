@@ -86,7 +86,7 @@ export function BatchesTable({
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-7 text-xs"
+                  className="text-xs"
                   onClick={() => setMarkSentBatchId(row.id)}
                 >
                   Mark Sent
@@ -96,7 +96,7 @@ export function BatchesTable({
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-7 text-xs"
+                  className="text-xs"
                   onClick={() => handleOpenMarkPaid(row.id)}
                 >
                   Mark Paid

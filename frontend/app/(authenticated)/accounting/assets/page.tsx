@@ -223,7 +223,7 @@ export default function FixedAssetsPage() {
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 text-xs"
+            className="text-xs"
             onClick={() => handleEditCategory(row)}
           >
             Edit
@@ -324,7 +324,7 @@ export default function FixedAssetsPage() {
           <TabsContent value="assets">
             <div className="flex flex-wrap items-center gap-2 mb-4">
               <Select value={statusFilter} onValueChange={handleStatusChange}>
-                <SelectTrigger className="h-8 w-[180px] text-xs">
+                <SelectTrigger className="w-[180px] text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -336,7 +336,7 @@ export default function FixedAssetsPage() {
                 </SelectContent>
               </Select>
               <Select value={categoryFilter} onValueChange={handleCategoryFilterChange}>
-                <SelectTrigger className="h-8 w-[180px] text-xs">
+                <SelectTrigger className="w-[180px] text-xs">
                   <SelectValue placeholder="All categories" />
                 </SelectTrigger>
                 <SelectContent>
@@ -451,7 +451,7 @@ export default function FixedAssetsPage() {
                 value={String(form.watch("categoryId") || "")}
                 onValueChange={(v) => form.setValue("categoryId", Number(v))}
               >
-                <SelectTrigger className="h-8 text-sm">
+                <SelectTrigger className="text-sm">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -498,7 +498,7 @@ export default function FixedAssetsPage() {
                   value={form.watch("depreciationMethod")}
                   onValueChange={(v) => { if (isDepreciationMethod(v)) form.setValue("depreciationMethod", v); }}
                 >
-                  <SelectTrigger className="h-8 text-sm">
+                  <SelectTrigger className="text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

@@ -166,7 +166,7 @@ export function LegalHoldSheet({ open, onClose, hold }: LegalHoldSheetProps) {
               )}
               {itemsLoading ? (
                 <div className="space-y-2">
-                  {[1, 2].map((i) => <Skeleton key={i} className="h-8 w-full rounded" />)}
+                  {[1, 2].map((i) => <Skeleton key={i} className="h-4 w-full rounded" />)}
                 </div>
               ) : (items ?? []).length === 0 ? (
                 <p className="text-sm text-muted-foreground">No items attached to this hold.</p>

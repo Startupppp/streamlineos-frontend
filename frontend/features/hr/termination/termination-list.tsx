@@ -154,7 +154,7 @@ function TerminationCard({
             <Button
               size="sm"
               variant="ghost"
-              className="h-7 text-xs gap-1.5 duration-200"
+              className="text-xs gap-1.5 duration-200"
               onClick={() => onView(record)}
               aria-label={`View termination details for ${employee?.name ?? "employee"}`}
             >
@@ -166,7 +166,7 @@ function TerminationCard({
               <Button
                 size="sm"
                 variant="outline"
-                className="h-7 text-xs gap-1.5 duration-200"
+                className="text-xs gap-1.5 duration-200"
                 onClick={() => onSubmit(record.id)}
                 disabled={isSubmitting}
                 aria-label={`Submit termination for ${employee?.name ?? "employee"} for CEO approval`}
@@ -180,7 +180,7 @@ function TerminationCard({
               <Button
                 size="sm"
                 variant="outline"
-                className="h-7 text-xs gap-1.5 duration-200"
+                className="text-xs gap-1.5 duration-200"
                 onClick={() => onSubmit(record.id)}
                 disabled={isSubmitting}
                 aria-label={`Resubmit termination for ${employee?.name ?? "employee"} for CEO approval`}
@@ -195,7 +195,7 @@ function TerminationCard({
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-7 text-xs gap-1.5 duration-200"
+                  className="text-xs gap-1.5 duration-200"
                   onClick={() => onApprove(record.id)}
                   aria-label={`Approve termination for ${employee?.name ?? "employee"}`}
                 >
@@ -205,7 +205,7 @@ function TerminationCard({
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-7 text-xs gap-1.5 duration-200 text-rose-600 hover:text-rose-600 border-rose-200 hover:bg-rose-50 dark:border-rose-800 dark:hover:bg-rose-950/30"
+                  className="text-xs gap-1.5 duration-200 text-rose-600 hover:text-rose-600 border-rose-200 hover:bg-rose-50 dark:border-rose-800 dark:hover:bg-rose-950/30"
                   onClick={() => onReject(record.id)}
                   aria-label={`Reject termination for ${employee?.name ?? "employee"}`}
                 >
@@ -219,7 +219,7 @@ function TerminationCard({
               <Button
                 size="sm"
                 variant="outline"
-                className="h-7 text-xs gap-1.5 duration-200"
+                className="text-xs gap-1.5 duration-200"
                 onClick={() => onSendEmail(record)}
                 aria-label={`Send termination email to ${employee?.name ?? "employee"}`}
               >
@@ -232,7 +232,7 @@ function TerminationCard({
               <Button
                 size="sm"
                 variant="outline"
-                className="h-7 text-xs gap-1.5 duration-200"
+                className="text-xs gap-1.5 duration-200"
                 onClick={() => onComplete(record.id)}
                 disabled={isCompleting}
                 aria-label={`Complete termination for ${employee?.name ?? "employee"}`}
@@ -317,7 +317,7 @@ export function TerminationList({
             key={value}
             size="sm"
             variant={statusFilter === value ? "default" : "outline"}
-            className="h-7 text-xs gap-1.5 duration-200"
+            className="text-xs gap-1.5 duration-200"
             onClick={() => onStatusFilterChange(value)}
           >
             {label}

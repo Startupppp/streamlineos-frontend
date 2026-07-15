@@ -115,7 +115,7 @@ export default function VendorsListPage() {
               value={search}
               onChange={handleSearchChange}
               placeholder="Search vendors..."
-              className="h-8 w-full pl-8 text-xs"
+              className="w-full pl-8 text-xs"
             />
           </div>
           <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer select-none">

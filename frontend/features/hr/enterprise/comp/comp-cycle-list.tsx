@@ -67,7 +67,7 @@ export function CompCycleList({ onSelect }: Props) {
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">FY {cycle.fiscalYear} · Budget {formatCents(cycle.budgetPoolCents)}</p>
           </div>
-          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+          <Button variant="ghost" size="icon" className="w-8 shrink-0">
             <ArrowRight className="h-4 w-4" />
           </Button>
         </motion.div>

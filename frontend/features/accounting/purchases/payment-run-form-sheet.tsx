@@ -82,7 +82,7 @@ export function PaymentRunFormSheet({ open, onOpenChange }: PaymentRunFormSheetP
               id="run-name"
               {...form.register("name")}
               placeholder="e.g. July vendor payments"
-              className="h-8 text-sm"
+              className="text-sm"
             />
             {form.formState.errors.name && (
               <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
@@ -97,7 +97,7 @@ export function PaymentRunFormSheet({ open, onOpenChange }: PaymentRunFormSheetP
               id="scheduled-date"
               type="date"
               {...form.register("scheduledDate")}
-              className="h-8 text-sm"
+              className="text-sm"
             />
           </div>
 
@@ -114,7 +114,7 @@ export function PaymentRunFormSheet({ open, onOpenChange }: PaymentRunFormSheetP
                 id="due-before"
                 type="date"
                 {...form.register("dueBefore")}
-                className="h-8 text-sm"
+                className="text-sm"
               />
             </div>
 
@@ -130,7 +130,7 @@ export function PaymentRunFormSheet({ open, onOpenChange }: PaymentRunFormSheetP
                   step="0.01"
                   {...form.register("minAmount")}
                   placeholder="0.00"
-                  className="h-8 text-sm"
+                  className="text-sm"
                 />
               </div>
               <div className="space-y-1.5">
@@ -144,7 +144,7 @@ export function PaymentRunFormSheet({ open, onOpenChange }: PaymentRunFormSheetP
                   step="0.01"
                   {...form.register("maxAmount")}
                   placeholder="Any"
-                  className="h-8 text-sm"
+                  className="text-sm"
                 />
               </div>
             </div>

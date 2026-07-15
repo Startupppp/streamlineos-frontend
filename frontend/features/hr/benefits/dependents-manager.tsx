@@ -47,7 +47,7 @@ function DependentRow({ dep, onDelete }: { dep: Dependent; onDelete: () => void 
   return (
     <div className="flex items-center justify-between py-2 border-b border-border/40 last:border-0">
       <div className="flex items-center gap-2.5">
-        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+        <div className="w-8 rounded-full bg-muted flex items-center justify-center shrink-0">
           <UserRound className="h-4 w-4 text-muted-foreground" />
         </div>
         <div>
@@ -62,7 +62,7 @@ function DependentRow({ dep, onDelete }: { dep: Dependent; onDelete: () => void 
           </div>
         </div>
       </div>
-      <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={onDelete}>
+      <Button size="icon" variant="ghost" className="w-7 text-muted-foreground hover:text-destructive" onClick={onDelete}>
         <Trash2 className="h-3.5 w-3.5" />
       </Button>
     </div>
@@ -126,7 +126,7 @@ export function DependentsManager() {
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-foreground">Dependents</p>
-        <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={handleOpenSheet}>
+        <Button size="sm" variant="outline" className="text-xs gap-1" onClick={handleOpenSheet}>
           <Plus className="h-3 w-3" />
           Add
         </Button>
@@ -174,7 +174,7 @@ export function DependentsManager() {
             defaultValue="spouse"
             onValueChange={(v) => form.setValue("relationship", v as DepFormValues["relationship"])}
           >
-            <SelectTrigger className="h-8 text-sm">
+            <SelectTrigger className="text-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

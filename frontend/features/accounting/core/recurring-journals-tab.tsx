@@ -80,7 +80,7 @@ function RecurringRowActions({ template, onEdit, onDelete }: RecurringRowActions
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-7 w-7" disabled={runNow.isPending}>
+        <Button variant="ghost" size="icon" className="w-7" disabled={runNow.isPending}>
           <MoreHorizontal className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>

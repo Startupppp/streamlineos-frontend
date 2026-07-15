@@ -171,7 +171,7 @@ export function AdjustmentDetailSheet({ adjustmentId, open, onOpenChange }: Adju
         <SheetBody className="space-y-4 px-6 py-4">
           {isLoading ? (
             <div className="space-y-2">
-              {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
+              {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-4 w-full" />)}
             </div>
           ) : detail ? (
             <>
@@ -207,7 +207,7 @@ export function AdjustmentDetailSheet({ adjustmentId, open, onOpenChange }: Adju
               {canAdjust && status === "PENDING_APPROVAL" && (
                 <Button
                   size="sm"
-                  className="h-8 text-xs"
+                  className="text-xs"
                   onClick={handleApprove}
                   disabled={isPending}
                 >
@@ -217,7 +217,7 @@ export function AdjustmentDetailSheet({ adjustmentId, open, onOpenChange }: Adju
               {canAdjust && status === "APPROVED" && (
                 <AlertDialog open={confirmPost} onOpenChange={setConfirmPost}>
                   <AlertDialogTrigger asChild>
-                    <Button size="sm" className="h-8 text-xs" disabled={isPending}>
+                    <Button size="sm" className="text-xs" disabled={isPending}>
                       Post to Stock
                     </Button>
                   </AlertDialogTrigger>
@@ -243,7 +243,7 @@ export function AdjustmentDetailSheet({ adjustmentId, open, onOpenChange }: Adju
                     <Button
                       size="sm"
                       variant="outline"
-                      className="h-8 text-xs text-destructive hover:text-destructive"
+                      className="text-xs text-destructive hover:text-destructive"
                       disabled={isPending}
                     >
                       Cancel
@@ -272,7 +272,7 @@ export function AdjustmentDetailSheet({ adjustmentId, open, onOpenChange }: Adju
             <Button
               variant="outline"
               size="sm"
-              className="h-8 text-xs"
+              className="text-xs"
               onClick={() => onOpenChange(false)}
             >
               Close

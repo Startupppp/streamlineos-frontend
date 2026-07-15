@@ -160,7 +160,7 @@ export function RecurringBillFormSheet({
             </Label>
             <Input
               id="name"
-              className="h-8 text-sm"
+              className="text-sm"
               placeholder="e.g. Monthly office rent"
               {...form.register("name")}
             />
@@ -177,7 +177,7 @@ export function RecurringBillFormSheet({
               value={form.watch("vendorId")}
               onValueChange={(v) => form.setValue("vendorId", v, { shouldValidate: true })}
             >
-              <SelectTrigger id="vendorId" className="h-8 text-sm">
+              <SelectTrigger id="vendorId" className="text-sm">
                 <SelectValue placeholder="Select vendor" />
               </SelectTrigger>
               <SelectContent>
@@ -202,7 +202,7 @@ export function RecurringBillFormSheet({
                 value={form.watch("frequency")}
                 onValueChange={handleFrequencyChange}
               >
-                <SelectTrigger id="frequency" className="h-8 text-sm">
+                <SelectTrigger id="frequency" className="text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -221,7 +221,7 @@ export function RecurringBillFormSheet({
               <Input
                 id="nextRunDate"
                 type="date"
-                className="h-8 text-sm"
+                className="text-sm"
                 {...form.register("nextRunDate")}
               />
             </div>
@@ -238,7 +238,7 @@ export function RecurringBillFormSheet({
                   form.setValue("isActive", v === "true", { shouldValidate: true })
                 }
               >
-                <SelectTrigger id="isActive" className="h-8 text-sm">
+                <SelectTrigger id="isActive" className="text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -261,7 +261,7 @@ export function RecurringBillFormSheet({
                 <Input
                   id="billDate"
                   type="date"
-                  className="h-8 text-sm"
+                  className="text-sm"
                   {...form.register("billDate")}
                 />
                 {form.formState.errors.billDate && (
@@ -274,7 +274,7 @@ export function RecurringBillFormSheet({
                 </Label>
                 <Input
                   id="expenseAccountCode"
-                  className="h-8 text-sm font-mono"
+                  className="text-sm font-mono"
                   {...form.register("expenseAccountCode")}
                 />
               </div>
@@ -286,7 +286,7 @@ export function RecurringBillFormSheet({
               </Label>
               <Input
                 id="lineDescription"
-                className="h-8 text-sm"
+                className="text-sm"
                 placeholder="e.g. Office rent"
                 {...form.register("lineDescription")}
               />
@@ -304,7 +304,7 @@ export function RecurringBillFormSheet({
                 </Label>
                 <Input
                   id="lineQuantity"
-                  className="h-8 text-sm"
+                  className="text-sm"
                   placeholder="1"
                   {...form.register("lineQuantity")}
                 />
@@ -315,7 +315,7 @@ export function RecurringBillFormSheet({
                 </Label>
                 <Input
                   id="lineRate"
-                  className="h-8 text-sm"
+                  className="text-sm"
                   placeholder="0.00"
                   {...form.register("lineRate")}
                 />
@@ -330,7 +330,7 @@ export function RecurringBillFormSheet({
                     form.setValue("lineGstRate", v, { shouldValidate: true })
                   }
                 >
-                  <SelectTrigger id="lineGstRate" className="h-8 text-sm">
+                  <SelectTrigger id="lineGstRate" className="text-sm">
                     <SelectValue placeholder="0" />
                   </SelectTrigger>
                   <SelectContent>

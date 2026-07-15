@@ -40,8 +40,8 @@ export default function CandidatesLoading() {
                 <div className="flex items-center justify-between gap-3">
                   <Skeleton className="h-3 w-16" />
                   <div className="flex items-center gap-1.5">
-                    <Skeleton className="h-7 w-10 rounded-md" />
-                    <Skeleton className="h-7 w-[120px] rounded-md" />
+                    <Skeleton className="h-10 w-10 rounded-md" />
+                    <Skeleton className="h-8 w-[120px] rounded-md" />
                   </div>
                 </div>
               </CardContent>

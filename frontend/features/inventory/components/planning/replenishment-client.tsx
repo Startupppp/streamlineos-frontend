@@ -199,7 +199,7 @@ export function ReplenishmentClient() {
   const columns = buildColumns(selectedIds, handleToggle);
 
   const selectAllToolbar = suggestions.length > 0 ? (
-    <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={handleSelectAll}>
+    <Button variant="ghost" size="sm" className="text-xs" onClick={handleSelectAll}>
       {allSelected ? "Deselect all" : "Select all"}
     </Button>
   ) : undefined;

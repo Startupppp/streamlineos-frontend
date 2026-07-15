@@ -69,7 +69,7 @@ function MethodEditor({ methodType, label, existing }: { methodType: ManualMetho
         value={form.displayName}
         onChange={(e) => setForm((p) => ({ ...p, displayName: e.target.value }))}
         placeholder="Display name shown on invoices"
-        className="h-8 text-xs"
+        className="text-xs"
       />
 
       {methodType === "bank_transfer" && (
@@ -78,25 +78,25 @@ function MethodEditor({ methodType, label, existing }: { methodType: ManualMetho
             value={form.bankName}
             onChange={(e) => setForm((p) => ({ ...p, bankName: e.target.value }))}
             placeholder="Bank name"
-            className="h-8 text-xs"
+            className="text-xs"
           />
           <Input
             value={form.accountHolder}
             onChange={(e) => setForm((p) => ({ ...p, accountHolder: e.target.value }))}
             placeholder="Account holder"
-            className="h-8 text-xs"
+            className="text-xs"
           />
           <Input
             value={form.maskedAccountNumber}
             onChange={(e) => setForm((p) => ({ ...p, maskedAccountNumber: e.target.value }))}
             placeholder="Account number (e.g. ****1234)"
-            className="h-8 text-xs"
+            className="text-xs"
           />
           <Input
             value={form.ifscSwiftIban}
             onChange={(e) => setForm((p) => ({ ...p, ifscSwiftIban: e.target.value }))}
             placeholder="IFSC / SWIFT / IBAN"
-            className="h-8 text-xs"
+            className="text-xs"
           />
         </div>
       )}
@@ -106,7 +106,7 @@ function MethodEditor({ methodType, label, existing }: { methodType: ManualMetho
           value={form.upiId}
           onChange={(e) => setForm((p) => ({ ...p, upiId: e.target.value }))}
           placeholder="UPI ID (e.g. business@upi)"
-          className="h-8 text-xs"
+          className="text-xs"
         />
       )}
 
@@ -127,14 +127,14 @@ function MethodEditor({ methodType, label, existing }: { methodType: ManualMetho
       </label>
 
       <div className="flex items-center gap-2">
-        <Button size="sm" className="h-7 text-xs gap-1.5" onClick={handleSave} disabled={save.isPending}>
+        <Button size="sm" className="text-xs gap-1.5" onClick={handleSave} disabled={save.isPending}>
           <Save className="h-3 w-3" /> Save
         </Button>
         {existing && existing.status !== "disabled" && (
           <Button
             size="sm"
             variant="ghost"
-            className="h-7 text-xs text-muted-foreground"
+            className="text-xs text-muted-foreground"
             onClick={() =>
               disable.mutate(existing.id, {
                 onSuccess: () => toast.success(`${label} disabled`),

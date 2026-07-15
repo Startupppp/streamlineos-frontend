@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, type ChangeEvent } from "react";
-import { ListFilter, Search, X } from "lucide-react";
+import { useCallback } from "react";
+import { ListFilter } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -97,17 +97,17 @@ function FilterSelects({
   stacked?: boolean;
 }) {
   const triggerClass = stacked
-    ? "h-8 w-full text-xs"
-    : "h-8 w-[7.5rem] shrink-0 text-xs";
+    ? "w-full text-xs"
+    : "w-[7.5rem] shrink-0 text-xs";
   const dateTriggerClass = stacked
-    ? "h-8 w-full text-xs"
-    : "h-8 w-[6.5rem] shrink-0 text-xs";
+    ? "w-full text-xs"
+    : "w-[6.5rem] shrink-0 text-xs";
   const actionTriggerClass = stacked
-    ? "h-8 w-full text-xs"
-    : "h-8 w-[8.5rem] shrink-0 text-xs";
+    ? "w-full text-xs"
+    : "w-[8.5rem] shrink-0 text-xs";
   const comboboxClass = stacked
-    ? "h-8 w-full text-xs"
-    : "h-8 w-[7rem] shrink-0 text-xs";
+    ? "w-full text-xs"
+    : "w-[7rem] shrink-0 text-xs";
 
   return (
     <>
@@ -198,16 +198,12 @@ export function MeetingsFilterBar({
   activeFilterCount,
   onClearFilters,
 }: MeetingsFilterBarProps) {
-  const handleSearchInput = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      onSearchChange(e.target.value);
+  const handleSearchChange = useCallback(
+    (value: string) => {
+      onSearchChange(value);
     },
     [onSearchChange],
   );
-
-  const handleClearSearch = useCallback(() => {
-    onSearchChange("");
-  }, [onSearchChange]);
 
   const selectProps = {
     typeFilter,
@@ -229,24 +225,13 @@ export function MeetingsFilterBar({
   return (
     <div className={cn(PM_TOOLBAR, "w-full")}>
       <div className="flex w-full min-w-0 items-center gap-2">
-        <div className="relative min-w-0 flex-1 sm:max-w-[11rem] sm:flex-none sm:shrink-0">
-          <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input
+        <div className="min-w-0 flex-1 sm:max-w-[11rem] sm:flex-none sm:shrink-0">
+          <SearchInput
             value={search}
-            onChange={handleSearchInput}
+            onValueChange={handleSearchChange}
             placeholder="Search meetings…"
-            className={cn(PM_CONTROL, "h-8 pl-7 pr-7 text-xs")}
+            className={PM_CONTROL}
           />
-          {search ? (
-            <button
-              type="button"
-              onClick={handleClearSearch}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              aria-label="Clear search"
-            >
-              <X className="h-3 w-3" />
-            </button>
-          ) : null}
         </div>
 
         <Popover>
@@ -254,7 +239,7 @@ export function MeetingsFilterBar({
             <Button
               type="button"
               variant="outline"
-              className="h-8 shrink-0 gap-1.5 px-2.5 text-xs sm:hidden"
+              className="shrink-0 gap-1.5 px-2.5 text-xs sm:hidden"
             >
               <ListFilter className="h-3.5 w-3.5 shrink-0" />
               Filters
@@ -272,7 +257,7 @@ export function MeetingsFilterBar({
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="h-8 justify-start text-xs"
+                  className="justify-start text-xs"
                   onClick={onClearFilters}
                 >
                   Clear filters
@@ -288,7 +273,7 @@ export function MeetingsFilterBar({
             <Button
               size="sm"
               variant="ghost"
-              className="h-8 shrink-0 text-xs"
+              className="shrink-0 text-xs"
               onClick={onClearFilters}
             >
               Clear

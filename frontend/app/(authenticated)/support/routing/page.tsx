@@ -127,7 +127,7 @@ function ConditionRow({ index, control, showRemove, onRemove }: ConditionRowProp
           <FormItem className="w-[calc(50%-0.25rem)] sm:w-32">
             <Select onValueChange={field.onChange} value={field.value}>
               <FormControl>
-                <SelectTrigger className="h-8 text-xs">
+                <SelectTrigger className="text-xs">
                   <SelectValue placeholder="Field" />
                 </SelectTrigger>
               </FormControl>
@@ -150,7 +150,7 @@ function ConditionRow({ index, control, showRemove, onRemove }: ConditionRowProp
           <FormItem className="w-[calc(50%-0.25rem)] sm:w-32">
             <Select onValueChange={field.onChange} value={field.value}>
               <FormControl>
-                <SelectTrigger className="h-8 text-xs">
+                <SelectTrigger className="text-xs">
                   <SelectValue placeholder="Op" />
                 </SelectTrigger>
               </FormControl>
@@ -174,7 +174,7 @@ function ConditionRow({ index, control, showRemove, onRemove }: ConditionRowProp
             <FormControl>
               {isVipCondition ? (
                 <Select onValueChange={field.onChange} value={field.value}>
-                  <SelectTrigger className="h-8 text-xs">
+                  <SelectTrigger className="text-xs">
                     <SelectValue placeholder="Value" />
                   </SelectTrigger>
                   <SelectContent>
@@ -183,7 +183,7 @@ function ConditionRow({ index, control, showRemove, onRemove }: ConditionRowProp
                   </SelectContent>
                 </Select>
               ) : (
-                <Input {...field} className="h-8 text-xs" placeholder="Value" />
+                <Input {...field} className="text-xs" placeholder="Value" />
               )}
             </FormControl>
             <FormMessage />
@@ -195,7 +195,7 @@ function ConditionRow({ index, control, showRemove, onRemove }: ConditionRowProp
           type="button"
           variant="ghost"
           size="icon"
-          className="h-8 w-8 text-destructive shrink-0"
+          className="w-8 text-destructive shrink-0"
           onClick={handleRemove}
           aria-label="Remove condition"
         >
@@ -522,7 +522,7 @@ function RuleSheet({ rule, members, onClose }: RuleSheetProps) {
                       onChange={handleSkillDraftChange}
                       onKeyDown={handleSkillKeyDown}
                       placeholder="e.g. billing"
-                      className="h-8"
+                      className=""
                     />
                     <Button type="button" variant="outline" size="sm" onClick={handleAddSkill}>
                       Add
@@ -683,13 +683,13 @@ function RuleCard({
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <Switch checked={rule.isEnabled} onCheckedChange={handleToggle} />
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleEdit} aria-label="Edit rule">
+            <Button variant="ghost" size="icon" className="w-7" onClick={handleEdit} aria-label="Edit rule">
               <Pencil className="h-3.5 w-3.5" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 text-destructive"
+              className="w-7 text-destructive"
               onClick={handleDelete}
               aria-label="Delete rule"
             >

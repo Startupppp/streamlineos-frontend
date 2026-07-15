@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import {
@@ -495,11 +496,16 @@ export default function BroadcastsPage() {
     >
       <div className="flex min-h-0 flex-1 flex-col gap-4">
         <Tabs value={activeStatus} onValueChange={setActiveStatus}>
-          <TabsList>
-            {STATUS_TABS.map((tab) => (
-              <TabsTrigger key={tab.value} value={tab.value}>{tab.label}</TabsTrigger>
-            ))}
-          </TabsList>
+          <PageTabsToolbar
+            tabsDensity="labeled"
+            tabs={
+              <TabsList>
+                {STATUS_TABS.map((tab) => (
+                  <TabsTrigger key={tab.value} value={tab.value}>{tab.label}</TabsTrigger>
+                ))}
+              </TabsList>
+            }
+          />
         </Tabs>
 
         {isLoading ? (

@@ -143,7 +143,7 @@ export function ExceptionsTab({ runId, isLocked }: ExceptionsTabProps) {
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <Select value={filterSeverity} onValueChange={handleSeverityChange}>
-          <SelectTrigger className="h-8 w-36 text-xs">
+          <SelectTrigger className="w-36 text-xs">
             <SelectValue placeholder="Severity" />
           </SelectTrigger>
           <SelectContent>
@@ -154,7 +154,7 @@ export function ExceptionsTab({ runId, isLocked }: ExceptionsTabProps) {
           </SelectContent>
         </Select>
         <Select value={filterStatus} onValueChange={handleStatusChange}>
-          <SelectTrigger className="h-8 w-32 text-xs">
+          <SelectTrigger className="w-32 text-xs">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>

@@ -35,7 +35,7 @@ export function ChatInviteJoinPage({ token }: { token: string }) {
 
       {errorMessage ? (
         <>
-          <XCircle className="h-8 w-8 text-destructive" />
+          <XCircle className="w-8 text-destructive" />
           <div>
             <p className="text-[15px] font-semibold">This invite link doesn&apos;t work</p>
             <p className="text-[13px] text-muted-foreground mt-1 max-w-sm">{errorMessage}</p>
@@ -46,7 +46,7 @@ export function ChatInviteJoinPage({ token }: { token: string }) {
         </>
       ) : joinViaInviteLink.isSuccess ? (
         <>
-          <CheckCircle2 className="h-8 w-8 text-emerald-500" />
+          <CheckCircle2 className="w-8 text-emerald-500" />
           <p className="text-[15px] font-semibold">Joined — taking you there...</p>
         </>
       ) : (

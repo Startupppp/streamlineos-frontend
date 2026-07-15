@@ -105,7 +105,7 @@ export function ReviewTable({ list, canReview, onOpenReview }: ReviewTableProps)
       header: "Employee",
       cell: (emp) => (
         <div className="flex items-center gap-2.5">
-          <Avatar className="h-8 w-8 shrink-0">
+          <Avatar className="w-8 shrink-0">
             {emp.userImage && (
               <AvatarImage src={emp.userImage} alt={emp.userName ?? "Employee"} />
             )}
@@ -157,7 +157,7 @@ export function ReviewTable({ list, canReview, onOpenReview }: ReviewTableProps)
           <Button
             size="sm"
             variant="outline"
-            className="h-7 gap-1.5 text-xs"
+            className="gap-1.5 text-xs"
             onClick={handleClick}
             aria-label={`${canReview ? "Review" : "View"} documents for ${emp.userName}`}
           >

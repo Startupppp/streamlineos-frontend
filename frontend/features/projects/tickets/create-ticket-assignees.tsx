@@ -81,7 +81,7 @@ export function CreateTicketAssignees({
             .map((member) => (
               <SelectItem key={member.id} value={member.id}>
                 <div className="flex items-center gap-2">
-                  <Avatar className="h-7 w-7">
+                  <Avatar className="w-7">
                     <AvatarImage src={resolveImageUrl(member.image)} />
                     <AvatarFallback className="text-[10px]">
                       {getUserInitials(member)}

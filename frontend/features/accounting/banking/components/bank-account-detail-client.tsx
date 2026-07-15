@@ -200,7 +200,7 @@ export function BankAccountDetailClient({ bankAccountId }: Props) {
       filters={
         <div className="flex flex-wrap items-center gap-2">
           <Select value={statusFilter} onValueChange={handleStatusChange}>
-            <SelectTrigger className="h-8 w-[160px] text-xs">
+            <SelectTrigger className="w-[160px] text-xs">
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>
@@ -215,14 +215,14 @@ export function BankAccountDetailClient({ bankAccountId }: Props) {
             type="date"
             value={from}
             onChange={handleFromChange}
-            className="h-8 text-xs w-[140px]"
+            className="text-xs w-[140px]"
             aria-label="From date"
           />
           <Input
             type="date"
             value={to}
             onChange={handleToChange}
-            className="h-8 text-xs w-[140px]"
+            className="text-xs w-[140px]"
             aria-label="To date"
           />
         </div>
@@ -232,7 +232,7 @@ export function BankAccountDetailClient({ bankAccountId }: Props) {
         <div className="space-y-4">
           <div className="flex gap-3">
             {Array.from({ length: 8 }).map((_, i) => (
-              <Skeleton key={i} className="h-8 w-32" />
+              <Skeleton key={i} className="h-4 w-32" />
             ))}
           </div>
           <Skeleton className="h-64 w-full rounded-xl" />

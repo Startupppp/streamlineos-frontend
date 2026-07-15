@@ -98,7 +98,7 @@ export function OverviewClient() {
               value={from}
               onChange={handleFromChange}
               placeholder="Start date"
-              className="h-8 w-[140px] text-sm"
+              className="w-[140px] text-sm"
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -110,7 +110,7 @@ export function OverviewClient() {
               value={to}
               onChange={handleToChange}
               placeholder="End date"
-              className="h-8 w-[140px] text-sm"
+              className="w-[140px] text-sm"
             />
           </div>
         </div>

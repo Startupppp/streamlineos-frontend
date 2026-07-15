@@ -347,7 +347,7 @@ export default function OrgCostCentersPage() {
             <Input className="pl-8 h-8 text-xs max-w-[240px]" placeholder="Search cost centers…" value={search} onChange={handleSearchInputChange} />
           </div>
           {archived.length > 0 && (
-            <Button variant="outline" size="sm" className="h-8 text-xs" onClick={handleToggleArchived}>
+            <Button variant="outline" size="sm" className="text-xs" onClick={handleToggleArchived}>
               <Archive className="h-4 w-4 mr-1.5" />
               {showArchived ? "Show Active" : `Archived (${archived.length})`}
             </Button>

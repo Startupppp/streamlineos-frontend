@@ -198,7 +198,7 @@ export default function LeadDistributionPage() {
             />
           </div>
           <Select value={statusFilter} onValueChange={handleStatusChange}>
-            <SelectTrigger className="h-8 text-xs w-[140px]">
+            <SelectTrigger className="text-xs w-[140px]">
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>
@@ -213,7 +213,7 @@ export default function LeadDistributionPage() {
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 text-xs"
+              className="text-xs"
               onClick={handleClearSelection}
             >
               Clear selection

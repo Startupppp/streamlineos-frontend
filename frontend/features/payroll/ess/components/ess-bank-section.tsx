@@ -317,7 +317,7 @@ export function EssBankSection() {
           <Landmark className="h-4 w-4 text-muted-foreground" />
           Bank Details
         </h2>
-        <Button size="sm" variant="outline" className="h-7 text-xs" onClick={handleOpen}>
+        <Button size="sm" variant="outline" className="text-xs" onClick={handleOpen}>
           Update
         </Button>
       </div>
@@ -348,7 +348,7 @@ export function EssBankSection() {
           </div>
         ) : (
           <div className="px-4 py-6 text-center">
-            <Landmark className="h-8 w-8 text-muted-foreground/50 mx-auto mb-2" />
+            <Landmark className="w-8 text-muted-foreground/50 mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">No bank details on file</p>
             <Button size="sm" className="mt-3" onClick={handleOpen}>Add Bank Details</Button>
           </div>

@@ -80,7 +80,7 @@ export function PermissionRow({
           </Badge>
         ) : (
           <Select value={scope} onValueChange={handleScopeChange}>
-            <SelectTrigger size="sm" className="h-8 w-[116px] shrink-0 text-xs">
+            <SelectTrigger size="sm" className="w-[116px] shrink-0 text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

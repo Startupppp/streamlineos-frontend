@@ -281,7 +281,7 @@ export default function CrmHubPage() {
             <Link key={card.href} href={card.href}>
               <Card className="shadow-sm hover:shadow-md transition-all hover:border-primary/40 cursor-pointer group h-full">
                 <CardContent className="p-3 flex items-center gap-2.5">
-                  <div className="h-8 w-8 rounded-md flex items-center justify-center shrink-0 bg-muted">
+                  <div className="w-8 rounded-md flex items-center justify-center shrink-0 bg-muted">
                     <card.icon className="h-4 w-4 text-muted-foreground" />
                   </div>
                   <div className="min-w-0">

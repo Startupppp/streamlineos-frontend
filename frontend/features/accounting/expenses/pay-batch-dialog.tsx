@@ -94,7 +94,7 @@ export function PayBatchDialog({ batchId, batchName, open, onOpenChange, onPaid 
         <form className="space-y-4" onSubmit={form.handleSubmit(handleSubmit)} noValidate>
           <div className="space-y-1.5">
             <Label className="text-xs">Payment date</Label>
-            <Input {...form.register("paidDate")} type="date" className="h-8 text-sm" />
+            <Input {...form.register("paidDate")} type="date" className="text-sm" />
             {form.formState.errors.paidDate && (
               <p className="text-xs text-destructive">{form.formState.errors.paidDate.message}</p>
             )}
@@ -106,7 +106,7 @@ export function PayBatchDialog({ batchId, batchName, open, onOpenChange, onPaid 
               value={form.watch("bankAccountId")}
               onValueChange={handleBankAccountChange}
             >
-              <SelectTrigger className="h-8 text-sm">
+              <SelectTrigger className="text-sm">
                 <SelectValue placeholder="Select bank account" />
               </SelectTrigger>
               <SelectContent>

@@ -17,9 +17,9 @@ export default function TimesheetsLoading() {
     >
       <div className="space-y-4">
         <div className="flex gap-1">
-          <Skeleton className="h-7 w-14 rounded-md" />
-          <Skeleton className="h-7 w-14 rounded-md" />
-          <Skeleton className="h-7 w-14 rounded-md" />
+          <Skeleton className="h-8 w-14 rounded-md" />
+          <Skeleton className="h-8 w-14 rounded-md" />
+          <Skeleton className="h-8 w-14 rounded-md" />
         </div>
 
         <Card>
@@ -39,7 +39,7 @@ export default function TimesheetsLoading() {
                       <Skeleton className="h-2.5 w-16" />
                     </div>
                     {Array.from({ length: 12 }).map((_, j) => (
-                      <Skeleton key={j} className="h-7 w-14 mx-auto rounded" />
+                      <Skeleton key={j} className="h-8 w-14 mx-auto rounded" />
                     ))}
                   </div>
                 ))}

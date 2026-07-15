@@ -72,7 +72,7 @@ function CompleteRunButton({ onClick, isPending }: { onClick: () => void; isPend
   return (
     <LoadingButton
       size="sm"
-      className="h-7 gap-1 text-[11px]"
+      className="gap-1 text-[11px]"
       onClick={onClick}
       isPending={isPending}
       loadingText="Completing…"
@@ -233,14 +233,14 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
                 <Input
                   value={bugTitle}
                   onChange={handleBugTitleChange}
-                  className="h-8 text-[11px]"
+                  className="text-[11px]"
                   placeholder="Bug title"
                 />
               </div>
               <div className="space-y-1.5">
                 <Label className="text-[11px]">Severity</Label>
                 <Select value={bugSeverity} onValueChange={setBugSeverity}>
-                  <SelectTrigger className="h-8 text-[11px]"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="text-[11px]"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="blocker">Blocker</SelectItem>
                     <SelectItem value="critical">Critical</SelectItem>

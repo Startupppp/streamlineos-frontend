@@ -108,7 +108,7 @@ function ReverseRow({ run, canManage }: ReverseRowProps) {
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 text-xs gap-1"
+          className="text-xs gap-1"
           onClick={handleOpenConfirm}
         >
           <RotateCcw className="h-3 w-3" />

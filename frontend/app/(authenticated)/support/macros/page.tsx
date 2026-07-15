@@ -364,16 +364,16 @@ function MacroCard({
             </p>
           </div>
           <div className="flex items-center gap-1 shrink-0">
-            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleCopy} aria-label="Copy response">
+            <Button size="icon" variant="ghost" className="w-7" onClick={handleCopy} aria-label="Copy response">
               <Copy className="h-3.5 w-3.5" />
             </Button>
-            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleEdit} aria-label="Edit response">
+            <Button size="icon" variant="ghost" className="w-7" onClick={handleEdit} aria-label="Edit response">
               <Pencil className="h-3.5 w-3.5" />
             </Button>
             <Button
               size="icon"
               variant="ghost"
-              className="h-7 w-7 text-destructive hover:text-destructive"
+              className="w-7 text-destructive hover:text-destructive"
               onClick={handleDelete}
               aria-label="Delete response"
             >

@@ -137,7 +137,7 @@ export function AnnouncementsWidget() {
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 px-2 text-amber-700 hover:text-amber-900 hover:bg-amber-100 dark:text-amber-300 dark:hover:bg-amber-900/40"
+            className="px-2 text-amber-700 hover:text-amber-900 hover:bg-amber-100 dark:text-amber-300 dark:hover:bg-amber-900/40"
             onClick={handleToggleForm}
             aria-label="Add announcement"
           >
@@ -173,14 +173,14 @@ export function AnnouncementsWidget() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-7 px-2 text-xs"
+                  className="px-2 text-xs"
                   onClick={handleCancelForm}
                 >
                   Cancel
                 </Button>
                 <Button
                   size="sm"
-                  className="h-7 px-3 text-xs bg-amber-600 hover:bg-amber-700 text-white"
+                  className="px-3 text-xs bg-amber-600 hover:bg-amber-700 text-white"
                   onClick={handleSubmit}
                   disabled={createMutation.isPending || !content.trim()}
                   aria-label="Post announcement"

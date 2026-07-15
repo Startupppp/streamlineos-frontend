@@ -73,19 +73,19 @@ function PreviewPanel() {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="text-xs font-medium mb-1 block">City</label>
-            <Input value={city} onChange={handleCityChange} placeholder="Mumbai" className="h-8 text-xs" />
+            <Input value={city} onChange={handleCityChange} placeholder="Mumbai" className="text-xs" />
           </div>
           <div>
             <label className="text-xs font-medium mb-1 block">State</label>
-            <Input value={state} onChange={handleStateChange} placeholder="Maharashtra" className="h-8 text-xs" />
+            <Input value={state} onChange={handleStateChange} placeholder="Maharashtra" className="text-xs" />
           </div>
           <div>
             <label className="text-xs font-medium mb-1 block">Country</label>
-            <Input value={country} onChange={handleCountryChange} placeholder="India" className="h-8 text-xs" />
+            <Input value={country} onChange={handleCountryChange} placeholder="India" className="text-xs" />
           </div>
           <div>
             <label className="text-xs font-medium mb-1 block">Industry</label>
-            <Input value={industry} onChange={handleIndustryChange} placeholder="Technology" className="h-8 text-xs" />
+            <Input value={industry} onChange={handleIndustryChange} placeholder="Technology" className="text-xs" />
           </div>
         </div>
         <LoadingButton
@@ -183,10 +183,10 @@ function buildColumns(
         const handleDelete = () => onDeleteRequest(row.id);
         return (
           <div className="flex items-center justify-end gap-1">
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleEdit} aria-label="Edit territory">
+            <Button variant="ghost" size="icon" className="w-7" onClick={handleEdit} aria-label="Edit territory">
               <Pencil className="h-3.5 w-3.5" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={handleDelete} aria-label="Delete territory">
+            <Button variant="ghost" size="icon" className="w-7 text-destructive" onClick={handleDelete} aria-label="Delete territory">
               <Trash2 className="h-3.5 w-3.5" />
             </Button>
           </div>

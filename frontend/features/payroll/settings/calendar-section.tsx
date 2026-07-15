@@ -23,7 +23,7 @@ export function CalendarSection() {
         <MonthPicker
           value={month}
           onChange={setMonth}
-          className="h-8 w-44"
+          className="w-44"
           yearRange={[-1, 1]}
         />
       }

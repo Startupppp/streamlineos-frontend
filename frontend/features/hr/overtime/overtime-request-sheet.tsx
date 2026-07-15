@@ -128,7 +128,7 @@ export function OvertimeRequestSheet({ open, onOpenChange }: Props) {
                   Hours Worked Overtime
                 </FormLabel>
                 <FormControl>
-                  <Input type="number" min="0.5" max="24" step="0.5" className="h-8 text-sm" {...field} />
+                  <Input type="number" min="0.5" max="24" step="0.5" className="text-sm" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

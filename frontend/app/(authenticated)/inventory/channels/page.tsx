@@ -66,9 +66,9 @@ function ChannelCardSkeleton() {
         </div>
         <Skeleton className="h-3 w-32" />
         <div className="flex gap-2 pt-1">
-          <Skeleton className="h-7 w-20" />
-          <Skeleton className="h-7 w-16" />
-          <Skeleton className="h-7 w-28" />
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-4 w-16" />
+          <Skeleton className="h-4 w-28" />
         </div>
       </CardContent>
     </Card>
@@ -159,7 +159,7 @@ const ChannelCard = memo(function ChannelCard({ channel, onEdit, onViewPublicati
             <Button
               size="sm"
               variant="outline"
-              className="h-7 text-xs gap-1.5"
+              className="text-xs gap-1.5"
               onClick={handleSync}
               disabled={syncMutation.isPending}
             >
@@ -169,7 +169,7 @@ const ChannelCard = memo(function ChannelCard({ channel, onEdit, onViewPublicati
             <Button
               size="sm"
               variant="outline"
-              className="h-7 text-xs"
+              className="text-xs"
               onClick={handleEdit}
             >
               Edit
@@ -177,7 +177,7 @@ const ChannelCard = memo(function ChannelCard({ channel, onEdit, onViewPublicati
             <Button
               size="sm"
               variant="ghost"
-              className="h-7 text-xs"
+              className="text-xs"
               onClick={handleViewPublications}
             >
               View publications
@@ -230,7 +230,7 @@ function ChannelsContent() {
   }
 
   const actions = (
-    <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={handleNewChannel} {...addHoverHandlers}>
+    <Button size="sm" className="gap-1.5 text-xs" onClick={handleNewChannel} {...addHoverHandlers}>
       <PlusIcon ref={addIconRef} size={14} />
       New Channel
     </Button>

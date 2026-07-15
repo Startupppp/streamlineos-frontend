@@ -40,7 +40,7 @@ function FeedbackListSkeleton() {
           <div className="min-w-0 flex-1 space-y-2">
             <Skeleton className="h-4 w-2/3" />
             <Skeleton className="h-3 w-full" />
-            <Skeleton className="h-7 w-36" />
+            <Skeleton className="h-4 w-36" />
           </div>
         </div>
       ))}

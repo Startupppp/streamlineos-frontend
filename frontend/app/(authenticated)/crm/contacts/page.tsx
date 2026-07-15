@@ -268,7 +268,7 @@ export default function ContactsPage() {
                 placeholder="Search contacts (min 3 chars)..."
                 value={search}
                 onChange={handleSearchChange}
-                className="h-8 w-full min-w-0 pl-8 text-xs"
+                className="w-full min-w-0 pl-8 text-xs"
               />
             </div>
             <div className="hidden min-w-0 items-center gap-2 sm:flex lg:gap-3">
@@ -285,7 +285,7 @@ export default function ContactsPage() {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 text-xs"
+                className="text-xs"
                 onClick={handleExport}
               >
                 <Download className="h-3.5 w-3.5 mr-1.5" />
@@ -309,7 +309,7 @@ export default function ContactsPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-7 text-xs"
+                    className="text-xs"
                     onClick={handleBulkMerge}
                   >
                     <GitMerge className="h-3.5 w-3.5 mr-1.5" />
@@ -319,7 +319,7 @@ export default function ContactsPage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-7 text-xs text-muted-foreground"
+                  className="text-xs text-muted-foreground"
                   onClick={handleClearSelection}
                 >
                   Clear

@@ -134,7 +134,7 @@ export function PolicyProfileSection({ policy }: PolicyProfileSectionProps) {
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
             <Label className="text-xs">Legal Entity Name</Label>
-            <Input {...register("legalEntityName")} className="h-8 text-sm" />
+            <Input {...register("legalEntityName")} className="text-sm" />
             {errors.legalEntityName && (
               <p className="text-xs text-destructive">{errors.legalEntityName.message}</p>
             )}
@@ -142,7 +142,7 @@ export function PolicyProfileSection({ policy }: PolicyProfileSectionProps) {
           <div className="space-y-1">
             <Label className="text-xs">Currency</Label>
             <Select value={watch("currency")} onValueChange={handleCurrencyChange}>
-              <SelectTrigger className="h-8 text-sm">
+              <SelectTrigger className="text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -157,7 +157,7 @@ export function PolicyProfileSection({ policy }: PolicyProfileSectionProps) {
           <div className="space-y-1">
             <Label className="text-xs">Pay Frequency</Label>
             <Select value={watch("payFrequency")} onValueChange={handleFrequencyChange}>
-              <SelectTrigger className="h-8 text-sm">
+              <SelectTrigger className="text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -172,7 +172,7 @@ export function PolicyProfileSection({ policy }: PolicyProfileSectionProps) {
           <div className="space-y-1">
             <Label className="text-xs">Pay Day</Label>
             <Select value={watch("payDay")} onValueChange={handlePayDayChange}>
-              <SelectTrigger className="h-8 text-sm">
+              <SelectTrigger className="text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -189,7 +189,7 @@ export function PolicyProfileSection({ policy }: PolicyProfileSectionProps) {
             <MonthPicker
               value={watch("startMonth")}
               onChange={(val) => setValue("startMonth", val)}
-              className="h-8"
+              className=""
             />
           </div>
         </div>

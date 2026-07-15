@@ -99,7 +99,7 @@ export function FormSubmissionsTab({ projectId, formId }: FormSubmissionsTabProp
       className: "w-40",
       cell: (row) => (
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => handleViewOpen(row)}>
+          <Button variant="ghost" size="sm" className="text-xs" onClick={() => handleViewOpen(row)}>
             View
           </Button>
           {canManage && row.status === "submitted" && (
@@ -107,7 +107,7 @@ export function FormSubmissionsTab({ projectId, formId }: FormSubmissionsTabProp
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 text-xs text-green-700 hover:text-green-800"
+                className="text-xs text-green-700 hover:text-green-800"
                 onClick={() => handleStatusUpdate(row, "processed")}
               >
                 Process
@@ -115,7 +115,7 @@ export function FormSubmissionsTab({ projectId, formId }: FormSubmissionsTabProp
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 text-xs text-destructive hover:text-destructive"
+                className="text-xs text-destructive hover:text-destructive"
                 onClick={() => handleStatusUpdate(row, "rejected")}
               >
                 Reject

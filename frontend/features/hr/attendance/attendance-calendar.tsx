@@ -128,7 +128,7 @@ export const AttendanceCalendar = memo(function AttendanceCalendar({
       <CardHeader className="pb-3 pt-5 px-5">
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+            <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
               <CalendarDays className="h-3.5 w-3.5 text-primary" />
             </div>
             Attendance Calendar
@@ -137,7 +137,7 @@ export const AttendanceCalendar = memo(function AttendanceCalendar({
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 rounded-md"
+              className="w-7 rounded-md"
               onClick={handlePrevMonth}
               aria-label="Previous month"
             >
@@ -149,7 +149,7 @@ export const AttendanceCalendar = memo(function AttendanceCalendar({
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 rounded-md"
+              className="w-7 rounded-md"
               onClick={handleNextMonth}
               aria-label="Next month"
             >
@@ -164,7 +164,7 @@ export const AttendanceCalendar = memo(function AttendanceCalendar({
           {isLoading ? (
             <div className="grid grid-cols-7 gap-1.5">
               {Array.from({ length: 35 }).map((_, i) => (
-                <Skeleton key={i} className="aspect-square w-full rounded-md" />
+                <Skeleton key={i} className="h-8 aspect-square w-full rounded-md" />
               ))}
             </div>
           ) : (

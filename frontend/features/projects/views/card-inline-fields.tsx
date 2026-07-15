@@ -165,7 +165,7 @@ export const InlineAssignee = memo(function InlineAssignee({
         </PopoverTrigger>
         <PopoverContent className="w-52 p-0" align="end">
           <Command>
-            <CommandInput placeholder="Search members..." className="h-8 text-xs" />
+            <CommandInput placeholder="Search members..." className="text-xs" />
             <CommandList className="max-h-48">
               <CommandEmpty className="py-2 text-center text-xs text-muted-foreground">No members found.</CommandEmpty>
               <CommandGroup>
@@ -267,7 +267,7 @@ export const InlineEstimate = memo(function InlineEstimate({
             value={value}
             onChange={handleValueChange}
             onKeyDown={handleKeyDown}
-            className="h-8 text-xs"
+            className="text-xs"
           />
         </PopoverContent>
       </Popover>
@@ -414,7 +414,7 @@ export const InlineTitle = memo(function InlineTitle({
             value={value}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
-            className="h-8 text-sm"
+            className="text-sm"
             placeholder="Title"
           />
           <LoadingButton

@@ -319,7 +319,7 @@ export default function PageDocumentHeader({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8"
+                className="w-8"
                 onClick={handleOpenMetaSheet}
                 aria-label="Page settings"
               >
@@ -347,7 +347,7 @@ export default function PageDocumentHeader({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8"
+                className="w-8"
                 onClick={handleOpenComments}
                 aria-label="Open comments"
               >
@@ -359,7 +359,7 @@ export default function PageDocumentHeader({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8"
+                className="w-8"
                 onClick={handleOpenHistory}
                 aria-label="View page history"
               >
@@ -372,7 +372,7 @@ export default function PageDocumentHeader({
             <Popover open={backlinksOpen} onOpenChange={setBacklinksOpen}>
               <HeaderToolbarTooltip label="Backlinks">
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="View backlinks">
+                  <Button variant="ghost" size="icon" className="w-8" aria-label="View backlinks">
                     <KbLink2Icon className="h-4 w-4" />
                   </Button>
                 </PopoverTrigger>
@@ -406,7 +406,7 @@ export default function PageDocumentHeader({
             <DropdownMenu>
               <HeaderToolbarTooltip label="More actions">
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="More options">
+                  <Button variant="ghost" size="icon" className="w-8" aria-label="More options">
                     <KbMoreHorizontalIcon className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>

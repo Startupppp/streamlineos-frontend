@@ -121,7 +121,7 @@ export function CalibrationTab() {
         };
         return (
           <Input
-            className="h-8 text-sm"
+            className="text-sm"
             value={editing.note}
             onChange={(e) => handleChange(row.employeeId, "note", e.target.value)}
           />

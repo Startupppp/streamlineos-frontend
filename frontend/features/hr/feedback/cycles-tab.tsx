@@ -202,11 +202,11 @@ export function CyclesTab() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label>Start Date *</Label>
-                  <DatePicker value={form.startDate ?? ""} onChange={(v) => handleFormChange("startDate", v)} placeholder="Pick a date" className="h-8 text-sm" />
+                  <DatePicker value={form.startDate ?? ""} onChange={(v) => handleFormChange("startDate", v)} placeholder="Pick a date" className="text-sm" />
                 </div>
                 <div className="space-y-1.5">
                   <Label>End Date *</Label>
-                  <DatePicker value={form.endDate ?? ""} onChange={(v) => handleFormChange("endDate", v)} placeholder="Pick a date" className="h-8 text-sm" />
+                  <DatePicker value={form.endDate ?? ""} onChange={(v) => handleFormChange("endDate", v)} placeholder="Pick a date" className="text-sm" />
                 </div>
               </div>
               <div className="flex items-center gap-3">

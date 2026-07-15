@@ -15,14 +15,17 @@ export default function SequencesLoading() {
           ))}
         </div>
         {Array.from({ length: 12 }).map((_, i) => (
-          <div key={i} className="flex items-center gap-6 px-4 py-3 border-b last:border-0">
+          <div
+            key={i}
+            className="flex items-center gap-6 px-4 py-3 border-b last:border-0"
+          >
             <Skeleton className="h-4 w-40" />
             <Skeleton className="h-4 w-16 rounded-full" />
             <Skeleton className="h-5 w-9 rounded-full" />
             <Skeleton className="h-3.5 w-20" />
             <div className="ml-auto flex gap-1">
-              <Skeleton className="h-7 w-7 rounded" />
-              <Skeleton className="h-7 w-7 rounded" />
+              <Skeleton className="h-7 w-7 rounded" />{" "}
+              <Skeleton className="h-7 w-7 rounded" />{" "}
             </div>
           </div>
         ))}

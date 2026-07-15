@@ -129,7 +129,7 @@ export function ContactForm() {
             className="py-10 text-center"
           >
             <div className="mx-auto mb-5 h-14 w-14 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 inline-flex items-center justify-center shadow-[0_18px_40px_-12px_rgba(59,130,246,0.45)]">
-              <CheckCircle2 className="h-7 w-7 text-white" strokeWidth={2.5} />
+              <CheckCircle2 className="w-7 text-white" strokeWidth={2.5} />
             </div>
             <h3 className="font-display text-2xl font-bold text-slate-900 mb-2">
               Message received.
@@ -197,7 +197,7 @@ export function ContactForm() {
                   value={values.name}
                   onChange={(e) => handleChange("name", e.target.value)}
                   placeholder="Aditya Sharma"
-                  className="h-8"
+                  className=""
                   required
                 />
               </Field>
@@ -207,7 +207,7 @@ export function ContactForm() {
                   value={values.email}
                   onChange={(e) => handleChange("email", e.target.value)}
                   placeholder="you@company.com"
-                  className="h-8"
+                  className=""
                   required
                 />
               </Field>
@@ -219,7 +219,7 @@ export function ContactForm() {
                   value={values.company}
                   onChange={(e) => handleChange("company", e.target.value)}
                   placeholder="Acme Inc."
-                  className="h-8"
+                  className=""
                 />
               </Field>
               <Field label="Phone" hint="optional" error={fieldErrors.phone}>

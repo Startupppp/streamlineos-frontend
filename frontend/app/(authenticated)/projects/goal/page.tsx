@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ChangeEvent } from "react";
+import { useMemo, useState } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
@@ -8,7 +8,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { RequireModule } from "@/components/auth/require-module";
 import {
   Select,
@@ -23,7 +23,6 @@ import { EmptyTargetIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared/error-state";
 import {
   Target,
-  Search,
   Users,
   TrendingUp,
   AlertTriangle,
@@ -194,8 +193,8 @@ export default function GoalsPage() {
     setCreateOpen(true);
   }
 
-  function handleSearchChange(e: ChangeEvent<HTMLInputElement>) {
-    setSearch(e.target.value);
+  function handleSearchChange(value: string) {
+    setSearch(value);
   }
 
   function handleLevelFilterChange(v: string) {
@@ -228,18 +227,16 @@ export default function GoalsPage() {
         actions={<NewGoalButton onClick={handleOpenCreate} />}
         filters={
           <div className={PM_TOOLBAR}>
-            <div className="relative min-w-[180px] max-w-sm flex-1">
-              <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-              <Input
+            <div className="min-w-[180px] max-w-sm flex-1">
+              <SearchInput
                 placeholder="Search goals..."
-                className="h-8 pl-8 text-sm"
                 value={search}
-                onChange={handleSearchChange}
+                onValueChange={handleSearchChange}
               />
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <Select value={levelFilter} onValueChange={handleLevelFilterChange}>
-                <SelectTrigger className="h-8 w-[130px] text-sm">
+                <SelectTrigger className="w-[130px] text-sm">
                   <SelectValue placeholder="Level" />
                 </SelectTrigger>
                 <SelectContent>
@@ -252,7 +249,7 @@ export default function GoalsPage() {
                 </SelectContent>
               </Select>
               <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
-                <SelectTrigger className="h-8 w-[140px] text-sm">
+                <SelectTrigger className="w-[140px] text-sm">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>

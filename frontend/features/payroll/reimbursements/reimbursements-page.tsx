@@ -257,7 +257,7 @@ export function ReimbursementsPageContent() {
     <div className="flex items-center gap-2 flex-wrap">
       <MonthPicker value={month} onChange={handleMonthChange} yearRange={[-1, 0]} className="w-44" />
       <Select value={status} onValueChange={handleStatusChange}>
-        <SelectTrigger className="h-8 text-sm w-36">
+        <SelectTrigger className="text-sm w-36">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -269,7 +269,7 @@ export function ReimbursementsPageContent() {
         </SelectContent>
       </Select>
       <Select value={category} onValueChange={handleCategoryChange}>
-        <SelectTrigger className="h-8 text-sm w-44">
+        <SelectTrigger className="text-sm w-44">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

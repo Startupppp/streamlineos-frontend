@@ -128,7 +128,7 @@ function BillRowActions({ bill, canApprove }: BillRowActionsProps) {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-7 w-7">
+          <Button variant="ghost" size="icon" className="w-7">
             <MoreHorizontal className="h-3.5 w-3.5" />
           </Button>
         </DropdownMenuTrigger>
@@ -303,11 +303,11 @@ export default function PurchaseBillsListPage() {
               value={search}
               onChange={handleSearchChange}
               placeholder="Search by bill number"
-              className="h-8 w-full pl-8 text-xs"
+              className="w-full pl-8 text-xs"
             />
           </div>
           <Select value={status} onValueChange={handleStatusChange}>
-            <SelectTrigger className="h-8 w-[180px] text-xs">
+            <SelectTrigger className="w-[180px] text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

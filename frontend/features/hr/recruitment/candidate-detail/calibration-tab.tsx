@@ -165,7 +165,7 @@ export function CalibrationTab({ candidateId }: CalibrationTabProps) {
   if (isLoading) {
     return (
       <div className="space-y-3">
-        <Skeleton className="h-8 w-full rounded-lg" />
+        <Skeleton className="h-10 w-full rounded-lg" />
         <Skeleton className="h-28 w-full rounded-2xl" />
         <Skeleton className="h-28 w-full rounded-2xl" />
       </div>
@@ -178,7 +178,7 @@ export function CalibrationTab({ candidateId }: CalibrationTabProps) {
         <p className="text-xs text-muted-foreground max-w-sm leading-relaxed">
           Calibration sessions align the hiring team on a final decision after scorecards are submitted.
         </p>
-        <Button size="sm" onClick={handleOpenNew} className="h-8 gap-1.5 shrink-0">
+        <Button size="sm" onClick={handleOpenNew} className="gap-1.5 shrink-0">
           <Plus className="h-3.5 w-3.5" />
           New Session
         </Button>
@@ -207,7 +207,7 @@ export function CalibrationTab({ candidateId }: CalibrationTabProps) {
                 <div className="p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-2">
-                      <div className="h-7 w-7 rounded-lg bg-violet-100 dark:bg-violet-950/40 flex items-center justify-center shrink-0">
+                      <div className="w-7 rounded-lg bg-violet-100 dark:bg-violet-950/40 flex items-center justify-center shrink-0">
                         <TrendingUp className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400" />
                       </div>
                       <div>
@@ -247,7 +247,7 @@ export function CalibrationTab({ candidateId }: CalibrationTabProps) {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-7 gap-1.5 text-xs"
+                      className="gap-1.5 text-xs"
                       onClick={() => openEdit(session)}
                     >
                       <Pencil className="h-3 w-3" />
@@ -257,7 +257,7 @@ export function CalibrationTab({ candidateId }: CalibrationTabProps) {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 gap-1.5 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+                        className="gap-1.5 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
                         onClick={() => handleMarkComplete(session.id)}
                       >
                         <CheckCircle className="h-3 w-3" />

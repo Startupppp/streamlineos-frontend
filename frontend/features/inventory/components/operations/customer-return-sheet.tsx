@@ -146,7 +146,7 @@ export function CustomerReturnSheet({ open, onOpenChange }: CustomerReturnSheetP
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Return Lines</span>
-              <Button type="button" variant="outline" size="sm" onClick={handleAddLine} className="h-7 text-xs">
+              <Button type="button" variant="outline" size="sm" onClick={handleAddLine} className="text-xs">
                 <Plus className="h-3 w-3 mr-1" /> Add Line
               </Button>
             </div>

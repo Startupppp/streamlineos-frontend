@@ -80,7 +80,7 @@ function NumInput({ label, name, form, min, max, float }: NumInputProps) {
               onChange={handleChange}
               min={min}
               max={max}
-              className="h-8 text-sm"
+              className="text-sm"
             />
             {fieldState.error?.message && (
               <p className="text-xs text-destructive">{fieldState.error.message}</p>
@@ -121,7 +121,7 @@ function SpendItemRow({ idx, itemId, form, onRemove }: SpendItemRowProps) {
 
       <div className="space-y-1">
         <Label className="text-xs">Label</Label>
-        <Input {...form.register(`plannedSpend.${idx}.label`)} placeholder="e.g. Office rent" className="h-8 text-xs" />
+        <Input {...form.register(`plannedSpend.${idx}.label`)} placeholder="e.g. Office rent" className="text-xs" />
         {form.formState.errors.plannedSpend?.[idx]?.label?.message && (
           <p className="text-xs text-destructive">
             {form.formState.errors.plannedSpend[idx].label.message}
@@ -145,7 +145,7 @@ function SpendItemRow({ idx, itemId, form, onRemove }: SpendItemRowProps) {
                   value={f.value}
                   onChange={handleAmountChange}
                   min={0}
-                  className="h-8 text-xs"
+                  className="text-xs"
                 />
                 {fieldState.error?.message && (
                   <p className="text-xs text-destructive">{fieldState.error.message}</p>
@@ -170,7 +170,7 @@ function SpendItemRow({ idx, itemId, form, onRemove }: SpendItemRowProps) {
                   onChange={handleWeekChange}
                   min={0}
                   max={51}
-                  className="h-8 text-xs"
+                  className="text-xs"
                 />
                 {fieldState.error?.message && (
                   <p className="text-xs text-destructive">{fieldState.error.message}</p>
@@ -218,7 +218,7 @@ export function ScenarioFormFields({
         <Input
           {...form.register("name")}
           placeholder="e.g. Base Case Q3"
-          className="h-8 text-sm"
+          className="text-sm"
         />
         {form.formState.errors.name?.message && (
           <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
@@ -232,7 +232,7 @@ export function ScenarioFormFields({
           <div className="space-y-1">
             <Label className="text-xs font-medium">Kind</Label>
             <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger className="h-8 text-sm">
+              <SelectTrigger className="text-sm">
                 <SelectValue placeholder="Select kind" />
               </SelectTrigger>
               <SelectContent>
@@ -275,7 +275,7 @@ export function ScenarioFormFields({
       <div className="pt-1 border-t border-border/50">
         <div className="flex items-center justify-between mb-3">
           <p className="text-xs font-semibold text-foreground">Planned Spend</p>
-          <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={handleAppend}>
+          <Button type="button" variant="outline" size="sm" className="text-xs" onClick={handleAppend}>
             <Plus className="size-3 mr-1" />
             Add Item
           </Button>

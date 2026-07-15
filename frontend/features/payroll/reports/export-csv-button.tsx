@@ -16,7 +16,7 @@ export function ExportCsvButton({ onExport, isLoading, disabled }: ExportCsvButt
       size="sm"
       onClick={onExport}
       disabled={disabled ?? isLoading}
-      className="h-8 gap-1.5 text-xs"
+      className="gap-1.5 text-xs"
     >
       {isLoading ? (
         <Loader2 className="h-3.5 w-3.5 animate-spin" />

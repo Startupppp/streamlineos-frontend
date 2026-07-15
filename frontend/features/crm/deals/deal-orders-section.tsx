@@ -195,7 +195,7 @@ function OrderCard({ order, dealId, onDeleteRequest }: OrderCardProps) {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-7 text-xs"
+                      className="text-xs"
                       disabled={updateStatus.isPending}
                     >
                       Update Status
@@ -218,7 +218,7 @@ function OrderCard({ order, dealId, onDeleteRequest }: OrderCardProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 text-destructive hover:text-destructive"
+                className="w-7 text-destructive hover:text-destructive"
                 onClick={handleDeleteRequest}
                 aria-label="Delete order"
               >
@@ -326,7 +326,7 @@ export function DealOrdersSection({ dealId, dealStage }: DealOrdersSectionProps)
           {isWon && (
             <Button
               size="sm"
-              className="h-7 text-xs"
+              className="text-xs"
               onClick={handleOpenCreate}
             >
               <Plus className="h-3 w-3 mr-1" />

@@ -16,7 +16,7 @@ export function AccessDenied({ currentRole, requiredRoles, message }: AccessDeni
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
       <div className="h-16 w-16 rounded-2xl bg-red-500/10 flex items-center justify-center mb-5">
-        <ShieldAlert className="h-8 w-8 text-red-500" />
+        <ShieldAlert className="w-8 text-red-500" />
       </div>
       <h2 className="text-xl font-bold mb-2">Access Restricted</h2>
       <p className="text-sm text-muted-foreground max-w-sm mb-1">

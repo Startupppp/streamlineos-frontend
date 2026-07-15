@@ -117,7 +117,7 @@ export function StandupPanel({
                 </FormControl>
               </FormItem>
             )} />
-            <LoadingButton type="submit" size="sm" className="h-8 text-xs" isPending={upsertStandup.isPending} loadingText="Saving…">
+            <LoadingButton type="submit" size="sm" className="text-xs" isPending={upsertStandup.isPending} loadingText="Saving…">
               Save Standup
             </LoadingButton>
           </form>

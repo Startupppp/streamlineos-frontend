@@ -140,7 +140,7 @@ export function DashboardInsightsPanel() {
           <Button
             variant="outline"
             size="sm"
-            className="h-7 text-xs"
+            className="text-xs"
             onClick={handleGenerate}
             disabled={generateInsights.isPending}
           >

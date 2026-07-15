@@ -147,7 +147,7 @@ export function FxRatesSection({ policy, activeVersion }: FxRatesSectionProps) {
                   value={watch(`rates.${idx}.currency`)}
                   onValueChange={(val) => handleCurrencyChange(idx, val)}
                 >
-                  <SelectTrigger className="h-8 text-sm">
+                  <SelectTrigger className="text-sm">
                     <SelectValue placeholder="Select currency" />
                   </SelectTrigger>
                   <SelectContent>
@@ -171,7 +171,7 @@ export function FxRatesSection({ policy, activeVersion }: FxRatesSectionProps) {
                   type="number"
                   step="any"
                   min="0"
-                  className="h-8 text-sm font-mono"
+                  className="text-sm font-mono"
                   placeholder="e.g. 1.12"
                 />
                 {errors.rates?.[idx]?.rate && (
@@ -182,7 +182,7 @@ export function FxRatesSection({ policy, activeVersion }: FxRatesSectionProps) {
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
+                className="w-8 shrink-0 text-muted-foreground hover:text-destructive"
                 onClick={() => remove(idx)}
                 aria-label="Remove rate"
               >
@@ -196,7 +196,7 @@ export function FxRatesSection({ policy, activeVersion }: FxRatesSectionProps) {
           type="button"
           variant="outline"
           size="sm"
-          className="h-7 text-xs gap-1"
+          className="text-xs gap-1"
           onClick={handleAddRate}
         >
           <Plus className="h-3 w-3" />

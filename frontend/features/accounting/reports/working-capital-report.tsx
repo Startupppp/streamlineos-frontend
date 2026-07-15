@@ -50,7 +50,7 @@ export function WorkingCapitalReport() {
             value={asOf}
             onChange={handleAsOfChange}
             placeholder="Pick a date"
-            className="h-8 w-[160px] text-sm"
+            className="w-[160px] text-sm"
           />
         </div>
       }

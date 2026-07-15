@@ -187,14 +187,14 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
               placeholder="e.g. Call to discuss SIP plan"
               value={fuTitle}
               onChange={handleTitleChange}
-              className="h-8 text-xs"
+              className="text-xs"
             />
           </div>
 
           <div className="space-y-1">
             <Label className="text-[11px] text-muted-foreground">Type</Label>
             <Select value={fuType} onValueChange={handleFuTypeChange}>
-              <SelectTrigger className="h-8 text-xs">
+              <SelectTrigger className="text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -213,7 +213,7 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
               type="time"
               value={fuTime}
               onChange={handleTimeChange}
-              className="h-8 text-xs"
+              className="text-xs"
             />
           </div>
 
@@ -224,7 +224,7 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
               onChange={setFuDate}
               placeholder="Pick a date"
               fromDate={new Date()}
-              className="h-8 text-xs"
+              className="text-xs"
             />
           </div>
 
@@ -356,7 +356,7 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
 
       {pendingTasks.length === 0 && doneTasks.length === 0 && (
         <div className="text-center py-8 text-muted-foreground/50">
-          <CalendarClock className="h-8 w-8 mx-auto mb-2 opacity-40" />
+          <CalendarClock className="w-8 mx-auto mb-2 opacity-40" />
           <p className="text-xs">No follow-ups yet</p>
           <p className="text-[11px] mt-0.5">
             Schedule one above to stay on track

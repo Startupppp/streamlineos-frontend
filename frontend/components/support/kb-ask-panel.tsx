@@ -91,14 +91,14 @@ export function KbAskPanel(props: KbAskPanelProps) {
             onChange={handleQuestionChange}
             onKeyDown={handleKeyDown}
             placeholder="e.g. How do I reset my password?"
-            className="h-8 flex-1 text-[13px]"
+            className="flex-1 text-[13px]"
             disabled={isPending}
           />
           <Button
             type="submit"
             size="sm"
             disabled={isPending || question.trim().length < MIN_QUESTION_LENGTH}
-            className="h-8 gap-1.5 text-xs shrink-0"
+            className="gap-1.5 text-xs shrink-0"
           >
             {isPending ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />

@@ -202,11 +202,11 @@ export default function HrTemplatesPage() {
                 placeholder="Search templates..."
                 value={search}
                 onChange={handleSearchChange}
-                className="h-8 w-56 pl-3 text-xs"
+                className="w-56 pl-3 text-xs"
               />
             </div>
             <Select value={kind} onValueChange={(v) => { setKind(v as HrTemplateKind | "all"); setPage(1); }}>
-              <SelectTrigger className="h-8 w-44 text-xs">
+              <SelectTrigger className="w-44 text-xs">
                 <SelectValue placeholder="All Kinds" />
               </SelectTrigger>
               <SelectContent>
@@ -217,7 +217,7 @@ export default function HrTemplatesPage() {
               </SelectContent>
             </Select>
             <Select value={status} onValueChange={(v) => { setStatus(v as HrTemplateStatus | "all"); setPage(1); }}>
-              <SelectTrigger className="h-8 w-36 text-xs">
+              <SelectTrigger className="w-36 text-xs">
                 <SelectValue placeholder="All Statuses" />
               </SelectTrigger>
               <SelectContent>

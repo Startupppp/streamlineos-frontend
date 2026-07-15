@@ -56,7 +56,7 @@ export function EmployeesFilters({
         />
       </div>
       <Select value={filterDept} onValueChange={onDeptChange}>
-        <SelectTrigger className="h-8 w-44 text-xs">
+        <SelectTrigger className="w-44 text-xs">
           <SelectValue placeholder="Department" />
         </SelectTrigger>
         <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -71,7 +71,7 @@ export function EmployeesFilters({
         </SelectContent>
       </Select>
       <Select value={filterStatus} onValueChange={onStatusChange}>
-        <SelectTrigger className="h-8 w-32 text-xs">
+        <SelectTrigger className="w-32 text-xs">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -89,11 +89,11 @@ export function EmployeesFilters({
           </SelectItem>
         </SelectContent>
       </Select>
-      <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" asChild>
+      <Button variant="outline" size="sm" className="text-xs gap-1.5" asChild>
         <Link href="/hr/termination">View Terminated</Link>
       </Button>
       {hasFilters && (
-        <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5" onClick={onClear}>
+        <Button variant="ghost" size="sm" className="text-xs gap-1.5" onClick={onClear}>
           <X className="h-3.5 w-3.5" />
           Clear
         </Button>

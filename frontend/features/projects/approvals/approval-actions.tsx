@@ -41,7 +41,7 @@ export function ApprovalActions({
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7"
+          className="w-7"
           aria-label="Approval actions"
           {...hoverHandlers}
         >

@@ -181,7 +181,7 @@ function HoldsPageInner() {
   const filtersRow = (
     <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
       <Select value={statusParam || "all"} onValueChange={handleStatusChange}>
-        <SelectTrigger className="h-8 text-xs w-44">
+        <SelectTrigger className="text-xs w-44">
           <SelectValue placeholder="All statuses" />
         </SelectTrigger>
         <SelectContent>

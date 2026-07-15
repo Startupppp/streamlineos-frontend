@@ -334,13 +334,13 @@ function FieldRow({ field, onToggle, onEdit, onDelete }: FieldRowProps) {
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <Switch checked={field.isActive} onCheckedChange={handleToggle} />
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleEdit} aria-label="Edit field">
+            <Button variant="ghost" size="icon" className="w-7" onClick={handleEdit} aria-label="Edit field">
               <Pencil className="h-3.5 w-3.5" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 text-destructive"
+              className="w-7 text-destructive"
               onClick={handleDelete}
               aria-label="Delete field"
             >

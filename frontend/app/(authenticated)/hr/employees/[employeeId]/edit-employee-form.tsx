@@ -251,7 +251,7 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
               variant="outline"
               size="sm"
               type="button"
-              className="h-8 gap-1.5"
+              className="gap-1.5"
               onClick={handleCancel}
               disabled={updateProfileMutation.isPending}
             >
@@ -260,7 +260,7 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
             <Button
               size="sm"
               type="submit"
-              className="h-8 gap-1.5"
+              className="gap-1.5"
               disabled={updateProfileMutation.isPending}
             >
               {updateProfileMutation.isPending ? (

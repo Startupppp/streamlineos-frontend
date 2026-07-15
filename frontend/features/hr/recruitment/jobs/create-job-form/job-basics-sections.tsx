@@ -37,7 +37,7 @@ export function SectionTitle({
     <div className="mb-5 pb-4 border-b border-border">
       <div className="flex items-center gap-2 mb-1">
         {Icon && (
-          <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+          <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
             <Icon className="h-3.5 w-3.5 text-primary" />
           </div>
         )}

@@ -263,7 +263,7 @@ function NodeConfigPanel({ node, onChange, onClose }: NodeConfigPanelProps) {
         <div className="overscroll-contain space-y-4 p-4">
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-foreground">Label</label>
-          <Input value={node.data.label} onChange={handleLabelChange} className="h-8 text-sm" />
+          <Input value={node.data.label} onChange={handleLabelChange} className="text-sm" />
         </div>
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-foreground">Description</label>
@@ -472,7 +472,7 @@ function BuilderCanvas({ workflow, workflowId }: BuilderCanvasProps) {
         <div className="h-12 shrink-0 bg-card border-b border-border flex items-center px-3 gap-3 shadow-sm">
           <button
             onClick={handleBack}
-            className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-muted transition-colors text-muted-foreground"
+            className="w-7 flex items-center justify-center rounded-lg hover:bg-muted transition-colors text-muted-foreground"
             aria-label="Back"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -486,7 +486,7 @@ function BuilderCanvas({ workflow, workflowId }: BuilderCanvasProps) {
                 onChange={handleNameChange}
                 onBlur={handleNameSubmit}
                 onKeyDown={handleNameKeyDown}
-                className="h-8 text-sm font-medium"
+                className="text-sm font-medium"
               />
             </form>
           ) : (
@@ -511,7 +511,7 @@ function BuilderCanvas({ workflow, workflowId }: BuilderCanvasProps) {
             <Button
               variant="outline"
               size="sm"
-              className="h-7 text-xs"
+              className="text-xs"
               onClick={handleSave}
               disabled={updateWorkflow.isPending}
             >
@@ -520,7 +520,7 @@ function BuilderCanvas({ workflow, workflowId }: BuilderCanvasProps) {
             </Button>
             <Button
               size="sm"
-              className="h-7 text-xs bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200"
+              className="text-xs bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200"
               onClick={handlePublish}
               disabled={publishWorkflow.isPending}
             >

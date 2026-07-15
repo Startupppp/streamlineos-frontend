@@ -164,7 +164,7 @@ export function CyclesTab() {
           active={cycleStats.active}
           completed={cycleStats.completed}
         />
-        <Button size="sm" className="h-8 gap-1.5 shrink-0" onClick={openCreate}>
+        <Button size="sm" className="gap-1.5 shrink-0" onClick={openCreate}>
           <Plus className="h-3.5 w-3.5" />New Cycle
         </Button>
       </div>
@@ -243,7 +243,7 @@ export function CyclesTab() {
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground transition-colors duration-200">
+                        <Button variant="ghost" size="icon" className="w-7 shrink-0 text-muted-foreground hover:text-foreground transition-colors duration-200">
                           <MoreHorizontal className="h-3.5 w-3.5" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -290,16 +290,16 @@ export function CyclesTab() {
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Period Start</label>
-            <DatePicker value={periodStart ?? ""} onChange={handlePeriodStartChange} placeholder="Pick a date" className="h-8 text-sm" />
+            <DatePicker value={periodStart ?? ""} onChange={handlePeriodStartChange} placeholder="Pick a date" className="text-sm" />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Period End</label>
-            <DatePicker value={periodEnd ?? ""} onChange={handlePeriodEndChange} fromDate={periodStart ? parseISO(periodStart) : undefined} placeholder="Pick a date" className="h-8 text-sm" />
+            <DatePicker value={periodEnd ?? ""} onChange={handlePeriodEndChange} fromDate={periodStart ? parseISO(periodStart) : undefined} placeholder="Pick a date" className="text-sm" />
           </div>
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Submission Deadline</label>
-          <DatePicker value={deadline ?? ""} onChange={handleDeadlineChange} fromDate={periodEnd ? parseISO(periodEnd) : undefined} placeholder="Pick a date" className="h-8 text-sm" />
+          <DatePicker value={deadline ?? ""} onChange={handleDeadlineChange} fromDate={periodEnd ? parseISO(periodEnd) : undefined} placeholder="Pick a date" className="text-sm" />
         </div>
       </HrSheet>
 

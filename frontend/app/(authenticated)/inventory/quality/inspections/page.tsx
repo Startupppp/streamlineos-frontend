@@ -146,10 +146,10 @@ function InspectionsPageInner() {
         value={sourceParam}
         onChange={handleSourceChange}
         placeholder="Filter by source…"
-        className="h-8 text-xs flex-1 max-w-xs"
+        className="text-xs flex-1 max-w-xs"
       />
       <Select value={statusParam || "all"} onValueChange={handleStatusChange}>
-        <SelectTrigger className="h-8 text-xs w-48">
+        <SelectTrigger className="text-xs w-48">
           <SelectValue placeholder="All statuses" />
         </SelectTrigger>
         <SelectContent>

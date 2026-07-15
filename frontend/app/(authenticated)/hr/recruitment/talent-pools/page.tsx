@@ -56,7 +56,7 @@ function CreatePoolSheet() {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button size="sm" className="h-8 gap-1.5">
+        <Button size="sm" className="gap-1.5">
           <Plus className="h-3.5 w-3.5" />
           New Pool
         </Button>
@@ -116,7 +116,7 @@ function AddMemberSheet({ poolId }: { poolId: number }) {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs">
+        <Button size="sm" variant="outline" className="gap-1.5 text-xs">
           <UserPlus className="h-3.5 w-3.5" />
           Add Candidate
         </Button>
@@ -181,7 +181,7 @@ function PoolMembersList({ poolId }: { poolId: number }) {
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
+            className="w-7 shrink-0 text-muted-foreground hover:text-destructive"
             onClick={() => handleRemove(m.candidateId)}
           >
             <X className="h-3.5 w-3.5" />
@@ -266,7 +266,7 @@ export default function TalentPoolsPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        className="w-8 text-muted-foreground hover:text-destructive"
                         onClick={() => setDeleteTarget(selectedPoolId)}
                       >
                         <Trash2 className="h-3.5 w-3.5" />

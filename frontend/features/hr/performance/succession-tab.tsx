@@ -156,7 +156,7 @@ export function SuccessionTab() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-7 text-destructive hover:text-destructive"
+                      className="text-destructive hover:text-destructive"
                       onClick={() => handleDelete(plan.id)}
                     >
                       Remove

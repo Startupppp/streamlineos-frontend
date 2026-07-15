@@ -8,7 +8,7 @@ export default function AuditLogLoading() {
       {Array.from({ length: 4 }).map((_, i) => (
         <div key={i} className="flex flex-col gap-1 min-w-[140px] flex-1">
           <Skeleton className="h-3 w-16" />
-          <Skeleton className="h-8 w-full rounded-md" />
+          <Skeleton className="h-9 w-full rounded-md" />
         </div>
       ))}
     </div>

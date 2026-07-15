@@ -200,11 +200,11 @@ export function LotsClient() {
               placeholder="Search lot or product…"
               value={search}
               onChange={handleSearchChange}
-              className="h-8 w-full pl-8 text-xs"
+              className="w-full pl-8 text-xs"
             />
           </div>
           <Select value={status} onValueChange={handleStatusChange}>
-            <SelectTrigger className="h-8 text-xs w-[140px]">
+            <SelectTrigger className="text-xs w-[140px]">
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>
@@ -217,7 +217,7 @@ export function LotsClient() {
             </SelectContent>
           </Select>
           <Select value={expiringWithinDays} onValueChange={handleExpiryFilterChange}>
-            <SelectTrigger className="h-8 text-xs w-[170px]">
+            <SelectTrigger className="text-xs w-[170px]">
               <SelectValue placeholder="Expiring within" />
             </SelectTrigger>
             <SelectContent>

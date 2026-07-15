@@ -98,7 +98,7 @@ function ScoringRuleRow({ rule, isEditing, editForm, onEditSubmit, onEdit, onDel
   const handleDeleteRequest = useCallback(() => onDeleteRequest(rule.id), [rule.id, onDeleteRequest]);
 
   return (
-    <TableRow className="h-8">
+    <TableRow className="">
       {isEditing ? (
         <>
           <TableCell colSpan={4} className="px-2 py-1">
@@ -106,24 +106,24 @@ function ScoringRuleRow({ rule, isEditing, editForm, onEditSubmit, onEdit, onDel
               <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="flex items-end gap-2">
                 <FormField control={editForm.control} name="field" render={({ field }) => (
                   <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger className="h-8 w-28 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="w-28 text-xs"><SelectValue /></SelectTrigger>
                     <SelectContent>{FIELDS.map(f => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}</SelectContent>
                   </Select>
                 )} />
                 <FormField control={editForm.control} name="operator" render={({ field }) => (
                   <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger className="h-8 w-28 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="w-28 text-xs"><SelectValue /></SelectTrigger>
                     <SelectContent>{OPERATORS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
                   </Select>
                 )} />
                 <FormField control={editForm.control} name="value" render={({ field }) => (
-                  <Input {...field} className="h-8 w-24 text-xs" />
+                  <Input {...field} className="w-24 text-xs" />
                 )} />
                 <FormField control={editForm.control} name="points" render={({ field }) => (
-                  <Input type="number" {...field} className="h-8 w-16 text-xs" />
+                  <Input type="number" {...field} className="w-16 text-xs" />
                 )} />
-                <Button type="submit" size="sm" className="h-8 text-xs" disabled={updatePending}>Save</Button>
-                <Button type="button" variant="outline" size="sm" className="h-8 text-xs" onClick={onCancelEdit}>Cancel</Button>
+                <Button type="submit" size="sm" className="text-xs" disabled={updatePending}>Save</Button>
+                <Button type="button" variant="outline" size="sm" className="text-xs" onClick={onCancelEdit}>Cancel</Button>
               </form>
             </Form>
           </TableCell>
@@ -149,10 +149,10 @@ function ScoringRuleRow({ rule, isEditing, editForm, onEditSubmit, onEdit, onDel
           </TableCell>
           <TableCell className="text-[11px] px-2 py-1 text-right">
             <div className="flex items-center justify-end gap-1">
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleEdit} aria-label="Edit">
+              <Button variant="ghost" size="icon" className="w-7" onClick={handleEdit} aria-label="Edit">
                 <Pencil className="h-3.5 w-3.5" />
               </Button>
-              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={handleDeleteRequest} aria-label="Delete">
+              <Button variant="ghost" size="icon" className="w-7 text-destructive" onClick={handleDeleteRequest} aria-label="Delete">
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
             </div>

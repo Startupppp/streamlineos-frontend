@@ -58,7 +58,7 @@ function SyncButtonCell({ connectionId }: SyncButtonCellProps) {
     <Button
       size="sm"
       variant="outline"
-      className="h-7 text-xs gap-1.5"
+      className="text-xs gap-1.5"
       onClick={handleSync}
       disabled={syncMutation.isPending}
     >
@@ -200,7 +200,7 @@ function ThreePlContent() {
   );
 
   const actions = (
-    <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={handleAddConnection} {...addHoverHandlers}>
+    <Button size="sm" className="gap-1.5 text-xs" onClick={handleAddConnection} {...addHoverHandlers}>
       <PlusIcon ref={addIconRef} size={14} />
       Add Connection
     </Button>

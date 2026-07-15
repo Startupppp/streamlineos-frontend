@@ -74,7 +74,7 @@ export default function RecentPage() {
       {!isLoading && isError && (
         <EmptyState
           illustration={
-            <KbClockIcon className="h-8 w-8 text-muted-foreground/40" />
+            <KbClockIcon className="w-8 text-muted-foreground/40" />
           }
           title="Could not load recent pages"
           description="There was a problem fetching your recently visited pages."
@@ -85,7 +85,7 @@ export default function RecentPage() {
       {!isLoading && !isError && pages.length === 0 && (
         <EmptyState
           illustration={
-            <KbClockIcon className="h-8 w-8 text-muted-foreground/40" />
+            <KbClockIcon className="w-8 text-muted-foreground/40" />
           }
           title="No recent pages"
           description="Pages you visit will appear here."

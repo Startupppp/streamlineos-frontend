@@ -130,7 +130,7 @@ export function HoldCreateSheet({ open, onOpenChange }: Props) {
                     form.setValue("lotId", "");
                     form.setValue("serialId", "");
                   }}
-                  className="h-8 text-xs"
+                  className="text-xs"
                 />
               )}
             />
@@ -141,7 +141,7 @@ export function HoldCreateSheet({ open, onOpenChange }: Props) {
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-foreground/80">Qty *</Label>
             <Input
-              className="h-8 text-xs"
+              className="text-xs"
               type="number"
               placeholder="Quantity"
               {...form.register("qty")}
@@ -165,7 +165,7 @@ export function HoldCreateSheet({ open, onOpenChange }: Props) {
                     form.setValue("locationId", "");
                   }}
                 >
-                  <SelectTrigger className="h-8 text-xs">
+                  <SelectTrigger className="text-xs">
                     <SelectValue placeholder="Optional" />
                   </SelectTrigger>
                   <SelectContent>
@@ -193,7 +193,7 @@ export function HoldCreateSheet({ open, onOpenChange }: Props) {
                   onValueChange={(v) => field.onChange(v === "none" ? "" : v)}
                   disabled={!warehouseId}
                 >
-                  <SelectTrigger className="h-8 text-xs">
+                  <SelectTrigger className="text-xs">
                     <SelectValue placeholder={warehouseId ? "Optional" : "Select warehouse first"} />
                   </SelectTrigger>
                   <SelectContent>
@@ -221,7 +221,7 @@ export function HoldCreateSheet({ open, onOpenChange }: Props) {
                   onValueChange={(v) => field.onChange(v === "none" ? "" : v)}
                   disabled={!variantEnabled || lots.length === 0}
                 >
-                  <SelectTrigger className="h-8 text-xs">
+                  <SelectTrigger className="text-xs">
                     <SelectValue placeholder={variantEnabled ? "Optional" : "Select variant first"} />
                   </SelectTrigger>
                   <SelectContent>
@@ -249,7 +249,7 @@ export function HoldCreateSheet({ open, onOpenChange }: Props) {
                   onValueChange={(v) => field.onChange(v === "none" ? "" : v)}
                   disabled={!variantEnabled || serials.length === 0}
                 >
-                  <SelectTrigger className="h-8 text-xs">
+                  <SelectTrigger className="text-xs">
                     <SelectValue placeholder={variantEnabled ? "Optional" : "Select variant first"} />
                   </SelectTrigger>
                   <SelectContent>

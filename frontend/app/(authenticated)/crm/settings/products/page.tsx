@@ -269,7 +269,7 @@ export default function ProductCatalogPage() {
                 placeholder="Search products..."
                 value={search}
                 onChange={handleSearchChange}
-                className="h-8 w-full pl-8 text-xs"
+                className="w-full pl-8 text-xs"
               />
             </div>
           </div>

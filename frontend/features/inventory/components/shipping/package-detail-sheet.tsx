@@ -112,7 +112,7 @@ const EditableLineRow = memo(function EditableLineRow({
         <ProductVariantCombobox
           value={line.variantId}
           onChange={handleVariantChange}
-          className="h-8 text-xs"
+          className="text-xs"
         />
       </div>
       <div className="space-y-0.5">
@@ -122,7 +122,7 @@ const EditableLineRow = memo(function EditableLineRow({
           min="1"
           value={line.qty}
           onChange={handleQtyChange}
-          className="h-8 text-xs"
+          className="text-xs"
         />
       </div>
       <div className="space-y-0.5">
@@ -132,7 +132,7 @@ const EditableLineRow = memo(function EditableLineRow({
           onValueChange={handleLotChange}
           disabled={!variantEnabled || lots.length === 0}
         >
-          <SelectTrigger className="h-8 text-xs">
+          <SelectTrigger className="text-xs">
             <SelectValue placeholder="—" />
           </SelectTrigger>
           <SelectContent>
@@ -152,7 +152,7 @@ const EditableLineRow = memo(function EditableLineRow({
           onValueChange={handleSerialChange}
           disabled={!variantEnabled || serials.length === 0}
         >
-          <SelectTrigger className="h-8 text-xs">
+          <SelectTrigger className="text-xs">
             <SelectValue placeholder="—" />
           </SelectTrigger>
           <SelectContent>
@@ -169,7 +169,7 @@ const EditableLineRow = memo(function EditableLineRow({
         type="button"
         variant="ghost"
         size="icon"
-        className="h-7 w-7 shrink-0"
+        className="w-7 shrink-0"
         onClick={handleRemove}
       >
         <Trash2 className="h-3.5 w-3.5 text-destructive" />

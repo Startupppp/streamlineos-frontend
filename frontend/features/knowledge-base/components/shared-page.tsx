@@ -85,7 +85,7 @@ export default function SharedPage() {
       {!isLoading && isError && (
         <EmptyState
           illustration={
-            <KbUsersIcon className="h-8 w-8 text-muted-foreground/40" />
+            <KbUsersIcon className="w-8 text-muted-foreground/40" />
           }
           title="Could not load pages"
           description="There was a problem fetching shared pages."
@@ -96,7 +96,7 @@ export default function SharedPage() {
       {!isLoading && !isError && sharedNodes.length === 0 && (
         <EmptyState
           illustration={
-            <KbUsersIcon className="h-8 w-8 text-muted-foreground/40" />
+            <KbUsersIcon className="w-8 text-muted-foreground/40" />
           }
           illustrationPreset="team"
           title="Nothing shared with you"

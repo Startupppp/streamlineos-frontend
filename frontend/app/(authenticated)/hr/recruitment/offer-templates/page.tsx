@@ -392,7 +392,7 @@ export default function OfferTemplatesPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-8 px-2 text-xs"
+                      className="px-2 text-xs"
                       onClick={() => setPreviewTemplate(template)}
                     >
                       Preview
@@ -400,7 +400,7 @@ export default function OfferTemplatesPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-8 w-8 p-0"
+                      className="w-8 p-0"
                       onClick={() => setEditingTemplate(template)}
                     >
                       <svg
@@ -420,7 +420,7 @@ export default function OfferTemplatesPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                      className="w-8 p-0 text-destructive hover:text-destructive"
                       onClick={() => setDeletingId(template.id)}
                     >
                       <svg

@@ -64,7 +64,7 @@ function CourseCardSkeleton() {
           <Skeleton className="h-5 w-20 rounded-full" />
           <Skeleton className="h-5 w-16 rounded-full" />
         </div>
-        <Skeleton className="h-8 w-full rounded-lg" />
+        <Skeleton className="h-10 w-full rounded-lg" />
       </div>
     </div>
   );

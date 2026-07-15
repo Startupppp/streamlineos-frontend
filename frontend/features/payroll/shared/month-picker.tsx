@@ -53,7 +53,7 @@ export function MonthPicker({
 
   return (
     <Select value={value} onValueChange={onChange} disabled={disabled}>
-      <SelectTrigger className={cn("h-8 text-sm", className)}>
+      <SelectTrigger className={cn("text-sm", className)}>
         <SelectValue placeholder="Select month" />
       </SelectTrigger>
       <SelectContent>

@@ -101,7 +101,7 @@ export function ChannelsDiscoveryPage() {
               private channels live under Discuss.
             </p>
           </div>
-          <Button size="sm" className="h-8 gap-1.5 shrink-0" onClick={handleOpenCreate}>
+          <Button size="sm" className="gap-1.5 shrink-0" onClick={handleOpenCreate}>
             <Plus className="h-3.5 w-3.5" />
             Create Channel
           </Button>
@@ -128,7 +128,7 @@ export function ChannelsDiscoveryPage() {
                   <Skeleton className="h-3.5 w-28" />
                   <Skeleton className="h-3 w-44" />
                 </div>
-                <Skeleton className="h-7 w-14 rounded-md" />
+                <Skeleton className="h-8 w-14 rounded-md" />
               </div>
             ))}
           </div>
@@ -172,7 +172,7 @@ export function ChannelsDiscoveryPage() {
                   type="button"
                   variant="outline"
                   size="icon"
-                  className="h-7 w-7"
+                  className="w-7"
                   onClick={handlePrevPage}
                   disabled={currentPage === 0}
                   aria-label="Previous page"
@@ -183,7 +183,7 @@ export function ChannelsDiscoveryPage() {
                   type="button"
                   variant="outline"
                   size="icon"
-                  className="h-7 w-7"
+                  className="w-7"
                   onClick={handleNextPage}
                   disabled={currentPage >= totalPages - 1}
                   aria-label="Next page"

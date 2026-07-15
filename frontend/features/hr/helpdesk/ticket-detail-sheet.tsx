@@ -129,7 +129,7 @@ export function TicketDetailSheet({ ticketId, isAdmin, onClose }: Props) {
                   <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Admin Actions</p>
                   <div className="flex items-center gap-3">
                     <Select value={ticket.status} onValueChange={handleStatusChange}>
-                      <SelectTrigger className="h-8 w-40 text-xs">
+                      <SelectTrigger className="w-40 text-xs">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -150,7 +150,7 @@ export function TicketDetailSheet({ ticketId, isAdmin, onClose }: Props) {
                 <div className="space-y-4">
                   {ticket.comments.map((c) => (
                     <div key={c.id} className="flex gap-3">
-                      <Avatar className="h-7 w-7 shrink-0">
+                      <Avatar className="w-7 shrink-0">
                         {c.authorImage && <AvatarImage src={c.authorImage} />}
                         <AvatarFallback className="text-[10px]">
                           {getUserInitials({ name: c.authorName })}

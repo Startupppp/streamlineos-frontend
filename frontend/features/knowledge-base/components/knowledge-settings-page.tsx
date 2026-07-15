@@ -207,7 +207,7 @@ function TrashRetentionSection() {
           </p>
         </div>
         {isLoading ? (
-          <div className="h-7 w-20 animate-pulse rounded-md bg-muted shrink-0" />
+          <div className="w-20 animate-pulse rounded-md bg-muted shrink-0" />
         ) : editing ? (
           <div className="flex items-center gap-2 shrink-0">
             <Input
@@ -217,14 +217,14 @@ function TrashRetentionSection() {
               value={value}
               onChange={handleValueChange}
               onKeyDown={handleKeyDown}
-              className="h-8 w-20 text-sm text-right"
+              className="w-20 text-sm text-right"
               autoFocus
             />
             <span className="text-sm text-muted-foreground">days</span>
-            <Button size="sm" className="h-7 text-xs" onClick={handleSave} disabled={updateSettings.isPending}>
+            <Button size="sm" className="text-xs" onClick={handleSave} disabled={updateSettings.isPending}>
               Save
             </Button>
-            <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={handleCancel}>
+            <Button size="sm" variant="ghost" className="text-xs" onClick={handleCancel}>
               Cancel
             </Button>
           </div>
@@ -233,7 +233,7 @@ function TrashRetentionSection() {
             <span className="text-sm font-medium tabular-nums text-foreground">
               {currentValue} days
             </span>
-            <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={handleEdit}>
+            <Button size="sm" variant="ghost" className="text-xs" onClick={handleEdit}>
               Edit
             </Button>
           </div>
@@ -441,7 +441,7 @@ export default function KnowledgeSettingsPage() {
       <PageWrapper title="Settings">
         <EmptyState
           illustration={
-            <KbLockIcon className="h-8 w-8 text-muted-foreground/40" />
+            <KbLockIcon className="w-8 text-muted-foreground/40" />
           }
           title="Access restricted"
           description="You don't have permission to view knowledge base settings."

@@ -44,8 +44,7 @@ export function TicketSubtasks({ ticketId, projectId, subtasks }: TicketSubtasks
 
       {projectLoading && subtasksTotal === 0 ? (
         <div className="space-y-1.5 mb-3">
-          <Skeleton className="h-7 w-full rounded-lg" />
-          <Skeleton className="h-7 w-full rounded-lg" />
+          <Skeleton className="h-10 w-full rounded-lg" />         <Skeleton className="h-10 w-full rounded-lg" />
         </div>
       ) : (
         <div className="space-y-1 mb-3">

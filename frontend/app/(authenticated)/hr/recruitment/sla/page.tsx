@@ -114,7 +114,7 @@ function buildSlaColumns(
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 w-7 p-0"
+            className="w-7 p-0"
             aria-label={`Edit SLA for ${row.stage}`}
             onClick={(e) => { e.stopPropagation(); onEdit(row.existing!); }}
           >
@@ -124,7 +124,7 @@ function buildSlaColumns(
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 w-7 p-0"
+            className="w-7 p-0"
             aria-label={`Configure SLA for ${row.stage}`}
             onClick={(e) => { e.stopPropagation(); onNew(row.stage); }}
           >
@@ -269,7 +269,7 @@ export default function SlaConfigPage() {
         <CardContent className="p-0">
           {isError ? (
             <div className="flex flex-col items-center justify-center gap-3 py-12">
-              <AlertCircle className="h-8 w-8 text-destructive/60" />
+              <AlertCircle className="w-8 text-destructive/60" />
               <p className="text-sm text-muted-foreground">Failed to load SLA configuration.</p>
               <Button variant="outline" size="sm" onClick={handleRetry}>
                 Try again

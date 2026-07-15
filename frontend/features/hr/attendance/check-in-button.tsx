@@ -225,7 +225,7 @@ export const TimerCard = memo(function TimerCard() {
     <Card className="rounded-2xl border border-border border-l-4 border-l-primary bg-card shadow-sm overflow-hidden">
       <CardHeader className="pb-3 pt-5">
         <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-          <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
+          <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
             <Clock className="h-4 w-4 text-primary" />
           </div>
           Time Tracker

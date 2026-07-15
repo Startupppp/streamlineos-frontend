@@ -89,11 +89,11 @@ function CollectionOwnerPopover({
             value={value}
             onChange={setValue}
             placeholder="Search for owner…"
-            className="h-8 text-xs"
+            className="text-xs"
           />
           <LoadingButton
             size="sm"
-            className="w-full h-7 text-xs"
+            className="w-full text-xs"
             isPending={mutation.isPending}
             onClick={handleAssign}
             loadingText="Saving…"
@@ -152,7 +152,7 @@ function PromiseDatePopover({ invoiceId, currentDate }: PromiseDatePopoverProps)
         <DatePicker
           value={currentDate ?? undefined}
           onChange={handleDateChange}
-          className="h-8 text-sm"
+          className="text-sm"
         />
       </PopoverContent>
     </Popover>
@@ -170,7 +170,7 @@ function ActivitySheetTrigger({ row, onOpen }: ActivitySheetTriggerProps) {
   }
 
   return (
-    <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={handleClick}>
+    <Button variant="ghost" size="sm" className="text-xs" onClick={handleClick}>
       + Activity
     </Button>
   );
@@ -403,7 +403,7 @@ export function CollectionsTab() {
           <div className="space-y-1">
             <Label className="text-xs">Activity Type</Label>
             <Select value={activityType} onValueChange={handleActivityTypeChange}>
-              <SelectTrigger className="h-8 text-sm">
+              <SelectTrigger className="text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -422,7 +422,7 @@ export function CollectionsTab() {
               <DatePicker
                 value={activityPromiseDate}
                 onChange={handleActivityPromiseDateChange}
-                className="h-8 text-sm w-full"
+                className="text-sm w-full"
               />
             </div>
           )}

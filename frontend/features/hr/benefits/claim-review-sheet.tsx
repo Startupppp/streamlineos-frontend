@@ -112,7 +112,7 @@ export function ClaimReviewSheet({ open, onOpenChange, claim }: Props) {
       <div className="space-y-1.5">
         <Label>Decision</Label>
         <Select defaultValue="in_review" onValueChange={handleStatusChange}>
-          <SelectTrigger className="h-8 text-sm">
+          <SelectTrigger className="text-sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -127,7 +127,7 @@ export function ClaimReviewSheet({ open, onOpenChange, claim }: Props) {
         <div className="space-y-1.5">
           <Label>Payout Route</Label>
           <Select onValueChange={handlePayoutRouteChange}>
-            <SelectTrigger className="h-8 text-sm">
+            <SelectTrigger className="text-sm">
               <SelectValue placeholder="Select payout route" />
             </SelectTrigger>
             <SelectContent>

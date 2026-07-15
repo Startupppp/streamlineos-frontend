@@ -136,7 +136,7 @@ export function CasesPageContent() {
       <div className="relative">
         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
         <Input
-          className="h-8 pl-8 w-48 text-sm"
+          className="pl-8 w-48 text-sm"
           placeholder="Search cases..."
           value={search}
           onChange={handleSearchChange}
@@ -146,7 +146,7 @@ export function CasesPageContent() {
         value={status || SENTINEL}
         onValueChange={(v) => { setStatus(v === SENTINEL ? "" : (v as CaseStatus)); setPage(1); }}
       >
-        <SelectTrigger className="h-8 w-44 text-sm">
+        <SelectTrigger className="w-44 text-sm">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -159,7 +159,7 @@ export function CasesPageContent() {
         value={category || SENTINEL}
         onValueChange={(v) => { setCategory(v === SENTINEL ? "" : (v as CaseCategory)); setPage(1); }}
       >
-        <SelectTrigger className="h-8 w-44 text-sm">
+        <SelectTrigger className="w-44 text-sm">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -188,7 +188,7 @@ export function CasesPageContent() {
             Anonymous Report
           </Button>
           {canManage && (
-            <Button size="sm" className="gap-1.5 h-8 text-sm" onClick={() => setShowNew(true)}>
+            <Button size="sm" className="gap-1.5 text-sm" onClick={() => setShowNew(true)}>
               <Plus className="h-3.5 w-3.5" />
               New Case
             </Button>
@@ -228,7 +228,7 @@ export function CasesPageContent() {
           <div className="flex flex-col gap-4">
             {canManage && (
               <div className="flex justify-end">
-                <Button size="sm" className="gap-1.5 h-8 text-sm" onClick={() => setShowWarning(true)}>
+                <Button size="sm" className="gap-1.5 text-sm" onClick={() => setShowWarning(true)}>
                   <Plus className="h-3.5 w-3.5" />
                   Issue Action
                 </Button>

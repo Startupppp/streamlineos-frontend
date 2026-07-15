@@ -64,7 +64,7 @@ export function SubmissionsDataTable({ formId, submissions, canManage }: Submiss
             value={row.status}
             onValueChange={(v) => handleStatusChange(row.id, v as HrFormSubmissionStatus)}
           >
-            <SelectTrigger className="h-8 text-xs w-32">
+            <SelectTrigger className="text-xs w-32">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -84,7 +84,7 @@ export function SubmissionsDataTable({ formId, submissions, canManage }: Submiss
       header: "",
       className: "w-24",
       cell: (row) => (
-        <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => handleViewClick(row)}>
+        <Button variant="ghost" size="sm" className="text-xs" onClick={() => handleViewClick(row)}>
           View
         </Button>
       ),

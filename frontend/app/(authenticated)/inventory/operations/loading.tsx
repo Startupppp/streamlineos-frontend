@@ -9,7 +9,7 @@ export default function OperationsLoading() {
     >
       <div className="space-y-1">
         {Array.from({ length: 12 }).map((_, i) => (
-          <Skeleton key={i} className="h-8 w-full rounded" />
+          <Skeleton key={i} className="h-4 w-full rounded" />
         ))}
       </div>
     </PageWrapper>

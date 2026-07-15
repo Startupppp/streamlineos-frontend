@@ -194,10 +194,10 @@ export default function SupportSlaPage() {
       className: "text-right",
       cell: (policy) => (
         <div className="flex items-center justify-end gap-1">
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={makeEditHandler(policy)} aria-label="Edit">
+          <Button variant="ghost" size="icon" className="w-7" onClick={makeEditHandler(policy)} aria-label="Edit">
             <Pencil className="h-3.5 w-3.5" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={makeDeleteHandler(policy.id)} aria-label="Delete">
+          <Button variant="ghost" size="icon" className="w-7 text-destructive" onClick={makeDeleteHandler(policy.id)} aria-label="Delete">
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
         </div>

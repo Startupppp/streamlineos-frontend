@@ -94,7 +94,7 @@ export function TaxReportTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <Select value={fy} onValueChange={handleFYChange}>
-          <SelectTrigger className="h-8 text-xs w-32">
+          <SelectTrigger className="text-xs w-32">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -110,7 +110,7 @@ export function TaxReportTab() {
           <Button
             size="sm"
             variant="outline"
-            className="h-8 text-xs gap-1.5"
+            className="text-xs gap-1.5"
             onClick={handleExportClick}
             disabled={exportMutation.isPending}
           >

@@ -5,6 +5,12 @@ import * as SelectPrimitive from "@radix-ui/react-select";
 import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 
 import { cn } from "../../lib/utils";
+import {
+  FIELD_CONTROL_CLASS,
+  FIELD_CONTROL_DISABLED_CLASS,
+  FIELD_CONTROL_HOVER_CLASS,
+  FIELD_CONTROL_INVALID_CLASS,
+} from "./field-control";
 
 function Select({
   ...props
@@ -44,16 +50,17 @@ function SelectTrigger({
       data-slot="select-trigger"
       data-size={size}
       className={cn(
-        "flex h-8 w-full min-w-0 items-center justify-between gap-2 rounded-md border border-input bg-card px-3 py-1 font-sans text-sm font-medium text-foreground shadow-xs transition-[color,box-shadow,border-color] outline-none whitespace-nowrap",
+        FIELD_CONTROL_CLASS,
+        "flex w-full min-w-0 items-center justify-between gap-2 px-3 font-sans font-medium whitespace-nowrap",
         "data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground",
-        "hover:border-primary/40",
-        "focus-visible:border-primary focus-visible:ring-primary/20 focus-visible:ring-[3px]",
-        "aria-invalid:border-destructive aria-invalid:ring-destructive/20",
-        "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-muted",
-        "data-[size=sm]:h-8",
+        FIELD_CONTROL_HOVER_CLASS,
+        "data-[state=open]:border-ring data-[state=open]:ring-1 data-[state=open]:ring-ring",
+        FIELD_CONTROL_INVALID_CLASS,
+        FIELD_CONTROL_DISABLED_CLASS,
+        "data-[size=sm]:h-9",
         "*:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2",
         "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-        className
+        className,
       )}
       {...props}
     >

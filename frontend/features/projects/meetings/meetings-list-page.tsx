@@ -223,7 +223,7 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
     <div className={cn(PM_TOOLBAR, "w-full")}>
       <div className="flex flex-wrap items-center gap-2">
         <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="h-8 w-36 text-xs">
+          <SelectTrigger className="w-36 text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -233,7 +233,7 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
           </SelectContent>
         </Select>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="h-8 w-36 text-xs">
+          <SelectTrigger className="w-36 text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -243,7 +243,7 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
           </SelectContent>
         </Select>
         <Select value={dateFilter} onValueChange={setDateFilter}>
-          <SelectTrigger className="h-8 w-32 text-xs">
+          <SelectTrigger className="w-32 text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -253,7 +253,7 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
           </SelectContent>
         </Select>
         <Select value={actionItemFilter} onValueChange={setActionItemFilter}>
-          <SelectTrigger className="h-8 w-40 text-xs">
+          <SelectTrigger className="w-40 text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -270,7 +270,7 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
             placeholder="Host…"
             searchPlaceholder="Search hosts…"
             emptyText="No members"
-            className="h-8 w-32 text-xs"
+            className="w-32 text-xs"
           />
         ) : null}
         {projectMembers.length > 0 ? (
@@ -281,11 +281,11 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
             placeholder="Attendee…"
             searchPlaceholder="Search attendees…"
             emptyText="No members"
-            className="h-8 w-32 text-xs"
+            className="w-32 text-xs"
           />
         ) : null}
         {isFiltered ? (
-          <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={handleClearFilters}>
+          <Button size="sm" variant="ghost" className="text-xs" onClick={handleClearFilters}>
             Clear
           </Button>
         ) : null}

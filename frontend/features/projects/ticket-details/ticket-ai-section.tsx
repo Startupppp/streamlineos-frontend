@@ -46,7 +46,7 @@ function SummarizeTrigger({ onClick, isPending }: SummarizeTriggerProps) {
       isPending={isPending}
       loadingText="Summarizing…"
       onClick={onClick}
-      className="h-7 gap-1.5 text-xs border-border/60"
+      className="gap-1.5 text-xs border-border/60"
       {...hoverHandlers}
     >
       <SparklesIcon ref={iconRef} size={13} />
@@ -69,7 +69,7 @@ function ImproveDescTrigger({ onClick, isPending }: ImproveDescTriggerProps) {
       isPending={isPending}
       loadingText="Improving…"
       onClick={onClick}
-      className="h-7 gap-1.5 text-xs border-border/60"
+      className="gap-1.5 text-xs border-border/60"
       {...hoverHandlers}
     >
       <SparklesIcon ref={iconRef} size={13} />
@@ -83,7 +83,10 @@ interface SuggestSubtasksTriggerProps {
   isPending: boolean;
 }
 
-function SuggestSubtasksTrigger({ onClick, isPending }: SuggestSubtasksTriggerProps) {
+function SuggestSubtasksTrigger({
+  onClick,
+  isPending,
+}: SuggestSubtasksTriggerProps) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
     <LoadingButton
@@ -92,7 +95,7 @@ function SuggestSubtasksTrigger({ onClick, isPending }: SuggestSubtasksTriggerPr
       isPending={isPending}
       loadingText="Thinking…"
       onClick={onClick}
-      className="h-7 gap-1.5 text-xs border-border/60"
+      className="gap-1.5 text-xs border-border/60"
       {...hoverHandlers}
     >
       <SparklesIcon ref={iconRef} size={13} />
@@ -149,10 +152,15 @@ function SummaryPanel({
       <p className="text-[13px] text-foreground leading-relaxed">{summary}</p>
       {keyPoints.length > 0 && (
         <div>
-          <p className="text-[11px] font-medium text-muted-foreground mb-1">Key points</p>
+          <p className="text-[11px] font-medium text-muted-foreground mb-1">
+            Key points
+          </p>
           <ul className="space-y-0.5">
             {keyPoints.map((point, i) => (
-              <li key={i} className="text-[12px] text-foreground/80 flex items-start gap-1.5">
+              <li
+                key={i}
+                className="text-[12px] text-foreground/80 flex items-start gap-1.5"
+              >
                 <span className="mt-2 h-1 w-1 rounded-full bg-primary shrink-0" />
                 {point}
               </li>
@@ -162,10 +170,15 @@ function SummaryPanel({
       )}
       {blockers.length > 0 && (
         <div>
-          <p className="text-[11px] font-medium text-destructive mb-1">Blockers</p>
+          <p className="text-[11px] font-medium text-destructive mb-1">
+            Blockers
+          </p>
           <ul className="space-y-0.5">
             {blockers.map((blocker, i) => (
-              <li key={i} className="text-[12px] text-destructive/80 flex items-start gap-1.5">
+              <li
+                key={i}
+                className="text-[12px] text-destructive/80 flex items-start gap-1.5"
+              >
                 <span className="mt-2 h-1 w-1 rounded-full bg-destructive shrink-0" />
                 {blocker}
               </li>
@@ -195,12 +208,20 @@ function ImproveDescDialog({
   onDiscard,
 }: ImproveDescDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) onDiscard(); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) onDiscard();
+      }}
+    >
       <DialogContent className="flex max-h-[min(80dvh,calc(100vh-100px))] max-w-2xl flex-col gap-0 overflow-hidden p-0 pb-0 md:!flex md:grid-cols-none md:max-w-2xl md:overflow-hidden md:pb-0 md:sm:max-w-2xl">
         <DialogHeader className="shrink-0 gap-1 border-b border-border px-5 pb-2 pt-4 text-left">
-          <DialogTitle className="text-sm font-semibold">Improved Description</DialogTitle>
+          <DialogTitle className="text-sm font-semibold">
+            Improved Description
+          </DialogTitle>
           <p className="text-[12px] text-muted-foreground">
-            Review the AI-generated description. Apply to replace the current one, or discard.
+            Review the AI-generated description. Apply to replace the current
+            one, or discard.
           </p>
         </DialogHeader>
 
@@ -222,7 +243,12 @@ function ImproveDescDialog({
         </DialogBody>
 
         <DialogFooter className="shrink-0 flex-row justify-end gap-2 border-t border-border px-5 pt-3 pb-0">
-          <Button variant="outline" size="sm" onClick={onDiscard} disabled={isApplying}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onDiscard}
+            disabled={isApplying}
+          >
             Discard
           </Button>
           <LoadingButton
@@ -264,10 +290,17 @@ function SubtaskSuggestionsDialog({
   onDiscard,
 }: SubtaskSuggestionsDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) onDiscard(); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) onDiscard();
+      }}
+    >
       <DialogContent className="max-w-md flex flex-col gap-0 p-0">
         <DialogHeader className="px-5 pt-5 pb-3 border-b border-border shrink-0">
-          <DialogTitle className="text-sm font-semibold">Suggested Subtasks</DialogTitle>
+          <DialogTitle className="text-sm font-semibold">
+            Suggested Subtasks
+          </DialogTitle>
           <p className="text-[12px] text-muted-foreground mt-0.5">
             Select the subtasks to create. Deselect any you don't need.
           </p>
@@ -277,7 +310,7 @@ function SubtaskSuggestionsDialog({
           {isPending ? (
             <div className="space-y-2">
               {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-8 w-full rounded" />
+                <Skeleton key={i} className="h-4 w-full rounded" />
               ))}
             </div>
           ) : (
@@ -302,7 +335,9 @@ function SubtaskSuggestionsDialog({
                           : "border-border bg-background",
                       ].join(" ")}
                     >
-                      {selected.has(i) && <Check className="h-2.5 w-2.5 text-primary-foreground" />}
+                      {selected.has(i) && (
+                        <Check className="h-2.5 w-2.5 text-primary-foreground" />
+                      )}
                     </span>
                     {title}
                   </button>
@@ -313,7 +348,12 @@ function SubtaskSuggestionsDialog({
         </DialogBody>
 
         <DialogFooter className="px-5 pt-3 pb-0 border-t border-border shrink-0 flex-row gap-2 justify-end">
-          <Button variant="outline" size="sm" onClick={onDiscard} disabled={isCreating}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onDiscard}
+            disabled={isCreating}
+          >
             Cancel
           </Button>
           <LoadingButton
@@ -323,7 +363,8 @@ function SubtaskSuggestionsDialog({
             onClick={onConfirm}
             disabled={isPending || isCreating || selected.size === 0}
           >
-            Create {selected.size > 0 ? `${selected.size} ` : ""}subtask{selected.size !== 1 ? "s" : ""}
+            Create {selected.size > 0 ? `${selected.size} ` : ""}subtask
+            {selected.size !== 1 ? "s" : ""}
           </LoadingButton>
         </DialogFooter>
       </DialogContent>
@@ -331,11 +372,17 @@ function SubtaskSuggestionsDialog({
   );
 }
 
-export function TicketAiSection({ ticket, ticketId, projectId }: TicketAiSectionProps) {
+export function TicketAiSection({
+  ticket,
+  ticketId,
+  projectId,
+}: TicketAiSectionProps) {
   const [summaryVisible, setSummaryVisible] = useState(false);
   const [improveOpen, setImproveOpen] = useState(false);
   const [subtasksOpen, setSubtasksOpen] = useState(false);
-  const [selectedSubtasks, setSelectedSubtasks] = useState<Set<number>>(new Set());
+  const [selectedSubtasks, setSelectedSubtasks] = useState<Set<number>>(
+    new Set(),
+  );
   const [creatingCount, setCreatingCount] = useState(0);
 
   const summarizeMutation = useTicketAiSummarize(projectId, ticketId);
@@ -434,7 +481,9 @@ export function TicketAiSection({ ticket, ticketId, projectId }: TicketAiSection
             done += 1;
             if (done + failed === toCreate.length) {
               if (failed === 0) {
-                toast.success(`${done} subtask${done !== 1 ? "s" : ""} created`);
+                toast.success(
+                  `${done} subtask${done !== 1 ? "s" : ""} created`,
+                );
               } else {
                 toast.warning(`${done} created, ${failed} failed`);
               }

@@ -305,7 +305,7 @@ export function TerritorySheet({
                   <FormItem>
                     <FormLabel>Name</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="e.g. West India" className="h-8" />
+                      <Input {...field} placeholder="e.g. West India" className="" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

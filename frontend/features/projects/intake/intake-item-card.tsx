@@ -104,7 +104,7 @@ export const IntakeItemCard = memo(function IntakeItemCard({ item, onAccept, onD
           <Button size="sm" variant="outline" className="text-xs h-7" onClick={handleDecline}>
             <X className="h-3.5 w-3.5 mr-1" /> Decline
           </Button>
-          <Button size="sm" variant="ghost" className="h-7 w-7" onClick={handleDuplicate} aria-label="Mark as duplicate">
+          <Button size="sm" variant="ghost" className="w-7" onClick={handleDuplicate} aria-label="Mark as duplicate">
             <Copy className="h-3.5 w-3.5" />
           </Button>
         </div>

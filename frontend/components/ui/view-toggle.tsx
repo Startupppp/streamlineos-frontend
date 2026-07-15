@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -23,44 +22,41 @@ export function ViewToggle<T extends string = string>({
   value,
   options,
   onChange,
-  size = "default",
   showLabel = false,
   className,
 }: ViewToggleProps<T>) {
-  const h = size === "sm" ? "h-7" : "h-8";
-  const pad = size === "sm" ? "px-2" : "px-2.5";
-  const labelPad = size === "sm" ? "px-2.5" : "px-3";
-  const iconSize = size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4";
-
   return (
     <div
       role="group"
       className={cn(
-        "inline-flex items-center rounded-lg border border-border bg-card p-0.5",
+        "inline-flex h-9 items-center gap-1 rounded-lg border border-border bg-card p-1",
         className,
       )}
     >
       {options.map((opt) => {
         const Icon = opt.icon;
         const isActive = opt.value === value;
+
+        function handleClick() {
+          onChange(opt.value);
+        }
+
         return (
           <button
             key={opt.value}
             type="button"
-            onClick={() => onChange(opt.value)}
+            onClick={handleClick}
             aria-label={opt.label}
             aria-pressed={isActive}
             className={cn(
-              "inline-flex items-center justify-center rounded-md transition-all press-scale",
-              showLabel && "gap-1.5 text-xs font-medium",
-              h,
-              showLabel ? labelPad : pad,
+              "inline-flex items-center justify-center rounded-md px-2.5 py-1.5 leading-none transition-colors press-scale outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring",
+              showLabel && "gap-1.5 px-3 text-sm font-medium",
               isActive
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "bg-card text-muted-foreground hover:text-foreground",
+                ? "bg-primary text-primary-foreground"
+                : "bg-transparent text-muted-foreground hover:text-foreground",
             )}
           >
-            <Icon className={iconSize} />
+            <Icon className="h-4 w-4" />
             {showLabel ? opt.label : null}
           </button>
         );

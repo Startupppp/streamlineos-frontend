@@ -41,7 +41,7 @@ import { cn } from "@/lib/utils";
 function NewMilestoneButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
-    <Button size="sm" className="h-8 gap-1.5" onClick={onClick} {...hoverHandlers}>
+    <Button size="sm" className="gap-1.5" onClick={onClick} {...hoverHandlers}>
       <PlusIcon ref={iconRef} size={14} />
       New Milestone
     </Button>

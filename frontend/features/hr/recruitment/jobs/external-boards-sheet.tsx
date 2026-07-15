@@ -95,7 +95,7 @@ export function ExternalBoardsSheet({ jobId, onClose }: ExternalBoardsSheetProps
               placeholder="e.g. LinkedIn, Naukri, Indeed"
               value={platform}
               onChange={(e) => setPlatform(e.target.value)}
-              className="h-8 text-sm"
+              className="text-sm"
             />
           </div>
           <Label className="text-xs">Posting URL (optional)</Label>
@@ -103,7 +103,7 @@ export function ExternalBoardsSheet({ jobId, onClose }: ExternalBoardsSheetProps
             placeholder="https://..."
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            className="h-8 text-sm"
+            className="text-sm"
           />
           <Button size="sm" className="w-full h-8 gap-1.5" onClick={handleAdd} disabled={createPosting.isPending}>
             <Plus className="h-3.5 w-3.5" />

@@ -119,7 +119,7 @@ const CustomFieldRow = memo(function CustomFieldRow({
         <AlertDialogTrigger asChild>
           <button
             type="button"
-            className="h-7 w-7 flex items-center justify-center rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors shrink-0"
+            className="w-7 flex items-center justify-center rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors shrink-0"
             aria-label="Delete field"
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -259,7 +259,7 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
                 animate={{ opacity: 1 }}
                 className="flex flex-col items-center gap-2 py-8 text-center"
               >
-                <Sliders className="h-8 w-8 text-muted-foreground/30" />
+                <Sliders className="w-8 text-muted-foreground/30" />
                 <p className="text-sm text-muted-foreground">
                   No custom fields yet
                 </p>
@@ -294,7 +294,7 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
                       value={fieldName}
                       onChange={handleFieldNameChange}
                       placeholder="e.g. Story Points"
-                      className="h-8 text-sm"
+                      className="text-sm"
                       autoFocus
                     />
                   </div>
@@ -304,7 +304,7 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
                       value={fieldType}
                       onValueChange={handleFieldTypeChange}
                     >
-                      <SelectTrigger className="h-8 text-sm">
+                      <SelectTrigger className="text-sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -330,7 +330,7 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
                       value={options}
                       onChange={handleOptionsChange}
                       placeholder="Option 1, Option 2, Option 3"
-                      className="h-8 text-sm"
+                      className="text-sm"
                     />
                   </div>
                 )}
@@ -341,7 +341,7 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
                     disabled={!fieldName.trim()}
                     isPending={createField.isPending}
                     loadingText="Creating…"
-                    className="h-7 text-xs"
+                    className="text-xs"
                   >
                     Create Field
                   </LoadingButton>
@@ -349,7 +349,7 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
                     size="sm"
                     variant="ghost"
                     onClick={handleCancelForm}
-                    className="h-7 text-xs"
+                    className="text-xs"
                   >
                     Cancel
                   </Button>

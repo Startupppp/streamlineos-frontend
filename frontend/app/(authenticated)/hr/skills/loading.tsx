@@ -18,7 +18,7 @@ export default function SkillsLoading() {
                   <Skeleton className="h-3.5 w-24" />
                   <Skeleton className="h-4 w-4 rounded" />
                 </div>
-                <Skeleton className="h-7 w-12" />
+                <Skeleton className="h-12 w-12" />
               </CardContent>
             </Card>
           ))}

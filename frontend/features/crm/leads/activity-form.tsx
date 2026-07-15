@@ -27,7 +27,7 @@ export function ActivityForm({ onSubmit, isPending }: ActivityFormProps) {
       <div>
         <Label className="text-xs font-medium mb-2 block">Activity Type</Label>
         <Select value={activityType} onValueChange={setActivityType}>
-          <SelectTrigger className="h-8">
+          <SelectTrigger className="">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -52,7 +52,7 @@ export function ActivityForm({ onSubmit, isPending }: ActivityFormProps) {
 
       <div>
         <Label htmlFor="subject" className="text-xs font-medium mb-2 block">Subject</Label>
-        <Input id="subject" name="subject" placeholder="Brief description" className="h-8" />
+        <Input id="subject" name="subject" placeholder="Brief description" className="" />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -65,7 +65,7 @@ export function ActivityForm({ onSubmit, isPending }: ActivityFormProps) {
         </div>
         <div>
           <Label htmlFor="outcome" className="text-xs font-medium mb-2 block">Outcome</Label>
-          <Input id="outcome" name="outcome" placeholder="Positive / Negative" className="h-8" />
+          <Input id="outcome" name="outcome" placeholder="Positive / Negative" className="" />
         </div>
       </div>
 

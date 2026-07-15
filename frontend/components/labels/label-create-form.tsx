@@ -52,7 +52,7 @@ function SubmitLabelButton({
       disabled={disabled}
       isPending={isPending}
       loadingText={loadingText}
-      className={cn("h-8 gap-1.5 text-xs", fullWidth && "w-full")}
+      className={cn("gap-1.5 text-xs", fullWidth && "w-full")}
       {...hoverHandlers}
     >
       <CheckIcon ref={iconRef} size={14} />
@@ -69,7 +69,7 @@ function CancelCreateButton({ onClick }: { onClick: () => void }) {
       type="button"
       size="sm"
       variant="outline"
-      className="h-8 gap-1.5 text-xs"
+      className="gap-1.5 text-xs"
       onClick={onClick}
       {...hoverHandlers}
     >
@@ -162,7 +162,7 @@ export function LabelCreateForm({
           onChange={handleNameChange}
           onKeyDown={handleNameKeyDown}
           placeholder="Label name"
-          className="h-8 text-sm"
+          className="text-sm"
           autoFocus={autoFocus}
           aria-label="Label name"
         />

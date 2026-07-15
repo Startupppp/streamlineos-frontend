@@ -168,7 +168,7 @@ function TokenListSkeleton() {
             </div>
             <Skeleton className="h-3 w-48" />
           </div>
-          <Skeleton className="h-7 w-14 rounded" />
+          <Skeleton className="h-8 w-14 rounded" />
         </div>
       ))}
     </div>
@@ -460,7 +460,7 @@ export function AgentTokensSection() {
             In Review — scoped to your project access only.
           </p>
         </div>
-        <Button size="sm" className="h-8 shrink-0" onClick={handleOpenDialog}>
+        <Button size="sm" className="shrink-0" onClick={handleOpenDialog}>
           <Plus className="mr-1 h-4 w-4" />
           New token
         </Button>

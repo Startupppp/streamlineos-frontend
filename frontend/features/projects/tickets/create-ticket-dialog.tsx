@@ -398,7 +398,7 @@ export function CreateTicketDialog({
               >
                 <SelectTrigger
                   aria-label="Select project"
-                  className="h-8 w-auto max-w-[220px] gap-1.5 border-border bg-card px-2 text-xs font-medium shadow-sm disabled:opacity-100"
+                  className="w-auto max-w-[220px] gap-1.5 border-border bg-card px-2 text-xs font-medium shadow-sm disabled:opacity-100"
                 >
                   <SelectValue placeholder={projectTriggerLabel} />
                 </SelectTrigger>
@@ -606,7 +606,7 @@ export function CreateTicketDialog({
                     type="submit"
                     isPending={isPending || isUploading}
                     loadingText="Creating…"
-                    className="h-8 px-4 text-xs"
+                    className="px-4 text-xs"
                     size="sm"
                     disabled={!canSubmit}
                   >

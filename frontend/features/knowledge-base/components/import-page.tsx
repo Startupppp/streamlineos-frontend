@@ -208,7 +208,7 @@ export default function ImportPage() {
       <PageWrapper title="Import & Export">
         <EmptyState
           illustration={
-            <KbUploadIcon className="h-8 w-8 text-muted-foreground/40" />
+            <KbUploadIcon className="w-8 text-muted-foreground/40" />
           }
           title="Access denied"
           description="You don't have permission to import pages. Ask an admin to grant kb:pages:import."
@@ -227,7 +227,7 @@ export default function ImportPage() {
                 size="sm"
                 variant={mode === "files" ? "default" : "outline"}
                 onClick={() => handleModeChange("files")}
-                className="h-8 gap-1.5"
+                className="gap-1.5"
               >
                 <KbUploadIcon className="h-3.5 w-3.5" />
                 Markdown files
@@ -236,7 +236,7 @@ export default function ImportPage() {
                 size="sm"
                 variant={mode === "paste" ? "default" : "outline"}
                 onClick={() => handleModeChange("paste")}
-                className="h-8 gap-1.5"
+                className="gap-1.5"
               >
                 <KbClipboardIcon className="h-3.5 w-3.5" />
                 Paste text
@@ -258,7 +258,7 @@ export default function ImportPage() {
                   variant="outline"
                   onClick={handleChooseFiles}
                   disabled={items.length >= 100}
-                  className="h-8"
+                  className=""
                 >
                   Choose files…
                 </Button>
@@ -276,7 +276,7 @@ export default function ImportPage() {
                     value={pasteTitle}
                     onChange={(e) => setPasteTitle(e.target.value)}
                     placeholder="Untitled page"
-                    className="h-8 text-sm"
+                    className="text-sm"
                     maxLength={500}
                   />
                 </div>
@@ -295,7 +295,7 @@ export default function ImportPage() {
                   variant="outline"
                   onClick={handleAddPaste}
                   disabled={!pasteTitle.trim() || items.length >= 100}
-                  className="h-8"
+                  className=""
                 >
                   Add to list
                 </Button>
@@ -363,7 +363,7 @@ export default function ImportPage() {
                   size="sm"
                   onClick={handleImport}
                   disabled={importMutation.isPending}
-                  className="h-8 gap-1.5"
+                  className="gap-1.5"
                 >
                   {importMutation.isPending ? (
                     <KbLoader2Icon className="h-3.5 w-3.5 animate-spin" />

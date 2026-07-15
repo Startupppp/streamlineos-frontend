@@ -142,7 +142,7 @@ function EventForm({ editing, defaultMonth, onSuccess, onCancel }: EventFormProp
               <FormLabel className="text-[11px]">Event Type</FormLabel>
               <Select value={field.value} onValueChange={field.onChange}>
                 <FormControl>
-                  <SelectTrigger className="h-8 text-xs">
+                  <SelectTrigger className="text-xs">
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                 </FormControl>
@@ -165,7 +165,7 @@ function EventForm({ editing, defaultMonth, onSuccess, onCancel }: EventFormProp
             <FormItem>
               <FormLabel className="text-[11px]">Date</FormLabel>
               <FormControl>
-                <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-xs" />
+                <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-xs" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -178,7 +178,7 @@ function EventForm({ editing, defaultMonth, onSuccess, onCancel }: EventFormProp
             <FormItem>
               <FormLabel className="text-[11px]">Title</FormLabel>
               <FormControl>
-                <Input {...field} className="h-8 text-xs" placeholder="Event title" />
+                <Input {...field} className="text-xs" placeholder="Event title" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -191,7 +191,7 @@ function EventForm({ editing, defaultMonth, onSuccess, onCancel }: EventFormProp
             <FormItem>
               <FormLabel className="text-[11px]">Month (YYYY-MM, optional)</FormLabel>
               <FormControl>
-                <Input {...field} className="h-8 text-xs" placeholder="e.g. 2025-04" />
+                <Input {...field} className="text-xs" placeholder="e.g. 2025-04" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -201,12 +201,12 @@ function EventForm({ editing, defaultMonth, onSuccess, onCancel }: EventFormProp
           <Button
             type="submit"
             size="sm"
-            className="h-7 text-xs"
+            className="text-xs"
             disabled={create.isPending || update.isPending}
           >
             {editing ? "Update" : "Add Event"}
           </Button>
-          <Button type="button" variant="ghost" size="sm" className="h-7 text-xs" onClick={onCancel}>
+          <Button type="button" variant="ghost" size="sm" className="text-xs" onClick={onCancel}>
             Cancel
           </Button>
         </div>
@@ -275,7 +275,7 @@ export function CalendarManager({ month }: CalendarManagerProps) {
           <Button
             variant="outline"
             size="sm"
-            className="h-7 text-xs"
+            className="text-xs"
             onClick={handleGenerate}
             disabled={generate.isPending}
           >
@@ -284,7 +284,7 @@ export function CalendarManager({ month }: CalendarManagerProps) {
           <Button
             variant="outline"
             size="sm"
-            className="h-7 text-xs gap-1"
+            className="text-xs gap-1"
             onClick={handleAddNew}
           >
             <Plus className="h-3 w-3" />

@@ -6,10 +6,11 @@ import { motion, useReducedMotion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { ErrorState } from "@/components/shared/error-state";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertCircle,
   CalendarClock,
@@ -138,6 +139,7 @@ export function MyWorkPage() {
                   value={totalOpen}
                   icon={CheckCircle2}
                   tone="default"
+                  className="border-border/60 bg-card/50 shadow-sm backdrop-blur-md transition-shadow duration-150 hover:shadow-md supports-[backdrop-filter]:bg-card/40"
                 />
               </motion.div>
               <motion.div
@@ -150,6 +152,7 @@ export function MyWorkPage() {
                   value={bucketCounts.overdue}
                   icon={AlertCircle}
                   tone={bucketCounts.overdue > 0 ? "red" : "default"}
+                  className="border-border/60 bg-card/50 shadow-sm backdrop-blur-md transition-shadow duration-150 hover:shadow-md supports-[backdrop-filter]:bg-card/40"
                 />
               </motion.div>
               <motion.div
@@ -162,6 +165,7 @@ export function MyWorkPage() {
                   value={bucketCounts.today}
                   icon={CalendarClock}
                   tone="amber"
+                  className="border-border/60 bg-card/50 shadow-sm backdrop-blur-md transition-shadow duration-150 hover:shadow-md supports-[backdrop-filter]:bg-card/40"
                 />
               </motion.div>
               <motion.div
@@ -173,7 +177,8 @@ export function MyWorkPage() {
                   label="Upcoming"
                   value={bucketCounts.upcoming}
                   icon={Clock}
-                  tone="default"
+                  tone="emerald"
+                  className="border-border/60 bg-card/50 shadow-sm backdrop-blur-md transition-shadow duration-150 hover:shadow-md supports-[backdrop-filter]:bg-card/40"
                 />
               </motion.div>
             </StatCardGrid>
@@ -186,20 +191,20 @@ export function MyWorkPage() {
             onValueChange={handleTabChange}
             className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden"
           >
-            <TabsList className="mb-0 shrink-0">
-              {WORK_TABS.map((tab) => (
-                <TabsTrigger
-                  key={tab}
-                  value={tab}
-                  className="px-2.5 text-[12px] sm:px-3 sm:text-[12px]"
-                >
-                  {TAB_CONFIG[tab].label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
+            <PageTabsToolbar
+              tabsDensity="labeled"
+              tabs={
+                <TabsList>
+                  {WORK_TABS.map((tab) => (
+                    <TabsTrigger key={tab} value={tab}>
+                      {TAB_CONFIG[tab].label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              }
+            />
 
             <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
-              <div className="flex min-h-full flex-1 flex-col overscroll-contain">
               {activeTab === "assigned" ? (
                 isLoading ? (
                   <AllWorkListSkeleton />
@@ -231,7 +236,6 @@ export function MyWorkPage() {
               {activeTab === "created" ? <CreatedTab /> : null}
               {activeTab === "subscribed" ? <SubscribedTab /> : null}
               {activeTab === "recent" ? <RecentTab /> : null}
-              </div>
             </ScrollArea>
           </Tabs>
         </PmSection>

@@ -281,7 +281,7 @@ function ExportTab() {
               </div>
               <LoadingButton
                 size="sm"
-                className="h-7 text-xs ml-4 shrink-0"
+                className="text-xs ml-4 shrink-0"
                 isPending={createExportJob.isPending}
                 loadingText="Starting…"
                 onClick={handleStartExport}

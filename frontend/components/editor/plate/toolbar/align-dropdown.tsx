@@ -73,7 +73,7 @@ export function AlignDropdown() {
           variant="ghost"
           size="icon-sm"
           aria-label="Text alignment"
-          className="h-8 w-8 shrink-0"
+          className="w-8 shrink-0"
         >
           {ICONS[currentAlign]}
         </Button>

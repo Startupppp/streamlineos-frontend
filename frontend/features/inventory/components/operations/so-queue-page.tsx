@@ -123,7 +123,7 @@ export function SoQueuePage({ status, title, actionNoun, emptyTitle, emptyDescri
         value={search}
         onChange={handleSearchChange}
         placeholder="Search SO # or customer…"
-        className="h-8 w-full pl-8 text-xs"
+        className="w-full pl-8 text-xs"
       />
     </div>
   );

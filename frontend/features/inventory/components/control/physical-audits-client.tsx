@@ -88,7 +88,7 @@ function NewAuditSheet({
           <div className="space-y-1.5">
             <Label htmlFor="pa-warehouse" className="text-xs font-semibold text-foreground/80">Warehouse *</Label>
             <Select value={warehouseId || "none"} onValueChange={handleWarehouseChange}>
-              <SelectTrigger id="pa-warehouse" className="h-8 text-sm">
+              <SelectTrigger id="pa-warehouse" className="text-sm">
                 <SelectValue placeholder="Select warehouse" />
               </SelectTrigger>
               <SelectContent>
@@ -192,7 +192,7 @@ export function PhysicalAuditsClient() {
       header: "",
       headerClassName: "w-[60px]",
       cell: (row) => (
-        <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
+        <Button variant="ghost" size="icon" className="w-7" asChild>
           <Link href={`/inventory/physical-audits/${row.id}`}>
             <Eye className="h-3.5 w-3.5" aria-hidden="true" />
           </Link>
@@ -203,7 +203,7 @@ export function PhysicalAuditsClient() {
 
   const filtersRow = (
     <Select value={statusFilter} onValueChange={handleStatusChange}>
-      <SelectTrigger className="h-8 w-[160px] text-xs">
+      <SelectTrigger className="w-[160px] text-xs">
         <SelectValue placeholder="All statuses" />
       </SelectTrigger>
       <SelectContent>

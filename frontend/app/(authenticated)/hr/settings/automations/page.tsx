@@ -97,21 +97,21 @@ function RuleCard({
               aria-label="Toggle automation"
             />
             <div className="flex items-center gap-1">
-              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={onViewRuns} title="View runs">
+              <Button size="icon" variant="ghost" className="w-7" onClick={onViewRuns} title="View runs">
                 <History className="h-3.5 w-3.5" />
               </Button>
-              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={onTest} title="Dry-run test">
+              <Button size="icon" variant="ghost" className="w-7" onClick={onTest} title="Dry-run test">
                 <Play className="h-3.5 w-3.5" />
               </Button>
               {canManage && (
                 <>
-                  <Button size="icon" variant="ghost" className="h-7 w-7" onClick={onEdit} title="Edit">
+                  <Button size="icon" variant="ghost" className="w-7" onClick={onEdit} title="Edit">
                     <Pencil className="h-3.5 w-3.5" />
                   </Button>
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="h-7 w-7 text-destructive hover:text-destructive"
+                    className="w-7 text-destructive hover:text-destructive"
                     onClick={onDelete}
                     title="Delete"
                   >

@@ -432,7 +432,7 @@ export function InputsSectionTabs({ periodId, isLocked, onCreateAdjustment }: In
           <TabsTrigger value="adjustments" className="text-xs">Adjustments</TabsTrigger>
         </TabsList>
         {!isLocked && (
-          <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={onCreateAdjustment}>
+          <Button variant="outline" size="sm" className="text-xs gap-1" onClick={onCreateAdjustment}>
             <Plus className="h-3 w-3" />
             Add Adjustment
           </Button>

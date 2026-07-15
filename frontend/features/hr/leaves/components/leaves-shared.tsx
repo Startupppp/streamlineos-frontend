@@ -297,7 +297,7 @@ export const WfhRequestItem = React.memo(function WfhRequestItem({
     >
       <div className="flex items-center gap-3 min-w-0 flex-1">
         {showUser && request.user && (
-          <Avatar className="h-8 w-8 shrink-0">
+          <Avatar className="w-8 shrink-0">
             <AvatarImage src={resolveImageUrl(request.user.image)} />
             <AvatarFallback className="text-xs bg-violet-100 text-violet-700 dark:bg-violet-950/40 dark:text-violet-400">
               {request.user.firstName?.[0]}
@@ -500,7 +500,7 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7"
+              className="w-7"
               aria-label="Actions"
             >
               <MoreVertical className="h-4 w-4" />

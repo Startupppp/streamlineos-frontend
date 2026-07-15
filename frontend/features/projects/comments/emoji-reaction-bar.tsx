@@ -88,7 +88,7 @@ export function EmojiReactionBar({ reactions, onReact, onUnreact }: EmojiReactio
                   type="button"
                   onClick={() => handleEmojiClick(e)}
                   aria-label={`React with ${e}`}
-                  className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-muted transition-colors text-base"
+                  className="w-7 flex items-center justify-center rounded-lg hover:bg-muted transition-colors text-base"
                 >
                   {e}
                 </button>

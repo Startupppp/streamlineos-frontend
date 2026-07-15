@@ -18,7 +18,7 @@ export default function ReimbursementsLoading() {
                   <Skeleton className="h-3.5 w-24" />
                   <Skeleton className="h-4 w-4 rounded" />
                 </div>
-                <Skeleton className="h-7 w-20" />
+                <Skeleton className="h-4 w-20" />
               </CardContent>
             </Card>
           ))}

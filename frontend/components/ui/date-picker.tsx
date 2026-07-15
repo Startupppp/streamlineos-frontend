@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { FIELD_CONTROL_CLASS } from "@/components/ui/field-control";
 
 interface DatePickerProps {
   value?: string;
@@ -66,9 +67,10 @@ export function DatePicker({
           variant="outline"
           disabled={disabled}
           className={cn(
-            "h-8 w-full min-w-0 justify-start gap-2 rounded-md border border-input bg-card px-3 text-left text-sm font-normal shadow-xs",
+            FIELD_CONTROL_CLASS,
+            "w-full min-w-0 justify-start gap-2 px-3 text-left font-normal",
             !selected && "text-muted-foreground",
-            className
+            className,
           )}
         >
           <CalendarIcon className="h-4 w-4 shrink-0" />

@@ -100,7 +100,7 @@ const AccountRow = memo(function AccountRow({
         <Button
           variant="outline"
           size="sm"
-          className="h-7 text-xs gap-1 shrink-0"
+          className="text-xs gap-1 shrink-0"
           onClick={handleReconnect}
         >
           <RefreshCw className="h-3 w-3" />
@@ -117,7 +117,7 @@ const AccountRow = memo(function AccountRow({
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7 shrink-0"
+          className="w-7 shrink-0"
           onClick={handleMakePrimary}
           aria-label="Make default"
         >
@@ -128,7 +128,7 @@ const AccountRow = memo(function AccountRow({
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
+          className="w-7 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
           onClick={handleDisconnectClick}
           aria-label="Disconnect"
         >

@@ -317,11 +317,11 @@ export default function QuotesPage() {
                 placeholder="Search quotes..."
                 value={search}
                 onChange={handleSearchChange}
-                className="h-8 w-full min-w-0 pl-8 text-xs"
+                className="w-full min-w-0 pl-8 text-xs"
               />
             </div>
             <Select value={statusFilter} onValueChange={handleStatusChange}>
-              <SelectTrigger className="h-8 w-[140px] text-xs">
+              <SelectTrigger className="w-[140px] text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

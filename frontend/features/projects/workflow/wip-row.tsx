@@ -69,7 +69,7 @@ export const WipRow = memo(function WipRow({ status, projectId, canManage }: Wip
               onKeyDown={handleKeyDown}
               placeholder="No limit"
               inputMode="numeric"
-              className="h-8 w-24 text-xs text-right"
+              className="w-24 text-xs text-right"
               disabled={updateWip.isPending}
             />
             <LoadingButton

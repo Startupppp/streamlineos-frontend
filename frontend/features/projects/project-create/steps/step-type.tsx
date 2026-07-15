@@ -46,7 +46,7 @@ export function StepType({ draft, updateDraft }: StepSharedProps) {
             type="button"
             variant="ghost"
             size="sm"
-            className="h-7 text-xs shrink-0 text-muted-foreground gap-1 hover:text-foreground"
+            className="text-xs shrink-0 text-muted-foreground gap-1 hover:text-foreground"
             onClick={handleClear}
           >
             <X className="h-3 w-3" />

@@ -69,7 +69,7 @@ export function NewMeetingButton({ onBlank, onTemplate }: NewMeetingButtonProps)
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button size="sm" className="h-8 gap-1.5 text-xs" {...hoverHandlers}>
+        <Button size="sm" className="gap-1.5 text-xs" {...hoverHandlers}>
           <PlusIcon ref={iconRef} size={14} />
           New Meeting
           <ChevronDown className="ml-0.5 h-3 w-3" />

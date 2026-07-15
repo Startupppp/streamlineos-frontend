@@ -38,7 +38,7 @@ export function MeetingRecurrenceSection() {
                 <FormLabel className="text-xs">Repeat</FormLabel>
                 <Select value={field.value} onValueChange={field.onChange}>
                   <FormControl>
-                    <SelectTrigger className="h-8 text-xs">
+                    <SelectTrigger className="text-xs">
                       <SelectValue />
                     </SelectTrigger>
                   </FormControl>
@@ -60,7 +60,7 @@ export function MeetingRecurrenceSection() {
               <FormItem>
                 <FormLabel className="text-xs">End date (optional)</FormLabel>
                 <FormControl>
-                  <Input {...field} type="date" className="h-8 text-xs" />
+                  <Input {...field} type="date" className="text-xs" />
                 </FormControl>
                 <FormMessage />
               </FormItem>

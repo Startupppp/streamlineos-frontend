@@ -148,7 +148,7 @@ export function StageAdvancedSheet({
             <FormField control={form.control} name="label" render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-xs">Label</FormLabel>
-                <FormControl><Input {...field} className="h-8 text-sm" /></FormControl>
+                <FormControl><Input {...field} className="text-sm" /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
@@ -167,7 +167,7 @@ export function StageAdvancedSheet({
               <FormField control={form.control} name="probability" render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-xs">Probability (%)</FormLabel>
-                  <FormControl><Input type="number" min={0} max={100} {...field} className="h-8 text-sm" /></FormControl>
+                  <FormControl><Input type="number" min={0} max={100} {...field} className="text-sm" /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
@@ -175,7 +175,7 @@ export function StageAdvancedSheet({
                 <FormItem>
                   <FormLabel className="text-xs">SLA Hours</FormLabel>
                   <FormControl>
-                    <Input type="number" min={1} placeholder="None" value={field.value ?? ""} onChange={field.onChange} className="h-8 text-sm" />
+                    <Input type="number" min={1} placeholder="None" value={field.value ?? ""} onChange={field.onChange} className="text-sm" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -186,7 +186,7 @@ export function StageAdvancedSheet({
                 <FormLabel className="text-xs">Stage Type</FormLabel>
                 <Select value={field.value} onValueChange={field.onChange}>
                   <FormControl>
-                    <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
                   </FormControl>
                   <SelectContent>
                     {STAGE_TYPES.map((t) => (
@@ -233,7 +233,7 @@ export function StageAdvancedSheet({
                   onChange={handleFieldInputChange}
                   onKeyDown={handleFieldKeyDown}
                   placeholder="Type field name + Enter"
-                  className="h-8 text-xs"
+                  className="text-xs"
                 />
               </FormItem>
             )} />

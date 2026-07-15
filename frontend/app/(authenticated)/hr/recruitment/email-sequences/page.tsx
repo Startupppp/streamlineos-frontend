@@ -325,7 +325,7 @@ function SequenceCard({ sequence, togglingId, onToggle, onEdit, onDelete }: Sequ
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 w-8 p-0"
+              className="w-8 p-0"
               onClick={handleEdit}
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -335,7 +335,7 @@ function SequenceCard({ sequence, togglingId, onToggle, onEdit, onDelete }: Sequ
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+              className="w-8 p-0 text-destructive hover:text-destructive"
               onClick={handleDelete}
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

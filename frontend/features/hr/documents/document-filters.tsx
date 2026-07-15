@@ -86,7 +86,7 @@ export function DocumentFilters({
       </div>
 
       <Select value={selectedType} onValueChange={onTypeChange}>
-        <SelectTrigger className="h-8 text-xs w-36 border-border">
+        <SelectTrigger className="text-xs w-36 border-border">
           <SelectValue placeholder="All types" />
         </SelectTrigger>
         <SelectContent>

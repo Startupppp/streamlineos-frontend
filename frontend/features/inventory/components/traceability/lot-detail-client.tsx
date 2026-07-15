@@ -97,7 +97,7 @@ export function LotDetailClient({ lotId }: LotDetailClientProps) {
           <Button
             variant="outline"
             size="sm"
-            className="h-8 text-xs gap-1.5"
+            className="text-xs gap-1.5"
             onClick={handleBlockUnblock}
             disabled={updateStatus.isPending}
           >
@@ -170,7 +170,7 @@ export function LotDetailClient({ lotId }: LotDetailClientProps) {
             <Button
               variant="outline"
               size="sm"
-              className="h-7 text-xs gap-1"
+              className="text-xs gap-1"
               onClick={handleToggleTraceability}
               {...traceHoverHandlers}
             >

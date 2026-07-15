@@ -10,7 +10,7 @@ export default function SmartLeadSearchLoading() {
           <Skeleton className="w-28 h-11" />
         </div>
         <div className="flex gap-2">
-          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-7 w-36 rounded-full" />)}
+          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-36 w-36 rounded-full" />)}
         </div>
         <div className="space-y-3">
           {[1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-14 w-full" />)}

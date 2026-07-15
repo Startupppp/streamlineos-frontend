@@ -66,7 +66,7 @@ function DocumentItem({ doc }: DocumentItemProps) {
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7"
+          className="w-7"
           onClick={handleViewClick}
           aria-label="View"
         >
@@ -75,7 +75,7 @@ function DocumentItem({ doc }: DocumentItemProps) {
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7"
+          className="w-7"
           onClick={handleDownload}
           aria-label="Download"
         >

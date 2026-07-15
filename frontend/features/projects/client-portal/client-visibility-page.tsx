@@ -13,6 +13,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Info } from "lucide-react";
 import { toast } from "sonner";
 import type { ClientVisibilityTicket, ClientVisibilityMilestone } from "@/types/projects";
@@ -145,76 +148,81 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
           ) : isError ? (
             <ErrorState className="min-h-[14rem]" onRetry={handleRetry} />
           ) : (
-            <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-3">
-              <TabsList>
-                <TabsTrigger value="tickets">
-                  Tickets
-                  {ticketCount > 0 ? (
-                    <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
-                      {ticketCount}
-                    </Badge>
-                  ) : null}
-                </TabsTrigger>
-                <TabsTrigger value="milestones">
-                  Milestones
-                  {milestoneCount > 0 ? (
-                    <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
-                      {milestoneCount}
-                    </Badge>
-                  ) : null}
-                </TabsTrigger>
-              </TabsList>
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="flex min-h-0 flex-1 flex-col gap-3">
+              <PageTabsToolbar
+                tabsDensity="labeled"
+                tabs={
+                  <TabsList>
+                    <TabsTrigger value="tickets">
+                      Tickets
+                      {ticketCount > 0 ? (
+                        <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
+                          {ticketCount}
+                        </Badge>
+                      ) : null}
+                    </TabsTrigger>
+                    <TabsTrigger value="milestones">
+                      Milestones
+                      {milestoneCount > 0 ? (
+                        <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
+                          {milestoneCount}
+                        </Badge>
+                      ) : null}
+                    </TabsTrigger>
+                  </TabsList>
+                }
+              />
 
-              <TabsContent value="tickets" className="mt-0">
+              <TabsContent value="tickets" className="mt-0 flex min-h-0 flex-1 flex-col">
                 {(data?.tickets ?? []).length === 0 ? (
-                  <PmPanel className="flex items-center justify-center p-4">
-                    <EmptyState
-                      illustrationPreset="ticket"
-                      title="No tickets"
-                      description="This project has no tickets yet."
-                      compact
-                      className="min-h-[120px]"
-                    />
-                  </PmPanel>
+                  <EmptyState
+                    illustrationPreset="ticket"
+                    title="No tickets"
+                    description="This project has no tickets yet."
+                    compact
+                    className={CONTENT_FILL_PANEL}
+                  />
                 ) : (
-                  <PmPanel>
-                    <div className="flex items-center gap-3 border-b border-border/50 bg-muted/30 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  <PmPanel className="flex min-h-0 flex-1 flex-col overflow-hidden p-0">
+                    <div className="flex items-center gap-3 border-b border-border/50 bg-muted/30 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground shrink-0">
                       <span className="w-16 shrink-0">ID</span>
                       <span className="flex-1">Title</span>
                       <span className="w-16 shrink-0">Type</span>
                       <span className="w-10 shrink-0 text-right">Visible</span>
                     </div>
-                    {data?.tickets.map((ticket) => (
-                      <TicketRow key={ticket.id} ticket={ticket} projectId={projectId} />
-                    ))}
+                    <ScrollArea fill hideScrollbar>
+                      {data?.tickets.map((ticket) => (
+                        <TicketRow key={ticket.id} ticket={ticket} projectId={projectId} />
+                      ))}
+                    </ScrollArea>
                   </PmPanel>
                 )}
               </TabsContent>
 
-              <TabsContent value="milestones" className="mt-0">
+              <TabsContent value="milestones" className="mt-0 flex min-h-0 flex-1 flex-col">
                 {(data?.milestones ?? []).length === 0 ? (
-                  <PmPanel className="flex items-center justify-center p-4">
-                    <EmptyState
-                      illustrationPreset="calendar"
-                      title="No milestones"
-                      description="This project has no milestones yet."
-                      compact
-                      className="min-h-[120px]"
-                    />
-                  </PmPanel>
+                  <EmptyState
+                    illustrationPreset="calendar"
+                    title="No milestones"
+                    description="This project has no milestones yet."
+                    compact
+                    className={CONTENT_FILL_PANEL}
+                  />
                 ) : (
-                  <PmPanel>
-                    <div className="flex items-center gap-3 border-b border-border/50 bg-muted/30 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  <PmPanel className="flex min-h-0 flex-1 flex-col overflow-hidden p-0">
+                    <div className="flex items-center gap-3 border-b border-border/50 bg-muted/30 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground shrink-0">
                       <span className="flex-1">Name</span>
                       <span className="w-10 shrink-0 text-right">Visible</span>
                     </div>
-                    {data?.milestones.map((milestone) => (
-                      <MilestoneRow
-                        key={milestone.id}
-                        milestone={milestone}
-                        projectId={projectId}
-                      />
-                    ))}
+                    <ScrollArea fill hideScrollbar>
+                      {data?.milestones.map((milestone) => (
+                        <MilestoneRow
+                          key={milestone.id}
+                          milestone={milestone}
+                          projectId={projectId}
+                        />
+                      ))}
+                    </ScrollArea>
                   </PmPanel>
                 )}
               </TabsContent>

@@ -51,7 +51,7 @@ export default function HrCustomFieldsPage() {
         subtitle="Define additional fields for HR entities"
         filters={
           <Select value={entityType} onValueChange={setEntityType}>
-            <SelectTrigger className="h-8 text-sm w-40"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="text-sm w-40"><SelectValue /></SelectTrigger>
             <SelectContent>
               {ENTITY_TYPES.map((t) => (
                 <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
@@ -60,7 +60,7 @@ export default function HrCustomFieldsPage() {
           </Select>
         }
         actions={
-          <Button size="sm" className="h-8 gap-1.5" onClick={handleCreateClick}>
+          <Button size="sm" className="gap-1.5" onClick={handleCreateClick}>
             <Plus className="h-4 w-4" /> New Field
           </Button>
         }

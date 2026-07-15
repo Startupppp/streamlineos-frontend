@@ -32,7 +32,7 @@ export function ChannelMemberRow({
   return (
     <div className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-muted/30 transition-colors group">
       <div className="relative shrink-0">
-        <Avatar className="h-8 w-8">
+        <Avatar className="w-8">
           <AvatarImage src={resolveImageUrl(member.user?.image)} />
           <AvatarFallback className="text-[10px] font-medium">
             {getInitials(member.user?.name)}

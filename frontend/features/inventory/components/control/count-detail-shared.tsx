@@ -82,7 +82,7 @@ const DebouncedQtyInput = memo(function DebouncedQtyInput({
       min={0}
       value={value}
       onChange={handleChange}
-      className="h-8 w-24 text-xs tabular-nums"
+      className="w-24 text-xs tabular-nums"
     />
   );
 });

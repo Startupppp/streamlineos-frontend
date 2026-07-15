@@ -142,7 +142,7 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
               <Label className="text-[11px]">Name *</Label>
               <Input
                 {...form.register("name")}
-                className="h-8 text-[11px]"
+                className="text-[11px]"
                 placeholder="e.g. Sprint 12 Regression"
               />
               {form.formState.errors.name && (
@@ -168,7 +168,7 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
                     value={form.watch("suiteId")}
                     onValueChange={(v) => form.setValue("suiteId", v)}
                   >
-                    <SelectTrigger className="h-8 text-[11px]">
+                    <SelectTrigger className="text-[11px]">
                       <SelectValue placeholder="Select suite" />
                     </SelectTrigger>
                     <SelectContent>
@@ -213,7 +213,7 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
                 <Label className="text-[11px]">Environment</Label>
                 <Input
                   {...form.register("environment")}
-                  className="h-8 text-[11px]"
+                  className="text-[11px]"
                   placeholder="e.g. Staging"
                 />
               </div>
@@ -221,7 +221,7 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
                 <Label className="text-[11px]">Browser / Device</Label>
                 <Input
                   {...form.register("browserDevice")}
-                  className="h-8 text-[11px]"
+                  className="text-[11px]"
                   placeholder="e.g. Chrome 124"
                 />
               </div>
@@ -236,7 +236,7 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
                 onChange={(v) => form.setValue("testerId", v ?? "")}
                 allowUnassigned
                 placeholder="Assign tester…"
-                className="h-8 text-[11px]"
+                className="text-[11px]"
               />
             </div>
           </form>

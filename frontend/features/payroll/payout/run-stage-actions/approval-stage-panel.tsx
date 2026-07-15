@@ -109,10 +109,10 @@ function StageRow({ row, canAct, isActive, runId, onChanged }: StageRowProps) {
 
       {isActive && canAct && row.isCurrentUserApprover !== false && (
         <div className="flex gap-2 pl-9 pt-1">
-          <Button size="sm" variant="outline" className="h-8" onClick={handleApprove} disabled={approvePending}>
+          <Button size="sm" variant="outline" className="" onClick={handleApprove} disabled={approvePending}>
             <CheckCircle2 className="mr-1 h-3.5 w-3.5" /> Approve
           </Button>
-          <Button size="sm" variant="outline" className="h-8 text-destructive border-destructive/40 hover:bg-destructive/10" onClick={handleRejectOpen} disabled={rejectPending}>
+          <Button size="sm" variant="outline" className="text-destructive border-destructive/40 hover:bg-destructive/10" onClick={handleRejectOpen} disabled={rejectPending}>
             <XCircle className="mr-1 h-3.5 w-3.5" /> Reject
           </Button>
         </div>

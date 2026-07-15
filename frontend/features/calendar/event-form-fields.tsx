@@ -121,7 +121,7 @@ export function EventFormFields({
             value={title}
             onChange={onTitleChange}
             placeholder="Add Title"
-            className="h-8 text-sm border-0 border-b border-border rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary placeholder:text-muted-foreground/60 font-medium"
+            className="text-sm border-0 border-b border-border rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary placeholder:text-muted-foreground/60 font-medium"
             autoFocus
           />
         </div>
@@ -137,12 +137,12 @@ export function EventFormFields({
                 onChange={onStartDateChange}
                 placeholder="Start date"
                 dateFormat="MMM d, yyyy"
-                className="h-8 min-w-0 flex-1 text-xs"
+                className="min-w-0 flex-1 text-xs"
               />
               {!allDay && (
                 <Input
                   type="time"
-                  className="h-8 w-[5.5rem] min-w-[5.5rem] shrink-0 text-xs"
+                  className="w-[5.5rem] min-w-[5.5rem] shrink-0 text-xs"
                   value={startTime}
                   onChange={onStartTimeChange}
                 />
@@ -166,7 +166,7 @@ export function EventFormFields({
                   fromDate={startDate ? new Date(startDate) : undefined}
                   placeholder="End date"
                   dateFormat="MMM d, yyyy"
-                  className={cn("h-8 min-w-0 flex-1 text-xs", dateTimeError && "border-destructive")}
+                  className={cn("min-w-0 flex-1 text-xs", dateTimeError && "border-destructive")}
                 />
               )}
               {showEndDate && !allDay && (
@@ -218,7 +218,7 @@ export function EventFormFields({
         <div className="flex flex-1 min-w-0 flex-row gap-2">
           <div className="flex-1 min-w-0">
             <Select value={category} onValueChange={onCategoryChange}>
-              <SelectTrigger className="h-8 w-full text-xs">
+              <SelectTrigger className="w-full text-xs">
                 <SelectValue placeholder="Select privacy / category" />
               </SelectTrigger>
               <SelectContent>
@@ -232,7 +232,7 @@ export function EventFormFields({
           </div>
           <div className="flex-1 min-w-0">
             <Select value={color} onValueChange={onColorChange}>
-              <SelectTrigger className="h-8 w-full text-xs">
+              <SelectTrigger className="w-full text-xs">
                 <SelectValue placeholder="Select busy status" />
               </SelectTrigger>
               <SelectContent>
@@ -261,7 +261,7 @@ export function EventFormFields({
             value={description}
             onChange={onDescriptionChange}
             placeholder="Notes"
-            className="h-8 text-xs"
+            className="text-xs"
           />
         </div>
       </div>
@@ -271,7 +271,7 @@ export function EventFormFields({
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">Sync to calendar account</Label>
             <Select value={syncConnectionId} onValueChange={onSyncConnectionChange}>
-              <SelectTrigger className="h-8">
+              <SelectTrigger className="">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

@@ -230,7 +230,7 @@ export function CustomFieldUpsertSheet({
                     name="entityType"
                     render={({ field: f }) => (
                       <Select value={f.value} onValueChange={f.onChange}>
-                        <SelectTrigger className="h-8 text-sm">
+                        <SelectTrigger className="text-sm">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -255,7 +255,7 @@ export function CustomFieldUpsertSheet({
                 <Label className="text-xs font-medium">Name *</Label>
                 <Input
                   {...form.register("name")}
-                  className="h-8 text-sm"
+                  className="text-sm"
                   placeholder="e.g. Employee Badge Number"
                 />
                 {form.formState.errors.name && (
@@ -274,7 +274,7 @@ export function CustomFieldUpsertSheet({
                     </Label>
                     <Input
                       {...form.register("key")}
-                      className="h-8 text-sm font-mono"
+                      className="text-sm font-mono"
                       placeholder="e.g. badge_number"
                     />
                     {form.formState.errors.key && (
@@ -295,7 +295,7 @@ export function CustomFieldUpsertSheet({
                       name="fieldType"
                       render={({ field: f }) => (
                         <Select value={f.value} onValueChange={f.onChange}>
-                          <SelectTrigger className="h-8 text-sm">
+                          <SelectTrigger className="text-sm">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -335,7 +335,7 @@ export function CustomFieldUpsertSheet({
                   <Label className="text-xs font-medium">Placeholder</Label>
                   <Input
                     {...form.register("placeholder")}
-                    className="h-8 text-sm"
+                    className="text-sm"
                     placeholder="Shown when the field is empty"
                   />
                 </div>
@@ -363,7 +363,7 @@ export function CustomFieldUpsertSheet({
                       <div className="flex-1 space-y-1">
                         <Input
                           {...form.register(`options.${idx}.label`)}
-                          className="h-8 text-xs"
+                          className="text-xs"
                           placeholder="Label"
                           onChange={(e) => {
                             form.register(`options.${idx}.label`).onChange(e);
@@ -379,7 +379,7 @@ export function CustomFieldUpsertSheet({
                       <div className="flex-1 space-y-1">
                         <Input
                           {...form.register(`options.${idx}.value`)}
-                          className="h-8 text-xs font-mono"
+                          className="text-xs font-mono"
                           placeholder="value"
                         />
                         {form.formState.errors.options?.[idx]?.value && (
@@ -392,7 +392,7 @@ export function CustomFieldUpsertSheet({
                         type="button"
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7 text-muted-foreground hover:text-destructive shrink-0"
+                        className="w-7 text-muted-foreground hover:text-destructive shrink-0"
                         onClick={() => removeOption(idx)}
                       >
                         <X className="h-3.5 w-3.5" />
@@ -413,7 +413,7 @@ export function CustomFieldUpsertSheet({
                           <Input
                             type="number"
                             {...form.register("validationMinLength")}
-                            className="h-8 text-xs"
+                            className="text-xs"
                             placeholder="0"
                             min={0}
                           />
@@ -423,7 +423,7 @@ export function CustomFieldUpsertSheet({
                           <Input
                             type="number"
                             {...form.register("validationMaxLength")}
-                            className="h-8 text-xs"
+                            className="text-xs"
                             placeholder="500"
                             min={1}
                           />
@@ -437,7 +437,7 @@ export function CustomFieldUpsertSheet({
                           <Input
                             type="number"
                             {...form.register("validationMinValue")}
-                            className="h-8 text-xs"
+                            className="text-xs"
                           />
                         </div>
                         <div className="space-y-1">
@@ -445,7 +445,7 @@ export function CustomFieldUpsertSheet({
                           <Input
                             type="number"
                             {...form.register("validationMaxValue")}
-                            className="h-8 text-xs"
+                            className="text-xs"
                           />
                         </div>
                       </>
@@ -457,7 +457,7 @@ export function CustomFieldUpsertSheet({
                           <Input
                             type="date"
                             {...form.register("validationDateMin")}
-                            className="h-8 text-xs"
+                            className="text-xs"
                           />
                         </div>
                         <div className="space-y-1">
@@ -465,7 +465,7 @@ export function CustomFieldUpsertSheet({
                           <Input
                             type="date"
                             {...form.register("validationDateMax")}
-                            className="h-8 text-xs"
+                            className="text-xs"
                           />
                         </div>
                       </>

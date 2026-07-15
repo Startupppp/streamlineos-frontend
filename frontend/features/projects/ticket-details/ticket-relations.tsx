@@ -130,7 +130,7 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
           <PopoverContent className="w-80 p-3 space-y-3" align="end">
             <p className="text-xs font-medium">Add Relation</p>
             <Select value={selectedType} onValueChange={handleTypeChange}>
-              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="text-xs"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {RELATION_TYPES.map((t) => (
                   <SelectItem key={t} value={t} className="text-xs">
@@ -140,7 +140,7 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
               </SelectContent>
             </Select>
             <Command>
-              <CommandInput placeholder="Search tickets..." className="h-8 text-xs" />
+              <CommandInput placeholder="Search tickets..." className="text-xs" />
               <CommandList className="max-h-[160px]">
                 <CommandEmpty className="py-2 text-xs text-muted-foreground text-center">No tickets found.</CommandEmpty>
                 <CommandGroup>
@@ -162,7 +162,7 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
             </Command>
             <Button
               size="sm"
-              className="w-full h-7 text-xs"
+              className="w-full text-xs"
               onClick={handleAdd}
               disabled={!selectedTicketId || addRelation.isPending}
             >

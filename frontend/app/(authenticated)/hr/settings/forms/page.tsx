@@ -59,7 +59,7 @@ export default function HrFormsSettingsPage() {
         subtitle="Build forms for requests, intake, and approvals"
         actions={
           canManage ? (
-            <Button size="sm" className="h-8 gap-1.5" onClick={handleCreateClick}>
+            <Button size="sm" className="gap-1.5" onClick={handleCreateClick}>
               <Plus className="h-4 w-4" /> New Form
             </Button>
           ) : undefined

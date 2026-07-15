@@ -36,7 +36,7 @@ export function FormBuilderTabSkeleton() {
     <div className="space-y-4 pt-3">
       <div className="bg-card border border-border rounded-xl p-4 space-y-3">
         <Skeleton className="h-4 w-24 rounded" />
-        <Skeleton className="h-8 w-full rounded" />
+        <Skeleton className="h-4 w-full rounded" />
         <Skeleton className="h-8 w-1/2 rounded" />
         <Skeleton className="h-16 w-full rounded" />
       </div>
@@ -141,14 +141,14 @@ export function FormBuilderTab({ projectId, formId }: FormBuilderTabProps) {
               value={effectiveName}
               onChange={handleNameChange}
               placeholder="e.g. Bug Report Form"
-              className="h-8 text-sm"
+              className="text-sm"
               readOnly={readOnly}
             />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs">Type</Label>
             <Select value={effectiveType} onValueChange={handleTypeChange} disabled={readOnly}>
-              <SelectTrigger className="h-8 text-sm">
+              <SelectTrigger className="text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

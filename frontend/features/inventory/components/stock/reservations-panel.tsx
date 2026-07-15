@@ -189,7 +189,7 @@ export function ReservationsPanel() {
     <>
       <div className="flex flex-wrap items-center gap-2 mb-3">
         <Select value={statusFilter} onValueChange={handleStatusChange}>
-          <SelectTrigger className="h-8 text-xs w-[160px]">
+          <SelectTrigger className="text-xs w-[160px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

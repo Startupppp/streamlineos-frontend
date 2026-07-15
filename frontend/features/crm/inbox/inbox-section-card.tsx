@@ -151,7 +151,7 @@ export function InboxSectionCard({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7"
+                      className="w-7"
                       onClick={handleComplete(item.id)}
                       disabled={isCompletePending}
                       aria-label="Complete task"

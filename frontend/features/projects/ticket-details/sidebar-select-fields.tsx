@@ -97,7 +97,7 @@ export function SidebarSelectFields({
             Status
           </span>
           <Select value={ticket.status || "TODO"} onValueChange={onStatusChange}>
-            <SelectTrigger className="h-8 text-xs bg-card border-input w-full">
+            <SelectTrigger className="text-xs bg-card border-input w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -137,7 +137,7 @@ export function SidebarSelectFields({
             Priority
           </span>
           <Select value={ticket.priority || "MEDIUM"} onValueChange={onPriorityChange}>
-            <SelectTrigger className="h-8 text-xs bg-card border-input w-full">
+            <SelectTrigger className="text-xs bg-card border-input w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -156,7 +156,7 @@ export function SidebarSelectFields({
             Type
           </span>
           <Select value={ticket.type || "TASK"} onValueChange={onTypeChange}>
-            <SelectTrigger className="h-8 text-xs bg-card border-input w-full">
+            <SelectTrigger className="text-xs bg-card border-input w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -176,7 +176,7 @@ export function SidebarSelectFields({
             min={0}
             value={ticket.points ?? ""}
             onChange={onPointsChange}
-            className="h-8 text-xs bg-card border-input w-full"
+            className="text-xs bg-card border-input w-full"
             placeholder="0"
           />
         </div>
@@ -189,7 +189,7 @@ export function SidebarSelectFields({
             Sprint
           </span>
           <Select value={ticket.sprintId?.toString() || "none"} onValueChange={onSprintChange}>
-            <SelectTrigger className="h-8 text-xs bg-card border-input w-full">
+            <SelectTrigger className="text-xs bg-card border-input w-full">
               <SelectValue placeholder="None" />
             </SelectTrigger>
             <SelectContent>
@@ -209,7 +209,7 @@ export function SidebarSelectFields({
             Epic
           </span>
           <Select value={ticket.epicId?.toString() || "none"} onValueChange={onEpicChange}>
-            <SelectTrigger className="h-8 text-xs bg-card border-input w-full">
+            <SelectTrigger className="text-xs bg-card border-input w-full">
               <SelectValue placeholder="None" />
             </SelectTrigger>
             <SelectContent>
@@ -231,7 +231,7 @@ export function SidebarSelectFields({
             Module
           </span>
           <Select value={ticket.moduleId?.toString() || "none"} onValueChange={onModuleChange}>
-            <SelectTrigger className="h-8 text-xs bg-card border-input w-full">
+            <SelectTrigger className="text-xs bg-card border-input w-full">
               <SelectValue placeholder="None" />
             </SelectTrigger>
             <SelectContent>
@@ -250,7 +250,7 @@ export function SidebarSelectFields({
             Cycle
           </span>
           <Select value={ticket.cycleId?.toString() || "none"} onValueChange={onCycleChange}>
-            <SelectTrigger className="h-8 text-xs bg-card border-input w-full">
+            <SelectTrigger className="text-xs bg-card border-input w-full">
               <SelectValue placeholder="None" />
             </SelectTrigger>
             <SelectContent>

@@ -95,7 +95,7 @@ export function FormRenderer({ fields, onSubmit, isPending, readOnly = false, in
               <Input
                 value={strVal}
                 onChange={handleInputChange(field.key)}
-                className="h-8 text-sm"
+                className="text-sm"
                 readOnly={readOnly}
               />
             )}
@@ -112,7 +112,7 @@ export function FormRenderer({ fields, onSubmit, isPending, readOnly = false, in
                 type="number"
                 value={numVal}
                 onChange={(e) => setValue(field.key, parseFloat(e.target.value) || 0)}
-                className="h-8 text-sm"
+                className="text-sm"
                 readOnly={readOnly}
               />
             )}
@@ -121,13 +121,13 @@ export function FormRenderer({ fields, onSubmit, isPending, readOnly = false, in
                 type="date"
                 value={strVal}
                 onChange={handleInputChange(field.key)}
-                className="h-8 text-sm"
+                className="text-sm"
                 readOnly={readOnly}
               />
             )}
             {field.type === "select" && !readOnly && (
               <Select value={strVal} onValueChange={(v) => setValue(field.key, v)}>
-                <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Select…" /></SelectTrigger>
+                <SelectTrigger className="text-sm"><SelectValue placeholder="Select…" /></SelectTrigger>
                 <SelectContent>
                   {(field.options ?? []).map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
@@ -136,7 +136,7 @@ export function FormRenderer({ fields, onSubmit, isPending, readOnly = false, in
               </Select>
             )}
             {field.type === "select" && readOnly && (
-              <Input value={strVal} readOnly className="h-8 text-sm" />
+              <Input value={strVal} readOnly className="text-sm" />
             )}
             {field.type === "multi_select" && (
               <div className="flex flex-wrap gap-2">
@@ -171,10 +171,10 @@ export function FormRenderer({ fields, onSubmit, isPending, readOnly = false, in
               </div>
             )}
             {field.type === "file" && !readOnly && (
-              <Input type="file" onChange={(e) => setValue(field.key, e.target.files?.[0]?.name ?? "")} className="h-8 text-sm" />
+              <Input type="file" onChange={(e) => setValue(field.key, e.target.files?.[0]?.name ?? "")} className="text-sm" />
             )}
             {field.type === "file" && readOnly && (
-              <Input value={strVal} readOnly className="h-8 text-sm" />
+              <Input value={strVal} readOnly className="text-sm" />
             )}
 
             {errors[field.key] && (

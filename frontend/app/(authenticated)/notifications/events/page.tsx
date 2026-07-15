@@ -447,7 +447,7 @@ function EventRow({
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+              className="w-7 opacity-0 group-hover:opacity-100 transition-opacity"
               onClick={handleSendTestClick}
               disabled={sending}
               title="Send test to me"
@@ -462,7 +462,7 @@ function EventRow({
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+              className="w-7 opacity-0 group-hover:opacity-100 transition-opacity"
               onClick={handleConfigureClick}
               title="Configure"
             >
@@ -570,10 +570,10 @@ export default function NotificationEventsPage() {
         placeholder="Search events…"
         value={search}
         onChange={handleSearchChange}
-        className="h-8 w-56 text-xs"
+        className="w-56 text-xs"
       />
       <Select value={moduleFilter} onValueChange={handleModuleChange}>
-        <SelectTrigger className="h-8 w-44 text-xs">
+        <SelectTrigger className="w-44 text-xs">
           <SelectValue placeholder="All modules" />
         </SelectTrigger>
         <SelectContent>

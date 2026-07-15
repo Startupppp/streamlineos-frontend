@@ -221,7 +221,7 @@ export function LogActivityDialog({
               <FormItem>
                 <FormLabel>Due Date</FormLabel>
                 <FormControl>
-                  <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+                  <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
                 </FormControl>
                 <FormMessage />
               </FormItem>

@@ -83,7 +83,7 @@ export function CareerPathsList({ canManage: _canManage }: Props) {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 px-2 text-xs text-muted-foreground"
+                className="px-2 text-xs text-muted-foreground"
                 onClick={() => handleToggle(path.id)}
               >
                 {isExpanded ? (

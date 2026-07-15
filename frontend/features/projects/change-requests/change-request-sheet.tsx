@@ -133,7 +133,7 @@ export function ChangeRequestSheet({ projectId, open, onOpenChange, editCr }: Ch
           <form id="cr-form" onSubmit={form.handleSubmit(handleSubmit)} className="px-5 py-4 space-y-4">
             <div className="space-y-1.5">
               <Label className="text-[11px]">Title *</Label>
-              <Input {...form.register("title")} className="h-8 text-[11px]" placeholder="Describe the change" />
+              <Input {...form.register("title")} className="text-[11px]" placeholder="Describe the change" />
               {form.formState.errors.title && (
                 <p className="text-[10px] text-destructive">{form.formState.errors.title.message}</p>
               )}
@@ -163,7 +163,7 @@ export function ChangeRequestSheet({ projectId, open, onOpenChange, editCr }: Ch
                 <div className="space-y-1.5">
                   <Label className="text-[11px]">Status</Label>
                   <Select value={form.watch("status")} onValueChange={(v) => form.setValue("status", v)}>
-                    <SelectTrigger className="h-8 text-[11px]"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="text-[11px]"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {CR_STATUSES.map((s) => (
                         <SelectItem key={s} value={s}>{CR_STATUS_LABELS[s]}</SelectItem>
@@ -174,15 +174,15 @@ export function ChangeRequestSheet({ projectId, open, onOpenChange, editCr }: Ch
                 <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-1.5">
                     <Label className="text-[11px]">Estimate (hrs)</Label>
-                    <Input {...form.register("estimateHours")} type="number" step="0.5" className="h-8 text-[11px]" placeholder="0" />
+                    <Input {...form.register("estimateHours")} type="number" step="0.5" className="text-[11px]" placeholder="0" />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-[11px]">Budget (₹)</Label>
-                    <Input {...form.register("budgetRs")} type="number" step="1" className="h-8 text-[11px]" placeholder="0" />
+                    <Input {...form.register("budgetRs")} type="number" step="1" className="text-[11px]" placeholder="0" />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-[11px]">Timeline (days)</Label>
-                    <Input {...form.register("timelineDays")} type="number" className="h-8 text-[11px]" placeholder="0" />
+                    <Input {...form.register("timelineDays")} type="number" className="text-[11px]" placeholder="0" />
                   </div>
                 </div>
                 <div className="space-y-1.5">
@@ -194,7 +194,7 @@ export function ChangeRequestSheet({ projectId, open, onOpenChange, editCr }: Ch
                     onChange={(v) => form.setValue("approvalOwnerId", v ?? "none")}
                     allowUnassigned
                     placeholder="Unassigned"
-                    className="h-8 text-[11px]"
+                    className="text-[11px]"
                   />
                 </div>
                 <div className="space-y-1.5">

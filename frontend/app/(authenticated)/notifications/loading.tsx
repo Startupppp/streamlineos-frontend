@@ -10,7 +10,7 @@ export default function NotificationsLoading() {
       filters={
         <div className="flex items-center gap-1">
           {Array.from({ length: 12 }).map((_, i) => (
-            <Skeleton key={i} className="h-7 w-14 rounded-md" />
+            <Skeleton key={i} className="h-8 w-14 rounded-md" />
           ))}
         </div>
       }

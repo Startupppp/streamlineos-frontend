@@ -130,7 +130,7 @@ export function FieldRow({ field, onEdit, onDeleteRequest, onToggle }: FieldRowP
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7"
+                className="w-7"
                 onClick={handleEdit}
                 aria-label={`Edit ${field.label}`}
               >
@@ -139,7 +139,7 @@ export function FieldRow({ field, onEdit, onDeleteRequest, onToggle }: FieldRowP
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 text-destructive"
+                className="w-7 text-destructive"
                 onClick={handleDelete}
                 aria-label={`Delete ${field.label}`}
               >
@@ -169,7 +169,7 @@ export function CreateOptionRow({ index, control, onRemove }: CreateOptionRowPro
         render={({ field }) => (
           <FormItem className="flex-1">
             <FormControl>
-              <Input {...field} className="h-8 text-xs" placeholder="Label" />
+              <Input {...field} className="text-xs" placeholder="Label" />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -181,7 +181,7 @@ export function CreateOptionRow({ index, control, onRemove }: CreateOptionRowPro
         render={({ field }) => (
           <FormItem className="flex-1">
             <FormControl>
-              <Input {...field} className="h-8 text-xs" placeholder="Value" />
+              <Input {...field} className="text-xs" placeholder="Value" />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -191,7 +191,7 @@ export function CreateOptionRow({ index, control, onRemove }: CreateOptionRowPro
         type="button"
         variant="ghost"
         size="icon"
-        className="h-8 w-8 text-destructive shrink-0"
+        className="w-8 text-destructive shrink-0"
         onClick={handleRemove}
         aria-label="Remove option"
       >
@@ -217,7 +217,7 @@ export function EditOptionRow({ index, control, onRemove }: EditOptionRowProps) 
         render={({ field }) => (
           <FormItem className="flex-1">
             <FormControl>
-              <Input {...field} className="h-8 text-xs" placeholder="Label" />
+              <Input {...field} className="text-xs" placeholder="Label" />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -229,7 +229,7 @@ export function EditOptionRow({ index, control, onRemove }: EditOptionRowProps) 
         render={({ field }) => (
           <FormItem className="flex-1">
             <FormControl>
-              <Input {...field} className="h-8 text-xs" placeholder="Value" />
+              <Input {...field} className="text-xs" placeholder="Value" />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -239,7 +239,7 @@ export function EditOptionRow({ index, control, onRemove }: EditOptionRowProps) 
         type="button"
         variant="ghost"
         size="icon"
-        className="h-8 w-8 text-destructive shrink-0"
+        className="w-8 text-destructive shrink-0"
         onClick={handleRemove}
         aria-label="Remove option"
       >

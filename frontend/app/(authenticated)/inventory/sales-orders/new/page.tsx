@@ -322,7 +322,7 @@ export default function NewSalesOrderPage() {
             type="button"
             variant="ghost"
             size="icon"
-            className="h-7 w-7"
+            className="w-7"
             onClick={handleRemove}
             disabled={fields.length === 1}
             aria-label={`Remove line ${row._index + 1}`}
@@ -399,7 +399,7 @@ export default function NewSalesOrderPage() {
                   <FormItem>
                     <FormLabel>Order Date *</FormLabel>
                     <FormControl>
-                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -417,7 +417,7 @@ export default function NewSalesOrderPage() {
                         value={field.value ?? ""}
                         onChange={field.onChange}
                         placeholder="Pick a date"
-                        className="h-8 text-sm"
+                        className="text-sm"
                         fromDate={parseISO(todayIso())}
                       />
                     </FormControl>

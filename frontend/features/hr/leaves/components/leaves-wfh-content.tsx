@@ -132,7 +132,7 @@ export function LeavesWfhContent() {
             <Card className="rounded-2xl border border-amber-200/50 dark:border-amber-800/30 bg-amber-50/50 dark:bg-amber-950/10 shadow-sm overflow-hidden">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-semibold flex items-center gap-2 text-amber-800 dark:text-amber-400">
-                  <div className="h-7 w-7 rounded-lg bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center">
+                  <div className="w-7 rounded-lg bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center">
                     <Users className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
                   </div>
                   Who&apos;s Out This Week
@@ -148,7 +148,7 @@ export function LeavesWfhContent() {
                       key={leave.id}
                       className="flex items-center gap-2 px-3 py-2 rounded-lg bg-card border border-amber-200/50 dark:border-amber-800/20"
                     >
-                      <Avatar className="h-7 w-7">
+                      <Avatar className="w-7">
                         <AvatarImage src={resolveImageUrl(leave.user?.image)} />
                         <AvatarFallback className="text-[10px] bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
                           {leave.user?.firstName?.[0]}

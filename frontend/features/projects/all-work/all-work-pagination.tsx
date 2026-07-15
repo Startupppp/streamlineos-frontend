@@ -31,7 +31,7 @@ export function PaginationFooter({ page, limit, total, onPageChange }: Paginatio
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 px-2.5 text-xs"
+          className="px-2.5 text-xs"
           disabled={page <= 1}
           onClick={handlePrev}
           aria-label="Previous page"
@@ -44,7 +44,7 @@ export function PaginationFooter({ page, limit, total, onPageChange }: Paginatio
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 px-2.5 text-xs"
+          className="px-2.5 text-xs"
           disabled={page >= totalPages}
           onClick={handleNext}
           aria-label="Next page"

@@ -98,7 +98,7 @@ function ScheduleRow({ schedule, onToggle, onDelete, isToggling }: ScheduleRowPr
             <Button
               size="icon"
               variant="ghost"
-              className="h-8 w-8"
+              className="w-8"
               onClick={handleToggle}
               disabled={isToggling}
               aria-label={schedule.isEnabled ? "Pause schedule" : "Activate schedule"}
@@ -112,7 +112,7 @@ function ScheduleRow({ schedule, onToggle, onDelete, isToggling }: ScheduleRowPr
             <Button
               size="icon"
               variant="ghost"
-              className="h-8 w-8 text-destructive hover:text-destructive"
+              className="w-8 text-destructive hover:text-destructive"
               onClick={handleDelete}
               aria-label="Delete schedule"
             >

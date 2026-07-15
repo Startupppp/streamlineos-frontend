@@ -96,7 +96,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
         <Button
           variant="outline"
           size="sm"
-          className="h-8 text-xs font-medium px-3 shrink-0"
+          className="text-xs font-medium px-3 shrink-0"
           onClick={onToday}
         >
           Today
@@ -106,7 +106,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
           <Button
             variant="outline"
             size="icon"
-            className="h-8 w-8 rounded-r-none border-r-0"
+            className="w-8 rounded-r-none border-r-0"
             aria-label="Previous"
             onClick={onPrev}
           >
@@ -115,7 +115,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
           <Button
             variant="outline"
             size="icon"
-            className="h-8 w-8 rounded-l-none"
+            className="w-8 rounded-l-none"
             aria-label="Next"
             onClick={onNext}
           >
@@ -132,7 +132,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
 
       <div className="flex items-center gap-2">
         <Select value={view} onValueChange={handleViewChange}>
-          <SelectTrigger className="h-8 w-[95px] text-xs font-medium">
+          <SelectTrigger className="w-[95px] text-xs font-medium">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -153,7 +153,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
             <Button
               variant="outline"
               size="sm"
-              className="h-8 text-xs font-medium gap-1 px-3"
+              className="text-xs font-medium gap-1 px-3"
             >
               <Share2 className="h-3.5 w-3.5" />
               <span className="hidden md:inline">Share</span>
@@ -173,7 +173,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
         <Button
           variant="outline"
           size="icon"
-          className="h-8 w-8 relative"
+          className="w-8 relative"
           aria-label="Calendar accounts"
           onClick={onOpenAccounts}
         >
@@ -188,7 +188,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
         <Button
           variant={hrEventsVisible ? "secondary" : "outline"}
           size="sm"
-          className="h-8 text-xs font-medium gap-1 px-3"
+          className="text-xs font-medium gap-1 px-3"
           aria-label={hrEventsVisible ? "Hide HR events" : "Show HR events"}
           onClick={onToggleHrEvents}
         >
@@ -199,7 +199,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
         <Button
           variant={crmEventsVisible ? "secondary" : "outline"}
           size="sm"
-          className="h-8 text-xs font-medium gap-1 px-3"
+          className="text-xs font-medium gap-1 px-3"
           aria-label={crmEventsVisible ? "Hide CRM events" : "Show CRM events"}
           onClick={onToggleCrmEvents}
         >
@@ -211,7 +211,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
           <DropdownMenuTrigger asChild>
             <Button
               size="sm"
-              className="h-8 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground gap-1"
+              className="text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground gap-1"
             >
               <Plus className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Add</span>

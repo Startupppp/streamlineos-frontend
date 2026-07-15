@@ -165,10 +165,10 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
           value={search}
           onChange={handleSearchChange}
           placeholder="Search…"
-          className="h-8 w-36 text-xs"
+          className="w-36 text-xs"
         />
         <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="h-8 w-40 text-xs">
+          <SelectTrigger className="w-40 text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -180,7 +180,7 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
           </SelectContent>
         </Select>
         <Select value={activeFilter} onValueChange={setActiveFilter}>
-          <SelectTrigger className="h-8 w-32 text-xs">
+          <SelectTrigger className="w-32 text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -204,7 +204,7 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
         canManage ? (
           <LoadingButton
             size="sm"
-            className="h-8 text-xs"
+            className="text-xs"
             onClick={handleNewForm}
             isPending={createForm.isPending}
             loadingText="Creating…"

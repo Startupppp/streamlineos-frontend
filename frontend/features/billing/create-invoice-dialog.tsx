@@ -68,7 +68,7 @@ function DialogLineItemRow({
     <div className="grid grid-cols-12 gap-2 items-start">
       <div className="col-span-5 space-y-1">
         <Input
-          className="h-8 text-sm"
+          className="text-sm"
           placeholder="Description"
           {...register(`lineItems.${idx}.description`)}
         />
@@ -78,7 +78,7 @@ function DialogLineItemRow({
       </div>
       <div className="col-span-2 space-y-1">
         <Input
-          className="h-8 text-sm text-right"
+          className="text-sm text-right"
           type="number"
           placeholder="Qty"
           {...register(`lineItems.${idx}.quantity`, { valueAsNumber: true })}
@@ -89,7 +89,7 @@ function DialogLineItemRow({
       </div>
       <div className="col-span-2 space-y-1">
         <Input
-          className="h-8 text-sm text-right"
+          className="text-sm text-right"
           type="number"
           placeholder="Rate"
           {...register(`lineItems.${idx}.rate`, { valueAsNumber: true })}
@@ -250,7 +250,7 @@ export function CreateInvoiceDialog({
               <Label className="text-xs">Tax Rate (%)</Label>
               <Input
                 type="number"
-                className="h-8 mt-1"
+                className="mt-1"
                 {...register("taxRate", { valueAsNumber: true })}
               />
               {errors.taxRate && (
@@ -263,7 +263,7 @@ export function CreateInvoiceDialog({
               <Label className="text-xs">Discount</Label>
               <Input
                 type="number"
-                className="h-8 mt-1"
+                className="mt-1"
                 {...register("discount", { valueAsNumber: true })}
               />
               {errors.discount && (
@@ -293,7 +293,7 @@ export function CreateInvoiceDialog({
             <Label className="text-xs">Notes</Label>
             <Input
               placeholder="Payment terms, bank details, etc."
-              className="h-8 mt-1"
+              className="mt-1"
               {...register("notes")}
             />
           </div>

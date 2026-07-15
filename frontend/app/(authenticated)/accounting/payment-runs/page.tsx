@@ -141,7 +141,7 @@ export default function PaymentRunsPage() {
       }
       filters={
         <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
-          <SelectTrigger className="h-8 w-[160px] text-xs">
+          <SelectTrigger className="w-[160px] text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

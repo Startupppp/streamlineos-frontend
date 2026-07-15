@@ -338,7 +338,7 @@ export default function PurchaseOrdersListPage() {
           value={search}
           onChange={handleSearchChange}
           placeholder="Search PO number or vendor…"
-          className="h-8 w-full min-w-0 pl-8 text-xs"
+          className="w-full min-w-0 pl-8 text-xs"
         />
       </div>
       <div className="hidden min-w-0 flex-[2] flex-row flex-nowrap items-center gap-2 sm:flex lg:gap-3">

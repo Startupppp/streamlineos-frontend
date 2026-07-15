@@ -35,7 +35,7 @@ function buildEmployeeListColumns(getDept: (emp: Employee) => string | null): Da
             : (emp.name ?? "—");
         return (
           <div className="flex items-center gap-3">
-            <Avatar className="h-8 w-8 shrink-0">
+            <Avatar className="w-8 shrink-0">
               <AvatarImage src={resolveImageUrl(emp.image)} />
               <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
                 {displayName[0]?.toUpperCase()}

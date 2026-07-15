@@ -250,7 +250,7 @@ export function AutomationCard({ rule, onToggle, onDeleteRequest }: AutomationCa
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                className="w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
                 onClick={handleDeleteRequest}
                 aria-label="Delete automation"
               >
@@ -282,7 +282,7 @@ export function ConditionRow({ index: i, control, showRemove, onRemove }: Condit
         name={`conditions.${i}.field`}
         render={({ field }) => (
           <Select onValueChange={field.onChange} value={field.value}>
-            <SelectTrigger className="h-8 text-xs w-[6.5rem]">
+            <SelectTrigger className="text-xs w-[6.5rem]">
               <SelectValue placeholder="Field" />
             </SelectTrigger>
             <SelectContent>
@@ -298,7 +298,7 @@ export function ConditionRow({ index: i, control, showRemove, onRemove }: Condit
         name={`conditions.${i}.operator`}
         render={({ field }) => (
           <Select onValueChange={field.onChange} value={field.value}>
-            <SelectTrigger className="h-8 text-xs w-[6.5rem]">
+            <SelectTrigger className="text-xs w-[6.5rem]">
               <SelectValue placeholder="Operator" />
             </SelectTrigger>
             <SelectContent>
@@ -313,7 +313,7 @@ export function ConditionRow({ index: i, control, showRemove, onRemove }: Condit
         control={control}
         name={`conditions.${i}.value`}
         render={({ field }) => (
-          <Input {...field} className="h-8 text-xs flex-1" placeholder="Value" />
+          <Input {...field} className="text-xs flex-1" placeholder="Value" />
         )}
       />
       {showRemove && (
@@ -321,7 +321,7 @@ export function ConditionRow({ index: i, control, showRemove, onRemove }: Condit
           type="button"
           variant="ghost"
           size="icon"
-          className="h-8 w-8 text-destructive shrink-0"
+          className="w-8 text-destructive shrink-0"
           onClick={handleRemove}
           aria-label="Remove condition"
         >

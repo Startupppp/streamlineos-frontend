@@ -89,7 +89,7 @@ export function VendorPaymentAllocationDialog({
               type="number"
               min="1"
               placeholder="e.g. 42"
-              className="h-8 text-sm"
+              className="text-sm"
               {...form.register("vendorPaymentId")}
             />
             <p className="text-[11px] text-muted-foreground">
@@ -109,7 +109,7 @@ export function VendorPaymentAllocationDialog({
               name="billId"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger className="h-8 text-sm">
+                  <SelectTrigger className="text-sm">
                     <SelectValue placeholder="Select a bill" />
                   </SelectTrigger>
                   <SelectContent>
@@ -137,7 +137,7 @@ export function VendorPaymentAllocationDialog({
               step="0.01"
               min="0.01"
               placeholder="0.00"
-              className="h-8 text-sm"
+              className="text-sm"
               {...form.register("amount")}
             />
             {form.formState.errors.amount && (

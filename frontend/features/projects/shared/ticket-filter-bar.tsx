@@ -1,9 +1,9 @@
 ﻿"use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition, type ChangeEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -12,7 +12,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { CircleCheckIcon } from "@animateicons/react/lucide";
-import { Search, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { cn } from "@/lib/utils";
 import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
@@ -189,8 +189,8 @@ export function TicketFilterBar({
     }
   }, [debouncedLocalSearch, q, setParam]);
 
-  function handleSearchChange(e: ChangeEvent<HTMLInputElement>) {
-    setLocalSearch(e.target.value);
+  function handleSearchChange(value: string) {
+    setLocalSearch(value);
   }
 
   function handleHideDoneClick() {
@@ -335,12 +335,10 @@ export function TicketFilterBar({
               : "min-w-[120px] max-w-[220px] flex-1",
           )}
         >
-          <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input
+          <SearchInput
             placeholder="Search..."
             value={localSearch}
-            onChange={handleSearchChange}
-            className="h-8 bg-card border-border text-xs font-normal shadow-xs pl-7"
+            onValueChange={handleSearchChange}
           />
         </div>
 
@@ -379,7 +377,7 @@ export function TicketFilterBar({
                   size="icon"
                   onClick={handleHideDoneClick}
                   className={cn(
-                    "h-8 w-8 shrink-0 bg-card shadow-xs",
+                    "shrink-0 bg-card shadow-xs",
                     hideCompleted && "border-primary bg-primary/10 text-primary",
                   )}
                   aria-label={doneCount > 0 ? `Hide done (${doneCount})` : "Hide done"}
@@ -400,9 +398,9 @@ export function TicketFilterBar({
           <button
             type="button"
             onClick={clearAll}
-            className="flex h-8 shrink-0 items-center gap-1 rounded-md border border-transparent px-2 text-xs text-muted-foreground transition-colors hover:border-border hover:bg-muted/50 hover:text-foreground"
+            className="flex h-9 shrink-0 items-center gap-1 rounded-md border border-transparent px-2 text-sm text-muted-foreground transition-colors hover:border-border hover:bg-muted/50 hover:text-foreground"
           >
-            <X className="h-3 w-3 shrink-0" />
+            <X className="h-3.5 w-3.5 shrink-0" />
             Clear all
           </button>
         )}

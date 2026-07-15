@@ -105,7 +105,7 @@ export function VendorCreditFormSheet({ open, onOpenChange }: VendorCreditFormSh
       cell: (row) => (
         <Input
           {...form.register(`items.${row._index}.description`)}
-          className="h-8 text-xs border-0 shadow-none focus-visible:ring-0 px-0"
+          className="text-xs border-0 shadow-none focus-visible:ring-0 px-0"
           placeholder="Description"
         />
       ),
@@ -118,7 +118,7 @@ export function VendorCreditFormSheet({ open, onOpenChange }: VendorCreditFormSh
       cell: (row) => (
         <Input
           {...form.register(`items.${row._index}.quantity`)}
-          className="h-8 text-xs text-right border-0 shadow-none focus-visible:ring-0 px-0"
+          className="text-xs text-right border-0 shadow-none focus-visible:ring-0 px-0"
           placeholder="1"
           type="number"
           min="0"
@@ -134,7 +134,7 @@ export function VendorCreditFormSheet({ open, onOpenChange }: VendorCreditFormSh
       cell: (row) => (
         <Input
           {...form.register(`items.${row._index}.rate`)}
-          className="h-8 text-xs text-right border-0 shadow-none focus-visible:ring-0 px-0"
+          className="text-xs text-right border-0 shadow-none focus-visible:ring-0 px-0"
           placeholder="0.00"
           type="number"
           min="0"
@@ -153,7 +153,7 @@ export function VendorCreditFormSheet({ open, onOpenChange }: VendorCreditFormSh
           name={`items.${row._index}.gstRate`}
           render={({ field: f }) => (
             <Select value={f.value} onValueChange={f.onChange}>
-              <SelectTrigger className="h-8 text-xs border-0 shadow-none focus:ring-0">
+              <SelectTrigger className="text-xs border-0 shadow-none focus:ring-0">
                 <SelectValue placeholder="0" />
               </SelectTrigger>
               <SelectContent>
@@ -222,7 +222,7 @@ export function VendorCreditFormSheet({ open, onOpenChange }: VendorCreditFormSh
             render={({ field, fieldState }) => (
               <>
                 <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger className="h-8 text-sm">
+                  <SelectTrigger className="text-sm">
                     <SelectValue placeholder="Select vendor…" />
                   </SelectTrigger>
                   <SelectContent>
@@ -245,7 +245,7 @@ export function VendorCreditFormSheet({ open, onOpenChange }: VendorCreditFormSh
           <Label className="text-xs">Reason</Label>
           <Input
             {...form.register("reason")}
-            className="h-8 text-sm"
+            className="text-sm"
             placeholder="e.g. Returned goods, pricing error…"
           />
         </div>

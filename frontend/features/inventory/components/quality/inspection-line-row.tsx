@@ -75,7 +75,7 @@ export const InspectionLineRow = memo(function InspectionLineRow({
                   form.setValue(`lines.${index}.lotId`, "");
                   form.setValue(`lines.${index}.serialId`, "");
                 }}
-                className="h-8 text-xs"
+                className="text-xs"
               />
             )}
           />
@@ -86,7 +86,7 @@ export const InspectionLineRow = memo(function InspectionLineRow({
         <div className="space-y-1">
           <Label className="text-[11px] font-semibold text-foreground/80">Qty *</Label>
           <Input
-            className="h-8 text-xs"
+            className="text-xs"
             type="number"
             placeholder="Qty"
             {...form.register(`lines.${index}.qty`)}
@@ -106,7 +106,7 @@ export const InspectionLineRow = memo(function InspectionLineRow({
                 onValueChange={(v) => field.onChange(v === "none" ? "" : v)}
                 disabled={!enabled || lots.length === 0}
               >
-                <SelectTrigger className="h-8 text-xs">
+                <SelectTrigger className="text-xs">
                   <SelectValue placeholder={enabled ? "Optional" : "Select variant first"} />
                 </SelectTrigger>
                 <SelectContent>
@@ -132,7 +132,7 @@ export const InspectionLineRow = memo(function InspectionLineRow({
                 onValueChange={(v) => field.onChange(v === "none" ? "" : v)}
                 disabled={!enabled || serials.length === 0}
               >
-                <SelectTrigger className="h-8 text-xs">
+                <SelectTrigger className="text-xs">
                   <SelectValue placeholder={enabled ? "Optional" : "Select variant first"} />
                 </SelectTrigger>
                 <SelectContent>

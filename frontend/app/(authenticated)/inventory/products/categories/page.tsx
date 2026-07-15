@@ -273,7 +273,7 @@ function categoriesColumns(
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7"
+              className="w-7"
               aria-label={`Actions for ${cat.name}`}
             >
               <MoreHorizontal className="h-4 w-4" />
@@ -406,12 +406,12 @@ function CategoriesPageInner() {
           value={searchInput}
           onChange={handleSearchChange}
           placeholder="Search categories..."
-          className="h-8 w-full min-w-0 pl-8 text-xs"
+          className="w-full min-w-0 pl-8 text-xs"
         />
       </div>
       <div className="hidden min-w-0 items-center gap-2 sm:flex">
         <Select value={statusParam} onValueChange={handleStatusChange}>
-          <SelectTrigger className="h-8 w-[140px] text-xs">
+          <SelectTrigger className="w-[140px] text-xs">
             <SelectValue placeholder="All" />
           </SelectTrigger>
           <SelectContent>

@@ -18,7 +18,7 @@ export default function AssetReturnsLoading() {
                   <Skeleton className="h-3.5 w-20" />
                   <Skeleton className="h-4 w-4 rounded" />
                 </div>
-                <Skeleton className="h-7 w-12" />
+                <Skeleton className="h-12 w-12" />
               </CardContent>
             </Card>
           ))}
@@ -33,7 +33,7 @@ export default function AssetReturnsLoading() {
                 </div>
                 <Skeleton className="h-3 w-32" />
                 <Skeleton className="h-3 w-24" />
-                <Skeleton className="h-8 w-full rounded-md" />
+                <Skeleton className="h-9 w-full rounded-md" />
               </CardContent>
             </Card>
           ))}

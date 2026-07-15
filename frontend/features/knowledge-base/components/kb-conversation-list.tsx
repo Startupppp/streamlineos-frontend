@@ -178,7 +178,7 @@ export function KbConversationList({
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7"
+            className="w-7"
             onClick={onNewChat}
             aria-label="New chat"
             {...newChatIcon.animatedNavHoverHandlers}
@@ -188,7 +188,7 @@ export function KbConversationList({
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7"
+            className="w-7"
             onClick={onClose}
             aria-label="Close panel"
             {...closeIcon.animatedNavHoverHandlers}
@@ -206,7 +206,7 @@ export function KbConversationList({
             value={search}
             onChange={handleSearchChange}
             placeholder="Search conversations…"
-            className="h-8 flex-1 bg-transparent text-xs focus-visible:outline-none"
+            className="flex-1 bg-transparent text-xs focus-visible:outline-none"
           />
         </div>
       </div>

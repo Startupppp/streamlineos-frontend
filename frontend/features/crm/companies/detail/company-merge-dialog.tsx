@@ -82,7 +82,7 @@ export function CompanyMergeDialog({ pair, currentOrgId, open, onOpenChange, onM
                     }`}
                   >
                     <div className="flex items-start gap-2">
-                      <div className="h-7 w-7 rounded-md bg-primary/10 flex items-center justify-center text-[11px] font-semibold text-primary shrink-0">
+                      <div className="w-7 rounded-md bg-primary/10 flex items-center justify-center text-[11px] font-semibold text-primary shrink-0">
                         {org.name[0]?.toUpperCase() ?? "?"}
                       </div>
                       <div className="min-w-0 flex-1">
@@ -98,10 +98,10 @@ export function CompanyMergeDialog({ pair, currentOrgId, open, onOpenChange, onM
               })}
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => onOpenChange(false)}>
+              <Button variant="outline" size="sm" className="text-xs" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button size="sm" className="h-8 text-xs" onClick={() => setConfirmOpen(true)}>
+              <Button size="sm" className="text-xs" onClick={() => setConfirmOpen(true)}>
                 Merge Companies
               </Button>
             </div>

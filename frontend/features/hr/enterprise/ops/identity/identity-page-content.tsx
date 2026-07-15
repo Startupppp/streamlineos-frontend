@@ -171,7 +171,7 @@ export function IdentityPageContent() {
       >
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center py-16 gap-4 text-center">
           <div className="bg-destructive/10 p-4 rounded-full">
-            <AlertTriangle className="h-8 w-8 text-destructive" aria-hidden="true" />
+            <AlertTriangle className="w-8 text-destructive" aria-hidden="true" />
           </div>
           <div className="space-y-1">
             <p className="text-base font-semibold text-foreground">Failed to load identity data</p>

@@ -152,7 +152,7 @@ export function RecurringTemplateFormSheet({
             </Label>
             <Input
               id="name"
-              className="h-8 text-sm"
+              className="text-sm"
               placeholder="e.g. Monthly retainer"
               {...form.register("name")}
             />
@@ -168,7 +168,7 @@ export function RecurringTemplateFormSheet({
             <Input
               id="clientId"
               type="number"
-              className="h-8 text-sm"
+              className="text-sm"
               placeholder="Client ID"
               {...form.register("clientId")}
             />
@@ -183,7 +183,7 @@ export function RecurringTemplateFormSheet({
                 value={form.watch("frequency")}
                 onValueChange={handleFrequencyChange}
               >
-                <SelectTrigger id="frequency" className="h-8 text-sm">
+                <SelectTrigger id="frequency" className="text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -204,7 +204,7 @@ export function RecurringTemplateFormSheet({
                 value={form.watch("currency")}
                 onValueChange={(v) => form.setValue("currency", v, { shouldValidate: true })}
               >
-                <SelectTrigger id="currency" className="h-8 text-sm">
+                <SelectTrigger id="currency" className="text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -225,7 +225,7 @@ export function RecurringTemplateFormSheet({
               <Input
                 id="nextRunDate"
                 type="date"
-                className="h-8 text-sm"
+                className="text-sm"
                 {...form.register("nextRunDate")}
               />
             </div>
@@ -236,7 +236,7 @@ export function RecurringTemplateFormSheet({
               <Input
                 id="endDate"
                 type="date"
-                className="h-8 text-sm"
+                className="text-sm"
                 {...form.register("endDate")}
               />
             </div>
@@ -253,7 +253,7 @@ export function RecurringTemplateFormSheet({
                   form.setValue("isActive", v === "true", { shouldValidate: true })
                 }
               >
-                <SelectTrigger id="isActive" className="h-8 text-sm">
+                <SelectTrigger id="isActive" className="text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

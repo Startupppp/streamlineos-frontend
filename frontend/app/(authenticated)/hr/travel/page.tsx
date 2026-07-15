@@ -334,7 +334,7 @@ export default function TravelPage() {
               name="departureDate"
               control={form.control}
               render={({ field }) => (
-                <DatePicker id="departureDate" value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+                <DatePicker id="departureDate" value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
               )}
             />
             {form.formState.errors.departureDate && (
@@ -349,7 +349,7 @@ export default function TravelPage() {
               name="returnDate"
               control={form.control}
               render={({ field }) => (
-                <DatePicker id="returnDate" value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+                <DatePicker id="returnDate" value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
               )}
             />
             {form.formState.errors.returnDate && (

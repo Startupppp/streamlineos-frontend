@@ -93,7 +93,7 @@ export function ItemActionDialog({
             placeholder={
               type === "paid" ? "e.g. NEFT0012345678" : "e.g. Account closed"
             }
-            className="h-8"
+            className=""
           />
         </div>
         <DialogFooter>

@@ -60,7 +60,7 @@ function EmojiButton({ emoji, onSelect }: EmojiButtonProps) {
   return (
     <button
       onClick={handleClick}
-      className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-muted/50 text-lg transition-colors"
+      className="w-8 flex items-center justify-center rounded-md hover:bg-muted/50 text-lg transition-colors"
     >
       {emoji}
     </button>

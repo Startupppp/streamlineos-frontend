@@ -239,7 +239,7 @@ export function ThreePlConnectionSheet({
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-7 text-xs gap-1.5"
+                className="text-xs gap-1.5"
                 onClick={handleAddConfig}
               >
                 <Plus className="h-3 w-3" />
@@ -263,7 +263,7 @@ export function ThreePlConnectionSheet({
                             <FormControl>
                               <Input
                                 placeholder="Config key"
-                                className="h-8 text-xs"
+                                className="text-xs"
                                 {...field}
                               />
                             </FormControl>
@@ -278,7 +278,7 @@ export function ThreePlConnectionSheet({
                             <FormControl>
                               <Input
                                 placeholder="Config value"
-                                className="h-8 text-xs"
+                                className="text-xs"
                                 {...field}
                               />
                             </FormControl>
@@ -289,7 +289,7 @@ export function ThreePlConnectionSheet({
                         type="button"
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
+                        className="w-8 shrink-0 text-muted-foreground hover:text-destructive"
                         onClick={handleRemove}
                       >
                         <X className="h-3.5 w-3.5" />

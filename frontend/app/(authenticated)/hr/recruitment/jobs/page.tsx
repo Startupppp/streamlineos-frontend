@@ -127,7 +127,7 @@ function JobCardSkeleton() {
       </div>
       <div className="flex items-center justify-between pt-2 border-t border-border/60">
         <Skeleton className="h-3 w-24" />
-        <Skeleton className="h-7 w-16 rounded-lg" />
+        <Skeleton className="h-4 w-16 rounded-lg" />
       </div>
     </div>
   );
@@ -298,7 +298,7 @@ export default function JobPostingsPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                            className="w-7 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
                           >
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
@@ -378,7 +378,7 @@ export default function JobPostingsPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-7 text-xs gap-1.5"
+                        className="text-xs gap-1.5"
                         asChild
                       >
                         <Link href={`/hr/recruitment/jobs/${job.id}/edit`}>

@@ -129,7 +129,7 @@ export function BgvTracker({
               <div className="space-y-1">
                 <Label className="text-xs">Status</Label>
                 <Select value={status} onValueChange={(v) => setStatus(v as BgvStatus)}>
-                  <SelectTrigger className="h-8 text-xs">
+                  <SelectTrigger className="text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -144,7 +144,7 @@ export function BgvTracker({
               <div className="space-y-1">
                 <Label className="text-xs">Agency</Label>
                 <Input
-                  className="h-8 text-xs"
+                  className="text-xs"
                   placeholder="e.g. AuthBridge"
                   value={agency}
                   onChange={(e) => setAgency(e.target.value)}
@@ -163,7 +163,7 @@ export function BgvTracker({
             </div>
             <Button
               size="sm"
-              className="h-7 text-xs"
+              className="text-xs"
               onClick={handleSave}
               disabled={update.isPending}
             >

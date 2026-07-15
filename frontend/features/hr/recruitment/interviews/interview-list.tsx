@@ -86,7 +86,7 @@ function TypeBadge({ type, panelCount }: { type: string | null; panelCount?: num
 function CandidateAvatar({ firstName, lastName }: { firstName?: string; lastName?: string }) {
   const initials = `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`.toUpperCase();
   return (
-    <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-[10px] font-bold text-primary border border-primary/20">
+    <div className="w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-[10px] font-bold text-primary border border-primary/20">
       {initials}
     </div>
   );
@@ -197,7 +197,7 @@ export function InterviewList() {
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
+          className="text-xs gap-1.5 text-muted-foreground hover:text-foreground"
           onClick={() => setFeedbackInterview(interview)}
         >
           <MessageSquare className="h-3 w-3" />
@@ -228,20 +228,20 @@ export function InterviewList() {
               <CalendarClock className="h-3.5 w-3.5 text-muted-foreground" />
               <Input
                 type="datetime-local"
-                className="h-8 text-xs w-52"
+                className="text-xs w-52"
                 value={bulkNewDate}
                 onChange={handleBulkDateChange}
               />
             </div>
             <Button
               size="sm"
-              className="h-8 text-xs gap-1.5"
+              className="text-xs gap-1.5"
               onClick={handleBulkReschedule}
               disabled={bulkReschedule.isPending || !bulkNewDate}
             >
               {bulkReschedule.isPending ? "Rescheduling…" : "Reschedule"}
             </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleClearSelection}>
+            <Button variant="ghost" size="icon" className="w-8" onClick={handleClearSelection}>
               <X className="h-3.5 w-3.5" />
             </Button>
           </div>

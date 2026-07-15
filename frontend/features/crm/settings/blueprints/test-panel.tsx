@@ -84,7 +84,7 @@ export function TestPanel({ blueprintId, stages }: TestPanelProps) {
       <CardContent className="px-4 pb-4 space-y-3">
         <div className="flex items-center gap-2">
           <Select value={fromKey} onValueChange={handleFromChange}>
-            <SelectTrigger className="h-8 text-xs flex-1">
+            <SelectTrigger className="text-xs flex-1">
               <SelectValue placeholder="From stage" />
             </SelectTrigger>
             <SelectContent>
@@ -97,7 +97,7 @@ export function TestPanel({ blueprintId, stages }: TestPanelProps) {
           </Select>
           <span className="text-muted-foreground text-xs">→</span>
           <Select value={toKey} onValueChange={handleToChange}>
-            <SelectTrigger className="h-8 text-xs flex-1">
+            <SelectTrigger className="text-xs flex-1">
               <SelectValue placeholder="To stage" />
             </SelectTrigger>
             <SelectContent>
@@ -120,13 +120,13 @@ export function TestPanel({ blueprintId, stages }: TestPanelProps) {
                 value={row.key}
                 onChange={(e) => handleFieldKeyChange(idx, e.target.value)}
                 placeholder="field"
-                className="h-8 text-xs flex-1"
+                className="text-xs flex-1"
               />
               <Input
                 value={row.value}
                 onChange={(e) => handleFieldValChange(idx, e.target.value)}
                 placeholder="value"
-                className="h-8 text-xs flex-1"
+                className="text-xs flex-1"
               />
             </div>
           ))}
@@ -144,7 +144,7 @@ export function TestPanel({ blueprintId, stages }: TestPanelProps) {
 
         <LoadingButton
           size="sm"
-          className="h-8 text-xs"
+          className="text-xs"
           onClick={handleTest}
           isPending={testTransition.isPending}
           loadingText="Testing…"

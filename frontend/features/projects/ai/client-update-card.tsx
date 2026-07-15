@@ -55,7 +55,7 @@ export function ClientUpdateCard({ projectId, featureEnabled, requiredPlan }: Cl
           onClick={handleRun}
           disabled={!featureEnabled}
           isPending={mutation.isPending}
-          className="h-8 w-full gap-1.5 text-xs"
+          className="w-full gap-1.5 text-xs"
           {...hoverHandlers}
         >
           <SparklesIcon ref={iconRef} size={14} />
@@ -81,7 +81,7 @@ export function ClientUpdateCard({ projectId, featureEnabled, requiredPlan }: Cl
             variant="outline"
             size="sm"
             onClick={handleRun}
-            className="h-8 w-full gap-1.5 text-xs"
+            className="w-full gap-1.5 text-xs"
           >
             <RotateCcw className="h-3.5 w-3.5" />
             Retry
@@ -109,7 +109,7 @@ export function ClientUpdateCard({ projectId, featureEnabled, requiredPlan }: Cl
               size="sm"
               onClick={handleRun}
               isPending={mutation.isPending}
-              className="h-8 w-full gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+              className="w-full gap-1.5 text-xs text-muted-foreground hover:text-foreground"
             >
               <RotateCcw className="h-3 w-3" />
               Regenerate
@@ -118,7 +118,7 @@ export function ClientUpdateCard({ projectId, featureEnabled, requiredPlan }: Cl
               variant="outline"
               size="sm"
               onClick={handleCopy}
-              className="h-8 w-full gap-1.5 text-xs"
+              className="w-full gap-1.5 text-xs"
             >
               {copied ? (
                 <Check className="h-3.5 w-3.5 text-emerald-500" />

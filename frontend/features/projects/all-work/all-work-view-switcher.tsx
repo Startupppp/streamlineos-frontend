@@ -34,7 +34,7 @@ export function AllWorkSkeleton({ view }: { view: AllWorkView }) {
       <div className="flex gap-3 px-3 pb-3 sm:px-4">
         {Array.from({ length: 8 }).map((_, i) => (
           <div key={i} className="w-64 flex-shrink-0 space-y-2">
-            <Skeleton className="h-8 w-full rounded-lg" />
+            <Skeleton className="h-10 w-full rounded-lg" />
             {Array.from({ length: 6 }).map((__, j) => (
               <Skeleton key={j} className="h-24 w-full rounded-xl" />
             ))}
@@ -68,7 +68,7 @@ export function AllWorkViewSwitcher({ activeView, onViewChange }: AllWorkViewSwi
   return (
     <Select value={activeView} onValueChange={handleChange}>
       <SelectTrigger
-        className="h-8 w-[110px] shrink-0 border-border/60 bg-card/60 text-xs backdrop-blur-sm"
+        className="w-[110px] shrink-0 border-border/60 bg-card/60 text-xs backdrop-blur-sm"
         aria-label="Select view"
       >
         <SelectValue />

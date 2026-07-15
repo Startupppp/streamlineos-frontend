@@ -52,7 +52,7 @@ export function FormActionsEditor({ actions, fields, onChange }: FormActionsEdit
       {actions.map((action, idx) => (
         <div key={idx} className="rounded-lg border bg-card p-3 flex flex-wrap items-center gap-2">
           <Select value={action.type} onValueChange={(v) => handleTypeChange(idx, v)}>
-            <SelectTrigger className="h-8 w-44 text-xs">
+            <SelectTrigger className="w-44 text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -68,7 +68,7 @@ export function FormActionsEditor({ actions, fields, onChange }: FormActionsEdit
                 value={getTitleField(action)}
                 onValueChange={(v) => handleTitleFieldChange(idx, v)}
               >
-                <SelectTrigger className="h-8 w-40 text-xs">
+                <SelectTrigger className="w-40 text-xs">
                   <SelectValue placeholder="Select field…" />
                 </SelectTrigger>
                 <SelectContent>
@@ -81,14 +81,14 @@ export function FormActionsEditor({ actions, fields, onChange }: FormActionsEdit
           )}
           <Button
             type="button" variant="ghost" size="icon"
-            className="h-8 w-8 ml-auto text-muted-foreground hover:text-destructive"
+            className="w-8 ml-auto text-muted-foreground hover:text-destructive"
             onClick={() => handleRemove(idx)} aria-label="Remove action"
           >
             <X className="h-3.5 w-3.5" />
           </Button>
         </div>
       ))}
-      <Button type="button" variant="outline" size="sm" className="h-7 text-xs w-full" onClick={handleAdd}>
+      <Button type="button" variant="outline" size="sm" className="text-xs w-full" onClick={handleAdd}>
         <Plus className="h-3.5 w-3.5 mr-1" />
         Add Action
       </Button>

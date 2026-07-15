@@ -235,7 +235,7 @@ export function RolloutDocumentsDialog({
                                     {...field}
                                     value={field.value ?? ""}
                                     placeholder={`Enter ${varName.replace(/_/g, " ").toLowerCase()}`}
-                                    className="h-8 text-sm"
+                                    className="text-sm"
                                   />
                                 </FormControl>
                                 <FormMessage />

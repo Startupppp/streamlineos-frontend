@@ -196,13 +196,13 @@ function ReorderReportContent() {
               value={search}
               onChange={handleSearchChange}
               placeholder="Search products, SKU, category…"
-              className="h-8 w-full min-w-0 pl-8 text-xs"
+              className="w-full min-w-0 pl-8 text-xs"
             />
           </div>
           <Button
             variant="outline"
             size="sm"
-            className="h-8 text-xs ml-auto shrink-0"
+            className="text-xs ml-auto shrink-0"
             onClick={handleExportClick}
             disabled={filtered.length === 0}
             aria-label="Export reorder report as CSV"

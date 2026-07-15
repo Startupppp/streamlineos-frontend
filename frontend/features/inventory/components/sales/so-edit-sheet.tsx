@@ -146,7 +146,7 @@ export function SoEditSheet({ open, onOpenChange, soId, so }: SoEditSheetProps) 
           name={`lines.${row.index}.variantId`}
           render={({ field: f }) => (
             <Select value={f.value} onValueChange={f.onChange}>
-              <SelectTrigger className="h-8 text-xs">
+              <SelectTrigger className="text-xs">
                 <SelectValue placeholder="Select variant" />
               </SelectTrigger>
               <SelectContent className="max-h-72">
@@ -171,7 +171,7 @@ export function SoEditSheet({ open, onOpenChange, soId, so }: SoEditSheetProps) 
           control={control}
           name={`lines.${row.index}.quantity`}
           render={({ field: f }) => (
-            <Input type="number" min="1" step="1" className="h-8 text-right tabular-nums text-xs" {...f} />
+            <Input type="number" min="1" step="1" className="text-right tabular-nums text-xs" {...f} />
           )}
         />
       ),
@@ -186,7 +186,7 @@ export function SoEditSheet({ open, onOpenChange, soId, so }: SoEditSheetProps) 
           control={control}
           name={`lines.${row.index}.unitPrice`}
           render={({ field: f }) => (
-            <Input type="number" min="0" step="0.01" className="h-8 text-right tabular-nums text-xs" {...f} />
+            <Input type="number" min="0" step="0.01" className="text-right tabular-nums text-xs" {...f} />
           )}
         />
       ),
@@ -201,7 +201,7 @@ export function SoEditSheet({ open, onOpenChange, soId, so }: SoEditSheetProps) 
           control={control}
           name={`lines.${row.index}.taxRate`}
           render={({ field: f }) => (
-            <Input type="number" min="0" max="100" step="0.01" className="h-8 text-right tabular-nums text-xs" {...f} />
+            <Input type="number" min="0" max="100" step="0.01" className="text-right tabular-nums text-xs" {...f} />
           )}
         />
       ),
@@ -226,7 +226,7 @@ export function SoEditSheet({ open, onOpenChange, soId, so }: SoEditSheetProps) 
             type="button"
             variant="ghost"
             size="icon"
-            className="h-7 w-7"
+            className="w-7"
             onClick={handleRemove}
             disabled={fields.length === 1}
             aria-label={`Remove line ${row.index + 1}`}
@@ -287,7 +287,7 @@ export function SoEditSheet({ open, onOpenChange, soId, so }: SoEditSheetProps) 
                   name="orderDate"
                   control={control}
                   render={({ field }) => (
-                    <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+                    <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
                   )}
                 />
                 {errors.orderDate && (
@@ -300,7 +300,7 @@ export function SoEditSheet({ open, onOpenChange, soId, so }: SoEditSheetProps) 
                   name="requiredDate"
                   control={control}
                   render={({ field }) => (
-                    <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+                    <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
                   )}
                 />
               </div>
@@ -327,7 +327,7 @@ export function SoEditSheet({ open, onOpenChange, soId, so }: SoEditSheetProps) 
               </div>
               <div className="space-y-1.5">
                 <Label className="text-[13px] font-medium">Currency</Label>
-                <Input {...register("currency")} placeholder="INR" className="h-8" />
+                <Input {...register("currency")} placeholder="INR" className="" />
               </div>
             </div>
             <div className="space-y-1.5">
@@ -344,7 +344,7 @@ export function SoEditSheet({ open, onOpenChange, soId, so }: SoEditSheetProps) 
                 <Label className="text-[13px] font-medium">
                   Lines <span className="text-destructive">*</span>
                 </Label>
-                <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={handleAddLine}>
+                <Button type="button" variant="outline" size="sm" className="text-xs" onClick={handleAddLine}>
                   <Plus className="size-3.5 mr-1" />
                   Add line
                 </Button>

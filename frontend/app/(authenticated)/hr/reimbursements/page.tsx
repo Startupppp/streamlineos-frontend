@@ -77,11 +77,11 @@ function ReimbursementActions({
   }
   return (
     <div className="flex gap-1 justify-end">
-      <Button size="sm" className="h-7 gap-1 text-xs" onClick={handleApproveClick} disabled={isPending}>
+      <Button size="sm" className="gap-1 text-xs" onClick={handleApproveClick} disabled={isPending}>
         <CheckCircle2 className="h-3 w-3" />
         Approve
       </Button>
-      <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={handleRejectClick}>
+      <Button size="sm" variant="outline" className="gap-1 text-xs" onClick={handleRejectClick}>
         <XCircle className="h-3 w-3" />
         Reject
       </Button>
@@ -294,7 +294,7 @@ export default function ReimbursementsPage() {
         className="flex-1 min-h-0"
         emptyState={
           <EmptyState
-            illustration={<Receipt className="h-8 w-8 text-muted-foreground" />}
+            illustration={<Receipt className="w-8 text-muted-foreground" />}
             title="No reimbursement requests"
             description="Submit expense reimbursement requests for approval."
           />

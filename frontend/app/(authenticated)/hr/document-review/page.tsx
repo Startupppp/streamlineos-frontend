@@ -100,7 +100,7 @@ export default function DocumentReviewPage() {
             />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="h-8 w-[140px] text-xs">
+            <SelectTrigger className="w-[140px] text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="w-[var(--radix-select-trigger-width)]">

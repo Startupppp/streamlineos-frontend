@@ -199,7 +199,7 @@ export function ShipmentDetailSheet({ open, onOpenChange, shipmentId }: Shipment
                     placeholder={shipment.carrierId ? String(shipment.carrierId) : "—"}
                     value={carrierId}
                     onChange={handleCarrierIdChange}
-                    className="h-8 text-xs"
+                    className="text-xs"
                   />
                 </div>
                 <div className="space-y-1">
@@ -209,7 +209,7 @@ export function ShipmentDetailSheet({ open, onOpenChange, shipmentId }: Shipment
                     placeholder={shipment.trackingNumber ?? "—"}
                     value={trackingNumber}
                     onChange={handleTrackingNumberChange}
-                    className="h-8 text-xs"
+                    className="text-xs"
                   />
                 </div>
               </div>

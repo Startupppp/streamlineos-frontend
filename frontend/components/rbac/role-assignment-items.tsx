@@ -124,7 +124,7 @@ export function MemberRow({
       role="listitem"
       className="flex items-center gap-3 rounded-md border border-border/50 px-3 py-2"
     >
-      <Avatar className="h-8 w-8">
+      <Avatar className="w-8">
         <AvatarImage src={image ?? undefined} alt={name ?? ""} />
         <AvatarFallback className="text-[10px]">
           {getInitials(name ?? subtitle ?? "?")}
@@ -143,7 +143,7 @@ export function MemberRow({
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+        className="w-8 text-muted-foreground hover:text-destructive"
         onClick={handleRemove}
         disabled={removing}
         aria-label={`Remove ${name ?? subtitle ?? "member"} from role`}
@@ -193,7 +193,7 @@ export function DepartmentRow({
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+        className="w-8 text-muted-foreground hover:text-destructive"
         onClick={handleRemove}
         disabled={removing}
         aria-label={`Remove ${name ?? "department"} from role`}

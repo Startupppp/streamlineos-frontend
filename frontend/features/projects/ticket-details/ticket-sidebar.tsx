@@ -194,7 +194,7 @@ export function TicketSidebar({
               onChange={handleStartDateChange}
               placeholder="Set start"
               toDate={ticket.dueDate ? new Date(ticket.dueDate) : undefined}
-              className="h-8 text-xs"
+              className="text-xs"
             />
             {ticket.startDate && (
               <Button
@@ -221,7 +221,7 @@ export function TicketSidebar({
               onChange={handleDueDateChange}
               placeholder="Set due"
               fromDate={ticket.startDate ? new Date(ticket.startDate) : undefined}
-              className="h-8 text-xs"
+              className="text-xs"
             />
             {ticket.dueDate && (
               <Button

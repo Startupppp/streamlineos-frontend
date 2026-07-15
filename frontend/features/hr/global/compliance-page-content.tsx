@@ -99,7 +99,7 @@ export function CompliancePageContent() {
               size="sm"
               isPending={generateEvents.isPending}
               onClick={() => generateEvents.mutate(undefined)}
-              className="h-8 text-xs"
+              className="text-xs"
             >
               Generate events (next 12 months)
             </LoadingButton>
@@ -111,7 +111,7 @@ export function CompliancePageContent() {
           <div className="flex justify-end gap-2 mb-4">
             <div className="flex items-center gap-2">
               <Select value={seedCountry} onValueChange={setSeedCountry}>
-                <SelectTrigger className="h-8 w-24 text-xs">
+                <SelectTrigger className="w-24 text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -124,7 +124,7 @@ export function CompliancePageContent() {
                 size="sm"
                 isPending={seedPack.isPending}
                 onClick={() => setSeedDialogOpen(true)}
-                className="h-8 text-xs gap-1.5"
+                className="text-xs gap-1.5"
               >
                 <Globe className="h-3 w-3" />
                 Seed country pack
@@ -161,8 +161,8 @@ export function CompliancePageContent() {
                     {req.active ? "Active" : "Inactive"}
                   </Badge>
                   <div className="flex gap-1">
-                    <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => handleOpenEditReq(req)}>Edit</Button>
-                    <Button variant="ghost" size="sm" className="h-7 text-xs text-red-600 hover:text-red-700" onClick={() => setDeleteReqId(req.id)}>Delete</Button>
+                    <Button variant="ghost" size="sm" className="text-xs" onClick={() => handleOpenEditReq(req)}>Edit</Button>
+                    <Button variant="ghost" size="sm" className="text-xs text-red-600 hover:text-red-700" onClick={() => setDeleteReqId(req.id)}>Delete</Button>
                   </div>
                 </div>
               ))}
@@ -207,8 +207,8 @@ export function CompliancePageContent() {
                   </div>
                   <WorkAuthStatusBadge status={auth.status} />
                   <div className="flex gap-1">
-                    <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => handleOpenEditAuth(auth)}>Edit</Button>
-                    <Button variant="ghost" size="sm" className="h-7 text-xs text-red-600 hover:text-red-700" onClick={() => setDeleteAuthId(auth.id)}>Delete</Button>
+                    <Button variant="ghost" size="sm" className="text-xs" onClick={() => handleOpenEditAuth(auth)}>Edit</Button>
+                    <Button variant="ghost" size="sm" className="text-xs text-red-600 hover:text-red-700" onClick={() => setDeleteAuthId(auth.id)}>Delete</Button>
                   </div>
                 </div>
               ))}

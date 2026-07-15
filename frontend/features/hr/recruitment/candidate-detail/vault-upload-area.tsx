@@ -106,7 +106,7 @@ export function VaultUploadArea({ candidateId }: VaultUploadAreaProps) {
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <Select value={docType} onValueChange={handleDocTypeChange}>
-          <SelectTrigger className="h-8 text-xs flex-1 min-w-0">
+          <SelectTrigger className="text-xs flex-1 min-w-0">
             <SelectValue placeholder="Document type" />
           </SelectTrigger>
           <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -120,7 +120,7 @@ export function VaultUploadArea({ candidateId }: VaultUploadAreaProps) {
         <Button
           variant="outline"
           size="sm"
-          className="h-8 text-xs gap-1.5 shrink-0"
+          className="text-xs gap-1.5 shrink-0"
           disabled={addDoc.isPending}
           onClick={handleUploadButtonClick}
         >
@@ -159,7 +159,7 @@ export function VaultUploadArea({ candidateId }: VaultUploadAreaProps) {
             aria-hidden="true"
           />
         ) : (
-          <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center mx-auto mb-2">
+          <div className="w-8 rounded-lg bg-muted flex items-center justify-center mx-auto mb-2">
             <Upload
               className="h-4 w-4 text-muted-foreground"
               aria-hidden="true"

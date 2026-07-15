@@ -173,7 +173,7 @@ export function EditCandidateSheet({
                         First Name <span className="text-destructive">*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input {...field} className="h-8" />
+                        <Input {...field} className="" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -188,7 +188,7 @@ export function EditCandidateSheet({
                         Last Name <span className="text-destructive">*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input {...field} className="h-8" />
+                        <Input {...field} className="" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -205,7 +205,7 @@ export function EditCandidateSheet({
                       Email <span className="text-destructive">*</span>
                     </FormLabel>
                     <FormControl>
-                      <Input {...field} type="email" className="h-8" />
+                      <Input {...field} type="email" className="" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -238,7 +238,7 @@ export function EditCandidateSheet({
                       </FormLabel>
                       <Select value={field.value} onValueChange={field.onChange}>
                         <FormControl>
-                          <SelectTrigger className="h-8">
+                          <SelectTrigger className="">
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
@@ -279,7 +279,7 @@ export function EditCandidateSheet({
                         Current Role
                       </FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="e.g. Software Engineer" className="h-8" />
+                        <Input {...field} placeholder="e.g. Software Engineer" className="" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -295,7 +295,7 @@ export function EditCandidateSheet({
                         Company
                       </FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="e.g. Acme Corp" className="h-8" />
+                        <Input {...field} placeholder="e.g. Acme Corp" className="" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -319,7 +319,7 @@ export function EditCandidateSheet({
                           max={50}
                           step={0.5}
                           placeholder="e.g. 3"
-                          className="h-8"
+                          className=""
                           value={field.value ?? ""}
                           onChange={(e) => {
                             const raw = e.target.value;
@@ -341,7 +341,7 @@ export function EditCandidateSheet({
                         Skills
                       </FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="React, Node.js..." className="h-8" />
+                        <Input {...field} placeholder="React, Node.js..." className="" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -358,7 +358,7 @@ export function EditCandidateSheet({
                       LinkedIn URL
                     </FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="https://linkedin.com/in/..." className="h-8" />
+                      <Input {...field} placeholder="https://linkedin.com/in/..." className="" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

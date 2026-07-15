@@ -7,7 +7,11 @@ import { GanttView } from "@/features/projects/views/gantt-view";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { buildTicketDetailUrl } from "@/features/projects/ticket-details/build-ticket-detail-url";
-import { PmPageShell, PmPanel, PM_TOOLBAR } from "@/features/projects/shared/pm-chrome";
+import {
+  PmPageShell,
+  PmPanel,
+  PM_TOOLBAR,
+} from "@/features/projects/shared/pm-chrome";
 import { cn } from "@/lib/utils";
 
 interface PageProps {
@@ -19,7 +23,8 @@ export default function TimelinePage({ params }: PageProps) {
   const projectId = parseInt(projectIdStr, 10);
   const router = useRouter();
   const { data, isLoading: projectLoading } = useProject(projectId);
-  const { data: boardTickets, isLoading: ticketsLoading } = useProjectBoardTickets(projectId);
+  const { data: boardTickets, isLoading: ticketsLoading } =
+    useProjectBoardTickets(projectId);
   const isLoading = projectLoading || ticketsLoading;
 
   const tickets = useMemo(() => {
@@ -45,7 +50,12 @@ export default function TimelinePage({ params }: PageProps) {
 
   const handleTicketClick = useCallback(
     (ticketId: number) => {
-      const href = buildTicketDetailUrl(projectId, data?.key, ticketId, tickets);
+      const href = buildTicketDetailUrl(
+        projectId,
+        data?.key,
+        ticketId,
+        tickets,
+      );
       if (href) router.push(href);
     },
     [router, projectId, data?.key, tickets],
@@ -59,7 +69,7 @@ export default function TimelinePage({ params }: PageProps) {
           <PmPanel className="flex min-h-0 flex-1 flex-col p-3">
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="flex items-center gap-3 py-1.5">
-                <Skeleton className="h-7 w-28 shrink-0 rounded-md sm:w-40" />
+                <Skeleton className="h-4 w-28 shrink-0 rounded-md sm:w-40" />{" "}
                 <Skeleton
                   className="h-7 rounded-md"
                   style={{
@@ -85,7 +95,11 @@ export default function TimelinePage({ params }: PageProps) {
       contentClassName="!p-0"
     >
       <PmPageShell className="h-full min-h-0 px-4 pt-0 sm:px-6">
-        <GanttView tickets={tickets} projectId={projectId} onTicketClick={handleTicketClick} />
+        <GanttView
+          tickets={tickets}
+          projectId={projectId}
+          onTicketClick={handleTicketClick}
+        />
       </PmPageShell>
     </PageWrapper>
   );

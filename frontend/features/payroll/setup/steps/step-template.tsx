@@ -136,7 +136,7 @@ export function StepTemplate({
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="h-7 text-xs px-2"
+                  className="text-xs px-2"
                   onClick={() => setPreviewTemplate(t)}
                 >
                   Preview
@@ -144,7 +144,7 @@ export function StepTemplate({
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="h-7 text-xs px-2"
+                  className="text-xs px-2"
                   onClick={() => setDuplicateTemplate(t)}
                 >
                   Duplicate

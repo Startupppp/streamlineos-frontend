@@ -27,7 +27,7 @@ export default function DocumentEditorLoading() {
 
       <div className="flex-1 min-h-0 px-4 sm:px-6 pt-4 pb-6">
         <div className="max-w-3xl mx-auto space-y-3">
-          <Skeleton className="h-8 w-2/3" />
+          <Skeleton className="h-4 w-2/3" />
           <Skeleton className="h-4 w-full" />
           <Skeleton className="h-4 w-full" />
           <Skeleton className="h-4 w-5/6" />

@@ -204,7 +204,7 @@ export function CustomerStatementReport() {
               Customer
             </label>
             <Select value={clientId ? String(clientId) : ""} onValueChange={handleClientChange}>
-              <SelectTrigger id="cs-client" className="h-8 w-[200px] text-sm">
+              <SelectTrigger id="cs-client" className="w-[200px] text-sm">
                 <SelectValue placeholder="Select customer…" />
               </SelectTrigger>
               <SelectContent>

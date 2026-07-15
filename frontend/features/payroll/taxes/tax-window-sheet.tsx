@@ -127,7 +127,7 @@ export function TaxWindowSheet({ window, onClose }: TaxWindowSheetProps) {
                   <FormItem>
                     <FormLabel>Opens At</FormLabel>
                     <FormControl>
-                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -140,7 +140,7 @@ export function TaxWindowSheet({ window, onClose }: TaxWindowSheetProps) {
                   <FormItem>
                     <FormLabel>Closes At</FormLabel>
                     <FormControl>
-                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -153,7 +153,7 @@ export function TaxWindowSheet({ window, onClose }: TaxWindowSheetProps) {
                   <FormItem>
                     <FormLabel>Proof Deadline (optional)</FormLabel>
                     <FormControl>
-                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -166,7 +166,7 @@ export function TaxWindowSheet({ window, onClose }: TaxWindowSheetProps) {
                   <FormItem>
                     <FormLabel>Lock Date (optional)</FormLabel>
                     <FormControl>
-                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

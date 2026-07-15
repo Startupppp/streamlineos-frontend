@@ -120,7 +120,7 @@ export function CreateLeadSheet({
                     name="name"
                     required
                     placeholder="Enter full name"
-                    className="h-8"
+                    className=""
                   />
                 </div>
                 <div>
@@ -156,7 +156,7 @@ export function CreateLeadSheet({
                     placeholder="Enter phone number"
                     value={phone}
                     onChange={setPhone}
-                    className="h-8"
+                    className=""
                   />
                 </div>
                 <div>

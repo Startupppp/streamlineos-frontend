@@ -155,7 +155,7 @@ export default function PublicIntakePage() {
                     name="requestType"
                     render={({ field }) => (
                       <Select value={field.value ?? ""} onValueChange={(v) => field.onChange(v || undefined)}>
-                        <SelectTrigger id="intake-type" className="h-8 text-sm">
+                        <SelectTrigger id="intake-type" className="text-sm">
                           <SelectValue placeholder="Select type…" />
                         </SelectTrigger>
                         <SelectContent>
@@ -175,7 +175,7 @@ export default function PublicIntakePage() {
                     name="priority"
                     render={({ field }) => (
                       <Select value={field.value ?? ""} onValueChange={(v) => field.onChange(v || undefined)}>
-                        <SelectTrigger id="intake-priority" className="h-8 text-sm">
+                        <SelectTrigger id="intake-priority" className="text-sm">
                           <SelectValue placeholder="Select priority…" />
                         </SelectTrigger>
                         <SelectContent>

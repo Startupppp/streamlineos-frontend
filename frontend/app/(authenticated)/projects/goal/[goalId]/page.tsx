@@ -89,7 +89,7 @@ function GoalDetailActions({
 function AddLinkButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
-    <Button size="sm" variant="outline" className="h-7" onClick={onClick} {...hoverHandlers}>
+    <Button size="sm" variant="outline" className="" onClick={onClick} {...hoverHandlers}>
       <PlusIcon ref={iconRef} size={14} className="mr-1" /> Link
     </Button>
   );

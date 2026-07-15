@@ -81,7 +81,7 @@ export function TicketRelatedLinksEditor({ links, onChange }: TicketRelatedLinks
             onChange={handleUrlChange}
             onKeyDown={handleKeyDown}
             placeholder="https://..."
-            className={cn("h-8 text-xs", urlError && "border-destructive")}
+            className={cn("text-xs", urlError && "border-destructive")}
             aria-label="Related link URL"
             aria-invalid={!!urlError}
             aria-describedby={urlError ? "link-url-error" : undefined}
@@ -95,7 +95,7 @@ export function TicketRelatedLinksEditor({ links, onChange }: TicketRelatedLinks
           onChange={handleLabelChange}
           onKeyDown={handleKeyDown}
           placeholder="Label (optional)"
-          className="h-8 text-xs w-32 shrink-0"
+          className="text-xs w-32 shrink-0"
           aria-label="Related link label"
         />
         <button

@@ -48,7 +48,7 @@ function LeaveCalendarWidget() {
     <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden flex flex-col">
       <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/60 shrink-0">
         <div className="flex items-center gap-2.5">
-          <div className="h-7 w-7 rounded-lg bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center shrink-0">
+          <div className="w-7 rounded-lg bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center shrink-0">
             <CalendarOff className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
           </div>
           <div>
@@ -87,7 +87,7 @@ function LeaveCalendarWidget() {
           </div>
         ) : thisWeekLeaves.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 gap-2">
-            <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+            <div className="w-8 rounded-full bg-muted flex items-center justify-center">
               <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
             </div>
             <p className="text-xs text-muted-foreground">
@@ -98,7 +98,7 @@ function LeaveCalendarWidget() {
           <div className="px-5 divide-y divide-border/40">
             {thisWeekLeaves.map((leave) => (
               <div key={leave.id} className="flex items-center gap-3 py-3">
-                <Avatar className="h-8 w-8 shrink-0">
+                <Avatar className="w-8 shrink-0">
                   {leave.userImage && (
                     <AvatarImage src={leave.userImage} alt={leave.userName} />
                   )}
@@ -138,7 +138,7 @@ function OnboardingStatusWidget() {
     <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden flex flex-col">
       <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/60 shrink-0">
         <div className="flex items-center gap-2.5">
-          <div className="h-7 w-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/40 flex items-center justify-center shrink-0">
+          <div className="w-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/40 flex items-center justify-center shrink-0">
             <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div>
@@ -183,7 +183,7 @@ function OnboardingStatusWidget() {
           </div>
         ) : !data || data.total === 0 ? (
           <div className="flex flex-col items-center justify-center py-6 gap-2">
-            <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+            <div className="w-8 rounded-full bg-muted flex items-center justify-center">
               <AlertCircle className="h-4 w-4 text-muted-foreground" />
             </div>
             <p className="text-xs text-muted-foreground">
@@ -221,7 +221,7 @@ function OnboardingStatusWidget() {
                     key={hire.userId}
                     className="flex items-center gap-3 group"
                   >
-                    <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-[10px] font-bold text-primary">
+                    <div className="w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-[10px] font-bold text-primary">
                       {hire.name.slice(0, 2).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0 space-y-1">

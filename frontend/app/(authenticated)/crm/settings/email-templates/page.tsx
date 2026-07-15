@@ -125,13 +125,13 @@ function TemplateCard({ template, onPreviewToggle, onEdit, onDeleteRequest }: Te
             </Tooltip>
           </TooltipProvider>
           <div className="flex items-center gap-1 shrink-0">
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handlePreviewToggle} aria-label="Preview">
+            <Button variant="ghost" size="icon" className="w-7" onClick={handlePreviewToggle} aria-label="Preview">
               <Eye className="h-3.5 w-3.5" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleEdit} aria-label="Edit">
+            <Button variant="ghost" size="icon" className="w-7" onClick={handleEdit} aria-label="Edit">
               <Pencil className="h-3.5 w-3.5" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={handleDeleteRequest} aria-label="Delete">
+            <Button variant="ghost" size="icon" className="w-7 text-destructive" onClick={handleDeleteRequest} aria-label="Delete">
               <Trash2 className="h-3.5 w-3.5" />
             </Button>
           </div>

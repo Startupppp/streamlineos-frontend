@@ -87,7 +87,7 @@ function BvaFilters({ from, to, onFromChange, onToChange }: BvaFiltersProps) {
           type="date"
           value={from}
           onChange={handleFromChange}
-          className="h-8 text-xs w-[140px]"
+          className="text-xs w-[140px]"
         />
       </div>
       <div className="flex items-center gap-2">
@@ -96,7 +96,7 @@ function BvaFilters({ from, to, onFromChange, onToChange }: BvaFiltersProps) {
           type="date"
           value={to}
           onChange={handleToChange}
-          className="h-8 text-xs w-[140px]"
+          className="text-xs w-[140px]"
         />
       </div>
     </div>

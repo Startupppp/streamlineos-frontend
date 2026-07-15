@@ -278,7 +278,7 @@ export function MeetingFormSheet({
                   <FormItem>
                     <FormLabel>Title <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Sprint 12 Planning" className="h-8 text-sm" />
+                      <Input {...field} placeholder="Sprint 12 Planning" className="text-sm" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -293,7 +293,7 @@ export function MeetingFormSheet({
                       <FormLabel>Type</FormLabel>
                       <Select value={field.value} onValueChange={field.onChange}>
                         <FormControl>
-                          <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                          <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="meeting">Meeting</SelectItem>
@@ -315,7 +315,7 @@ export function MeetingFormSheet({
                       <FormLabel>Status</FormLabel>
                       <Select value={field.value} onValueChange={field.onChange}>
                         <FormControl>
-                          <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                          <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="scheduled">Scheduled</SelectItem>
@@ -338,7 +338,7 @@ export function MeetingFormSheet({
                     <FormItem>
                       <FormLabel>Start <span className="text-destructive">*</span></FormLabel>
                       <FormControl>
-                        <Input {...field} type="datetime-local" className="h-8 text-sm" />
+                        <Input {...field} type="datetime-local" className="text-sm" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -351,7 +351,7 @@ export function MeetingFormSheet({
                     <FormItem>
                       <FormLabel>End</FormLabel>
                       <FormControl>
-                        <Input {...field} type="datetime-local" className="h-8 text-sm" />
+                        <Input {...field} type="datetime-local" className="text-sm" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -367,7 +367,7 @@ export function MeetingFormSheet({
                     <FormItem>
                       <FormLabel>Duration (min)</FormLabel>
                       <FormControl>
-                        <Input {...field} type="number" min="1" placeholder="30" className="h-8 text-sm" />
+                        <Input {...field} type="number" min="1" placeholder="30" className="text-sm" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -380,7 +380,7 @@ export function MeetingFormSheet({
                     <FormItem>
                       <FormLabel>Timezone</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="UTC" className="h-8 text-sm" />
+                        <Input {...field} placeholder="UTC" className="text-sm" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -488,7 +488,7 @@ export function MeetingFormSheet({
                           <FormLabel className="text-xs">Repeat</FormLabel>
                           <Select value={field.value} onValueChange={field.onChange}>
                             <FormControl>
-                              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                              <SelectTrigger className="text-xs"><SelectValue /></SelectTrigger>
                             </FormControl>
                             <SelectContent>
                               <SelectItem value="daily">Daily</SelectItem>
@@ -508,7 +508,7 @@ export function MeetingFormSheet({
                         <FormItem>
                           <FormLabel className="text-xs">End date (optional)</FormLabel>
                           <FormControl>
-                            <Input {...field} type="date" className="h-8 text-xs" />
+                            <Input {...field} type="date" className="text-xs" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

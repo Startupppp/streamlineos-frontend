@@ -224,7 +224,7 @@ export default function ForecastPage() {
         value={selectedScenarioId !== undefined ? String(selectedScenarioId) : ""}
         onValueChange={handleScenarioChange}
       >
-        <SelectTrigger className="h-8 w-[180px] text-xs">
+        <SelectTrigger className="w-[180px] text-xs">
           <SelectValue placeholder="Default scenario" />
         </SelectTrigger>
         <SelectContent>
@@ -245,14 +245,14 @@ export default function ForecastPage() {
           max={52}
           value={weeks}
           onChange={handleWeeksChange}
-          className="h-8 w-20 text-xs"
+          className="w-20 text-xs"
         />
       </div>
 
       <Button
         variant={compareMode ? "default" : "outline"}
         size="sm"
-        className="h-8 text-xs"
+        className="text-xs"
         onClick={handleToggleCompare}
       >
         Compare Scenarios
@@ -262,7 +262,7 @@ export default function ForecastPage() {
         <LoadingButton
           variant="outline"
           size="sm"
-          className="h-8 text-xs"
+          className="text-xs"
           isPending={seedMutation.isPending}
           loadingText="Seeding…"
           onClick={handleSeedDefaults}

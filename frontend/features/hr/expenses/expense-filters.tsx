@@ -164,7 +164,7 @@ export function AdminExpenseFilters({
           onValueChange={handleUserChange}
         >
           <SelectTrigger
-            className="h-8 w-[180px] text-sm"
+            className="w-[180px] text-sm"
             aria-label="Filter by employee"
           >
             <SelectValue placeholder="All Employees" />
@@ -227,7 +227,7 @@ export function MemberExpenseFilters({
       <div className="flex items-center gap-2">
         <Select value={datePreset} onValueChange={handleDatePresetChange}>
           <SelectTrigger
-            className="h-8 w-[150px] text-sm gap-1.5"
+            className="w-[150px] text-sm gap-1.5"
             aria-label="Filter expenses by date range"
           >
             <Filter className="h-3 w-3 shrink-0" />
@@ -248,7 +248,7 @@ export function MemberExpenseFilters({
             <Button
               variant="outline"
               size="icon"
-              className="h-8 w-8"
+              className="w-8"
               aria-label="Download report"
             >
               <Download className="h-3.5 w-3.5" />

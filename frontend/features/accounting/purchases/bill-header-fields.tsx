@@ -105,7 +105,7 @@ export function BillHeaderFields({
                   value={field.value ?? ""}
                   onChange={field.onChange}
                   placeholder="Pick a date"
-                  className="h-8 text-sm"
+                  className="text-sm"
                 />
               </FormControl>
               <FormMessage />
@@ -123,7 +123,7 @@ export function BillHeaderFields({
                   value={field.value ?? ""}
                   onChange={field.onChange}
                   placeholder="Pick a date"
-                  className="h-8 text-sm"
+                  className="text-sm"
                 />
               </FormControl>
               <FormMessage />

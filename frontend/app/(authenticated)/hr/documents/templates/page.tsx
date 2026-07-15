@@ -109,7 +109,7 @@ function TemplatesPageSkeleton() {
               <div className="flex items-start justify-between">
                 <div className="space-y-2">
                   <Skeleton className="h-3 w-24" />
-                  <Skeleton className="h-7 w-10" />
+                  <Skeleton className="h-10 w-10" />
                 </div>
                 <Skeleton className="h-9 w-9 rounded-lg" />
               </div>
@@ -260,7 +260,7 @@ function buildTemplateColumns(
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 hover:bg-muted transition-colors duration-200"
+              className="w-7 hover:bg-muted transition-colors duration-200"
               aria-label="Template actions"
               onClick={(e) => e.stopPropagation()}
             >
@@ -336,7 +336,7 @@ export default function DocumentTemplatesPage() {
         subtitle="Manage reusable HTML templates for offer letters, NDAs, and policies."
       >
         <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
-          <AlertCircle className="h-8 w-8 text-destructive" />
+          <AlertCircle className="w-8 text-destructive" />
           <div>
             <p className="text-sm font-medium text-foreground">
               Failed to load document templates
@@ -373,7 +373,7 @@ export default function DocumentTemplatesPage() {
       title="Document Templates"
       subtitle="Manage reusable HTML templates for offer letters, NDAs, and policies."
       actions={
-        <Button size="sm" className="gap-1.5 h-8" asChild>
+        <Button size="sm" className="gap-1.5" asChild>
           <Link href="/hr/documents/templates/new">
             <FilePlus2 className="h-3.5 w-3.5" />
             Add Template

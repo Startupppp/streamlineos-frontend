@@ -105,7 +105,7 @@ export function TrainingList({ canManage, onSelectProgram, selectedProgramId }: 
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2">
         <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="h-8 w-36 text-xs">
+          <SelectTrigger className="w-36 text-xs">
             <SelectValue placeholder="Type" />
           </SelectTrigger>
           <SelectContent>
@@ -116,7 +116,7 @@ export function TrainingList({ canManage, onSelectProgram, selectedProgramId }: 
           </SelectContent>
         </Select>
         <Select value={formatFilter} onValueChange={setFormatFilter}>
-          <SelectTrigger className="h-8 w-36 text-xs">
+          <SelectTrigger className="w-36 text-xs">
             <SelectValue placeholder="Format" />
           </SelectTrigger>
           <SelectContent>
@@ -128,7 +128,7 @@ export function TrainingList({ canManage, onSelectProgram, selectedProgramId }: 
           </SelectContent>
         </Select>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="h-8 w-36 text-xs">
+          <SelectTrigger className="w-36 text-xs">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -224,7 +224,7 @@ export function TrainingList({ canManage, onSelectProgram, selectedProgramId }: 
               {program.status !== "COMPLETED" && program.status !== "CANCELLED" && (
                 <Button
                   size="sm"
-                  className="w-full h-7 text-xs bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200"
+                  className="w-full text-xs bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleEnroll(program.id);

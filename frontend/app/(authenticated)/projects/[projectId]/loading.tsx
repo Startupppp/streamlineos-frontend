@@ -11,9 +11,9 @@ export default function ProjectBoardLoading() {
         ))}
       </div>
       <div className="w-px h-5 bg-border/60 shrink-0 hidden sm:block" />
-      <Skeleton className="h-7 w-48 rounded-md" />
-      <Skeleton className="h-7 w-24 rounded-md" />
-      <Skeleton className="h-7 w-24 rounded-md" />
+      <Skeleton className="h-8 w-48 rounded-md" />
+      <Skeleton className="h-8 w-24 rounded-md" />
+      <Skeleton className="h-8 w-24 rounded-md" />
       <div className="w-px h-5 bg-border/60 shrink-0 hidden sm:block" />
       <div className="ml-auto flex items-center gap-1.5">
         <Skeleton className="h-5 w-8 rounded-full" />

@@ -157,7 +157,7 @@ export default function CertificationsPage() {
     return (
       <PageWrapper title="Certifications" subtitle="Track professional certifications and renewals">
         <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
-          <AlertCircle className="h-8 w-8 text-destructive" />
+          <AlertCircle className="w-8 text-destructive" />
           <div>
             <p className="text-sm font-medium text-foreground">Failed to load certifications</p>
             <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
@@ -178,7 +178,7 @@ export default function CertificationsPage() {
       subtitle="Track professional certifications and renewals"
       badge={`${certs?.length ?? 0} certifications`}
       actions={
-        <Button size="sm" className="h-8 gap-1.5" onClick={handleOpenSheet}>
+        <Button size="sm" className="gap-1.5" onClick={handleOpenSheet}>
           <Plus className="h-3.5 w-3.5" />
           Add Certification
         </Button>
@@ -280,7 +280,7 @@ export default function CertificationsPage() {
                     <CardContent className="p-3 space-y-3">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-2 min-w-0">
-                          <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                          <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                             <Award className="h-3.5 w-3.5 text-primary" />
                           </div>
                           <div className="min-w-0">
@@ -381,11 +381,11 @@ export default function CertificationsPage() {
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Issue Date</label>
-            <DatePicker value={issueDate ?? ""} onChange={handleIssueDateChange} placeholder="Pick a date" className="h-8 text-sm" />
+            <DatePicker value={issueDate ?? ""} onChange={handleIssueDateChange} placeholder="Pick a date" className="text-sm" />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Expiry Date</label>
-            <DatePicker value={expiryDate ?? ""} onChange={handleExpiryDateChange} placeholder="Pick a date" className="h-8 text-sm" />
+            <DatePicker value={expiryDate ?? ""} onChange={handleExpiryDateChange} placeholder="Pick a date" className="text-sm" />
           </div>
         </div>
         <div className="space-y-1.5">

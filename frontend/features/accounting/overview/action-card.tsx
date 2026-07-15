@@ -40,7 +40,7 @@ export function ActionCard({
       )}
       {...hoverHandlers}
     >
-      <div className={cn("h-8 w-8 rounded-md flex items-center justify-center shrink-0 mt-0.5", styles.bg)}>
+      <div className={cn("w-8 rounded-md flex items-center justify-center shrink-0 mt-0.5", styles.bg)}>
         <Icon ref={iconRef} className={cn("h-4 w-4", styles.text)} />
       </div>
       <div className="min-w-0 flex-1">

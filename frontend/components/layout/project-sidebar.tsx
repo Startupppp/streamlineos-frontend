@@ -232,7 +232,7 @@ function ProjectSwitcher({
               value={search}
               onChange={handleSearchChange}
               placeholder="Search projects…"
-              className="h-8 pl-7 text-xs"
+              className="pl-7 text-xs"
               autoFocus
             />
           </div>
@@ -356,7 +356,7 @@ function DesktopSidebar({
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 shrink-0 rounded-md text-muted-foreground hover:bg-primary/10 hover:text-foreground"
+              className="w-7 shrink-0 rounded-md text-muted-foreground hover:bg-primary/10 hover:text-foreground"
               onClick={handleToggleCollapse}
               aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
@@ -474,7 +474,7 @@ function MobileProjectNav({
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 shrink-0"
+            className="w-8 shrink-0"
             aria-label="Open project menu"
           >
             <MenuIcon className="h-4 w-4" />

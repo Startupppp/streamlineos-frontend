@@ -182,7 +182,7 @@ export function DecisionFormSheet({
                   <FormItem>
                     <FormLabel>Decided At (optional)</FormLabel>
                     <FormControl>
-                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -191,7 +191,7 @@ export function DecisionFormSheet({
                   <FormItem>
                     <FormLabel>Revisit At (optional)</FormLabel>
                     <FormControl>
-                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

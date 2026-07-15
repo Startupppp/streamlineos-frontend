@@ -64,7 +64,7 @@ export default function ApplyPage({ params }: Props) {
         <Card className="w-full max-w-md">
           <CardHeader className="text-center pb-3">
             <div className="w-14 h-14 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-3">
-              <svg className="h-7 w-7 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg className="w-7 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>

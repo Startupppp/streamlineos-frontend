@@ -3,9 +3,9 @@
 import { useCallback, useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import {
   PmPageShell,
-  PmPanel,
   PmSection,
 } from "@/features/projects/shared/pm-chrome";
 import { TestCasesTab } from "./test-cases-tab";
@@ -30,22 +30,23 @@ export function QaPage({ projectId }: QaPageProps) {
       <PmPageShell>
         <Tabs value={tab} onValueChange={handleTabChange} className="flex min-h-0 flex-1 flex-col gap-3">
           <PmSection index={0}>
-            <TabsList>
-              <TabsTrigger value="cases">Test Cases</TabsTrigger>
-              <TabsTrigger value="runs">Test Runs</TabsTrigger>
-            </TabsList>
+            <PageTabsToolbar
+              tabsDensity="labeled"
+              tabs={
+                <TabsList>
+                  <TabsTrigger value="cases">Test Cases</TabsTrigger>
+                  <TabsTrigger value="runs">Test Runs</TabsTrigger>
+                </TabsList>
+              }
+            />
           </PmSection>
 
           <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
             <TabsContent value="cases" className="mt-0 flex min-h-0 flex-1 flex-col data-[state=inactive]:hidden">
-              <PmPanel className="flex min-h-0 flex-1 flex-col p-3 sm:p-3.5">
-                <TestCasesTab projectId={projectId} />
-              </PmPanel>
+              <TestCasesTab projectId={projectId} />
             </TabsContent>
             <TabsContent value="runs" className="mt-0 flex min-h-0 flex-1 flex-col data-[state=inactive]:hidden">
-              <PmPanel className="flex min-h-0 flex-1 flex-col p-3 sm:p-3.5">
-                <TestRunsTab projectId={projectId} />
-              </PmPanel>
+              <TestRunsTab projectId={projectId} />
             </TabsContent>
           </PmSection>
         </Tabs>

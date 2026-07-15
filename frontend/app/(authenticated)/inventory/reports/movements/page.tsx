@@ -221,7 +221,7 @@ export default function MovementsReportPage() {
   const filterBar = (
     <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
       <Select value={warehouseId || "ALL"} onValueChange={handleWarehouseChange}>
-        <SelectTrigger className="h-8 w-full sm:max-w-[180px] text-xs">
+        <SelectTrigger className="w-full sm:max-w-[180px] text-xs">
           <SelectValue placeholder="All warehouses" />
         </SelectTrigger>
         <SelectContent>
@@ -234,7 +234,7 @@ export default function MovementsReportPage() {
         </SelectContent>
       </Select>
       <Select value={movementType} onValueChange={handleTypeChange}>
-        <SelectTrigger className="h-8 w-full sm:max-w-[160px] text-xs">
+        <SelectTrigger className="w-full sm:max-w-[160px] text-xs">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -250,7 +250,7 @@ export default function MovementsReportPage() {
       <Button
         variant="outline"
         size="sm"
-        className="h-8 text-xs ml-auto shrink-0"
+        className="text-xs ml-auto shrink-0"
         onClick={handleExportClick}
         disabled={rows.length === 0}
         aria-label="Export movements as CSV"

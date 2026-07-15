@@ -11,10 +11,10 @@ export default function PerformanceLoading() {
       <div className="space-y-3">
 
         <div className="h-9 inline-flex items-center gap-2 rounded-md border border-border/60 px-2 py-1 bg-muted/20">
-          <Skeleton className="h-7 w-20 rounded-md" />
-          <Skeleton className="h-7 w-16 rounded-md" />
-          <Skeleton className="h-7 w-20 rounded-md" />
-          <Skeleton className="h-7 w-16 rounded-md" />
+          <Skeleton className="h-8 w-20 rounded-md" />
+          <Skeleton className="h-8 w-16 rounded-md" />
+          <Skeleton className="h-8 w-20 rounded-md" />
+          <Skeleton className="h-8 w-16 rounded-md" />
         </div>
 
         <div className="flex items-center justify-between">
@@ -35,7 +35,7 @@ export default function PerformanceLoading() {
                   <Skeleton className="h-4 w-28" />
                 </div>
                 <Skeleton className="h-3 w-40" />
-                <Skeleton className="h-7 w-full rounded-md" />
+                <Skeleton className="h-9 w-full rounded-md" />
               </CardContent>
             </Card>
           ))}

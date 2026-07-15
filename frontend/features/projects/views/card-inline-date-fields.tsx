@@ -84,7 +84,7 @@ export const InlineDueDate = memo(function InlineDueDate({
               <Button
                 variant="ghost"
                 size="sm"
-                className="w-full h-7 text-xs text-muted-foreground"
+                className="w-full text-xs text-muted-foreground"
                 onClick={handleClear}
               >
                 Clear due date
@@ -169,7 +169,7 @@ export const InlineStartDate = memo(function InlineStartDate({
               <Button
                 variant="ghost"
                 size="sm"
-                className="w-full h-7 text-xs text-muted-foreground"
+                className="w-full text-xs text-muted-foreground"
                 onClick={handleClear}
               >
                 Clear start date

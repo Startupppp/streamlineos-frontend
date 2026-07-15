@@ -63,7 +63,7 @@ export function BurnupSection({ projectId }: { projectId: number }) {
         value={selectedSprintId ? String(selectedSprintId) : undefined}
         onValueChange={handleSprintChange}
       >
-        <SelectTrigger className="h-8 w-44 text-sm bg-muted/40 border-border">
+        <SelectTrigger className="w-44 text-sm bg-muted/40 border-border">
           <SelectValue placeholder="Select sprint" />
         </SelectTrigger>
         <SelectContent>

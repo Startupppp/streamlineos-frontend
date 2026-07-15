@@ -52,7 +52,7 @@ export default function ApplicationStatusPage({ params }: Props) {
     return (
       <main className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center text-muted-foreground">
-          <svg className="h-8 w-8 mx-auto mb-3 animate-spin opacity-60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg className="w-8 mx-auto mb-3 animate-spin opacity-60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M21 12a9 9 0 1 1-6.219-8.56" />
           </svg>
           Loading…

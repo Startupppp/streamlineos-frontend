@@ -490,7 +490,7 @@ export function BonusesTab() {
     <div className="flex items-center gap-2 flex-wrap mb-3">
       <MonthPicker value={month} onChange={handleMonthChange} yearRange={[-1, 0]} className="w-44" />
       <Select value={type} onValueChange={handleTypeChange}>
-        <SelectTrigger className="h-8 text-sm w-36">
+        <SelectTrigger className="text-sm w-36">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -502,7 +502,7 @@ export function BonusesTab() {
         </SelectContent>
       </Select>
       <Select value={status} onValueChange={handleStatusChange}>
-        <SelectTrigger className="h-8 text-sm w-36">
+        <SelectTrigger className="text-sm w-36">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -514,7 +514,7 @@ export function BonusesTab() {
         </SelectContent>
       </Select>
       {canManage && (
-        <Button size="sm" className="h-8 gap-1.5 ml-auto" onClick={handleOpenCreate}>
+        <Button size="sm" className="gap-1.5 ml-auto" onClick={handleOpenCreate}>
           <Plus className="h-3.5 w-3.5" />
           Add Bonus
         </Button>

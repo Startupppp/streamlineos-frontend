@@ -91,7 +91,7 @@ const KeyResultRow = memo(function KeyResultRow({ kr, index, onUpdate, onRemove 
       <div className="flex items-start gap-2">
         <Input
           placeholder="Key result title"
-          className="h-8 flex-1"
+          className="flex-1"
           value={kr.title}
           onChange={handleTitleChange}
         />
@@ -99,7 +99,7 @@ const KeyResultRow = memo(function KeyResultRow({ kr, index, onUpdate, onRemove 
           type="button"
           variant="ghost"
           size="icon"
-          className="h-8 w-8 text-destructive hover:text-destructive shrink-0"
+          className="w-8 text-destructive hover:text-destructive shrink-0"
           onClick={handleRemove}
         >
           <Trash2 className="h-3.5 w-3.5" />
@@ -107,7 +107,7 @@ const KeyResultRow = memo(function KeyResultRow({ kr, index, onUpdate, onRemove 
       </div>
       <div className="grid grid-cols-2 gap-2">
         <Select value={kr.metricType} onValueChange={handleMetricTypeChange}>
-          <SelectTrigger className="h-8 w-full text-xs">
+          <SelectTrigger className="w-full text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -120,21 +120,21 @@ const KeyResultRow = memo(function KeyResultRow({ kr, index, onUpdate, onRemove 
         </Select>
         <Input
           placeholder="Unit (optional)"
-          className="h-8 text-xs"
+          className="text-xs"
           value={kr.unit}
           onChange={handleUnitChange}
         />
         <Input
           type="number"
           placeholder="Start"
-          className="h-8 text-xs"
+          className="text-xs"
           value={kr.startValue}
           onChange={handleStartValueChange}
         />
         <Input
           type="number"
           placeholder="Target"
-          className="h-8 text-xs"
+          className="text-xs"
           value={kr.targetValue}
           onChange={handleTargetValueChange}
         />
@@ -299,7 +299,7 @@ export function GoalFormSheet({
                 <Input
                   id="goal-title"
                   placeholder="e.g. Grow monthly active users"
-                  className="h-8"
+                  className=""
                   value={title}
                   onChange={handleTitleChange}
                 />
@@ -323,7 +323,7 @@ export function GoalFormSheet({
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium">Level</Label>
                   <Select value={level} onValueChange={handleLevelChange}>
-                    <SelectTrigger className="h-8 w-full">
+                    <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -338,7 +338,7 @@ export function GoalFormSheet({
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium">Status</Label>
                   <Select value={status} onValueChange={handleGoalStatusChange}>
-                    <SelectTrigger className="h-8 w-full">
+                    <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -361,7 +361,7 @@ export function GoalFormSheet({
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium">Owner</Label>
                 <Select value={ownerId} onValueChange={setOwnerId}>
-                  <SelectTrigger className="h-8 w-full">
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Unassigned" />
                   </SelectTrigger>
                   <SelectContent>
@@ -384,7 +384,7 @@ export function GoalFormSheet({
                     value={startDate}
                     onChange={handleStartDateChange}
                     placeholder="Pick a date"
-                    className="h-8 text-sm"
+                    className="text-sm"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -396,7 +396,7 @@ export function GoalFormSheet({
                     value={dueDate}
                     onChange={handleDueDateChange}
                     placeholder="Pick a date"
-                    className="h-8 text-sm"
+                    className="text-sm"
                   />
                 </div>
               </div>
@@ -413,7 +413,7 @@ export function GoalFormSheet({
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="h-8"
+                    className=""
                     onClick={handleAddKeyResult}
                   >
                     <Plus className="h-3.5 w-3.5 mr-1" /> Add

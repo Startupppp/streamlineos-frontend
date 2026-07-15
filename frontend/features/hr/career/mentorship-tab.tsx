@@ -51,7 +51,7 @@ const MentorshipRow = memo(function MentorshipRow({
         <div className="flex items-center gap-2 shrink-0">
           <Badge variant="outline" className={`text-xs ${statusClassName}`}>{statusLabel}</Badge>
           {status === "active" && (
-            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={onComplete}>Complete</Button>
+            <Button variant="ghost" size="sm" className="text-xs" onClick={onComplete}>Complete</Button>
           )}
         </div>
       </CardContent>

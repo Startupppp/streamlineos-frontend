@@ -365,7 +365,7 @@ export function DocumentTable({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                className="w-7 text-muted-foreground hover:text-foreground"
                 disabled={!hasFileUrl}
                 onClick={handleView}
                 aria-label="View document"
@@ -375,7 +375,7 @@ export function DocumentTable({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                className="w-7 text-muted-foreground hover:text-foreground"
                 disabled={!hasFileUrl}
                 onClick={handleDownload}
                 aria-label="Download document"
@@ -385,7 +385,7 @@ export function DocumentTable({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                className="w-7 text-muted-foreground hover:text-foreground"
                 onClick={handleEdit}
                 aria-label="Edit document"
               >
@@ -396,7 +396,7 @@ export function DocumentTable({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                    className="w-7 text-muted-foreground hover:text-foreground"
                     aria-label="More options"
                   >
                     <MoreHorizontal className="h-3.5 w-3.5" />
@@ -448,7 +448,7 @@ export function DocumentTable({
 
   const emptyState = (
     <EmptyState
-      illustration={<Upload className="h-8 w-8 text-muted-foreground" />}
+      illustration={<Upload className="w-8 text-muted-foreground" />}
       title="No documents found"
       description="Upload your first document to get started"
       action={{
@@ -464,7 +464,7 @@ export function DocumentTable({
         <Button
           variant="outline"
           size="sm"
-          className="h-7 text-xs gap-1.5"
+          className="text-xs gap-1.5"
           onClick={handleDownloadZip}
           disabled={isZipping}
         >

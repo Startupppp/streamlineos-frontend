@@ -163,7 +163,7 @@ function RequestSheet({ initial, onClose }: RequestSheetProps) {
           </div>
           <div className="space-y-1.5">
             <Label>Target Start Date</Label>
-            <DatePicker value={targetDate ?? ""} onChange={handleTargetDateChange} placeholder="Pick a date" className="h-8 text-sm" />
+            <DatePicker value={targetDate ?? ""} onChange={handleTargetDateChange} placeholder="Pick a date" className="text-sm" />
           </div>
           <div className="space-y-1.5">
             <Label>Justification</Label>

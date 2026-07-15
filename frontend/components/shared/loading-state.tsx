@@ -91,7 +91,7 @@ function PageSkeleton() {
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="rounded-lg border border-border/60 p-4 space-y-2">
             <Skeleton className="h-4 w-1/2" />
-            <Skeleton className="h-7 w-3/4" />
+            <Skeleton className="h-4 w-3/4" />
           </div>
         ))}
       </div>

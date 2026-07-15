@@ -97,7 +97,7 @@ export function ContactRolesCard({ contactId }: ContactRolesCardProps) {
         <CardTitle className="text-sm font-medium">Buying Committee Roles</CardTitle>
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-7 px-2 gap-1 text-xs" {...hoverHandlers}>
+            <Button variant="ghost" size="sm" className="px-2 gap-1 text-xs" {...hoverHandlers}>
               <PlusIcon ref={iconRef} size={14} />
               Add Role
             </Button>
@@ -110,7 +110,7 @@ export function ContactRolesCard({ contactId }: ContactRolesCardProps) {
                   value={form.watch("entityType")}
                   onValueChange={(v) => form.setValue("entityType", v as "deal" | "company")}
                 >
-                  <SelectTrigger className="h-8 text-xs">
+                  <SelectTrigger className="text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -125,7 +125,7 @@ export function ContactRolesCard({ contactId }: ContactRolesCardProps) {
                   value={form.watch("entityId")}
                   onValueChange={(v) => form.setValue("entityId", v)}
                 >
-                  <SelectTrigger className="h-8 text-xs">
+                  <SelectTrigger className="text-xs">
                     <SelectValue placeholder={entityType === "deal" ? "Select deal" : "Select company"} />
                   </SelectTrigger>
                   <SelectContent>
@@ -152,7 +152,7 @@ export function ContactRolesCard({ contactId }: ContactRolesCardProps) {
                   value={form.watch("roleKey")}
                   onValueChange={(v) => form.setValue("roleKey", v)}
                 >
-                  <SelectTrigger className="h-8 text-xs">
+                  <SelectTrigger className="text-xs">
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
                   <SelectContent>

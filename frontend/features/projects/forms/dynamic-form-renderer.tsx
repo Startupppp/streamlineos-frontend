@@ -128,7 +128,7 @@ export function DynamicFormRenderer({
               {field.required && <span className="text-destructive ml-0.5">*</span>}
             </Label>
             {field.type === "text" && (
-              <Input value={strVal} onChange={(e) => setFieldValue(field.key, e.target.value)} className="h-8 text-sm" />
+              <Input value={strVal} onChange={(e) => setFieldValue(field.key, e.target.value)} className="text-sm" />
             )}
             {field.type === "long_text" && (
               <Textarea value={strVal} onChange={(e) => setFieldValue(field.key, e.target.value)} className="text-sm resize-none h-20" />
@@ -138,18 +138,18 @@ export function DynamicFormRenderer({
                 type="number"
                 value={numVal || ""}
                 onChange={(e) => setFieldValue(field.key, parseFloat(e.target.value) || 0)}
-                className="h-8 text-sm"
+                className="text-sm"
               />
             )}
             {field.type === "date" && (
-              <DatePicker value={strVal} onChange={(v) => setFieldValue(field.key, v)} placeholder="Pick a date" className="h-8 text-sm" />
+              <DatePicker value={strVal} onChange={(v) => setFieldValue(field.key, v)} placeholder="Pick a date" className="text-sm" />
             )}
             {field.type === "url" && (
-              <Input type="url" value={strVal} onChange={(e) => setFieldValue(field.key, e.target.value)} className="h-8 text-sm" placeholder="https://" />
+              <Input type="url" value={strVal} onChange={(e) => setFieldValue(field.key, e.target.value)} className="text-sm" placeholder="https://" />
             )}
             {field.type === "dropdown" && (
               <Select value={strVal} onValueChange={(v) => setFieldValue(field.key, v)}>
-                <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Select…" /></SelectTrigger>
+                <SelectTrigger className="text-sm"><SelectValue placeholder="Select…" /></SelectTrigger>
                 <SelectContent>
                   {(field.options ?? []).map((opt) => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
                 </SelectContent>
@@ -176,7 +176,7 @@ export function DynamicFormRenderer({
             )}
             {field.type === "user" && (
               <Select value={strVal} onValueChange={(v) => setFieldValue(field.key, v)}>
-                <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Select user…" /></SelectTrigger>
+                <SelectTrigger className="text-sm"><SelectValue placeholder="Select user…" /></SelectTrigger>
                 <SelectContent>
                   {(members ?? []).map((m) => (
                     <SelectItem key={m.id} value={m.id}>
@@ -201,7 +201,7 @@ export function DynamicFormRenderer({
         <Input
           value={submitterName}
           onChange={handleSubmitterNameChange}
-          className="h-8 text-sm"
+          className="text-sm"
           placeholder="Optional"
         />
       </div>

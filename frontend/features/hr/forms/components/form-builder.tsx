@@ -177,7 +177,7 @@ export function FormBuilder({ form, onSave, isPending }: FormBuilderProps) {
                       {...field}
                       onChange={handleNameChange}
                       placeholder="e.g. WFH Request"
-                      className="h-8 text-sm"
+                      className="text-sm"
                     />
                   </FormControl>
                   <FormMessage className="text-xs" />
@@ -194,7 +194,7 @@ export function FormBuilder({ form, onSave, isPending }: FormBuilderProps) {
                     <Input
                       {...field}
                       placeholder="wfh-request"
-                      className="h-8 text-sm font-mono"
+                      className="text-sm font-mono"
                     />
                   </FormControl>
                   <FormMessage className="text-xs" />
@@ -230,7 +230,7 @@ export function FormBuilder({ form, onSave, isPending }: FormBuilderProps) {
                   <FormLabel className="text-xs">Audience</FormLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
                     <FormControl>
-                      <SelectTrigger className="h-8 text-sm w-36">
+                      <SelectTrigger className="text-sm w-36">
                         <SelectValue />
                       </SelectTrigger>
                     </FormControl>
@@ -251,7 +251,7 @@ export function FormBuilder({ form, onSave, isPending }: FormBuilderProps) {
                   <FormLabel className="text-xs">Trigger workflow</FormLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
                     <FormControl>
-                      <SelectTrigger className="h-8 text-sm w-52">
+                      <SelectTrigger className="text-sm w-52">
                         <SelectValue placeholder="None" />
                       </SelectTrigger>
                     </FormControl>
@@ -278,7 +278,7 @@ export function FormBuilder({ form, onSave, isPending }: FormBuilderProps) {
               type="button"
               variant="outline"
               size="sm"
-              className="h-7 text-xs"
+              className="text-xs"
               onClick={() => setPaletteOpen(true)}
             >
               + Add Field

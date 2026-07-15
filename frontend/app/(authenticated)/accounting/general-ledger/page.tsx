@@ -227,14 +227,14 @@ export default function GeneralLedgerPage() {
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-1.5">
               <label htmlFor="gl-from" className="text-xs text-muted-foreground whitespace-nowrap">From</label>
-              <DatePicker id="gl-from" value={from} onChange={handleFromChange} placeholder="Start" className="h-8 text-xs w-[150px]" />
+              <DatePicker id="gl-from" value={from} onChange={handleFromChange} placeholder="Start" className="text-xs w-[150px]" />
             </div>
             <div className="flex items-center gap-1.5">
               <label htmlFor="gl-to" className="text-xs text-muted-foreground whitespace-nowrap">To</label>
-              <DatePicker id="gl-to" value={to} onChange={handleToChange} placeholder="End" className="h-8 text-xs w-[150px]" />
+              <DatePicker id="gl-to" value={to} onChange={handleToChange} placeholder="End" className="text-xs w-[150px]" />
             </div>
             <Select value={accountId || "__none__"} onValueChange={handleAccountChange} disabled={!hasDateRange || glAccountsQuery.isLoading}>
-              <SelectTrigger className="h-8 text-xs w-[220px]">
+              <SelectTrigger className="text-xs w-[220px]">
                 <SelectValue placeholder={hasDateRange ? "Select account…" : "Set date range first"} />
               </SelectTrigger>
               <SelectContent>
@@ -253,7 +253,7 @@ export default function GeneralLedgerPage() {
           {showMoreFilters && (
             <div className="flex flex-wrap items-center gap-2">
               <Select value={clientId || "__none__"} onValueChange={handleClientChange}>
-                <SelectTrigger className="h-8 text-xs w-[180px]">
+                <SelectTrigger className="text-xs w-[180px]">
                   <SelectValue placeholder="All clients" />
                 </SelectTrigger>
                 <SelectContent>
@@ -264,7 +264,7 @@ export default function GeneralLedgerPage() {
                 </SelectContent>
               </Select>
               <Select value={vendorId || "__none__"} onValueChange={handleVendorChange}>
-                <SelectTrigger className="h-8 text-xs w-[180px]">
+                <SelectTrigger className="text-xs w-[180px]">
                   <SelectValue placeholder="All vendors" />
                 </SelectTrigger>
                 <SelectContent>

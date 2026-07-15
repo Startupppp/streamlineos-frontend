@@ -158,7 +158,7 @@ export function ReconciliationMatchPanel({ txn, bankAccountId, onClose }: Props)
             <BankTxnStatusBadge status={txn.status} size="chip" />
           </div>
         </div>
-        <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={onClose}>
+        <Button variant="ghost" size="icon" className="w-7 shrink-0" onClick={onClose}>
           <X className="h-4 w-4" />
         </Button>
       </div>
@@ -299,7 +299,7 @@ export function ReconciliationMatchPanel({ txn, bankAccountId, onClose }: Props)
           <div className="space-y-1.5">
             <Label className="text-xs">Counter Account *</Label>
             <Select value={counterAccountId} onValueChange={handleCounterAccountChange}>
-              <SelectTrigger className="h-8 text-sm">
+              <SelectTrigger className="text-sm">
                 <SelectValue placeholder="Select account" />
               </SelectTrigger>
               <SelectContent>
@@ -317,7 +317,7 @@ export function ReconciliationMatchPanel({ txn, bankAccountId, onClose }: Props)
               placeholder="Add a memo…"
               value={memo}
               onChange={handleMemoChange}
-              className="h-8 text-sm"
+              className="text-sm"
             />
           </div>
         </div>

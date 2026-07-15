@@ -63,7 +63,7 @@ export function QuoteLineItemsEditor({ control, rootError }: QuoteLineItemsEdito
                     render={({ field: f }) => (
                       <FormItem className="space-y-0">
                         <FormControl>
-                          <Input placeholder="Description" className="h-8 text-xs" {...f} />
+                          <Input placeholder="Description" className="text-xs" {...f} />
                         </FormControl>
                         <FormMessage className="text-xs" />
                       </FormItem>
@@ -77,7 +77,7 @@ export function QuoteLineItemsEditor({ control, rootError }: QuoteLineItemsEdito
                     render={({ field: f }) => (
                       <FormItem className="space-y-0">
                         <FormControl>
-                          <Input type="number" min="0.01" step="0.01" className="h-8 text-xs" {...f} />
+                          <Input type="number" min="0.01" step="0.01" className="text-xs" {...f} />
                         </FormControl>
                         <FormMessage className="text-xs" />
                       </FormItem>
@@ -91,7 +91,7 @@ export function QuoteLineItemsEditor({ control, rootError }: QuoteLineItemsEdito
                     render={({ field: f }) => (
                       <FormItem className="space-y-0">
                         <FormControl>
-                          <Input type="number" min="0" step="0.01" className="h-8 text-xs" {...f} />
+                          <Input type="number" min="0" step="0.01" className="text-xs" {...f} />
                         </FormControl>
                         <FormMessage className="text-xs" />
                       </FormItem>
@@ -105,7 +105,7 @@ export function QuoteLineItemsEditor({ control, rootError }: QuoteLineItemsEdito
                     render={({ field: f }) => (
                       <FormItem className="space-y-0">
                         <FormControl>
-                          <Input type="number" min="0" max="100" step="0.01" className="h-8 text-xs" {...f} />
+                          <Input type="number" min="0" max="100" step="0.01" className="text-xs" {...f} />
                         </FormControl>
                         <FormMessage className="text-xs" />
                       </FormItem>
@@ -117,7 +117,7 @@ export function QuoteLineItemsEditor({ control, rootError }: QuoteLineItemsEdito
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 text-destructive hover:text-destructive"
+                    className="w-7 text-destructive hover:text-destructive"
                     onClick={() => handleRemove(index)}
                     disabled={fields.length === 1}
                     aria-label="Remove line item"
@@ -135,7 +135,7 @@ export function QuoteLineItemsEditor({ control, rootError }: QuoteLineItemsEdito
         type="button"
         variant="outline"
         size="sm"
-        className="h-7 text-xs"
+        className="text-xs"
         onClick={handleAdd}
       >
         <Plus className="h-3.5 w-3.5 mr-1" />

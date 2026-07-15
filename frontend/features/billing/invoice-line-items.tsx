@@ -335,7 +335,7 @@ export function InvoiceLineItems({
                   max={100}
                   value={editTaxRate}
                   onChange={handleTaxRateChange}
-                  className="h-8 text-sm"
+                  className="text-sm"
                 />
               </div>
               <div className="space-y-1">
@@ -345,7 +345,7 @@ export function InvoiceLineItems({
                   min={0}
                   value={editDiscount}
                   onChange={handleDiscountChange}
-                  className="h-8 text-sm"
+                  className="text-sm"
                 />
               </div>
               <div className="space-y-1">
@@ -361,7 +361,7 @@ export function InvoiceLineItems({
                 <Input
                   value={editCurrency}
                   onChange={handleCurrencyChange}
-                  className="h-8 text-sm"
+                  className="text-sm"
                   placeholder="INR"
                 />
               </div>
@@ -371,7 +371,7 @@ export function InvoiceLineItems({
               <Input
                 value={editNotes}
                 onChange={handleNotesChange}
-                className="h-8 text-sm"
+                className="text-sm"
                 placeholder="e.g. Payment due within 30 days"
               />
             </div>

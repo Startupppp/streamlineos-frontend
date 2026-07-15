@@ -73,7 +73,7 @@ export function CfdSection({ projectId }: { projectId: number }) {
   const actions = (
     <div className="flex items-center gap-2">
       <Select value={String(days)} onValueChange={handleDaysChange}>
-        <SelectTrigger className="h-8 w-28 text-sm bg-muted/40 border-border">
+        <SelectTrigger className="w-28 text-sm bg-muted/40 border-border">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -86,7 +86,7 @@ export function CfdSection({ projectId }: { projectId: number }) {
       <LoadingButton
         size="sm"
         variant="outline"
-        className="h-8"
+        className=""
         onClick={handleCapture}
         isPending={capture.isPending}
         loadingText="Capturing…"

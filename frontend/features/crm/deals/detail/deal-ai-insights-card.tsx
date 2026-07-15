@@ -185,7 +185,7 @@ export function DealAiInsightsCard({ dealId, dealName }: DealAiInsightsCardProps
               <LoadingButton
                 size="sm"
                 variant="ghost"
-                className="h-7 text-xs text-primary hover:text-primary/80"
+                className="text-xs text-primary hover:text-primary/80"
                 isPending={isPending}
                 onClick={handleGenerate}
               >

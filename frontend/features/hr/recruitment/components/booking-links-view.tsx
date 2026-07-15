@@ -59,7 +59,7 @@ function RevokeButton({
     <Button
       variant="ghost"
       size="sm"
-      className="h-7 text-xs text-destructive hover:text-destructive"
+      className="text-xs text-destructive hover:text-destructive"
       onClick={handleClick}
       disabled={disabled}
     >

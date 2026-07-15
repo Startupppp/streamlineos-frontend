@@ -41,7 +41,7 @@ const columns: DataTableColumn<LetterRender>[] = [
     header: "Template",
     cell: (letter) => (
       <div className="flex items-center gap-2">
-        <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+        <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
           <FileText className="h-3.5 w-3.5 text-primary" />
         </div>
         <span className="text-sm font-medium text-foreground">{letter.templateName}</span>
@@ -72,7 +72,7 @@ const columns: DataTableColumn<LetterRender>[] = [
 export function LettersHistoryTable({ letters, isLoading, className }: LettersHistoryTableProps) {
   const emptyState = (
     <EmptyState
-      illustration={<FileText className="h-8 w-8 text-muted-foreground" />}
+      illustration={<FileText className="w-8 text-muted-foreground" />}
       title="No letters generated"
       description="Generated letters will appear here."
       compact

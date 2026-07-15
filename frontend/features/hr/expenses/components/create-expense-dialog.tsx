@@ -444,7 +444,7 @@ export function CreateExpenseDialog({
             <label className="text-xs font-medium">Receipt</label>
             {!receiptFile && !receiptPreview ? (
               <label className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg p-6 cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors">
-                <Upload className="h-7 w-7 text-muted-foreground/50 mb-1.5" />
+                <Upload className="w-7 text-muted-foreground/50 mb-1.5" />
                 <span className="text-sm font-medium text-foreground/70">
                   Upload receipt
                 </span>

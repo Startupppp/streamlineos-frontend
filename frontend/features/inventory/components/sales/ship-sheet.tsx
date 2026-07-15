@@ -87,7 +87,7 @@ export function ShipSheet({ open, onOpenChange, soId }: ShipSheetProps) {
             name="shipDate"
             control={form.control}
             render={({ field }) => (
-              <DatePicker id="shipDate" value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+              <DatePicker id="shipDate" value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
             )}
           />
           {form.formState.errors.shipDate && (
@@ -99,7 +99,7 @@ export function ShipSheet({ open, onOpenChange, soId }: ShipSheetProps) {
           <Input
             id="trackingNumber"
             placeholder="Optional"
-            className="h-8 text-sm"
+            className="text-sm"
             {...form.register("trackingNumber")}
           />
         </div>

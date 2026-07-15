@@ -904,7 +904,7 @@ export default function CheckoutPage() {
           {step === 7 && (
             <div className="flex flex-col items-center text-center py-12 space-y-6">
               <div className="h-16 w-16 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
-                <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-400" />
+                <CheckCircle2 className="w-8 text-green-600 dark:text-green-400" />
               </div>
               <div className="space-y-1">
                 <h2 className="text-xl font-semibold">Payment Successful!</h2>

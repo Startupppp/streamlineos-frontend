@@ -134,7 +134,7 @@ const COLUMNS: DataTableColumn<AgingDealRow>[] = [
     header: "",
     headerClassName: "w-24",
     cell: (r) => (
-      <Button variant="ghost" size="sm" className="h-7 text-xs" asChild>
+      <Button variant="ghost" size="sm" className="text-xs" asChild>
         <Link href={`/crm/deals/${r.id}`}>
           <ExternalLink className="h-3.5 w-3.5 mr-1" />
           View

@@ -95,7 +95,7 @@ function PollCard({
           <Button
             size="sm"
             variant="ghost"
-            className="h-7 text-[11px] gap-1 px-2"
+            className="text-[11px] gap-1 px-2"
             onClick={() => setShowResults((p) => !p)}
           >
             <BarChart3 className="h-3.5 w-3.5" />
@@ -105,7 +105,7 @@ function PollCard({
             <Button
               size="sm"
               variant="ghost"
-              className="h-7 text-[11px] px-2"
+              className="text-[11px] px-2"
               onClick={handleToggleStatus}
               disabled={updatePoll.isPending}
             >
@@ -239,7 +239,7 @@ export function PollsTab() {
     <div className="space-y-4">
       {canManage && (
         <div className="flex justify-end">
-          <Button size="sm" className="h-8 gap-1.5" onClick={() => setSheetOpen(true)}>
+          <Button size="sm" className="gap-1.5" onClick={() => setSheetOpen(true)}>
             <Plus className="h-3.5 w-3.5" />
             New Poll
           </Button>
@@ -248,7 +248,7 @@ export function PollsTab() {
 
       {(!polls || polls.length === 0) ? (
         <div className="flex flex-col items-center justify-center py-16 rounded-lg border border-dashed border-border bg-muted/20">
-          <BarChart3 className="h-8 w-8 text-muted-foreground mb-3" />
+          <BarChart3 className="w-8 text-muted-foreground mb-3" />
           <p className="text-sm font-medium text-foreground">No polls yet</p>
         </div>
       ) : (
@@ -276,7 +276,7 @@ export function PollsTab() {
               placeholder="Ask a question..."
               value={question}
               onChange={handleQuestionChange}
-              className="h-8 text-sm"
+              className="text-sm"
             />
           </div>
           <div className="space-y-2">
@@ -287,14 +287,14 @@ export function PollsTab() {
                   placeholder={`Option ${idx + 1}`}
                   value={opt}
                   onChange={(e) => handleOptionChange(idx, e.target.value)}
-                  className="h-8 text-sm flex-1"
+                  className="text-sm flex-1"
                 />
                 {options.length > 2 && (
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 shrink-0"
+                    className="w-8 shrink-0"
                     onClick={() => handleRemoveOption(idx)}
                   >
                     ×
@@ -307,7 +307,7 @@ export function PollsTab() {
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-7 text-xs"
+                className="text-xs"
                 onClick={handleAddOption}
               >
                 + Add option
@@ -321,7 +321,7 @@ export function PollsTab() {
               type="datetime-local"
               value={closesAt}
               onChange={handleClosesAtChange}
-              className="h-8 text-sm"
+              className="text-sm"
             />
           </div>
           <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-4 py-3">

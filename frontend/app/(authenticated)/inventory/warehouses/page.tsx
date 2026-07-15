@@ -301,7 +301,7 @@ export default function WarehousesPage() {
           aria-hidden="true"
         />
         <Input
-          className="h-8 w-full min-w-0 pl-8 pr-8 text-xs"
+          className="w-full min-w-0 pl-8 pr-8 text-xs"
           placeholder="Search by name, code, city, country…"
           value={localSearch}
           onChange={handleSearchChange}
@@ -336,7 +336,7 @@ export default function WarehousesPage() {
         <Button
           variant="outline"
           size="sm"
-          className="h-8 gap-1.5 text-xs"
+          className="gap-1.5 text-xs"
           onClick={() => setShowFilters((prev) => !prev)}
           aria-expanded={showFilters}
         >
@@ -348,7 +348,7 @@ export default function WarehousesPage() {
         <Button
           variant="ghost"
           size="sm"
-          className="h-8 gap-1 text-xs text-muted-foreground"
+          className="gap-1 text-xs text-muted-foreground"
           onClick={clearFilters}
         >
           <X className="h-3 w-3" aria-hidden="true" />
@@ -383,7 +383,7 @@ export default function WarehousesPage() {
       actions={
         <Button
           size="sm"
-          className="h-8 gap-1.5 text-xs"
+          className="gap-1.5 text-xs"
           onClick={handleOpenSheet}
         >
           <Plus className="h-3.5 w-3.5" aria-hidden="true" />

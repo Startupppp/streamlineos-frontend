@@ -60,7 +60,7 @@ const CR_STATUSES: ChangeRequestStatus[] = [
 function NewCrButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
-    <Button size="sm" className="h-7 gap-1 text-[11px]" onClick={onClick} {...hoverHandlers}>
+    <Button size="sm" className="gap-1 text-[11px]" onClick={onClick} {...hoverHandlers}>
       <PlusIcon ref={iconRef} size={14} />
       New Change Request
     </Button>
@@ -220,10 +220,10 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
           placeholder="Search..."
           value={search}
           onChange={handleSearchChange}
-          className="h-8 w-44 text-[11px]"
+          className="w-44 text-[11px]"
         />
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="h-8 w-40 text-[11px]">
+          <SelectTrigger className="w-40 text-[11px]">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>

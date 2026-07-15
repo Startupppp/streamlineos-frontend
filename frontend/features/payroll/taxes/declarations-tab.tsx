@@ -194,7 +194,7 @@ export function DeclarationsTab() {
         toolbar={
           <div className="flex items-center gap-2">
             <Select value={fyParam} onValueChange={handleFYChange}>
-              <SelectTrigger className="h-8 text-xs w-28">
+              <SelectTrigger className="text-xs w-28">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -207,7 +207,7 @@ export function DeclarationsTab() {
               </SelectContent>
             </Select>
             <Select value={statusParam} onValueChange={handleStatusChange}>
-              <SelectTrigger className="h-8 text-xs w-28">
+              <SelectTrigger className="text-xs w-28">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -223,7 +223,7 @@ export function DeclarationsTab() {
               <Button
                 size="sm"
                 variant="outline"
-                className="h-7 text-xs gap-1"
+                className="text-xs gap-1"
                 onClick={handleExportClick}
                 disabled={exportMutation.isPending}
               >

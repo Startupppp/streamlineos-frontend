@@ -63,7 +63,7 @@ export function PlanCard({ projectId, featureEnabled, requiredPlan }: PlanCardPr
           onClick={handleRun}
           disabled={!featureEnabled || !prompt.trim()}
           isPending={mutation.isPending}
-          className="h-8 w-full gap-1.5 text-xs"
+          className="w-full gap-1.5 text-xs"
           {...hoverHandlers}
         >
           {result ? (
@@ -83,9 +83,7 @@ export function PlanCard({ projectId, featureEnabled, requiredPlan }: PlanCardPr
         <div className="space-y-1.5 py-1">
           <Skeleton className="h-3.5 w-3/4 rounded" />
           <Skeleton className="h-3.5 w-full rounded" />
-          <Skeleton className="h-8 w-full rounded-lg" />
-          <Skeleton className="h-8 w-full rounded-lg" />
-          <Skeleton className="h-8 w-full rounded-lg" />
+          <Skeleton className="h-10 w-full rounded-lg" />         <Skeleton className="h-10 w-full rounded-lg" />         <Skeleton className="h-10 w-full rounded-lg" />
         </div>
       ) : null}
 

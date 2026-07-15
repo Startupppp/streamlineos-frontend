@@ -79,7 +79,7 @@ function UnlinkProjectButton({
     <Button
       variant="ghost"
       size="icon"
-      className="h-7 w-7 shrink-0"
+      className="w-7 shrink-0"
       onClick={handleClick}
       disabled={isPending}
       aria-label={`Unlink ${projectName}`}
@@ -103,7 +103,7 @@ function LinkProjectButton({
   return (
     <LoadingButton
       size="sm"
-      className="h-7 gap-1 text-xs"
+      className="gap-1 text-xs"
       onClick={onClick}
       disabled={disabled}
       isPending={isPending}
@@ -118,7 +118,7 @@ function LinkProjectButton({
 function PortfolioActionsButton() {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
-    <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" {...hoverHandlers}>
+    <Button variant="outline" size="sm" className="gap-1.5 text-xs" {...hoverHandlers}>
       <EllipsisIcon ref={iconRef} size={14} /> Actions
     </Button>
   );
@@ -317,7 +317,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
             {canManage && availableProjects.length > 0 ? (
               <div className="flex min-w-0 flex-wrap items-center gap-2">
                 <Select value={linkProjectId} onValueChange={setLinkProjectId}>
-                  <SelectTrigger className="h-8 w-48 text-xs">
+                  <SelectTrigger className="w-48 text-xs">
                     <SelectValue placeholder="Link a project…" />
                   </SelectTrigger>
                   <SelectContent>

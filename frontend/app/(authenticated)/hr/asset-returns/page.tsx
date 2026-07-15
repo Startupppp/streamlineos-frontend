@@ -50,33 +50,42 @@ const arKeys = {
   list: () => [...arKeys.all, "list"] as const,
 };
 
-const STATUS_META: Record<string, { label: string; badge: string; accent: string }> = {
+const STATUS_META: Record<
+  string,
+  { label: string; badge: string; accent: string }
+> = {
   PENDING: {
     label: "Pending",
-    badge: "bg-amber-100 border-amber-200 text-amber-700 dark:bg-amber-900/40 dark:border-amber-800 dark:text-amber-300",
+    badge:
+      "bg-amber-100 border-amber-200 text-amber-700 dark:bg-amber-900/40 dark:border-amber-800 dark:text-amber-300",
     accent: "border-l-amber-500",
   },
   RETURNED: {
     label: "Returned",
-    badge: "bg-emerald-100 border-emerald-200 text-emerald-700 dark:bg-emerald-900/40 dark:border-emerald-800 dark:text-emerald-300",
+    badge:
+      "bg-emerald-100 border-emerald-200 text-emerald-700 dark:bg-emerald-900/40 dark:border-emerald-800 dark:text-emerald-300",
     accent: "border-l-emerald-500",
   },
   MISSING: {
     label: "Missing",
-    badge: "bg-rose-100 border-rose-200 text-rose-700 dark:bg-rose-900/40 dark:border-rose-800 dark:text-rose-300",
+    badge:
+      "bg-rose-100 border-rose-200 text-rose-700 dark:bg-rose-900/40 dark:border-rose-800 dark:text-rose-300",
     accent: "border-l-rose-500",
   },
 };
 
 const CONDITION_META: Record<string, { badge: string }> = {
   Good: {
-    badge: "bg-emerald-100 border-emerald-200 text-emerald-700 dark:bg-emerald-900/40 dark:border-emerald-800 dark:text-emerald-300",
+    badge:
+      "bg-emerald-100 border-emerald-200 text-emerald-700 dark:bg-emerald-900/40 dark:border-emerald-800 dark:text-emerald-300",
   },
   Fair: {
-    badge: "bg-amber-100 border-amber-200 text-amber-700 dark:bg-amber-900/40 dark:border-amber-800 dark:text-amber-300",
+    badge:
+      "bg-amber-100 border-amber-200 text-amber-700 dark:bg-amber-900/40 dark:border-amber-800 dark:text-amber-300",
   },
   Poor: {
-    badge: "bg-rose-100 border-rose-200 text-rose-700 dark:bg-rose-900/40 dark:border-rose-800 dark:text-rose-300",
+    badge:
+      "bg-rose-100 border-rose-200 text-rose-700 dark:bg-rose-900/40 dark:border-rose-800 dark:text-rose-300",
   },
 };
 
@@ -92,13 +101,23 @@ function buildAssetReturnColumns(
       header: "Asset",
       cell: (ar) => (
         <div className="flex items-center gap-2.5">
-          <div className="h-7 w-7 rounded-lg bg-muted flex items-center justify-center shrink-0">
+          <div className="w-7 rounded-lg bg-muted flex items-center justify-center shrink-0">
             <Laptop className="h-3.5 w-3.5 text-muted-foreground" />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-foreground truncate">{ar.assetName}</p>
-            {ar.assetType && <p className="text-[10px] text-muted-foreground">{ar.assetType}</p>}
-            {ar.serialNumber && <p className="text-[10px] font-mono text-muted-foreground">S/N: {ar.serialNumber}</p>}
+            <p className="text-sm font-semibold text-foreground truncate">
+              {ar.assetName}
+            </p>
+            {ar.assetType && (
+              <p className="text-[10px] text-muted-foreground">
+                {ar.assetType}
+              </p>
+            )}
+            {ar.serialNumber && (
+              <p className="text-[10px] font-mono text-muted-foreground">
+                S/N: {ar.serialNumber}
+              </p>
+            )}
           </div>
         </div>
       ),
@@ -116,9 +135,15 @@ function buildAssetReturnColumns(
       key: "status",
       header: "Status",
       cell: (ar) => {
-        const statusMeta = STATUS_META[ar.status ?? "PENDING"] ?? STATUS_META.PENDING;
+        const statusMeta =
+          STATUS_META[ar.status ?? "PENDING"] ?? STATUS_META.PENDING;
         return (
-          <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border", statusMeta.badge)}>
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+              statusMeta.badge,
+            )}
+          >
             {statusMeta.label}
           </span>
         );
@@ -130,9 +155,16 @@ function buildAssetReturnColumns(
       key: "condition",
       header: "Condition",
       cell: (ar) => {
-        const conditionMeta = ar.condition ? CONDITION_META[ar.condition] : null;
+        const conditionMeta = ar.condition
+          ? CONDITION_META[ar.condition]
+          : null;
         return conditionMeta ? (
-          <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border", conditionMeta.badge)}>
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+              conditionMeta.badge,
+            )}
+          >
             {ar.condition}
           </span>
         ) : (
@@ -169,10 +201,21 @@ function buildAssetReturnColumns(
   return cols;
 }
 
-function AssetReturnActionButton({ id, onMark }: { id: number; onMark: (id: number) => void }) {
+function AssetReturnActionButton({
+  id,
+  onMark,
+}: {
+  id: number;
+  onMark: (id: number) => void;
+}) {
   const handleClick = useCallback(() => onMark(id), [id, onMark]);
   return (
-    <Button size="sm" variant="outline" className="h-7 text-xs gap-1.5" onClick={handleClick}>
+    <Button
+      size="sm"
+      variant="outline"
+      className="text-xs gap-1.5"
+      onClick={handleClick}
+    >
       <CheckCircle2 className="h-3 w-3" />
       Received
     </Button>
@@ -248,45 +291,60 @@ export default function AssetReturnsPage() {
     [employees],
   );
 
-  const { data: items, isLoading, isError, refetch } = useQuery({
+  const {
+    data: items,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: arKeys.list(),
     queryFn: () => apiClient.get<AssetReturn[]>("/hr/asset-returns"),
     staleTime: 60_000,
   });
 
   const create = useMutation({
-    mutationFn: (data: { userId: string; assetName: string; assetId?: number; condition?: string; notes?: string }) =>
-      apiClient.post<AssetReturn>("/hr/asset-returns", data),
+    mutationFn: (data: {
+      userId: string;
+      assetName: string;
+      assetId?: number;
+      condition?: string;
+      notes?: string;
+    }) => apiClient.post<AssetReturn>("/hr/asset-returns", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: arKeys.list() }),
   });
 
   const markReturned = useMutation({
     mutationFn: ({ id, condition: cond }: { id: number; condition: string }) =>
-      apiClient.patch<{ success: boolean }>(`/hr/asset-returns/${id}`, { status: "RETURNED", condition: cond }),
+      apiClient.patch<{ success: boolean }>(`/hr/asset-returns/${id}`, {
+        status: "RETURNED",
+        condition: cond,
+      }),
     onSuccess: () => qc.invalidateQueries({ queryKey: arKeys.list() }),
   });
 
-  const handleAssetChange = useCallback(
-    (id: string) => {
-      setSelectedAssetId(id);
-      setOverrideUserId(null);
-    },
-    [],
-  );
+  const handleAssetChange = useCallback((id: string) => {
+    setSelectedAssetId(id);
+    setOverrideUserId(null);
+  }, []);
 
   const handleEmployeeOverrideChange = useCallback((id: string) => {
     setOverrideUserId(id || null);
   }, []);
 
-  const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const val = e.target.value;
-    setNotes(val);
-    if (val.length > 1000) {
-      setNotesError(`Notes must be at most 1000 characters (${val.length}/1000)`);
-    } else {
-      setNotesError("");
-    }
-  }, []);
+  const handleNotesChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const val = e.target.value;
+      setNotes(val);
+      if (val.length > 1000) {
+        setNotesError(
+          `Notes must be at most 1000 characters (${val.length}/1000)`,
+        );
+      } else {
+        setNotesError("");
+      }
+    },
+    [],
+  );
 
   const resetSheetState = useCallback(() => {
     setSelectedAssetId("");
@@ -323,7 +381,9 @@ export default function AssetReturnsPage() {
       toast.error("Notes must be at most 1000 characters");
       return;
     }
-    const asset = allAssignedAssets.find((a) => String(a.id) === selectedAssetId);
+    const asset = allAssignedAssets.find(
+      (a) => String(a.id) === selectedAssetId,
+    );
     if (!asset) return;
     create.mutate(
       {
@@ -342,7 +402,15 @@ export default function AssetReturnsPage() {
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [selectedAssetId, resolvedUserId, condition, notes, allAssignedAssets, create, resetSheetState]);
+  }, [
+    selectedAssetId,
+    resolvedUserId,
+    condition,
+    notes,
+    allAssignedAssets,
+    create,
+    resetSheetState,
+  ]);
 
   const handleMarkReturned = useCallback(() => {
     if (!returnId) return;
@@ -378,7 +446,7 @@ export default function AssetReturnsPage() {
                   <Skeleton className="h-4 w-48" />
                   <Skeleton className="h-3 w-72" />
                 </div>
-                <Skeleton className="h-7 w-24 rounded-md" />
+                <Skeleton className="h-4 w-24 rounded-md" />{" "}
               </div>
             ))}
           </div>
@@ -391,12 +459,18 @@ export default function AssetReturnsPage() {
     return (
       <PageWrapper title="Asset Returns" subtitle="Track company asset returns">
         <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
-          <AlertCircle className="h-8 w-8 text-destructive" />
+          <AlertCircle className="w-8 text-destructive" />
           <div>
-            <p className="text-sm font-medium text-foreground">Failed to load asset returns</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
+            <p className="text-sm font-medium text-foreground">
+              Failed to load asset returns
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Something went wrong. Please try again.
+            </p>
           </div>
-          <Button size="sm" variant="outline" onClick={handleRetry}>Try again</Button>
+          <Button size="sm" variant="outline" onClick={handleRetry}>
+            Try again
+          </Button>
         </div>
       </PageWrapper>
     );
@@ -424,7 +498,8 @@ export default function AssetReturnsPage() {
         columns={buildAssetReturnColumns(isAdmin, handleSetReturnId)}
         getRowKey={(row) => row.id}
         rowClassName={(ar) => {
-          const statusMeta = STATUS_META[ar.status ?? "PENDING"] ?? STATUS_META.PENDING;
+          const statusMeta =
+            STATUS_META[ar.status ?? "PENDING"] ?? STATUS_META.PENDING;
           return cn("border-l-4", statusMeta.accent);
         }}
         minWidth="640px"
@@ -434,7 +509,9 @@ export default function AssetReturnsPage() {
               <EmptyDevicesIllustration />
             </div>
             <div>
-              <p className="text-[0.9375rem] font-semibold text-foreground">No asset returns tracked</p>
+              <p className="text-[0.9375rem] font-semibold text-foreground">
+                No asset returns tracked
+              </p>
               <p className="mt-1 text-sm text-muted-foreground max-w-xs">
                 Log an asset return when an employee returns company equipment.
               </p>
@@ -470,18 +547,28 @@ export default function AssetReturnsPage() {
             searchPlaceholder="Search assets…"
           />
           {allAssignedAssets.length === 0 && (
-            <p className="text-xs text-muted-foreground">No currently assigned assets found.</p>
+            <p className="text-xs text-muted-foreground">
+              No currently assigned assets found.
+            </p>
           )}
         </div>
 
         {selectedAsset && (
           <div className="rounded-xl bg-muted/50 border border-border p-3 text-xs space-y-1">
-            <p><span className="font-medium">Type:</span> {selectedAsset.type}</p>
+            <p>
+              <span className="font-medium">Type:</span> {selectedAsset.type}
+            </p>
             {selectedAsset.serialNumber && (
-              <p><span className="font-medium">Serial Number:</span> {selectedAsset.serialNumber}</p>
+              <p>
+                <span className="font-medium">Serial Number:</span>{" "}
+                {selectedAsset.serialNumber}
+              </p>
             )}
             {selectedAsset.brand && (
-              <p><span className="font-medium">Brand:</span> {selectedAsset.brand}</p>
+              <p>
+                <span className="font-medium">Brand:</span>{" "}
+                {selectedAsset.brand}
+              </p>
             )}
           </div>
         )}
@@ -490,7 +577,9 @@ export default function AssetReturnsPage() {
           <label className="text-sm font-medium">
             Employee <span className="text-destructive">*</span>
             {employeeAutoFilled && resolvedEmployee && (
-              <span className="ml-1.5 text-xs font-normal text-muted-foreground">(auto-filled from assignment)</span>
+              <span className="ml-1.5 text-xs font-normal text-muted-foreground">
+                (auto-filled from assignment)
+              </span>
             )}
           </label>
           {employeeAutoFilled && resolvedEmployee ? (
@@ -552,7 +641,9 @@ export default function AssetReturnsPage() {
             className="resize-none w-full"
             maxLength={1000}
           />
-          {notesError && <p className="text-xs text-destructive">{notesError}</p>}
+          {notesError && (
+            <p className="text-xs text-destructive">{notesError}</p>
+          )}
         </div>
       </HrSheet>
 

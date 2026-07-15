@@ -144,11 +144,11 @@ export function MeetingsTab() {
             <Card key={m.id}>
               <CardContent className="p-3 flex items-center gap-3">
                 <div className="flex -space-x-2 shrink-0">
-                  <Avatar className="h-7 w-7 border-2 border-background">
+                  <Avatar className="w-7 border-2 border-background">
                     <AvatarImage src={resolveImageUrl(m.manager?.image ?? null)} />
                     <AvatarFallback className="text-[9px] bg-primary/10 text-primary">{m.manager?.name?.[0]}</AvatarFallback>
                   </Avatar>
-                  <Avatar className="h-7 w-7 border-2 border-background">
+                  <Avatar className="w-7 border-2 border-background">
                     <AvatarImage src={resolveImageUrl(m.employee?.image ?? null)} />
                     <AvatarFallback className="text-[9px] bg-primary/10 text-primary">{m.employee?.name?.[0]}</AvatarFallback>
                   </Avatar>
@@ -164,7 +164,7 @@ export function MeetingsTab() {
                   {m.status}
                 </Badge>
                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7"><MoreHorizontal className="h-3.5 w-3.5" /></Button></DropdownMenuTrigger>
+                  <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="w-7"><MoreHorizontal className="h-3.5 w-3.5" /></Button></DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     {m.status === "SCHEDULED" && <DropdownMenuItem onClick={() => handleStatusChange(m.id, "COMPLETED")}>Mark Completed</DropdownMenuItem>}
                     {m.status === "SCHEDULED" && <DropdownMenuItem onClick={() => handleStatusChange(m.id, "CANCELLED")}>Cancel</DropdownMenuItem>}
@@ -208,7 +208,7 @@ export function MeetingsTab() {
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Date</label>
-            <DatePicker value={scheduledDate ?? ""} onChange={handleScheduledDateChange} fromDate={new Date()} placeholder="Pick a date" className="h-8 text-sm" />
+            <DatePicker value={scheduledDate ?? ""} onChange={handleScheduledDateChange} fromDate={new Date()} placeholder="Pick a date" className="text-sm" />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Time</label>

@@ -299,7 +299,7 @@ export function PoliciesSection({ policies, canManage }: PoliciesSectionProps) {
         <CardHeader className="pb-2 flex flex-row items-center justify-between">
           <CardTitle className="text-sm font-semibold">Approval Policies</CardTitle>
           {canManage && (
-            <Button size="sm" className="h-7 text-xs" onClick={handleAddPolicyOpen}>Add policy</Button>
+            <Button size="sm" className="text-xs" onClick={handleAddPolicyOpen}>Add policy</Button>
           )}
         </CardHeader>
         <CardContent className="p-0">
@@ -375,7 +375,7 @@ export function ExchangeRatesSection({ rates, canManage }: ExchangeRatesSectionP
         <CardHeader className="pb-2 flex flex-row items-center justify-between">
           <CardTitle className="text-sm font-semibold">Exchange Rates</CardTitle>
           {canManage && (
-            <Button size="sm" className="h-7 text-xs" onClick={handleAddRateOpen}>Add rate</Button>
+            <Button size="sm" className="text-xs" onClick={handleAddRateOpen}>Add rate</Button>
           )}
         </CardHeader>
         <CardContent className="p-0">

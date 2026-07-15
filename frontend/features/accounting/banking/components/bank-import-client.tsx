@@ -267,7 +267,7 @@ export function BankImportClient() {
                 <div className="space-y-1.5">
                   <Label className="text-xs">Bank Account</Label>
                   <Select value={selectedAccountId} onValueChange={handleAccountChange}>
-                    <SelectTrigger className="h-8 text-sm">
+                    <SelectTrigger className="text-sm">
                       <SelectValue placeholder="Select account" />
                     </SelectTrigger>
                     <SelectContent>
@@ -283,7 +283,7 @@ export function BankImportClient() {
                 <div className="space-y-1.5">
                   <Label className="text-xs">CSV File</Label>
                   <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
-                    <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                    <Upload className="w-8 text-muted-foreground mx-auto mb-2" />
                     <p className="text-xs text-muted-foreground mb-2">
                       {fileName ? fileName : "Drop your CSV or click to browse"}
                     </p>

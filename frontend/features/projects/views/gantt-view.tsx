@@ -76,7 +76,7 @@ function NavIconButton({
     <Button
       variant="outline"
       size="icon"
-      className="h-8 w-8 shrink-0 border-input bg-card"
+      className="shrink-0 border-input bg-card"
       onClick={onClick}
       aria-label={ariaLabel}
       {...hoverHandlers}
@@ -227,7 +227,7 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
       <div className={cn(PM_TOOLBAR, "gap-2")}>
         <div className="flex min-w-0 flex-wrap items-center gap-1.5">
           <Select value={String(displayMonth)} onValueChange={handleMonthChange}>
-            <SelectTrigger className="h-8 w-[120px] shrink-0 border-input bg-card text-xs">
+            <SelectTrigger className="w-[120px] shrink-0 text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -239,7 +239,7 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
             </SelectContent>
           </Select>
           <Select value={String(displayYear)} onValueChange={handleYearChange}>
-            <SelectTrigger className="h-8 w-[80px] shrink-0 border-input bg-card text-xs">
+            <SelectTrigger className="w-[80px] shrink-0 text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -256,7 +256,7 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
           <Button
             variant="outline"
             size="sm"
-            className="h-8 border-input bg-card px-2.5 text-xs"
+            className="border-input bg-card px-2.5 text-xs"
             onClick={handleResetWeek}
           >
             Today

@@ -135,7 +135,7 @@ export function CreateBatchSheet({ open, onOpenChange, onCreated }: CreateBatchS
           <Label className="text-xs">Batch name</Label>
           <Input
             {...form.register("name")}
-            className="h-8 text-sm"
+            className="text-sm"
             placeholder="e.g. July reimbursements"
           />
           {form.formState.errors.name && (

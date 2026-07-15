@@ -271,7 +271,7 @@ function ASSET_COLUMNS(
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7"
+            className="w-7"
             title={asset.assignedTo ? "Reassign / Unassign" : "Assign Employee"}
             onClick={(e) => { e.stopPropagation(); onAssign(asset); }}
           >
@@ -280,7 +280,7 @@ function ASSET_COLUMNS(
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7"
+            className="w-7"
             title="Edit asset"
             onClick={(e) => { e.stopPropagation(); onEdit(asset); }}
           >
@@ -289,7 +289,7 @@ function ASSET_COLUMNS(
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 text-destructive hover:text-destructive"
+            className="w-7 text-destructive hover:text-destructive"
             title="Retire asset"
             onClick={(e) => { e.stopPropagation(); onRetire(asset.id); }}
           >

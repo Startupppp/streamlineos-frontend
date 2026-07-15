@@ -58,7 +58,7 @@ function SnoozeOptionButton({
     <Button
       variant="ghost"
       size="sm"
-      className="h-7 w-full justify-start text-xs"
+      className="w-full justify-start text-xs"
       onClick={handleClick}
     >
       {opt.label}
@@ -83,7 +83,7 @@ export function SnoozePopover({ taskId, onSnooze, isPending }: SnoozePopoverProp
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7 shrink-0"
+          className="w-7 shrink-0"
           disabled={isPending}
           aria-label="Snooze task"
         >

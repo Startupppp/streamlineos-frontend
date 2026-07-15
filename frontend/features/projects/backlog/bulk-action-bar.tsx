@@ -67,7 +67,7 @@ export const BulkActionBar = memo(function BulkActionBar({
       </span>
       <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:ml-auto">
         <Select onValueChange={onBulkStatus}>
-          <SelectTrigger className="h-8 w-[8.5rem] border-input bg-card text-xs">
+          <SelectTrigger className="w-[8.5rem] border-input bg-card text-xs">
             <SelectValue placeholder="Set Status" />
           </SelectTrigger>
           <SelectContent>
@@ -79,7 +79,7 @@ export const BulkActionBar = memo(function BulkActionBar({
           </SelectContent>
         </Select>
         <Select onValueChange={onBulkPriority}>
-          <SelectTrigger className="h-8 w-[8.5rem] border-input bg-card text-xs">
+          <SelectTrigger className="w-[8.5rem] border-input bg-card text-xs">
             <SelectValue placeholder="Set Priority" />
           </SelectTrigger>
           <SelectContent>
@@ -91,7 +91,7 @@ export const BulkActionBar = memo(function BulkActionBar({
           </SelectContent>
         </Select>
         <Select onValueChange={onBulkAssignee}>
-          <SelectTrigger className="h-8 w-[8.5rem] border-input bg-card text-xs">
+          <SelectTrigger className="w-[8.5rem] border-input bg-card text-xs">
             <SelectValue placeholder="Assign to" />
           </SelectTrigger>
           <SelectContent>
@@ -104,7 +104,7 @@ export const BulkActionBar = memo(function BulkActionBar({
         </Select>
         {onBulkLabel !== undefined && (labels?.length ?? 0) > 0 ? (
           <Select onValueChange={onBulkLabel}>
-            <SelectTrigger className="h-8 w-[8.5rem] border-input bg-card text-xs">
+            <SelectTrigger className="w-[8.5rem] border-input bg-card text-xs">
               <SelectValue placeholder="Add Label" />
             </SelectTrigger>
             <SelectContent>
@@ -118,7 +118,7 @@ export const BulkActionBar = memo(function BulkActionBar({
         ) : null}
         {!hideSprint ? (
           <Select onValueChange={onBulkSprint}>
-            <SelectTrigger className="h-8 w-40 border-input bg-card text-xs">
+            <SelectTrigger className="w-40 border-input bg-card text-xs">
               <SelectValue placeholder="Move to Sprint" />
             </SelectTrigger>
             <SelectContent>
@@ -138,7 +138,7 @@ export const BulkActionBar = memo(function BulkActionBar({
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 w-7 shrink-0 px-0 text-xs"
+          className="shrink-0 px-0 text-xs"
           onClick={onClear}
           aria-label="Clear selection"
         >

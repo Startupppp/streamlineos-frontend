@@ -85,7 +85,7 @@ function AddLabelButton({ onClick }: { onClick: () => void }) {
       variant="outline"
       size="sm"
       onClick={onClick}
-      className="h-8 shrink-0 gap-1.5 text-xs"
+      className="shrink-0 gap-1.5 text-xs"
       {...hoverHandlers}
     >
       <PlusIcon ref={iconRef} size={14} />

@@ -85,7 +85,7 @@ export function KbNoteSheet({ open, onOpenChange }: KbNoteSheetProps) {
           placeholder="Note title"
           value={title}
           onChange={handleTitleChange}
-          className="h-8 text-sm"
+          className="text-sm"
         />
         <Textarea
           placeholder="Paste or type the content you want the AI to learn…"

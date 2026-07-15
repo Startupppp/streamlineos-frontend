@@ -85,7 +85,7 @@ function ExecutionRow({
           <Button
             size="icon"
             variant="ghost"
-            className="h-7 w-7 text-destructive hover:text-destructive"
+            className="w-7 text-destructive hover:text-destructive"
             onClick={handleCancel}
             disabled={isCancelling}
             aria-label="Cancel execution"

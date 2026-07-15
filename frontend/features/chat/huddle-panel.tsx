@@ -503,11 +503,11 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
                 onChange={setInviteUserId}
                 placeholder="Select member to invite…"
                 excludeUserId={currentUserId}
-                className="h-8 text-[12px] mb-2"
+                className="text-[12px] mb-2"
               />
               <Button
                 size="sm"
-                className="h-7 text-[11px]"
+                className="text-[11px]"
                 disabled={!inviteUserId || inviteToHuddle.isPending}
                 onClick={() => {
                   if (huddle.participants.some((p) => p.userId === inviteUserId)) {

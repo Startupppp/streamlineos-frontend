@@ -87,7 +87,7 @@ function WebhookRow({
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7"
+          className="w-7"
           title="View deliveries"
           onClick={() => onViewDeliveries(sub)}
         >
@@ -96,7 +96,7 @@ function WebhookRow({
         <LoadingButton
           variant="ghost"
           size="icon"
-          className="h-7 w-7"
+          className="w-7"
           title="Send test payload"
           isPending={test.isPending}
           onClick={handleTest}
@@ -106,7 +106,7 @@ function WebhookRow({
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7"
+          className="w-7"
           title="Edit"
           onClick={() => onEdit(sub)}
         >
@@ -115,7 +115,7 @@ function WebhookRow({
         <LoadingButton
           variant="ghost"
           size="icon"
-          className="h-7 w-7 text-destructive hover:text-destructive"
+          className="w-7 text-destructive hover:text-destructive"
           title="Delete"
           isPending={remove.isPending}
           onClick={handleDelete}

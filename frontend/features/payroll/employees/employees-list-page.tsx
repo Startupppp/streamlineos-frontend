@@ -175,7 +175,7 @@ export function EmployeesListPage() {
       filters={
         <>
           <Select value={workerType} onValueChange={handleWorkerTypeChange}>
-            <SelectTrigger className="h-8 w-36 text-xs">
+            <SelectTrigger className="w-36 text-xs">
               <SelectValue placeholder="Worker type" />
             </SelectTrigger>
             <SelectContent>
@@ -188,7 +188,7 @@ export function EmployeesListPage() {
             </SelectContent>
           </Select>
           <Select value={status} onValueChange={handleStatusChange}>
-            <SelectTrigger className="h-8 w-32 text-xs">
+            <SelectTrigger className="w-32 text-xs">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>

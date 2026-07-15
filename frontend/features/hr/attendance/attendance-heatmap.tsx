@@ -95,7 +95,7 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
       <CardHeader className="pb-3 pt-5">
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
+            <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
               <Activity className="h-4 w-4 text-primary" />
             </div>
             Attendance Heatmap
@@ -104,7 +104,7 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 duration-200"
+              className="w-8 duration-200"
               onClick={handlePrevYear}
               aria-label="Previous year"
             >
@@ -116,7 +116,7 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 duration-200"
+              className="w-8 duration-200"
               onClick={handleNextYear}
               disabled={year >= new Date().getFullYear()}
               aria-label="Next year"

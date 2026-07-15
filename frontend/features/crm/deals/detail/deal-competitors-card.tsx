@@ -66,7 +66,7 @@ export function DealCompetitorsCard({ dealId }: DealCompetitorsCardProps) {
     <Card className="shadow-noir">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-base">Competitors</CardTitle>
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleStartAdding}>
+        <Button variant="ghost" size="icon" className="w-7" onClick={handleStartAdding}>
           <Plus className="h-3.5 w-3.5" />
         </Button>
       </CardHeader>
@@ -83,7 +83,7 @@ export function DealCompetitorsCard({ dealId }: DealCompetitorsCardProps) {
                 if (e.key === "Escape") handleCancelAdding();
               }}
             />
-            <Button size="sm" className="h-8 px-2" onClick={handleAdd} disabled={addCompetitor.isPending}>
+            <Button size="sm" className="px-2" onClick={handleAdd} disabled={addCompetitor.isPending}>
               Add
             </Button>
           </div>

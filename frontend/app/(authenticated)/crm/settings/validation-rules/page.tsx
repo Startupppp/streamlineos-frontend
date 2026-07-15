@@ -99,9 +99,9 @@ function TestPanel({ entityType }: TestPanelProps) {
       </CardHeader>
       <CardContent className="px-4 pb-4 space-y-3">
         <div className="flex gap-2">
-          <Input value={fieldKey} onChange={handleFieldKeyChange} placeholder="field name" className="h-8 text-xs flex-1" />
-          <Input value={fieldValue} onChange={handleFieldValueChange} placeholder="value" className="h-8 text-xs flex-1" />
-          <Button size="sm" variant="outline" className="h-8 text-xs shrink-0" onClick={handleAddField}>Add</Button>
+          <Input value={fieldKey} onChange={handleFieldKeyChange} placeholder="field name" className="text-xs flex-1" />
+          <Input value={fieldValue} onChange={handleFieldValueChange} placeholder="value" className="text-xs flex-1" />
+          <Button size="sm" variant="outline" className="text-xs shrink-0" onClick={handleAddField}>Add</Button>
         </div>
         {Object.keys(record).length > 0 && (
           <div className="flex flex-wrap gap-1.5">
@@ -282,10 +282,10 @@ function EntityRulesTab({ entityType, onNewRule }: EntityRulesTabProps) {
         const onDeleteRow = () => handleDeleteRequest(row.id);
         return (
           <div className="flex items-center justify-end gap-1">
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onEditRow} aria-label="Edit rule">
+            <Button variant="ghost" size="icon" className="w-7" onClick={onEditRow} aria-label="Edit rule">
               <Pencil className="h-3.5 w-3.5" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={onDeleteRow} aria-label="Delete rule">
+            <Button variant="ghost" size="icon" className="w-7 text-destructive" onClick={onDeleteRow} aria-label="Delete rule">
               <Trash2 className="h-3.5 w-3.5" />
             </Button>
           </div>

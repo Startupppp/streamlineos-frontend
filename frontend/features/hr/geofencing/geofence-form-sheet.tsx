@@ -103,7 +103,7 @@ export function GeofenceFormSheet({ open, onOpenChange, fence }: Props) {
                   Location Name
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. Head Office" className="h-8 text-sm" {...field} />
+                  <Input placeholder="e.g. Head Office" className="text-sm" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -120,7 +120,7 @@ export function GeofenceFormSheet({ open, onOpenChange, fence }: Props) {
                     Latitude
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="12.9716" className="h-8 text-sm font-mono" {...field} />
+                    <Input placeholder="12.9716" className="text-sm font-mono" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -135,7 +135,7 @@ export function GeofenceFormSheet({ open, onOpenChange, fence }: Props) {
                     Longitude
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="77.5946" className="h-8 text-sm font-mono" {...field} />
+                    <Input placeholder="77.5946" className="text-sm font-mono" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

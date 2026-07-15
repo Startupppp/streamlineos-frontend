@@ -254,7 +254,7 @@ export function ToggleSettingsSection({ policy, activeVersion }: ToggleSettingsS
                 <Input
                   {...register("effectiveFrom")}
                   placeholder="2026-08"
-                  className="h-8 text-sm font-mono"
+                  className="text-sm font-mono"
                 />
                 {errors.effectiveFrom && (
                   <p className="text-xs text-destructive">{errors.effectiveFrom.message}</p>

@@ -162,7 +162,7 @@ export function MyCareerPlan() {
                       Target Role
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g. Senior Engineer" className="h-8 text-sm" {...field} />
+                      <Input placeholder="e.g. Senior Engineer" className="text-sm" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -178,7 +178,7 @@ export function MyCareerPlan() {
                       Target Date
                     </FormLabel>
                     <FormControl>
-                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -199,7 +199,7 @@ export function MyCareerPlan() {
                     onValueChange={(v) => field.onChange(v === "none" ? undefined : Number(v))}
                   >
                     <FormControl>
-                      <SelectTrigger className="h-8 text-sm">
+                      <SelectTrigger className="text-sm">
                         <SelectValue placeholder="Select a path" />
                       </SelectTrigger>
                     </FormControl>
@@ -230,7 +230,7 @@ export function MyCareerPlan() {
                       <Input
                         type="number"
                         min={1}
-                        className="h-8 text-sm"
+                        className="text-sm"
                         {...field}
                         onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 1)}
                       />
@@ -255,7 +255,7 @@ export function MyCareerPlan() {
                         onChange={field.onChange}
                         placeholder="Select mentor…"
                         allowUnassigned
-                        className="h-8 text-sm"
+                        className="text-sm"
                       />
                     </FormControl>
                     <FormMessage />
@@ -384,12 +384,12 @@ export function MyCareerPlan() {
         <div className="flex items-center gap-2 border-t border-border pt-4">
           <Input
             placeholder="Milestone title"
-            className="h-8 text-sm flex-1"
+            className="text-sm flex-1"
             value={newMilestoneTitle}
             onChange={(e) => setNewMilestoneTitle(e.target.value)}
           />
           <DatePicker
-            className="h-8 text-sm w-36 shrink-0"
+            className="text-sm w-36 shrink-0"
             value={newMilestoneDue}
             onChange={setNewMilestoneDue}
             placeholder="Pick a date"
@@ -397,7 +397,7 @@ export function MyCareerPlan() {
           <Button
             variant="outline"
             size="sm"
-            className="h-8 shrink-0 gap-1 text-xs"
+            className="shrink-0 gap-1 text-xs"
             onClick={handleAddMilestone}
             disabled={!newMilestoneTitle.trim() || !newMilestoneDue || savePlan.isPending}
           >

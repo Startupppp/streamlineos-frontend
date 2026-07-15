@@ -187,7 +187,7 @@ export function EssLoansSection({ allowRequests }: EssLoansSectionProps) {
           Loans & Advances
         </h2>
         {allowRequests && (
-          <Button size="sm" className="h-7 text-xs gap-1.5" onClick={handleOpenDialog}>
+          <Button size="sm" className="text-xs gap-1.5" onClick={handleOpenDialog}>
             <Plus className="h-3 w-3" />
             Request Loan
           </Button>

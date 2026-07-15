@@ -154,7 +154,7 @@ function TransferDetailSkeleton() {
         </Card>
         <Card>
           <CardContent className="p-4 space-y-2">
-            {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-8 w-full" />)}
+            {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-4 w-full" />)}
           </CardContent>
         </Card>
       </div>
@@ -296,7 +296,7 @@ export default function TransferDetailPage({
       }
       actions={
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="h-8 text-xs" asChild>
+          <Button variant="outline" size="sm" className="text-xs" asChild>
             <Link href="/inventory/stock/transfers">
               <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
               Back to Transfers
@@ -306,7 +306,7 @@ export default function TransferDetailPage({
             <Button
               size="sm"
               variant="outline"
-              className="h-8 text-xs"
+              className="text-xs"
               onClick={handleReserve}
               disabled={anyMutationPending}
             >
@@ -316,7 +316,7 @@ export default function TransferDetailPage({
           {transfer.status === "RESERVED" && (
             <Button
               size="sm"
-              className="h-8 text-xs"
+              className="text-xs"
               onClick={handleDispatch}
               disabled={anyMutationPending}
             >
@@ -324,7 +324,7 @@ export default function TransferDetailPage({
             </Button>
           )}
           {transfer.status === "IN_TRANSIT" && (
-            <Button size="sm" className="h-8 text-xs" onClick={handleOpenReceiveSheet}>
+            <Button size="sm" className="text-xs" onClick={handleOpenReceiveSheet}>
               Receive Transfer
             </Button>
           )}
@@ -334,7 +334,7 @@ export default function TransferDetailPage({
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-8 text-xs text-destructive hover:text-destructive"
+                  className="text-xs text-destructive hover:text-destructive"
                   disabled={anyMutationPending}
                 >
                   Cancel Transfer

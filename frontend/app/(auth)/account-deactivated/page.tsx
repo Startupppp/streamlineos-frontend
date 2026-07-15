@@ -5,7 +5,7 @@ export default function AccountDeactivatedPage() {
   return (
     <div className="w-full max-w-md animate-fade-up text-center">
       <div className="mx-auto mb-5 h-14 w-14 flex items-center justify-center rounded-2xl bg-destructive/10">
-        <ShieldOff className="h-7 w-7 text-destructive" />
+        <ShieldOff className="w-7 text-destructive" />
       </div>
 
       <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">

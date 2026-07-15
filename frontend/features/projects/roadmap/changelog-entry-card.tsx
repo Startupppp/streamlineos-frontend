@@ -87,19 +87,19 @@ export const ChangelogEntryCard = memo(function ChangelogEntryCard({
           <Button
             size="sm"
             variant="outline"
-            className="h-7 text-xs"
+            className="text-xs"
             onClick={handleTogglePublish}
             disabled={isUpdating}
           >
             {entry.isPublished ? "Unpublish" : "Publish"}
           </Button>
-          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleEdit}>
+          <Button size="icon" variant="ghost" className="w-7" onClick={handleEdit}>
             <Pencil className="h-3 w-3" />
           </Button>
           <Button
             size="icon"
             variant="ghost"
-            className="h-7 w-7 text-destructive hover:text-destructive"
+            className="w-7 text-destructive hover:text-destructive"
             onClick={handleDelete}
           >
             <Trash2 className="h-3 w-3" />

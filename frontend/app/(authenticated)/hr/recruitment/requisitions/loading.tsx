@@ -19,8 +19,8 @@ function RequisitionCardSkeleton() {
       <div className="flex items-center justify-between pt-2 border-t border-border/60">
         <Skeleton className="h-3 w-28" />
         <div className="flex gap-2">
-          <Skeleton className="h-7 w-16 rounded-lg" />
-          <Skeleton className="h-7 w-16 rounded-lg" />
+          <Skeleton className="h-4 w-16 rounded-lg" />
+          <Skeleton className="h-4 w-16 rounded-lg" />
         </div>
       </div>
     </div>

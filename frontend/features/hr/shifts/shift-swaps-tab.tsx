@@ -82,7 +82,7 @@ export function ShiftSwapsTab({ canManage }: Props) {
               <Button
                 size="sm"
                 variant="outline"
-                className="h-7 text-xs"
+                className="text-xs"
                 onClick={() => handleApprove(swap.id)}
                 disabled={updateStatus.isPending}
               >
@@ -91,7 +91,7 @@ export function ShiftSwapsTab({ canManage }: Props) {
               <Button
                 size="sm"
                 variant="outline"
-                className="h-7 text-xs text-destructive hover:text-destructive"
+                className="text-xs text-destructive hover:text-destructive"
                 onClick={() => handleReject(swap.id)}
                 disabled={updateStatus.isPending}
               >

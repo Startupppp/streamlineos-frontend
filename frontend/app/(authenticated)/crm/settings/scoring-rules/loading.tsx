@@ -49,7 +49,7 @@ export default function ScoringRulesLoading() {
             </div>
             <div className="mt-4 p-4 rounded-xl border border-border/50 flex items-center justify-between">
               <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-8 w-20 rounded-full" />
+              <Skeleton className="h-20 w-20 rounded-full" />
             </div>
           </CardContent>
         </Card>

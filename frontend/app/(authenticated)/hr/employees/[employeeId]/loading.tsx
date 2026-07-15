@@ -12,7 +12,7 @@ export default function EmployeeDetailLoading() {
             <div className="flex items-start gap-6">
               <Skeleton className="h-20 w-20 rounded-full" />
               <div className="flex-1 space-y-2">
-                <Skeleton className="h-7 w-48" />
+                <Skeleton className="h-8 w-48" />
                 <Skeleton className="h-4 w-64" />
                 <div className="flex items-center gap-3 pt-2">
                   <Skeleton className="h-5 w-20 rounded-full" />
@@ -30,7 +30,7 @@ export default function EmployeeDetailLoading() {
             <Card key={i}>
               <CardContent className="pt-6">
                 <Skeleton className="h-4 w-24 mb-2" />
-                <Skeleton className="h-7 w-16" />
+                <Skeleton className="h-4 w-16" />
               </CardContent>
             </Card>
           ))}

@@ -7,7 +7,7 @@ export function ReportsPageSkeleton() {
       <div className="flex flex-col gap-3 lg:flex-row lg:gap-6">
         <div className="hidden lg:flex w-52 shrink-0 flex-col gap-1">
           {Array.from({ length: 12 }).map((_, i) => (
-            <Skeleton key={i} className="h-8 w-full rounded" />
+            <Skeleton key={i} className="h-4 w-full rounded" />
           ))}
         </div>
         <div className="flex-1 min-w-0 flex flex-col gap-4">

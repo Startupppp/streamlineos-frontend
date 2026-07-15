@@ -251,7 +251,7 @@ function RecognitionTab() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-foreground">Kudos Feed</p>
-        <Button size="sm" className="h-8 gap-1.5" onClick={handleGiveKudos}>
+        <Button size="sm" className="gap-1.5" onClick={handleGiveKudos}>
           <Heart className="h-3.5 w-3.5" />
           Give Kudos
         </Button>

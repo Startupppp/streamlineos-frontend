@@ -146,7 +146,7 @@ export function StepBasics({ data, patch, onToggleGoal, onBack, onNext }: StepBa
             patch({ industry: e.target.value });
           }}
           placeholder="Other industry"
-          className="h-8 text-[12.5px]"
+          className="text-[12.5px]"
         />
       </section>
 
@@ -160,13 +160,13 @@ export function StepBasics({ data, patch, onToggleGoal, onBack, onNext }: StepBa
               value={data.companyName}
               onChange={(e) => patch({ companyName: e.target.value })}
               placeholder="Acme Corp"
-              className="h-8 text-sm"
+              className="text-sm"
             />
           </div>
           <div className="space-y-1">
             <Label className="text-[12px]">Team size *</Label>
             <Select onValueChange={(v) => patch({ teamSize: v })} value={data.teamSize}>
-              <SelectTrigger className="h-8 text-sm">
+              <SelectTrigger className="text-sm">
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
               <SelectContent>
@@ -179,7 +179,7 @@ export function StepBasics({ data, patch, onToggleGoal, onBack, onNext }: StepBa
           <div className="space-y-1 sm:col-span-2">
             <Label className="text-[12px]">Country</Label>
             <Select onValueChange={handleCountrySelect} value={data.country}>
-              <SelectTrigger className="h-8 text-sm">
+              <SelectTrigger className="text-sm">
                 <SelectValue placeholder="Select country" />
               </SelectTrigger>
               <SelectContent className="max-h-[200px]">

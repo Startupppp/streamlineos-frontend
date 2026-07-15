@@ -203,7 +203,7 @@ function buildValuationColumns(
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 text-xs gap-1"
+          className="text-xs gap-1"
           onClick={() => handleViewLayersFor(row)}
         >
           <Eye className="h-3.5 w-3.5" />
@@ -278,7 +278,7 @@ export function ValuationClient() {
           value={warehouseFilter ? String(warehouseFilter) : SENTINEL}
           onValueChange={handleWarehouseChange}
         >
-          <SelectTrigger className="h-8 w-48 text-sm">
+          <SelectTrigger className="w-48 text-sm">
             <SelectValue placeholder="All warehouses" />
           </SelectTrigger>
           <SelectContent>

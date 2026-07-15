@@ -228,7 +228,7 @@ export default function CompaniesPage() {
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 px-2 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+          className="px-2 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
           onClick={(e) => { e.stopPropagation(); handleRequestDelete(o.id); }}
           aria-label="Delete company"
         >
@@ -283,7 +283,7 @@ export default function CompaniesPage() {
                 placeholder="Search companies..."
                 value={search}
                 onChange={handleSearchChange}
-                className="h-8 w-full min-w-0 pl-8 text-xs"
+                className="w-full min-w-0 pl-8 text-xs"
               />
             </div>
           </div>
@@ -303,7 +303,7 @@ export default function CompaniesPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-7 text-xs"
+                    className="text-xs"
                     onClick={handleBulkMerge}
                   >
                     <GitMerge className="h-3.5 w-3.5 mr-1.5" />
@@ -313,7 +313,7 @@ export default function CompaniesPage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-7 text-xs text-muted-foreground"
+                  className="text-xs text-muted-foreground"
                   onClick={handleClearSelection}
                 >
                   Clear

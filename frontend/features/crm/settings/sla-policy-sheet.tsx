@@ -132,7 +132,7 @@ export function SlaPolicySheet({
                   <FormItem>
                     <FormLabel>Policy Name</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="e.g. Hot Lead SLA" className="h-8" />
+                      <Input {...field} placeholder="e.g. Hot Lead SLA" className="" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

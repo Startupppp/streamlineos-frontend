@@ -141,11 +141,11 @@ export default function IntakeInboxPage() {
           selectedIds.size > 0 ? (
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground">{selectedIds.size} selected</span>
-              <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={handleBulkShortlist} disabled={bulkShortlist.isPending}>
+              <Button size="sm" variant="outline" className="gap-1.5" onClick={handleBulkShortlist} disabled={bulkShortlist.isPending}>
                 <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
                 Shortlist
               </Button>
-              <Button size="sm" variant="outline" className="h-8 gap-1.5 text-destructive" onClick={() => setRejectOpen(true)}>
+              <Button size="sm" variant="outline" className="gap-1.5 text-destructive" onClick={() => setRejectOpen(true)}>
                 <XCircle className="h-3.5 w-3.5" />
                 Reject
               </Button>
@@ -183,7 +183,7 @@ export default function IntakeInboxPage() {
                 return (
                   <div key={c.id} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors">
                     <Checkbox checked={selectedIds.has(c.id)} onCheckedChange={() => handleToggle(c.id)} />
-                    <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 text-[11px] font-bold text-primary">
+                    <div className="w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 text-[11px] font-bold text-primary">
                       {c.firstName?.[0]}{c.lastName?.[0]}
                     </div>
                     <Link href={`/hr/recruitment/candidates/${c.id}`} className="flex-1 min-w-0 group">

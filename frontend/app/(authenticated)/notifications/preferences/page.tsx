@@ -225,7 +225,7 @@ export default function NotificationPreferencesPage() {
                 <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">Timezone</Label>
                   <Select value={prefs?.quietHoursTimezone ?? "UTC"} onValueChange={handleTimezone}>
-                    <SelectTrigger className="h-8 text-sm">
+                    <SelectTrigger className="text-sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -298,13 +298,13 @@ export default function NotificationPreferencesPage() {
                 {Array.from({ length: 2 }).map((_, i) => (
                   <div key={i} className="flex items-center justify-between px-3 py-2.5 bg-card gap-3">
                     <Skeleton className="h-4 w-40" />
-                    <Skeleton className="h-7 w-16 rounded-md" />
+                    <Skeleton className="h-8 w-16 rounded-md" />
                   </div>
                 ))}
               </div>
             ) : !suppressions || suppressions.length === 0 ? (
               <div className="flex flex-col items-center justify-center gap-2 py-8 bg-card text-center">
-                <BellOff className="h-8 w-8 text-muted-foreground/40" />
+                <BellOff className="w-8 text-muted-foreground/40" />
                 <p className="text-sm text-muted-foreground">Nothing muted</p>
                 <p className="text-xs text-muted-foreground/70">
                   Mute specific notification types from the notification detail drawer.

@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { FIELD_CONTROL_CLASS } from "@/components/ui/field-control";
 
 interface DateRangePickerProps {
   from?: string;
@@ -66,7 +67,8 @@ export function DateRangePicker({
           variant="outline"
           disabled={disabled}
           className={cn(
-            "justify-start text-left font-normal h-8 text-xs",
+            FIELD_CONTROL_CLASS,
+            "w-full min-w-0 justify-start gap-2 px-3 text-left font-normal",
             !from && !to && "text-muted-foreground",
             className,
           )}

@@ -17,6 +17,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { FIELD_CONTROL_CLASS } from "@/components/ui/field-control";
 
 export interface ComboboxOption {
   value: string;
@@ -95,12 +96,12 @@ export function Combobox({
         <Button
           type="button"
           variant="outline"
-          size="sm"
           role="combobox"
           aria-expanded={open}
           disabled={disabled}
           className={cn(
-            "h-8 w-full justify-between gap-2 rounded-md border border-input bg-card px-3 font-normal text-sm shadow-xs",
+            FIELD_CONTROL_CLASS,
+            "w-full justify-between gap-2 px-3 font-normal",
             className,
           )}
         >

@@ -88,14 +88,14 @@ export function EffectiveRulesPreview() {
             value={employeeId}
             onChange={setEmployeeId}
             placeholder="Select employee"
-            className="h-8 text-xs"
+            className="text-xs"
           />
         </div>
         <Input
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="h-8 w-40 text-xs"
+          className="w-40 text-xs"
         />
         <span className="text-xs text-muted-foreground">
           {params ? "Showing effective rules" : "Select an employee to preview"}

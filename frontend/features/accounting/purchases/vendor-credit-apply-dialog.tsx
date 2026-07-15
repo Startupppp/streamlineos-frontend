@@ -101,7 +101,7 @@ export function VendorCreditApplyDialog({
               render={({ field, fieldState }) => (
                 <>
                   <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger className="h-8 text-sm">
+                    <SelectTrigger className="text-sm">
                       <SelectValue placeholder="Select bill…" />
                     </SelectTrigger>
                     <SelectContent>
@@ -123,7 +123,7 @@ export function VendorCreditApplyDialog({
             <Label className="text-xs">Amount to apply</Label>
             <Input
               {...form.register("amount")}
-              className="h-8 text-sm"
+              className="text-sm"
               type="number"
               min="0.01"
               max={remaining}

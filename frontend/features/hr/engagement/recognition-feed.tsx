@@ -94,7 +94,7 @@ const RecognitionCard = memo(function RecognitionCard({
   return (
     <div className="bg-card border border-border rounded-lg p-4">
       <div className="flex items-start gap-3">
-        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold shrink-0">
+        <div className="w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold shrink-0">
           {displayName(r.fromUser).slice(0, 2).toUpperCase()}
         </div>
         <div className="flex-1 min-w-0">
@@ -135,7 +135,7 @@ const LeaderboardRow = memo(function LeaderboardRow({
       <span className="text-sm w-6 text-center shrink-0">
         {rank < 3 ? medals[rank] : `${rank + 1}`}
       </span>
-      <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold shrink-0">
+      <div className="w-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold shrink-0">
         {initials}
       </div>
       <span className="text-xs font-medium text-foreground flex-1 min-w-0 truncate">
@@ -170,7 +170,7 @@ export function RecognitionFeed({ recognitions, isLoading, onGiveKudos }: Recogn
   if (recognitions.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 rounded-lg border border-dashed border-border bg-muted/20">
-        <Heart className="h-8 w-8 text-muted-foreground mb-3" />
+        <Heart className="w-8 text-muted-foreground mb-3" />
         <p className="text-sm font-medium text-foreground">No kudos yet</p>
         <p className="text-xs text-muted-foreground mt-1">Be the first to recognize a colleague!</p>
         <Button size="sm" className="mt-4 h-8 gap-1.5" onClick={onGiveKudos}>
@@ -233,7 +233,7 @@ export function BadgesGrid() {
   if (!badges || badges.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-10 rounded-lg border border-dashed border-border bg-muted/20">
-        <Award className="h-7 w-7 text-muted-foreground mb-2" />
+        <Award className="w-7 text-muted-foreground mb-2" />
         <p className="text-sm text-muted-foreground">No badges created yet</p>
       </div>
     );
@@ -324,7 +324,7 @@ export function PointsLeaderboard() {
   if (!entries || entries.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-10">
-        <Trophy className="h-7 w-7 text-muted-foreground mb-2" />
+        <Trophy className="w-7 text-muted-foreground mb-2" />
         <p className="text-sm text-muted-foreground">No points earned yet</p>
       </div>
     );
@@ -396,7 +396,7 @@ export function GiveKudosSheet({
         <div className="space-y-1.5">
           <Label className="text-xs font-medium">Category</Label>
           <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger className="h-8 text-sm">
+            <SelectTrigger className="text-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

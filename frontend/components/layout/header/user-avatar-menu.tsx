@@ -62,10 +62,10 @@ export function UserAvatarMenu({ variant = "header" }: UserAvatarMenuProps) {
         ) : (
           <button
             type="button"
-            className="h-8 w-8 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 transition-opacity hover:opacity-80"
+            className="w-8 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 transition-opacity hover:opacity-80"
             aria-label="Account menu"
           >
-            <Avatar className="h-8 w-8 ring-2 ring-sidebar-border">
+            <Avatar className="w-8 ring-2 ring-sidebar-border">
               <AvatarImage src={image} alt={name} />
               <AvatarFallback className="text-[11px] font-bold bg-primary/10 text-primary">
                 {initials}

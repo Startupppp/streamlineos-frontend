@@ -365,7 +365,7 @@ export default function ExitManagementPage() {
       badge={`${resignations?.length ?? 0} records`}
       actions={
         !isCEO && !hasActiveResignation ? (
-          <Button size="sm" onClick={handleOpenSheet} className="h-8 gap-1.5">
+          <Button size="sm" onClick={handleOpenSheet} className="gap-1.5">
             <Plus className="h-3.5 w-3.5" />
             Submit Resignation
           </Button>

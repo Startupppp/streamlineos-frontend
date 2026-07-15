@@ -147,7 +147,7 @@ export default function FindExpertPage() {
           </Select>
 
           {hasActiveFilters && (
-            <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={handleClearFilters}>
+            <Button size="sm" variant="ghost" className="text-xs" onClick={handleClearFilters}>
               <X className="h-3 w-3 mr-1" />
               Clear filters
             </Button>

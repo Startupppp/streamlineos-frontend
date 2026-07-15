@@ -176,7 +176,7 @@ function SourceRow({
       <Button
         variant="ghost"
         size="icon"
-        className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
+        className="w-7 shrink-0 text-muted-foreground hover:text-destructive"
         onClick={onDelete}
         disabled={isDeleting}
         aria-label="Delete source"
