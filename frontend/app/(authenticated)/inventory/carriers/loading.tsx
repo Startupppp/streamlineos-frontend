@@ -4,7 +4,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function CarriersLoading() {
   return (
     <PageWrapper
-      eyebrow="Inventory · Shipping"
       title="Carriers"
       subtitle="Manage shipping carriers and tracking"
       actions={<Skeleton className="h-9 w-28" />}

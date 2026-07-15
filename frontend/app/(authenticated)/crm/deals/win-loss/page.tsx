@@ -61,7 +61,6 @@ export default function WinLossAnalysisPage() {
       <PageWrapper
         title="Win/Loss Analysis"
         subtitle="Deal outcome breakdown and lost reason attribution"
-        eyebrow="CRM / Deals"
       >
         <div className="space-y-6">
           <StatCardGrid cols={4}>
@@ -84,7 +83,6 @@ export default function WinLossAnalysisPage() {
       <PageWrapper
         title="Win/Loss Analysis"
         subtitle="Deal outcome breakdown and lost reason attribution"
-        eyebrow="CRM / Deals"
       >
         <ErrorState
           title="Failed to load win/loss data"
@@ -110,7 +108,6 @@ export default function WinLossAnalysisPage() {
       <PageWrapper
         title="Win/Loss Analysis"
         subtitle="Deal outcome breakdown and lost reason attribution"
-        eyebrow="CRM / Deals"
       >
         <EmptyState
           illustration={<EmptyDealsIllustration />}
@@ -130,7 +127,6 @@ export default function WinLossAnalysisPage() {
     <PageWrapper
       title="Win/Loss Analysis"
       subtitle="Deal outcome breakdown and lost reason attribution"
-      eyebrow="CRM / Deals"
     >
       <motion.div
         className="space-y-6"

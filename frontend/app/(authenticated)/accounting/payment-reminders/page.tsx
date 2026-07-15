@@ -353,7 +353,6 @@ export default function PaymentRemindersPage() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting"
       title="Payment Reminders"
       subtitle="Automated overdue reminders"
       actions={

@@ -13,7 +13,6 @@ export default function ChangeRequestsLoading() {
   return (
     <PageWrapper
       title="Change Requests"
-      eyebrow="Project"
       actions={<Skeleton className="h-7 w-40 rounded-md" />}
       filters={filtersBar}
     >

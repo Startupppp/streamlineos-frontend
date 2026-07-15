@@ -214,7 +214,6 @@ function ShipmentsPageInner() {
   return (
     <>
       <PageWrapper
-        eyebrow="Inventory · Shipping"
         title="Shipments"
         subtitle={total > 0 ? `${total} ${total === 1 ? "shipment" : "shipments"}` : "Track and manage outbound shipments"}
         actions={

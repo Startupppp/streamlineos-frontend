@@ -31,7 +31,6 @@ export default function ReimbursementsPage() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting · Expenses"
       title="Reimbursement Batches"
       subtitle="Group and process employee reimbursements."
       actions={

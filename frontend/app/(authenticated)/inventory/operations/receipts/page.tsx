@@ -123,7 +123,6 @@ export default function ReceiptsPage() {
 
   return (
     <PageWrapper
-      eyebrow="Inventory / Operations"
       title="Receipts"
       subtitle={query.data ? `${total} ${total === 1 ? "receipt" : "receipts"}` : undefined}
       filters={filterBar}

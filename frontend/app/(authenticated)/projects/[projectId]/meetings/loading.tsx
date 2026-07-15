@@ -7,7 +7,6 @@ export default function MeetingsLoading() {
   return (
     <PageWrapper
       title="Meetings"
-      eyebrow="Project"
       subtitle="Schedule meetings, standups, and retros for your project"
       actions={<Skeleton className="h-8 w-32 rounded-md" />}
       filters={

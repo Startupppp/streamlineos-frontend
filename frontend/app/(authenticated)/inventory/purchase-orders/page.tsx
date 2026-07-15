@@ -372,7 +372,6 @@ export default function PurchaseOrdersListPage() {
 
   return (
     <PageWrapper
-      eyebrow="Inventory"
       title="Purchase Orders"
       subtitle="Track and manage orders sent to your suppliers."
       actions={

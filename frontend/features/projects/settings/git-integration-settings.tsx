@@ -200,7 +200,6 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
     <RequireModule module="PROJECTS">
       <PageWrapper
         title="Integrations"
-        eyebrow="Projects"
         subtitle="Connect Git repositories to link commits and pull requests to tickets"
         actions={<AddConnectionButton onClick={handleOpenDialog} />}
       >

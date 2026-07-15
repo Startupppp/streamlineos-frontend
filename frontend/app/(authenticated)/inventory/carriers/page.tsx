@@ -89,7 +89,6 @@ function CarriersPageInner() {
   return (
     <>
       <PageWrapper
-        eyebrow="Inventory · Shipping"
         title="Carriers"
         subtitle={
           items.length > 0

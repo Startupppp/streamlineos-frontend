@@ -4,7 +4,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function ReceiptsLoading() {
   return (
     <PageWrapper
-      eyebrow="Inventory / Operations"
       title="Receipts"
       filters={<Skeleton className="h-8 w-48" />}
     >

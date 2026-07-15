@@ -247,7 +247,6 @@ export default function RecurringInvoicesPage() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting"
       title="Recurring Invoices"
       subtitle="Automated invoice templates on a schedule"
       actions={

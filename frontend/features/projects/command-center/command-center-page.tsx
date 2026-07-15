@@ -256,7 +256,7 @@ export function CommandCenterPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Home" eyebrow="Projects">
+      <PageWrapper title="Home">
         <PmPageShell>
           <div className="grid grid-cols-2 gap-2 lg:grid-cols-3">
             {Array.from({ length: 3 }).map((_, i) => (
@@ -273,7 +273,7 @@ export function CommandCenterPage() {
 
   if (isError) {
     return (
-      <PageWrapper title="Home" eyebrow="Projects">
+      <PageWrapper title="Home">
         <PmPageShell withGlow={false}>
           <ErrorState
             title="Failed to load home"
@@ -289,7 +289,6 @@ export function CommandCenterPage() {
     <>
       <PageWrapper
         title="Home"
-        eyebrow="Projects"
         subtitle="Your issues, projects, and shortcuts"
         actions={
           <QuickCreateMenu

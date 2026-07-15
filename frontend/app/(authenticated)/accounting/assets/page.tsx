@@ -299,7 +299,6 @@ export default function FixedAssetsPage() {
   return (
     <>
       <PageWrapper
-        eyebrow="Accounting"
         title="Fixed Assets"
         subtitle="Track assets and depreciation"
         actions={

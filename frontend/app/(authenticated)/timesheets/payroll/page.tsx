@@ -163,7 +163,7 @@ export default function TimesheetPayrollPage() {
 
   if (!canView) {
     return (
-      <PageWrapper title="Payroll" eyebrow="Timesheets">
+      <PageWrapper title="Payroll">
         <EmptyState
           illustration={<EmptyReportIllustration className="h-32 w-32" />}
           title="Access restricted"
@@ -193,7 +193,6 @@ export default function TimesheetPayrollPage() {
   return (
     <PageWrapper
       title="Payroll"
-      eyebrow="Timesheets"
       subtitle={subtitle}
       actions={pageActions}
       filters={pageFilters}

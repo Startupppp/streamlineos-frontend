@@ -132,7 +132,7 @@ export function ApprovalsView() {
 
   if (!canAccess) {
     return (
-      <PageWrapper title="Approvals" eyebrow="Timesheets">
+      <PageWrapper title="Approvals">
         <EmptyState
           illustrationPreset="approval"
           title="Access restricted"
@@ -203,7 +203,6 @@ export function ApprovalsView() {
   return (
     <PageWrapper
       title="Approvals"
-      eyebrow="Timesheets"
       subtitle={subtitle}
       filters={pageFilters}
     >

@@ -16,7 +16,6 @@ export default function ProjectFeedbackSubmissionRoute({ params }: PageProps) {
   return (
     <DashboardGate permission="feedbucket:submissions:view">
       <PageWrapper
-        eyebrow="Project"
         title="Submission"
         backHref={`/projects/${projectId}/feedbucket`}
       >

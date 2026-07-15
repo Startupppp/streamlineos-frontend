@@ -437,7 +437,6 @@ export function ImportClient() {
 
   return (
     <PageWrapper
-      eyebrow="Operations · Inventory"
       title="Import & Export"
       subtitle="Import products, vendors, stock, and more from CSV or Excel files. Export data for offline analysis."
     >

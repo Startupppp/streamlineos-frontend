@@ -4,7 +4,6 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 export default function InspectionsLoading() {
   return (
     <PageWrapper
-      eyebrow="Inventory · Quality"
       title="Inspections"
       subtitle="Manage quality inspections"
       actions={<Skeleton className="h-8 w-32 rounded-md" />}

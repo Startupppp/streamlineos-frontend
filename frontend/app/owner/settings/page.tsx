@@ -68,7 +68,6 @@ export default function SettingsPage() {
   return (
     <div>
       <OwnerPage
-        eyebrow="Platform settings"
         title="Configuration"
         description="What's wired up, what needs your attention."
       />

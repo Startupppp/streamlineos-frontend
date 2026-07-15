@@ -46,7 +46,6 @@ export default function NewProductPage() {
 
   return (
     <PageWrapper
-      eyebrow="Inventory · Products"
       title="New Product"
       subtitle="Add a new product to your catalogue."
       actions={

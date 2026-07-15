@@ -269,7 +269,6 @@ function StockSummaryContent() {
 
   return (
     <PageWrapper
-      eyebrow="Inventory · Reports"
       title="Stock Summary"
       subtitle={
         query.data !== undefined

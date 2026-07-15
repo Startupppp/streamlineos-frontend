@@ -4,7 +4,6 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 export default function PackagesLoading() {
   return (
     <PageWrapper
-      eyebrow="Inventory · Shipping"
       title="Packages"
       subtitle="Manage shipping packages"
       actions={<Skeleton className="h-8 w-28 rounded-md" />}

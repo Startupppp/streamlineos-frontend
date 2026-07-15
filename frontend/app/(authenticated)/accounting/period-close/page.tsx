@@ -47,7 +47,6 @@ export default function PeriodClosePage() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting"
       title="Period Close"
       subtitle="Manage fiscal periods and close checklists."
       actions={

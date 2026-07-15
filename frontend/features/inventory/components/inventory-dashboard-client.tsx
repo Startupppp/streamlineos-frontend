@@ -236,7 +236,6 @@ export function InventoryDashboardClient() {
   if (!isKpiLoading && !kpiError && !hasAnyData) {
     return (
       <PageWrapper
-        eyebrow="Operations · Inventory"
         title="Inventory Dashboard"
         subtitle="Track stock levels, movements, and reorder alerts."
       >
@@ -254,7 +253,6 @@ export function InventoryDashboardClient() {
 
   return (
     <PageWrapper
-      eyebrow="Operations · Inventory"
       title="Inventory Dashboard"
       subtitle="Track stock levels, movements, and reorder alerts."
       actions={ADD_PRODUCT_LINK}

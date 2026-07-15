@@ -335,7 +335,6 @@ function UomPageInner() {
 
   return (
     <PageWrapper
-      eyebrow="Inventory · Products"
       title="Units of Measure"
       subtitle={
         uomList.length > 0

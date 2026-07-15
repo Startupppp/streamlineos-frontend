@@ -238,7 +238,7 @@ function ChannelsContent() {
 
   if (isLoading) {
     return (
-      <PageWrapper eyebrow="Inventory · Channels" title="Channels" actions={actions}>
+      <PageWrapper title="Channels" actions={actions}>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 10 }).map((_, i) => (
             <ChannelCardSkeleton key={i} />
@@ -250,7 +250,7 @@ function ChannelsContent() {
 
   if (isError) {
     return (
-      <PageWrapper eyebrow="Inventory · Channels" title="Channels" actions={actions}>
+      <PageWrapper title="Channels" actions={actions}>
         <ErrorState
           title="Failed to load channels"
           description="An error occurred while fetching channel data."
@@ -263,7 +263,6 @@ function ChannelsContent() {
   return (
     <>
       <PageWrapper
-        eyebrow="Inventory · Channels"
         title="Channels"
         subtitle="Manage sales and fulfilment channels"
         badge={channels.length > 0 ? String(channels.length) : undefined}

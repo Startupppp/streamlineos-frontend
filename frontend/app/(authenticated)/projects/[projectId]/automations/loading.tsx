@@ -6,7 +6,6 @@ export default function AutomationsLoading() {
   return (
     <PageWrapper
       title="Automations"
-      eyebrow="Project"
       subtitle="Automate repetitive actions with if-then rules"
       actions={<Skeleton className="h-8 w-36 rounded-md" />}
     >

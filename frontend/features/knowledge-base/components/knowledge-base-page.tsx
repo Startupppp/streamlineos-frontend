@@ -261,7 +261,6 @@ export default function KnowledgeBasePage() {
 
   return (
     <PageWrapper
-      eyebrow="Knowledge Base"
       title="Knowledge Base"
       subtitle="Chat with your files, notes and wiki — answers are grounded in your content."
       noInternalScroll

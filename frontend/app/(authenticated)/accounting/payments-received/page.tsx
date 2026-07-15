@@ -258,7 +258,7 @@ export default function PaymentsReceivedPage() {
 
   if (error) {
     return (
-      <PageWrapper eyebrow="Accounting" title="Payments Received" subtitle="All payments collected against invoices">
+      <PageWrapper title="Payments Received" subtitle="All payments collected against invoices">
         <div className="flex flex-col items-center gap-3 py-16 text-center">
           <p className="text-sm text-muted-foreground">{getErrorMessage(error)}</p>
           <Button variant="outline" size="sm" onClick={handleRetry}>Retry</Button>
@@ -269,7 +269,6 @@ export default function PaymentsReceivedPage() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting"
       title="Payments Received"
       subtitle="All payments collected against invoices"
       filters={

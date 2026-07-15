@@ -4,7 +4,6 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 export default function ShipmentsLoading() {
   return (
     <PageWrapper
-      eyebrow="Inventory · Shipping"
       title="Shipments"
       subtitle="Track and manage outbound shipments"
       actions={<Skeleton className="h-8 w-32 rounded-md" />}

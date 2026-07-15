@@ -214,7 +214,6 @@ function ExpiryReportContent() {
 
   return (
     <PageWrapper
-      eyebrow="Inventory · Reports"
       title="Expiry Report"
       subtitle="Lots approaching or past their expiry date within the selected window"
       filters={

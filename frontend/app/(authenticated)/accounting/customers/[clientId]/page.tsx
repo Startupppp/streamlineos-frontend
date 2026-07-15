@@ -163,7 +163,6 @@ export default function CustomerLedgerDetailPage({
 
   return (
     <PageWrapper
-      eyebrow="Accounting · Customer"
       title={
         summary?.clientName ??
         (clientId > 0 ? "Customer ledger" : "Invalid customer")

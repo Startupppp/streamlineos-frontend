@@ -275,7 +275,6 @@ export default function ForecastPage() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting · Planning"
       title="Cash Forecast"
       subtitle="13-week rolling cash forecast"
       filters={filtersNode}

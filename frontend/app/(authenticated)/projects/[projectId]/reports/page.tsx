@@ -20,7 +20,6 @@ export default function ProjectReportsPage({
 
   return (
     <PageWrapper
-      eyebrow="Project"
       title="Agile Reports"
       subtitle="Velocity, burnup, and cumulative flow for this project"
     >

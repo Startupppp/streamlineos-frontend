@@ -292,7 +292,6 @@ export default function PaymentRunDetailPage({
 
   return (
     <PageWrapper
-      eyebrow="Accounting · Payment Runs"
       title={run?.name ?? "Payment Run"}
       subtitle={
         run

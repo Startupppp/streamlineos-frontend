@@ -4,7 +4,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function PackingLoading() {
   return (
     <PageWrapper
-      eyebrow="Inventory / Operations"
       title="Packing"
       filters={<Skeleton className="h-8 w-64" />}
     >

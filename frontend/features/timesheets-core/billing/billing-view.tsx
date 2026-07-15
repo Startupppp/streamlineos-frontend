@@ -193,7 +193,7 @@ export function BillingView() {
 
   if (!canView) {
     return (
-      <PageWrapper title="Billing Queue" eyebrow="Timesheets">
+      <PageWrapper title="Billing Queue">
         <EmptyState
           illustration={<EmptyReportIllustration className="h-32 w-32" />}
           title="Access restricted"
@@ -256,7 +256,6 @@ export function BillingView() {
   return (
     <PageWrapper
       title="Billing Queue"
-      eyebrow="Timesheets"
       subtitle={subtitle}
       actions={pageActions}
       filters={pageFilters}
@@ -359,7 +358,6 @@ export function BillingPageSkeleton() {
   return (
     <PageWrapper
       title="Billing Queue"
-      eyebrow="Timesheets"
       actions={
         <div className="flex items-center gap-2">
           <Skeleton className="h-8 w-20 rounded-md" />

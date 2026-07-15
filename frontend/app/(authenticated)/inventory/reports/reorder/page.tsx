@@ -182,7 +182,6 @@ function ReorderReportContent() {
 
   return (
     <PageWrapper
-      eyebrow="Inventory · Reports"
       title="Reorder Report"
       subtitle={
         query.data !== undefined

@@ -138,7 +138,7 @@ export function ReportsView() {
 
   if (!canView) {
     return (
-      <PageWrapper title="Reports" eyebrow="Timesheets">
+      <PageWrapper title="Reports">
         <EmptyState
           illustration={<EmptyReportIllustration className="h-32 w-32" />}
           title="Access restricted"
@@ -151,7 +151,6 @@ export function ReportsView() {
   return (
     <PageWrapper
       title="Reports"
-      eyebrow="Timesheets"
       subtitle={subtitle}
       filters={pageFilters}
     >
@@ -201,7 +200,6 @@ export function ReportsPageSkeleton() {
   return (
     <PageWrapper
       title="Reports"
-      eyebrow="Timesheets"
       filters={
         <div className="flex items-center gap-2">
           <Skeleton className="h-8 w-48 rounded-md" />

@@ -131,7 +131,6 @@ export default function PaymentRunsPage() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting"
       title="Payment Runs"
       subtitle="Batch vendor payment processing."
       actions={

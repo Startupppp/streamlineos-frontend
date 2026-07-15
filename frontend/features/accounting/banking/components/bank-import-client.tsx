@@ -173,7 +173,6 @@ export function BankImportClient() {
   if (importResult) {
     return (
       <PageWrapper
-        eyebrow="Banking"
         title="Import Complete"
         subtitle="Your bank statement has been imported."
         backHref="/accounting/banking"
@@ -236,7 +235,6 @@ export function BankImportClient() {
 
   return (
     <PageWrapper
-      eyebrow="Banking"
       title="Import Statement"
       subtitle="Upload a CSV bank statement and map columns."
       backHref="/accounting/banking"

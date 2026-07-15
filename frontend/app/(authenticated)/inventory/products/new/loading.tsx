@@ -4,7 +4,6 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 export default function NewProductLoading() {
   return (
     <PageWrapper
-      eyebrow="Inventory · Products"
       title="New Product"
       subtitle="Add a new product to your catalogue."
     >

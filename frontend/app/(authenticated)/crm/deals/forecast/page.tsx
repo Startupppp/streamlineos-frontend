@@ -61,7 +61,6 @@ export default function DealForecastPage() {
         title="Deal Forecast"
         subtitle="Pipeline forecast and revenue projection"
         backHref="/crm/deals"
-        eyebrow="CRM / Deals"
       >
         <ForecastSkeleton />
       </PageWrapper>
@@ -73,7 +72,6 @@ export default function DealForecastPage() {
       title="Deal Forecast"
       subtitle="Pipeline forecast and revenue projection"
       backHref="/crm/deals"
-      eyebrow="CRM / Deals"
       actions={
         <Button size="sm" onClick={handleCapture} disabled={captureForecast.isPending}>
           <Camera className="h-3.5 w-3.5 mr-1.5" />

@@ -50,7 +50,6 @@ export default function EnterpriseQuoteDetailPage({
   return (
     <PageWrapper
       title={quote?.subject ?? "Enterprise Quote"}
-      eyebrow={quote?.quoteRef}
       badge={quote ? STATUS_CONFIG[quote.status].label : undefined}
       backHref="/billing/enterprise-quotes"
       actions={

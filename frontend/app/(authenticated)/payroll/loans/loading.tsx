@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export function LoansPageSkeleton() {
   return (
-    <PageWrapper title="Loans & Advances" eyebrow="Payroll" subtitle="Loading…">
+    <PageWrapper title="Loans & Advances" subtitle="Loading…">
       <div className="flex items-center gap-2 mb-3">
         <Skeleton className="h-8 w-44 rounded-md" />
       </div>

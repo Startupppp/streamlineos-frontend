@@ -6,7 +6,6 @@ export function PayrollPageSkeleton() {
   return (
     <PageWrapper
       title="Payroll"
-      eyebrow="Timesheets"
       actions={
         <div className="flex items-center gap-2">
           <Skeleton className="h-8 w-24 rounded-md" />

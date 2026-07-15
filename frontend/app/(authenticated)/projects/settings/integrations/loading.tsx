@@ -7,7 +7,6 @@ export default function IntegrationsLoading() {
   return (
     <PageWrapper
       title="Integrations"
-      eyebrow="Projects"
       subtitle="Connect Git repositories to link commits and pull requests to tickets"
       actions={<Skeleton className="h-8 w-36 rounded-md" />}
     >

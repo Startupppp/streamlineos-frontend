@@ -220,7 +220,6 @@ export default function TransfersPage() {
   return (
     <PageWrapper
       title="Stock Transfers"
-      eyebrow="Inventory / Stock"
       subtitle="Move stock between warehouse locations"
       filters={
         <div className="flex w-full min-w-0 flex-wrap items-center gap-2">

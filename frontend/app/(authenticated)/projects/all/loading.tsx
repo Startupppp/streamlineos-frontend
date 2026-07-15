@@ -10,7 +10,6 @@ export default function ProjectsLoading() {
   return (
     <PageWrapper
       title="All Projects"
-      eyebrow="Projects"
       subtitle="Browse and manage every project in your workspace"
       actions={<Skeleton className="h-8 w-28 rounded-md" />}
     >

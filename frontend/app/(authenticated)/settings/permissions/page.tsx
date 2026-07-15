@@ -78,7 +78,6 @@ function PermissionsContent() {
       <PageWrapper
         title="Permission Matrix"
         subtitle="Read-only overview of built-in permissions per system role"
-        eyebrow="Settings"
       >
         <MatrixSkeleton />
       </PageWrapper>
@@ -90,7 +89,6 @@ function PermissionsContent() {
       <PageWrapper
         title="Permission Matrix"
         subtitle="Read-only overview of built-in permissions per system role"
-        eyebrow="Settings"
       >
         <ErrorState
           title="Failed to load permissions"
@@ -107,7 +105,6 @@ function PermissionsContent() {
       <PageWrapper
         title="Permission Matrix"
         subtitle="Read-only overview of built-in permissions per system role"
-        eyebrow="Settings"
       >
         <div className="flex flex-1 flex-col items-center justify-center gap-3 py-20 text-center">
           <ShieldOff className="h-8 w-8 text-muted-foreground" />
@@ -133,7 +130,6 @@ function PermissionsContent() {
     <PageWrapper
       title="Permission Matrix"
       subtitle="Read-only overview of permissions per role"
-      eyebrow="Settings"
     >
       <div className="space-y-4">
         <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm text-foreground">

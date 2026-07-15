@@ -105,7 +105,6 @@ export default function ContactDetailPage({
     <>
       <PageWrapper
         title={contact.name}
-        eyebrow="CRM / Contacts"
         subtitle={[contact.title, contact.company].filter(Boolean).join(" · ") || undefined}
         backHref="/crm/contacts"
         actions={

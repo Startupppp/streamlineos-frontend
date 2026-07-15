@@ -7,7 +7,6 @@ export default function CustomersPage() {
   return (
     <div>
       <OwnerPage
-        eyebrow="Customers"
         title="All organizations"
         description="Every organization running on StreamlineOS — users, plan, lifetime spend."
       />

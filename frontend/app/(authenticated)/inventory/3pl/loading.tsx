@@ -4,7 +4,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function ThreePlLoading() {
   return (
     <PageWrapper
-      eyebrow="Inventory · Channels"
       title="3PL Connections"
       subtitle="Manage third-party logistics provider connections"
       actions={<Skeleton className="h-8 w-32" />}

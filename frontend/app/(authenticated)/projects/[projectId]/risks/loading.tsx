@@ -6,7 +6,6 @@ export default function ProjectRisksLoading() {
   return (
     <PageWrapper
       title="Risk Register"
-      eyebrow="Project"
       actions={<Skeleton className="h-8 w-28 rounded-md" />}
     >
       <div className="px-4 pb-4 space-y-4">

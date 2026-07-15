@@ -20,7 +20,7 @@ export function KbArticleEditorPage({ articleId }: { articleId: number }) {
 
   if (articleQuery.isLoading) {
     return (
-      <PageWrapper eyebrow="Documents · Knowledge Base" title="Edit Article">
+      <PageWrapper title="Edit Article">
         <LoadingState variant="form" />
       </PageWrapper>
     );
@@ -31,7 +31,7 @@ export function KbArticleEditorPage({ articleId }: { articleId: number }) {
       notFound();
     }
     return (
-      <PageWrapper eyebrow="Documents · Knowledge Base" title="Edit Article">
+      <PageWrapper title="Edit Article">
         <ErrorState
           title="Failed to load article"
           description={getApiError(articleQuery.error)}

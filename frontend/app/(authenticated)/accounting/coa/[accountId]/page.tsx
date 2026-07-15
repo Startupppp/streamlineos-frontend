@@ -267,7 +267,6 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
 
   return (
     <PageWrapper
-      eyebrow="Accounting · Chart of Accounts"
       title={account ? account.name : "Account"}
       subtitle={account ? `Code ${account.code}` : "Loading account details…"}
       actions={

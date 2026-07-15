@@ -212,7 +212,6 @@ export default function GeneralLedgerPage() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting"
       title="General Ledger"
       subtitle="Account activity and running balances."
       actions={

@@ -11,6 +11,7 @@ import { BulkActionBar } from "@/features/projects/backlog/bulk-action-bar";
 import { pmSnappy } from "@/features/projects/shared/pm-motion";
 import type { ViewType } from "@/features/projects/views/view-switcher";
 import type { KanbanTicket, DisplayOptions } from "@/features/projects/shared/types";
+import type { FilterState as WorkloadFilterState } from "@/features/projects/views/workload-types";
 import type { Sprint } from "@/types/projects";
 import type { Variants } from "framer-motion";
 
@@ -45,6 +46,11 @@ interface ProjectViewRendererProps {
   selectedIds: Set<string | number>;
   members: Member[];
   sprints: Sprint[];
+  workloadFilters: WorkloadFilterState;
+  onWorkloadFilterChange: <K extends keyof WorkloadFilterState>(
+    key: K,
+    value: WorkloadFilterState[K],
+  ) => void;
   onBulkStatus: (v: string) => void;
   onBulkPriority: (v: string) => void;
   onBulkAssignee: (v: string) => void;
@@ -67,6 +73,8 @@ export function ProjectViewRenderer({
   selectedIds,
   members,
   sprints,
+  workloadFilters,
+  onWorkloadFilterChange,
   onBulkStatus,
   onBulkPriority,
   onBulkAssignee,
@@ -205,7 +213,8 @@ export function ProjectViewRenderer({
               projectId={projectId}
               projectKey={projectKey}
               members={members}
-              projectStatuses={statuses}
+              filters={workloadFilters}
+              onFilterChange={onWorkloadFilterChange}
             />
           </motion.div>
         ) : null}

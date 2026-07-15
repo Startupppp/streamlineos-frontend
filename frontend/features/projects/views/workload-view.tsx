@@ -15,12 +15,9 @@ import {
 import { cn } from "@/lib/utils";
 import type { KanbanTicket } from "../shared/types";
 import { stopEvent, InlineAssignee } from "./card-inline-fields";
-import { WorkloadFilterBar } from "./workload-filter-bar";
 import { WorkloadMemberRow } from "./workload-member-row";
 import type { FilterState, StatFilter } from "./workload-types";
-import { INITIAL_FILTERS } from "./workload-types";
-import { useSprints } from "@/hooks/api/projects/sprints";
-import { useCycles } from "@/hooks/api/projects/advanced";
+import { hasActiveWorkloadFilters } from "./workload-types";
 import Link from "next/link";
 import { getTicketDetailHref } from "@/features/projects/shared/format-ticket-key";
 import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
@@ -38,7 +35,8 @@ interface WorkloadViewProps {
   projectId: number;
   projectKey?: string | null;
   members: WorkloadMember[];
-  projectStatuses?: Array<{ name: string; color: string | null; type?: string | null }>;
+  filters: FilterState;
+  onFilterChange: <K extends keyof FilterState>(key: K, value: FilterState[K]) => void;
 }
 
 function applyTicketFilters(tickets: KanbanTicket[], filters: FilterState): KanbanTicket[] {
@@ -94,18 +92,15 @@ export const WorkloadView = memo(function WorkloadView({
   members,
   projectId,
   projectKey,
-  projectStatuses,
+  filters,
+  onFilterChange,
 }: WorkloadViewProps) {
   const shouldReduceMotion = useReducedMotion();
   const [expandedMembers, setExpandedMembers] = useState<Set<string>>(new Set());
-  const [filters, setFilters] = useState<FilterState>(INITIAL_FILTERS);
   const days = useMemo(() => {
     const today = new Date();
     return Array.from({ length: 14 }, (_, i) => addDays(today, i));
   }, []);
-
-  const { data: sprints = [] } = useSprints(projectId);
-  const { data: cycles = [] } = useCycles(projectId);
 
   const filteredTickets = useMemo(() => applyTicketFilters(tickets, filters), [tickets, filters]);
 
@@ -160,21 +155,10 @@ export const WorkloadView = memo(function WorkloadView({
   }, []);
 
   function handleStatCardClick(card: StatFilter) {
-    setFilters((prev) => ({ ...prev, statCard: prev.statCard === card ? "all" : card }));
+    onFilterChange("statCard", filters.statCard === card ? "all" : card);
   }
 
-  function handleFilterChange<K extends keyof FilterState>(key: K, value: FilterState[K]) {
-    setFilters((prev) => ({ ...prev, [key]: value }));
-  }
-
-  const hasActiveFilters =
-    filters.sprintId !== "all" ||
-    filters.cycleId !== "all" ||
-    filters.priority !== "all" ||
-    filters.type !== "all" ||
-    filters.status !== "all" ||
-    filters.assigneeId !== "all" ||
-    filters.statCard !== "all";
+  const hasActiveFilters = hasActiveWorkloadFilters(filters);
 
   const showUnassignedRow =
     filters.showUnassigned &&
@@ -205,17 +189,6 @@ export const WorkloadView = memo(function WorkloadView({
           </button>
         ))}
       </div>
-
-      <WorkloadFilterBar
-        filters={filters}
-        sprints={sprints}
-        cycles={cycles}
-        members={members}
-        projectStatuses={projectStatuses}
-        hasActiveFilters={hasActiveFilters}
-        onFilterChange={handleFilterChange}
-        onClearFilters={() => setFilters(INITIAL_FILTERS)}
-      />
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-card">
         <div className="min-h-0 flex-1 overflow-auto">

@@ -31,7 +31,7 @@ export default function ProjectChatRoute({ params }: PageProps) {
 
   if (error) {
     return (
-      <PageWrapper title="Chat" eyebrow="Project" subtitle="Opening project conversation">
+      <PageWrapper title="Chat" subtitle="Opening project conversation">
         <PmPageShell>
           <PmPanel className="flex flex-1 min-h-0 flex-col items-center justify-center gap-3 p-8 text-center" solid>
             <p className="text-sm text-muted-foreground">{getErrorMessage(error)}</p>
@@ -45,7 +45,7 @@ export default function ProjectChatRoute({ params }: PageProps) {
   }
 
   return (
-    <PageWrapper title="Chat" eyebrow="Project" subtitle="Opening project conversation">
+    <PageWrapper title="Chat" subtitle="Opening project conversation">
       <PmPageShell>
         <PmPanel className="flex flex-1 min-h-0 items-center justify-center gap-2 p-8" solid>
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />

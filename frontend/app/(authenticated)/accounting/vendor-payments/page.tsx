@@ -123,7 +123,6 @@ export default function VendorPaymentsPage() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting"
       title="Vendor Payments"
       subtitle="Payment history for vendor bills."
       actions={

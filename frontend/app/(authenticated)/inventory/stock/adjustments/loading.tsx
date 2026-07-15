@@ -3,7 +3,7 @@ import { DataTableSkeleton } from "@/components/ui/data-table";
 
 export default function AdjustmentsLoading() {
   return (
-    <PageWrapper eyebrow="Inventory · Stock" title="Adjustments" subtitle="Stock quantity adjustments.">
+    <PageWrapper title="Adjustments" subtitle="Stock quantity adjustments.">
       <DataTableSkeleton rows={12} columns={6} />
     </PageWrapper>
   );

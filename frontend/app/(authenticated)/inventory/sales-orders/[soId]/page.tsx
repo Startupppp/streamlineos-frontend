@@ -294,7 +294,6 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
 
   return (
     <PageWrapper
-      eyebrow="Inventory / Sales Orders"
       title={so.soNumber}
       subtitle={`${so.customerName ?? "Unknown customer"} · ${formatDate(so.orderDate)}`}
       backHref="/inventory/sales-orders"

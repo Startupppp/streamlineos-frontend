@@ -4,7 +4,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function CycleCountsLoading() {
   return (
     <PageWrapper
-      eyebrow="Operations · Inventory"
       title="Cycle Counts"
       subtitle="Count inventory by location or category to verify stock accuracy."
     >

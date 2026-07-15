@@ -140,7 +140,6 @@ export default function PurchaseBillDetailPage({
 
   return (
     <PageWrapper
-      eyebrow="Accounting · Purchase Bills"
       title={bill?.billNumber ?? "Purchase bill"}
       subtitle={
         bill

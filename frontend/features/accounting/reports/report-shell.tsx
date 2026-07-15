@@ -7,7 +7,6 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { useCan } from "@/hooks/api/access";
 
 interface ReportShellProps {
-  eyebrow?: string;
   title: string;
   subtitle?: string;
   filters?: ReactNode;
@@ -18,7 +17,6 @@ interface ReportShellProps {
 }
 
 export function ReportShell({
-  eyebrow = "Finance · Reports",
   title,
   subtitle,
   filters,
@@ -31,7 +29,6 @@ export function ReportShell({
 
   return (
     <PageWrapper
-      eyebrow={eyebrow}
       backHref="/accounting/reports"
       title={title}
       subtitle={subtitle}

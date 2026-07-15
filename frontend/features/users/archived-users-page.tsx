@@ -227,7 +227,6 @@ export function ArchivedUsersPage() {
     <>
       <PageWrapper
         title="Archived Users"
-        eyebrow="People"
         subtitle="Archived members no longer have access."
         badge={pagination?.total !== undefined ? String(pagination.total) : undefined}
         filters={

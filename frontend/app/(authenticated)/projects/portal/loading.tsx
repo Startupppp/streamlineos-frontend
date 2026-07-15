@@ -7,7 +7,6 @@ export default function PortalLoading() {
   return (
     <PageWrapper
       title="Client Portal"
-      eyebrow="Projects"
       subtitle="Your projects and their current status"
     >
       <PmPageShell>

@@ -4,7 +4,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function ExpiryLoading() {
   return (
     <PageWrapper
-      eyebrow="Operations · Inventory"
       title="Expiry Management"
       subtitle="Monitor stock approaching or past expiry dates."
       filters={

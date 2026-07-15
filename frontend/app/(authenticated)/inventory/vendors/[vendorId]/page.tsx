@@ -135,7 +135,6 @@ export default function VendorDetailPage({ params }: VendorDetailPageProps) {
   return (
     <>
       <PageWrapper
-        eyebrow="Inventory / Vendors"
         title={vendor.name}
         subtitle={`${vendor.code} · ${vendor.currency}`}
         backHref="/inventory/vendors"

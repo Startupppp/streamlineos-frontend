@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 export default function RunExecutionLoading() {
   return (
-    <PageWrapper eyebrow="Quality" title="Test Run" subtitle="Test run execution">
+    <PageWrapper title="Test Run" subtitle="Test run execution">
       <PmPageShell>
         <PmSection index={0}>
           <Skeleton className={cn("h-10 w-full rounded-xl", PM_PANEL)} />

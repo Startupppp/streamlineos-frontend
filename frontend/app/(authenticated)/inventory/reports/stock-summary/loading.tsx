@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function StockSummaryLoading() {
   return (
-    <PageWrapper eyebrow="Inventory · Reports" title="Stock Summary">
+    <PageWrapper title="Stock Summary">
       <div className="flex flex-wrap items-center gap-2 mb-4">
         <Skeleton className="h-8 w-64" />
         <Skeleton className="h-8 w-44" />

@@ -283,7 +283,6 @@ export default function PurchaseBillsListPage() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting"
       title="Purchase Bills"
       subtitle="Vendor bills and accounts payable."
       actions={

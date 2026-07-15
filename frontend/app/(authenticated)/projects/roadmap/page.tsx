@@ -117,7 +117,6 @@ export default function RoadmapPage() {
       <Tabs value={activeTab} onValueChange={handleTabChange} className="flex min-h-0 flex-1 flex-col">
         <PageWrapper
           title="Roadmap"
-          eyebrow="Projects"
           subtitle="Plan publicly, collect feedback and ship a changelog"
           filters={filters}
           actions={hasActions ? actions : undefined}

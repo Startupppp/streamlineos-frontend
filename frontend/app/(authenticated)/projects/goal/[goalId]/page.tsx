@@ -156,7 +156,7 @@ export default function GoalDetailPage({ params }: { params: Promise<{ goalId: s
 
   if (isLoading) {
     return (
-      <PageWrapper title="Goal" eyebrow="Goals" backHref="/projects/goal">
+      <PageWrapper title="Goal" backHref="/projects/goal">
         <GoalDetailSkeleton />
       </PageWrapper>
     );
@@ -164,7 +164,7 @@ export default function GoalDetailPage({ params }: { params: Promise<{ goalId: s
 
   if (isError || !goal) {
     return (
-      <PageWrapper title="Goal" eyebrow="Goals" backHref="/projects/goal">
+      <PageWrapper title="Goal" backHref="/projects/goal">
         <PmPageShell withGlow={false}>
           <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
             <ErrorState
@@ -185,7 +185,6 @@ export default function GoalDetailPage({ params }: { params: Promise<{ goalId: s
   return (
     <PageWrapper
       title={detail.title}
-      eyebrow={LEVEL_LABEL[detail.level]}
       backHref="/projects/goal"
       actions={<GoalDetailActions onEdit={handleOpenEdit} onDelete={handleOpenDelete} />}
     >

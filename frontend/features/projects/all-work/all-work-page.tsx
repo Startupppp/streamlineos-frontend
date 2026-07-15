@@ -134,7 +134,6 @@ export function AllWorkPage() {
     <PageWrapper
       title="All Work"
       subtitle={subtitleText}
-      eyebrow="Projects"
       noInternalScroll
       contentClassName="!p-0"
       filters={
@@ -229,7 +228,7 @@ export function AllWorkPage() {
                       animate="animate"
                       exit="exit"
                       transition={pmSnappy}
-                      className="py-2"
+                      className="pt-2 pb-0"
                     >
                       <AllWorkListSection groups={projectGroups} />
                     </motion.div>

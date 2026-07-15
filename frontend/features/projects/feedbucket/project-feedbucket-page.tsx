@@ -355,7 +355,6 @@ export function ProjectFeedbucketPage({ projectId }: ProjectFeedbucketPageProps)
   return (
     <DashboardGate permission="feedbucket:submissions:view">
       <PageWrapper
-        eyebrow="Project"
         title="Feedback"
         subtitle="Collect and triage user feedback submitted via this project's widget."
       >

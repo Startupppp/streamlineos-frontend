@@ -13,7 +13,6 @@ export default function TimesheetsLoading() {
   return (
     <PageWrapper
       title="My Time"
-      eyebrow="Timesheets"
       actions={weekNavSkeleton}
     >
       <div className="space-y-4">

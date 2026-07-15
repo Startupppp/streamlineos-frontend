@@ -108,7 +108,6 @@ export function FormDetailPage({ projectId, formId }: FormDetailPageProps) {
     return (
       <PageWrapper
         title="Form"
-        eyebrow="Project"
         backHref={`/projects/${projectId}/forms`}
       >
         <div className="space-y-4 pt-2">
@@ -123,7 +122,6 @@ export function FormDetailPage({ projectId, formId }: FormDetailPageProps) {
     return (
       <PageWrapper
         title="Form"
-        eyebrow="Project"
         backHref={`/projects/${projectId}/forms`}
       >
         <ErrorState onRetry={() => void refetch()} />
@@ -134,7 +132,6 @@ export function FormDetailPage({ projectId, formId }: FormDetailPageProps) {
   return (
     <PageWrapper
       title={form.name}
-      eyebrow={`FORM-${form.formNumber}`}
       backHref={`/projects/${projectId}/forms`}
       actions={
         <div className="flex items-center gap-2">

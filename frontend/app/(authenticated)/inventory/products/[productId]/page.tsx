@@ -160,7 +160,6 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   if (productQuery.isLoading) {
     return (
       <PageWrapper
-        eyebrow="Inventory · Products"
         title="Product"
         actions={BACK_LINK}
       >
@@ -172,7 +171,6 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   if (productQuery.error || !product || !Number.isInteger(productId)) {
     return (
       <PageWrapper
-        eyebrow="Inventory · Products"
         title="Product"
         actions={BACK_LINK}
       >
@@ -270,7 +268,6 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
 
   return (
     <PageWrapper
-      eyebrow="Inventory · Products"
       title={product.name}
       subtitle={`SKU: ${product.sku}`}
       actions={

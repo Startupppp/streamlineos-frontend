@@ -243,7 +243,6 @@ function SalesOrdersContent() {
 
   return (
     <PageWrapper
-      eyebrow="Inventory"
       title="Sales Orders"
       subtitle="Manage customer sales orders from creation to invoicing."
       actions={

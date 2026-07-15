@@ -4,7 +4,6 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 export default function LoadsLoading() {
   return (
     <PageWrapper
-      eyebrow="Inventory · Shipping"
       title="Loads"
       subtitle="Group shipments into transport loads"
       actions={<Skeleton className="h-8 w-24 rounded-md" />}

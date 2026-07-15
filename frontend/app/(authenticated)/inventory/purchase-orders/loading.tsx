@@ -4,7 +4,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function PurchaseOrdersLoading() {
   return (
     <PageWrapper
-      eyebrow="Inventory"
       title="Purchase Orders"
       actions={<Skeleton className="h-8 w-20" />}
       filters={

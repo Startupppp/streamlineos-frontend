@@ -45,7 +45,6 @@ export default function ReceiptInboxPage() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting · Expenses"
       title="Receipt Inbox"
       subtitle="Submitted expenses with policy flags needing review."
     >

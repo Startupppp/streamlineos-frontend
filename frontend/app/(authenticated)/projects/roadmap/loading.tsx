@@ -11,7 +11,6 @@ export default function RoadmapLoading() {
   return (
     <PageWrapper
       title="Roadmap"
-      eyebrow="Projects"
       subtitle="Plan publicly, collect feedback and ship a changelog"
       filters={
         <div className={PM_TOOLBAR}>

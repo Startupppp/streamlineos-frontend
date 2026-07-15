@@ -206,7 +206,6 @@ export function ReplenishmentClient() {
 
   return (
     <PageWrapper
-      eyebrow="Operations · Inventory"
       title="Replenishment"
       subtitle="Review suggestions and create draft purchase orders."
       actions={

@@ -4,7 +4,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function BarcodeLoading() {
   return (
     <PageWrapper
-      eyebrow="Operations · Inventory"
       title="Barcode Lookup"
       subtitle="Scan or enter a barcode to look up inventory items."
     >

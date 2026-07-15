@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 export default function ImportLoading() {
   return (
-    <PageWrapper eyebrow="Operations · Inventory" title="Import & Export">
+    <PageWrapper title="Import & Export">
       <div className="flex gap-4 mb-4">
         <Skeleton className="h-9 w-20 rounded-sm" />
         <Skeleton className="h-9 w-20 rounded-sm" />

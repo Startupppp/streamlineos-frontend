@@ -7,7 +7,6 @@ export function FnfPageContent() {
   return (
     <PageWrapper
       title="Full & Final Settlement"
-      eyebrow="Payroll"
       subtitle="Review and approve exit settlements"
     >
       <FnfTable />

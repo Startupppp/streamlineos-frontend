@@ -5,7 +5,6 @@ export default function SurveysLoading() {
   return (
     <PageWrapper
       title="Surveys"
-      eyebrow="Surveys"
       subtitle="Build surveys, quizzes, live polls, and lead forms."
     >
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

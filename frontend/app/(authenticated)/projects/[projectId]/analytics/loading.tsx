@@ -4,7 +4,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 
 export default function AnalyticsLoading() {
   return (
-    <PageWrapper title="Analytics" eyebrow="Project" subtitle="Project health, velocity, and performance charts">
+    <PageWrapper title="Analytics" subtitle="Project health, velocity, and performance charts">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {Array.from({ length: 12 }).map((_, i) => (
           <Card key={i}>

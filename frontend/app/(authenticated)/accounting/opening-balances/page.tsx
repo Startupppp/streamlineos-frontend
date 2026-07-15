@@ -46,7 +46,7 @@ export default function OpeningBalancesPage() {
 
   if (query.isLoading) {
     return (
-      <PageWrapper eyebrow="Accounting" title="Opening Balances" subtitle="Set starting account balances.">
+      <PageWrapper title="Opening Balances" subtitle="Set starting account balances.">
         <LoadingState variant="form" rows={8} />
       </PageWrapper>
     );
@@ -54,7 +54,7 @@ export default function OpeningBalancesPage() {
 
   if (query.error) {
     return (
-      <PageWrapper eyebrow="Accounting" title="Opening Balances" subtitle="Set starting account balances.">
+      <PageWrapper title="Opening Balances" subtitle="Set starting account balances.">
         <ErrorState
           title="Failed to load opening balances"
           description={getErrorMessage(query.error)}
@@ -69,7 +69,6 @@ export default function OpeningBalancesPage() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting"
       title="Opening Balances"
       subtitle="Set starting account balances."
     >

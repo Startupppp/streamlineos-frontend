@@ -4,7 +4,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function SalesOrdersLoading() {
   return (
     <PageWrapper
-      eyebrow="Inventory"
       title="Sales Orders"
       subtitle="Manage customer sales orders from creation to invoicing."
       actions={<Skeleton className="h-9 w-20" />}

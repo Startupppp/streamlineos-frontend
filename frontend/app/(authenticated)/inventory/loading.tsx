@@ -3,7 +3,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 
 export default function InventoryDashboardLoading() {
   return (
-    <PageWrapper eyebrow="Inventory" title="Dashboard" subtitle="Stock overview and recent activity.">
+    <PageWrapper title="Dashboard" subtitle="Stock overview and recent activity.">
       <div className="space-y-4">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {Array.from({ length: 10 }).map((_, i) => (

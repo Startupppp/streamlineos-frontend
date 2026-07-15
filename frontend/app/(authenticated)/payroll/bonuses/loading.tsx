@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function BonusesPageSkeleton() {
   return (
-    <PageWrapper title="Bonuses & Incentives" eyebrow="Payroll" subtitle="Loading…">
+    <PageWrapper title="Bonuses & Incentives" subtitle="Loading…">
       <div className="flex flex-col gap-3">
         <Skeleton className="h-9 w-full rounded-lg" />
         <div className="flex gap-1">

@@ -181,7 +181,6 @@ export default function AdjustmentsPage() {
   return (
     <PageWrapper
       title="Stock Adjustments"
-      eyebrow="Inventory / Stock"
       subtitle={subtitle}
       actions={
         <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={handleOpenSheet}>

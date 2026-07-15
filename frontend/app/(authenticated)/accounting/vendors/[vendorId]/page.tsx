@@ -162,7 +162,6 @@ export default function VendorLedgerDetailPage({ params }: PageProps) {
 
   return (
     <PageWrapper
-      eyebrow="Accounting · Vendors"
       title={
         summary?.vendorName ??
         (vendorId > 0 ? "Vendor ledger" : "Invalid vendor")

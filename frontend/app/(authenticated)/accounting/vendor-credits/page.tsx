@@ -300,7 +300,6 @@ export default function VendorCreditsPage() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting"
       title="Vendor Credits"
       subtitle="Debit notes and credit memos from vendors."
       actions={

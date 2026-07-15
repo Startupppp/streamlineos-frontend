@@ -68,7 +68,6 @@ export default function TeamExpensesPage() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting"
       title="Team Expenses"
       subtitle="Finance view of all employee expense submissions."
       filters={

@@ -287,7 +287,6 @@ export function CycleCountsClient() {
   return (
     <>
       <PageWrapper
-        eyebrow="Operations · Inventory"
         title="Cycle Counts"
         subtitle="Count inventory by location or category to verify stock accuracy."
         filters={filtersRow}

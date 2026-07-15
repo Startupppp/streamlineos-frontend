@@ -160,7 +160,6 @@ function SlowMovingReportContent() {
 
   return (
     <PageWrapper
-      eyebrow="Inventory · Reports"
       title="Slow-Moving Inventory"
       subtitle="Products with stock on hand but no outbound activity within the selected window"
       filters={

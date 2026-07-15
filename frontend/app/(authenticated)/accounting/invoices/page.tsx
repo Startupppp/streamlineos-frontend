@@ -340,7 +340,6 @@ export default function AccountingInvoicesPage() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting"
       title="Invoices & Receivables"
       subtitle="Track outstanding invoices, collections, and payments"
       actions={

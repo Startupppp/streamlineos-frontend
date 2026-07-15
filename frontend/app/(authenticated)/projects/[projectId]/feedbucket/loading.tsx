@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ProjectFeedbackLoading() {
   return (
-    <PageWrapper eyebrow="Project" title="Feedback" subtitle="Collect and triage user feedback submitted via this project's widget.">
+    <PageWrapper title="Feedback" subtitle="Collect and triage user feedback submitted via this project's widget.">
       <div className="space-y-4">
         <Skeleton className="h-24 w-full rounded-xl" />
         <div className="space-y-2">

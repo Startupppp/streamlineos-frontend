@@ -91,7 +91,6 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
   return (
     <PageWrapper
       title={formatMonth(run.month)}
-      eyebrow="Payroll / Runs"
       backHref="/payroll/runs"
       subtitle={
         <span className="flex items-center gap-2">

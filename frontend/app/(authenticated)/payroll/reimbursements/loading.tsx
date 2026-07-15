@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function ReimbursementsPageSkeleton() {
   return (
-    <PageWrapper title="Reimbursements" eyebrow="Payroll" subtitle="Loading…">
+    <PageWrapper title="Reimbursements" subtitle="Loading…">
       <div className="flex flex-col gap-3">
         <Skeleton className="h-9 w-full rounded-lg" />
         <div className="rounded-md border border-border overflow-hidden">

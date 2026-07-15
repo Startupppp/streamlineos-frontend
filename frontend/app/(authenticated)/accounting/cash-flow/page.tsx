@@ -144,7 +144,6 @@ export default function CashFlowPage() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting · Reports"
       title="Cash Flow Statement"
       subtitle="Cash generated and used across operating, investing, and financing activities."
       filters={

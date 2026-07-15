@@ -110,7 +110,7 @@ type CreateWarehouseValues = z.infer<typeof createWarehouseSchema>;
 
 function WarehousesLoading() {
   return (
-    <PageWrapper eyebrow="Operations · Inventory" title="Warehouses">
+    <PageWrapper title="Warehouses">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 4 }).map((_, i) => (
           <Card key={i}>
@@ -360,7 +360,6 @@ export default function WarehousesPage() {
   if (isError) {
     return (
       <PageWrapper
-        eyebrow="Operations · Inventory"
         title="Warehouses"
         filters={filterBar}
       >
@@ -375,7 +374,6 @@ export default function WarehousesPage() {
 
   return (
     <PageWrapper
-      eyebrow="Operations · Inventory"
       title="Warehouses"
       subtitle="Physical storage facilities and their locations"
       filters={filterBar}

@@ -3,7 +3,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 
 export default function IncidentDetailLoading() {
   return (
-    <PageWrapper title="Incident" eyebrow="Quality">
+    <PageWrapper title="Incident">
       <div className="px-4 pb-4 space-y-4">
         <div className="flex gap-2">
           <Skeleton className="h-5 w-20 rounded-full" />

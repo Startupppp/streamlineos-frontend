@@ -11,6 +11,11 @@ import { TableView } from "@/features/projects/views/table-view";
 import { CalendarView } from "@/features/projects/views/calendar-view";
 import { GanttView } from "@/features/projects/views/gantt-view";
 import { WorkloadView } from "@/features/projects/views/workload-view";
+import { WorkloadFilterBar } from "@/features/projects/views/workload-filter-bar";
+import {
+  INITIAL_FILTERS,
+  type FilterState as WorkloadFilterState,
+} from "@/features/projects/views/workload-types";
 import {
   ViewSwitcher,
   parseViewType,
@@ -107,6 +112,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
   const [saveViewOpen, setSaveViewOpen] = useState(false);
   const [saveViewName, setSaveViewName] = useState("");
   const [displayOptions, setDisplayOptions] = useDisplayOptions(projectId);
+  const [workloadFilters, setWorkloadFilters] = useState<WorkloadFilterState>(INITIAL_FILTERS);
 
   const [importOpen, setImportOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
@@ -210,6 +216,17 @@ export default function ProjectBoardPage({ params }: PageProps) {
     (e: React.ChangeEvent<HTMLInputElement>) => setSaveViewName(e.target.value),
     [],
   );
+
+  const handleWorkloadFilterChange = useCallback(
+    <K extends keyof WorkloadFilterState>(key: K, value: WorkloadFilterState[K]) => {
+      setWorkloadFilters((prev) => ({ ...prev, [key]: value }));
+    },
+    [],
+  );
+
+  const handleClearWorkloadFilters = useCallback(() => {
+    setWorkloadFilters(INITIAL_FILTERS);
+  }, []);
 
   const allTickets: KanbanTicket[] = useMemo(() => {
     if (!boardTickets) return [];
@@ -591,18 +608,30 @@ export default function ProjectBoardPage({ params }: PageProps) {
               </Badge>
             )}
           </div>
-          <TicketFilterBar
-            className="w-full sm:min-w-0 sm:max-w-xl sm:flex-1"
-            align="end"
-            members={members}
-            statuses={statuses}
-            projectId={projectId}
-            showSprintFilter={false}
-            showDoneToggle
-            hideCompleted={hideCompleted}
-            onHideCompletedChange={setHideCompleted}
-            doneCount={doneCount}
-          />
+          {view === "workload" ? (
+            <WorkloadFilterBar
+              className="w-full sm:min-w-0 sm:flex-1 sm:justify-end"
+              projectId={projectId}
+              filters={workloadFilters}
+              members={members}
+              projectStatuses={statuses}
+              onFilterChange={handleWorkloadFilterChange}
+              onClearFilters={handleClearWorkloadFilters}
+            />
+          ) : (
+            <TicketFilterBar
+              className="w-full sm:min-w-0 sm:max-w-xl sm:flex-1"
+              align="end"
+              members={members}
+              statuses={statuses}
+              projectId={projectId}
+              showSprintFilter={false}
+              showDoneToggle
+              hideCompleted={hideCompleted}
+              onHideCompletedChange={setHideCompleted}
+              doneCount={doneCount}
+            />
+          )}
         </div>
       }
     >
@@ -769,7 +798,8 @@ export default function ProjectBoardPage({ params }: PageProps) {
                   projectId={projectId}
                   projectKey={data.key}
                   members={members}
-                  projectStatuses={statuses}
+                  filters={workloadFilters}
+                  onFilterChange={handleWorkloadFilterChange}
                 />
               </motion.div>
             ) : null}

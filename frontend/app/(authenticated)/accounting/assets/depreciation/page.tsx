@@ -237,7 +237,6 @@ export default function DepreciationRunsPage() {
   return (
     <>
       <PageWrapper
-        eyebrow="Fixed Assets"
         title="Depreciation Runs"
         subtitle="View and manage monthly depreciation postings"
         actions={

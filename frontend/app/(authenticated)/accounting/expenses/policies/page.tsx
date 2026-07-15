@@ -141,7 +141,6 @@ export default function PoliciesPage() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting · Expenses"
       title="Expense Policies"
       subtitle="Define rules and limits for employee expense submissions."
       actions={

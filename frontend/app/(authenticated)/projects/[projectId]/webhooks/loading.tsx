@@ -6,7 +6,6 @@ export default function WebhooksLoading() {
   return (
     <PageWrapper
       title="Webhooks"
-      eyebrow="Project"
       subtitle="Receive HTTP POST notifications when project events occur"
       actions={<Skeleton className="h-8 w-32 rounded-md" />}
     >

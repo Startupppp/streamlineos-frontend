@@ -231,7 +231,6 @@ export function KbArticleEditor({
 
   return (
     <PageWrapper
-      eyebrow="Documents · Knowledge Base"
       title={article.title}
       subtitle="Edit article content, metadata, and publishing settings."
       backHref="/support/kb"

@@ -238,7 +238,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Portfolio" eyebrow="Portfolios" backHref="/projects/portfolios">
+      <PageWrapper title="Portfolio" backHref="/projects/portfolios">
         <DetailSkeleton />
       </PageWrapper>
     );
@@ -246,7 +246,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
 
   if (isError || !data) {
     return (
-      <PageWrapper title="Portfolio" eyebrow="Portfolios" backHref="/projects/portfolios">
+      <PageWrapper title="Portfolio" backHref="/projects/portfolios">
         <PmPageShell withGlow={false}>
           <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
             <ErrorState className="flex-1" onRetry={handleRetry} />
@@ -259,7 +259,6 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
   return (
     <PageWrapper
       title={data.name}
-      eyebrow="Portfolios"
       backHref="/projects/portfolios"
       actions={
         canManage ? (

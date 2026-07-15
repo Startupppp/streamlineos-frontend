@@ -67,7 +67,7 @@ export function InventorySettingsClient() {
 
   if (!canManage) {
     return (
-      <PageWrapper eyebrow="Inventory" title="Settings" subtitle="">
+      <PageWrapper title="Settings" subtitle="">
         <InventoryEmptyState
           title="Access Denied"
           description="You don't have permission to manage inventory settings."
@@ -87,7 +87,7 @@ export function InventorySettingsClient() {
   }
 
   return (
-    <PageWrapper eyebrow="Inventory" title="Settings" subtitle="Configure stock policies, procurement rules, and system sequences.">
+    <PageWrapper title="Settings" subtitle="Configure stock policies, procurement rules, and system sequences.">
       <FormProvider {...methods}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {isLoading ? (

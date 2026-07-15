@@ -72,7 +72,7 @@ const ProjectSection = memo(function ProjectSection({
   );
 
   return (
-    <PmPanel className="mx-3 mb-3 sm:mx-4">
+    <PmPanel className="mx-3 sm:mx-4">
       <div className="flex min-w-0 items-center gap-2 border-b border-border/50 bg-muted/20 px-3 py-2">
         <ProjectChip
           projectId={group.projectId}
@@ -108,7 +108,7 @@ export const AllWorkListSection = memo(function AllWorkListSection({
   if (groups.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-0">
+    <div className="flex flex-col gap-3">
       {groups.map((group) => (
         <ProjectSection key={group.projectId} group={group} />
       ))}

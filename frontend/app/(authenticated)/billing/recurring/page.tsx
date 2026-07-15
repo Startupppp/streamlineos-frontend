@@ -170,7 +170,6 @@ export default function RecurringInvoicesPage() {
 
   return (
     <PageWrapper
-      eyebrow="Billing"
       title="Recurring Invoices"
       subtitle="Automatically clone invoices on a schedule and track upcoming runs."
       actions={generateButton}

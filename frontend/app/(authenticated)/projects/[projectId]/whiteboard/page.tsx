@@ -332,7 +332,6 @@ export default function WhiteboardPage({
   return (
     <PageWrapper
       title={selectedBoard?.name ?? "Whiteboard"}
-      eyebrow="Project"
       badge={visibilityBadge}
       leading={leadingToggle}
       noInternalScroll

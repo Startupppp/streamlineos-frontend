@@ -262,7 +262,6 @@ export function BarcodeClient() {
 
   return (
     <PageWrapper
-      eyebrow="Operations · Inventory"
       title="Barcode Lookup"
       subtitle="Scan or enter a barcode to look up inventory items."
     >

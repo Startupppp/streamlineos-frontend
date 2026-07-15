@@ -8,7 +8,6 @@ export default function VisitorsPage() {
   return (
     <div>
       <OwnerPage
-        eyebrow="Analytics"
         title="Visitors"
         description="Lightweight pageview tracking — anonymous, no cookies, no third parties."
       />

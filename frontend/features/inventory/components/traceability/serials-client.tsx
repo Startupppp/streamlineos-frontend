@@ -176,7 +176,6 @@ export function SerialsClient() {
 
   return (
     <PageWrapper
-      eyebrow="Operations · Inventory"
       title="Serial Numbers"
       subtitle="Track individual serial numbers and their history."
       filters={

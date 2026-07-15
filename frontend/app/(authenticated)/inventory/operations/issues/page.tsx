@@ -158,7 +158,6 @@ export default function IssuesPage() {
 
   return (
     <PageWrapper
-      eyebrow="Inventory / Operations"
       title="Issues"
       subtitle={query.data ? `${total} ${total === 1 ? "transaction" : "transactions"}` : undefined}
       filters={filterBar}

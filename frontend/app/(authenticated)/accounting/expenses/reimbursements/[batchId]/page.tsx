@@ -98,7 +98,7 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
 
   if (query.isLoading) {
     return (
-      <PageWrapper eyebrow="Accounting · Reimbursements" title="Loading..." backHref="/accounting/expenses/reimbursements">
+      <PageWrapper title="Loading..." backHref="/accounting/expenses/reimbursements">
         <LoadingState variant="table" rows={12} />
       </PageWrapper>
     );
@@ -106,7 +106,7 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
 
   if (query.error) {
     return (
-      <PageWrapper eyebrow="Accounting · Reimbursements" title="Error" backHref="/accounting/expenses/reimbursements">
+      <PageWrapper title="Error" backHref="/accounting/expenses/reimbursements">
         <ErrorState
           title="Failed to load batch"
           description={getErrorMessage(query.error)}
@@ -125,7 +125,6 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
 
   return (
     <PageWrapper
-      eyebrow="Accounting · Reimbursements"
       title={batch.name}
       subtitle={`Created by ${getUserDisplayName(batch.creator)} · ${formatDate(batch.createdAt)}`}
       backHref="/accounting/expenses/reimbursements"

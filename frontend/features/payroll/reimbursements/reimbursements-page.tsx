@@ -287,7 +287,6 @@ export function ReimbursementsPageContent() {
     <>
       <PageWrapper
         title="Reimbursements"
-        eyebrow="Payroll"
         subtitle="Review and approve employee expense claims"
         filters={filterBar}
       >

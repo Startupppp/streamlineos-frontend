@@ -4,7 +4,6 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 export default function QualityHubLoading() {
   return (
     <PageWrapper
-      eyebrow="Inventory · Quality"
       title="Quality Hub"
       subtitle="Overview of inspections, holds, and recalls"
     >

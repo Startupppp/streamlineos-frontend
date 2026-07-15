@@ -20,7 +20,6 @@ export default function RbacOverviewPage() {
       <PageWrapper
         title="RBAC Overview"
         subtitle="Role-based access control analytics and coverage"
-        eyebrow="Settings"
       >
         <div className="space-y-6">
           <StatCardGrid cols={4}>

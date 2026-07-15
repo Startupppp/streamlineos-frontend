@@ -122,19 +122,19 @@ export const TimerCard = memo(function TimerCard() {
   const isInCooldown = localCooldown > 0;
   const isPending = checkInMutation.isPending || checkOutMutation.isPending;
 
-  const breakStartRef = useRef<number | null>(null);
+  const [breakStart, setBreakStart] = useState<number | null>(null);
   const [localExtraBreakMs, setLocalExtraBreakMs] = useState(0);
   const prevBreakHoursRef = useRef<number>(0);
 
   useEffect(() => {
-    if (isOnBreak && !breakStartRef.current) {
-      breakStartRef.current = Date.now();
-    } else if (!isOnBreak && breakStartRef.current !== null) {
-      const duration = Date.now() - breakStartRef.current;
+    if (isOnBreak && breakStart === null) {
+      setBreakStart(Date.now());
+    } else if (!isOnBreak && breakStart !== null) {
+      const duration = Date.now() - breakStart;
       setLocalExtraBreakMs((prev) => prev + duration);
-      breakStartRef.current = null;
+      setBreakStart(null);
     }
-  }, [isOnBreak]);
+  }, [isOnBreak, breakStart]);
 
   useEffect(() => {
     const serverBreakHours = Number(statusData?.todayLog?.breakHours) || 0;
@@ -150,8 +150,6 @@ export const TimerCard = memo(function TimerCard() {
   }, []);
 
   const sessionTimer = useMemo(() => {
-    // eslint-disable-next-line react-hooks/refs
-    const breakStart = breakStartRef.current;
     if (!statusData?.todayLog?.checkIn || statusData?.todayLog?.checkOut) {
       return { hours: 0, minutes: 0, seconds: 0 };
     }
@@ -173,7 +171,7 @@ export const TimerCard = memo(function TimerCard() {
       minutes: Math.floor((diffMs % 3600000) / 60000),
       seconds: Math.floor((diffMs % 60000) / 1000),
     };
-  }, [now, statusData?.todayLog, localExtraBreakMs, isOnBreak]);
+  }, [now, statusData?.todayLog, localExtraBreakMs, isOnBreak, breakStart]);
 
   const handleCheckIn = useCallback(() => {
     checkInMutation.mutate({
@@ -195,7 +193,7 @@ export const TimerCard = memo(function TimerCard() {
     const goingOnBreak = !isOnBreak;
     setLocalBreakOverride(goingOnBreak);
     if (goingOnBreak) {
-      breakStartRef.current = Date.now();
+      setBreakStart(Date.now());
     }
     breakMutation.mutate();
   }, [breakMutation, isOnBreak]);

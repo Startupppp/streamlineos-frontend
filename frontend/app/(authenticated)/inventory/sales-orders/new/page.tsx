@@ -345,7 +345,6 @@ export default function NewSalesOrderPage() {
 
   return (
     <PageWrapper
-      eyebrow="Inventory · Sales Orders"
       title="New Sales Order"
       subtitle="Create a customer sales order. Confirm it to reserve stock."
       backHref="/inventory/sales-orders"

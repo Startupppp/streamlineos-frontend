@@ -5,7 +5,6 @@ export function SettingsPageSkeleton() {
   return (
     <PageWrapper
       title="Timesheet Settings"
-      eyebrow="Timesheets"
       noInternalScroll
       className="flex-none"
     >

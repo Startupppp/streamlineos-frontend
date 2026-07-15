@@ -262,7 +262,6 @@ export default function MovementsReportPage() {
 
   return (
     <PageWrapper
-      eyebrow="Inventory · Reports"
       title="Stock Movements"
       subtitle="Full audit trail of all inventory movements — receipts, shipments, adjustments, and transfers."
       filters={filterBar}

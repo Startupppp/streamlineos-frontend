@@ -168,7 +168,6 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
   return (
     <PageWrapper
       title={localTitle || ticket.title}
-      eyebrow={projectData?.name ?? "Project"}
       backHref={`/projects/${projectId}`}
       noInternalScroll
       className="h-full"

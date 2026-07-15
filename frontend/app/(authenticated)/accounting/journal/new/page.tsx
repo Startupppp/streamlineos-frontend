@@ -336,7 +336,7 @@ export default function NewJournalEntryPage() {
   }
   if (!canCreate) {
     return (
-      <PageWrapper eyebrow="Accounting · Journal" title="New journal entry" subtitle="Record a manual journal entry. Debits must equal credits before posting.">
+      <PageWrapper title="New journal entry" subtitle="Record a manual journal entry. Debits must equal credits before posting.">
         <EmptyState
           illustrationPreset="security"
           title="Access restricted"
@@ -399,7 +399,6 @@ export default function NewJournalEntryPage() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting · Journal"
       title="New journal entry"
       subtitle="Record a manual journal entry. Debits must equal credits before posting."
     >

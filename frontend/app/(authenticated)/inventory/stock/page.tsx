@@ -297,7 +297,6 @@ export default function StockLevelsPage() {
     <>
       <PageWrapper
         title="Stock Levels"
-        eyebrow="Inventory / Stock"
         subtitle={subtitle}
         actions={
           <div className="flex items-center gap-2">

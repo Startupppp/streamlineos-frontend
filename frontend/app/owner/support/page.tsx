@@ -7,7 +7,6 @@ export default function SupportPage() {
   return (
     <div>
       <OwnerPage
-        eyebrow="Customer support"
         title="Support requests"
         description="Every 'Get support' message customers send through the contact form. Reply directly from each conversation."
       />

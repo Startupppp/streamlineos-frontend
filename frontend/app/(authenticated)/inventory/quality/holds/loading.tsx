@@ -4,7 +4,6 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 export default function HoldsLoading() {
   return (
     <PageWrapper
-      eyebrow="Inventory · Quality"
       title="Quality Holds"
       subtitle="Manage inventory quality holds"
       actions={<Skeleton className="h-8 w-28 rounded-md" />}

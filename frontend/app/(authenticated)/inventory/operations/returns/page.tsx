@@ -259,7 +259,6 @@ export default function ReturnsPage() {
 
   return (
     <PageWrapper
-      eyebrow="Inventory / Operations"
       title="Returns"
       subtitle="Manage vendor and customer return merchandise authorizations"
     >

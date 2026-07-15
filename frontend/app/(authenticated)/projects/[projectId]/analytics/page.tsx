@@ -144,7 +144,6 @@ export default function AnalyticsPage({
     return (
       <PageWrapper
         title="Analytics"
-        eyebrow="Project"
         subtitle="Velocity, health, and ticket insights"
       >
         <PmPageShell>
@@ -163,7 +162,6 @@ export default function AnalyticsPage({
     return (
       <PageWrapper
         title="Analytics"
-        eyebrow="Project"
         subtitle="Velocity, health, and ticket insights"
       >
         <PmPageShell>
@@ -181,7 +179,6 @@ export default function AnalyticsPage({
   return (
     <PageWrapper
       title="Analytics"
-      eyebrow="Project"
       subtitle="Velocity, health, and ticket insights"
     >
       <PmPageShell>

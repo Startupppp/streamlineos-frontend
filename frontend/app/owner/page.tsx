@@ -13,7 +13,6 @@ export default function OwnerDashboard() {
   return (
     <div>
       <OwnerPage
-        eyebrow="Platform overview"
         title="Welcome back."
         description="Everything across your StreamlineOS platform — customers, messages, leads, traffic, and revenue."
       />

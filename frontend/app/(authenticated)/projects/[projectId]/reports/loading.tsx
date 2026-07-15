@@ -5,7 +5,6 @@ export default function ReportsLoading() {
   return (
     <PageWrapper
       title="Agile Reports"
-      eyebrow="Project"
       subtitle="Velocity, burnup, and cumulative flow for this project"
     >
       <div className="space-y-3">

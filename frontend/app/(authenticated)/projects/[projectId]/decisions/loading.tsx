@@ -6,7 +6,6 @@ export default function ProjectDecisionsLoading() {
   return (
     <PageWrapper
       title="Decisions Log"
-      eyebrow="Project"
       actions={<Skeleton className="h-8 w-36 rounded-md" />}
       filters={
         <div className="flex items-center gap-2">

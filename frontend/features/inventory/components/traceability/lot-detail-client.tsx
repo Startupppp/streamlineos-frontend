@@ -78,7 +78,7 @@ export function LotDetailClient({ lotId }: LotDetailClientProps) {
 
   if (isLoading) {
     return (
-      <PageWrapper backHref="/inventory/lots" title="Loading…" eyebrow="Operations · Inventory">
+      <PageWrapper backHref="/inventory/lots" title="Loading…">
         <DetailSkeleton />
       </PageWrapper>
     );
@@ -86,7 +86,7 @@ export function LotDetailClient({ lotId }: LotDetailClientProps) {
 
   if (isError || !lot) {
     return (
-      <PageWrapper backHref="/inventory/lots" title="Lot Detail" eyebrow="Operations · Inventory">
+      <PageWrapper backHref="/inventory/lots" title="Lot Detail">
         <ErrorState
           title="Failed to load lot"
           description="Could not retrieve lot details. Please try again."
@@ -103,7 +103,6 @@ export function LotDetailClient({ lotId }: LotDetailClientProps) {
   return (
     <PageWrapper
       backHref="/inventory/lots"
-      eyebrow="Operations · Inventory"
       title={`Lot ${lot.lotNumber}`}
       subtitle={`${lot.productName} · ${lot.variantSku}`}
       badge={LOT_STATUS_LABEL[lot.status]}

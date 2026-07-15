@@ -74,7 +74,6 @@ export function PortalTicketDetailPage({ portalTicketId }: PortalTicketDetailPag
     <PageWrapper
       variant="display"
       title={ticket.title}
-      eyebrow={formatCategoryLabel(ticket.category)}
       backHref="/support/portal"
       badge={<Badge variant="outline" className={STATUS_COLORS[ticket.status]}>{STATUS_LABELS[ticket.status]}</Badge>}
       noInternalScroll

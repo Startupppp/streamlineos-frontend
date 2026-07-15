@@ -4,7 +4,6 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 export default function RecallsLoading() {
   return (
     <PageWrapper
-      eyebrow="Inventory · Quality"
       title="Recalls"
       subtitle="Manage product recalls"
       actions={<Skeleton className="h-8 w-28 rounded-md" />}

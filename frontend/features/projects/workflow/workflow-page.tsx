@@ -36,7 +36,6 @@ export function WorkflowPage({ projectId }: WorkflowPageProps) {
   return (
     <PageWrapper
       title="Workflow"
-      eyebrow="Project"
       subtitle="Configure allowed status transitions and WIP limits."
     >
       <PmPageShell>

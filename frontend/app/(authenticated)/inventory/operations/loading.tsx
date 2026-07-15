@@ -4,7 +4,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function OperationsLoading() {
   return (
     <PageWrapper
-      eyebrow="Inventory"
       title="Operations"
       subtitle="Operational cockpit for daily inventory workflow"
     >

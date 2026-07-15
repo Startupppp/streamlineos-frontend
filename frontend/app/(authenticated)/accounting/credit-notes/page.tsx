@@ -240,7 +240,6 @@ export default function CreditNotesPage() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting"
       title="Credit Notes"
       subtitle="Manage refunds and billing adjustments"
       actions={

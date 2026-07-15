@@ -21,7 +21,7 @@ export function AiAssistantPage({ projectId }: AiAssistantPageProps) {
 
   if (!canUseAI) {
     return (
-      <PageWrapper title="AI Assistant" eyebrow="Project" subtitle={SUBTITLE}>
+      <PageWrapper title="AI Assistant" subtitle={SUBTITLE}>
         <PmPageShell>
           <EmptyState
             className={PM_FILL_PANEL}
@@ -36,7 +36,7 @@ export function AiAssistantPage({ projectId }: AiAssistantPageProps) {
 
   if (!feature.enabled) {
     return (
-      <PageWrapper title="AI Assistant" eyebrow="Project" subtitle={SUBTITLE}>
+      <PageWrapper title="AI Assistant" subtitle={SUBTITLE}>
         <PmPageShell>
           <EmptyState
             className={PM_FILL_PANEL}
@@ -59,7 +59,6 @@ export function AiAssistantPage({ projectId }: AiAssistantPageProps) {
   return (
     <PageWrapper
       title="AI Assistant"
-      eyebrow="Project"
       subtitle={SUBTITLE}
       noInternalScroll
       contentClassName="px-0"

@@ -227,7 +227,6 @@ export default function GoalsPage() {
     <RequireModule module="PROJECTS">
       <PageWrapper
         title="Goals & OKRs"
-        eyebrow="Projects"
         subtitle="Track company, team, and individual objectives and their key results"
         actions={<NewGoalButton onClick={handleOpenCreate} />}
         filters={

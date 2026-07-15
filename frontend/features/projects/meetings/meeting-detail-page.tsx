@@ -92,7 +92,7 @@ export function MeetingDetailPage({ projectId, meetingId }: MeetingDetailPagePro
 
   if (isLoading) {
     return (
-      <PageWrapper title="Meeting" eyebrow="Project" backHref={`/projects/${projectId}/meetings`}>
+      <PageWrapper title="Meeting" backHref={`/projects/${projectId}/meetings`}>
         <PmPageShell>
           <div className="flex gap-2">
             <Skeleton className="h-5 w-20 rounded-full" />
@@ -107,7 +107,7 @@ export function MeetingDetailPage({ projectId, meetingId }: MeetingDetailPagePro
 
   if (isError || !meeting) {
     return (
-      <PageWrapper title="Meeting" eyebrow="Project" backHref={`/projects/${projectId}/meetings`}>
+      <PageWrapper title="Meeting" backHref={`/projects/${projectId}/meetings`}>
         <PmPageShell withGlow={false}>
           <ErrorState onRetry={handleRetry} />
         </PmPageShell>
@@ -122,7 +122,6 @@ export function MeetingDetailPage({ projectId, meetingId }: MeetingDetailPagePro
   return (
     <PageWrapper
       title={meeting.title}
-      eyebrow={`MTG-${meeting.meetingNumber}`}
       backHref={`/projects/${projectId}/meetings`}
       badge={
         <div className="flex items-center gap-1.5">

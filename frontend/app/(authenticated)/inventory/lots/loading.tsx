@@ -4,7 +4,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function LotsLoading() {
   return (
     <PageWrapper
-      eyebrow="Operations · Inventory"
       title="Lots"
       subtitle="Track lot numbers, expiry dates, and stock by lot."
       filters={

@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ProjectMeetingDetailLoading() {
   return (
-    <PageWrapper title="Meeting" eyebrow="Project">
+    <PageWrapper title="Meeting">
       <div className="px-4 pb-8 space-y-6">
         <div className="flex items-center gap-2">
           <Skeleton className="h-5 w-20 rounded-full" />

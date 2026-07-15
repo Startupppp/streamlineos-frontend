@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function NewPurchaseOrderLoading() {
   return (
-    <PageWrapper eyebrow="Inventory · Purchase Orders" title="New Purchase Order">
+    <PageWrapper title="New Purchase Order">
       <div className="space-y-4">
         <div className="rounded-lg border border-border bg-card p-4 space-y-4">
           <Skeleton className="h-4 w-32" />

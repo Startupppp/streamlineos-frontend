@@ -9,7 +9,6 @@ export default function DimensionsPage() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting"
       title="Dimensions"
       subtitle="Cost centres, projects, and departments for GL entry tagging and reporting."
     >

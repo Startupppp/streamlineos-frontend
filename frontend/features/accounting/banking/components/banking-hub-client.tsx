@@ -124,7 +124,6 @@ export function BankingHubClient() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting"
       title="Banking"
       subtitle="Manage bank accounts and reconciliation"
       actions={

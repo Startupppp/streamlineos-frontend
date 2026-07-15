@@ -122,7 +122,6 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
 
   return (
     <PageWrapper
-      eyebrow="Project"
       title="Client Portal"
       subtitle="Control what clients see in their portal"
     >

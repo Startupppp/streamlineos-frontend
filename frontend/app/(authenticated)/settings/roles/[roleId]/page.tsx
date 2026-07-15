@@ -82,7 +82,6 @@ function RoleEditorContent() {
     <PageWrapper
       title={role.name}
       subtitle="Manage permissions for this role"
-      eyebrow="Settings / Roles"
       noInternalScroll
       actions={
         <Button variant="outline" onClick={handleBack} className="gap-2">
@@ -170,7 +169,6 @@ function RoleEditorSkeleton({ onBack }: RoleEditorSkeletonProps) {
     <PageWrapper
       title="Loading…"
       subtitle="Manage permissions for this role"
-      eyebrow="Settings / Roles"
       noInternalScroll
       actions={
         <Button variant="outline" onClick={onBack} className="gap-2" disabled>

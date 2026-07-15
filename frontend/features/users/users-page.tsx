@@ -379,7 +379,6 @@ export function UsersPage() {
     <>
       <PageWrapper
         title="Users"
-        eyebrow="People"
         subtitle="Manage members, roles, and access."
         badge={
           pagination?.total !== undefined ? String(pagination.total) : undefined

@@ -62,7 +62,6 @@ export function SerialDetailClient({ serialId }: SerialDetailClientProps) {
       <PageWrapper
         backHref="/inventory/serials"
         title="Loading…"
-        eyebrow="Operations · Inventory"
       >
         <DetailSkeleton />
       </PageWrapper>
@@ -74,7 +73,6 @@ export function SerialDetailClient({ serialId }: SerialDetailClientProps) {
       <PageWrapper
         backHref="/inventory/serials"
         title="Serial Detail"
-        eyebrow="Operations · Inventory"
       >
         <ErrorState
           title="Failed to load serial"
@@ -89,7 +87,6 @@ export function SerialDetailClient({ serialId }: SerialDetailClientProps) {
   return (
     <PageWrapper
       backHref="/inventory/serials"
-      eyebrow="Operations · Inventory"
       title={`Serial ${serial.serialNumber}`}
       subtitle={`${serial.productName} · ${serial.variantSku}`}
       badge={SERIAL_STATUS_LABEL[serial.status]}

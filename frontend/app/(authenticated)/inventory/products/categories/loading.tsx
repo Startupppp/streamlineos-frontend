@@ -3,7 +3,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 
 export default function CategoriesLoading() {
   return (
-    <PageWrapper eyebrow="Inventory · Products" title="Categories" subtitle="Organise products into categories and sub-categories.">
+    <PageWrapper title="Categories" subtitle="Organise products into categories and sub-categories.">
       <div className="space-y-4">
         <Skeleton className="h-32 w-full rounded-lg" />
         <div className="space-y-1">

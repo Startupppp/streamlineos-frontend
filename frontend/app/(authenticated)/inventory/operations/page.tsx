@@ -93,7 +93,6 @@ export default function OperationsHubPage() {
 
   return (
     <PageWrapper
-      eyebrow="Inventory"
       title="Operations"
       subtitle="Operational cockpit for daily inventory workflow"
       variant="default"

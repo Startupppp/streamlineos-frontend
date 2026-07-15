@@ -81,7 +81,6 @@ export default function TrialBalancePage() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting · Reports"
       title="Trial Balance"
       subtitle="Ledger balances as of a chosen date."
       filters={

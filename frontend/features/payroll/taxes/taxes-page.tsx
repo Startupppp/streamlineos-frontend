@@ -11,7 +11,6 @@ export function TaxesPageContent() {
   return (
     <PageWrapper
       title="Tax & Statutory"
-      eyebrow="Payroll"
       subtitle="Manage declaration windows and employee tax declarations"
     >
       <Tabs defaultValue="windows" className="flex flex-col gap-4">

@@ -120,7 +120,6 @@ export function MyTimeView() {
   return (
     <PageWrapper
       title="My Time"
-      eyebrow="Timesheets"
       subtitle={subtitle}
       badge={periodBadge}
       actions={weekNavActions}

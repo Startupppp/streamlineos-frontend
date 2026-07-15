@@ -173,7 +173,6 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
 
   return (
     <PageWrapper
-      eyebrow={`Run #${run.runNumber}`}
       title={run.name}
       backHref={`/projects/${projectId}/qa`}
       actions={

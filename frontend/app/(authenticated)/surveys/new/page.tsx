@@ -34,7 +34,6 @@ export default function NewSurveyPage() {
       <RequireModule module="SURVEYS">
         <PageWrapper
           title="New Survey"
-          eyebrow="Surveys"
           subtitle="Start from a template or build from scratch."
           backHref="/surveys"
         >

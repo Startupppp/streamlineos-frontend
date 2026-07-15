@@ -5,7 +5,6 @@ import { Card, CardContent } from "@/components/ui/card";
 export default function ChannelsLoading() {
   return (
     <PageWrapper
-      eyebrow="Inventory · Channels"
       title="Channels"
       actions={<Skeleton className="h-8 w-28" />}
     >

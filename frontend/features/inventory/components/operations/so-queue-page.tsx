@@ -130,7 +130,6 @@ export function SoQueuePage({ status, title, actionNoun, emptyTitle, emptyDescri
 
   return (
     <PageWrapper
-      eyebrow="Inventory / Operations"
       title={title}
       subtitle={query.data ? `${total} ${total === 1 ? "order" : "orders"} to ${actionNoun}` : undefined}
       filters={filterBar}

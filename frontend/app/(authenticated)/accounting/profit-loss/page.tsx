@@ -97,7 +97,6 @@ export default function ProfitLossPage() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting · Reports"
       title="Profit & Loss"
       subtitle="Income minus expense for the selected range."
       filters={

@@ -3,7 +3,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 
 export default function VendorDetailLoading() {
   return (
-    <PageWrapper eyebrow="Inventory · Vendors" title="Vendor" subtitle="Loading...">
+    <PageWrapper title="Vendor" subtitle="Loading...">
       <div className="space-y-4">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {Array.from({ length: 4 }).map((_, i) => (

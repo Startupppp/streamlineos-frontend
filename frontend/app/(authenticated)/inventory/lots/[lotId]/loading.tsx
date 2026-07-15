@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function LotDetailLoading() {
   return (
-    <PageWrapper backHref="/inventory/lots" title="Loading…" eyebrow="Operations · Inventory">
+    <PageWrapper backHref="/inventory/lots" title="Loading…">
       <div className="space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {Array.from({ length: 8 }).map((_, i) => (

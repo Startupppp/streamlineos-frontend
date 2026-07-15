@@ -214,7 +214,6 @@ export default function NewPurchaseBillPage() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting · Purchase Bills"
       title="New purchase bill"
       subtitle="Record a vendor bill. Posting credits AP and debits the chosen expense account + Input GST."
     >

@@ -4,7 +4,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function PickingLoading() {
   return (
     <PageWrapper
-      eyebrow="Inventory / Operations"
       title="Picking"
       filters={<Skeleton className="h-8 w-64" />}
     >

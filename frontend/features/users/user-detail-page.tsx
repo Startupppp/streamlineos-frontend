@@ -93,7 +93,6 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
   return (
     <PageWrapper
       title={isLoading ? "User" : (user?.name ?? user?.email ?? "User")}
-      eyebrow="People"
       subtitle={user?.designation ?? undefined}
       backHref="/users"
       actions={

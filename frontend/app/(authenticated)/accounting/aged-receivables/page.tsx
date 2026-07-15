@@ -95,7 +95,6 @@ export default function AgedReceivablesPage() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting · Reports"
       title="Aged Receivables"
       subtitle="Outstanding customer balances grouped by days overdue."
       filters={

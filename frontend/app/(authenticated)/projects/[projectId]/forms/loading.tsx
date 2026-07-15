@@ -14,7 +14,6 @@ export default function ProjectFormsLoading() {
   return (
     <PageWrapper
       title="Forms"
-      eyebrow="Project"
       filters={filtersBar}
       actions={<Skeleton className="h-8 w-24 rounded-md" />}
     >

@@ -100,7 +100,6 @@ export function TransfersClient() {
 
   return (
     <PageWrapper
-      eyebrow="Banking"
       title="Transfers"
       subtitle="Inter-account fund movements"
       backHref="/accounting/banking"

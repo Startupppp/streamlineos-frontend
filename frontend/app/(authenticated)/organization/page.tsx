@@ -102,7 +102,6 @@ export default function OrganizationOverviewPage() {
     <RequireModule module="HR">
     <PageWrapper
       title="Organization"
-      eyebrow="Organization"
       subtitle={
         overview
           ? `${(overview.businessUnits ?? 0) + (overview.branches ?? 0) + (overview.departments ?? 0) + (overview.teams ?? 0)} entities across your hierarchy`

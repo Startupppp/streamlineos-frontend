@@ -11,7 +11,6 @@ export default function GoalsLoading() {
   return (
     <PageWrapper
       title="Goals & OKRs"
-      eyebrow="Projects"
       subtitle="Track company, team, and individual objectives and their key results"
       actions={<Skeleton className="h-8 w-28 rounded-md" />}
       filters={

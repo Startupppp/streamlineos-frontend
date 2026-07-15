@@ -257,7 +257,6 @@ export function RisksPage({ projectId }: RisksPageProps) {
   return (
     <PageWrapper
       title="Risk Register"
-      eyebrow="Project"
       subtitle="Identify, assess, and mitigate project risks"
       actions={canManage ? <NewRiskButton onClick={handleNewRisk} /> : undefined}
     >

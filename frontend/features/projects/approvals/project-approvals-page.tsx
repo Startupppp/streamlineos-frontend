@@ -388,7 +388,6 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
   return (
     <PageWrapper
       title="Approvals"
-      eyebrow="Project"
       subtitle="Review and manage approval requests for this project"
       filters={filtersBar}
       actions={canRequest ? <RequestApprovalButton onClick={handleRequestClick} /> : undefined}

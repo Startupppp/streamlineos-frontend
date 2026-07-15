@@ -217,7 +217,6 @@ export function PhysicalAuditsClient() {
   return (
     <>
       <PageWrapper
-        eyebrow="Operations · Inventory"
         title="Physical Audits"
         subtitle="Warehouse-wide full stock audits."
         filters={filtersRow}

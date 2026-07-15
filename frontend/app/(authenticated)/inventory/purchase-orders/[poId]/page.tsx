@@ -262,7 +262,6 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
 
   return (
     <PageWrapper
-      eyebrow="Inventory / Purchase Orders"
       title={po.poNumber}
       subtitle={`${po.vendor?.name ?? "Unknown vendor"} · ${formatDate(po.orderDate)}`}
       backHref="/inventory/purchase-orders"

@@ -206,7 +206,6 @@ export default function CompanyDetailPage({
   return (
     <PageWrapper
       title={org.name}
-      eyebrow="Companies"
       subtitle={org.description ?? org.industry ?? undefined}
       backHref="/crm/companies"
       actions={

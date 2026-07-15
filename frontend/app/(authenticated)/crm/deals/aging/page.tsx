@@ -174,7 +174,6 @@ export default function DealAgingPage() {
       title="Deal Aging"
       subtitle="Deals stuck in pipeline stages"
       backHref="/crm/deals"
-      eyebrow="CRM / Deals"
     >
       {isError ? (
         <ErrorState

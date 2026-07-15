@@ -122,7 +122,6 @@ export default function JournalEntryDetailPage({ params }: JournalEntryDetailPag
 
   return (
     <PageWrapper
-      eyebrow="Accounting · Journal"
       title={entry ? entry.entryNumber : "Journal entry"}
       subtitle={entry ? formatDate(entry.entryDate) : "Loading journal entry…"}
       backHref="/accounting/journal"

@@ -289,7 +289,6 @@ export function PortfoliosPage() {
   return (
     <PageWrapper
       title="Portfolios"
-      eyebrow="Projects"
       subtitle="Group related projects into portfolios"
       filters={filtersBar}
       actions={canManage ? <NewPortfolioButton onClick={handleOpenCreate} /> : undefined}

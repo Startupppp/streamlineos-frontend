@@ -250,7 +250,6 @@ export function UserInvitationsPanel() {
     <>
       <PageWrapper
         title="Invitations"
-        eyebrow="People"
         subtitle={pagination ? `${pagination.total} invitation${pagination.total === 1 ? "" : "s"}` : undefined}
         actions={
           <Button size="sm" onClick={handleOpenInvite}>

@@ -5,7 +5,6 @@ export default function BudgetLoading() {
   return (
     <PageWrapper
       title="Budget"
-      eyebrow="Project"
       subtitle="Planned budget vs actual cost from billable timesheets"
       actions={<Skeleton className="h-8 w-32 rounded-md" />}
     >

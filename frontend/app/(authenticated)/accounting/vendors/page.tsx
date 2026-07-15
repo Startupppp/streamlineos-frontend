@@ -105,7 +105,6 @@ export default function VendorsListPage() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting · Vendors"
       title="Vendor ledgers"
       subtitle="Outstanding payables by vendor."
       filters={

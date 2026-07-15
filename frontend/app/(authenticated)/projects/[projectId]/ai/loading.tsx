@@ -5,7 +5,6 @@ export default function ProjectAiLoading() {
   return (
     <PageWrapper
       title="AI Assistant"
-      eyebrow="Project"
       subtitle="Analyze, plan, and get answers about this project."
     >
       <div className="space-y-4 pb-16">

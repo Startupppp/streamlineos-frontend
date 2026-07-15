@@ -155,7 +155,6 @@ export function ExpiryClient() {
 
   return (
     <PageWrapper
-      eyebrow="Operations · Inventory"
       title="Expiry Management"
       subtitle="Monitor stock approaching or past expiry dates."
       filters={

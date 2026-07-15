@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function MovementsReportLoading() {
   return (
-    <PageWrapper eyebrow="Inventory · Reports" title="Stock Movements">
+    <PageWrapper title="Stock Movements">
       <div className="flex flex-wrap items-center gap-2 mb-4">
         <Skeleton className="h-8 w-44" />
         <Skeleton className="h-8 w-40" />

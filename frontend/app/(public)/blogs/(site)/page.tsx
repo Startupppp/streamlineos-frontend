@@ -32,7 +32,6 @@ export default async function BlogListingPage({
   return (
     <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
       <BlogHeader
-        eyebrow="Insights"
         title="The StreamlineOS Blog"
         subtitle="Ideas on product, design, engineering, and building modern teams."
       />

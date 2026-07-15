@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function ReportsPageSkeleton() {
   return (
-    <PageWrapper title="Payroll Reports" eyebrow="Payroll">
+    <PageWrapper title="Payroll Reports">
       <div className="flex flex-col gap-3 lg:flex-row lg:gap-6">
         <div className="hidden lg:flex w-52 shrink-0 flex-col gap-1">
           {Array.from({ length: 11 }).map((_, i) => (

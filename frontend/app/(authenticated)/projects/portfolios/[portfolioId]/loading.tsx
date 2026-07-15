@@ -5,7 +5,7 @@ import { PmPageShell, PM_PANEL } from "@/features/projects/shared/pm-chrome";
 
 export default function PortfolioDetailLoading() {
   return (
-    <PageWrapper title="Portfolio" eyebrow="Portfolios" backHref="/projects/portfolios">
+    <PageWrapper title="Portfolio" backHref="/projects/portfolios">
       <PmPageShell>
         <div className={cn(PM_PANEL, "space-y-3 p-4")}>
           <div className="flex gap-2">

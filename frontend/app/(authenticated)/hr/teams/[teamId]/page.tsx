@@ -156,7 +156,7 @@ export default function TeamDetailPage({ params }: { params: Promise<{ teamId: s
 
   if (isLoading) {
     return (
-      <PageWrapper title="Team" eyebrow="HR / Teams">
+      <PageWrapper title="Team">
         <div className="space-y-4">
           <Skeleton className="h-28 w-full rounded-xl" />
           <div className="grid gap-3 sm:grid-cols-2">
@@ -171,7 +171,7 @@ export default function TeamDetailPage({ params }: { params: Promise<{ teamId: s
 
   if (teamsError) {
     return (
-      <PageWrapper title="Team" eyebrow="HR / Teams">
+      <PageWrapper title="Team">
         <EmptyState
           title="Failed to load team"
           description="Something went wrong while fetching team data."
@@ -183,7 +183,7 @@ export default function TeamDetailPage({ params }: { params: Promise<{ teamId: s
 
   if (!team) {
     return (
-      <PageWrapper title="Team not found" eyebrow="HR / Teams">
+      <PageWrapper title="Team not found">
         <EmptyState
           illustration={<EmptyTeamIllustration className="h-32 w-32" />}
           title="Team not found"
@@ -202,7 +202,6 @@ export default function TeamDetailPage({ params }: { params: Promise<{ teamId: s
     <>
       <PageWrapper
         title={team.name}
-        eyebrow="HR / Teams"
         badge={team.code}
         subtitle={team.description ?? undefined}
         actions={

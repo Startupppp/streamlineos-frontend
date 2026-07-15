@@ -5,7 +5,6 @@ export default function WhiteboardLoading() {
   return (
     <PageWrapper
       title="Whiteboard"
-      eyebrow="Project"
       noInternalScroll
       contentClassName="flex min-h-0"
     >

@@ -194,7 +194,7 @@ export default function ProjectSettingsPage({ params }: PageProps) {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Settings" eyebrow="Project">
+      <PageWrapper title="Settings">
         <PmPageShell>
           <div className="flex flex-col gap-4 pb-8 md:flex-row">
             <div className="flex shrink-0 gap-0.5 border-b border-border pb-2 md:w-48 md:flex-col md:border-b-0 md:border-r md:pb-0 md:pr-4">
@@ -215,7 +215,7 @@ export default function ProjectSettingsPage({ params }: PageProps) {
 
   if (!project) {
     return (
-      <PageWrapper title="Settings" eyebrow="Project">
+      <PageWrapper title="Settings">
         <PmPageShell>
           <PmPanel className="flex h-64 items-center justify-center" solid>
             <div className="space-y-2 text-center" role="alert">
@@ -234,7 +234,6 @@ export default function ProjectSettingsPage({ params }: PageProps) {
 
   return (
     <PageWrapper
-      eyebrow="Project"
       title="Settings"
       subtitle={project.name}
     >

@@ -309,7 +309,6 @@ export function KbManagerContent() {
 
   return (
     <PageWrapper
-      eyebrow="Documents"
       title="Knowledge Base"
       subtitle={
         stats.total === 0

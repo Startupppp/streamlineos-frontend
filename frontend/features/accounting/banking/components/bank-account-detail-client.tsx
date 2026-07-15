@@ -178,7 +178,6 @@ export function BankAccountDetailClient({ bankAccountId }: Props) {
 
   return (
     <PageWrapper
-      eyebrow="Banking"
       title={account?.name ?? "Account"}
       subtitle={account?.bankName ?? undefined}
       backHref="/accounting/banking"

@@ -193,7 +193,6 @@ export default function ProjectsPage() {
     <RequireModule module="PROJECTS">
       <PageWrapper
         title="All Projects"
-        eyebrow="Projects"
         subtitle="Browse and manage every project in your workspace"
         actions={
           <NewProjectDialog open={createOpen} onOpenChange={handleCreateOpenChange} />

@@ -227,7 +227,6 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
   return (
     <PageWrapper
       title="Decisions Log"
-      eyebrow="Project"
       subtitle="Log and track key project decisions for accountability and audit"
       actions={canManage ? <NewDecisionButton onClick={handleNewDecision} /> : undefined}
       filters={

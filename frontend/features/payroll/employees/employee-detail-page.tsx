@@ -214,7 +214,6 @@ export function EmployeeDetailPage({ employeeUserId }: EmployeeDetailPageProps) 
   return (
     <PageWrapper
       title={userName}
-      eyebrow="Payroll / Employees"
       backHref="/payroll/employees"
       subtitle={
         activeProfile ? (

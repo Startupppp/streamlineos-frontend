@@ -113,7 +113,6 @@ export default function CustomerLedgersPage() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting · Customers"
       title="Customer ledgers"
       subtitle="Track outstanding receivables by customer."
       filters={

@@ -350,7 +350,6 @@ export default function BudgetDetailPage() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting · Budgets"
       title={budget?.name ?? "Budget"}
       subtitle={budget ? `${budget.fiscalYear} · ${budget.periodType}` : "Loading…"}
       backHref="/accounting/budgets"

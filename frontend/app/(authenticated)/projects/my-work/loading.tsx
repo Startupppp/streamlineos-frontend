@@ -3,7 +3,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 
 export default function MyWorkLoading() {
   return (
-    <PageWrapper title="My Work" eyebrow="Projects" subtitle="Your assigned tickets across all projects">
+    <PageWrapper title="My Work" subtitle="Your assigned tickets across all projects">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-4">
         {Array.from({ length: 4 }).map((_, i) => (
           <Skeleton key={i} className="h-14 rounded-lg" />

@@ -6,7 +6,6 @@ import { cn } from "@/lib/utils";
 export default function BugsLoading() {
   return (
     <PageWrapper
-      eyebrow="Quality"
       title="Bugs"
       subtitle="Track and triage project bugs"
       actions={<Skeleton className="h-7 w-28 rounded-md" />}

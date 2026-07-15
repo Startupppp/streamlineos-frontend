@@ -439,7 +439,6 @@ function ProductsPageInner() {
 
   return (
     <PageWrapper
-      eyebrow="Inventory · Products"
       title="Products"
       subtitle={
         total > 0

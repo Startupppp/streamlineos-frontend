@@ -287,7 +287,7 @@ export default function PagesPage({
 
   if (isLoading) {
     return (
-      <PageWrapper title="Pages" eyebrow="Project" subtitle="Create and manage project documentation and notes" noInternalScroll contentClassName="p-0">
+      <PageWrapper title="Pages" subtitle="Create and manage project documentation and notes" noInternalScroll contentClassName="p-0">
         <PmPageShell className="h-full gap-0" withGlow={false}>
           <div className="flex h-full">
             <div className="w-64 space-y-2 border-r border-border/60 p-4">
@@ -307,7 +307,6 @@ export default function PagesPage({
   return (
     <PageWrapper
       title="Pages"
-      eyebrow="Project"
       subtitle="Create and manage project documentation and notes"
       actions={
         <Sheet open={createOpen} onOpenChange={setCreateOpen}>

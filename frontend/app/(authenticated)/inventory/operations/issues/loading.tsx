@@ -4,7 +4,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function IssuesLoading() {
   return (
     <PageWrapper
-      eyebrow="Inventory / Operations"
       title="Issues"
       filters={<Skeleton className="h-8 w-64" />}
     >

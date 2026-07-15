@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ReplenishmentLoading() {
   return (
-    <PageWrapper eyebrow="Operations · Inventory" title="Replenishment">
+    <PageWrapper title="Replenishment">
       <div className="rounded-lg border border-border bg-card overflow-hidden">
         <div className="h-10 bg-muted/30 border-b border-border" />
         {Array.from({ length: 12 }).map((_, i) => (

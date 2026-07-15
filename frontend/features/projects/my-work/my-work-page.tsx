@@ -119,7 +119,6 @@ export function MyWorkPage() {
   return (
     <PageWrapper
       title="My Work"
-      eyebrow="Projects"
       subtitle="Your assigned tickets across all projects"
     >
       <PmPageShell>

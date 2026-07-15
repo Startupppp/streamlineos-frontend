@@ -104,7 +104,7 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
 
   if (isLoading) {
     return (
-      <PageWrapper title="Incident" eyebrow="Project" backHref={`/projects/${projectId}/incidents`}>
+      <PageWrapper title="Incident" backHref={`/projects/${projectId}/incidents`}>
         <div className="flex min-h-0 flex-1 flex-col space-y-4">
           <div className="flex gap-2">
             <Skeleton className="h-5 w-20 rounded-full" />
@@ -119,7 +119,7 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
 
   if (isError || !incident) {
     return (
-      <PageWrapper title="Incident" eyebrow="Project" backHref={`/projects/${projectId}/incidents`}>
+      <PageWrapper title="Incident" backHref={`/projects/${projectId}/incidents`}>
         <ErrorState onRetry={() => void refetch()} />
       </PageWrapper>
     );
@@ -129,7 +129,6 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
 
   return (
     <PageWrapper
-      eyebrow={`INC-${incident.incidentNumber}`}
       title={incident.title}
       backHref={`/projects/${projectId}/incidents`}
       badge={

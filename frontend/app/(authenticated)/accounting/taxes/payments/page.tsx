@@ -232,7 +232,6 @@ export default function TaxPaymentsPage() {
 
   return (
     <PageWrapper
-      eyebrow="Taxes"
       title="Tax Payments"
       subtitle="Record and track tax payments by period and type."
       backHref="/accounting/taxes"

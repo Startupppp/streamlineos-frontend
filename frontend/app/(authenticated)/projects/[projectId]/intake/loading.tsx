@@ -6,7 +6,6 @@ export default function IntakeLoading() {
   return (
     <PageWrapper
       title="Intake"
-      eyebrow="Project"
       subtitle="Collect and triage incoming requests from your team or clients"
       actions={
         <div className="flex items-center gap-2">

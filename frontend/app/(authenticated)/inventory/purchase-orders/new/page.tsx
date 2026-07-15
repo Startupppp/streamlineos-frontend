@@ -309,7 +309,6 @@ export default function NewPurchaseOrderPage() {
 
   return (
     <PageWrapper
-      eyebrow="Inventory / Purchase Orders"
       title="New purchase order"
       subtitle="Create a PO to order products from a supplier."
       backHref="/inventory/purchase-orders"

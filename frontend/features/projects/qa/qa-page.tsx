@@ -26,7 +26,6 @@ export function QaPage({ projectId }: QaPageProps) {
 
   return (
     <PageWrapper
-      eyebrow="Quality"
       title="QA / Tests"
       subtitle="Test cases, suites, and execution runs"
     >

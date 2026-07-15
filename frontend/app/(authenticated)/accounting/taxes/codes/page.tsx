@@ -230,7 +230,6 @@ export default function TaxCodesPage() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting · Taxes"
       title="Tax Codes"
       subtitle="Manage tax codes and rates applied to transactions."
       actions={

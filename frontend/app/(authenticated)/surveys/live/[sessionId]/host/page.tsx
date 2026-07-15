@@ -53,7 +53,7 @@ export default function LiveSessionHostPage() {
   return (
     <DashboardGate permission="surveys:live:host">
       <RequireModule module="SURVEYS">
-        <PageWrapper title="Live session" eyebrow="Surveys" backHref={`/surveys/${session?.surveyId ?? ""}`}>
+        <PageWrapper title="Live session" backHref={`/surveys/${session?.surveyId ?? ""}`}>
           {isLoading || !session ? (
             <Skeleton className="h-64 w-full" />
           ) : (

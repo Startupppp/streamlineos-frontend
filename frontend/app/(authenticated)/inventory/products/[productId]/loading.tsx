@@ -4,7 +4,6 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 export default function ProductDetailLoading() {
   return (
     <PageWrapper
-      eyebrow="Inventory · Products"
       title="Product"
       actions={<Skeleton className="h-8 w-20 rounded-md" />}
     >

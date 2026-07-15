@@ -34,7 +34,6 @@ export default function SurveysPage() {
       <RequireModule module="SURVEYS">
         <PageWrapper
           title="Surveys"
-          eyebrow="Surveys"
           subtitle="Build surveys, quizzes, live polls, and lead forms."
           actions={
             hasAnySurveys ? (

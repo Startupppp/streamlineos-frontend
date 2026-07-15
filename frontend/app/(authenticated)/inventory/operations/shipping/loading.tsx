@@ -4,7 +4,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function ShippingQueueLoading() {
   return (
     <PageWrapper
-      eyebrow="Inventory / Operations"
       title="Shipping"
       filters={<Skeleton className="h-8 w-64" />}
     >

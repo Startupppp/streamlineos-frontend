@@ -1,18 +1,21 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useCallback, useMemo } from "react";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Info } from "lucide-react";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Info, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { FilterChip } from "@/features/projects/shared/filter-chips";
 import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
-import type { Sprint } from "@/types/projects";
-import type { Cycle } from "@/types/projects";
+import { useSprints } from "@/hooks/api/projects/sprints";
+import { useCycles } from "@/hooks/api/projects/advanced";
+import { WorkloadFilterMenu } from "./workload-filter-menu";
 import type { FilterState } from "./workload-types";
+import { hasActiveWorkloadFilters } from "./workload-types";
 
 interface WorkloadMember {
   id: string;
@@ -23,119 +26,154 @@ interface WorkloadMember {
 }
 
 interface WorkloadFilterBarProps {
+  projectId: number;
   filters: FilterState;
-  sprints: Sprint[];
-  cycles: Cycle[];
   members: WorkloadMember[];
   projectStatuses?: Array<{ name: string; color: string | null; type?: string | null }>;
-  hasActiveFilters: boolean;
   onFilterChange: <K extends keyof FilterState>(key: K, value: FilterState[K]) => void;
   onClearFilters: () => void;
+  className?: string;
 }
 
-const TICKET_TYPES = ["TASK", "BUG", "STORY", "EPIC", "SUBTASK"];
-const PRIORITIES = ["URGENT", "HIGH", "MEDIUM", "LOW"];
+function countBarFilters(filters: FilterState): number {
+  let count = 0;
+  if (filters.sprintId !== "all") count += 1;
+  if (filters.cycleId !== "all") count += 1;
+  if (filters.priority !== "all") count += 1;
+  if (filters.type !== "all") count += 1;
+  if (filters.status !== "all") count += 1;
+  if (filters.assigneeId !== "all") count += 1;
+  return count;
+}
+
+function formatEnumLabel(value: string): string {
+  return value.charAt(0) + value.slice(1).toLowerCase();
+}
 
 export const WorkloadFilterBar = memo(function WorkloadFilterBar({
+  projectId,
   filters,
-  sprints,
-  cycles,
   members,
   projectStatuses,
-  hasActiveFilters,
   onFilterChange,
   onClearFilters,
+  className,
 }: WorkloadFilterBarProps) {
+  const { data: sprints = [] } = useSprints(projectId);
+  const { data: cycles = [] } = useCycles(projectId);
+  const hasActiveFilters = hasActiveWorkloadFilters(filters);
+  const activeFilterCount = countBarFilters(filters);
+
+  const sprintMap = useMemo(() => new Map(sprints.map((s) => [String(s.id), s])), [sprints]);
+  const cycleMap = useMemo(() => new Map(cycles.map((c) => [String(c.id), c])), [cycles]);
+  const memberMap = useMemo(() => new Map(members.map((m) => [m.id, m])), [members]);
+
+  const assigneeChipLabel = useMemo(() => {
+    if (filters.assigneeId === "all") return "";
+    const member = memberMap.get(filters.assigneeId);
+    return member ? getUserDisplayName(member) : filters.assigneeId;
+  }, [filters.assigneeId, memberMap]);
+
+  const handleClearSprint = useCallback(() => {
+    onFilterChange("sprintId", "all");
+  }, [onFilterChange]);
+
+  const handleClearCycle = useCallback(() => {
+    onFilterChange("cycleId", "all");
+  }, [onFilterChange]);
+
+  const handleClearPriority = useCallback(() => {
+    onFilterChange("priority", "all");
+  }, [onFilterChange]);
+
+  const handleClearType = useCallback(() => {
+    onFilterChange("type", "all");
+  }, [onFilterChange]);
+
+  const handleClearStatus = useCallback(() => {
+    onFilterChange("status", "all");
+  }, [onFilterChange]);
+
+  const handleClearAssignee = useCallback(() => {
+    onFilterChange("assigneeId", "all");
+  }, [onFilterChange]);
+
   return (
-    <div className="flex flex-wrap items-center gap-2 shrink-0">
-      <Select value={filters.sprintId} onValueChange={(v) => onFilterChange("sprintId", v)}>
-        <SelectTrigger className="h-7 text-[11px] w-32">
-          <SelectValue placeholder="Sprint" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All sprints</SelectItem>
-          {sprints.map((s) => (
-            <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+    <div className={cn("flex min-w-0 flex-col gap-1.5", className)}>
+      <div className="flex min-w-0 flex-nowrap items-center justify-end gap-2">
+        <WorkloadFilterMenu
+          filters={filters}
+          members={members}
+          sprints={sprints}
+          cycles={cycles}
+          projectStatuses={projectStatuses}
+          activeFilterCount={activeFilterCount}
+          onFilterChange={onFilterChange}
+        />
 
-      <Select value={filters.cycleId} onValueChange={(v) => onFilterChange("cycleId", v)}>
-        <SelectTrigger className="h-7 text-[11px] w-32">
-          <SelectValue placeholder="Cycle" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All cycles</SelectItem>
-          {cycles.map((c) => (
-            <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        {hasActiveFilters ? (
+          <button
+            type="button"
+            onClick={onClearFilters}
+            className="flex h-8 shrink-0 items-center gap-1 rounded-md border border-transparent px-2 text-xs text-muted-foreground transition-colors hover:border-border hover:bg-muted/50 hover:text-foreground"
+          >
+            <X className="h-3 w-3 shrink-0" />
+            Clear all
+          </button>
+        ) : null}
 
-      <Select value={filters.priority} onValueChange={(v) => onFilterChange("priority", v)}>
-        <SelectTrigger className="h-7 text-[11px] w-28">
-          <SelectValue placeholder="Priority" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All priorities</SelectItem>
-          {PRIORITIES.map((p) => (
-            <SelectItem key={p} value={p}>{p.charAt(0) + p.slice(1).toLowerCase()}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <Select value={filters.type} onValueChange={(v) => onFilterChange("type", v)}>
-        <SelectTrigger className="h-7 text-[11px] w-24">
-          <SelectValue placeholder="Type" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All types</SelectItem>
-          {TICKET_TYPES.map((t) => (
-            <SelectItem key={t} value={t}>{t.charAt(0) + t.slice(1).toLowerCase()}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      {projectStatuses && projectStatuses.length > 0 && (
-        <Select value={filters.status} onValueChange={(v) => onFilterChange("status", v)}>
-          <SelectTrigger className="h-7 text-[11px] w-28">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            {projectStatuses.map((s) => (
-              <SelectItem key={s.name} value={s.name}>{s.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      )}
-
-      <Select value={filters.assigneeId} onValueChange={(v) => onFilterChange("assigneeId", v)}>
-        <SelectTrigger className="h-7 text-[11px] w-32">
-          <SelectValue placeholder="Assignee" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All members</SelectItem>
-          {members.map((m) => (
-            <SelectItem key={m.id} value={m.id}>{getUserDisplayName(m)}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      {hasActiveFilters && (
-        <button
-          type="button"
-          className="h-7 text-[11px] px-2 rounded border border-border text-muted-foreground hover:bg-muted/40 transition-colors"
-          onClick={onClearFilters}
-        >
-          Clear filters
-        </button>
-      )}
-
-      <div className="ml-auto flex items-center gap-1.5 text-[11px] text-muted-foreground">
-        <Info className="h-3 w-3 shrink-0" />
-        <span>Workload shows ticket count per member. Points are summed where set.</span>
+        <TooltipProvider delayDuration={200}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+                aria-label="About workload metrics"
+              >
+                <Info className="h-3.5 w-3.5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-[16rem] text-xs">
+              Workload shows ticket count per member. Points are summed where set.
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
+
+      {activeFilterCount > 0 ? (
+        <div className="flex min-w-0 flex-wrap items-center justify-end gap-1">
+          {filters.sprintId !== "all" ? (
+            <FilterChip
+              label={sprintMap.get(filters.sprintId)?.name ?? filters.sprintId}
+              onRemove={handleClearSprint}
+            />
+          ) : null}
+          {filters.cycleId !== "all" ? (
+            <FilterChip
+              label={cycleMap.get(filters.cycleId)?.name ?? filters.cycleId}
+              onRemove={handleClearCycle}
+            />
+          ) : null}
+          {filters.priority !== "all" ? (
+            <FilterChip
+              label={formatEnumLabel(filters.priority)}
+              onRemove={handleClearPriority}
+            />
+          ) : null}
+          {filters.type !== "all" ? (
+            <FilterChip label={formatEnumLabel(filters.type)} onRemove={handleClearType} />
+          ) : null}
+          {filters.status !== "all" ? (
+            <FilterChip
+              label={filters.status.replace(/_/g, " ")}
+              onRemove={handleClearStatus}
+            />
+          ) : null}
+          {filters.assigneeId !== "all" ? (
+            <FilterChip label={assigneeChipLabel} onRemove={handleClearAssignee} />
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 });

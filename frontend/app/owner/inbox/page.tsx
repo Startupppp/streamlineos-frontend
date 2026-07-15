@@ -23,7 +23,6 @@ export default async function InboxPage({
   return (
     <div>
       <OwnerPage
-        eyebrow="Messages"
         title="Inbox"
         description="Everything customers send from the contact form. Reply directly — they get a branded email."
       />

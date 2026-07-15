@@ -238,7 +238,6 @@ export default function BudgetsListPage() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting"
       title="Budgets"
       subtitle="Annual and departmental budgets."
       actions={

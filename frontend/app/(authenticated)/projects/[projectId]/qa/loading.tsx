@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 export default function QaLoading() {
   return (
-    <PageWrapper eyebrow="Quality" title="QA / Tests" subtitle="Test cases and runs">
+    <PageWrapper title="QA / Tests" subtitle="Test cases and runs">
       <div className="relative flex min-h-0 flex-1 flex-col gap-4">
         <Skeleton className={cn("h-10 w-52 rounded-xl", PM_PANEL)} />
         <div className={cn("space-y-3 p-3", PM_PANEL)}>

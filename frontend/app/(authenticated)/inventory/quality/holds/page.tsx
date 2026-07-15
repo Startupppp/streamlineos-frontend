@@ -197,7 +197,6 @@ function HoldsPageInner() {
   return (
     <>
       <PageWrapper
-        eyebrow="Inventory · Quality"
         title="Quality Holds"
         subtitle={total > 0 ? `${total} ${total === 1 ? "hold" : "holds"}` : "Manage inventory quality holds"}
         actions={

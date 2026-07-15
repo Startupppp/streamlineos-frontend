@@ -77,7 +77,6 @@ export default function SurveyParticipantsPage() {
       <RequireModule module="SURVEYS">
         <PageWrapper
           title="Participants"
-          eyebrow="Surveys"
           backHref={`/surveys/${surveyId}`}
           actions={
             <Button size="sm" onClick={() => setAddOpen(true)}>

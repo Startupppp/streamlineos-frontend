@@ -21,7 +21,6 @@ export function BonusesPageContent() {
   return (
     <PageWrapper
       title="Bonuses & Incentives"
-      eyebrow="Payroll"
       subtitle="Manage variable pay and sales commissions"
     >
       <div className="flex flex-1 min-h-0 flex-col gap-3">

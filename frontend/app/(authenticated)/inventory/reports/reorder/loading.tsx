@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ReorderReportLoading() {
   return (
-    <PageWrapper eyebrow="Inventory · Reports" title="Reorder Report">
+    <PageWrapper title="Reorder Report">
       <div className="flex flex-wrap items-center gap-2 mb-4">
         <Skeleton className="h-8 w-64 flex-1" />
         <Skeleton className="h-8 w-28 ml-auto" />

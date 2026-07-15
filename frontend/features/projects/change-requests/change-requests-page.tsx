@@ -241,7 +241,6 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
 
   return (
     <PageWrapper
-      eyebrow="Project"
       title="Change Requests"
       subtitle="Track and manage change requests"
       filters={filtersBar}

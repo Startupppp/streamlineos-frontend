@@ -4,7 +4,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function PurchaseOrderDetailLoading() {
   return (
     <PageWrapper
-      eyebrow="Inventory · Purchase Orders"
       title="Purchase Order"
       backHref="/inventory/purchase-orders"
       actions={

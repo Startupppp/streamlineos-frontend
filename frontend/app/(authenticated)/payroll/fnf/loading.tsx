@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function FnfPageSkeleton() {
   return (
-    <PageWrapper title="Full & Final Settlement" eyebrow="Payroll">
+    <PageWrapper title="Full & Final Settlement">
       <div className="flex flex-col gap-3">
         <Skeleton className="h-9 w-48" />
         <Skeleton className="h-64 rounded-xl" />

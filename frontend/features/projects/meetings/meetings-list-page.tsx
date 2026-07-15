@@ -321,7 +321,6 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
   return (
     <PageWrapper
       title="Meetings"
-      eyebrow="Project"
       subtitle="Schedule meetings, standups, and retros for your project"
       filters={filtersBar}
       actions={

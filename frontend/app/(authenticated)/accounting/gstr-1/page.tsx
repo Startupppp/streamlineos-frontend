@@ -217,7 +217,6 @@ export default function Gstr1Page() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting · Reports"
       title="GSTR-1 Summary"
       subtitle="Outward supplies for the selected period."
       filters={

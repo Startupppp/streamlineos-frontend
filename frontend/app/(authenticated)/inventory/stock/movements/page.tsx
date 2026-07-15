@@ -344,7 +344,6 @@ export default function MovementsPage() {
   return (
     <PageWrapper
       title="Stock Movements"
-      eyebrow="Inventory / Stock"
       subtitle={subtitle}
       filters={
         <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">

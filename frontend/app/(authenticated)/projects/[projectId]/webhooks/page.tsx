@@ -338,7 +338,6 @@ export default function WebhooksPage({ params }: PageProps) {
 
   return (
     <PageWrapper
-      eyebrow="Project"
       title="Webhooks"
       subtitle="Receive HTTP POST notifications when project events occur"
       actions={<AddWebhookButton onClick={handleShowForm} />}

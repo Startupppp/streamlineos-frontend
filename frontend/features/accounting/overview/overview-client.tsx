@@ -85,7 +85,6 @@ export function OverviewClient() {
 
   return (
     <PageWrapper
-      eyebrow="Finance · Accounting"
       title="Finance Overview"
       subtitle="Real-time cash, revenue, and liquidity metrics."
       filters={

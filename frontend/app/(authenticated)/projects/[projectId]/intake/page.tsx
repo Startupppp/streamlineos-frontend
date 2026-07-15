@@ -180,7 +180,7 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
 
   if (isLoading) {
     return (
-      <PageWrapper title="Intake" eyebrow="Project" subtitle="Collect and triage incoming requests from your team or clients">
+      <PageWrapper title="Intake" subtitle="Collect and triage incoming requests from your team or clients">
         <PmPageShell>
           <div className="space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -195,7 +195,6 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
   return (
     <PageWrapper
       title="Intake"
-      eyebrow="Project"
       subtitle="Collect and triage incoming requests from your team or clients"
       actions={
         <div className="flex items-center gap-2">

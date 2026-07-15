@@ -4,7 +4,6 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 export default function InventorySettingsLoading() {
   return (
     <PageWrapper
-      eyebrow="Inventory"
       title="Settings"
       subtitle="Configure stock policies, procurement rules, and system sequences."
     >

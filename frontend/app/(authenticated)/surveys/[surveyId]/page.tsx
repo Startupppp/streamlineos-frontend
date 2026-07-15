@@ -21,7 +21,6 @@ export default function SurveyDetailPage() {
       <RequireModule module="SURVEYS">
         <PageWrapper
           title={survey?.title ?? "Survey"}
-          eyebrow="Surveys"
           backHref="/surveys"
           actions={survey ? <SurveyBuilderHeader survey={survey} /> : undefined}
         >

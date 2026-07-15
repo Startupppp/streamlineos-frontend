@@ -178,7 +178,7 @@ export function TeamView() {
 
   if (!canView) {
     return (
-      <PageWrapper title="Team Time" eyebrow="Timesheets">
+      <PageWrapper title="Team Time">
         <EmptyState
           illustrationPreset="team"
           title="Access restricted"
@@ -255,7 +255,6 @@ export function TeamView() {
   return (
     <PageWrapper
       title="Team Time"
-      eyebrow="Timesheets"
       subtitle={subtitle}
       actions={weekNavActions}
       filters={pageFilters}

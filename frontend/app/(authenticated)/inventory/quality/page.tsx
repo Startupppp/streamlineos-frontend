@@ -77,7 +77,6 @@ function QualityHubInner() {
 
   return (
     <PageWrapper
-      eyebrow="Inventory · Quality"
       title="Quality Hub"
       subtitle="Overview of inspections, holds, and recalls"
     >

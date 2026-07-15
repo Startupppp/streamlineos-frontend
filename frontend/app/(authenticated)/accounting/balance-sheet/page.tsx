@@ -102,7 +102,6 @@ export default function BalanceSheetPage() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting · Reports"
       title="Balance Sheet"
       subtitle="Snapshot of assets, liabilities, and equity as of a chosen date."
       filters={

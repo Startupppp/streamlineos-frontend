@@ -198,7 +198,6 @@ export default function TaxPage() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting"
       title="Tax"
       subtitle="GST compliance and tax liability overview"
       filters={

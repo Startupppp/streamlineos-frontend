@@ -7,7 +7,6 @@ export default function TemplatesLoading() {
   return (
     <PageWrapper
       title="Templates"
-      eyebrow="Projects"
       subtitle="Reusable project structures to bootstrap new work"
       actions={<Skeleton className="h-8 w-32 rounded-md" />}
     >

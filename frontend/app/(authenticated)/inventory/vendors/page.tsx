@@ -277,7 +277,6 @@ export default function VendorsListPage() {
 
   return (
     <PageWrapper
-      eyebrow="Inventory"
       title="Vendors"
       subtitle="Manage your suppliers and purchase order vendors."
       badge={query.data ? `${total}` : undefined}

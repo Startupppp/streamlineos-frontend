@@ -3,7 +3,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 
 export default function TransferDetailLoading() {
   return (
-    <PageWrapper eyebrow="Inventory / Transfers" title="Transfer" subtitle="Transfer details.">
+    <PageWrapper title="Transfer" subtitle="Transfer details.">
       <div className="space-y-4">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {Array.from({ length: 4 }).map((_, i) => (

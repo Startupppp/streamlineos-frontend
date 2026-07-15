@@ -55,7 +55,6 @@ export function PortalListPage() {
 
   return (
     <PageWrapper
-      eyebrow="Projects"
       title="Client Portal"
       subtitle="Your projects and their current status"
     >

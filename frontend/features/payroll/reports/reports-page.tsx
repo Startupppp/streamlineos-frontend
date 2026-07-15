@@ -179,7 +179,6 @@ export function ReportsPageContent() {
   return (
     <PageWrapper
       title="Payroll Reports"
-      eyebrow="Payroll"
       subtitle={formatMonth(month)}
       filters={filtersNode}
       actions={actionsNode}

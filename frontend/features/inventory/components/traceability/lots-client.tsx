@@ -187,7 +187,6 @@ export function LotsClient() {
 
   return (
     <PageWrapper
-      eyebrow="Operations · Inventory"
       title="Lots"
       subtitle="Track lot numbers, expiry dates, and stock by lot."
       filters={

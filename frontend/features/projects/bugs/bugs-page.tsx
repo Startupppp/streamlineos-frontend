@@ -299,7 +299,6 @@ export function BugsPage({ projectId }: BugsPageProps) {
 
   return (
     <PageWrapper
-      eyebrow="Quality"
       title="Bugs"
       subtitle="Track and triage project bugs"
       filters={filtersBar}

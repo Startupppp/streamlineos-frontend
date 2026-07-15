@@ -31,7 +31,6 @@ export function SettingsView() {
     return (
       <PageWrapper
         title="Timesheet Settings"
-        eyebrow="Timesheets"
         noInternalScroll
         className="flex-none"
       >
@@ -47,7 +46,6 @@ export function SettingsView() {
   return (
     <PageWrapper
       title="Timesheet Settings"
-      eyebrow="Timesheets"
       noInternalScroll
       className="flex-none"
     >

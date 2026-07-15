@@ -7,7 +7,6 @@ export default function ProjectApprovalsLoading() {
   return (
     <PageWrapper
       title="Approvals"
-      eyebrow="Project"
       subtitle="Review and manage approval requests for this project"
       actions={<Skeleton className="h-8 w-36 rounded-md" />}
       filters={

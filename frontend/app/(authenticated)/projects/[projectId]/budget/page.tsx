@@ -150,7 +150,6 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
     return (
       <PageWrapper
         title="Budget"
-        eyebrow="Project"
         subtitle="Planned budget vs actual cost from billable timesheets"
         actions={<Skeleton className="h-8 w-32 rounded-md" />}
       >
@@ -171,7 +170,6 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
   return (
     <PageWrapper
       title="Budget"
-      eyebrow="Project"
       subtitle="Planned budget vs actual cost from billable timesheets"
       actions={budgetActions}
     >

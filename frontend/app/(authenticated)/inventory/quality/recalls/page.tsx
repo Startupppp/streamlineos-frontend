@@ -222,7 +222,6 @@ function RecallsPageInner() {
   return (
     <>
       <PageWrapper
-        eyebrow="Inventory · Quality"
         title="Recalls"
         subtitle={total > 0 ? `${total} ${total === 1 ? "recall" : "recalls"}` : "Manage product recalls"}
         actions={

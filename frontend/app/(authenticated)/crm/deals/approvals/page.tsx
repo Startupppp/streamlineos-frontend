@@ -286,7 +286,6 @@ export default function DealApprovalsPage() {
       title="Deal Approvals"
       subtitle="Review and approve high-value deals"
       filters={filterBar}
-      eyebrow="CRM / Deals"
     >
       {isError ? (
         <ErrorState

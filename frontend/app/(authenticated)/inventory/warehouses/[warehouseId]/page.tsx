@@ -122,7 +122,6 @@ export default function WarehouseDetailPage({
     return (
       <PageWrapper
         title="Warehouse"
-        eyebrow="Operations · Inventory"
         backHref="/inventory/warehouses"
       >
         <div className="space-y-4">
@@ -158,7 +157,6 @@ export default function WarehouseDetailPage({
     return (
       <PageWrapper
         title="Warehouse"
-        eyebrow="Operations · Inventory"
         backHref="/inventory/warehouses"
       >
         <ErrorState
@@ -174,7 +172,6 @@ export default function WarehouseDetailPage({
     return (
       <PageWrapper
         title="Warehouse not found"
-        eyebrow="Operations · Inventory"
         backHref="/inventory/warehouses"
       >
         <InventoryEmptyState
@@ -192,7 +189,6 @@ export default function WarehouseDetailPage({
   return (
     <PageWrapper
       title={warehouse.name}
-      eyebrow="Operations · Inventory"
       backHref="/inventory/warehouses"
       subtitle={
         <span className="flex items-center gap-2 flex-wrap">

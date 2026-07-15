@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function SerialDetailLoading() {
   return (
-    <PageWrapper backHref="/inventory/serials" title="Loading…" eyebrow="Operations · Inventory">
+    <PageWrapper backHref="/inventory/serials" title="Loading…">
       <div className="space-y-6">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {Array.from({ length: 4 }).map((_, i) => (

@@ -11,7 +11,6 @@ export default function PortfoliosLoading() {
   return (
     <PageWrapper
       title="Portfolios"
-      eyebrow="Projects"
       subtitle="Group related projects into portfolios"
       filters={
         <div className={PM_TOOLBAR}>

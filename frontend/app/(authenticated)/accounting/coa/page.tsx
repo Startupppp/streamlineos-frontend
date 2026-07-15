@@ -352,7 +352,6 @@ export default function ChartOfAccountsPage() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting"
       title="Chart of Accounts"
       subtitle="Manage ledger accounts grouped by type."
       actions={

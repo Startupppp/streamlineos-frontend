@@ -426,7 +426,6 @@ function CategoriesPageInner() {
 
   return (
     <PageWrapper
-      eyebrow="Inventory · Products"
       title="Categories"
       subtitle={
         categories.length > 0

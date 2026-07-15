@@ -351,7 +351,6 @@ export function InvoiceDetailContent({ invoiceId }: InvoiceDetailContentProps) {
 
   return (
     <PageWrapper
-      eyebrow="Accounting · Invoices"
       title={invoice.invoiceNumber}
       backHref="/accounting/invoices"
       badge={<FinanceStatusBadge status={toFinanceStatus(invoice.status)} />}

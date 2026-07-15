@@ -110,7 +110,6 @@ export default function ProjectTemplatesPage() {
     <RequireModule module="PROJECTS">
       <PageWrapper
         title="Templates"
-        eyebrow="Projects"
         subtitle="Reusable project structures to bootstrap new work"
         actions={<NewTemplateButton onClick={handleOpenCreate} />}
       >

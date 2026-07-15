@@ -242,7 +242,6 @@ export function SuspendedUsersPage() {
     <>
       <PageWrapper
         title="Suspended Users"
-        eyebrow="People"
         subtitle="Users whose access has been temporarily suspended."
         badge={pagination?.total !== undefined ? String(pagination.total) : undefined}
         filters={

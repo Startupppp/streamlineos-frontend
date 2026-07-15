@@ -209,7 +209,6 @@ function ThreePlContent() {
   if (isLoading) {
     return (
       <PageWrapper
-        eyebrow="Inventory · Channels"
         title="3PL Connections"
         subtitle="Manage third-party logistics provider connections"
         actions={actions}
@@ -222,7 +221,6 @@ function ThreePlContent() {
   if (isError) {
     return (
       <PageWrapper
-        eyebrow="Inventory · Channels"
         title="3PL Connections"
         subtitle="Manage third-party logistics provider connections"
         actions={actions}
@@ -239,7 +237,6 @@ function ThreePlContent() {
   return (
     <>
       <PageWrapper
-        eyebrow="Inventory · Channels"
         title="3PL Connections"
         subtitle="Manage third-party logistics provider connections"
         badge={connections.length > 0 ? String(connections.length) : undefined}

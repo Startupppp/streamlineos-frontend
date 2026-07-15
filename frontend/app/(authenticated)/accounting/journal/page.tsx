@@ -305,7 +305,6 @@ export default function JournalListPage() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting"
       title="Journal"
       subtitle="Posted journal entries and recurring templates."
       actions={

@@ -213,7 +213,6 @@ export default function ScenariosPage() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting · Planning"
       title="Scenarios"
       subtitle="Cash flow planning scenarios"
       actions={

@@ -23,7 +23,7 @@ export default async function CustomerDetailPage({
         </Link>
       </div>
 
-      <OwnerPage eyebrow={`Customer · /${slug}`} title={slug} />
+      <OwnerPage title={slug} />
     </div>
   );
 }

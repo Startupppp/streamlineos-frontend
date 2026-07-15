@@ -21,3 +21,15 @@ export const INITIAL_FILTERS: FilterState = {
   assigneeId: "all",
   showUnassigned: true,
 };
+
+export function hasActiveWorkloadFilters(filters: FilterState): boolean {
+  return (
+    filters.sprintId !== "all" ||
+    filters.cycleId !== "all" ||
+    filters.priority !== "all" ||
+    filters.type !== "all" ||
+    filters.status !== "all" ||
+    filters.assigneeId !== "all" ||
+    filters.statCard !== "all"
+  );
+}

@@ -310,7 +310,6 @@ function LoadsPageInner() {
   return (
     <>
       <PageWrapper
-        eyebrow="Inventory · Shipping"
         title="Loads"
         subtitle={total > 0 ? `${total} ${total === 1 ? "load" : "loads"}` : "Group shipments into transport loads"}
         actions={

@@ -165,7 +165,6 @@ function InspectionsPageInner() {
   return (
     <>
       <PageWrapper
-        eyebrow="Inventory · Quality"
         title="Inspections"
         subtitle={total > 0 ? `${total} ${total === 1 ? "inspection" : "inspections"}` : "Manage quality inspections"}
         actions={

@@ -75,7 +75,6 @@ export default function Gstr3BPage() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting · Reports"
       title="GSTR-3B"
       subtitle="Consolidated monthly GST return summary. Outward minus ITC equals tax payable."
       filters={

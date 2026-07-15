@@ -5,7 +5,6 @@ export default function PagesLoading() {
   return (
     <PageWrapper
       title="Pages"
-      eyebrow="Project"
       subtitle="Create and manage project documentation and notes"
       noInternalScroll
       contentClassName="p-0"

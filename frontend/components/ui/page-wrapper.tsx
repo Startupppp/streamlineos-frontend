@@ -10,7 +10,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 interface PageWrapperProps {
   title: string;
   subtitle?: React.ReactNode;
-  eyebrow?: string;
   badge?: React.ReactNode;
   backHref?: string;
   leading?: React.ReactNode;
@@ -29,7 +28,6 @@ interface PageWrapperProps {
 export function PageWrapper({
   title,
   subtitle,
-  eyebrow,
   badge,
   backHref,
   leading,
@@ -68,11 +66,6 @@ export function PageWrapper({
               </Button>
             )}
             <div className="min-w-0 flex-1">
-              {eyebrow && (
-                <p className="text-[11px] font-medium text-muted-foreground mb-1 leading-none">
-                  {eyebrow}
-                </p>
-              )}
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className={titleClass}>
                   {title}

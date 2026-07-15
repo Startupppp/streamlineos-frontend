@@ -7,7 +7,6 @@ export default function LeadsPage() {
   return (
     <div>
       <OwnerPage
-        eyebrow="Cross-org leads"
         title="Leads"
         description="Every lead captured across every customer org and through your contact form."
       />

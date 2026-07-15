@@ -95,7 +95,6 @@ export default function AgedPayablesPage() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting · Reports"
       title="Aged Payables"
       subtitle="Outstanding vendor balances grouped by days overdue."
       filters={

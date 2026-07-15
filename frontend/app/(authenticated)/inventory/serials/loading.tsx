@@ -4,7 +4,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function SerialsLoading() {
   return (
     <PageWrapper
-      eyebrow="Operations · Inventory"
       title="Serial Numbers"
       subtitle="Track individual serial numbers and their history."
       filters={

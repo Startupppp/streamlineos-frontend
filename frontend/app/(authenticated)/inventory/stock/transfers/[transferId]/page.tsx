@@ -134,7 +134,7 @@ function buildLineColumns(isCompleted: boolean): DataTableColumn<TransferLine>[]
 
 function TransferDetailSkeleton() {
   return (
-    <PageWrapper title="Transfer" eyebrow="Inventory / Transfers">
+    <PageWrapper title="Transfer">
       <div className="space-y-4">
         <Card>
           <CardContent className="p-4 space-y-4">
@@ -236,7 +236,6 @@ export default function TransferDetailPage({
     return (
       <PageWrapper
         title="Transfer"
-        eyebrow="Inventory / Transfers"
         actions={
           <Button variant="outline" size="sm" asChild>
             <Link href="/inventory/stock/transfers">
@@ -259,7 +258,6 @@ export default function TransferDetailPage({
     return (
       <PageWrapper
         title="Transfer not found"
-        eyebrow="Inventory / Transfers"
         actions={
           <Button variant="outline" size="sm" asChild>
             <Link href="/inventory/stock/transfers">
@@ -288,7 +286,6 @@ export default function TransferDetailPage({
   return (
     <PageWrapper
       title={transfer.referenceNumber}
-      eyebrow="Inventory / Transfers"
       subtitle={
         <Badge
           variant="outline"

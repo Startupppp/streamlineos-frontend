@@ -1,7 +1,6 @@
 import { ReactNode } from "react";
 
 type Props = {
-  eyebrow?: string;
   title: string;
   description?: string;
   actions?: ReactNode;
@@ -9,7 +8,6 @@ type Props = {
 };
 
 export function OwnerPage({
-  eyebrow,
   title,
   description,
   actions,
@@ -20,12 +18,7 @@ export function OwnerPage({
       <div className="sticky top-0 z-10 -mx-3 lg:-mx-4 px-3 lg:px-4 py-1.5 mb-1 bg-background/90 backdrop-blur-sm border-b border-border">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="min-w-0">
-            {eyebrow && (
-              <p className="text-[11px] font-medium text-muted-foreground leading-none">
-                {eyebrow}
-              </p>
-            )}
-            <h1 className="font-display text-[0.95rem] lg:text-[1rem] font-bold tracking-[-0.01em] text-foreground leading-tight mt-0.5">
+            <h1 className="font-display text-[0.95rem] lg:text-[1rem] font-bold tracking-[-0.01em] text-foreground leading-tight">
               {title}
             </h1>
             {description && (

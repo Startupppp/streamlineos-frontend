@@ -80,7 +80,6 @@ export function ReconciliationClient() {
 
   return (
     <PageWrapper
-      eyebrow="Banking"
       title="Reconciliation"
       subtitle="Match bank transactions to your books."
       backHref="/accounting/banking"

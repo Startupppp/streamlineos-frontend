@@ -253,7 +253,6 @@ export default function RecurringBillsPage() {
 
   return (
     <PageWrapper
-      eyebrow="Accounting"
       title="Recurring Bills"
       subtitle="Automate vendor bill creation on a schedule."
       actions={

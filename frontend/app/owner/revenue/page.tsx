@@ -10,7 +10,6 @@ export default function RevenuePage() {
   return (
     <div>
       <OwnerPage
-        eyebrow="Razorpay"
         title="Revenue"
         description="Every payment, refund, and failed transaction across your customer base."
       />

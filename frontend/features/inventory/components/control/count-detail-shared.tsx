@@ -219,7 +219,7 @@ export function CountDetailShared({
 
   if (error) {
     return (
-      <PageWrapper eyebrow="Operations · Inventory" title={entityNoun} backHref={backHref}>
+      <PageWrapper title={entityNoun} backHref={backHref}>
         <ErrorState
           title={`Failed to load ${entityNoun.toLowerCase()}`}
           description={error.message}
@@ -233,7 +233,6 @@ export function CountDetailShared({
   return (
     <>
       <PageWrapper
-        eyebrow="Operations · Inventory"
         title={isLoading ? entityNoun : `${entityNoun} #${entityNumber ?? ""}`}
         backHref={backHref}
         badge={

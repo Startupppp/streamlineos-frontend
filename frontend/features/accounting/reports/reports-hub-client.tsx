@@ -134,7 +134,6 @@ export function ReportsHubClient() {
 
   return (
     <PageWrapper
-      eyebrow="Finance · Accounting"
       title="Reports"
       subtitle="Financial reports, statements, and analytics for your organisation."
       filters={

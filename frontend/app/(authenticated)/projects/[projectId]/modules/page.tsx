@@ -229,7 +229,6 @@ export default function ModulesPage({
     return (
       <PageWrapper
         title="Modules"
-        eyebrow="Project"
         subtitle="Organize work into feature groups and track module progress"
       >
         <PmPageShell>
@@ -255,7 +254,6 @@ export default function ModulesPage({
   return (
     <PageWrapper
       title="Modules"
-      eyebrow="Project"
       subtitle="Organize work into feature groups and track module progress"
       actions={
         <Sheet open={createOpen} onOpenChange={handleOpenChange}>
