@@ -14,6 +14,7 @@ import {
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { ErrorState } from "@/components/shared/error-state";
+import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ReportFiltersBar } from "@/features/support/reports/report-filters";
 import { OverviewCharts } from "@/features/support/reports/overview-charts";
@@ -59,14 +60,10 @@ export default function SupportOverviewReportPage() {
         <ErrorState title="Could not load the overview report" onRetry={handleRetry} />
       ) : isLoading || !data ? (
         <div className="flex flex-1 min-h-0 flex-col space-y-4">
-          <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <Skeleton key={i} className="h-20" />
-            ))}
-          </div>
+          <StatCardGridSkeleton cols={4} count={12} />
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-64" />
+            {Array.from({ length: 12 }).map((_, i) => (
+              <Skeleton key={i} className="h-64 rounded-xl border border-border bg-card" />
             ))}
           </div>
         </div>

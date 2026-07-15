@@ -4,7 +4,7 @@ import { use, useState, useMemo, type ChangeEvent } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { StatCard } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -154,12 +154,8 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
         actions={<Skeleton className="h-8 w-32 rounded-md" />}
       >
         <PmPageShell>
-          <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-24 rounded-xl" />
-            ))}
-          </div>
-          <Skeleton className="h-20 rounded-xl" />
+          <StatCardGridSkeleton cols={3} count={12} className="mb-4" />
+          <Skeleton className="h-20 rounded-xl border border-border bg-card" />
         </PmPageShell>
       </PageWrapper>
     );
@@ -175,32 +171,29 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
     >
       <PmPageShell>
         <PmSection index={0}>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <StatCardGrid cols={3}>
             <StatCard
               label="Planned Budget"
               value={fmt(budget?.plannedBudget ?? 0)}
               icon={IndianRupee}
               hint={budget?.plannedBudget ? "Project budget" : "Not set"}
-              color="blue"
-              index={0}
+              tone="blue"
             />
             <StatCard
               label="Actual Cost"
               value={fmt(budget?.actualCost ?? 0)}
               icon={TrendingUp}
               hint={`${(budget?.totalHours ?? 0).toFixed(1)} billable hours`}
-              color={overBudget ? "red" : "cyan"}
-              index={1}
+              tone={overBudget ? "red" : "blue"}
             />
             <StatCard
               label="Remaining"
               value={fmt(Math.abs(budget?.remaining ?? 0))}
               icon={IndianRupee}
               hint={overBudget ? "Over budget" : "Available"}
-              color={overBudget ? "red" : "green"}
-              index={2}
+              tone={overBudget ? "red" : "emerald"}
             />
-          </div>
+          </StatCardGrid>
         </PmSection>
 
         {(budget?.plannedBudget ?? 0) > 0 ? (

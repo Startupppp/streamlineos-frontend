@@ -16,10 +16,10 @@ import {
   CheckCircle2,
   Clock,
   ArrowRight,
-  TrendingUp,
   AlertCircle,
 } from "lucide-react";
 import Link from "next/link";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 
 const HR_ADMIN_ROLES = ["CEO", "HR", "ADMIN", "BRANCH_HR", "BRANCH_MANAGER"];
 
@@ -255,39 +255,27 @@ const METRIC_CARDS = [
     key: "totalEmployees" as const,
     label: "Total Headcount",
     icon: Users,
-    accent: "border-l-blue-500",
-    iconBg: "bg-blue-50 dark:bg-blue-950/40",
-    iconColor: "text-blue-600 dark:text-blue-400",
-    valueColor: "text-blue-700 dark:text-blue-400",
+    tone: "blue" as const,
     href: "/hr",
   },
   {
     key: "activeEmployees" as const,
     label: "Active Employees",
     icon: UserCheck,
-    accent: "border-l-emerald-500",
-    iconBg: "bg-emerald-50 dark:bg-emerald-950/40",
-    iconColor: "text-emerald-600 dark:text-emerald-400",
-    valueColor: "text-emerald-700 dark:text-emerald-400",
+    tone: "emerald" as const,
   },
   {
     key: "onLeaveToday" as const,
     label: "On Leave Today",
     icon: CalendarOff,
-    accent: "border-l-amber-500",
-    iconBg: "bg-amber-50 dark:bg-amber-950/40",
-    iconColor: "text-amber-600 dark:text-amber-400",
-    valueColor: "text-amber-700 dark:text-amber-400",
+    tone: "amber" as const,
     href: "/hr/leaves",
   },
   {
     key: "pendingLeaveRequests" as const,
     label: "Pending Leaves",
     icon: ClipboardList,
-    accent: "border-l-rose-500",
-    iconBg: "bg-rose-50 dark:bg-rose-950/40",
-    iconColor: "text-rose-600 dark:text-rose-400",
-    valueColor: "text-rose-700 dark:text-rose-400",
+    tone: "red" as const,
     href: "/hr/leaves",
   },
 ] satisfies Array<{
@@ -298,10 +286,7 @@ const METRIC_CARDS = [
     | "pendingLeaveRequests";
   label: string;
   icon: React.ElementType;
-  accent: string;
-  iconBg: string;
-  iconColor: string;
-  valueColor: string;
+  tone: "blue" | "emerald" | "amber" | "red";
   href?: string;
 }>;
 
@@ -318,75 +303,30 @@ export function HrDashboardOverview() {
 
   return (
     <div className="mb-6 space-y-3">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {METRIC_CARDS.map(
-          ({
-            key,
-            label,
-            icon: Icon,
-            accent,
-            iconBg,
-            iconColor,
-            valueColor,
-            href,
-          }) => {
-            const value = isLoading ? null : (metrics?.[key] ?? 0);
-            const card = (
-              <div
-                className={`relative rounded-2xl border border-border border-l-4 ${accent} bg-card p-4 overflow-hidden transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${href ? "cursor-pointer" : ""}`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-2 truncate">
-                      {label}
-                    </p>
-                    {isLoading ? (
-                      <Skeleton className="h-8 w-16" />
-                    ) : (
-                      <p
-                        className={`text-3xl font-bold tabular-nums ${valueColor}`}
-                      >
-                        {value}
-                      </p>
-                    )}
-                    {key === "activeEmployees" && !isLoading && (
-                      <div className="flex items-center gap-1 mt-1.5">
-                        <TrendingUp className="h-3 w-3 text-emerald-500" />
-                        <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
-                          {activeRate}% rate
-                        </span>
-                      </div>
-                    )}
-                    {key === "pendingLeaveRequests" &&
-                      !isLoading &&
-                      value !== null &&
-                      value > 0 && (
-                        <div className="flex items-center gap-1 mt-1.5">
-                          <AlertCircle className="h-3 w-3 text-rose-500" />
-                          <span className="text-[11px] text-rose-600 dark:text-rose-400 font-semibold">
-                            Needs attention
-                          </span>
-                        </div>
-                      )}
-                  </div>
-                  <div
-                    className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${iconBg}`}
-                  >
-                    <Icon className={`h-5 w-5 ${iconColor}`} />
-                  </div>
-                </div>
-              </div>
-            );
-            return href ? (
-              <Link key={key} href={href}>
-                {card}
-              </Link>
-            ) : (
-              <div key={key}>{card}</div>
-            );
-          },
-        )}
-      </div>
+      <StatCardGrid cols={4}>
+        {METRIC_CARDS.map(({ key, label, icon, tone, href }) => {
+          const value = metrics?.[key] ?? 0;
+          const hint =
+            key === "activeEmployees" && !isLoading
+              ? `${activeRate}% rate`
+              : key === "pendingLeaveRequests" && !isLoading && value > 0
+                ? "Needs attention"
+                : undefined;
+
+          return (
+            <StatCard
+              key={key}
+              label={label}
+              value={value}
+              icon={icon}
+              tone={tone}
+              href={href}
+              hint={hint}
+              isLoading={isLoading}
+            />
+          );
+        })}
+      </StatCardGrid>
 
       <div className="grid sm:grid-cols-2 gap-3">
         <LeaveCalendarWidget />

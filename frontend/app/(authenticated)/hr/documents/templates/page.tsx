@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
@@ -382,36 +382,12 @@ export default function DocumentTemplatesPage() {
       }
     >
       <div className="space-y-6">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard
-            label="Total Templates"
-            value={total}
-            icon={FileText}
-            color="blue"
-            index={0}
-          />
-          <StatCard
-            label="Active"
-            value={active}
-            icon={FileCheck}
-            color="green"
-            index={1}
-          />
-          <StatCard
-            label="NDAs"
-            value={ndaCount}
-            icon={FileLock}
-            color="red"
-            index={2}
-          />
-          <StatCard
-            label="Offer Letters"
-            value={offerCount}
-            icon={FileKey}
-            color="amber"
-            index={3}
-          />
-        </div>
+        <StatCardGrid cols={4}>
+          <StatCard label="Total Templates" value={total} icon={FileText} tone="blue" />
+          <StatCard label="Active" value={active} icon={FileCheck} tone="emerald" />
+          <StatCard label="NDAs" value={ndaCount} icon={FileLock} tone="red" />
+          <StatCard label="Offer Letters" value={offerCount} icon={FileKey} tone="amber" />
+        </StatCardGrid>
 
         <DataTable<DocumentTemplate>
           data={list}

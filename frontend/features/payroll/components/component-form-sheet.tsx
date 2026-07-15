@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
+import { Sheet, SheetBody, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -116,7 +116,7 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent className="p-0 flex flex-col gap-0 sm:max-w-lg">
+      <SheetContent className="p-0 flex flex-col gap-0 overflow-hidden sm:max-w-lg">
         <div className="shrink-0 px-6 py-4 border-b">
           <SheetHeader>
             <SheetTitle className="text-base">{isEdit ? "Edit Component" : "Add Component"}</SheetTitle>
@@ -126,8 +126,8 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
           </SheetHeader>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
-          <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+          <SheetBody className="px-6 py-4 space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label htmlFor="comp-name" className="text-xs font-medium">Name *</Label>
@@ -202,7 +202,7 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
                 </div>
               ))}
             </div>
-          </div>
+          </SheetBody>
 
           <SheetFooter className="shrink-0 px-6 py-4 border-t">
             <Button type="button" variant="outline" size="sm" onClick={() => handleOpenChange(false)}>

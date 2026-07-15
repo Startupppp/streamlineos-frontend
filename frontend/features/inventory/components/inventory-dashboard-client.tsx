@@ -15,7 +15,7 @@ import {
   BookOpen,
 } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
@@ -50,19 +50,7 @@ const URGENCY_CONFIG: Record<
 };
 
 function KpiSkeletons() {
-  return (
-    <StatCardGrid cols={4}>
-      {Array.from({ length: 7 }).map((_, i) => (
-        <div key={i} className="flex items-center gap-2.5 rounded-lg border border-border bg-card px-3 py-2.5">
-          <Skeleton className="h-8 w-8 rounded-md shrink-0" />
-          <div className="space-y-1.5 flex-1 min-w-0">
-            <Skeleton className="h-3 w-24" />
-            <Skeleton className="h-5 w-16" />
-          </div>
-        </div>
-      ))}
-    </StatCardGrid>
-  );
+  return <StatCardGridSkeleton cols={4} count={12} />;
 }
 
 function LowStockSkeleton() {

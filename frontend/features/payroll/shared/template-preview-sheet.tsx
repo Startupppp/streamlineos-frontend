@@ -3,6 +3,7 @@
 import { useState } from "react";
 import {
   Sheet,
+  SheetBody,
   SheetContent,
   SheetHeader,
   SheetTitle,
@@ -62,7 +63,7 @@ export function TemplatePreviewSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="p-0 flex flex-col gap-0 sm:max-w-lg">
+      <SheetContent className="p-0 flex flex-col gap-0 overflow-hidden sm:max-w-lg">
         <div className="shrink-0 px-6 py-4 border-b">
           <SheetHeader>
             <SheetTitle className="text-base">{template?.name} — Preview</SheetTitle>
@@ -72,7 +73,7 @@ export function TemplatePreviewSheet({
           </SheetHeader>
         </div>
 
-        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-4">
+        <SheetBody className="px-6 py-4 space-y-4">
           <div className="flex items-end gap-2">
             <div className="flex-1 space-y-1">
               <Label htmlFor="preview-ctc" className="text-xs">Annual CTC ({currency})</Label>
@@ -145,7 +146,7 @@ export function TemplatePreviewSheet({
               </div>
             </div>
           )}
-        </div>
+        </SheetBody>
       </SheetContent>
     </Sheet>
   );

@@ -1,5 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 
 export function ReportsSkeleton() {
@@ -9,20 +9,18 @@ export function ReportsSkeleton() {
       subtitle="Sales performance and pipeline analytics"
     >
       <div className="space-y-6">
-        <div className="bg-card rounded-lg border border-border shadow-sm p-4">
-          <StatCardGrid cols={4}>
-            <StatCard label="Total Leads" value="" isLoading />
-            <StatCard label="Active Deals" value="" isLoading />
-            <StatCard label="Pipeline Value" value="" isLoading />
-            <StatCard label="Won Revenue" value="" isLoading />
-          </StatCardGrid>
+        <StatCardGridSkeleton cols={4} count={12} />
+        <div className="grid gap-3 md:grid-cols-2">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div
+              key={i}
+              className="bg-card rounded-lg border border-border shadow-sm p-4 space-y-3"
+            >
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-40 w-full" />
+            </div>
+          ))}
         </div>
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="bg-card rounded-lg border border-border shadow-sm p-4 space-y-3">
-            <Skeleton className="h-4 w-40" />
-            <Skeleton className="h-48 w-full" />
-          </div>
-        ))}
       </div>
     </PageWrapper>
   );

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import {
   Sheet,
+  SheetBody,
   SheetContent,
   SheetHeader,
   SheetTitle,
@@ -117,11 +118,11 @@ export function QuestionEditorSheet({ surveyId, sectionId, question, sections, l
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="flex flex-col gap-0 sm:max-w-md">
-        <SheetHeader>
+      <SheetContent className="flex flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
+        <SheetHeader className="shrink-0 px-4 py-4 border-b">
           <SheetTitle>{question ? "Edit question" : "Add question"}</SheetTitle>
         </SheetHeader>
-        <div className="flex-1 space-y-4 overflow-y-auto px-4 py-2">
+        <SheetBody className="space-y-4 px-4 py-4">
           <div className="space-y-1.5">
             <Label>Type</Label>
             <Select value={type} onValueChange={(v) => setType(v as SurveyQuestionType)}>
@@ -169,8 +170,8 @@ export function QuestionEditorSheet({ surveyId, sectionId, question, sections, l
           {question && (
             <LogicRulesSection surveyId={surveyId} question={question} sections={sections} rules={logicRules} />
           )}
-        </div>
-        <SheetFooter className="flex-row justify-end gap-2">
+        </SheetBody>
+        <SheetFooter className="shrink-0 flex-row justify-end gap-2 border-t px-4 py-3">
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={handleSave} disabled={isBusy}>Save</Button>
         </SheetFooter>

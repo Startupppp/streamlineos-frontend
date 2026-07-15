@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Download } from "lucide-react";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetBody, SheetContent, SheetFooter } from "@/components/ui/sheet";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -94,7 +94,7 @@ function FnfDetailSheetInner({ settlementId, onClose }: FnfDetailSheetInnerProps
         )}
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 flex flex-col gap-4">
+      <SheetBody className="px-6 py-4 flex flex-col gap-4">
         {isLoading ? (
           <div className="flex flex-col gap-3">
             <Skeleton className="h-16 w-full" />
@@ -119,9 +119,9 @@ function FnfDetailSheetInner({ settlementId, onClose }: FnfDetailSheetInnerProps
             )}
           </>
         ) : null}
-      </div>
+      </SheetBody>
 
-      <div className="border-t px-6 py-4 shrink-0 flex flex-col gap-2">
+      <SheetFooter className="border-t px-6 py-4 flex flex-col gap-2">
         {settlement?.statementPublishedAt && (
           <Button
             variant="outline"
@@ -172,7 +172,7 @@ function FnfDetailSheetInner({ settlementId, onClose }: FnfDetailSheetInnerProps
         )}
         {!showApprove && <div />}
         </div>
-      </div>
+      </SheetFooter>
     </>
   );
 }
@@ -189,7 +189,7 @@ export function FnfDetailSheet({ settlementId, onClose }: FnfDetailSheetProps) {
 
   return (
     <Sheet open={settlementId !== null} onOpenChange={handleOpenChange}>
-      <SheetContent className="p-0 flex flex-col sm:max-w-lg" side="right">
+      <SheetContent className="p-0 flex flex-col gap-0 overflow-hidden sm:max-w-lg" side="right">
         {settlementId !== null && (
           <FnfDetailSheetInner settlementId={settlementId} onClose={onClose} />
         )}

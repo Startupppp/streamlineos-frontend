@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import {
   Sheet,
+  SheetBody,
   SheetContent,
   SheetHeader,
   SheetTitle,
@@ -209,14 +210,14 @@ export function BreakdownSheet({
   return (
     <>
       <Sheet open={runEmployeeId !== null} onOpenChange={onClose}>
-        <SheetContent className="p-0 flex flex-col sm:max-w-2xl">
+        <SheetContent className="p-0 flex flex-col gap-0 overflow-hidden sm:max-w-2xl">
           <SheetHeader className="px-6 py-4 border-b shrink-0">
             <SheetTitle className="text-sm font-semibold">
               Salary Breakdown — {data?.userName ?? "Employee"}
             </SheetTitle>
           </SheetHeader>
 
-          <div className="flex-1 min-h-0 overflow-y-auto">
+          <SheetBody>
             {isLoading ? (
               <div className="px-6 py-8 text-center text-sm text-muted-foreground">Loading…</div>
             ) : !snapshot ? (
@@ -291,7 +292,7 @@ export function BreakdownSheet({
                 )}
               </div>
             )}
-          </div>
+          </SheetBody>
 
           {((!isLocked && canUpdate) || canManage) && (
             <div className="px-6 py-4 border-t shrink-0 flex items-center gap-2 flex-wrap">

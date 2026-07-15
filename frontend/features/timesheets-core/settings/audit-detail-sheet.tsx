@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { format, parseISO } from "date-fns";
 import {
   Sheet,
+  SheetBody,
   SheetContent,
   SheetHeader,
   SheetTitle,
@@ -108,7 +109,7 @@ interface AuditDetailSheetProps {
 export function AuditDetailSheet({ event, onOpenChange }: AuditDetailSheetProps) {
   return (
     <Sheet open={event != null} onOpenChange={onOpenChange}>
-      <SheetContent className="p-0 flex flex-col gap-0 sm:max-w-xl">
+      <SheetContent className="p-0 flex flex-col gap-0 overflow-hidden sm:max-w-xl">
         <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle className="text-sm font-semibold">Audit event</SheetTitle>
           {event && (
@@ -119,7 +120,7 @@ export function AuditDetailSheet({ event, onOpenChange }: AuditDetailSheetProps)
         </SheetHeader>
 
         {event && (
-          <div className="flex-1 min-h-0 overflow-y-auto px-6 py-5 space-y-5">
+          <SheetBody className="px-6 py-5 space-y-5">
             <div className="grid grid-cols-2 gap-4 text-xs">
               <div>
                 <p className="text-muted-foreground mb-0.5">Time</p>
@@ -151,7 +152,7 @@ export function AuditDetailSheet({ event, onOpenChange }: AuditDetailSheetProps)
                 <DiffTable before={event.before} after={event.after} />
               </div>
             )}
-          </div>
+          </SheetBody>
         )}
       </SheetContent>
     </Sheet>

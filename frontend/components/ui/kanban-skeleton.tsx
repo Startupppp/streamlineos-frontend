@@ -14,7 +14,7 @@ export function KanbanColumnSkeleton() {
       </div>
 
       <div className="flex-1 overflow-y-auto min-h-[120px] p-2 sm:p-2.5 space-y-2">
-        {Array.from({ length: 6 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <Card key={i} className="p-3 shadow-sm">
             <CardContent className="p-0 space-y-2">
 

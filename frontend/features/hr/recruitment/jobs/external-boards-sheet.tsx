@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
+  Sheet, SheetBody, SheetContent, SheetHeader, SheetTitle, SheetDescription,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -80,7 +80,7 @@ export function ExternalBoardsSheet({ jobId, onClose }: ExternalBoardsSheetProps
 
   return (
     <Sheet open onOpenChange={(v) => { if (!v) onClose(); }}>
-      <SheetContent className="sm:max-w-md flex flex-col p-0">
+      <SheetContent className="sm:max-w-md flex flex-col gap-0 overflow-hidden p-0">
         <SheetHeader className="shrink-0 px-6 py-4 border-b">
           <SheetTitle className="text-base">External Job Board Postings</SheetTitle>
           <SheetDescription className="text-xs">
@@ -111,7 +111,7 @@ export function ExternalBoardsSheet({ jobId, onClose }: ExternalBoardsSheetProps
           </Button>
         </div>
 
-        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-3">
+        <SheetBody className="px-6 py-4 space-y-3">
           {isLoading ? (
             <div className="flex justify-center py-8">
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
@@ -167,7 +167,7 @@ export function ExternalBoardsSheet({ jobId, onClose }: ExternalBoardsSheetProps
               </div>
             ))
           )}
-        </div>
+        </SheetBody>
       </SheetContent>
     </Sheet>
   );

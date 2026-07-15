@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useCallback } from "react";
+import { Fragment, useCallback, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowDown, Loader2, Send } from "lucide-react";
@@ -38,7 +38,7 @@ interface MessageItemProps {
   onForward: (msg: Message) => void;
 }
 
-function MessageItem({
+const MessageItem = memo(function MessageItem({
   msg,
   isOwn,
   showHeader,
@@ -99,7 +99,7 @@ function MessageItem({
       onForward={handleForward}
     />
   );
-}
+});
 
 interface MessageListProps {
   groupedMessages: GroupedMessages[];

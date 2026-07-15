@@ -7,9 +7,9 @@ import { Inbox, Send, CheckCircle2, Clock, AlertTriangle, Plus, FileStack, Uploa
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
-import { MetricCard } from "@/components/charts/metric-card";
+import { MetricCard, MetricCardGrid } from "@/components/charts/metric-card";
+import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useSignDashboard } from "@/hooks/api/sign/reports";
 import { CreateEnvelopeDialog } from "../components/create-envelope-dialog";
@@ -25,11 +25,7 @@ export function SignDashboard() {
   if (isLoading || !data) {
     return (
       <PageWrapper title="SignOS" subtitle="Envelopes, signatures, and completion status at a glance">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <Skeleton key={i} className="h-28" />
-          ))}
-        </div>
+        <StatCardGridSkeleton cols={4} count={12} />
       </PageWrapper>
     );
   }
@@ -54,12 +50,14 @@ export function SignDashboard() {
       }
     >
       <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-6">
-        <motion.div variants={fadeUp} className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+        <motion.div variants={fadeUp}>
+          <MetricCardGrid cols={5}>
           <MetricCard label="Awaiting me" value={data.awaitingMe} icon={Inbox} />
           <MetricCard label="Sent, pending signature" value={data.sentPending} icon={Send} />
           <MetricCard label="Completed this month" value={data.completedThisMonth} icon={CheckCircle2} />
           <MetricCard label="Expiring soon" value={data.expiringSoon} icon={Clock} />
           <MetricCard label="Failed / bounced" value={data.failedOrBounced} icon={AlertTriangle} />
+          </MetricCardGrid>
         </motion.div>
 
         <motion.div variants={fadeUp} className="grid gap-4 md:grid-cols-3">

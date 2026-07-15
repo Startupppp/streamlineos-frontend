@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
+  SheetBody,
   SheetContent,
   SheetDescription,
   SheetFooter,
@@ -153,13 +154,15 @@ function CreateDialog({
             Add a question to the interview bank.
           </SheetDescription>
         </SheetHeader>
-        <QuestionFormBody
-          form={form}
-          setForm={setForm}
-          roleOptions={roleOptions}
-          rolePickerOpen={rolePickerOpen}
-          onRolePickerOpenChange={setRolePickerOpen}
-        />
+        <SheetBody className="px-4 py-4">
+          <QuestionFormBody
+            form={form}
+            setForm={setForm}
+            roleOptions={roleOptions}
+            rolePickerOpen={rolePickerOpen}
+            onRolePickerOpenChange={setRolePickerOpen}
+          />
+        </SheetBody>
         <SheetFooter className="shrink-0 px-4 py-3 border-t flex-row gap-2">
           <Button variant="outline" className="flex-1" onClick={onClose}>
             Cancel
@@ -228,13 +231,15 @@ function EditDialog({ question, roleOptions, children }: EditDialogProps) {
             Update this question bank entry.
           </SheetDescription>
         </SheetHeader>
-        <QuestionFormBody
-          form={form}
-          setForm={setForm}
-          roleOptions={roleOptions}
-          rolePickerOpen={rolePickerOpen}
-          onRolePickerOpenChange={setRolePickerOpen}
-        />
+        <SheetBody className="px-4 py-4">
+          <QuestionFormBody
+            form={form}
+            setForm={setForm}
+            roleOptions={roleOptions}
+            rolePickerOpen={rolePickerOpen}
+            onRolePickerOpenChange={setRolePickerOpen}
+          />
+        </SheetBody>
         <SheetFooter className="shrink-0 px-4 py-3 border-t flex-row gap-2">
           <Button variant="outline" className="flex-1" onClick={handleCancelEdit}>
             Cancel

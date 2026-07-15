@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { type ComponentType } from "react";
+import { memo, type ComponentType } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
@@ -10,18 +10,18 @@ export type StatTone = "default" | "blue" | "emerald" | "amber" | "red" | "viole
 export type StatColor = StatTone | "cyan" | "green" | "gold" | "purple";
 
 const TONE_MAP: Record<StatTone, { bg: string; text: string }> = {
-  default: { bg: "bg-muted",  text: "text-muted-foreground" },
-  blue:    { bg: "bg-blue-50 dark:bg-blue-500/10",       text: "text-blue-600 dark:text-blue-400" },
+  default: { bg: "bg-muted", text: "text-muted-foreground" },
+  blue: { bg: "bg-blue-50 dark:bg-blue-500/10", text: "text-blue-600 dark:text-blue-400" },
   emerald: { bg: "bg-emerald-50 dark:bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-400" },
-  amber:   { bg: "bg-amber-50 dark:bg-amber-500/10",     text: "text-amber-600 dark:text-amber-400" },
-  red:     { bg: "bg-red-50 dark:bg-red-500/10",         text: "text-red-600 dark:text-red-400" },
-  violet:  { bg: "bg-violet-50 dark:bg-violet-500/10",   text: "text-violet-600 dark:text-violet-400" },
+  amber: { bg: "bg-amber-50 dark:bg-amber-500/10", text: "text-amber-600 dark:text-amber-400" },
+  red: { bg: "bg-red-50 dark:bg-red-500/10", text: "text-red-600 dark:text-red-400" },
+  violet: { bg: "bg-violet-50 dark:bg-violet-500/10", text: "text-violet-600 dark:text-violet-400" },
 };
 
 const COLOR_TONE: Partial<Record<StatColor, StatTone>> = {
-  cyan:   "blue",
-  green:  "emerald",
-  gold:   "amber",
+  cyan: "blue",
+  green: "emerald",
+  gold: "amber",
   purple: "violet",
 };
 
@@ -30,6 +30,36 @@ function resolveTone(tone?: StatTone, color?: StatColor): StatTone {
   if (!color) return "default";
   if (color in TONE_MAP) return color as StatTone;
   return COLOR_TONE[color] ?? "default";
+}
+
+function StatSparkLine({ data, color }: { data: number[]; color: string }) {
+  if (data.length < 2) return null;
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+  const h = 28;
+  const w = 60;
+  const points = data
+    .map((v, i) => {
+      const x = (i / (data.length - 1)) * w;
+      const y = h - ((v - min) / range) * h;
+      return `${x},${y}`;
+    })
+    .join(" ");
+
+  return (
+    <svg width={w} height={h} className="shrink-0" aria-hidden="true">
+      <polyline
+        points={points}
+        fill="none"
+        stroke={color}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        opacity="0.8"
+      />
+    </svg>
+  );
 }
 
 export interface StatCardProps {
@@ -42,15 +72,24 @@ export interface StatCardProps {
   hint?: string;
   href?: string;
   isLoading?: boolean;
+  featured?: boolean;
   className?: string;
   index?: number;
   trend?: { value: number; isPositive: boolean; label?: string };
   subtitle?: string;
+  sparkData?: number[];
+  sparkColor?: string;
 }
 
 export interface StatCardGridProps {
   children: React.ReactNode;
   cols?: 2 | 3 | 4 | 5 | 6;
+  className?: string;
+}
+
+export interface StatCardGridSkeletonProps {
+  cols?: 2 | 3 | 4 | 5 | 6;
+  count?: number;
   className?: string;
 }
 
@@ -79,7 +118,18 @@ export function StatCardGrid({ children, cols = 4, className }: StatCardGridProp
   );
 }
 
-export function StatCard({
+export function StatCardGridSkeleton({ cols = 4, count, className }: StatCardGridSkeletonProps) {
+  const itemCount = count ?? cols;
+  return (
+    <StatCardGrid cols={cols} className={className}>
+      {Array.from({ length: itemCount }).map((_, i) => (
+        <StatCard key={i} label="—" value="—" isLoading />
+      ))}
+    </StatCardGrid>
+  );
+}
+
+export const StatCard = memo(function StatCard({
   label,
   value,
   icon: Icon,
@@ -89,13 +139,15 @@ export function StatCard({
   hint,
   href,
   isLoading,
+  featured,
   className,
   index: _index,
   trend,
   subtitle,
+  sparkData,
+  sparkColor = "#3b82f6",
 }: StatCardProps) {
   const t = TONE_MAP[resolveTone(tone, color)];
-
   const effectiveHint = hint ?? subtitle;
 
   const effectiveDelta: { value: string; direction: "up" | "down" } | undefined =
@@ -111,39 +163,67 @@ export function StatCard({
     <div
       className={cn(
         "flex items-center gap-2.5 rounded-lg border border-border bg-card px-3 py-2.5 transition-colors",
+        featured && "border-primary bg-primary text-primary-foreground",
         href && "hover:bg-muted/30 cursor-pointer",
+        featured && href && "hover:bg-primary/90",
         className,
       )}
     >
       {Icon && (
-        <div className={cn("h-8 w-8 rounded-md flex items-center justify-center shrink-0", t.bg)}>
-          <Icon className={cn("h-4 w-4", t.text)} />
+        <div
+          className={cn(
+            "h-8 w-8 rounded-md flex items-center justify-center shrink-0",
+            featured ? "bg-primary-foreground/15" : t.bg,
+          )}
+        >
+          <Icon className={cn("h-4 w-4", featured ? "text-primary-foreground" : t.text)} />
         </div>
       )}
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-medium text-muted-foreground truncate">{label}</p>
+        <p
+          className={cn(
+            "text-[11px] font-medium truncate",
+            featured ? "text-primary-foreground/70" : "text-muted-foreground",
+          )}
+        >
+          {label}
+        </p>
         {isLoading ? (
-          <Skeleton className="h-5 w-14 mt-0.5" />
+          <Skeleton className={cn("h-5 w-14 mt-0.5", featured && "bg-primary-foreground/20")} />
         ) : (
-          <p className="text-lg font-semibold tabular-nums leading-tight text-foreground">{value}</p>
+          <p
+            className={cn(
+              "text-lg font-semibold tabular-nums leading-tight",
+              featured ? "text-primary-foreground" : "text-foreground",
+            )}
+          >
+            {value}
+          </p>
         )}
         {!isLoading && effectiveDelta && (
           <p
             className={cn(
               "text-[10px] font-medium",
-              effectiveDelta.direction === "up" ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400",
+              effectiveDelta.direction === "up"
+                ? "text-emerald-600 dark:text-emerald-400"
+                : "text-red-600 dark:text-red-400",
             )}
           >
             {effectiveDelta.direction === "up" ? "↑" : "↓"} {effectiveDelta.value}
           </p>
         )}
         {!isLoading && !effectiveDelta && effectiveHint && (
-          <p className="text-[10px] text-muted-foreground truncate">{effectiveHint}</p>
+          <p className={cn("text-[10px] truncate", featured ? "text-primary-foreground/70" : "text-muted-foreground")}>
+            {effectiveHint}
+          </p>
         )}
       </div>
+      {!isLoading && sparkData && sparkData.length > 1 ? (
+        <StatSparkLine data={sparkData} color={sparkColor} />
+      ) : null}
     </div>
   );
 
   if (href) return <Link href={href}>{body}</Link>;
   return body;
-}
+});

@@ -5,7 +5,9 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   Sheet,
+  SheetBody,
   SheetContent,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetDescription,
@@ -155,15 +157,15 @@ export function TemplateEditSheet({ open, onOpenChange, template }: TemplateEdit
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="p-0 flex flex-col w-full sm:max-w-md">
+      <SheetContent className="p-0 flex flex-col gap-0 overflow-hidden w-full sm:max-w-md">
         <SheetHeader className="px-6 py-4 border-b shrink-0">
           <SheetTitle>{isEdit ? "Edit Template" : "Create Template"}</SheetTitle>
           <SheetDescription>
             {isEdit ? "Update payslip template settings." : "Add a new payslip template."}
           </SheetDescription>
         </SheetHeader>
-        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
-          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+          <SheetBody className="px-6 py-4 space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="template-name">Name</Label>
               <Input
@@ -240,8 +242,8 @@ export function TemplateEditSheet({ open, onOpenChange, template }: TemplateEdit
                 onCheckedChange={handleIsDefaultChange}
               />
             </div>
-          </div>
-          <div className="flex justify-end gap-2 px-6 py-4 border-t shrink-0">
+          </SheetBody>
+          <SheetFooter className="flex justify-end gap-2 px-6 py-4 border-t">
             <Button
               type="button"
               variant="outline"
@@ -254,7 +256,7 @@ export function TemplateEditSheet({ open, onOpenChange, template }: TemplateEdit
               {isPending && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
               {isEdit ? "Save" : "Create"}
             </Button>
-          </div>
+          </SheetFooter>
         </form>
       </SheetContent>
     </Sheet>

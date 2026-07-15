@@ -1,6 +1,7 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 
 export function EmployeesGridSkeleton({ count = 15 }: { count?: number }) {
   return (
@@ -43,27 +44,14 @@ export function EmployeesLoadingSkeleton() {
       }
     >
       <div className="space-y-4">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div
-              key={`stat-${i}`}
-              className="rounded-2xl border border-border bg-card shadow-sm p-4"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="space-y-2 flex-1">
-                  <Skeleton className="h-3 w-16" />
-                  <Skeleton className="h-8 w-10" />
-                  <Skeleton className="h-2.5 w-20" />
-                </div>
-                <Skeleton className="h-7 w-7 rounded-lg shrink-0" />
-              </div>
-            </div>
-          ))}
-        </div>
+        <StatCardGridSkeleton cols={4} count={12} />
 
         <div className="grid sm:grid-cols-3 gap-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Card key={`widget-a-${i}`} className="rounded-2xl border border-border shadow-sm">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <Card
+              key={`widget-a-${i}`}
+              className="rounded-2xl border border-border bg-card shadow-sm"
+            >
               <CardContent className="p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -78,44 +66,9 @@ export function EmployeesLoadingSkeleton() {
             </Card>
           ))}
         </div>
-
-        <div className="grid sm:grid-cols-3 gap-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Card key={`widget-b-${i}`} className="rounded-2xl border border-border shadow-sm">
-              <CardContent className="p-4 space-y-2.5">
-                <div className="flex items-center gap-2">
-                  <Skeleton className="h-7 w-7 rounded-lg" />
-                  <Skeleton className="h-4 w-24" />
-                </div>
-                <Skeleton className="h-3 w-full" />
-                <Skeleton className="h-3 w-[85%]" />
-                <Skeleton className="h-3 w-[70%]" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        <div className="grid sm:grid-cols-2 gap-3">
-          {Array.from({ length: 2 }).map((_, i) => (
-            <Card key={`widget-c-${i}`} className="rounded-2xl border border-border shadow-sm">
-              <CardContent className="p-4 space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Skeleton className="h-7 w-7 rounded-lg" />
-                    <Skeleton className="h-4 w-28" />
-                  </div>
-                  <Skeleton className="h-3 w-10" />
-                </div>
-                <Skeleton className="h-3 w-full" />
-                <Skeleton className="h-3 w-[90%]" />
-                <Skeleton className="h-3 w-[72%]" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
       </div>
 
-      <Card className="rounded-2xl border border-border shadow-sm overflow-hidden mt-4">
+      <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden mt-4">
         <CardContent className="p-0">
           <div className="border-b px-4 py-3 flex items-center gap-8 bg-muted/40">
             <Skeleton className="h-4 w-28" />

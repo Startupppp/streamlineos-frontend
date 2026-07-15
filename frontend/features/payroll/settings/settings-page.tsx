@@ -17,8 +17,8 @@ export function SettingsPageContent() {
     return (
       <PageWrapper title="Payroll Settings">
         <div className="space-y-4">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="h-24 rounded-lg border border-border bg-card animate-pulse" />
           ))}
         </div>
       </PageWrapper>

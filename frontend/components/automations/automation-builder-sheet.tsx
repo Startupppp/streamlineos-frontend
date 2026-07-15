@@ -217,7 +217,7 @@ export function AutomationBuilderSheet({
         return "Webhook action needs an event name";
       }
       if (action.type === "support_assign_ticket" && !action.config.assigneeId.trim()) {
-        return "Assign ticket action needs an assignee user ID";
+        return "Assign ticket action needs an assignee selected";
       }
       if (action.type === "support_add_tag" && action.config.tagId <= 0) {
         return "Add ticket tag action needs a tag ID";

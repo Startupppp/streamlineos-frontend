@@ -20,10 +20,11 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Card, CardContent } from "@/components/ui/card";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useCourses, useMyEnrollments } from "@/hooks/api/hr/courses";
 import { useTrainingPrograms } from "@/hooks/api/hr/training";
@@ -47,14 +48,6 @@ interface CourseEnrollment {
 
 type EnrollmentStatus = CourseEnrollment["status"];
 
-interface KpiItem {
-  label: string;
-  value: string | number;
-  icon: React.ComponentType<{ className?: string }>;
-  iconBg: string;
-  iconColor: string;
-  valueColor: string;
-}
 
 interface StatusBarDatum {
   status: string;
@@ -80,50 +73,6 @@ const STATUSES: EnrollmentStatus[] = [
   "COMPLETED",
   "DROPPED",
 ];
-
-function KpiCard({ item, delay }: { item: KpiItem; delay: number }) {
-  const Icon = item.icon;
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.22, ease: "easeOut", delay }}
-    >
-      <Card className="bg-card border border-border rounded-lg shadow-sm overflow-hidden">
-        <CardContent className="p-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                {item.label}
-              </p>
-              <p className={cn("text-3xl font-bold tabular-nums leading-none", item.valueColor)}>
-                {item.value}
-              </p>
-            </div>
-            <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center shrink-0", item.iconBg)}>
-              <Icon className={cn("h-4 w-4", item.iconColor)} aria-hidden="true" />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
-}
-
-function KpiSkeletons() {
-  return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <Card key={i} className="bg-card border border-border rounded-lg shadow-sm overflow-hidden">
-          <CardContent className="p-4">
-            <Skeleton className="h-3 w-20 mb-3" />
-            <Skeleton className="h-8 w-14" />
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
-}
 
 function ChartSkeleton() {
   return (
@@ -198,40 +147,12 @@ export default function LearningAnalyticsPage() {
     [enrollments],
   );
 
-  const kpis: KpiItem[] = useMemo(
+  const kpis = useMemo(
     () => [
-      {
-        label: "Total Courses",
-        value: publishedCount,
-        icon: BookOpen,
-        iconBg: "bg-muted",
-        iconColor: "text-foreground",
-        valueColor: "text-foreground",
-      },
-      {
-        label: "Total Enrolled",
-        value: totalEnrolled,
-        icon: Users,
-        iconBg: "bg-blue-50 dark:bg-blue-500/10",
-        iconColor: "text-blue-600 dark:text-blue-400",
-        valueColor: "text-foreground",
-      },
-      {
-        label: "Avg Completion",
-        value: `${avgCompletion}%`,
-        icon: TrendingUp,
-        iconBg: "bg-amber-50 dark:bg-amber-500/10",
-        iconColor: "text-amber-600 dark:text-amber-400",
-        valueColor: "text-foreground",
-      },
-      {
-        label: "Completed",
-        value: completedCount,
-        icon: CheckCircle2,
-        iconBg: "bg-emerald-50 dark:bg-emerald-500/10",
-        iconColor: "text-emerald-600 dark:text-emerald-400",
-        valueColor: "text-foreground",
-      },
+      { label: "Total Courses", value: publishedCount, icon: BookOpen, tone: "default" as const },
+      { label: "Total Enrolled", value: totalEnrolled, icon: Users, tone: "blue" as const },
+      { label: "Avg Completion", value: `${avgCompletion}%`, icon: TrendingUp, tone: "amber" as const },
+      { label: "Completed", value: completedCount, icon: CheckCircle2, tone: "emerald" as const },
     ],
     [publishedCount, totalEnrolled, avgCompletion, completedCount],
   );
@@ -291,13 +212,25 @@ export default function LearningAnalyticsPage() {
     >
       <div className="space-y-5">
         {isLoading ? (
-          <KpiSkeletons />
+          <StatCardGridSkeleton cols={4} />
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {kpis.map((item, i) => (
-              <KpiCard key={item.label} item={item} delay={i * 0.08} />
-            ))}
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.22, ease: "easeOut" }}
+          >
+            <StatCardGrid cols={4}>
+              {kpis.map((item) => (
+                <StatCard
+                  key={item.label}
+                  label={item.label}
+                  value={item.value}
+                  icon={item.icon}
+                  tone={item.tone}
+                />
+              ))}
+            </StatCardGrid>
+          </motion.div>
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">

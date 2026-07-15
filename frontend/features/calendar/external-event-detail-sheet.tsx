@@ -1,7 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetBody, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays, ExternalLink, MapPin, Video } from "lucide-react";
@@ -15,7 +15,7 @@ interface ExternalEventDetailSheetProps {
 export function ExternalEventDetailSheet({ event, onClose }: ExternalEventDetailSheetProps) {
   return (
     <Sheet open={event !== null} onOpenChange={onClose}>
-      <SheetContent side="right" className="w-full sm:max-w-sm p-0 flex flex-col">
+      <SheetContent side="right" className="w-full sm:max-w-sm p-0 flex flex-col gap-0 overflow-hidden">
         <SheetHeader className="px-5 py-4 border-b shrink-0">
           <SheetTitle className="text-base leading-snug">{event?.title}</SheetTitle>
           {event?.resource?.accountEmail && (
@@ -25,7 +25,7 @@ export function ExternalEventDetailSheet({ event, onClose }: ExternalEventDetail
           )}
         </SheetHeader>
         {event && (
-          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+          <SheetBody className="px-5 py-4 space-y-3">
             <div className="flex items-start gap-2 text-sm text-muted-foreground">
               <CalendarDays className="h-3.5 w-3.5 shrink-0 mt-0.5" />
               <span>
@@ -43,9 +43,9 @@ export function ExternalEventDetailSheet({ event, onClose }: ExternalEventDetail
             <p className="text-[11px] text-muted-foreground">
               Read-only event from a connected account. Edit it in its own calendar.
             </p>
-          </div>
+          </SheetBody>
         )}
-        <div className="px-5 py-3 border-t shrink-0 flex flex-wrap items-center justify-end gap-2">
+        <SheetFooter className="px-5 py-3 flex flex-wrap items-center justify-end gap-2 border-t">
           {event?.resource?.meetingUrl && (
             <Button size="sm" asChild>
               <a href={event.resource.meetingUrl} target="_blank" rel="noopener noreferrer">
@@ -65,7 +65,7 @@ export function ExternalEventDetailSheet({ event, onClose }: ExternalEventDetail
           <Button variant="outline" size="sm" onClick={onClose}>
             Close
           </Button>
-        </div>
+        </SheetFooter>
       </SheetContent>
     </Sheet>
   );

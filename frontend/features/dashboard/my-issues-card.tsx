@@ -49,7 +49,7 @@ export const MyIssuesCard = memo(function MyIssuesCard({ tickets, isLoading, err
       <CardContent className="flex-1 overflow-hidden px-4 pt-0 pb-4" aria-live="polite">
         {isLoading ? (
           <div className="space-y-3">
-            {[1, 2, 3].map((i) => (
+            {Array.from({ length: 9 }).map((_, i) => (
               <Skeleton key={`ticket-skel-${i}`} className="h-14 w-full" />
             ))}
           </div>

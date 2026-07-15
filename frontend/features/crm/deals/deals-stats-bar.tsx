@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { TrendingUp, IndianRupee, Trophy, Target } from "lucide-react";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { formatINRCompact } from "@/lib/format-utils";
@@ -11,7 +12,7 @@ interface DealsStatsBarProps {
   avgProbability: number;
 }
 
-export function DealsStatsBar({ total, totalValue, wonValue, avgProbability }: DealsStatsBarProps) {
+export const DealsStatsBar = memo(function DealsStatsBar({ total, totalValue, wonValue, avgProbability }: DealsStatsBarProps) {
   return (
     <StatCardGrid cols={4}>
       <StatCard label="Total Deals" value={total} icon={TrendingUp} tone="blue" />
@@ -20,4 +21,4 @@ export function DealsStatsBar({ total, totalValue, wonValue, avgProbability }: D
       <StatCard label="Avg Probability" value={`${avgProbability}%`} icon={Target} tone="amber" />
     </StatCardGrid>
   );
-}
+});

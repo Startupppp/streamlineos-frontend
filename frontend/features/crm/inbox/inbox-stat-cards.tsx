@@ -1,6 +1,7 @@
 "use client";
 
-import { AlertCircle, Clock, ShieldAlert, TrendingDown } from "lucide-react";
+import { memo } from "react";
+import { Clock, AlertCircle, ShieldAlert, TrendingDown } from "lucide-react";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import type { CrmInboxCounts } from "@/types/crm";
 
@@ -9,7 +10,7 @@ interface InboxStatCardsProps {
   isLoading: boolean;
 }
 
-export function InboxStatCards({ counts, isLoading }: InboxStatCardsProps) {
+export const InboxStatCards = memo(function InboxStatCards({ counts, isLoading }: InboxStatCardsProps) {
   return (
     <StatCardGrid cols={4}>
       <StatCard
@@ -42,4 +43,4 @@ export function InboxStatCards({ counts, isLoading }: InboxStatCardsProps) {
       />
     </StatCardGrid>
   );
-}
+});

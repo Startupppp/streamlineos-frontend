@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetBody, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
 import { usePayoutBatch } from "@/hooks/api/payroll/payout-batches";
@@ -143,7 +143,7 @@ export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailShe
   return (
     <>
       <Sheet open={batchId !== null} onOpenChange={(open) => !open && onClose()}>
-        <SheetContent className="p-0 flex flex-col gap-0 sm:max-w-2xl">
+        <SheetContent className="p-0 flex flex-col gap-0 overflow-hidden sm:max-w-2xl">
           <div className="shrink-0 px-6 py-4 border-b">
             <SheetHeader>
               <SheetTitle className="flex items-center gap-2">
@@ -166,7 +166,7 @@ export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailShe
             </SheetHeader>
           </div>
 
-          <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
+          <SheetBody className="px-6 py-4">
             {isLoading ? (
               <DataTableSkeleton rows={8} columns={canManage ? 7 : 6} />
             ) : (
@@ -182,7 +182,7 @@ export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailShe
                 minWidth="640px"
               />
             )}
-          </div>
+          </SheetBody>
         </SheetContent>
       </Sheet>
 

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { UserCombobox } from "@/components/ui/user-combobox";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -233,9 +234,13 @@ function ChannelDialog({ channel, onClose }: ChannelDialogProps) {
                 name="ownerUserId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Inbox owner (user ID)</FormLabel>
+                    <FormLabel>Inbox owner</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Org member user ID" />
+                      <UserCombobox
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Select org member…"
+                      />
                     </FormControl>
                     <FormDescription>
                       The org member this shared inbox is attributed to.

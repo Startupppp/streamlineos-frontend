@@ -3,7 +3,7 @@
 import { use, useState, useCallback } from "react";
 import { useModules, useCreateModule } from "@/hooks/api/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { ModuleCard, ModuleCardSkeleton } from "@/features/projects/modules/module-card";
 import { EmptyTasksIllustration } from "@/components/illustrations";
@@ -407,12 +407,12 @@ export default function ModulesPage({
     >
       <PmPageShell>
         <PmSection index={0}>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            <StatCard label="Total" value={total} icon={Package} tone="blue" index={0} />
-            <StatCard label="In Progress" value={inProgress} icon={Activity} tone="blue" index={1} />
-            <StatCard label="Completed" value={completed} icon={CheckCircle2} tone="emerald" index={2} />
-            <StatCard label="Planned" value={planned} icon={Calendar} tone="amber" index={3} />
-          </div>
+          <StatCardGrid cols={4}>
+            <StatCard label="Total" value={total} icon={Package} tone="blue" />
+            <StatCard label="In Progress" value={inProgress} icon={Activity} tone="blue" />
+            <StatCard label="Completed" value={completed} icon={CheckCircle2} tone="emerald" />
+            <StatCard label="Planned" value={planned} icon={Calendar} tone="amber" />
+          </StatCardGrid>
         </PmSection>
 
         {!modules?.length ? (

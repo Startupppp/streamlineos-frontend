@@ -1,7 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetBody, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays } from "lucide-react";
@@ -33,7 +33,7 @@ export function HrEventDetailSheet({ event, onClose }: HrEventDetailSheetProps) 
           )}
         </SheetHeader>
         {event && (
-          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+          <SheetBody className="px-5 py-4 space-y-3">
             <div className="flex items-start gap-2 text-sm text-muted-foreground">
               <CalendarDays className="h-3.5 w-3.5 shrink-0 mt-0.5" />
               <span>{format(event.start, "EEE, MMM d, yyyy")}</span>
@@ -41,7 +41,7 @@ export function HrEventDetailSheet({ event, onClose }: HrEventDetailSheetProps) 
             <p className="text-[11px] text-muted-foreground">
               Read-only HR event. Manage it from the HR module.
             </p>
-          </div>
+          </SheetBody>
         )}
         <div className="px-5 py-3 border-t shrink-0 flex justify-end">
           <Button variant="outline" size="sm" onClick={onClose}>

@@ -1,6 +1,7 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent } from "@/components/ui/card";
+import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 
 export function PayrollPageSkeleton() {
   return (
@@ -21,11 +22,7 @@ export function PayrollPageSkeleton() {
       }
     >
       <div className="space-y-4">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-[72px] rounded-lg" />
-          ))}
-        </div>
+        <StatCardGridSkeleton cols={4} count={12} />
         <Card>
           <CardContent className="p-0">
             <div className="border-b px-3 py-2 flex gap-2">

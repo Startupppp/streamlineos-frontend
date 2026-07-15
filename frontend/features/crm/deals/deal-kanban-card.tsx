@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, memo, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { User, Calendar, MoreHorizontal, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -59,7 +59,7 @@ function StageMenuItem({
   );
 }
 
-export function DealKanbanCard({ deal, onStageChange, onDelete, onOpen }: DealKanbanCardProps) {
+export const DealKanbanCard = memo(function DealKanbanCard({ deal, onStageChange, onDelete, onOpen }: DealKanbanCardProps) {
   const router = useRouter();
   const { data: dealStages = [] } = useCrmStages("deal");
   const handleDelete = useCallback(() => onDelete(deal.id), [deal.id, onDelete]);
@@ -157,4 +157,4 @@ export function DealKanbanCard({ deal, onStageChange, onDelete, onOpen }: DealKa
       </CardContent>
     </Card>
   );
-}
+});

@@ -13,8 +13,8 @@ export function GoalDetailSkeleton() {
         <Skeleton className="h-2 w-full rounded-full" />
       </div>
       <div className="space-y-2">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="h-20 w-full rounded-xl" />
+        {Array.from({ length: 12 }).map((_, i) => (
+          <Skeleton key={i} className="h-20 w-full rounded-xl border border-border bg-card" />
         ))}
       </div>
     </PmPageShell>

@@ -1,41 +1,8 @@
 "use client";
 
 import { memo } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import type { ProjectAnalytics } from "@/types/projects";
-import { PM_PANEL } from "@/features/projects/shared/pm-chrome";
-import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
-
-interface KpiCardProps {
-  label: string;
-  value: string | number;
-  sub?: string;
-  accent?: boolean;
-}
-
-const KpiCard = memo(function KpiCard({ label, value, sub, accent }: KpiCardProps) {
-  return (
-    <div className={cn(PM_PANEL, "flex min-w-0 flex-col gap-0.5 px-4 py-3")}>
-      <span className={cn("text-[11px] font-medium leading-none text-muted-foreground", TEXT_ONE_LINE)}>
-        {label}
-      </span>
-      <span
-        className={cn(
-          "text-2xl font-bold tabular-nums leading-tight tracking-tight",
-          accent ? "text-primary" : "text-foreground",
-        )}
-      >
-        {value}
-      </span>
-      {sub ? (
-        <span className={cn("text-[11px] leading-none text-muted-foreground", TEXT_ONE_LINE)}>
-          {sub}
-        </span>
-      ) : null}
-    </div>
-  );
-});
 
 interface AnalyticsKpiStripProps {
   analytics: ProjectAnalytics;
@@ -84,38 +51,30 @@ export const AnalyticsKpiStrip = memo(function AnalyticsKpiStrip({
       : null;
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mb-4">
-      <KpiCard label="Total tickets" value={derivedTotal} />
-      <KpiCard label="Open" value={openCount} />
-      <KpiCard label="Completed" value={doneCount} />
-      <KpiCard label="Completion rate" value={`${completionPct}%`} accent />
-      {onTimePct != null && (
-        <KpiCard label="On-time rate" value={`${onTimePct}%`} />
-      )}
+    <StatCardGrid cols={6} className="mb-4">
+      <StatCard label="Total tickets" value={derivedTotal} />
+      <StatCard label="Open" value={openCount} />
+      <StatCard label="Completed" value={doneCount} tone="emerald" />
+      <StatCard label="Completion rate" value={`${completionPct}%`} tone="blue" />
+      {onTimePct != null && <StatCard label="On-time rate" value={`${onTimePct}%`} tone="blue" />}
       {overdueTickets > 0 && (
-        <KpiCard
+        <StatCard
           label="Overdue"
           value={overdueTickets}
-          sub="tickets past due"
-          accent={overdueTickets > 0}
+          hint="tickets past due"
+          tone="red"
         />
       )}
       {avgVelocity != null && (
-        <KpiCard label="Avg velocity" value={avgVelocity} sub="pts / cycle" />
+        <StatCard label="Avg velocity" value={avgVelocity} hint="pts / cycle" tone="amber" />
       )}
       {velocityScore != null && avgVelocity == null && (
-        <KpiCard label="Velocity score" value={`${velocityScore}%`} />
+        <StatCard label="Velocity score" value={`${velocityScore}%`} tone="amber" />
       )}
-    </div>
+    </StatCardGrid>
   );
 });
 
 export function AnalyticsKpiStripSkeleton() {
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mb-4">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <Skeleton key={i} className="h-[72px] w-full rounded-xl" />
-      ))}
-    </div>
-  );
+  return <StatCardGridSkeleton cols={6} className="mb-4" />;
 }

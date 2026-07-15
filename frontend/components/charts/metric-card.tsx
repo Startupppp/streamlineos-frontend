@@ -1,9 +1,7 @@
 "use client";
 
-import { TrendingUp, TrendingDown, Minus } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
-import type { TrendValue } from "@/types/crm";
+import type { TrendValue } from "@/types/crm/deals";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 
 interface MetricCardProps {
   label: string;
@@ -14,79 +12,36 @@ interface MetricCardProps {
   sparkColor?: string;
 }
 
-function TrendBadge({ trend }: { trend: TrendValue }) {
-  const Icon = trend.isPositive ? TrendingUp : trend.value === 0 ? Minus : TrendingDown;
+export function MetricCard({
+  label,
+  value,
+  icon,
+  trend,
+  sparkData,
+  sparkColor,
+}: MetricCardProps) {
   return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-0.5 text-[11px] font-medium px-1.5 py-0.5 rounded",
-        trend.value === 0
-          ? "bg-muted text-muted-foreground"
-          : trend.isPositive
-          ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-          : "bg-red-500/10 text-red-600 dark:text-red-400"
-      )}
-    >
-      <Icon className="h-2.5 w-2.5" />
-      {Math.abs(trend.value)}%
-    </span>
+    <StatCard
+      label={label}
+      value={value}
+      icon={icon}
+      trend={trend}
+      sparkData={sparkData}
+      sparkColor={sparkColor}
+    />
   );
 }
 
-function SparkLine({ data, color }: { data: number[]; color: string }) {
-  if (!data.length) return null;
-  const min = Math.min(...data);
-  const max = Math.max(...data);
-  const range = max - min || 1;
-  const h = 28;
-  const w = 60;
-  const points = data
-    .map((v, i) => {
-      const x = (i / (data.length - 1)) * w;
-      const y = h - ((v - min) / range) * h;
-      return `${x},${y}`;
-    })
-    .join(" ");
-
-  return (
-    <svg width={w} height={h} className="shrink-0" aria-hidden="true">
-      <polyline
-        points={points}
-        fill="none"
-        stroke={color}
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        opacity="0.8"
-      />
-    </svg>
-  );
+interface MetricCardGridProps {
+  children: React.ReactNode;
+  cols?: 2 | 3 | 4 | 5 | 6;
+  className?: string;
 }
 
-export function MetricCard({ label, value, icon: Icon, trend, sparkData, sparkColor = "#3b82f6" }: MetricCardProps) {
+export function MetricCardGrid({ children, cols = 4, className }: MetricCardGridProps) {
   return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0 flex-1">
-            <p className="text-xs text-muted-foreground mb-1">{label}</p>
-            <p className="text-2xl font-bold tabular-nums leading-none">{value}</p>
-            {trend && (
-              <div className="mt-2">
-                <TrendBadge trend={trend} />
-              </div>
-            )}
-          </div>
-          <div className="flex flex-col items-end gap-2 shrink-0">
-            <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center">
-              <Icon className="h-4 w-4 text-muted-foreground" />
-            </div>
-            {sparkData && sparkData.length > 1 && (
-              <SparkLine data={sparkData} color={sparkColor} />
-            )}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+    <StatCardGrid cols={cols} className={className}>
+      {children}
+    </StatCardGrid>
   );
 }

@@ -25,7 +25,7 @@ import { ClockInWidget } from "@/components/attendance/clock-in-widget";
 import { DashboardStatsSkeleton } from "@/components/ui/dashboard-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyActivityIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
@@ -329,28 +329,28 @@ export function DashboardClient() {
     >
       <div className="space-y-4">
         {statCards.length > 0 && (
-          <motion.div
-            variants={fadeUp}
-            initial="hidden"
-            animate="visible"
-            className={`grid gap-3 grid-cols-1 ${
-              statCards.length >= 4
-                ? "sm:grid-cols-2 lg:grid-cols-4"
-                : statCards.length >= 3
-                  ? "sm:grid-cols-2 md:grid-cols-3"
-                  : "sm:grid-cols-2"
-            }`}
-          >
-            {statCards.map((stat, i) => (
-              <StatCard
-                key={stat.id}
-                label={stat.label}
-                value={stat.value}
-                icon={stat.icon}
-                href={stat.href}
-                index={i}
-              />
-            ))}
+          <motion.div variants={fadeUp} initial="hidden" animate="visible">
+            <StatCardGrid
+              cols={
+                statCards.length >= 5
+                  ? 5
+                  : statCards.length >= 4
+                    ? 4
+                    : statCards.length >= 3
+                      ? 3
+                      : 2
+              }
+            >
+              {statCards.map((stat) => (
+                <StatCard
+                  key={stat.id}
+                  label={stat.label}
+                  value={stat.value}
+                  icon={stat.icon}
+                  href={stat.href}
+                />
+              ))}
+            </StatCardGrid>
           </motion.div>
         )}
 

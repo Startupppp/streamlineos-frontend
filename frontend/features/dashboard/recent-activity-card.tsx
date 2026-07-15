@@ -50,7 +50,7 @@ export const RecentActivityCard = memo(function RecentActivityCard({ items, isLo
       <CardContent className="flex-1 overflow-hidden px-4 pt-0 pb-4" aria-live="polite">
         {isLoading ? (
           <div className="space-y-3">
-            {[1, 2, 3].map((i) => (
+            {Array.from({ length: 9 }).map((_, i) => (
               <Skeleton key={`activity-skel-${i}`} className="h-14 w-full" />
             ))}
           </div>

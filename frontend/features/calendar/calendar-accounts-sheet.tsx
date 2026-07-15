@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { memo, useCallback, useState } from "react";
+import { Sheet, SheetBody, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -53,7 +53,7 @@ interface AccountRowProps {
   onDisconnect: (connection: IntegrationConnection) => void;
 }
 
-function AccountRow({
+const AccountRow = memo(function AccountRow({
   connection,
   index,
   isHidden,
@@ -137,7 +137,7 @@ function AccountRow({
       )}
     </div>
   );
-}
+});
 
 export function CalendarAccountsSheet({ open, onClose }: CalendarAccountsSheetProps) {
   const { data: connections, isLoading, isError, refetch } = useIntegrationConnections();
@@ -215,13 +215,11 @@ export function CalendarAccountsSheet({ open, onClose }: CalendarAccountsSheetPr
   return (
     <>
       <Sheet open={open} onOpenChange={onClose}>
-        <SheetContent side="right" className="w-full sm:max-w-lg gap-0 p-0 flex flex-col">
+        <SheetContent side="right" className="w-full sm:max-w-lg gap-0 p-0 flex flex-col overflow-hidden">
           <SheetHeader className="px-4 py-3 border-b shrink-0">
             <SheetTitle className="text-base">Calendar accounts</SheetTitle>
           </SheetHeader>
-          <div
-            className="order-2 sm:order-3 flex flex-col flex-1 min-h-0 overflow-y-auto px-4 py-2"
-          >
+          <SheetBody className="order-2 sm:order-3 flex flex-col px-4 py-2">
             {isLoading ? (
               <div className="space-y-2">
                 <Skeleton className="h-14 w-full" />
@@ -260,7 +258,7 @@ export function CalendarAccountsSheet({ open, onClose }: CalendarAccountsSheetPr
                 ))}
               </div>
             )}
-          </div>
+          </SheetBody>
           {canManage && (
             <div className="order-3 sm:order-2 px-4 py-2 border-t sm:border-t-0 sm:border-b shrink-0 flex flex-row flex-wrap gap-2">
               <Button

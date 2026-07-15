@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, memo } from "react";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useReferenceChecks,
@@ -17,7 +17,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger,
+  Sheet, SheetBody, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger,
 } from "@/components/ui/sheet";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { toast } from "sonner";
@@ -123,7 +123,9 @@ export function ReferenceChecksTab({ candidateId }: Props) {
   if (isLoading) {
     return (
       <div className="space-y-2">
-        {[1, 2].map((i) => <Skeleton key={i} className="h-24 w-full rounded-2xl" />)}
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Skeleton key={i} className="h-24 w-full rounded-2xl" />
+        ))}
       </div>
     );
   }
@@ -146,7 +148,7 @@ export function ReferenceChecksTab({ candidateId }: Props) {
               <SheetTitle className="text-base font-semibold">Add Reference</SheetTitle>
               <SheetDescription className="text-xs">Add a professional reference contact to track verification.</SheetDescription>
             </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+            <SheetBody className="space-y-4 px-4 py-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-foreground/80">
                   Reference Name<span className="text-rose-500 ml-0.5">*</span>
@@ -181,7 +183,7 @@ export function ReferenceChecksTab({ candidateId }: Props) {
                 <label className="text-xs font-semibold text-foreground/80">Notes</label>
                 <Textarea placeholder="Any additional context or notes..." value={notes} onChange={handleNotesChange} rows={3} />
               </div>
-            </div>
+            </SheetBody>
             <SheetFooter className="shrink-0 px-4 py-3 border-t flex-row gap-2">
               <Button variant="outline" className="flex-1 h-9" onClick={handleCancel}>Cancel</Button>
               <Button className="flex-1 h-9" onClick={handleCreate} disabled={createCheck.isPending}>
@@ -210,7 +212,7 @@ export function ReferenceChecksTab({ candidateId }: Props) {
   );
 }
 
-function ReferenceCheckCard({
+const ReferenceCheckCard = memo(function ReferenceCheckCard({
   check,
   candidateId,
 }: {
@@ -343,4 +345,4 @@ function ReferenceCheckCard({
       </div>
     </div>
   );
-}
+});

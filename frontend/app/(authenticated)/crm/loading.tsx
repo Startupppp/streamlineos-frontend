@@ -1,21 +1,13 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 
 export default function CrmHubLoading() {
   return (
     <PageWrapper title="CRM" subtitle="Command center">
       <div className="space-y-4 pb-4">
-        <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <Card key={i} className="shadow-sm">
-              <CardContent className="p-3 space-y-1.5">
-                <Skeleton className="h-3 w-20" />
-                <Skeleton className="h-6 w-16" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <StatCardGridSkeleton cols={4} count={12} />
 
         <div className="flex items-center gap-4 flex-wrap px-1">
           {Array.from({ length: 12 }).map((_, i) => (

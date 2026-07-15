@@ -7,7 +7,9 @@ import { z } from "zod";
 import { Loader2 } from "lucide-react";
 import {
   Sheet,
+  SheetBody,
   SheetContent,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
@@ -132,7 +134,7 @@ export function RateFormSheet({ open, onOpenChange, rate }: RateFormSheetProps) 
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="p-0 flex flex-col gap-0 sm:max-w-md">
+      <SheetContent className="p-0 flex flex-col gap-0 overflow-hidden sm:max-w-md">
         <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle className="text-sm font-semibold">
             {rate ? "Edit rate" : "Add rate"}
@@ -141,9 +143,9 @@ export function RateFormSheet({ open, onOpenChange, rate }: RateFormSheetProps) 
 
         <form
           onSubmit={handleSave}
-          className="flex-1 min-h-0 overflow-y-auto flex flex-col"
+          className="flex flex-col flex-1 min-h-0 overflow-hidden"
         >
-          <div className="flex-1 px-6 py-5 space-y-4">
+          <SheetBody className="px-6 py-5 space-y-4">
             <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
               Scope (optional)
             </p>
@@ -273,9 +275,9 @@ export function RateFormSheet({ open, onOpenChange, rate }: RateFormSheetProps) 
                 </div>
               </div>
             </div>
-          </div>
+          </SheetBody>
 
-          <div className="shrink-0 border-t px-6 py-4 grid grid-cols-2 gap-2">
+          <SheetFooter className="border-t px-6 py-4 grid grid-cols-2 gap-2">
             <Button
               type="button"
               variant="outline"
@@ -295,7 +297,7 @@ export function RateFormSheet({ open, onOpenChange, rate }: RateFormSheetProps) 
               {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
               {rate ? "Save changes" : "Add rate"}
             </Button>
-          </div>
+          </SheetFooter>
         </form>
       </SheetContent>
     </Sheet>

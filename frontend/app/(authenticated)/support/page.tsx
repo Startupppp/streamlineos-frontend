@@ -12,7 +12,7 @@ import {
   Shield,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MetricCard } from "@/components/charts/metric-card";
+import { MetricCard, MetricCardGrid } from "@/components/charts/metric-card";
 import { MiniAreaChart } from "@/components/charts/mini-area-chart";
 import { MiniDonutChart } from "@/components/charts/mini-donut-chart";
 import { ActivityFeed } from "@/components/charts/activity-feed";
@@ -22,6 +22,7 @@ import { useSupportDashboard } from "@/hooks/api";
 import { staggerContainer, fadeUp, slideInLeft } from "@/lib/motion-variants";
 import { safeMax, calcPercent } from "@/lib/format-utils";
 import { getColorSafe, onlineStatusColors, sparkColors } from "@/lib/theme-constants";
+import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ErrorState } from "@/components/shared/error-state";
@@ -105,9 +106,7 @@ export default function SupportDashboardPage() {
         subtitle="Real-time insights into customer support performance across all channels"
       >
         <div className="flex flex-1 min-h-0 flex-col space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-28" />)}
-          </div>
+          <StatCardGridSkeleton cols={4} count={12} />
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-12">
             <Skeleton className="h-72 lg:col-span-5" />
             <Skeleton className="h-72 lg:col-span-7" />
@@ -150,35 +149,37 @@ export default function SupportDashboardPage() {
       animate="visible"
     >
 
-      <motion.div variants={fadeUp} className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <MetricCard
-          label="Open Tickets"
-          value={supportDashboardStats.openTickets.value}
-          icon={Ticket}
-          trend={supportDashboardStats.openTickets.trend}
-          sparkColor={sparkColors.blue}
-        />
-        <MetricCard
-          label="Avg Resolution Time"
-          value={supportDashboardStats.avgResolution.value}
-          icon={Clock}
-          trend={supportDashboardStats.avgResolution.trend}
-          sparkColor={sparkColors.amber}
-        />
-        <MetricCard
-          label="CSAT Score"
-          value={supportDashboardStats.csatScore.value}
-          icon={Star}
-          trend={supportDashboardStats.csatScore.trend}
-          sparkColor={sparkColors.green}
-        />
-        <MetricCard
-          label="Response Rate"
-          value={supportDashboardStats.responseRate.value}
-          icon={Zap}
-          trend={supportDashboardStats.responseRate.trend}
-          sparkColor={sparkColors.purple}
-        />
+      <motion.div variants={fadeUp}>
+        <MetricCardGrid cols={4}>
+          <MetricCard
+            label="Open Tickets"
+            value={supportDashboardStats.openTickets.value}
+            icon={Ticket}
+            trend={supportDashboardStats.openTickets.trend}
+            sparkColor={sparkColors.blue}
+          />
+          <MetricCard
+            label="Avg Resolution Time"
+            value={supportDashboardStats.avgResolution.value}
+            icon={Clock}
+            trend={supportDashboardStats.avgResolution.trend}
+            sparkColor={sparkColors.amber}
+          />
+          <MetricCard
+            label="CSAT Score"
+            value={supportDashboardStats.csatScore.value}
+            icon={Star}
+            trend={supportDashboardStats.csatScore.trend}
+            sparkColor={sparkColors.green}
+          />
+          <MetricCard
+            label="Response Rate"
+            value={supportDashboardStats.responseRate.value}
+            icon={Zap}
+            trend={supportDashboardStats.responseRate.trend}
+            sparkColor={sparkColors.purple}
+          />
+        </MetricCardGrid>
       </motion.div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-12">

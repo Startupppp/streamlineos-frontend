@@ -1,10 +1,12 @@
 "use client";
 
-import { useCallback } from "react";
+import { memo, useCallback } from "react";
 import Link from "next/link";
 import {
   Sheet,
+  SheetBody,
   SheetContent,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
@@ -24,7 +26,7 @@ interface StatRowProps {
   highlight?: boolean;
 }
 
-function StatRow({ label, value, highlight }: StatRowProps) {
+const StatRow = memo(function StatRow({ label, value, highlight }: StatRowProps) {
   return (
     <div className="flex items-center justify-between py-1.5 border-b border-border/50 last:border-0">
       <span className="text-xs text-muted-foreground">{label}</span>
@@ -33,7 +35,7 @@ function StatRow({ label, value, highlight }: StatRowProps) {
       </span>
     </div>
   );
-}
+});
 
 export function PayrollRowDetailSheet({
   row,
@@ -44,7 +46,7 @@ export function PayrollRowDetailSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="p-0 flex flex-col gap-0 sm:max-w-lg">
+      <SheetContent className="p-0 flex flex-col gap-0 overflow-hidden sm:max-w-lg">
         <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle className="text-base leading-tight truncate">
             {row?.userName ?? "Employee"}
@@ -54,7 +56,7 @@ export function PayrollRowDetailSheet({
           )}
         </SheetHeader>
 
-        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-5 space-y-5">
+        <SheetBody className="px-6 py-5 space-y-5">
           {row && (
             <>
               <div className="grid grid-cols-3 gap-2">
@@ -118,9 +120,9 @@ export function PayrollRowDetailSheet({
               </div>
             </>
           )}
-        </div>
+        </SheetBody>
 
-        <div className="shrink-0 border-t px-6 py-4">
+        <SheetFooter className="border-t px-6 py-4">
           <Button
             variant="outline"
             size="sm"
@@ -129,7 +131,7 @@ export function PayrollRowDetailSheet({
           >
             Close
           </Button>
-        </div>
+        </SheetFooter>
       </SheetContent>
     </Sheet>
   );

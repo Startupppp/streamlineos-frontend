@@ -1,6 +1,6 @@
 "use client";
 
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetBody, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSurveyResponse, type SurveyResponseAnswer } from "@/hooks/api/surveys/analytics";
@@ -28,11 +28,11 @@ export function ResponseDetailSheet({ surveyId, sessionId, open, onOpenChange }:
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-md">
-        <SheetHeader>
+      <SheetContent className="flex flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
+        <SheetHeader className="shrink-0 px-6 py-4 border-b">
           <SheetTitle>Response detail</SheetTitle>
         </SheetHeader>
-        <div className="space-y-4 overflow-y-auto px-4 py-2">
+        <SheetBody className="space-y-4 px-6 py-4">
           {isLoading ? (
             <Skeleton className="h-40 w-full" />
           ) : data ? (
@@ -55,7 +55,7 @@ export function ResponseDetailSheet({ surveyId, sessionId, open, onOpenChange }:
           ) : (
             <p className="text-sm text-muted-foreground">Response not found.</p>
           )}
-        </div>
+        </SheetBody>
       </SheetContent>
     </Sheet>
   );

@@ -4,7 +4,9 @@ import { useState } from "react";
 import { toast } from "sonner";
 import {
   Sheet,
+  SheetBody,
   SheetContent,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
@@ -111,7 +113,7 @@ export function DeclarationReviewSheet({ declaration, onClose }: DeclarationRevi
   return (
     <>
       <Sheet open onOpenChange={onClose}>
-        <SheetContent className="flex flex-col p-0 sm:max-w-md">
+        <SheetContent className="flex flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
           <SheetHeader className="border-b px-6 py-4 shrink-0">
             <div className="flex items-center gap-2">
               <SheetTitle className="flex-1">Tax Declaration</SheetTitle>
@@ -123,7 +125,7 @@ export function DeclarationReviewSheet({ declaration, onClose }: DeclarationRevi
             </div>
           </SheetHeader>
 
-          <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-5">
+          <SheetBody className="px-6 py-4 space-y-5">
             <div className="space-y-1">
               <p className="text-sm font-medium">{declaration.userName}</p>
               <p className="text-xs text-muted-foreground">{declaration.userEmail}</p>
@@ -159,9 +161,9 @@ export function DeclarationReviewSheet({ declaration, onClose }: DeclarationRevi
                 </tbody>
               </table>
             </div>
-          </div>
+          </SheetBody>
 
-          <div className="border-t px-6 py-4 shrink-0 grid grid-cols-2 gap-2">
+          <SheetFooter className="border-t px-6 py-4 grid grid-cols-2 gap-2">
             {canAct ? (
               <>
                 <Button
@@ -183,7 +185,7 @@ export function DeclarationReviewSheet({ declaration, onClose }: DeclarationRevi
                 Close
               </Button>
             )}
-          </div>
+          </SheetFooter>
         </SheetContent>
       </Sheet>
 

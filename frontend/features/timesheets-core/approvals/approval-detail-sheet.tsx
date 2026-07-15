@@ -5,7 +5,9 @@ import { format, parseISO } from "date-fns";
 import { CheckCircle, XCircle } from "lucide-react";
 import {
   Sheet,
+  SheetBody,
   SheetContent,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetDescription,
@@ -108,8 +110,8 @@ export function ApprovalDetailSheet({
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent className="overflow-y-auto sm:max-w-lg flex flex-col gap-0 pb-6">
-        <SheetHeader className="pb-3">
+      <SheetContent className="p-0 flex flex-col gap-0 overflow-hidden sm:max-w-lg">
+        <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle className="text-sm font-semibold">
             {period?.user?.name ?? period?.user?.email ?? "Timesheet"}
           </SheetTitle>
@@ -120,6 +122,7 @@ export function ApprovalDetailSheet({
           </SheetDescription>
         </SheetHeader>
 
+        <SheetBody className="px-6 py-4">
         {period && (
           <div className="flex items-center gap-2 mb-3 flex-wrap">
             <Badge
@@ -231,10 +234,10 @@ export function ApprovalDetailSheet({
             })}
           </div>
         )}
+        </SheetBody>
 
         {isActionable && (
-          <>
-            <Separator className="mt-4 mb-3" />
+          <SheetFooter className="flex-col items-stretch gap-3 border-t px-6 py-4">
             {rejectMode ? (
               <div className="space-y-2">
                 <Label htmlFor="reject-reason" className="text-xs">
@@ -292,7 +295,7 @@ export function ApprovalDetailSheet({
                 </Button>
               </div>
             )}
-          </>
+          </SheetFooter>
         )}
       </SheetContent>
     </Sheet>

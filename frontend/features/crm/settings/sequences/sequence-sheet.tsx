@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetBody, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Form,
@@ -352,10 +352,10 @@ export function SequenceSheet({ sequence, open, onOpenChange }: Props) {
             )}
           </TabsList>
 
-          <TabsContent value="details" className="flex-1 min-h-0 overflow-y-auto mt-0">
+          <TabsContent value="details" className="flex flex-col flex-1 min-h-0 mt-0 overflow-hidden">
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
-                <div className="flex-1 px-6 py-4 space-y-5">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+                <SheetBody className="px-6 py-4 space-y-5">
                   <FormField
                     control={form.control}
                     name="name"
@@ -418,23 +418,27 @@ export function SequenceSheet({ sequence, open, onOpenChange }: Props) {
                       </FormItem>
                     )}
                   />
-                </div>
-                <div className="shrink-0 px-6 py-4 border-t">
+                </SheetBody>
+                <SheetFooter className="shrink-0 px-6 py-4 border-t">
                   <LoadingButton type="submit" isPending={isPending} className="w-full">
                     {isEdit ? "Save Changes" : "Create Sequence"}
                   </LoadingButton>
-                </div>
+                </SheetFooter>
               </form>
             </Form>
           </TabsContent>
 
           {isEdit && sequence && (
             <>
-              <TabsContent value="steps" className="flex-1 min-h-0 overflow-y-auto mt-0 px-6 py-4">
-                <StepsTab sequenceId={sequence.id} />
+              <TabsContent value="steps" className="flex flex-col flex-1 min-h-0 mt-0 overflow-hidden">
+                <SheetBody className="px-6 py-4">
+                  <StepsTab sequenceId={sequence.id} />
+                </SheetBody>
               </TabsContent>
-              <TabsContent value="enrollments" className="flex-1 min-h-0 overflow-y-auto mt-0 px-6 py-4">
-                <EnrollmentsTab sequenceId={sequence.id} />
+              <TabsContent value="enrollments" className="flex flex-col flex-1 min-h-0 mt-0 overflow-hidden">
+                <SheetBody className="px-6 py-4">
+                  <EnrollmentsTab sequenceId={sequence.id} />
+                </SheetBody>
               </TabsContent>
             </>
           )}

@@ -7,7 +7,9 @@ import { z } from "zod";
 import { toast } from "sonner";
 import {
   Sheet,
+  SheetBody,
   SheetContent,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
@@ -156,7 +158,7 @@ export function SalaryProfileSheet({
 
   return (
     <Sheet open={open} onOpenChange={onClose}>
-      <SheetContent className="p-0 flex flex-col sm:max-w-lg">
+      <SheetContent className="p-0 flex flex-col gap-0 overflow-hidden sm:max-w-lg">
         <SheetHeader className="px-6 py-4 border-b shrink-0">
           <SheetTitle className="text-sm font-semibold">
             {isEdit ? "Edit Salary Profile" : "Create Salary Profile"}
@@ -165,9 +167,9 @@ export function SalaryProfileSheet({
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleSubmit)}
-            className="flex flex-col flex-1 overflow-hidden"
+            className="flex flex-col flex-1 min-h-0 overflow-hidden"
           >
-            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
+            <SheetBody className="px-6 py-4 space-y-3">
               {showPicker && (
                 <FormItem>
                   <FormLabel>Employee *</FormLabel>
@@ -300,8 +302,8 @@ export function SalaryProfileSheet({
                   </FormItem>
                 )}
               />
-            </div>
-            <div className="px-6 py-4 border-t flex justify-end gap-2 shrink-0">
+            </SheetBody>
+            <SheetFooter className="border-t px-6 py-4 flex justify-end gap-2">
               <Button type="button" variant="outline" size="sm" onClick={onClose}>
                 Cancel
               </Button>
@@ -312,7 +314,7 @@ export function SalaryProfileSheet({
               >
                 {isEdit ? "Update" : "Create"}
               </Button>
-            </div>
+            </SheetFooter>
           </form>
         </Form>
       </SheetContent>

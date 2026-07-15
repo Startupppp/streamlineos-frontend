@@ -3,6 +3,7 @@
 import { useState } from "react";
 import {
   Sheet,
+  SheetBody,
   SheetContent,
   SheetHeader,
   SheetTitle,
@@ -110,7 +111,7 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
           </div>
         </SheetHeader>
 
-        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-5">
+        <SheetBody className="px-6 py-5">
         {isLoading && <ProfileSkeleton />}
 
         {!isLoading && user && (
@@ -294,7 +295,7 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
             )}
           </>
         )}
-        </div>
+        </SheetBody>
       </SheetContent>
     </Sheet>
   );

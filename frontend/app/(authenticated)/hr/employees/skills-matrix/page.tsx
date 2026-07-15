@@ -105,7 +105,7 @@ export default function SkillsMatrixPage() {
             <table className="text-xs border-collapse">
               <thead>
                 <tr>
-                  <th className="sticky left-0 z-10 bg-background border-b border-r px-3 py-2 text-left font-medium min-w-[160px]">
+                  <th className="sticky left-0 z-10 bg-card border-b border-r border-border px-3 py-2 text-left font-medium min-w-[160px]">
                     Employee
                   </th>
                   {skills.map((skill) => (
@@ -129,7 +129,7 @@ export default function SkillsMatrixPage() {
                   const skillCount = Object.keys(emp.skills).length;
                   return (
                     <tr key={emp.userId} className="hover:bg-muted/30">
-                      <td className="sticky left-0 z-10 bg-background border-b border-r px-3 py-2">
+                      <td className="sticky left-0 z-10 bg-card border-b border-r border-border px-3 py-2">
                         <div className="flex items-center gap-2">
                           <Avatar className="h-6 w-6 shrink-0">
                             <AvatarImage src={emp.image ?? undefined} />

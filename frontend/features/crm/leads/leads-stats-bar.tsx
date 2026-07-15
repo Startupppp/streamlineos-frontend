@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { Users, TrendingUp, BarChart2, IndianRupee, UserX } from "lucide-react";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { formatINRCompact } from "@/lib/format-utils";
@@ -15,7 +16,7 @@ interface LeadsStatsBarProps {
   };
 }
 
-export function LeadsStatsBar({ stats }: LeadsStatsBarProps) {
+export const LeadsStatsBar = memo(function LeadsStatsBar({ stats }: LeadsStatsBarProps) {
   return (
     <StatCardGrid cols={5}>
       <StatCard
@@ -50,4 +51,4 @@ export function LeadsStatsBar({ stats }: LeadsStatsBarProps) {
       />
     </StatCardGrid>
   );
-}
+});

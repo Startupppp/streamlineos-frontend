@@ -48,7 +48,7 @@ export function EssSectionNav({ items }: EssSectionNavProps) {
   return (
     <div
       ref={navRef}
-      className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border shrink-0"
+      className="sticky top-0 z-10 bg-muted/40 backdrop-blur-sm border-b border-border shrink-0"
     >
       <div className="flex overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden gap-1 px-4 sm:px-6 py-1.5">
         {items.map((item) => (

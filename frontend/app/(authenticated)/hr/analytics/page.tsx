@@ -7,7 +7,7 @@ import {
 } from "@/hooks/api/hr/analytics";
 import { useRecruitmentStats } from "@/hooks/api/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Skeleton } from "@/components/ui/skeleton";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
@@ -69,9 +69,66 @@ interface KpiItem {
   label: string;
   value: string | number;
   icon: React.ComponentType<{ className?: string }>;
-  iconBg: string;
-  iconColor: string;
-  valueColor: string;
+  tone: "default" | "blue" | "emerald" | "amber" | "red";
+}
+
+function ExecutiveKPIs({
+  totalEmployees,
+  attritionRate,
+  openPositions,
+  attendanceLogs,
+  isLoading,
+}: {
+  totalEmployees: number;
+  attritionRate: string;
+  openPositions: number;
+  attendanceLogs: number;
+  isLoading: boolean;
+}) {
+  if (isLoading) {
+    return <StatCardGridSkeleton cols={4} />;
+  }
+
+  const kpis: KpiItem[] = [
+    {
+      label: "Total Employees",
+      value: totalEmployees,
+      icon: Users,
+      tone: "blue",
+    },
+    {
+      label: "Attrition Rate",
+      value: `${attritionRate}%`,
+      icon: TrendingDown,
+      tone: "red",
+    },
+    {
+      label: "Open Positions",
+      value: openPositions,
+      icon: Briefcase,
+      tone: "amber",
+    },
+    {
+      label: "Attendance Logs",
+      value: attendanceLogs,
+      icon: Activity,
+      tone: "emerald",
+    },
+  ];
+
+  return (
+    <StatCardGrid cols={4}>
+      {kpis.map((item) => (
+        <StatCard
+          key={item.label}
+          label={item.label}
+          value={item.value}
+          icon={item.icon}
+          tone={item.tone}
+        />
+      ))}
+    </StatCardGrid>
+  );
 }
 
 function DateRangeSelector({
@@ -99,110 +156,6 @@ function DateRangeSelector({
         <SelectItem value="year">This Year</SelectItem>
       </SelectContent>
     </Select>
-  );
-}
-
-function KpiCard({ item }: { item: KpiItem }) {
-  const Icon = item.icon;
-  return (
-    <div className="rounded-xl bg-muted/40 p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-            {item.label}
-          </p>
-          <p
-            className={cn(
-              "text-3xl font-bold tabular-nums leading-none",
-              item.valueColor,
-            )}
-          >
-            {item.value}
-          </p>
-        </div>
-        <div
-          className={cn(
-            "h-7 w-7 rounded-lg flex items-center justify-center shrink-0",
-            item.iconBg,
-          )}
-        >
-          <Icon
-            className={cn("h-3.5 w-3.5", item.iconColor)}
-            aria-hidden="true"
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ExecutiveKPIs({
-  totalEmployees,
-  attritionRate,
-  openPositions,
-  attendanceLogs,
-  isLoading,
-}: {
-  totalEmployees: number;
-  attritionRate: string;
-  openPositions: number;
-  attendanceLogs: number;
-  isLoading: boolean;
-}) {
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {Array.from({ length: 10 }).map((_, i) => (
-          <div key={i} className="rounded-xl bg-muted/40 p-4">
-            <Skeleton className="h-3 w-20 mb-3" />
-            <Skeleton className="h-8 w-14" />
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  const kpis: KpiItem[] = [
-    {
-      label: "Total Employees",
-      value: totalEmployees,
-      icon: Users,
-      iconBg: "bg-primary/10",
-      iconColor: "text-primary",
-      valueColor: "text-primary",
-    },
-    {
-      label: "Attrition Rate",
-      value: `${attritionRate}%`,
-      icon: TrendingDown,
-      iconBg: "bg-rose-100 dark:bg-rose-950/40",
-      iconColor: "text-rose-600 dark:text-rose-400",
-      valueColor: "text-rose-700 dark:text-rose-400",
-    },
-    {
-      label: "Open Positions",
-      value: openPositions,
-      icon: Briefcase,
-      iconBg: "bg-amber-100 dark:bg-amber-950/40",
-      iconColor: "text-amber-600 dark:text-amber-400",
-      valueColor: "text-amber-700 dark:text-amber-400",
-    },
-    {
-      label: "Attendance Logs",
-      value: attendanceLogs,
-      icon: Activity,
-      iconBg: "bg-emerald-100 dark:bg-emerald-950/40",
-      iconColor: "text-emerald-600 dark:text-emerald-400",
-      valueColor: "text-emerald-700 dark:text-emerald-400",
-    },
-  ];
-
-  return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-      {kpis.map((item) => (
-        <KpiCard key={item.label} item={item} />
-      ))}
-    </div>
   );
 }
 

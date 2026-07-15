@@ -6,7 +6,9 @@ import { z } from "zod";
 import { toast } from "sonner";
 import {
   Sheet,
+  SheetBody,
   SheetContent,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
@@ -94,17 +96,17 @@ export function TaxWindowSheet({ window, onClose }: TaxWindowSheetProps) {
 
   return (
     <Sheet open onOpenChange={onClose}>
-      <SheetContent className="flex flex-col p-0 sm:max-w-md">
-        <SheetHeader className="border-b px-6 py-4">
+      <SheetContent className="flex flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
+        <SheetHeader className="shrink-0 border-b px-6 py-4">
           <SheetTitle>{window ? "Edit Window" : "New Declaration Window"}</SheetTitle>
         </SheetHeader>
 
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleSubmit)}
-            className="flex flex-1 flex-col overflow-hidden"
+            className="flex flex-1 flex-col min-h-0 overflow-hidden"
           >
-            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+            <SheetBody className="px-6 py-4 space-y-4">
               <FormField
                 control={form.control}
                 name="financialYear"
@@ -170,16 +172,16 @@ export function TaxWindowSheet({ window, onClose }: TaxWindowSheetProps) {
                   </FormItem>
                 )}
               />
-            </div>
+            </SheetBody>
 
-            <div className="border-t px-6 py-4 grid grid-cols-2 gap-2">
+            <SheetFooter className="border-t px-6 py-4 grid grid-cols-2 gap-2">
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancel
               </Button>
               <Button type="submit" disabled={isPending}>
                 {isPending ? "Saving…" : "Save"}
               </Button>
-            </div>
+            </SheetFooter>
           </form>
         </Form>
       </SheetContent>

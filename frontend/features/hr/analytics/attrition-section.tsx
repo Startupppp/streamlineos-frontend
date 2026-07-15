@@ -2,7 +2,7 @@
 
 import { useHrAttritionAnalytics } from "@/hooks/api/hr/analytics";
 import { Skeleton } from "@/components/ui/skeleton";
-import { StatCard } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Users, UserMinus, TrendingDown } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -18,7 +18,6 @@ import {
   AnalyticsSectionHeader,
   CHART_SEMANTIC,
   EmptyChart,
-  SectionSkeleton,
   chartAxisTick,
   chartGridProps,
   chartTooltipStyle,
@@ -35,11 +34,7 @@ export function AttritionSection({ isLoading }: AttritionSectionProps) {
     return (
       <section className="space-y-4">
         <Skeleton className="h-5 w-44" />
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-          <SectionSkeleton rows={2} />
-          <SectionSkeleton rows={2} />
-          <SectionSkeleton rows={2} />
-        </div>
+        <StatCardGridSkeleton cols={3} />
       </section>
     );
   }
@@ -56,29 +51,26 @@ export function AttritionSection({ isLoading }: AttritionSectionProps) {
         description="Year-to-date exits and monthly resignation trend."
       />
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+      <StatCardGrid cols={3}>
         <StatCard
           label="Total Employees"
           value={data.totalEmployees}
           icon={Users}
-          color="blue"
-          index={0}
+          tone="blue"
         />
         <StatCard
           label="Resignations (YTD)"
           value={data.resignedThisYear}
           icon={UserMinus}
-          color="red"
-          index={1}
+          tone="red"
         />
         <StatCard
           label="Attrition Rate"
           value={`${data.attritionRatePercent}%`}
           icon={TrendingDown}
-          color="amber"
-          index={2}
+          tone="amber"
         />
-      </div>
+      </StatCardGrid>
 
       <AnalyticsChartCard title="Resignation Trend by Month (YTD)">
         {monthlyData.length > 0 ? (

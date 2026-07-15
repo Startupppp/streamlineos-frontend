@@ -10,6 +10,7 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -46,34 +47,15 @@ function isTabId(value: string): value is TabId {
   return (TAB_IDS as readonly string[]).includes(value);
 }
 
-interface MetricCardProps {
+interface BillingMetricProps {
   label: string;
   value: string;
   icon: React.ElementType;
-  variant?: "default" | "highlight" | "danger";
+  tone?: "default" | "blue" | "emerald" | "amber" | "red";
 }
 
-function MetricCard({
-  label,
-  value,
-  icon: Icon,
-  variant = "default",
-}: MetricCardProps) {
-  const cardClass =
-    variant === "highlight"
-      ? "border-primary/30 bg-primary/5"
-      : variant === "danger"
-        ? "border-destructive/30 bg-destructive/5"
-        : "border-border bg-card";
-  return (
-    <div className={`rounded-lg border px-4 py-3 ${cardClass}`}>
-      <div className="flex items-center gap-1.5 mb-1">
-        <Icon className="h-3.5 w-3.5 text-muted-foreground" />
-        <p className="text-xs text-muted-foreground">{label}</p>
-      </div>
-      <p className="text-xl font-bold tabular-nums">{value}</p>
-    </div>
-  );
+function BillingMetric({ label, value, icon, tone = "default" }: BillingMetricProps) {
+  return <StatCard label={label} value={value} icon={icon} tone={tone} />;
 }
 
 interface MrrChartProps {
@@ -134,15 +116,6 @@ function createPeriodHandler(p: Period, setter: (period: Period) => void) {
   };
 }
 
-function CardSkeleton() {
-  return (
-    <div className="rounded-lg border border-border bg-card p-4 space-y-2">
-      <Skeleton className="h-3 w-20" />
-      <Skeleton className="h-8 w-24" />
-    </div>
-  );
-}
-
 export default function RevenueAnalyticsPage() {
   const [period, setPeriod] = useState<Period>("6m");
   const [activeTab, setActiveTab] = useState<TabId>("executive");
@@ -178,55 +151,63 @@ export default function RevenueAnalyticsPage() {
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {isLoading ? (
-            Array.from({ length: 9 }).map((_, i) => <CardSkeleton key={i} />)
+            <StatCardGridSkeleton cols={3} count={12} />
           ) : (
-            <>
-              <MetricCard
+            <StatCardGrid cols={3} className="col-span-full">
+              <BillingMetric
                 label="MRR"
                 value={fmt(metrics?.mrr ?? 0)}
                 icon={DollarSign}
+                tone="blue"
               />
-              <MetricCard
+              <BillingMetric
                 label="ARR"
                 value={fmt(metrics?.arr ?? 0)}
                 icon={TrendingUp}
+                tone="emerald"
               />
-              <MetricCard
+              <BillingMetric
                 label="ARPU"
                 value={fmt(metrics?.arpu ?? 0)}
                 icon={DollarSign}
               />
-              <MetricCard
+              <BillingMetric
                 label="Active Subscriptions"
                 value={String(metrics?.activeSubscriptions ?? 0)}
                 icon={Users}
+                tone="blue"
               />
-              <MetricCard
+              <BillingMetric
                 label="Trial Subscriptions"
                 value={String(metrics?.trialSubscriptions ?? 0)}
                 icon={Users}
+                tone="amber"
               />
-              <MetricCard
+              <BillingMetric
                 label="Churn Rate"
                 value={`${metrics?.churnRate ?? 0}%`}
                 icon={Percent}
+                tone="red"
               />
-              <MetricCard
+              <BillingMetric
                 label="LTV"
                 value={fmt(metrics?.ltv ?? 0)}
                 icon={TrendingUp}
+                tone="emerald"
               />
-              <MetricCard
+              <BillingMetric
                 label="Expansion Revenue"
                 value={fmt(metrics?.expansionRevenue ?? 0)}
                 icon={ArrowUpRight}
+                tone="blue"
               />
-              <MetricCard
+              <BillingMetric
                 label="Trial Conversion Rate"
                 value={`${metrics?.trialConversionRate ?? 0}%`}
                 icon={RefreshCw}
+                tone="amber"
               />
-            </>
+            </StatCardGrid>
           )}
         </div>
 
@@ -234,18 +215,18 @@ export default function RevenueAnalyticsPage() {
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
             Risk
           </p>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {isLoading ? (
-              <CardSkeleton />
-            ) : (
-              <MetricCard
+          {isLoading ? (
+            <StatCardGridSkeleton cols={3} count={3} />
+          ) : (
+            <StatCardGrid cols={3}>
+              <BillingMetric
                 label="Refund Rate"
                 value={`${metrics?.refundRate ?? 0}%`}
                 icon={AlertTriangle}
-                variant="danger"
+                tone="red"
               />
-            )}
-          </div>
+            </StatCardGrid>
+          )}
         </div>
 
         <Tabs value={activeTab} onValueChange={handleTabChange}>

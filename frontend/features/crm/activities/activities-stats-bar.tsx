@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { Phone, Mail, Video, ListTodo, AlertCircle } from "lucide-react";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 
@@ -12,7 +13,7 @@ interface ActivitiesStatsBarProps {
   isLoading: boolean;
 }
 
-export function ActivitiesStatsBar({
+export const ActivitiesStatsBar = memo(function ActivitiesStatsBar({
   total,
   calls,
   emails,
@@ -29,4 +30,4 @@ export function ActivitiesStatsBar({
       <StatCard label="Pending" value={pending} icon={AlertCircle} tone="amber" isLoading={isLoading} />
     </StatCardGrid>
   );
-}
+});

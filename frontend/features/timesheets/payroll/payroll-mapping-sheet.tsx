@@ -6,7 +6,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
   Sheet,
+  SheetBody,
   SheetContent,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
@@ -205,14 +207,14 @@ export function PayrollMappingSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="p-0 flex flex-col gap-0 sm:max-w-lg">
+      <SheetContent className="p-0 flex flex-col gap-0 overflow-hidden sm:max-w-lg">
         <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle>Column Mapping</SheetTitle>
           <p className="text-xs text-muted-foreground">Configure payroll export columns per provider.</p>
         </SheetHeader>
 
-        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
-          <div className="flex-1 min-h-0 overflow-y-auto px-6 py-5 space-y-5">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+          <SheetBody className="px-6 py-5 space-y-5">
             <div className="space-y-1.5">
               <Label className="text-xs font-medium">Provider</Label>
               <Select value={form.watch("provider")} onValueChange={handleProviderChange}>
@@ -242,9 +244,9 @@ export function PayrollMappingSheet({
                 ))}
               </div>
             </div>
-          </div>
+          </SheetBody>
 
-          <div className="shrink-0 border-t px-6 py-4 grid grid-cols-2 gap-2">
+          <SheetFooter className="border-t px-6 py-4 grid grid-cols-2 gap-2">
             <Button
               type="button"
               variant="outline"
@@ -263,7 +265,7 @@ export function PayrollMappingSheet({
               {updateSettings.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
               Save Mapping
             </Button>
-          </div>
+          </SheetFooter>
         </form>
       </SheetContent>
     </Sheet>

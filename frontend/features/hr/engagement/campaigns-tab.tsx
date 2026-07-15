@@ -121,7 +121,7 @@ export function CampaignsTab() {
   if (isLoading) {
     return (
       <div className="space-y-3">
-        {[1, 2, 3].map((i) => <Skeleton key={i} className="h-24 rounded-lg" />)}
+        {Array.from({ length: 9 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-lg" />)}
       </div>
     );
   }

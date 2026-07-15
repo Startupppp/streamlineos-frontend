@@ -54,7 +54,7 @@ export function RecognitionFeed({ recognitions, isLoading, onGiveKudos }: Recogn
   if (isLoading) {
     return (
       <div className="space-y-3">
-        {[1, 2, 3].map((i) => (
+        {Array.from({ length: 9 }).map((_, i) => (
           <div key={i} className="bg-card border border-border rounded-lg p-4">
             <div className="flex items-start gap-3">
               <Skeleton className="h-8 w-8 rounded-full shrink-0" />

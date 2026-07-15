@@ -6,6 +6,7 @@ import { Bell } from "lucide-react";
 import { toast } from "sonner";
 import {
   Sheet,
+  SheetBody,
   SheetContent,
   SheetHeader,
   SheetTitle,
@@ -63,8 +64,8 @@ export function MemberDetailSheet({
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent className="overflow-y-auto sm:max-w-lg">
-        <SheetHeader className="pb-4">
+      <SheetContent className="flex flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
+        <SheetHeader className="shrink-0 px-6 py-4 border-b text-left">
           <SheetTitle className="text-sm font-semibold">{memberName}</SheetTitle>
           <SheetDescription className="text-xs">
             {period
@@ -73,6 +74,7 @@ export function MemberDetailSheet({
           </SheetDescription>
         </SheetHeader>
 
+        <SheetBody className="px-6 py-4">
         {isMissingOrDraft && (
           <div className="flex items-center justify-between p-3 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 mb-4">
             <p className="text-xs text-amber-700 dark:text-amber-300">No timesheet submitted yet</p>
@@ -153,6 +155,7 @@ export function MemberDetailSheet({
             })}
           </div>
         )}
+        </SheetBody>
       </SheetContent>
     </Sheet>
   );

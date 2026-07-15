@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, memo } from "react";
 import {
   Plus,
   GripVertical,
@@ -214,7 +214,7 @@ function ScoreExplainerBadge({
 
 const stopPropagation = (e: React.MouseEvent) => e.stopPropagation();
 
-export function KanbanCard({
+export const KanbanCard = memo(function KanbanCard({
   lead,
   index,
   status,
@@ -406,4 +406,4 @@ export function KanbanCard({
       )}
     </Draggable>
   );
-}
+});

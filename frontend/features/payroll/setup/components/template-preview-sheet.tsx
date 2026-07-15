@@ -2,6 +2,7 @@
 
 import {
   Sheet,
+  SheetBody,
   SheetContent,
   SheetHeader,
   SheetTitle,
@@ -33,7 +34,7 @@ export function TemplatePreviewSheet({ template, onOpenChange }: TemplatePreview
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-lg">
+      <SheetContent className="p-0 flex flex-col gap-0 overflow-hidden w-full sm:max-w-lg">
         <div className="shrink-0 px-6 py-4 border-b">
           <SheetHeader className="space-y-1 pr-6">
             <div className="flex items-center gap-2">
@@ -46,7 +47,7 @@ export function TemplatePreviewSheet({ template, onOpenChange }: TemplatePreview
           </SheetHeader>
         </div>
 
-        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-5">
+        <SheetBody className="px-6 py-4 space-y-5">
           <div>
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
               Best For
@@ -87,7 +88,7 @@ export function TemplatePreviewSheet({ template, onOpenChange }: TemplatePreview
               ))}
             </div>
           </div>
-        </div>
+        </SheetBody>
       </SheetContent>
     </Sheet>
   );
