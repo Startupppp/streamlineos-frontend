@@ -126,6 +126,8 @@ export function TicketDetailMainSection({
         />
       </div>
 
+      <TicketAiSection ticket={ticket} ticketId={ticketId} projectId={projectId} />
+
       <TicketSubtasks ticketId={ticketId} projectId={projectId} subtasks={subtasks} />
 
       {ticket.attachments && ticket.attachments.length > 0 && (
