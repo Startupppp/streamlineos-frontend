@@ -2,7 +2,7 @@
 
 import { useRecruitmentStats } from "@/hooks/api/hr/recruitment";
 import { Skeleton } from "@/components/ui/skeleton";
-import { StatCard } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Briefcase, Users, TrendingUp, Clock } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -57,8 +57,7 @@ export function RecruitmentSection({ isLoading }: RecruitmentSectionProps) {
         title="Recruitment Analytics"
         description="Pipeline volume, sources, and hiring efficiency."
       />
-
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <StatCardGrid cols={4}>
         <StatCard
           label="Open Positions"
           value={stats.openJobs}
@@ -87,7 +86,7 @@ export function RecruitmentSection({ isLoading }: RecruitmentSectionProps) {
           color="violet"
           index={3}
         />
-      </div>
+      </StatCardGrid>
 
       <div className="grid gap-3 md:grid-cols-2">
         <AnalyticsChartCard title="Candidate Pipeline">

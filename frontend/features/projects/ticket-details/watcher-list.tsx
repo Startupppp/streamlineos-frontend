@@ -89,7 +89,7 @@ export function WatcherList({ projectId, ticketId, members }: WatcherListProps) 
       )}
 
       <Select value="" onValueChange={handleAddWatcher}>
-        <SelectTrigger className="h-7 text-xs bg-background">
+        <SelectTrigger className="h-8 text-xs border-input bg-card">
           <SelectValue placeholder="+ Add watcher" />
         </SelectTrigger>
         <SelectContent>

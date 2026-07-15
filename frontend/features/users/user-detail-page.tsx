@@ -290,7 +290,7 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
                   <TabsTrigger
                     key={value}
                     value={value}
-                    className="text-xs h-7 px-2.5"
+                    className="text-xs h-8 px-2.5"
                   >
                     {label}
                   </TabsTrigger>

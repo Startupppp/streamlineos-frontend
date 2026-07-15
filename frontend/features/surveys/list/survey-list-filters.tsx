@@ -29,9 +29,9 @@ export function SurveyListFilters({
 
   return (
     <div className="flex items-center gap-2">
-      <Input placeholder="Search surveys..." value={search} onChange={handleSearchInput} className="h-9 w-48" />
+      <Input placeholder="Search surveys..." value={search} onChange={handleSearchInput} className="h-8 w-48" />
       <Select value={status} onValueChange={handleStatusSelect}>
-        <SelectTrigger className="h-9 w-32"><SelectValue placeholder="Status" /></SelectTrigger>
+        <SelectTrigger className="h-8 w-32"><SelectValue placeholder="Status" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All statuses</SelectItem>
           <SelectItem value="draft">Draft</SelectItem>
@@ -43,7 +43,7 @@ export function SurveyListFilters({
         </SelectContent>
       </Select>
       <Select value={mode} onValueChange={handleModeSelect}>
-        <SelectTrigger className="h-9 w-40"><SelectValue placeholder="Mode" /></SelectTrigger>
+        <SelectTrigger className="h-8 w-40"><SelectValue placeholder="Mode" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All modes</SelectItem>
           <SelectItem value="survey">Survey</SelectItem>

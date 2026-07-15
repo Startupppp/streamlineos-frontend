@@ -291,7 +291,7 @@ export function WorkLogFilterActions({
             <div className="space-y-1.5">
               <Label className="text-[11px] font-semibold text-foreground/80 uppercase tracking-wider">Year</Label>
               <Select value={draftFilters.year.toString()} onValueChange={handleDraftYearChange}>
-                <SelectTrigger className="w-full h-9 text-sm"><SelectValue placeholder="Select year" /></SelectTrigger>
+                <SelectTrigger className="w-full h-8 text-sm"><SelectValue placeholder="Select year" /></SelectTrigger>
                 <SelectContent className="w-[var(--radix-select-trigger-width)]">
                   {availableYears.map((y) => (
                     <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
@@ -303,7 +303,7 @@ export function WorkLogFilterActions({
             <div className="space-y-1.5">
               <Label className="text-[11px] font-semibold text-foreground/80 uppercase tracking-wider">Quarter</Label>
               <Select value={draftFilters.quarter.toString()} onValueChange={handleDraftQuarterChange}>
-                <SelectTrigger className="w-full h-9 text-sm"><SelectValue placeholder="Select quarter" /></SelectTrigger>
+                <SelectTrigger className="w-full h-8 text-sm"><SelectValue placeholder="Select quarter" /></SelectTrigger>
                 <SelectContent className="w-[var(--radix-select-trigger-width)]">
                   <SelectItem value="1">Q1 (Jan – Mar)</SelectItem>
                   <SelectItem value="2">Q2 (Apr – Jun)</SelectItem>
@@ -319,7 +319,7 @@ export function WorkLogFilterActions({
                 value={draftFilters.month !== undefined ? draftFilters.month.toString() : "all"}
                 onValueChange={handleDraftMonthChange}
               >
-                <SelectTrigger className="w-full h-9 text-sm">
+                <SelectTrigger className="w-full h-8 text-sm">
                   <CalendarDays className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
                   <SelectValue placeholder="All months" />
                 </SelectTrigger>
@@ -360,7 +360,7 @@ export function WorkLogFilterActions({
               <div className="space-y-1.5">
                 <Label className="text-[11px] font-semibold text-foreground/80 uppercase tracking-wider">Department</Label>
                 <Select value={draftFilters.departmentId || "all"} onValueChange={handleDraftDepartmentChange}>
-                  <SelectTrigger className="w-full h-9 text-sm"><SelectValue placeholder="All departments" /></SelectTrigger>
+                  <SelectTrigger className="w-full h-8 text-sm"><SelectValue placeholder="All departments" /></SelectTrigger>
                   <SelectContent className="max-h-[200px] overflow-y-auto">
                     <SelectItem value="all">All Departments</SelectItem>
                     {departments.map((dept) => (
@@ -380,7 +380,7 @@ export function WorkLogFilterActions({
                       variant="outline"
                       role="combobox"
                       aria-expanded={sheetPickerOpen}
-                      className="w-full h-9 justify-between font-normal text-sm"
+                      className="h-8 w-full justify-between rounded-md border border-input bg-card px-3 font-normal text-sm shadow-xs"
                     >
                       <span className="flex items-center gap-1.5 truncate">
                         <Users className="h-3.5 w-3.5 text-muted-foreground shrink-0" />

@@ -397,7 +397,7 @@ export function CreateTicketDialog({
               >
                 <SelectTrigger
                   aria-label="Select project"
-                  className="h-7 w-auto max-w-[220px] gap-1.5 border-border bg-card px-2 text-xs font-medium shadow-sm disabled:opacity-100"
+                  className="h-8 w-auto max-w-[220px] gap-1.5 border-border bg-card px-2 text-xs font-medium shadow-sm disabled:opacity-100"
                 >
                   <SelectValue placeholder={projectTriggerLabel} />
                 </SelectTrigger>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useHrAttendanceAnalytics } from "@/hooks/api/hr/analytics";
-import { StatCard } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Clock, Building2, CalendarCheck } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -57,8 +57,7 @@ export function AttendanceSection({ year, month }: AttendanceSectionProps) {
         title="Attendance Analytics"
         description="Check-in volume by department and day for the selected period."
       />
-
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+      <StatCardGrid cols={3}>
         <StatCard
           label="Total Logs (Month)"
           value={data.totalAttendanceLogs}
@@ -80,7 +79,7 @@ export function AttendanceSection({ year, month }: AttendanceSectionProps) {
           color="violet"
           index={2}
         />
-      </div>
+      </StatCardGrid>
 
       <div className="grid gap-3 md:grid-cols-2">
         <AnalyticsChartCard title="Department-wise Attendance">

@@ -348,7 +348,7 @@ export default function SignInPage() {
               {...form.register("email")}
               disabled={isPending}
               className={cn(
-                "h-9 text-sm",
+                "h-8 text-sm",
                 form.formState.errors.email &&
                   "border-destructive focus-visible:ring-destructive/30",
               )}
@@ -385,7 +385,7 @@ export default function SignInPage() {
                   {...form.register("password")}
                   disabled={isPending}
                   className={cn(
-                    "h-9 text-sm pr-9",
+                    "h-8 text-sm pr-9",
                     form.formState.errors.password &&
                       "border-destructive focus-visible:ring-destructive/30",
                   )}

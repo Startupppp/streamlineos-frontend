@@ -313,7 +313,7 @@ export function BulkActionsBar({
         <div className="h-4 w-px bg-border" />
 
         <Select onValueChange={handleBulkStatus}>
-          <SelectTrigger className="h-7 w-[120px] text-xs">
+          <SelectTrigger className="h-8 w-[120px] text-xs">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -324,7 +324,7 @@ export function BulkActionsBar({
         </Select>
 
         <Select onValueChange={handleBulkPriority}>
-          <SelectTrigger className="h-7 w-[100px] text-xs">
+          <SelectTrigger className="h-8 w-[100px] text-xs">
             <SelectValue placeholder="Priority" />
           </SelectTrigger>
           <SelectContent>
@@ -335,7 +335,7 @@ export function BulkActionsBar({
         </Select>
 
         <Select onValueChange={handleBulkAssign}>
-          <SelectTrigger className="h-7 w-[130px] text-xs">
+          <SelectTrigger className="h-8 w-[130px] text-xs">
             <SelectValue placeholder="Assign" />
           </SelectTrigger>
           <SelectContent>

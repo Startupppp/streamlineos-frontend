@@ -72,7 +72,7 @@ function SequenceRow({
         <Input
           value={state.prefix}
           onChange={handlePrefixChange}
-          className="h-7 w-24 text-xs"
+          className="h-8 w-24 text-xs"
         />
       </TableCell>
       <TableCell>
@@ -80,7 +80,7 @@ function SequenceRow({
           type="number"
           value={state.padding}
           onChange={handlePaddingChange}
-          className="h-7 w-16 text-xs text-right"
+          className="h-8 w-16 text-xs text-right"
           min={1}
         />
       </TableCell>

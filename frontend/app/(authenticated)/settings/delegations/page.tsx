@@ -15,6 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
+  SheetBody,
   SheetContent,
   SheetDescription,
   SheetHeader,
@@ -476,7 +477,7 @@ function GrantDelegationSheet({
           noValidate
           className="flex flex-col flex-1 overflow-hidden"
         >
-          <div className="flex-1 min-h-0 flex flex-col gap-3 overflow-y-auto px-6 py-5">
+          <SheetBody className="flex flex-col gap-3 px-6 py-5">
           <div className="space-y-1.5">
             <Label htmlFor="del-to" className="text-xs">
               Delegate to
@@ -597,7 +598,7 @@ function GrantDelegationSheet({
             />
           </div>
 
-          </div>
+          </SheetBody>
           <div className="shrink-0 px-6 py-4 border-t">
             <div className="grid grid-cols-2 gap-2">
               <Button

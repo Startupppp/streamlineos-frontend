@@ -225,7 +225,7 @@ export function InterviewFeedbackForm({ interview, open, onOpenChange }: Intervi
                     value={entry.category}
                     onChange={(e) => handleCategoryNameChange(index, e.target.value)}
                     placeholder="Category name"
-                    className="h-7 text-xs font-medium flex-1"
+                    className="h-8 text-xs font-medium flex-1"
                   />
                   <div className="flex items-center gap-1 shrink-0">
                     <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
@@ -253,7 +253,7 @@ export function InterviewFeedbackForm({ interview, open, onOpenChange }: Intervi
                   value={entry.comment ?? ""}
                   onChange={(e) => handleRubricCommentChange(index, e.target.value)}
                   placeholder="Notes for this category..."
-                  className="h-7 text-xs"
+                  className="h-8 text-xs"
                 />
               </div>
             </div>

@@ -301,7 +301,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
               onChange={handleEstimateChange}
               onKeyDown={handleEstimateKeyDown}
               placeholder="0"
-              className="h-7 text-xs"
+              className="h-8 text-xs"
               autoFocus
             />
             <button

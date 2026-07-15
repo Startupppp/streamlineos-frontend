@@ -1,6 +1,6 @@
 import { Phone, Mail, Video } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { StatCard } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import type { SalesLeaderboardEntry } from "@/types/leads";
 
 interface ActivityTotals {
@@ -44,7 +44,7 @@ export function ActivitySummary({
         </p>
       </CardHeader>
       <CardContent>
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
+        <StatCardGrid cols={3}>
           <StatCard
             label="Calls"
             value={totals ? totals.calls.toLocaleString() : "—"}
@@ -66,7 +66,7 @@ export function ActivitySummary({
             color="amber"
             index={2}
           />
-        </div>
+        </StatCardGrid>
       </CardContent>
     </Card>
   );

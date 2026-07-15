@@ -162,7 +162,7 @@ export function TicketTimeTracker({ ticketId, projectId, timeSpent }: TicketTime
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="What did you work on? (optional)"
-          className="h-7 text-xs mb-2"
+          className="h-8 text-xs mb-2"
         />
       )}
 
@@ -175,13 +175,13 @@ export function TicketTimeTracker({ ticketId, projectId, timeSpent }: TicketTime
             placeholder="Hours"
             value={manualHours}
             onChange={(e) => setManualHours(e.target.value)}
-            className="h-7 text-xs w-24"
+            className="h-8 text-xs w-24"
           />
           <Input
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Description (optional)"
-            className="h-7 text-xs flex-1"
+            className="h-8 text-xs flex-1"
           />
           <Button
             size="sm"

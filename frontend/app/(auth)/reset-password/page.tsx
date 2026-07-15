@@ -86,7 +86,7 @@ function PasswordFields({
                 <Input
                   type={showPassword ? "text" : "password"}
                   placeholder="8+ characters"
-                  className="pl-9 pr-9 h-9 text-sm"
+                  className="pl-9 pr-9 h-8 text-sm"
                   {...field}
                 />
                 <button
@@ -129,7 +129,7 @@ function PasswordFields({
                 <Input
                   type={showConfirmPassword ? "text" : "password"}
                   placeholder="Confirm your password"
-                  className="pl-9 pr-9 h-9 text-sm"
+                  className="pl-9 pr-9 h-8 text-sm"
                   {...field}
                 />
                 <button

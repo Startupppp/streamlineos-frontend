@@ -11,7 +11,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { ChevronLeft, Clock, TrendingUp, UserCheck, AlertCircle } from "lucide-react";
-import { StatCard } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { cn } from "@/lib/utils";
 import { EmptyLeaderboardIllustration } from "@/components/illustrations";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
@@ -199,61 +199,61 @@ export default function InterviewerPerformancePage() {
       }
     >
       <div className="flex flex-1 min-h-0 flex-col space-y-4">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <StatCard
-          label="Avg Submit Time"
-          value={isLoading ? "—" : avgSubmitTime !== null ? `${Math.round(avgSubmitTime)}h` : "—"}
-          icon={Clock}
-          color="blue"
-          index={0}
-        />
-        <StatCard
-          label="Submission Rate"
-          value={isLoading ? "—" : `${submissionRate}%`}
-          icon={UserCheck}
-          color="green"
-          index={1}
-        />
-        <StatCard
-          label="Submitted"
-          value={isLoading ? "—" : totalSubmitted}
-          icon={TrendingUp}
-          color="cyan"
-          index={2}
-        />
-        <StatCard
-          label="Pending"
-          value={isLoading ? "—" : totalPending}
-          icon={AlertCircle}
-          color="amber"
-          index={3}
-        />
-      </div>
+        <StatCardGrid cols={4}>
+          <StatCard
+            label="Avg Submit Time"
+            value={isLoading ? "—" : avgSubmitTime !== null ? `${Math.round(avgSubmitTime)}h` : "—"}
+            icon={Clock}
+            color="blue"
+            index={0}
+          />
+          <StatCard
+            label="Submission Rate"
+            value={isLoading ? "—" : `${submissionRate}%`}
+            icon={UserCheck}
+            color="green"
+            index={1}
+          />
+          <StatCard
+            label="Submitted"
+            value={isLoading ? "—" : totalSubmitted}
+            icon={TrendingUp}
+            color="cyan"
+            index={2}
+          />
+          <StatCard
+            label="Pending"
+            value={isLoading ? "—" : totalPending}
+            icon={AlertCircle}
+            color="amber"
+            index={3}
+          />
+        </StatCardGrid>
 
-      {isError ? (
-        <div className="flex flex-col items-center justify-center gap-3 py-12">
-          <AlertCircle className="h-8 w-8 text-destructive/60" />
-          <p className="text-sm text-muted-foreground">Failed to load performance data.</p>
-          <Button variant="outline" size="sm" onClick={handleRetry}>Try again</Button>
-        </div>
-      ) : (
-        <DataTable
-          data={stats}
-          columns={INTERVIEWER_PERF_COLUMNS}
-          getRowKey={(s) => s.interviewerId}
-          isLoading={isLoading}
-          className="flex-1 min-h-0"
-          emptyState={
-            <RecruitmentEmptyState
-              illustration={<EmptyLeaderboardIllustration />}
-              title="No scorecard data for the selected period"
-              action={{ label: "View Interviews", href: "/hr/recruitment/interviews" }}
-              compact
-              className="border-0 bg-transparent shadow-none"
-            />
-          }
-        />
-      )}
+        {isError ? (
+          <div className="flex flex-col items-center justify-center gap-3 py-12">
+            <AlertCircle className="h-8 w-8 text-destructive/60" />
+            <p className="text-sm text-muted-foreground">Failed to load performance data.</p>
+            <Button variant="outline" size="sm" onClick={handleRetry}>Try again</Button>
+          </div>
+        ) : (
+          <DataTable
+            data={stats}
+            columns={INTERVIEWER_PERF_COLUMNS}
+            getRowKey={(s) => s.interviewerId}
+            isLoading={isLoading}
+            className="flex-1 min-h-0"
+            emptyState={
+              <RecruitmentEmptyState
+                illustration={<EmptyLeaderboardIllustration />}
+                title="No scorecard data for the selected period"
+                action={{ label: "View Interviews", href: "/hr/recruitment/interviews" }}
+                compact
+                className="border-0 bg-transparent shadow-none"
+              />
+            }
+          />
+        )}
       </div>
     </PageWrapper>
   );

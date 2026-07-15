@@ -106,7 +106,7 @@ export default function SupportDashboardPage() {
         subtitle="Real-time insights into customer support performance across all channels"
       >
         <div className="flex flex-1 min-h-0 flex-col space-y-4">
-          <StatCardGridSkeleton cols={4} count={12} />
+          <StatCardGridSkeleton cols={4} />
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-12">
             <Skeleton className="h-72 lg:col-span-5" />
             <Skeleton className="h-72 lg:col-span-7" />

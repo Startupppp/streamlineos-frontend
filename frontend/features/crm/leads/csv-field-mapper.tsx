@@ -62,7 +62,7 @@ function MappingSelectCell({ row, fields, onMappingChange }: MappingSelectCellPr
   const handleChange = useCallback((v: string) => onMappingChange(row.index, v), [row.index, onMappingChange]);
   return (
     <Select value={row.currentMapping} onValueChange={handleChange}>
-      <SelectTrigger className="h-7 text-xs">
+      <SelectTrigger className="h-8 text-xs">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>

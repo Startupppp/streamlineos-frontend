@@ -233,7 +233,7 @@ export function StageAdvancedSheet({
                   onChange={handleFieldInputChange}
                   onKeyDown={handleFieldKeyDown}
                   placeholder="Type field name + Enter"
-                  className="h-7 text-xs"
+                  className="h-8 text-xs"
                 />
               </FormItem>
             )} />

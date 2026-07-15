@@ -193,7 +193,7 @@ export function MyWorkPage() {
                 <TabsTrigger
                   key={tab}
                   value={tab}
-                  className="h-7 px-2.5 text-[12px] sm:px-3 sm:text-[12px]"
+                  className="h-8 px-2.5 text-[12px] sm:px-3 sm:text-[12px]"
                 >
                   {TAB_CONFIG[tab].label}
                 </TabsTrigger>

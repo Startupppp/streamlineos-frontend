@@ -4,12 +4,11 @@ import { use, useState, useCallback } from "react";
 import Link from "next/link";
 import { ChevronLeft, Receipt, Wallet, AlertCircle } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { LoadingState, ErrorState } from "@/components/shared";
-import { DS } from "@/lib/design-system";
 import { useCustomerLedger } from "@/hooks/api/accounting";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { CustomerLedgerLine } from "@/types/accounting";
@@ -178,7 +177,7 @@ export default function CustomerLedgerDetailPage({
       }
     >
       <div className="space-y-6">
-        <div className={DS.gridResponsive3}>
+        <StatCardGrid cols={3}>
           <StatCard
             label="Total Invoiced"
             value={summary ? formatCurrency(summary.totalInvoiced) : "—"}
@@ -200,7 +199,7 @@ export default function CustomerLedgerDetailPage({
             color={summary && Number(summary.outstanding) > 0 ? "red" : "green"}
             index={2}
           />
-        </div>
+        </StatCardGrid>
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:flex-wrap">
           <div className="flex flex-col gap-1">

@@ -1,6 +1,6 @@
 import { Users, Target, BarChart3, DollarSign } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { StatCard } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import type { LeadStats } from "@/types/leads";
 import type { DealStats } from "@/types/crm/deals";
 import { formatCurrency } from "../lib/types";
@@ -25,7 +25,7 @@ export function PipelineOverview({
         <p className="text-xs text-muted-foreground mt-0.5">{periodLabel}</p>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <StatCardGrid cols={4}>
           <StatCard
             label="Total Leads"
             value={stats?.total ?? 0}
@@ -55,7 +55,7 @@ export function PipelineOverview({
             color="green"
             index={3}
           />
-        </div>
+        </StatCardGrid>
       </CardContent>
     </Card>
   );

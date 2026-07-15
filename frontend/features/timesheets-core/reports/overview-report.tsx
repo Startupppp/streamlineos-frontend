@@ -65,7 +65,7 @@ export function OverviewReport({ overview, isLoading }: OverviewReportProps) {
           <CardTitle className="text-sm font-medium">Team Compliance</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <StatCardGrid cols={2}>
             <StatCard
               label="Active Users"
               value={isLoading ? "-" : activeUsers}
@@ -85,7 +85,7 @@ export function OverviewReport({ overview, isLoading }: OverviewReportProps) {
               }
               isLoading={isLoading}
             />
-          </div>
+          </StatCardGrid>
         </CardContent>
       </Card>
     </div>

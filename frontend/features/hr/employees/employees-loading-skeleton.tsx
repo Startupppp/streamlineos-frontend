@@ -44,7 +44,7 @@ export function EmployeesLoadingSkeleton() {
       }
     >
       <div className="space-y-4">
-        <StatCardGridSkeleton cols={4} count={12} />
+        <StatCardGridSkeleton cols={4} />
 
         <div className="grid sm:grid-cols-3 gap-3">
           {Array.from({ length: 12 }).map((_, i) => (

@@ -235,10 +235,10 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
           placeholder="Search cases..."
           value={search}
           onChange={handleSearchChange}
-          className="h-7 w-48 text-[11px]"
+          className="h-8 w-48 text-[11px]"
         />
         <Select value={suiteFilter} onValueChange={setSuiteFilter}>
-          <SelectTrigger className="h-7 w-36 text-[11px]">
+          <SelectTrigger className="h-8 w-36 text-[11px]">
             <SelectValue placeholder="All suites" />
           </SelectTrigger>
           <SelectContent>

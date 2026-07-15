@@ -34,10 +34,10 @@ export function QaPage({ projectId }: QaPageProps) {
           <PmSection index={0}>
             <div className={cn(PM_TOOLBAR, "w-fit p-1")}>
               <TabsList className="h-8 bg-transparent p-0">
-                <TabsTrigger value="cases" className="h-7 px-3 text-xs data-[state=active]:bg-primary/10 data-[state=active]:text-foreground">
+                <TabsTrigger value="cases" className="h-8 px-3 text-xs data-[state=active]:bg-primary/10 data-[state=active]:text-foreground">
                   Test Cases
                 </TabsTrigger>
-                <TabsTrigger value="runs" className="h-7 px-3 text-xs data-[state=active]:bg-primary/10 data-[state=active]:text-foreground">
+                <TabsTrigger value="runs" className="h-8 px-3 text-xs data-[state=active]:bg-primary/10 data-[state=active]:text-foreground">
                   Test Runs
                 </TabsTrigger>
               </TabsList>

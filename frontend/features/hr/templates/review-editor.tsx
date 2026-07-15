@@ -91,7 +91,7 @@ export function ReviewEditor({ sections, onChange }: ReviewEditorProps) {
               placeholder="Section title"
               value={section.title}
               onChange={(e) => handleSectionTitle(section.id, e.target.value)}
-              className="h-7 flex-1 text-sm font-medium"
+              className="h-8 flex-1 text-sm font-medium"
             />
             <Button
               type="button"
@@ -110,13 +110,13 @@ export function ReviewEditor({ sections, onChange }: ReviewEditorProps) {
                   placeholder="Question"
                   value={q.text}
                   onChange={(e) => handleChangeQuestion(section.id, q.id, { text: e.target.value })}
-                  className="h-7 flex-1"
+                  className="h-8 flex-1"
                 />
                 <Select
                   value={q.type}
                   onValueChange={(v) => handleChangeQuestion(section.id, q.id, { type: v as ReviewQuestion["type"] })}
                 >
-                  <SelectTrigger className="h-7 w-32 shrink-0">
+                  <SelectTrigger className="h-8 w-32 shrink-0">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

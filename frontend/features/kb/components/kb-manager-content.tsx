@@ -55,7 +55,7 @@ import { getApiError } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
-const filterControlClassName = "h-9 text-xs";
+const filterControlClassName = "h-8 text-xs";
 
 function isStatus(v: string): v is KbArticleStatus {
   return v === "draft" || v === "published" || v === "archived";

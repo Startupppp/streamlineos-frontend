@@ -12,13 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetBody } from "@/components/ui/sheet";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -265,7 +259,7 @@ function SpaceSheet({
             onSubmit={form.handleSubmit(handleSubmit)}
             className="flex flex-col flex-1 min-h-0"
           >
-            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+            <SheetBody className="px-6 py-5 space-y-4">
               <FormField
                 control={form.control}
                 name="name"
@@ -340,7 +334,7 @@ function SpaceSheet({
                   </FormItem>
                 )}
               />
-            </div>
+            </SheetBody>
             <SheetFooter className="px-6 py-4 border-t shrink-0 flex gap-2">
               <Button
                 type="button"

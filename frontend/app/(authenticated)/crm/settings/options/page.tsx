@@ -113,14 +113,14 @@ function AddOptionRow({ type, sortOrder, onCancel }: AddRowProps) {
         value={label}
         onChange={handleLabelChange}
         placeholder="Label"
-        className="h-7 text-xs w-32 shrink-0"
+        className="h-8 text-xs w-32 shrink-0"
         autoFocus
       />
       <Input
         value={key}
         onChange={handleKeyChange}
         placeholder="key"
-        className="h-7 text-xs font-mono w-28 shrink-0"
+        className="h-8 text-xs font-mono w-28 shrink-0"
       />
       <CrmColorPicker value={color} onChange={handleColorChange} />
       <LoadingButton
@@ -218,7 +218,7 @@ function OptionRow({ option, showTerminal, onDeleteRequest }: OptionRowProps) {
         key={option.label}
         defaultValue={option.label}
         onBlur={handleLabelBlur}
-        className="h-7 text-xs w-32 shrink-0 border-transparent hover:border-input focus:border-input bg-transparent"
+        className="h-8 text-xs w-32 shrink-0 border-transparent hover:border-input focus:border-input bg-transparent"
       />
       <span className="font-mono text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground shrink-0">
         {option.key}

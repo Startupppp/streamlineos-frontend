@@ -370,7 +370,7 @@ export function LeadDetailSheet({
 
               <div className="pt-2">
                 <Tabs value={activityTab} onValueChange={setActivityTab}>
-                  <TabsList className="w-full h-10">
+                  <TabsList className="w-full h-8">
                     <TabsTrigger value="details" className="flex-1 text-xs">
                       Details
                     </TabsTrigger>

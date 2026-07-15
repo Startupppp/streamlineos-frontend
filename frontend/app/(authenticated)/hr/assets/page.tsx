@@ -46,7 +46,7 @@ import {
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { Loader2 } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DatePicker } from "@/components/ui/date-picker";
 import { HrSheet } from "@/features/hr/hr-sheet";
@@ -830,7 +830,7 @@ export default function HrAssetsPage() {
       }
     >
       <div className="flex flex-1 min-h-0 flex-col space-y-4">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCardGrid cols={4}>
           <StatCard
             label="Total Assets"
             value={counts.total}
@@ -855,7 +855,7 @@ export default function HrAssetsPage() {
             icon={Wrench}
             color="red"
           />
-        </div>
+        </StatCardGrid>
 
         {isError ? (
           <div className="flex flex-col items-center justify-center rounded-2xl border border-border bg-card shadow-sm py-16 gap-4">

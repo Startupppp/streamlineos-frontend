@@ -109,7 +109,7 @@ function RejectInline({
   return (
     <div className="flex items-center gap-1.5">
       <Input
-        className="h-7 text-xs"
+        className="h-8 text-xs"
         placeholder="Reason for rejection..."
         value={reason}
         onChange={handleReasonChange}

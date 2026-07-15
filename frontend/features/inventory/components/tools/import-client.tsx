@@ -441,7 +441,7 @@ export function ImportClient() {
       subtitle="Import products, vendors, stock, and more from CSV or Excel files. Export data for offline analysis."
     >
       <Tabs defaultValue="import" className="space-y-4">
-        <TabsList className="h-9 w-full justify-start border-b bg-transparent p-0 rounded-none shrink-0">
+        <TabsList className="h-8 w-full justify-start border-b bg-transparent p-0 rounded-none shrink-0">
           <TabsTrigger value="import" className={tabTriggerClass}>Import</TabsTrigger>
           <TabsTrigger value="export" className={tabTriggerClass}>Export</TabsTrigger>
         </TabsList>

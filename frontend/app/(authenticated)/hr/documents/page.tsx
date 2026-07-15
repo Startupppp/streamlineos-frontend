@@ -23,7 +23,7 @@ import {
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -327,7 +327,7 @@ export default function DocumentsPage() {
       }
     >
       <div className="space-y-4">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCardGrid cols={4}>
           <StatCard label="Total Documents" value={documents.length} icon={FileText} color="blue" />
           <StatCard label="Folders" value={folders.length + customFolders.length} icon={FolderOpen} color="amber" />
           <StatCard
@@ -337,7 +337,7 @@ export default function DocumentsPage() {
             color={storagePercent > 80 ? "red" : storagePercent > 50 ? "gold" : "green"}
           />
           <StatCard label="Public Documents" value={documents.filter((d) => d.isPublic).length} icon={Star} color="purple" />
-        </div>
+        </StatCardGrid>
 
         <DocumentTable
           paginatedDocuments={paginatedDocuments}
@@ -542,15 +542,15 @@ function DocumentsExtendedSection() {
       <CardContent className="p-4">
         <Tabs defaultValue="letters">
           <TabsList className="h-8 mb-4">
-            <TabsTrigger value="letters" className="text-xs gap-1.5 h-7">
+            <TabsTrigger value="letters" className="text-xs gap-1.5 h-8">
               <Mail className="h-3 w-3" />
               Letters
             </TabsTrigger>
-            <TabsTrigger value="expiring" className="text-xs gap-1.5 h-7">
+            <TabsTrigger value="expiring" className="text-xs gap-1.5 h-8">
               <AlertTriangle className="h-3 w-3" />
               Expiring
             </TabsTrigger>
-            <TabsTrigger value="compliance" className="text-xs gap-1.5 h-7">
+            <TabsTrigger value="compliance" className="text-xs gap-1.5 h-8">
               <CalendarCheck className="h-3 w-3" />
               Calendar
             </TabsTrigger>

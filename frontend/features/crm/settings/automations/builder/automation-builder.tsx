@@ -435,13 +435,13 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
                   {testPayload.map((row, i) => (
                     <div key={i} className="flex gap-1.5">
                       <Input
-                        className="h-7 text-xs"
+                        className="h-8 text-xs"
                         placeholder="key"
                         value={row.key}
                         onChange={(e) => setTestPayload((p) => p.map((r, idx) => idx === i ? { ...r, key: e.target.value } : r))}
                       />
                       <Input
-                        className="h-7 text-xs"
+                        className="h-8 text-xs"
                         placeholder="value"
                         value={row.value}
                         onChange={(e) => setTestPayload((p) => p.map((r, idx) => idx === i ? { ...r, value: e.target.value } : r))}

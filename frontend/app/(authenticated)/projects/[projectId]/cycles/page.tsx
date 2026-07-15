@@ -6,7 +6,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyCalendarIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetBody } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -193,7 +193,7 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
             <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
               <SheetTitle>Create Cycle</SheetTitle>
             </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-6 py-5">
+            <SheetBody className="px-6 py-5">
               <form id="cycle-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
                 <div className="space-y-1.5">
                   <Label htmlFor="name">Name</Label>
@@ -237,7 +237,7 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
                   </div>
                 </div>
               </form>
-            </div>
+            </SheetBody>
             <div className="shrink-0 px-6 py-4 border-t">
               <LoadingButton type="submit" form="cycle-form" isPending={createMutation.isPending} loadingText="Creating..." className="w-full">
                 Create Cycle

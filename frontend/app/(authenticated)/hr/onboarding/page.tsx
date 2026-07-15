@@ -118,31 +118,31 @@ export default function OnboardingPage() {
           <TabsList className="rounded-lg border p-1 h-auto bg-muted/40">
             <TabsTrigger
               value="workflow"
-              className="text-xs h-7 px-3 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              className="text-xs h-8 px-3 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             >
               Workflow
             </TabsTrigger>
             <TabsTrigger
               value="plans"
-              className="text-xs h-7 px-3 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              className="text-xs h-8 px-3 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             >
               Plans
             </TabsTrigger>
             <TabsTrigger
               value="wizard"
-              className="text-xs h-7 px-3 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              className="text-xs h-8 px-3 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             >
               New Employee
             </TabsTrigger>
             <TabsTrigger
               value="documents"
-              className="text-xs h-7 px-3 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              className="text-xs h-8 px-3 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             >
               Documents
             </TabsTrigger>
             <TabsTrigger
               value="probation"
-              className="text-xs h-7 px-3 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              className="text-xs h-8 px-3 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             >
               Probation
             </TabsTrigger>
@@ -173,7 +173,7 @@ export default function OnboardingPage() {
           <TabsList className="h-8 shrink-0 rounded-lg border p-1 bg-muted/40">
             <TabsTrigger
               value="checklist"
-              className="text-xs h-7 px-3 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              className="text-xs h-8 px-3 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             >
               My Documents
             </TabsTrigger>

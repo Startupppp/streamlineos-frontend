@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { memo, type ComponentType } from "react";
+import { memo, type ComponentType, type ReactNode } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
@@ -82,7 +82,7 @@ export interface StatCardProps {
 }
 
 export interface StatCardGridProps {
-  children: React.ReactNode;
+  children: ReactNode;
   cols?: 2 | 3 | 4 | 5 | 6;
   className?: string;
 }
@@ -93,23 +93,12 @@ export interface StatCardGridSkeletonProps {
   className?: string;
 }
 
-const GRID_COLS: Record<number, string> = {
-  2: "grid-cols-2",
-  3: "grid-cols-2 sm:grid-cols-3",
-  4: "grid-cols-2 lg:grid-cols-4",
-  5: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5",
-  6: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-6",
-};
-
-export function StatCardGrid({ children, cols = 4, className }: StatCardGridProps) {
+export function StatCardGrid({ children, cols: _cols = 4, className }: StatCardGridProps) {
   return (
     <div
       className={cn(
-        "flex gap-2 overflow-x-auto snap-x [scrollbar-width:none] [&::-webkit-scrollbar]:hidden -mx-px pb-1",
-        "[&>*]:min-w-[150px] [&>*]:snap-start [&>*]:shrink-0",
-        "sm:grid sm:overflow-visible sm:snap-none sm:pb-0 sm:mx-0",
-        "sm:[&>*]:min-w-0 sm:[&>*]:shrink",
-        GRID_COLS[cols],
+        "flex flex-nowrap gap-2 overflow-x-auto scrollbar-hide snap-x snap-mandatory -mx-px pb-0.5",
+        "[&>*]:min-w-[148px] [&>*]:max-w-[220px] [&>*]:flex-1 [&>*]:shrink-0 [&>*]:snap-start [&>*]:basis-[148px]",
         className,
       )}
     >
@@ -162,7 +151,7 @@ export const StatCard = memo(function StatCard({
   const body = (
     <div
       className={cn(
-        "flex items-center gap-2.5 rounded-lg border border-border bg-card px-3 py-2.5 transition-colors",
+        "flex h-full items-center gap-2.5 rounded-lg border border-border bg-card px-3 py-2.5 transition-colors",
         featured && "border-primary bg-primary text-primary-foreground",
         href && "hover:bg-muted/30 cursor-pointer",
         featured && href && "hover:bg-primary/90",

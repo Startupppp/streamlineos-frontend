@@ -115,7 +115,7 @@ function ReceiveTransferForm({
             max={ld.line.quantity}
             value={ld.input.quantityReceived}
             onChange={handleChange}
-            className="h-7 w-20 text-xs"
+            className="h-8 w-20 text-xs"
           />
         );
       },
@@ -133,7 +133,7 @@ function ReceiveTransferForm({
             placeholder="Optional"
             value={ld.input.notes}
             onChange={handleChange}
-            className="h-7 text-xs"
+            className="h-8 text-xs"
           />
         );
       },

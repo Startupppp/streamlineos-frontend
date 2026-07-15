@@ -22,7 +22,7 @@ export function ReportsPage() {
         title="Reports"
         subtitle="Envelope activity, completion rates, and usage across SignOS"
       >
-        <StatCardGridSkeleton cols={4} count={12} />
+        <StatCardGridSkeleton cols={4} />
       </PageWrapper>
     );
   }

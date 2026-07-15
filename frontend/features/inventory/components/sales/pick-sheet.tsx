@@ -189,7 +189,7 @@ export function PickSheet({ open, onOpenChange, soId, lines }: PickSheetProps) {
                   type="number"
                   min="0"
                   step="0.001"
-                  className="h-7 text-xs text-right"
+                  className="h-8 text-xs text-right"
                   {...form.register(`lines.${idx}.quantityPicked`, { valueAsNumber: true })}
                 />
               </div>

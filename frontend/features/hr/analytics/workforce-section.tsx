@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { useHrAnalytics } from "@/hooks/api/hr/analytics";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { StatCard } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Users, TrendingUp, UserMinus, UserPlus } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -58,8 +58,7 @@ export function WorkforceSection({ data, isLoading }: WorkforceSectionProps) {
         title="Workforce Overview"
         description="Headcount composition, diversity, and joining vs exit movement."
       />
-
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <StatCardGrid cols={4}>
         <StatCard
           label="Total Headcount"
           value={data.headcount.total}
@@ -89,7 +88,7 @@ export function WorkforceSection({ data, isLoading }: WorkforceSectionProps) {
           color="violet"
           index={3}
         />
-      </div>
+      </StatCardGrid>
 
       <div className="grid gap-3 md:grid-cols-2">
         <AnalyticsChartCard title="Headcount by Department">

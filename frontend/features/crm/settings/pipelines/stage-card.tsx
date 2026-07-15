@@ -119,7 +119,7 @@ export function StageCard({
               ))}
             </SelectContent>
           </Select>
-          <Input ref={slaRef} type="number" min={1} defaultValue={stage.slaHours ?? ""} placeholder="SLA" className="h-7 w-16 text-xs" onBlur={handleSlaBlur} />
+          <Input ref={slaRef} type="number" min={1} defaultValue={stage.slaHours ?? ""} placeholder="SLA" className="h-8 w-16 text-xs" onBlur={handleSlaBlur} />
           <div className="flex items-center gap-1.5 shrink-0">
             <span className="text-[10px] text-muted-foreground">Appr.</span>
             <Switch checked={stage.requiresApproval} onCheckedChange={handleApprovalChange} className="scale-75" />

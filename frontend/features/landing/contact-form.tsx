@@ -197,7 +197,7 @@ export function ContactForm() {
                   value={values.name}
                   onChange={(e) => handleChange("name", e.target.value)}
                   placeholder="Aditya Sharma"
-                  className="h-10"
+                  className="h-8"
                   required
                 />
               </Field>
@@ -207,7 +207,7 @@ export function ContactForm() {
                   value={values.email}
                   onChange={(e) => handleChange("email", e.target.value)}
                   placeholder="you@company.com"
-                  className="h-10"
+                  className="h-8"
                   required
                 />
               </Field>
@@ -219,7 +219,7 @@ export function ContactForm() {
                   value={values.company}
                   onChange={(e) => handleChange("company", e.target.value)}
                   placeholder="Acme Inc."
-                  className="h-10"
+                  className="h-8"
                 />
               </Field>
               <Field label="Phone" hint="optional" error={fieldErrors.phone}>

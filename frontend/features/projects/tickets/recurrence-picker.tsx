@@ -57,9 +57,9 @@ export function RecurrencePicker({ value, onChange }: RecurrencePickerProps) {
         <div className="pl-10 space-y-3">
           <div className="flex items-center gap-2">
             <Label className="text-xs text-muted-foreground w-14 shrink-0">Repeat</Label>
-            <Input type="number" min={1} max={99} value={value.interval} onChange={handleInterval} className="h-7 w-16 text-xs text-center" />
+            <Input type="number" min={1} max={99} value={value.interval} onChange={handleInterval} className="h-8 w-16 text-xs text-center" />
             <Select value={value.frequency} onValueChange={handleFrequency}>
-              <SelectTrigger className="h-7 text-xs w-28"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-8 text-xs w-28"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="daily" className="text-xs">day(s)</SelectItem>
                 <SelectItem value="weekly" className="text-xs">week(s)</SelectItem>
@@ -84,7 +84,7 @@ export function RecurrencePicker({ value, onChange }: RecurrencePickerProps) {
 
           <div className="flex items-center gap-2">
             <Label className="text-xs text-muted-foreground w-14 shrink-0">End date</Label>
-            <DatePicker value={value.endDate ?? ""} onChange={(v) => onChange({ ...value, endDate: v || null })} placeholder="Pick a date" className="h-7 text-xs w-36" />
+            <DatePicker value={value.endDate ?? ""} onChange={(v) => onChange({ ...value, endDate: v || null })} placeholder="Pick a date" className="h-8 text-xs w-36" />
           </div>
         </div>
       )}

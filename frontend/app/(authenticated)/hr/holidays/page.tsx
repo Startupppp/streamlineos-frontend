@@ -38,7 +38,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetBody } from "@/components/ui/sheet";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -669,7 +669,7 @@ export default function HolidaysPage() {
           </SheetHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleFormSubmit)} className="flex-1 flex flex-col overflow-hidden">
-              <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+              <SheetBody className="px-6 py-5 space-y-4">
                 <FormField
                   control={form.control}
                   name="name"
@@ -711,7 +711,7 @@ export default function HolidaysPage() {
                     </FormItem>
                   )}
                 />
-              </div>
+              </SheetBody>
               <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
                 <LoadingButton type="submit" isPending={isPending} loadingText="Saving..." className="w-full">
                   {editingHoliday ? "Update Holiday" : "Add Holiday"}

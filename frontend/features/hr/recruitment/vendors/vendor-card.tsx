@@ -80,7 +80,7 @@ export function VendorCard({ vendor, isHr, onEdit, onViewSubmissions, onDelete }
 
         {portalLink && (
           <div className="flex items-center gap-1.5">
-            <Input readOnly value={portalLink} className="h-7 text-[11px]" />
+            <Input readOnly value={portalLink} className="h-8 text-[11px]" />
           </div>
         )}
 

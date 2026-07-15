@@ -576,7 +576,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
           className="flex flex-col flex-1 min-h-0"
         >
           <div className="overflow-x-auto shrink-0">
-          <TabsList className="h-9 rounded-lg border p-1 w-max min-w-full">
+          <TabsList className="h-8 rounded-lg border p-1 w-max min-w-full">
             <TabsTrigger
               value="overview"
               className="text-xs gap-1.5 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"

@@ -51,15 +51,15 @@ export function SettingsView() {
     >
       <Tabs defaultValue="general" onValueChange={handleTabChange}>
         <TabsList className="h-8 mb-4">
-          <TabsTrigger value="general" className="text-xs h-7">
+          <TabsTrigger value="general" className="text-xs h-8">
             General
           </TabsTrigger>
           {canViewRates && (
-            <TabsTrigger value="rates" className="text-xs h-7">
+            <TabsTrigger value="rates" className="text-xs h-8">
               Rates
             </TabsTrigger>
           )}
-          <TabsTrigger value="audit" className="text-xs h-7">
+          <TabsTrigger value="audit" className="text-xs h-8">
             Audit trail
           </TabsTrigger>
         </TabsList>

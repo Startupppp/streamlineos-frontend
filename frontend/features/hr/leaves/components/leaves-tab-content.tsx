@@ -547,7 +547,7 @@ export function LeavesTabContent({
             <div className="flex items-center gap-2.5">
               <div
                 className={cn(
-                  "h-7 w-7 rounded-lg flex items-center justify-center",
+                  "h-8 w-7 rounded-lg flex items-center justify-center",
                   config.iconBg,
                 )}
               >

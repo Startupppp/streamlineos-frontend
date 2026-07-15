@@ -127,7 +127,7 @@ export function TicketExternalLinksSection({ ticketId }: TicketExternalLinksSect
           )}
           <div className="flex items-center gap-2">
             <Select value={entityType} onValueChange={handleEntityTypeChange}>
-              <SelectTrigger className="h-7 text-xs w-[130px] shrink-0">
+              <SelectTrigger className="h-8 text-xs w-[130px] shrink-0">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -142,7 +142,7 @@ export function TicketExternalLinksSection({ ticketId }: TicketExternalLinksSect
               value={entityId}
               onChange={handleEntityIdChange}
               placeholder="ID"
-              className="h-7 text-xs w-20"
+              className="h-8 text-xs w-20"
               inputMode="numeric"
             />
             <Button

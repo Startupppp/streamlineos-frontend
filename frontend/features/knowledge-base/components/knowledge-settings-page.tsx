@@ -216,7 +216,7 @@ function TrashRetentionSection() {
               value={value}
               onChange={handleValueChange}
               onKeyDown={handleKeyDown}
-              className="h-7 w-20 text-sm text-right"
+              className="h-8 w-20 text-sm text-right"
               autoFocus
             />
             <span className="text-sm text-muted-foreground">days</span>

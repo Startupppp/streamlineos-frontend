@@ -273,7 +273,7 @@ export const StatusRow = memo(function StatusRow({
             onKeyDown={handleRenameKeyDown}
             onBlur={handleRenameBlur}
             className={cn(
-              "h-7 text-sm px-1.5",
+              "h-8 text-sm px-1.5",
               renameError && "border-destructive focus-visible:ring-destructive",
             )}
             disabled={updateState.isPending}
@@ -307,7 +307,7 @@ export const StatusRow = memo(function StatusRow({
           onValueChange={handleTypeChange}
           disabled={updateState.isPending}
         >
-          <SelectTrigger className="h-7 w-[118px] shrink-0 text-[11px]">
+          <SelectTrigger className="h-8 w-[118px] shrink-0 text-[11px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

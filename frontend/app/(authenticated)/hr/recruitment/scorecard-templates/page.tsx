@@ -87,7 +87,7 @@ function CriterionRow({ criterion, onUpdate, onRemove, canRemove }: CriterionRow
       <Button
         variant="ghost"
         size="icon"
-        className={cn("h-7 w-7 text-destructive opacity-0 group-hover:opacity-100 transition-opacity", !canRemove && "invisible")}
+        className={cn("h-8 w-7 text-destructive opacity-0 group-hover:opacity-100 transition-opacity", !canRemove && "invisible")}
         onClick={handleRemoveClick}
         aria-label="Remove criterion"
         disabled={!canRemove}

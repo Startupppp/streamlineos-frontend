@@ -64,7 +64,7 @@ export function OrgHubClient() {
     >
       <HeadcountStats groupBy="department" />
       <Tabs defaultValue="departments" className="flex flex-col flex-1 min-h-0">
-        <TabsList className="h-9 shrink-0 rounded-lg border p-1 w-fit">
+        <TabsList className="h-8 shrink-0 rounded-lg border p-1 w-fit">
           <TabsTrigger
             value="departments"
             className="text-xs gap-1.5 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"

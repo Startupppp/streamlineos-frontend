@@ -219,7 +219,7 @@ export function WorkLogEntryRow({
               <Link2 className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
               <Input
                 placeholder="Link (optional) — paste URL to doc, PR, sheet, or file"
-                className={cn("h-7 text-xs", linkError && "border-destructive focus-visible:ring-destructive")}
+                className={cn("h-8 text-xs", linkError && "border-destructive focus-visible:ring-destructive")}
                 type="url"
                 value={workLink}
                 onChange={(e) => {

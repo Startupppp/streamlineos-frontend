@@ -133,7 +133,7 @@ export function CreateInspectionSheet({ open, onOpenChange }: Props) {
                   <div className="space-y-1">
                     <Label className="text-[11px] text-muted-foreground">Variant ID *</Label>
                     <Input
-                      className="h-7 text-xs"
+                      className="h-8 text-xs"
                       type="number"
                       placeholder="ID"
                       {...form.register(`lines.${idx}.variantId`)}
@@ -145,7 +145,7 @@ export function CreateInspectionSheet({ open, onOpenChange }: Props) {
                   <div className="space-y-1">
                     <Label className="text-[11px] text-muted-foreground">Qty *</Label>
                     <Input
-                      className="h-7 text-xs"
+                      className="h-8 text-xs"
                       type="number"
                       placeholder="Qty"
                       {...form.register(`lines.${idx}.qty`)}
@@ -157,7 +157,7 @@ export function CreateInspectionSheet({ open, onOpenChange }: Props) {
                   <div className="space-y-1">
                     <Label className="text-[11px] text-muted-foreground">Lot ID</Label>
                     <Input
-                      className="h-7 text-xs"
+                      className="h-8 text-xs"
                       type="number"
                       placeholder="Optional"
                       {...form.register(`lines.${idx}.lotId`)}
@@ -166,7 +166,7 @@ export function CreateInspectionSheet({ open, onOpenChange }: Props) {
                   <div className="space-y-1">
                     <Label className="text-[11px] text-muted-foreground">Serial ID</Label>
                     <Input
-                      className="h-7 text-xs"
+                      className="h-8 text-xs"
                       type="number"
                       placeholder="Optional"
                       {...form.register(`lines.${idx}.serialId`)}

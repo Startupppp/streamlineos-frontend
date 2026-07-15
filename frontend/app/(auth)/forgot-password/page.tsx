@@ -203,7 +203,7 @@ export default function ForgotPasswordPage() {
               placeholder="you@example.com"
               {...form.register("email")}
               disabled={forgotPassword.isPending}
-              className="h-9 text-sm focus-visible:ring-primary"
+              className="h-8 text-sm focus-visible:ring-primary"
               aria-invalid={!!form.formState.errors.email}
               aria-describedby={
                 form.formState.errors.email ? "email-error" : undefined

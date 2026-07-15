@@ -321,7 +321,7 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
                   onChange={handleTitleChange}
                   placeholder="New story title..."
                   aria-label={`Add new story to ${epic.title}`}
-                  className="h-7 min-w-0 flex-1 border-border/70 bg-background/60 text-xs backdrop-blur-sm"
+                  className="h-8 min-w-0 flex-1 border-border/70 bg-background/60 text-xs backdrop-blur-sm"
                   onKeyDown={handleTitleKeyDown}
                 />
                 <Button size="sm" className="h-7 px-2.5 text-xs" onClick={handleAddStory} disabled={!newStoryTitle.trim()}>

@@ -14,14 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetFooter,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetBody } from "@/components/ui/sheet";
 import {
   Form,
   FormControl,
@@ -157,7 +150,7 @@ function CreateSecretSheet({ open, onClose }: CreateSecretSheetProps) {
         </SheetHeader>
         <Form {...form}>
           <form onSubmit={handleFormSubmit} className="flex flex-col flex-1 overflow-hidden">
-            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+            <SheetBody className="px-6 py-4 space-y-4">
               <FormField
                 control={form.control}
                 name="name"
@@ -211,7 +204,7 @@ function CreateSecretSheet({ open, onClose }: CreateSecretSheetProps) {
                   </FormItem>
                 )}
               />
-            </div>
+            </SheetBody>
             <SheetFooter className="px-6 py-4 border-t border-border/60 gap-2">
               <Button type="button" variant="outline" onClick={onClose} disabled={createSecret.isPending}>
                 Cancel

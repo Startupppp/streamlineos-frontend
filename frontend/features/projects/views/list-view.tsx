@@ -280,7 +280,7 @@ function InlineGroupCreate({ groupKey, projectId, status }: InlineGroupCreatePro
         onChange={handleTitleChange}
         onKeyDown={handleKeyDown}
         placeholder="New ticket title... (Enter to create)"
-        className="h-7 flex-1 text-xs"
+        className="h-8 flex-1 text-xs"
         disabled={createTicket.isPending}
       />
       <button

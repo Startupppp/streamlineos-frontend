@@ -6,7 +6,7 @@ import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 export function OverviewSkeleton() {
   return (
     <div className="space-y-4">
-      <StatCardGridSkeleton cols={4} count={12} />
+      <StatCardGridSkeleton cols={4} />
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4">
         <div className="rounded-xl border border-border bg-card p-4">

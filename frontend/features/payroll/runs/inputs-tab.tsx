@@ -9,12 +9,7 @@ import { AlertTriangle } from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetBody } from "@/components/ui/sheet";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -268,7 +263,7 @@ export function InputsTab({ runId, isLocked }: InputsTabProps) {
               onSubmit={form.handleSubmit(handleSubmit)}
               className="flex flex-col flex-1 overflow-hidden"
             >
-              <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
+              <SheetBody className="px-6 py-4 space-y-3">
                 <FormField
                   control={form.control}
                   name="scheduledDays"
@@ -347,7 +342,7 @@ export function InputsTab({ runId, isLocked }: InputsTabProps) {
                     </FormItem>
                   )}
                 />
-              </div>
+              </SheetBody>
               <div className="px-6 py-4 border-t flex justify-end gap-2">
                 <Button type="button" variant="outline" size="sm" onClick={handleSheetClose}>
                   Cancel

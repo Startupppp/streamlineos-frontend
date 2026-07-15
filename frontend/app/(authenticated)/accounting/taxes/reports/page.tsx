@@ -371,13 +371,13 @@ export default function TaxReportsPage() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
         <div className="shrink-0 flex items-center justify-between gap-3 px-4 sm:px-6 pb-2">
           <TabsList className="h-8">
-            <TabsTrigger value="output" className="text-xs px-3 h-7">
+            <TabsTrigger value="output" className="text-xs px-3 h-8">
               Output
             </TabsTrigger>
-            <TabsTrigger value="input" className="text-xs px-3 h-7">
+            <TabsTrigger value="input" className="text-xs px-3 h-8">
               Input
             </TabsTrigger>
-            <TabsTrigger value="liability" className="text-xs px-3 h-7">
+            <TabsTrigger value="liability" className="text-xs px-3 h-8">
               Liability
             </TabsTrigger>
           </TabsList>

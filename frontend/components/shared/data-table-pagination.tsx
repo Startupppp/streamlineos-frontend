@@ -47,7 +47,7 @@ export function DataTablePagination({
         <span>Showing {start}-{end} of {total}</span>
         {onLimitChange && (
           <Select value={String(limit)} onValueChange={(v) => onLimitChange(Number(v))}>
-            <SelectTrigger className="h-7 w-[70px] text-xs">
+            <SelectTrigger className="h-8 w-[70px] text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

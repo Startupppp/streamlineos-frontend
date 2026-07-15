@@ -32,8 +32,8 @@ export default function ApiTokensPage() {
       <div className="flex flex-1 min-h-0 flex-col">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-1 min-h-0 flex-col">
           <TabsList className="mb-3 h-8 shrink-0">
-            <TabsTrigger value="personal" className="text-xs h-7">Personal</TabsTrigger>
-            <TabsTrigger value="organization" className="text-xs h-7">Organization</TabsTrigger>
+            <TabsTrigger value="personal" className="text-xs h-8">Personal</TabsTrigger>
+            <TabsTrigger value="organization" className="text-xs h-8">Organization</TabsTrigger>
           </TabsList>
           <TabsContent value="personal" className="mt-0 flex flex-1 min-h-0 flex-col">
             <PersonalTokensTab

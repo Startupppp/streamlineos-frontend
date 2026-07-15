@@ -210,7 +210,7 @@ export function SalaryStructureTemplateSheet({
         <Input
           {...register("name")}
           placeholder="e.g. Senior Engineer L3"
-          className="h-9"
+          className="h-8"
         />
         {errors.name && (
           <p className="text-xs text-destructive mt-1">{errors.name.message}</p>
@@ -224,7 +224,7 @@ export function SalaryStructureTemplateSheet({
             type="number"
             min="0"
             placeholder="50000"
-            className="h-9"
+            className="h-8"
           />
           {errors.basicSalary && (
             <p className="text-xs text-destructive mt-1">{errors.basicSalary.message}</p>
@@ -237,7 +237,7 @@ export function SalaryStructureTemplateSheet({
             min="0"
             max="100"
             placeholder="40"
-            className="h-9"
+            className="h-8"
           />
         </FieldGroup>
       </div>
@@ -257,7 +257,7 @@ export function SalaryStructureTemplateSheet({
             type="number"
             min="0"
             placeholder="0"
-            className="h-9"
+            className="h-8"
           />
         </FieldGroup>
         <FieldGroup label="Medical Allowance (₹)">
@@ -266,7 +266,7 @@ export function SalaryStructureTemplateSheet({
             type="number"
             min="0"
             placeholder="0"
-            className="h-9"
+            className="h-8"
           />
         </FieldGroup>
         <FieldGroup label="Travel Allowance (₹)">
@@ -275,7 +275,7 @@ export function SalaryStructureTemplateSheet({
             type="number"
             min="0"
             placeholder="0"
-            className="h-9"
+            className="h-8"
           />
         </FieldGroup>
         <FieldGroup label="Other Allowances (₹)">
@@ -284,7 +284,7 @@ export function SalaryStructureTemplateSheet({
             type="number"
             min="0"
             placeholder="0"
-            className="h-9"
+            className="h-8"
           />
         </FieldGroup>
       </div>
@@ -303,7 +303,7 @@ export function SalaryStructureTemplateSheet({
             min="0"
             max="100"
             placeholder="12"
-            className="h-9"
+            className="h-8"
           />
         </FieldGroup>
         <FieldGroup label="Professional Tax (₹)">
@@ -312,7 +312,7 @@ export function SalaryStructureTemplateSheet({
             type="number"
             min="0"
             placeholder="200"
-            className="h-9"
+            className="h-8"
           />
         </FieldGroup>
       </div>

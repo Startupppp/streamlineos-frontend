@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 import { Receipt, Plus, Paperclip, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetBody } from "@/components/ui/sheet";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -130,7 +130,7 @@ function SubmitSheet({ open, onClose }: { open: boolean; onClose: () => void }) 
         </div>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col flex-1 min-h-0">
-          <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-4">
+          <SheetBody className="px-6 py-4 space-y-4">
             <FormField
               control={form.control}
               name="category"
@@ -225,7 +225,7 @@ function SubmitSheet({ open, onClose }: { open: boolean; onClose: () => void }) 
                 </label>
               )}
             </div>
-          </div>
+          </SheetBody>
           <div className="shrink-0 px-6 py-4 border-t grid grid-cols-2 gap-2">
             <Button type="button" variant="outline" onClick={handleClose}>Cancel</Button>
             <Button type="submit" disabled={mutation.isPending || uploadFile.isPending}>

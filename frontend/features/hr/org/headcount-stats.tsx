@@ -12,7 +12,7 @@ export function HeadcountStats({ groupBy }: Props) {
   const { data, isLoading } = useOrgHeadcount(groupBy);
 
   if (isLoading) {
-    return <StatCardGridSkeleton cols={4} count={12} className="mb-4" />;
+    return <StatCardGridSkeleton cols={4} className="mb-4" />;
   }
 
   if (!data || data.length === 0) return null;

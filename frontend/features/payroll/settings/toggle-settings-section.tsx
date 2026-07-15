@@ -6,14 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { PageSection } from "@/components/ui/page-wrapper";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetFooter,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetBody } from "@/components/ui/sheet";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -238,7 +231,7 @@ export function ToggleSettingsSection({ policy, activeVersion }: ToggleSettingsS
             </SheetDescription>
           </SheetHeader>
           <form onSubmit={handleSubmit(onVersionSubmit)} className="flex flex-col flex-1 min-h-0">
-            <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-4">
+            <SheetBody className="px-6 py-4 space-y-4">
               {impactData && (
                 <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 space-y-1">
                   <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Impact Preview</p>
@@ -279,7 +272,7 @@ export function ToggleSettingsSection({ policy, activeVersion }: ToggleSettingsS
                   <p className="text-xs text-destructive">{errors.reason.message}</p>
                 )}
               </div>
-            </div>
+            </SheetBody>
             <SheetFooter className="px-6 py-4 border-t shrink-0">
               <Button
                 type="button"

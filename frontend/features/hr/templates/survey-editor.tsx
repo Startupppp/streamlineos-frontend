@@ -100,7 +100,7 @@ export function SurveyEditor({ questions, onChange }: SurveyEditorProps) {
                 onChange={(e) =>
                   handleChange(q.id, { options: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })
                 }
-                className="h-7 text-xs"
+                className="h-8 text-xs"
               />
             </div>
           )}

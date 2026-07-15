@@ -74,7 +74,7 @@ function PasswordInput({
           placeholder={placeholder}
           maxLength={maxLength}
           autoComplete={autoComplete}
-          className={cn("h-9 text-sm pr-9", error && "border-destructive")}
+          className={cn("h-8 text-sm pr-9", error && "border-destructive")}
         />
         <button
           type="button"

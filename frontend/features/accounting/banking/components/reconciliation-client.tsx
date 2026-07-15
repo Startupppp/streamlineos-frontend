@@ -98,7 +98,7 @@ export function ReconciliationClient() {
             value={selectedAccountId ? String(selectedAccountId) : ""}
             onValueChange={handleAccountChange}
           >
-            <SelectTrigger className="h-9 w-[220px] text-sm">
+            <SelectTrigger className="h-8 w-[220px] text-sm">
               <SelectValue placeholder="Select account" />
             </SelectTrigger>
             <SelectContent>

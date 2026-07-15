@@ -120,13 +120,13 @@ export function TestPanel({ blueprintId, stages }: TestPanelProps) {
                 value={row.key}
                 onChange={(e) => handleFieldKeyChange(idx, e.target.value)}
                 placeholder="field"
-                className="h-7 text-xs flex-1"
+                className="h-8 text-xs flex-1"
               />
               <Input
                 value={row.value}
                 onChange={(e) => handleFieldValChange(idx, e.target.value)}
                 placeholder="value"
-                className="h-7 text-xs flex-1"
+                className="h-8 text-xs flex-1"
               />
             </div>
           ))}

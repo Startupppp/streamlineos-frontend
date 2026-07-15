@@ -595,7 +595,7 @@ export function EventCreateDialog({
                     onChange={handleLocationChange}
                     placeholder="Room or Location"
                     className={cn(
-                      "h-9 text-xs flex-1 min-w-0",
+                      "h-8 text-xs flex-1 min-w-0",
                       form.locationError && "border-destructive",
                     )}
                   />

@@ -132,7 +132,7 @@ export function ChatConfigurationPage() {
                 onChange={(e) =>
                   setDraft({ ...draft, maxAttachmentSizeMb: Number(e.target.value) })
                 }
-                className="max-w-xs h-9"
+                className="max-w-xs h-8"
               />
               <p className="text-[11px] text-muted-foreground/70">
                 Files larger than this are rejected when sent in a message.
@@ -161,7 +161,7 @@ export function ChatConfigurationPage() {
                 onChange={(e) =>
                   setDraft({ ...draft, maxHuddleParticipants: Number(e.target.value) })
                 }
-                className="max-w-xs h-9"
+                className="max-w-xs h-8"
               />
               <p className="text-[11px] text-muted-foreground/70">
                 Once a call reaches this many active participants, further join attempts are

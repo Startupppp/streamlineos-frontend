@@ -517,13 +517,13 @@ export function FilterDatesInline({
           value={dueDateFrom}
           onChange={onDueDateFromChange}
           placeholder="From"
-          className="h-7 w-full text-xs"
+          className="h-8 w-full text-xs"
         />
         <DatePicker
           value={dueDateTo}
           onChange={onDueDateToChange}
           placeholder="To"
-          className="h-7 w-full text-xs"
+          className="h-8 w-full text-xs"
         />
       </div>
     </div>

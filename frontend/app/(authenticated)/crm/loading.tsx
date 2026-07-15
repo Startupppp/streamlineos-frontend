@@ -7,7 +7,7 @@ export default function CrmHubLoading() {
   return (
     <PageWrapper title="CRM" subtitle="Command center">
       <div className="space-y-4 pb-4">
-        <StatCardGridSkeleton cols={4} count={12} />
+        <StatCardGridSkeleton cols={4} />
 
         <div className="flex items-center gap-4 flex-wrap px-1">
           {Array.from({ length: 12 }).map((_, i) => (

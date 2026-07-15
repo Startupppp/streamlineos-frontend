@@ -222,7 +222,7 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
               placeholder="e.g. GitHub, Jira, AWS Console"
               value={systemName}
               onChange={handleSystemNameChange}
-              className="h-9"
+              className="h-8"
             />
           </div>
           <div className="space-y-1.5">
@@ -231,7 +231,7 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
               placeholder="e.g. Read, Write, Admin"
               value={accessLevel}
               onChange={handleAccessLevelChange}
-              className="h-9"
+              className="h-8"
             />
           </div>
           <LoadingButton

@@ -99,7 +99,7 @@ export function TestPaymentTab({ providerKey }: { providerKey: string }) {
             id="test-amount"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="h-9 text-sm w-32"
+            className="h-8 text-sm w-32"
           />
         </div>
         <Button

@@ -152,7 +152,7 @@ export function TransitionPopover({
           onChange={handleFieldInputChange}
           onKeyDown={handleFieldKeyDown}
           placeholder="field_name → Enter"
-          className="h-7 text-xs"
+          className="h-8 text-xs"
         />
       </div>
 

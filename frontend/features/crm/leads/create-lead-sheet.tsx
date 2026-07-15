@@ -120,7 +120,7 @@ export function CreateLeadSheet({
                     name="name"
                     required
                     placeholder="Enter full name"
-                    className="h-9"
+                    className="h-8"
                   />
                 </div>
                 <div>
@@ -137,7 +137,7 @@ export function CreateLeadSheet({
                       name="email"
                       type="email"
                       placeholder="john@example.com"
-                      className="pl-9 h-9"
+                      className="pl-9 h-8"
                       value={emailInput}
                       onChange={handleEmailChange}
                     />
@@ -156,7 +156,7 @@ export function CreateLeadSheet({
                     placeholder="Enter phone number"
                     value={phone}
                     onChange={setPhone}
-                    className="h-9"
+                    className="h-8"
                   />
                 </div>
                 <div>
@@ -172,7 +172,7 @@ export function CreateLeadSheet({
                       id="company"
                       name="company"
                       placeholder="Acme Corp"
-                      className="pl-9 h-9"
+                      className="pl-9 h-8"
                     />
                   </div>
                 </div>
@@ -189,7 +189,7 @@ export function CreateLeadSheet({
                       id="city"
                       name="city"
                       placeholder="Mumbai"
-                      className="pl-9 h-9"
+                      className="pl-9 h-8"
                     />
                   </div>
                 </div>
@@ -249,7 +249,7 @@ export function CreateLeadSheet({
                     type="priority"
                     value={priority}
                     onChange={setPriority}
-                    className="w-full h-9"
+                    className="w-full h-8"
                   />
                 </div>
                 <div>
@@ -260,7 +260,7 @@ export function CreateLeadSheet({
                     type="source"
                     value={source}
                     onChange={setSource}
-                    className="w-full h-9"
+                    className="w-full h-8"
                   />
                 </div>
 
@@ -279,7 +279,7 @@ export function CreateLeadSheet({
                         name="referredBy"
                         required
                         placeholder="Name of person who referred this lead"
-                        className="pl-9 h-9"
+                        className="pl-9 h-8"
                       />
                     </div>
                   </div>
@@ -309,7 +309,7 @@ export function CreateLeadSheet({
                       min="0"
                       step="1"
                       placeholder="5,00,000"
-                      className="pl-9 h-9"
+                      className="pl-9 h-8"
                     />
                   </div>
                 </div>
@@ -329,7 +329,7 @@ export function CreateLeadSheet({
                       min="0"
                       step="1"
                       placeholder="10,00,000"
-                      className="pl-9 h-9"
+                      className="pl-9 h-8"
                     />
                   </div>
                 </div>
@@ -356,7 +356,7 @@ export function CreateLeadSheet({
           <Button
             type="button"
             variant="outline"
-            className="flex-1 h-9"
+            className="flex-1 h-8"
             onClick={handleCancel}
           >
             Cancel
@@ -364,7 +364,7 @@ export function CreateLeadSheet({
           <Button
             type="submit"
             form="create-lead-form"
-            className="flex-1 h-9"
+            className="flex-1 h-8"
             disabled={isPending}
           >
             {isPending ? "Creating..." : "Create Lead"}

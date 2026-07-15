@@ -37,6 +37,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetBody,
 } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -391,7 +392,7 @@ export default function WebhooksPage({ params }: PageProps) {
           <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
             <SheetTitle>New Webhook</SheetTitle>
           </SheetHeader>
-          <div className="flex-1 overflow-y-auto px-6 py-5">
+          <SheetBody className="px-6 py-5">
             <Form {...form}>
               <form id="webhook-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
                 <FormField
@@ -472,7 +473,7 @@ export default function WebhooksPage({ params }: PageProps) {
                 />
               </form>
             </Form>
-          </div>
+          </SheetBody>
           <div className="shrink-0 px-6 py-4 border-t">
             <div className="grid grid-cols-2 gap-2">
               <Button variant="outline" size="sm" onClick={handleCancelForm}>Cancel</Button>

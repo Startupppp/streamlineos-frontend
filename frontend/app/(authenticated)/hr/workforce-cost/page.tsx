@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Users, DollarSign, Calendar } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -51,9 +51,7 @@ export default function WorkforceCostPage() {
         >
           {/* Summary */}
           {summaryLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
-            </div>
+            <StatCardGridSkeleton cols={3} />
           ) : (
             <StatCardGrid cols={3}>
               <StatCard label="Total Headcount" value={String(summary?.total_headcount ?? "—")} hint="Active employees" icon={Users} tone="blue" />

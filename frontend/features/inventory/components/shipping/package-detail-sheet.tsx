@@ -92,7 +92,7 @@ const EditableLineRow = memo(function EditableLineRow({
           min="1"
           value={line.variantId}
           onChange={handleVariantChange}
-          className="h-7 text-xs"
+          className="h-8 text-xs"
         />
       </div>
       <div className="space-y-0.5">
@@ -102,7 +102,7 @@ const EditableLineRow = memo(function EditableLineRow({
           min="1"
           value={line.qty}
           onChange={handleQtyChange}
-          className="h-7 text-xs"
+          className="h-8 text-xs"
         />
       </div>
       <div className="space-y-0.5">
@@ -113,7 +113,7 @@ const EditableLineRow = memo(function EditableLineRow({
           placeholder="—"
           value={line.lotId}
           onChange={handleLotChange}
-          className="h-7 text-xs"
+          className="h-8 text-xs"
         />
       </div>
       <div className="space-y-0.5">
@@ -124,7 +124,7 @@ const EditableLineRow = memo(function EditableLineRow({
           placeholder="—"
           value={line.serialId}
           onChange={handleSerialChange}
-          className="h-7 text-xs"
+          className="h-8 text-xs"
         />
       </div>
       <Button

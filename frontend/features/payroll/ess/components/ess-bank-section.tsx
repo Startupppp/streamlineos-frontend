@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 import { Landmark, Eye, EyeOff, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetBody } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -168,7 +168,7 @@ function BankSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
         </div>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col flex-1 min-h-0">
-          <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-4">
+          <SheetBody className="px-6 py-4 space-y-4">
             <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 dark:border-amber-500/30 dark:bg-amber-500/10">
               <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
               <p className="text-xs text-amber-800 dark:text-amber-200">
@@ -289,7 +289,7 @@ function BankSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
                 </FormItem>
               )}
             />
-          </div>
+          </SheetBody>
           <div className="shrink-0 px-6 py-4 border-t grid grid-cols-2 gap-2">
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
             <Button type="submit" disabled={mutation.isPending}>

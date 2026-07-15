@@ -10,9 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyInboxIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
-import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetBody } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -211,7 +209,7 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
               <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
                 <SheetTitle>Create Intake Item</SheetTitle>
               </SheetHeader>
-              <div className="flex-1 overflow-y-auto px-6 py-5">
+              <SheetBody className="px-6 py-5">
                 <form id="create-intake-form" onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4">
                   <div>
                     <Label htmlFor="intake-title">Title</Label>
@@ -225,7 +223,7 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
                     <Textarea id="intake-desc" {...createForm.register("description")} />
                   </div>
                 </form>
-              </div>
+              </SheetBody>
               <div className="shrink-0 px-6 py-4 border-t">
                 <div className="grid grid-cols-2 gap-2">
                   <Button variant="outline" size="sm" onClick={handleCloseCreate}>Cancel</Button>
@@ -305,7 +303,7 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
           <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
             <SheetTitle>Accept Intake Item</SheetTitle>
           </SheetHeader>
-          <div className="flex-1 overflow-y-auto px-6 py-5">
+          <SheetBody className="px-6 py-5">
             <form id="accept-intake-form" onSubmit={acceptForm.handleSubmit(onAcceptSubmit)} className="space-y-4">
               <div>
                 <Label>State</Label>
@@ -374,7 +372,7 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
                 </Select>
               </div>
             </form>
-          </div>
+          </SheetBody>
           <div className="shrink-0 px-6 py-4 border-t">
             <div className="grid grid-cols-2 gap-2">
               <Button variant="outline" size="sm" onClick={handleCloseAccept}>Cancel</Button>
@@ -391,7 +389,7 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
           <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
             <SheetTitle>Decline Intake Item</SheetTitle>
           </SheetHeader>
-          <div className="flex-1 overflow-y-auto px-6 py-5">
+          <SheetBody className="px-6 py-5">
             <form id="decline-intake-form" onSubmit={declineForm.handleSubmit(onDeclineSubmit)} className="space-y-4">
               <div>
                 <Label htmlFor="decline-reason">Reason</Label>
@@ -405,7 +403,7 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
                 )}
               </div>
             </form>
-          </div>
+          </SheetBody>
           <div className="shrink-0 px-6 py-4 border-t">
             <div className="grid grid-cols-2 gap-2">
               <Button variant="outline" size="sm" onClick={handleCloseDecline}>Cancel</Button>

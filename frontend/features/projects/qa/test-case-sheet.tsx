@@ -295,12 +295,12 @@ export function TestCaseSheet({
                 <div key={field.id} className="grid grid-cols-[1fr_1fr_auto] gap-1.5 items-start">
                   <Input
                     {...form.register(`steps.${idx}.action`)}
-                    className="h-7 text-[10px]"
+                    className="h-8 text-[10px]"
                     placeholder={`Step ${idx + 1} action`}
                   />
                   <Input
                     {...form.register(`steps.${idx}.expected`)}
-                    className="h-7 text-[10px]"
+                    className="h-8 text-[10px]"
                     placeholder="Expected result"
                   />
                   <Button

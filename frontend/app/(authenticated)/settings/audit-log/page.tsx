@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
+  SheetBody,
 } from "@/components/ui/sheet";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
@@ -131,7 +132,7 @@ function LogDetailSheet({ log, onClose }: { log: AuditLogRow; onClose: () => voi
             Event Details
           </SheetTitle>
         </SheetHeader>
-        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-5 space-y-4">
+        <SheetBody className="px-6 py-5 space-y-4">
           <DetailField label="Action">
             <Badge variant="outline" className={`text-xs ${actionBadgeClass(log.action)}`}>
               {log.action}
@@ -172,7 +173,7 @@ function LogDetailSheet({ log, onClose }: { log: AuditLogRow; onClose: () => voi
               </pre>
             </DetailField>
           )}
-        </div>
+        </SheetBody>
       </SheetContent>
     </Sheet>
   );
@@ -406,7 +407,7 @@ export default function AuditLogPage() {
         onChange={handleGoToPageChange}
         onKeyDown={handleGoToPageKeyDown}
         placeholder="—"
-        className="h-7 w-14 text-xs text-center"
+        className="h-8 w-14 text-xs text-center"
         aria-label="Go to page"
       />
     </div>
@@ -416,7 +417,7 @@ export default function AuditLogPage() {
     <div className="flex items-center gap-2">
       <span className="text-[12px] text-muted-foreground">Rows per page</span>
       <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
-        <SelectTrigger className="h-7 w-[64px] text-xs">
+        <SelectTrigger className="h-8 w-[64px] text-xs">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

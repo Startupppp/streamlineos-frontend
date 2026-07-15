@@ -267,7 +267,7 @@ export const InlineEstimate = memo(function InlineEstimate({
             value={value}
             onChange={handleValueChange}
             onKeyDown={handleKeyDown}
-            className="h-7 text-xs"
+            className="h-8 text-xs"
           />
         </PopoverContent>
       </Popover>

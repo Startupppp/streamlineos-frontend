@@ -64,7 +64,7 @@ export function SubmissionsDataTable({ formId, submissions, canManage }: Submiss
             value={row.status}
             onValueChange={(v) => handleStatusChange(row.id, v as HrFormSubmissionStatus)}
           >
-            <SelectTrigger className="h-7 text-xs w-32">
+            <SelectTrigger className="h-8 text-xs w-32">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

@@ -50,7 +50,7 @@ const URGENCY_CONFIG: Record<
 };
 
 function KpiSkeletons() {
-  return <StatCardGridSkeleton cols={4} count={12} />;
+  return <StatCardGridSkeleton cols={4} />;
 }
 
 function LowStockSkeleton() {

@@ -481,7 +481,7 @@ function BuilderCanvas({ workflow, workflowId }: BuilderCanvasProps) {
                 onChange={handleNameChange}
                 onBlur={handleNameSubmit}
                 onKeyDown={handleNameKeyDown}
-                className="h-7 text-sm font-medium"
+                className="h-8 text-sm font-medium"
               />
             </form>
           ) : (

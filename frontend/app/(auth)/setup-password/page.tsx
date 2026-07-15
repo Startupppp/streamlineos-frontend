@@ -144,7 +144,7 @@ function SetupPasswordContent() {
               <Input
                 type={showPassword ? "text" : "password"}
                 placeholder="Create a strong password"
-                className="pl-9 pr-9 h-9 text-sm"
+                className="pl-9 pr-9 h-8 text-sm"
                 {...form.register("password")}
               />
               <button
@@ -176,7 +176,7 @@ function SetupPasswordContent() {
               <Input
                 type={showConfirm ? "text" : "password"}
                 placeholder="Confirm your password"
-                className="pl-9 pr-9 h-9 text-sm"
+                className="pl-9 pr-9 h-8 text-sm"
                 {...form.register("confirmPassword")}
               />
               <button

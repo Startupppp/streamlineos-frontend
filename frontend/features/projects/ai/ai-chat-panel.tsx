@@ -362,7 +362,7 @@ export function AiChatPanel({
               rows={1}
               disabled={mutation.isPending}
               aria-label="Question input"
-              className="min-h-10 max-h-36 min-w-0 flex-1 resize-none border-border bg-background py-2.5 text-[13px]"
+              className="min-h-8 max-h-36 min-w-0 flex-1 resize-none border-border bg-background py-2.5 text-[13px]"
             />
             <LoadingButton
               type="submit"

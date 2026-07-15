@@ -178,7 +178,7 @@ export function TicketDetailRelations({ ticketId }: TicketDetailRelationsProps) 
             </div>
             <div className="flex items-center gap-2">
               <Select value={selectedTagId} onValueChange={handleTagSelectChange} disabled={!availableTags.length}>
-                <SelectTrigger className="h-7 text-xs flex-1 min-w-0">
+                <SelectTrigger className="h-8 text-xs flex-1 min-w-0">
                   <SelectValue placeholder="Add a tag" />
                 </SelectTrigger>
                 <SelectContent>
@@ -226,11 +226,11 @@ export function TicketDetailRelations({ ticketId }: TicketDetailRelationsProps) 
                 value={linkedTicketId}
                 onChange={handleLinkedTicketIdChange}
                 placeholder="Ticket ID"
-                className="h-7 text-xs w-20"
+                className="h-8 text-xs w-20"
                 inputMode="numeric"
               />
               <Select value={linkRelation} onValueChange={handleLinkRelationChange}>
-                <SelectTrigger className="h-7 text-xs w-[110px]">
+                <SelectTrigger className="h-8 text-xs w-[110px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -260,7 +260,7 @@ export function TicketDetailRelations({ ticketId }: TicketDetailRelationsProps) 
                 value={mergeTargetId}
                 onChange={handleMergeTargetChange}
                 placeholder="Target ticket ID"
-                className="h-7 text-xs w-28"
+                className="h-8 text-xs w-28"
                 inputMode="numeric"
               />
               <Button
@@ -285,7 +285,7 @@ export function TicketDetailRelations({ ticketId }: TicketDetailRelationsProps) 
                 value={splitTitle}
                 onChange={handleSplitTitleChange}
                 placeholder="New ticket title"
-                className="h-7 text-xs"
+                className="h-8 text-xs"
               />
               <Textarea
                 value={splitDescription}

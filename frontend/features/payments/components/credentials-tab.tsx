@@ -114,7 +114,7 @@ export function CredentialsTab({ providerKey, environment, credential }: Credent
           value={keyId}
           onChange={(e) => setKeyId(e.target.value)}
           placeholder={credential?.maskedKeyHint ? `Currently ****${credential.maskedKeyHint.slice(-4)}` : "rzp_test_..."}
-          className="h-9 text-sm font-mono"
+          className="h-8 text-sm font-mono"
         />
       </div>
 
@@ -126,7 +126,7 @@ export function CredentialsTab({ providerKey, environment, credential }: Credent
           value={secret}
           onChange={(e) => setSecret(e.target.value)}
           placeholder={credential?.hasSecret ? "Saved — enter a new value to replace" : "Enter key secret"}
-          className="h-9 text-sm font-mono"
+          className="h-8 text-sm font-mono"
         />
       </div>
 
@@ -138,7 +138,7 @@ export function CredentialsTab({ providerKey, environment, credential }: Credent
           value={webhookSecret}
           onChange={(e) => setWebhookSecret(e.target.value)}
           placeholder={credential?.hasWebhookSecret ? "Saved — enter a new value to replace" : "Enter webhook secret"}
-          className="h-9 text-sm font-mono"
+          className="h-8 text-sm font-mono"
         />
       </div>
 

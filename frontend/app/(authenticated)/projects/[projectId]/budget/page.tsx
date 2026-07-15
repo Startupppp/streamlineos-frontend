@@ -192,7 +192,7 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
         actions={<Skeleton className="h-8 w-32 rounded-md" />}
       >
         <PmPageShell>
-          <StatCardGridSkeleton cols={3} count={12} className="mb-4" />
+          <StatCardGridSkeleton cols={3} className="mb-4" />
           <Skeleton className="h-20 rounded-xl border border-border bg-card" />
         </PmPageShell>
       </PageWrapper>

@@ -220,10 +220,10 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
           placeholder="Search..."
           value={search}
           onChange={handleSearchChange}
-          className="h-7 w-44 text-[11px]"
+          className="h-8 w-44 text-[11px]"
         />
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="h-7 w-40 text-[11px]">
+          <SelectTrigger className="h-8 w-40 text-[11px]">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>

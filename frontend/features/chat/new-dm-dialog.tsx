@@ -149,7 +149,7 @@ export function NewDMDialog({
               placeholder="Search by name or email..."
               value={search}
               onChange={handleSearchChange}
-              className="pl-9 h-9 bg-muted/30 border-border/30"
+              className="pl-9 h-8 bg-muted/30 border-border/30"
               autoFocus
             />
           </div>

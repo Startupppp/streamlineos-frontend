@@ -113,7 +113,7 @@ export function NotificationFilterBar({
     (activeSection !== "ALL" ? 1 : 0) + (activeCategory ? 1 : 0) + (activePriority ? 1 : 0);
 
   const filterControlClassName =
-    "h-9 bg-card border-border text-xs font-normal shadow-xs hover:border-ring/50 focus-visible:border-ring focus-visible:ring-ring/30 focus-visible:ring-[3px]";
+    "h-8 bg-card border-border text-xs font-normal shadow-xs hover:border-ring/50 focus-visible:border-ring focus-visible:ring-ring/30 focus-visible:ring-[3px]";
 
   return (
     <div className="flex w-full min-w-0 items-center gap-2">
@@ -248,7 +248,7 @@ export function NotificationFilterBar({
         <Button
           variant="ghost"
           size="sm"
-          className="hidden sm:inline-flex h-9 shrink-0 gap-1.5 px-2 text-xs text-muted-foreground hover:text-foreground focus-visible:border-transparent focus-visible:ring-border focus-visible:ring-[3px] transition-colors"
+          className="hidden sm:inline-flex h-8 shrink-0 gap-1.5 px-2 text-xs text-muted-foreground hover:text-foreground focus-visible:border-transparent focus-visible:ring-border focus-visible:ring-[3px] transition-colors"
           onClick={onClearFilters}
           aria-label="Clear filters"
         >

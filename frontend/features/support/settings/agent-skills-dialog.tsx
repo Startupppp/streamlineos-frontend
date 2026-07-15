@@ -94,7 +94,7 @@ export function AgentSkillsDialog({ userId, label, initialSkills, onClose }: Age
               onChange={handleDraftChange}
               onKeyDown={handleKeyDown}
               placeholder="e.g. billing"
-              className="h-9"
+              className="h-8"
             />
             <Button type="button" variant="outline" size="sm" onClick={handleAdd}>
               Add

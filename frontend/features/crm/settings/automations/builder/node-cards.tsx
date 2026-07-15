@@ -78,13 +78,13 @@ export const ConditionRowCard = memo(function ConditionRowCard({ condition, inde
     <motion.div layout className="flex items-center gap-2 rounded-lg border border-border bg-muted/20 px-3 py-2">
       <div className="flex flex-1 items-center gap-2 min-w-0">
         <Input
-          className="h-7 text-xs flex-1 min-w-0"
+          className="h-8 text-xs flex-1 min-w-0"
           placeholder="field"
           value={condition.field}
           onChange={handleFieldChange}
         />
         <Select value={condition.operator} onValueChange={handleOperatorChange}>
-          <SelectTrigger className="h-7 text-xs w-[110px] shrink-0">
+          <SelectTrigger className="h-8 text-xs w-[110px] shrink-0">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -94,7 +94,7 @@ export const ConditionRowCard = memo(function ConditionRowCard({ condition, inde
           </SelectContent>
         </Select>
         <Input
-          className="h-7 text-xs flex-1 min-w-0"
+          className="h-8 text-xs flex-1 min-w-0"
           placeholder="value"
           value={condition.value}
           onChange={handleValueChange}
@@ -138,7 +138,7 @@ export const ActionNodeCard = memo(function ActionNodeCard({ node, actions, drag
             <div className="flex items-center gap-2">
               <div className="h-5 w-5 rounded bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground">A</div>
               <Select value={node.type ?? ""} onValueChange={handleActionChange}>
-                <SelectTrigger className="h-7 text-xs w-[180px]">
+                <SelectTrigger className="h-8 text-xs w-[180px]">
                   <SelectValue placeholder="Select action" />
                 </SelectTrigger>
                 <SelectContent>
@@ -158,7 +158,7 @@ export const ActionNodeCard = memo(function ActionNodeCard({ node, actions, drag
                 <div key={key} className="space-y-0.5">
                   <Label className="text-[10px] text-muted-foreground capitalize">{key}</Label>
                   <Input
-                    className="h-7 text-xs"
+                    className="h-8 text-xs"
                     placeholder={key}
                     value={String(node.config?.[key] ?? "")}
                     onChange={(e) => onUpdateConfig(node.id, key, e.target.value)}
@@ -194,7 +194,7 @@ export const WaitCard = memo(function WaitCard({ waitHours, onChangeHours, onRem
           <Input
             type="number"
             min={0}
-            className="h-7 text-xs w-16"
+            className="h-8 text-xs w-16"
             value={waitHours}
             onChange={handleChange}
           />

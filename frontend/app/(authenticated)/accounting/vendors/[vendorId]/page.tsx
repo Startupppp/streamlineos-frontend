@@ -4,7 +4,7 @@ import { use, useState, useCallback } from "react";
 import Link from "next/link";
 import { Receipt, Wallet, AlertCircle, ArrowLeft } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -182,8 +182,7 @@ export default function VendorLedgerDetailPage({ params }: PageProps) {
             </Link>
           </Button>
         </div>
-
-        <div className={DS.gridResponsive3}>
+        <StatCardGrid cols={3}>
           <StatCard
             label="Total Billed"
             value={summary ? formatCurrency(summary.totalBilled) : "—"}
@@ -205,7 +204,7 @@ export default function VendorLedgerDetailPage({ params }: PageProps) {
             color={summary && Number(summary.outstanding) > 0 ? "red" : "green"}
             index={2}
           />
-        </div>
+        </StatCardGrid>
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:flex-wrap">
           <div className="flex flex-col gap-1">

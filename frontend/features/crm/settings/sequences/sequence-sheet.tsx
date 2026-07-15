@@ -342,12 +342,12 @@ export function SequenceSheet({ sequence, open, onOpenChange }: Props) {
           <SheetTitle>{isEdit ? "Edit Sequence" : "New Sequence"}</SheetTitle>
         </SheetHeader>
         <Tabs defaultValue="details" className="flex flex-col flex-1 min-h-0">
-          <TabsList className="shrink-0 rounded-none border-b w-full justify-start px-6 h-10 bg-transparent gap-0">
-            <TabsTrigger value="details" className="h-9 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent text-sm">Details</TabsTrigger>
+          <TabsList className="shrink-0 rounded-none border-b w-full justify-start px-6 h-8 bg-transparent gap-0">
+            <TabsTrigger value="details" className="h-8 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent text-sm">Details</TabsTrigger>
             {isEdit && (
               <>
-                <TabsTrigger value="steps" className="h-9 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent text-sm">Steps</TabsTrigger>
-                <TabsTrigger value="enrollments" className="h-9 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent text-sm">Enrollments</TabsTrigger>
+                <TabsTrigger value="steps" className="h-8 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent text-sm">Steps</TabsTrigger>
+                <TabsTrigger value="enrollments" className="h-8 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent text-sm">Enrollments</TabsTrigger>
               </>
             )}
           </TabsList>

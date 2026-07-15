@@ -44,7 +44,7 @@ export function ListToolbar({
               value={search ?? ""}
               onChange={handleSearchChange}
               placeholder={searchPlaceholder}
-              className="h-9 pl-9 text-sm"
+              className="h-8 pl-9 text-sm"
             />
           </div>
         )}

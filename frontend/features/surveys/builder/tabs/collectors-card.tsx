@@ -100,7 +100,7 @@ export function CollectorsCard({ surveyId }: { surveyId: number }) {
 
         <div className="flex items-center gap-2">
           <Select value={newType} onValueChange={(v) => setNewType(v as CollectorType)}>
-            <SelectTrigger className="h-9 flex-1"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-8 flex-1"><SelectValue /></SelectTrigger>
             <SelectContent>
               {(Object.keys(COLLECTOR_TYPE_LABELS) as CollectorType[]).map((type) => (
                 <SelectItem key={type} value={type}>{COLLECTOR_TYPE_LABELS[type]}</SelectItem>

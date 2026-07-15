@@ -86,7 +86,7 @@ export default function RecruitmentAnalyticsPage() {
     >
       <div className="space-y-6">
         {isLoading ? (
-          <StatCardGridSkeleton cols={3} count={12} />
+          <StatCardGridSkeleton cols={3} />
         ) : (
           <StatCardGrid cols={3}>
             <StatCard

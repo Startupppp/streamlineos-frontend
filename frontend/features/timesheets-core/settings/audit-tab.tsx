@@ -146,7 +146,7 @@ export function AuditTab() {
   const toolbar = (
     <div className="flex items-center gap-2">
       <Select value={entityType} onValueChange={handleEntityTypeChange}>
-        <SelectTrigger className="h-7 text-xs w-44">
+        <SelectTrigger className="h-8 text-xs w-44">
           <SelectValue placeholder="All entity types" />
         </SelectTrigger>
         <SelectContent>
@@ -162,7 +162,7 @@ export function AuditTab() {
       </Select>
 
       <Select value={action} onValueChange={handleActionChange}>
-        <SelectTrigger className="h-7 text-xs w-36">
+        <SelectTrigger className="h-8 text-xs w-36">
           <SelectValue placeholder="All actions" />
         </SelectTrigger>
         <SelectContent>

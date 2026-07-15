@@ -106,7 +106,7 @@ export function KbDeflectionPanel({ ticketId, ticketTitle }: KbDeflectionPanelPr
               onValueChange={handleSpaceChange}
               disabled={!spaces?.length}
             >
-              <SelectTrigger className="h-7 text-xs flex-1 min-w-0">
+              <SelectTrigger className="h-8 text-xs flex-1 min-w-0">
                 <SelectValue placeholder="Select space" />
               </SelectTrigger>
               <SelectContent>

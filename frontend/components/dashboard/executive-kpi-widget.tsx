@@ -1,8 +1,7 @@
 "use client";
 
-import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { StatCard } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { useExecutiveDashboard } from "@/hooks/api/dashboard";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -29,13 +28,7 @@ export function ExecutiveKpiWidget() {
   const skeletonCount = hasCrmAccess ? 4 : 2;
 
   if (isLoading || !data) {
-    return (
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {Array.from({ length: skeletonCount }).map((_, i) => (
-          <Skeleton key={i} className="h-24 rounded-xl" />
-        ))}
-      </div>
-    );
+    return <StatCardGridSkeleton cols={4} count={skeletonCount} />;
   }
 
   const fmt = (n: number) =>
@@ -46,7 +39,7 @@ export function ExecutiveKpiWidget() {
         : `₹${n}`;
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <StatCardGrid cols={4}>
       <StatCard
         label="Open Roles"
         value={data.openRoles}
@@ -82,6 +75,6 @@ export function ExecutiveKpiWidget() {
           />
         </>
       )}
-    </div>
+    </StatCardGrid>
   );
 }

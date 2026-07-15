@@ -81,7 +81,7 @@ function AddUpdateForm({ projectId, incidentId }: AddUpdateFormProps) {
       <div className="flex items-center gap-2">
         <div className="w-44">
           <Select value={form.watch("newStatus")} onValueChange={(v) => form.setValue("newStatus", v)}>
-            <SelectTrigger className="h-7 text-[11px]"><SelectValue placeholder="Change status?" /></SelectTrigger>
+            <SelectTrigger className="h-8 text-[11px]"><SelectValue placeholder="Change status?" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="none">No status change</SelectItem>
               {STATUSES.map((s) => <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>)}

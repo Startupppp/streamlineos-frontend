@@ -96,7 +96,7 @@ export default function SurveyParticipantsPage() {
                 </>
               )}
               <Select value={status} onValueChange={(v) => setStatus(v as ParticipantStatus | "all")}>
-                <SelectTrigger className="h-9 w-40"><SelectValue placeholder="Status" /></SelectTrigger>
+                <SelectTrigger className="h-8 w-40"><SelectValue placeholder="Status" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All statuses</SelectItem>
                   <SelectItem value="invited">Invited</SelectItem>

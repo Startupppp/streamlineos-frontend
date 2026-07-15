@@ -158,7 +158,7 @@ export function ReportsView() {
         <Tabs value={activeTab} onValueChange={handleTabChange}>
           <TabsList className="h-8 flex-wrap">
             {REPORT_TABS.map((tab) => (
-              <TabsTrigger key={tab.value} value={tab.value} className="text-xs h-7">
+              <TabsTrigger key={tab.value} value={tab.value} className="text-xs h-8">
                 {tab.label}
               </TabsTrigger>
             ))}

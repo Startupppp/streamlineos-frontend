@@ -149,7 +149,7 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
             <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-3">
               <div className={PM_TOOLBAR}>
                 <TabsList className="h-8 rounded-lg border border-border/50 bg-muted/40 p-0.5">
-                  <TabsTrigger value="tickets" className="h-7 px-3 text-xs">
+                  <TabsTrigger value="tickets" className="h-8 px-3 text-xs">
                     Tickets
                     {ticketCount > 0 ? (
                       <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
@@ -157,7 +157,7 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
                       </Badge>
                     ) : null}
                   </TabsTrigger>
-                  <TabsTrigger value="milestones" className="h-7 px-3 text-xs">
+                  <TabsTrigger value="milestones" className="h-8 px-3 text-xs">
                     Milestones
                     {milestoneCount > 0 ? (
                       <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">

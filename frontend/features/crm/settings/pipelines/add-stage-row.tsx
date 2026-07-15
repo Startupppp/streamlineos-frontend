@@ -67,7 +67,7 @@ export function AddStageRow({
         onChange={handleLabelChange}
         onKeyDown={handleKeyDown}
         placeholder="Stage name…"
-        className="h-7 text-xs flex-1"
+        className="h-8 text-xs flex-1"
       />
       <LoadingButton
         type="button"

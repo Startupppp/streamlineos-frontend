@@ -264,10 +264,10 @@ export function BugsPage({ projectId }: BugsPageProps) {
           placeholder="Search bugs..."
           value={search}
           onChange={handleSearchChange}
-          className="h-7 w-44 text-[11px]"
+          className="h-8 w-44 text-[11px]"
         />
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="h-7 w-32 text-[11px]"><SelectValue placeholder="Status" /></SelectTrigger>
+          <SelectTrigger className="h-8 w-32 text-[11px]"><SelectValue placeholder="Status" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All statuses</SelectItem>
             {BUG_STATUSES.map((s) => (
@@ -276,7 +276,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
           </SelectContent>
         </Select>
         <Select value={severityFilter} onValueChange={setSeverityFilter}>
-          <SelectTrigger className="h-7 w-28 text-[11px]"><SelectValue placeholder="Severity" /></SelectTrigger>
+          <SelectTrigger className="h-8 w-28 text-[11px]"><SelectValue placeholder="Severity" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All severities</SelectItem>
             {BUG_SEVERITIES.map((s) => (
@@ -285,7 +285,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
           </SelectContent>
         </Select>
         <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
-          <SelectTrigger className="h-7 w-32 text-[11px]"><SelectValue placeholder="Assignee" /></SelectTrigger>
+          <SelectTrigger className="h-8 w-32 text-[11px]"><SelectValue placeholder="Assignee" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All assignees</SelectItem>
             {members.map((m) => (

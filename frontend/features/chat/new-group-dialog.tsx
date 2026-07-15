@@ -275,7 +275,7 @@ export function NewGroupDialog({
                   value={name}
                   onChange={handleNameChange}
                   placeholder="e.g. design-team"
-                  className="h-9 border-border/30 bg-muted/30 pl-9"
+                  className="h-8 border-border/30 bg-muted/30 pl-9"
                   autoFocus
                 />
               </div>
@@ -290,7 +290,7 @@ export function NewGroupDialog({
                 value={description}
                 onChange={handleDescriptionChange}
                 placeholder="What's this channel about?"
-                className="h-9 border-border/30 bg-muted/30"
+                className="h-8 border-border/30 bg-muted/30"
               />
             </div>
 

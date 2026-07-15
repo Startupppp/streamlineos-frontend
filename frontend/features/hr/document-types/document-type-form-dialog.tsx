@@ -125,7 +125,7 @@ export function DocumentTypeFormDialog({
           placeholder="e.g. National ID / Aadhaar Card"
           value={form.name}
           onChange={handleNameChange}
-          className="h-9"
+          className="h-8"
           aria-label="Document type name"
         />
         {form.name && (
@@ -203,7 +203,7 @@ export function DocumentTypeFormDialog({
           placeholder="e.g. 1"
           value={form.sortOrder}
           onChange={handleSortOrderChange}
-          className="h-9"
+          className="h-8"
           aria-label="Sort order"
         />
         <p className="text-[11px] text-muted-foreground">

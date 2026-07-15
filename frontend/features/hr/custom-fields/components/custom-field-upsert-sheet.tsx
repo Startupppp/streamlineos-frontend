@@ -363,7 +363,7 @@ export function CustomFieldUpsertSheet({
                       <div className="flex-1 space-y-1">
                         <Input
                           {...form.register(`options.${idx}.label`)}
-                          className="h-7 text-xs"
+                          className="h-8 text-xs"
                           placeholder="Label"
                           onChange={(e) => {
                             form.register(`options.${idx}.label`).onChange(e);
@@ -379,7 +379,7 @@ export function CustomFieldUpsertSheet({
                       <div className="flex-1 space-y-1">
                         <Input
                           {...form.register(`options.${idx}.value`)}
-                          className="h-7 text-xs font-mono"
+                          className="h-8 text-xs font-mono"
                           placeholder="value"
                         />
                         {form.formState.errors.options?.[idx]?.value && (
@@ -413,7 +413,7 @@ export function CustomFieldUpsertSheet({
                           <Input
                             type="number"
                             {...form.register("validationMinLength")}
-                            className="h-7 text-xs"
+                            className="h-8 text-xs"
                             placeholder="0"
                             min={0}
                           />
@@ -423,7 +423,7 @@ export function CustomFieldUpsertSheet({
                           <Input
                             type="number"
                             {...form.register("validationMaxLength")}
-                            className="h-7 text-xs"
+                            className="h-8 text-xs"
                             placeholder="500"
                             min={1}
                           />
@@ -437,7 +437,7 @@ export function CustomFieldUpsertSheet({
                           <Input
                             type="number"
                             {...form.register("validationMinValue")}
-                            className="h-7 text-xs"
+                            className="h-8 text-xs"
                           />
                         </div>
                         <div className="space-y-1">
@@ -445,7 +445,7 @@ export function CustomFieldUpsertSheet({
                           <Input
                             type="number"
                             {...form.register("validationMaxValue")}
-                            className="h-7 text-xs"
+                            className="h-8 text-xs"
                           />
                         </div>
                       </>
@@ -457,7 +457,7 @@ export function CustomFieldUpsertSheet({
                           <Input
                             type="date"
                             {...form.register("validationDateMin")}
-                            className="h-7 text-xs"
+                            className="h-8 text-xs"
                           />
                         </div>
                         <div className="space-y-1">
@@ -465,7 +465,7 @@ export function CustomFieldUpsertSheet({
                           <Input
                             type="date"
                             {...form.register("validationDateMax")}
-                            className="h-7 text-xs"
+                            className="h-8 text-xs"
                           />
                         </div>
                       </>

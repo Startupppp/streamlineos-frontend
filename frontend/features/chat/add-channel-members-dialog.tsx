@@ -135,7 +135,7 @@ export function AddChannelMembersDialog({
               placeholder="Search people..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 h-9 bg-muted/30 border-border/30"
+              className="pl-9 h-8 bg-muted/30 border-border/30"
               autoFocus
             />
           </div>
@@ -206,7 +206,7 @@ export function AddChannelMembersDialog({
                 <Input
                   readOnly
                   value={inviteUrl ?? ""}
-                  className="h-9 text-[12px] bg-muted/30 border-border/30 flex-1 truncate"
+                  className="h-8 text-[12px] bg-muted/30 border-border/30 flex-1 truncate"
                   onFocus={(e) => e.currentTarget.select()}
                 />
                 <Button

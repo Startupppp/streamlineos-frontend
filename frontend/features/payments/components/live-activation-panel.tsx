@@ -71,7 +71,7 @@ export function LiveActivationPanel({ providerKey }: { providerKey: string }) {
               value={confirmText}
               onChange={(e) => setConfirmText(e.target.value)}
               placeholder={CONFIRM_PHRASE}
-              className="h-9 text-sm font-mono"
+              className="h-8 text-sm font-mono"
             />
           </div>
           <AlertDialogFooter>

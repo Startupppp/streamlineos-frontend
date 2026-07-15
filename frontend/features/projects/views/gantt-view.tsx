@@ -226,7 +226,7 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
       <div className={cn(PM_TOOLBAR, "gap-2")}>
         <div className="flex min-w-0 flex-wrap items-center gap-1.5">
           <Select value={String(displayMonth)} onValueChange={handleMonthChange}>
-            <SelectTrigger className="h-8 w-[120px] shrink-0 border-border/70 bg-background/60 text-xs backdrop-blur-sm">
+            <SelectTrigger className="h-8 w-[120px] shrink-0 border-input bg-card text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -238,7 +238,7 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
             </SelectContent>
           </Select>
           <Select value={String(displayYear)} onValueChange={handleYearChange}>
-            <SelectTrigger className="h-8 w-[80px] shrink-0 border-border/70 bg-background/60 text-xs backdrop-blur-sm">
+            <SelectTrigger className="h-8 w-[80px] shrink-0 border-input bg-card text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

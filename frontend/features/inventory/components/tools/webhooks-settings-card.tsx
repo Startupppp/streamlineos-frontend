@@ -14,7 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetBody } from "@/components/ui/sheet";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -287,7 +287,7 @@ export function WebhooksSettingsCard() {
           </SheetHeader>
           <Form {...form}>
             <form className="flex flex-col flex-1 overflow-hidden" onSubmit={form.handleSubmit(onSubmit)}>
-              <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+              <SheetBody className="px-6 py-4 space-y-4">
                 <FormField
                   control={form.control}
                   name="url"
@@ -335,7 +335,7 @@ export function WebhooksSettingsCard() {
                     </FormItem>
                   )}
                 />
-              </div>
+              </SheetBody>
               <SheetFooter className="border-t px-6 py-4 gap-2">
                 <Button type="button" variant="outline" className="flex-1" onClick={() => handleSheetOpenChange(false)}>
                   Cancel

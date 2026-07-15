@@ -67,8 +67,6 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
     for (const member of membersData?.data ?? []) {
       map.set(member.userId, {
         name: member.name,
-        firstName: member.firstName,
-        lastName: member.lastName,
         email: member.email,
       });
     }

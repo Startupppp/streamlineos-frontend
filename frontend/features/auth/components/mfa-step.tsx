@@ -58,7 +58,7 @@ export function MfaStep({
             onKeyDown={onKeyDown}
             disabled={isPending}
             className={cn(
-              "h-9 text-sm text-center tracking-[0.4em] font-mono",
+              "h-8 text-sm text-center tracking-[0.4em] font-mono",
               error && "border-destructive focus-visible:ring-destructive/30",
             )}
             autoFocus

@@ -70,7 +70,7 @@ function AllocationRow({ index, register, onRemove }: AllocationRowProps) {
         type="number"
         step="0.01"
         min="0.01"
-        className="h-7 text-xs flex-1"
+        className="h-8 text-xs flex-1"
         placeholder="Amount"
         {...register(`allocations.${index}.amount`)}
       />

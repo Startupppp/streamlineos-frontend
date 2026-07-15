@@ -12,7 +12,7 @@ export function AnalyticsLoadingSkeleton() {
       subtitle="Pipeline insights and performance metrics"
     >
       <div className="space-y-4">
-        <StatCardGridSkeleton cols={4} count={12} />
+        <StatCardGridSkeleton cols={4} />
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 12 }).map((_, i) => (
             <Card key={i} className="shadow-sm border-border bg-card">

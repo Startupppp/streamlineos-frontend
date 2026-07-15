@@ -273,7 +273,7 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
                 >
                   <div
                     className={cn(
-                      "h-7 w-7 rounded-md flex items-center justify-center shrink-0 mt-0.5",
+                      "h-8 w-7 rounded-md flex items-center justify-center shrink-0 mt-0.5",
                       task.type === "CALL"
                         ? "bg-blue-500/15 text-blue-400"
                         : task.type === "EMAIL"

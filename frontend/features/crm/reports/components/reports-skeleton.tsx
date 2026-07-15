@@ -9,7 +9,7 @@ export function ReportsSkeleton() {
       subtitle="Sales performance and pipeline analytics"
     >
       <div className="space-y-6">
-        <StatCardGridSkeleton cols={4} count={12} />
+        <StatCardGridSkeleton cols={4} />
         <div className="grid gap-3 md:grid-cols-2">
           {Array.from({ length: 12 }).map((_, i) => (
             <div

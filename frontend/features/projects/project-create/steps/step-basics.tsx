@@ -258,7 +258,7 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
                           variant="outline"
                           role="combobox"
                           className={cn(
-                            "w-full justify-between gap-2 font-normal h-9",
+                            "w-full justify-between gap-2 font-normal h-8",
                             !selectedManager && "text-muted-foreground",
                           )}
                         >

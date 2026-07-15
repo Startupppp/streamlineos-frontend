@@ -232,7 +232,7 @@ function ProjectSwitcher({
               value={search}
               onChange={handleSearchChange}
               placeholder="Search projects…"
-              className="h-7 pl-7 text-xs"
+              className="h-8 pl-7 text-xs"
               autoFocus
             />
           </div>

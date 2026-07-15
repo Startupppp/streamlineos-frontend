@@ -206,10 +206,10 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
           placeholder="Search incidents..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="h-7 w-44 text-[11px]"
+          className="h-8 w-44 text-[11px]"
         />
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="h-7 w-36 text-[11px]">
+          <SelectTrigger className="h-8 w-36 text-[11px]">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -222,7 +222,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
           </SelectContent>
         </Select>
         <Select value={severityFilter} onValueChange={setSeverityFilter}>
-          <SelectTrigger className="h-7 w-28 text-[11px]">
+          <SelectTrigger className="h-8 w-28 text-[11px]">
             <SelectValue placeholder="Severity" />
           </SelectTrigger>
           <SelectContent>

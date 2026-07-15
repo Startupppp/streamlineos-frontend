@@ -29,10 +29,10 @@ export function BonusesPageContent() {
         </div>
         <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-1 min-h-0 flex-col">
           <TabsList className="h-8">
-            <TabsTrigger value="bonuses" className="text-xs h-7">
+            <TabsTrigger value="bonuses" className="text-xs h-8">
               Bonuses
             </TabsTrigger>
-            <TabsTrigger value="incentives" className="text-xs h-7">
+            <TabsTrigger value="incentives" className="text-xs h-8">
               Incentives
             </TabsTrigger>
           </TabsList>

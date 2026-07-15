@@ -24,7 +24,7 @@ export function SignDashboard() {
   if (isLoading || !data) {
     return (
       <PageWrapper title="SignOS" subtitle="Envelopes, signatures, and completion status at a glance">
-        <StatCardGridSkeleton cols={4} count={12} />
+        <StatCardGridSkeleton cols={4} />
       </PageWrapper>
     );
   }
