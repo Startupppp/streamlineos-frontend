@@ -238,7 +238,7 @@ export function StepBasics({ data, patch, onToggleGoal, onBack, onNext }: StepBa
             <Label className="text-xs font-medium text-foreground">Country</Label>
             <Combobox
               options={COUNTRY_OPTIONS}
-              value={data.country}
+              value={data.country ?? ""}
               onChange={handleCountrySelect}
               placeholder="Select country"
               searchPlaceholder="Search countries…"
