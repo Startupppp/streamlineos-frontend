@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -147,6 +148,7 @@ export default function PipelinesPage() {
           </Button>
         }
       >
+        <div className="flex min-h-0 flex-1 flex-col">
         {isLoading ? (
           <div className="flex gap-4 h-full">
             <div className="w-[280px] shrink-0 space-y-2">
@@ -161,10 +163,10 @@ export default function PipelinesPage() {
             title="Failed to load pipelines"
             description="Something went wrong loading pipeline data."
             action={{ label: "Retry", onClick: handleRetry }}
-            className="flex-1 min-h-[40vh]"
+            className={CONTENT_FILL_PANEL}
           />
         ) : (
-          <div className="flex gap-0 h-full min-h-0 border border-border rounded-xl overflow-hidden bg-card shadow-sm">
+          <div className="flex min-h-0 flex-1 gap-0 border border-border rounded-xl overflow-hidden bg-card shadow-sm">
             <div className="w-[280px] shrink-0 border-r border-border flex flex-col min-h-0">
               <div className="shrink-0 px-3 py-2.5 border-b border-border">
                 <span className="text-xs font-semibold text-foreground">Pipelines</span>
@@ -222,7 +224,7 @@ export default function PipelinesPage() {
                 <EmptyState
                   title="Select a pipeline"
                   description="Choose a pipeline from the left to manage its stages."
-                  className="flex-1"
+                  className={cn(CONTENT_FILL_PANEL, "border-0 bg-transparent")}
                   compact
                 />
               ) : (
@@ -239,7 +241,7 @@ export default function PipelinesPage() {
                       {sortedStages.length} stage{sortedStages.length !== 1 ? "s" : ""}
                     </span>
                   </div>
-                  <ScrollArea hideScrollbar className="min-h-0 flex-1">
+                  <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
                     <div className="overscroll-contain p-3">
                     <DragDropContext onDragEnd={handleDragEnd}>
                       <Droppable droppableId="stages">
@@ -273,6 +275,7 @@ export default function PipelinesPage() {
             </div>
           </div>
         )}
+        </div>
       </PageWrapper>
     </>
   );

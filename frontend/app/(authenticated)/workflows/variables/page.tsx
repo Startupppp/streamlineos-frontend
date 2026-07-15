@@ -23,6 +23,7 @@ import {
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import {
   useGlobalVariables,
   useDeleteGlobalVariable,
@@ -142,17 +143,15 @@ export default function VariablesManagerPage() {
       {isLoading ? (
         <LoadingState variant="list" rows={12} />
       ) : isError ? (
-        <ErrorState title="Failed to load variables" onRetry={handleRetry} className="flex-1" />
+        <ErrorState title="Failed to load variables" onRetry={handleRetry} className={CONTENT_FILL_PANEL} />
       ) : list.length === 0 ? (
-        <div className="flex flex-1 min-h-0">
-          <EmptyState
-            illustrationPreset="settings"
-            title="No variables defined"
-            description="Variables are defined in the workflow builder when creating or editing workflow versions."
-            action={{ label: "Go to Workflows", href: "/workflows" }}
-            className="w-full"
-          />
-        </div>
+        <EmptyState
+          illustrationPreset="settings"
+          title="No variables defined"
+          description="Variables are defined in the workflow builder when creating or editing workflow versions."
+          action={{ label: "Go to Workflows", href: "/workflows" }}
+          className={CONTENT_FILL_PANEL}
+        />
       ) : (
         <AnimatePresence mode="popLayout">
           <div className="space-y-3">

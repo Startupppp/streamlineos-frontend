@@ -394,7 +394,7 @@ export default function ScoringRulesPage() {
                       title="No scoring rules defined"
                       description="Create your first rule to start scoring leads automatically."
                       action={{ label: "New Rule", onClick: handleOpenCreate }}
-                      className="border-0 bg-transparent"
+                      className={cn(CONTENT_FILL_PANEL, "border-0 bg-transparent")}
                     />
                   </div>
                 )}

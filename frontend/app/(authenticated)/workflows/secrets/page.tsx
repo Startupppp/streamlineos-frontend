@@ -36,6 +36,7 @@ import {
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import {
   useGlobalSecrets,
   useCreateGlobalSecret,
@@ -280,17 +281,15 @@ export default function SecretsManagerPage() {
       {isLoading ? (
         <LoadingState variant="list" rows={12} />
       ) : isError ? (
-        <ErrorState title="Failed to load secrets" onRetry={handleRetry} className="flex-1" />
+        <ErrorState title="Failed to load secrets" onRetry={handleRetry} className={CONTENT_FILL_PANEL} />
       ) : list.length === 0 ? (
-        <div className="flex flex-1 min-h-0">
-          <EmptyState
-            illustrationPreset="security"
-            title="No secrets yet"
-            description="Store encrypted API keys, tokens, and credentials your workflows need."
-            action={{ label: "New Secret", onClick: handleOpenSheet }}
-            className="w-full"
-          />
-        </div>
+        <EmptyState
+          illustrationPreset="security"
+          title="No secrets yet"
+          description="Store encrypted API keys, tokens, and credentials your workflows need."
+          action={{ label: "New Secret", onClick: handleOpenSheet }}
+          className={CONTENT_FILL_PANEL}
+        />
       ) : (
         <AnimatePresence mode="popLayout">
           <div className="space-y-3">

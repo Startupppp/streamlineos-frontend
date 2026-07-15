@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useKbPagesRecent } from "@/hooks/api/kb";
 import {
@@ -77,6 +78,7 @@ export default function RecentPage() {
           }
           title="Could not load recent pages"
           description="There was a problem fetching your recently visited pages."
+          className={CONTENT_FILL_PANEL}
         />
       )}
 
@@ -88,6 +90,7 @@ export default function RecentPage() {
           title="No recent pages"
           description="Pages you visit will appear here."
           action={{ label: "Browse favorites", href: KB_FAVORITES }}
+          className={CONTENT_FILL_PANEL}
         />
       )}
 

@@ -7,6 +7,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -99,6 +100,7 @@ function MyBenefitsTab() {
           illustrationPreset="payroll"
           title="No active benefit plans"
           description="Your organisation has not configured any benefit plans yet."
+          className={CONTENT_FILL_PANEL}
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -326,6 +328,7 @@ function PlansAdminTab({ canManage }: { canManage: boolean }) {
             title="No benefit plans"
             description="Create your first benefit plan to get started."
             action={canManage ? { label: "New Plan", onClick: handleNew } : undefined}
+            className={CONTENT_FILL_PANEL}
           />
         }
       />
@@ -384,6 +387,7 @@ function ClaimsDashboardTab({ canManage }: { canManage: boolean }) {
             illustrationPreset="documents"
             title="No claims found"
             description="No insurance claims match the current filter."
+            className={CONTENT_FILL_PANEL}
           />
         }
       />
@@ -405,8 +409,8 @@ export default function BenefitsPage() {
       title="Benefits"
       subtitle="Manage employee benefit plans, enrollments, and insurance claims"
     >
-      <Tabs defaultValue="my-benefits" className="space-y-4">
-        <TabsList>
+      <Tabs defaultValue="my-benefits" className="flex min-h-0 flex-1 flex-col gap-4">
+        <TabsList className="shrink-0">
           <TabsTrigger value="my-benefits" className="gap-1.5 text-xs">
             <Shield className="h-3.5 w-3.5" />
             My Benefits
@@ -423,16 +427,16 @@ export default function BenefitsPage() {
           )}
         </TabsList>
 
-        <TabsContent value="my-benefits">
+        <TabsContent value="my-benefits" className="mt-0 flex min-h-0 flex-1 flex-col">
           <MyBenefitsTab />
         </TabsContent>
 
-        <TabsContent value="claims">
+        <TabsContent value="claims" className="mt-0 flex min-h-0 flex-1 flex-col">
           <ClaimsDashboardTab canManage={canManage} />
         </TabsContent>
 
         {canManage && (
-          <TabsContent value="plans">
+          <TabsContent value="plans" className="mt-0 flex min-h-0 flex-1 flex-col">
             <PlansAdminTab canManage={canManage} />
           </TabsContent>
         )}

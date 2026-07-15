@@ -63,6 +63,7 @@ import {
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { EmptyProjectsIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import {
@@ -468,30 +469,28 @@ export default function WorkflowsPage() {
             title="Couldn't load workflows"
             description="Something went wrong while fetching your workflows."
             onRetry={handleRetry}
-            className="flex-1"
+            className={CONTENT_FILL_PANEL}
           />
         ) : workflows.length === 0 ? (
-          <div className="flex flex-1 min-h-0">
-            <EmptyState
-              illustration={<EmptyProjectsIllustration />}
-              title={
-                hasFilters
-                  ? "No workflows match your filters"
-                  : "No workflows yet"
-              }
-              description={
-                hasFilters
-                  ? "Try adjusting your search or status filter."
-                  : "Create your first workflow to start automating your business processes."
-              }
-              action={
-                hasFilters
-                  ? undefined
-                  : { label: "New Workflow", onClick: handleOpenCreate }
-              }
-              className="w-full"
-            />
-          </div>
+          <EmptyState
+            illustration={<EmptyProjectsIllustration />}
+            title={
+              hasFilters
+                ? "No workflows match your filters"
+                : "No workflows yet"
+            }
+            description={
+              hasFilters
+                ? "Try adjusting your search or status filter."
+                : "Create your first workflow to start automating your business processes."
+            }
+            action={
+              hasFilters
+                ? undefined
+                : { label: "New Workflow", onClick: handleOpenCreate }
+            }
+            className={CONTENT_FILL_PANEL}
+          />
         ) : (
           <AnimatePresence mode="popLayout">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

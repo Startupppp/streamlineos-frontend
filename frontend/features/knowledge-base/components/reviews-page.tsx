@@ -5,6 +5,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -378,6 +379,7 @@ export default function ReviewsPage() {
           }
           title="Access restricted"
           description="You don't have permission to view knowledge base reviews."
+          className={CONTENT_FILL_PANEL}
         />
       </PageWrapper>
     );
@@ -429,6 +431,7 @@ export default function ReviewsPage() {
             }
             title="Failed to load reviews"
             description="An error occurred while fetching reviews."
+            className={CONTENT_FILL_PANEL}
           />
         ) : (
           <DataTable
@@ -448,6 +451,7 @@ export default function ReviewsPage() {
                     ? "No reviews match the current filters."
                     : "No pages are currently under review."
                 }
+                className={CONTENT_FILL_PANEL}
               />
             }
           />

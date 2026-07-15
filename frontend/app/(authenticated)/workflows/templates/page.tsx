@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptySearchIllustration } from "@/components/illustrations";
@@ -166,20 +167,18 @@ export default function WorkflowTemplatesPage() {
       {isLoading ? (
         <LoadingState variant="cards" rows={9} />
       ) : isError ? (
-        <ErrorState title="Failed to load templates" onRetry={handleRetry} className="flex-1" />
+        <ErrorState title="Failed to load templates" onRetry={handleRetry} className={CONTENT_FILL_PANEL} />
       ) : filtered.length === 0 ? (
-        <div className="flex flex-1 min-h-0">
-          <EmptyState
-            illustration={<EmptySearchIllustration />}
-            title={search ? "No templates match your search" : "No templates available"}
-            description={
-              search
-                ? "Try a different search term or category."
-                : "Templates will appear here once added."
-            }
-            className="w-full"
-          />
-        </div>
+        <EmptyState
+          illustration={<EmptySearchIllustration />}
+          title={search ? "No templates match your search" : "No templates available"}
+          description={
+            search
+              ? "Try a different search term or category."
+              : "Templates will appear here once added."
+          }
+          className={CONTENT_FILL_PANEL}
+        />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((template) => (

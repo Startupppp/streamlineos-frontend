@@ -9,6 +9,7 @@ import { GeneralSettingsForm } from "./general-settings-form";
 import { RatesTab } from "./rates-tab";
 import { AuditTab } from "./audit-tab";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 
 const tabMotion = {
   initial: { opacity: 0, y: 8 },
@@ -37,7 +38,7 @@ export function SettingsView() {
         <EmptyState
           title="Access restricted"
           description="You don't have permission to view timesheet settings."
-          className="min-h-[30vh]"
+          className={CONTENT_FILL_PANEL}
         />
       </PageWrapper>
     );

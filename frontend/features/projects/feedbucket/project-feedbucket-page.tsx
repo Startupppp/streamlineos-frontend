@@ -293,7 +293,7 @@ function ProjectSubmissionsInbox({ widgetId, projectId }: ProjectSubmissionsInbo
           illustration={<EmptyInboxIllustration className="h-24 w-24" />}
           title="No submissions yet"
           description="Submissions from this widget will appear here once users submit feedback."
-          className="flex-1 py-16"
+          className={PM_FILL_PANEL}
         />
       }
       rowClassName={() => "cursor-pointer"}

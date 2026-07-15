@@ -5,6 +5,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -444,6 +445,7 @@ export default function KnowledgeSettingsPage() {
           }
           title="Access restricted"
           description="You don't have permission to view knowledge base settings."
+          className={CONTENT_FILL_PANEL}
         />
       </PageWrapper>
     );

@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import {
   Sheet,
   SheetContent,
@@ -551,6 +552,7 @@ export default function NotificationTemplatesPage() {
           title="No templates yet"
           description="Create reusable notification templates to standardize messages sent to your team."
           action={{ label: "Create Template", onClick: handleCreate }}
+          className={CONTENT_FILL_PANEL}
         />
       ) : (
         <div className="rounded-lg border border-border overflow-hidden divide-y divide-border">

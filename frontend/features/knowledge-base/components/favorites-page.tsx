@@ -4,6 +4,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useKbPagesFavorites, useToggleFavoriteKbPage } from "@/hooks/api/kb";
@@ -88,6 +89,7 @@ export default function FavoritesPage() {
           }
           title="Could not load favorites"
           description="There was a problem fetching your favorited pages."
+          className={CONTENT_FILL_PANEL}
         />
       )}
 
@@ -99,6 +101,7 @@ export default function FavoritesPage() {
           title="No favorites yet"
           description="Star pages to pin them here for quick access."
           action={{ label: "Browse pages", href: KNOWLEDGE_BASE }}
+          className={CONTENT_FILL_PANEL}
         />
       )}
 

@@ -3,6 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useKbSpace } from "@/hooks/api/kb/spaces";
 import { useKbPagesTree } from "@/hooks/api/kb/pages";
@@ -51,6 +52,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
           }
           title="Could not load space"
           description="There was a problem fetching this space."
+          className={CONTENT_FILL_PANEL}
         />
       </PageWrapper>
     );
@@ -111,6 +113,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
               }
               title="No pages in this space yet"
               description="Assign pages from Page settings"
+              className={CONTENT_FILL_PANEL}
             />
           ) : (
             <div className="bg-card border border-border rounded-xl p-2">

@@ -37,6 +37,8 @@ import {
   PmPageShell,
   PmSection,
   PmStaggerList,
+  PM_FILL_PANEL,
+  PM_FILL_SECTION,
 } from "@/features/projects/shared/pm-chrome";
 
 const MODULE_STATUSES = ["backlog", "planned", "in-progress", "paused", "completed", "cancelled"] as const;
@@ -410,13 +412,13 @@ export default function ModulesPage({
         </PmSection>
 
         {!modules?.length ? (
-          <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
+          <PmSection index={1} className={PM_FILL_SECTION}>
             <EmptyState
               illustration={<EmptyTasksIllustration />}
               title="No modules yet"
               description="Create your first module to organize work into feature areas."
               action={{ label: "Create First Module", onClick: handleOpenCreate }}
-              className="flex-1"
+              className={PM_FILL_PANEL}
             />
           </PmSection>
         ) : (

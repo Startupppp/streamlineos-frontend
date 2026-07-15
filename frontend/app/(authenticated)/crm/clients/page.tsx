@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { CONTENT_FILL_PANEL, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { EmptyClientsIllustration } from "@/components/illustrations";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared";
@@ -253,7 +253,7 @@ export default function ClientsPage() {
           ? { label: "Clear filters", onClick: handleClearFilters }
           : undefined
       }
-      className="min-h-[40vh] border-0 bg-transparent"
+      className={cn(CONTENT_FILL_PANEL, "border-0 bg-transparent")}
     />
   );
 

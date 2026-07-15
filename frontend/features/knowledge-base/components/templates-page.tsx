@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { PageWrapper, PageSection } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -279,6 +280,7 @@ export default function TemplatesPage() {
               }
               title="Could not load templates"
               description="There was a problem fetching page templates."
+              className={CONTENT_FILL_PANEL}
             />
           )}
 
@@ -289,6 +291,7 @@ export default function TemplatesPage() {
               }
               title="No saved templates yet"
               description="Save a page as a template to reuse its structure across your wiki."
+              className={CONTENT_FILL_PANEL}
             />
           )}
 

@@ -2,6 +2,7 @@
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { useKbPagesTree } from "@/hooks/api/kb";
 import { filterTreeWithAncestors } from "@/features/knowledge-base/lib/tree-utils";
 import { KbLockIcon } from "@/features/knowledge-base/lib/kb-icons";
@@ -30,6 +31,7 @@ export default function PrivatePage() {
           }
           title="Could not load pages"
           description="There was a problem fetching your pages."
+          className={CONTENT_FILL_PANEL}
         />
       )}
 
@@ -40,6 +42,7 @@ export default function PrivatePage() {
           }
           title="No private pages"
           description="Set a page to Private from Share."
+          className={CONTENT_FILL_PANEL}
         />
       )}
 

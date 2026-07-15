@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 import {
   useAllSchedules,
@@ -190,13 +191,11 @@ export default function SchedulerPage() {
       ) : isError ? (
         <ErrorState title="Failed to load schedules" onRetry={handleRetry} className="flex-1" />
       ) : list.length === 0 ? (
-        <div className="flex flex-1 min-h-0">
-          <EmptyState
-            title="No schedules configured"
-            description="Add cron schedules to your workflows to run them automatically. Open a workflow and add a schedule from the builder."
-            className="w-full"
-          />
-        </div>
+        <EmptyState
+          title="No schedules configured"
+          description="Add cron schedules to your workflows to run them automatically. Open a workflow and add a schedule from the builder."
+          className={CONTENT_FILL_PANEL}
+        />
       ) : (
         <div className="space-y-3">
           {list.map((schedule) => (

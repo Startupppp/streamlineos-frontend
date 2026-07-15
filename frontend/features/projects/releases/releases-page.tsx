@@ -287,7 +287,7 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
                     title="No releases yet"
                     description="Create your first release to track shipped features and versions."
                     action={{ label: "New Release", onClick: handleOpenCreate }}
-                    className="min-h-0 flex-1 border-0 bg-transparent"
+                    className={PM_FILL_PANEL}
                   />
                 }
               />

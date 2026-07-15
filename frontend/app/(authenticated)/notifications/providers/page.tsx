@@ -50,6 +50,7 @@ import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -732,7 +733,7 @@ export default function NotificationProvidersPage() {
               ? { label: "New Provider", onClick: handleCreate }
               : undefined
           }
-          className="flex-1"
+          className={CONTENT_FILL_PANEL}
         />
       ) : (
         <div className="rounded-lg border border-border overflow-hidden divide-y divide-border">

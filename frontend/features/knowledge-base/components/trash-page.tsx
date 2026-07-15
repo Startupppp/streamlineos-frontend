@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -188,6 +189,7 @@ export default function TrashPage() {
             }
             title="Could not load trash"
             description="There was a problem fetching deleted pages."
+            className={CONTENT_FILL_PANEL}
           />
         )}
         {!isLoading && !isError && pages.length === 0 && (
@@ -197,6 +199,7 @@ export default function TrashPage() {
             }
             title="Trash is empty"
             description="Deleted pages will appear here and can be restored or permanently removed."
+            className={CONTENT_FILL_PANEL}
           />
         )}
         {!isLoading && !isError && pages.length > 0 && (

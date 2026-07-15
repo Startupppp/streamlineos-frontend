@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { ErrorState } from "@/components/shared/error-state";
 import {
   Sheet,
@@ -620,6 +621,7 @@ export default function NotificationEventsPage() {
               ? "No events match your current filters. Try adjusting your search or module selection."
               : "No notification events are registered for this organization."
           }
+          className={CONTENT_FILL_PANEL}
         />
       ) : (
         <div className="space-y-4 flex flex-1 min-h-0 flex-col">

@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { EmptyActivityIllustration } from "@/components/illustrations";
 import { Download } from "lucide-react";
 import { useMovementsReport, type MovementType } from "@/hooks/api/inventory/reports";
@@ -275,6 +276,7 @@ export default function MovementsReportPage() {
           illustration={<EmptyActivityIllustration />}
           title="No movements found"
           description="No stock movements match the selected filters."
+          className={CONTENT_FILL_PANEL}
         />
       )}
 

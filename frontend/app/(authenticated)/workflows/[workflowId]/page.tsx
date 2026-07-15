@@ -27,6 +27,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { EmptyActivityIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import {
@@ -138,7 +139,7 @@ function ExecutionsTab({ workflowId }: ExecutionsTabProps) {
   }
 
   if (isLoading) return <LoadingState variant="list" rows={12} />;
-  if (isError) return <ErrorState title="Failed to load executions" onRetry={handleRetry} className="py-8" />;
+  if (isError) return <ErrorState title="Failed to load executions" onRetry={handleRetry} className={CONTENT_FILL_PANEL} />;
 
   const executions = data?.data ?? [];
 
@@ -148,6 +149,7 @@ function ExecutionsTab({ workflowId }: ExecutionsTabProps) {
         illustration={<EmptyActivityIllustration />}
         title="No executions yet"
         description="This workflow hasn't been triggered yet. Publish it and run it to see executions here."
+        className={CONTENT_FILL_PANEL}
       />
     );
   }
@@ -257,18 +259,19 @@ export default function WorkflowDetailPage() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.22, ease: "easeOut" }}
+        className="flex min-h-0 flex-1 flex-col"
       >
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex min-h-0 flex-1 flex-col gap-4">
+          <TabsList className="shrink-0">
             <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
             <TabsTrigger value="executions" className="text-xs">Executions</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview">
+          <TabsContent value="overview" className="mt-0">
             <WorkflowOverviewTab workflow={workflow} />
           </TabsContent>
 
-          <TabsContent value="executions">
+          <TabsContent value="executions" className="mt-0">
             <ExecutionsTab workflowId={workflowId} />
           </TabsContent>
         </Tabs>

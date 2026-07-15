@@ -259,6 +259,7 @@ export default function AutomationsPage() {
             title="Failed to load automations"
             description="Could not fetch automation rules."
             action={{ label: "Retry", onClick: handleRetry }}
+            className={CONTENT_FILL_PANEL}
           />
         ) : rules.length === 0 && !isLoading ? (
           <EmptyState

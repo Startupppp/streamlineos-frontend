@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { DatePicker } from "@/components/ui/date-picker";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import {
   Select,
   SelectContent,
@@ -282,6 +283,7 @@ function SalesOrdersContent() {
                   }
                 : { label: "New SO", href: "/inventory/sales-orders/new" }
             }
+            className={CONTENT_FILL_PANEL}
           />
         }
         pagination={

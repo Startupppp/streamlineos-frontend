@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetBody } from "@/components/ui/sheet";
 import {
@@ -446,6 +447,7 @@ export default function SpacesPage() {
           }
           title="Could not load spaces"
           description="There was a problem fetching spaces."
+          className={CONTENT_FILL_PANEL}
         />
       )}
 
@@ -461,6 +463,7 @@ export default function SpacesPage() {
               ? { label: "Create space", onClick: handleCreate }
               : undefined
           }
+          className={CONTENT_FILL_PANEL}
         />
       )}
 

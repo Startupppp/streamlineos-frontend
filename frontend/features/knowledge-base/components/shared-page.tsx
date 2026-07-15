@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { Badge } from "@/components/ui/badge";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useKbPagesTree } from "@/hooks/api/kb";
 import { pageHref } from "@/features/knowledge-base/lib/knowledge-routes";
@@ -88,6 +89,7 @@ export default function SharedPage() {
           }
           title="Could not load pages"
           description="There was a problem fetching shared pages."
+          className={CONTENT_FILL_PANEL}
         />
       )}
 
@@ -98,6 +100,7 @@ export default function SharedPage() {
           }
           illustrationPreset="team"
           title="Nothing shared with you"
+          className={CONTENT_FILL_PANEL}
         />
       )}
 
