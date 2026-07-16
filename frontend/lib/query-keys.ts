@@ -672,6 +672,9 @@ export const queryKeys = {
       range === undefined
         ? ([...base, "kb", "knowledgeGaps"] as const)
         : ([...base, "kb", "knowledgeGaps", range] as const),
+    contentGaps: (params?: Record<string, unknown>) => [...base, "kb", "content-gaps", params] as const,
+    researchBriefs: () => [...base, "kb", "research-briefs"] as const,
+    researchBrief: (id: number) => [...base, "kb", "research-brief", id] as const,
     settings: () => [...base, "kb", "settings"] as const,
   },
 
@@ -774,6 +777,16 @@ export const queryKeys = {
   supportAiSuggestions: {
     all: [...base, "supportAiSuggestions"] as const,
     list: (ticketId: number) => [...base, "supportAiSuggestions", "list", ticketId] as const,
+  },
+
+  supportAiReport: {
+    all: [...base, "supportAiReport"] as const,
+    get: (params?: Record<string, unknown>) => [...base, "supportAiReport", "get", params] as const,
+  },
+
+  supportAiSettings: {
+    all: [...base, "supportAiSettings"] as const,
+    get: () => [...base, "supportAiSettings", "get"] as const,
   },
 
   supportReports: {
@@ -979,6 +992,7 @@ export const queryKeys = {
     numberSequences: () => [...base, "inventory", "numberSequences"] as const,
     aiInsights: (params?: object) => [...base, "inventory", "aiInsights", params] as const,
     aiDigest: (narrate?: boolean) => [...base, "inventory", "aiDigest", narrate] as const,
+    supplierDelayBriefing: (vendorId?: string) => [...base, "inventory", "supplierDelayBriefing", vendorId] as const,
     barcodeLookup: (code: string) => [...base, "inventory", "barcodeLookup", code] as const,
     qualityHold: (id: number) => [...base, "inventory", "qualityHold", id] as const,
     webhooks: () => [...base, "inventory", "webhooks"] as const,
@@ -1215,6 +1229,10 @@ export const queryKeys = {
     all: [...base, "aiSummaries"] as const,
     latest: (entityType: string, entityId: string) =>
       [...base, "aiSummaries", entityType, entityId] as const,
+  },
+
+  meetingsAi: {
+    all: [...base, "ai", "meetings"] as const,
   },
 
 } as const;

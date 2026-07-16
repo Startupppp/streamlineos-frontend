@@ -92,3 +92,7 @@ If you're building a team operating system or running one, I'd love to compare n
 export function getAllPosts(): BlogPost[] {
   return [...posts].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
 }
+
+export function getPostBySlug(slug: string): BlogPost | undefined {
+  return posts.find((p) => p.slug === slug);
+}

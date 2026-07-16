@@ -21,7 +21,10 @@ import {
   type ReplenishmentSuggestion,
   type GeneratePOInput,
 } from "@/hooks/api/inventory/planning";
+import { useInventoryInsights } from "@/hooks/api/inventory/ai";
 import { GeneratePODialog } from "./generate-po-dialog";
+import { ReorderProposalPanel } from "./reorder-proposal-panel";
+import { SupplierDelayBriefing } from "./supplier-delay-briefing";
 
 function formatDate(dateStr: string | null): string {
   if (!dateStr) return "—";
@@ -34,7 +37,9 @@ function formatDate(dateStr: string | null): string {
 
 function buildColumns(
   selectedIds: Set<number>,
+  expandedId: number | null,
   handleToggle: (id: number) => void,
+  handleExpand: (id: number) => void,
 ): DataTableColumn<ReplenishmentSuggestion>[] {
   return [
     {
@@ -101,7 +106,37 @@ function buildColumns(
         <TruncatedText text={row.reason} className="text-[11px] text-muted-foreground max-w-[160px]" />
       ),
     },
+    {
+      key: "aiExplain",
+      header: "",
+      className: "w-28",
+      cell: (row) => {
+        const isExpanded = expandedId === row.id;
+        return (
+          <ExpandAiButton rowId={row.id} isExpanded={isExpanded} onExpand={handleExpand} />
+        );
+      },
+    },
   ];
+}
+
+interface ExpandAiButtonProps {
+  rowId: number;
+  isExpanded: boolean;
+  onExpand: (id: number) => void;
+}
+
+function ExpandAiButton({ rowId, isExpanded, onExpand }: ExpandAiButtonProps) {
+  return (
+    <Button
+      variant={isExpanded ? "secondary" : "ghost"}
+      size="sm"
+      className="h-6 text-[10px] px-2 gap-1"
+      onClick={() => onExpand(rowId)}
+    >
+      AI Explain
+    </Button>
+  );
 }
 
 export function ReplenishmentClient() {
@@ -112,6 +147,10 @@ export function ReplenishmentClient() {
 
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+
+  const { data: insightsData } = useInventoryInsights({ type: "vendor_delay", limit: 1 });
+  const hasVendorDelayInsights = (insightsData?.total ?? 0) > 0;
 
   const suggestions = data?.items ?? [];
 
@@ -125,6 +164,10 @@ export function ReplenishmentClient() {
       }
       return next;
     });
+  }, []);
+
+  const handleExpand = useCallback(function handleExpand(id: number): void {
+    setExpandedId((prev) => (prev === id ? null : id));
   }, []);
 
   function handleSelectAll(): void {
@@ -196,7 +239,11 @@ export function ReplenishmentClient() {
   const selectedSuggestions = suggestions.filter((s) => selectedIds.has(s.id));
   const allSelected = suggestions.length > 0 && selectedIds.size === suggestions.length;
 
-  const columns = buildColumns(selectedIds, handleToggle);
+  const expandedSuggestion = expandedId !== null
+    ? suggestions.find((s) => s.id === expandedId) ?? null
+    : null;
+
+  const columns = buildColumns(selectedIds, expandedId, handleToggle, handleExpand);
 
   const selectAllToolbar = suggestions.length > 0 ? (
     <Button variant="ghost" size="sm" className="text-xs" onClick={handleSelectAll}>
@@ -256,7 +303,7 @@ export function ReplenishmentClient() {
               columns={columns}
               getRowKey={(row) => row.id}
               isLoading={isLoading}
-              minWidth="760px"
+              minWidth="900px"
               toolbar={selectAllToolbar}
               pagination={{
                 mode: "server",
@@ -268,6 +315,18 @@ export function ReplenishmentClient() {
             />
           </CardContent>
         </Card>
+      )}
+
+      {expandedSuggestion && (
+        <ReorderProposalPanel
+          variantId={String(expandedSuggestion.variantId)}
+          variantName={expandedSuggestion.productName}
+          warehouseId={expandedSuggestion.warehouseId !== null ? String(expandedSuggestion.warehouseId) : undefined}
+        />
+      )}
+
+      {hasVendorDelayInsights && (
+        <SupplierDelayBriefing />
       )}
 
       <GeneratePODialog

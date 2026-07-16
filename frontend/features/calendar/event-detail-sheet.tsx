@@ -9,6 +9,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { Sparkles } from "lucide-react";
+import { MeetingPrepPanel } from "./meeting-prep-panel";
+import { MeetingFollowUpPanel } from "./meeting-follow-up-panel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -72,6 +75,16 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [unlinkConfirmOpen, setUnlinkConfirmOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [aiPrepOpen, setAiPrepOpen] = useState(false);
+  const [aiFollowUpOpen, setAiFollowUpOpen] = useState(false);
+
+  const handleOpenAiPrep = useCallback(() => setAiPrepOpen(true), []);
+  const handleCloseAiPrep = useCallback(() => setAiPrepOpen(false), []);
+  const handleCloseAiFollowUp = useCallback(() => setAiFollowUpOpen(false), []);
+  const handleSwitchToFollowUp = useCallback(() => {
+    setAiPrepOpen(false);
+    setAiFollowUpOpen(true);
+  }, []);
   const { mutateAsync: deleteEvent, isPending: deleteEventIsPending } =
     useDeleteCalendarEvent();
   const { mutateAsync: rsvpMutation, isPending: rsvpMutationIsPending } =
@@ -415,6 +428,17 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
               <div />
             )}
             <div className="flex items-center gap-2">
+              {isCalendarEvent && event?.category !== "huddle" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleOpenAiPrep}
+                  className="gap-1.5"
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  AI Prep
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"
@@ -464,6 +488,51 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
         onOpenChange={setEditOpen}
         event={event}
       />
+      <Sheet open={aiPrepOpen} onOpenChange={setAiPrepOpen}>
+        <SheetContent className="flex flex-col p-0 w-[360px] sm:max-w-[360px]">
+          <SheetHeader className="px-5 py-4 border-b shrink-0">
+            <SheetTitle className="text-sm font-semibold">AI Meeting Prep</SheetTitle>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+            {event && (
+              <>
+                <MeetingPrepPanel
+                  eventId={String(event.id)}
+                  eventTitle={event.title ?? ""}
+                  onClose={handleCloseAiPrep}
+                />
+                <div className="pt-2 border-t">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full text-xs text-muted-foreground hover:text-foreground gap-1.5"
+                    onClick={handleSwitchToFollowUp}
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />
+                    Draft Follow-up instead
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
+      <Sheet open={aiFollowUpOpen} onOpenChange={setAiFollowUpOpen}>
+        <SheetContent className="flex flex-col p-0 w-[360px] sm:max-w-[360px]">
+          <SheetHeader className="px-5 py-4 border-b shrink-0">
+            <SheetTitle className="text-sm font-semibold">AI Follow-up</SheetTitle>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto px-5 py-4">
+            {event && (
+              <MeetingFollowUpPanel
+                eventId={String(event.id)}
+                eventTitle={event.title ?? ""}
+                onClose={handleCloseAiFollowUp}
+              />
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }

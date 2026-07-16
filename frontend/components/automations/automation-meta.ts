@@ -3,6 +3,7 @@ import type {
   AutomationActionType,
   AutomationConditionOp,
 } from "@/hooks/api/automations";
+import type { AiAutomationActionType } from "@/hooks/api/automation-ai-nodes";
 
 export type TriggerModule = "crm" | "support" | "finance" | "hr";
 
@@ -615,7 +616,7 @@ export const CONDITION_OPS: { value: AutomationConditionOp; label: string }[] =
   ];
 
 export const ACTION_TYPES: {
-  value: AutomationActionType;
+  value: AutomationActionType | AiAutomationActionType;
   label: string;
   description: string;
 }[] = [
@@ -663,6 +664,27 @@ export const ACTION_TYPES: {
     value: "support_internal_note",
     label: "Add internal note",
     description: "Post a system-authored internal note on the ticket",
+  },
+  // AI-powered actions — consume org AI credits
+  {
+    value: "ai_classify",
+    label: "AI: Classify",
+    description: "Use AI to classify the event into one of your configured labels",
+  },
+  {
+    value: "ai_summarize",
+    label: "AI: Summarize",
+    description: "Use AI to generate a summary from selected event fields",
+  },
+  {
+    value: "ai_extract",
+    label: "AI: Extract fields",
+    description: "Use AI to extract structured data from the event payload",
+  },
+  {
+    value: "ai_routing_suggestion",
+    label: "AI: Routing suggestion",
+    description: "Use AI to suggest a route/assignee (requires human approval before acting)",
   },
 ];
 

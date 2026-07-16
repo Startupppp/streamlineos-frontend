@@ -10,5 +10,17 @@
       "quality": 0.85
     },
     "createdAt": 1784216992419
+  },
+  {
+    "id": "task-crm-ai-phase2-hooks",
+    "key": "crm-ai-phase2-hooks",
+    "content": "Task completed: crm-ai-phase2-hooks",
+    "namespace": "tasks",
+    "type": "task-outcome",
+    "metadata": {
+      "success": true,
+      "quality": 0.85
+    },
+    "createdAt": 1784222180854
   }
 ]

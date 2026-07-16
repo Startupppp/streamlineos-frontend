@@ -35,10 +35,6 @@ export interface LeadUser {
   email?: string | null;
 }
 
-export interface LeadUserWithEmail extends LeadUser {
-  email: string | null;
-}
-
 export interface LeadCampaign {
   id: number;
   name: string;
@@ -219,16 +215,6 @@ export interface LeadAnalyticsSummary {
   assignmentDistribution: AssignmentDistribution[];
 }
 
-export interface LeadDashboardMetrics {
-  activeClients: number;
-  inactiveClients: number;
-  totalCalls: number;
-  inPersonMeetings: number;
-  followUpDue: number;
-  totalLeads: number;
-  conversionRate: number;
-}
-
 export interface SalesLeaderboardEntry {
   userId: string;
   name: string;
@@ -388,17 +374,6 @@ export interface BulkImportResult {
   salesPeopleCount: number;
 }
 
-export interface VerifyLeadInput {
-  leadId: number;
-  priority?: LeadPriority;
-  notes?: string;
-}
-
-export interface RejectLeadInput {
-  leadId: number;
-  reason?: string;
-}
-
 export interface DistributeResult {
   distributed: number;
   salesPeople: number;
@@ -429,17 +404,4 @@ export interface LeadClient {
   lead?: { id: number; source: string | null; priority: string | null } | null;
 }
 
-export interface LeadImportBatch {
-  id: number;
-  orgId: string;
-  createdBy: string;
-  filename: string;
-  status: string;
-  totalRows: number;
-  importedRows: number;
-  failedRows: number;
-  errorReport: Array<{ row: number; error: string }> | null;
-  createdAt: string | null;
-  completedAt: string | null;
-}
 

@@ -10,7 +10,6 @@ export type DocumentType =
   | "OTHER";
 export type TicketPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 export type TicketStatus = "TODO" | "IN_PROGRESS" | "IN_REVIEW" | "DONE";
-export type DeviceStatus = "ACTIVE" | "INACTIVE" | "RETURNED";
 export type DeviceStatusExtended = "ACTIVE" | "INACTIVE" | "LOST" | "RETURNED";
 export type WorkLogStatus = "PENDING" | "APPROVED" | "REJECTED";
 

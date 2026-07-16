@@ -1,0 +1,72 @@
+"use client";
+
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { EmptyState } from "@/components/ui/empty-state";
+import { LoadingState } from "@/components/shared/loading-state";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { KbResearchBriefForm } from "@/features/kb/components/kb-research-brief-form";
+import { KbResearchBriefCard } from "@/features/kb/components/kb-research-brief-card";
+import { useKbResearchBriefs } from "@/hooks/api/kb/research-briefs";
+
+function BriefListSkeleton() {
+  return (
+    <div className="space-y-2">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <div key={i} className="rounded-xl border border-border/60 p-3 space-y-2">
+          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="h-3 w-1/3" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default function KbResearchBriefsPage() {
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useKbResearchBriefs();
+
+  const allBriefs = data?.pages.flatMap((p) => p.items) ?? [];
+
+  function handleLoadMore() {
+    void fetchNextPage();
+  }
+
+  return (
+    <PageWrapper
+      title="Research Briefs"
+      subtitle="AI-synthesized reports from your knowledge base"
+    >
+      <div className="space-y-4">
+        <KbResearchBriefForm />
+
+        {isLoading ? (
+          <BriefListSkeleton />
+        ) : allBriefs.length === 0 ? (
+          <EmptyState
+            compact
+            title="No research briefs yet"
+            description="Enter a topic above to generate your first AI research brief."
+          />
+        ) : (
+          <div className="space-y-2">
+            {allBriefs.map((brief) => (
+              <KbResearchBriefCard key={brief.id} brief={brief} />
+            ))}
+            {hasNextPage && (
+              <div className="flex justify-center pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleLoadMore}
+                  disabled={isFetchingNextPage}
+                >
+                  {isFetchingNextPage ? "Loading…" : "Load more"}
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </PageWrapper>
+  );
+}

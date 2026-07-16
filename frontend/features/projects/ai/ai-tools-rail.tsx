@@ -28,6 +28,8 @@ import { RisksCard } from "./risks-card";
 import { ClientUpdateCard } from "./client-update-card";
 import { PlanCard } from "./plan-card";
 import { ExtractTasksCard } from "./extract-tasks-card";
+import { WeeklyUpdateCard } from "./weekly-update-card";
+import { ChangeImpactCard } from "./change-impact-card";
 
 interface AiToolsSharedProps {
   projectId: number;
@@ -80,6 +82,18 @@ function buildSections(sharedProps: AiToolsSharedProps): ToolSection[] {
       label: "Extract Tasks",
       description: "Extract action items from notes",
       content: <ExtractTasksCard {...sharedProps} />,
+    },
+    {
+      id: "weekly-update",
+      label: "Weekly Update Draft",
+      description: "Draft a cited weekly status update",
+      content: <WeeklyUpdateCard {...sharedProps} />,
+    },
+    {
+      id: "change-impact",
+      label: "Change Impact Brief",
+      description: "Analyze scope, schedule & budget impact",
+      content: <ChangeImpactCard {...sharedProps} />,
     },
   ];
 }

@@ -221,29 +221,6 @@ export interface DeleteMessageInput {
   messageId: number;
 }
 
-export interface MarkReadInput {
-  channelId: number;
-}
-
-export interface SetTypingInput {
-  channelId: number;
-}
-
-export interface GetMessagesParams {
-  cursor?: number;
-  limit?: number;
-}
-
-export interface PollMessagesParams {
-  since: string;
-}
-
-export interface SearchMessagesParams {
-  query: string;
-  channelId?: number;
-  limit?: number;
-}
-
 export interface PollOption {
   id: number;
   text: string;

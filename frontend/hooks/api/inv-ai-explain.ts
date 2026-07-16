@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -51,5 +51,84 @@ export function useInventoryDigest(narrate = false) {
     queryFn: () =>
       apiClient.get<InventoryDigest>("/inventory/ai/digest", narrate ? { narrate: "true" } : {}),
     staleTime: 2 * 60_000,
+  });
+}
+
+export interface ReorderEvidence {
+  productVariantId: string;
+  variantSku: string;
+  variantName: string;
+  productName: string;
+  currentOnHand: number;
+  forecasted: number;
+  suggestedQty: number;
+  vendorId: string;
+  leadTimeDays: number;
+  expectedDate: string | null;
+  reason: string;
+}
+
+export interface ReorderProposalResponse {
+  evidence: ReorderEvidence;
+  explanation: InsightNarration;
+  proposal: {
+    proposalId: string;
+    token: string;
+    expiresAt: string;
+  };
+}
+
+export interface VendorPerformance {
+  onTimeRate: number;
+  fillRate: number;
+  avgLeadTimeDays: number;
+  returnRate: number;
+  openPoCount: number;
+  totalSpend: number;
+}
+
+export interface SupplierDelayVendor {
+  vendorId: string;
+  vendorName: string;
+  insights: unknown[];
+  performance: VendorPerformance;
+  insightCount: number;
+}
+
+export interface SupplierDelayBriefing {
+  vendors: SupplierDelayVendor[];
+  narration: string;
+  generatedAt: string;
+}
+
+export function useReorderProposal() {
+  return useMutation<ReorderProposalResponse, Error, { variantId: string; warehouseId?: string }>({
+    mutationKey: ["inventory", "ai", "reorder-proposal"],
+    mutationFn: (body) =>
+      apiClient.post<ReorderProposalResponse>("/inventory/ai/reorder-proposal", body),
+  });
+}
+
+export function useConfirmReorderProposal() {
+  const qc = useQueryClient();
+  return useMutation<unknown, Error, { proposalId: string; token: string }>({
+    mutationKey: ["inventory", "ai", "reorder-proposal", "confirm"],
+    mutationFn: (body) =>
+      apiClient.post<unknown>("/inventory/ai/reorder-proposal/confirm", body),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.aiInsights() });
+    },
+  });
+}
+
+export function useSupplierDelayBriefing(vendorId?: string) {
+  return useQuery<SupplierDelayBriefing, Error>({
+    queryKey: queryKeys.inventory.supplierDelayBriefing(vendorId),
+    queryFn: () =>
+      apiClient.get<SupplierDelayBriefing>(
+        "/inventory/ai/supplier-delay",
+        vendorId ? { vendorId } : {},
+      ),
+    staleTime: 5 * 60_000,
   });
 }

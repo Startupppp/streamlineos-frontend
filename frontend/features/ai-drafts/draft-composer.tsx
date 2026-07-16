@@ -1,72 +1,122 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { AiDraftCard } from "@/components/ai/ai-draft-card";
-import type { Citation } from "@/components/ai";
+import { useState, useCallback } from "react";
+import { Copy, CheckCheck, Edit2, Check, X } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { AiGeneratedLabel } from "@/components/ai";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface DraftComposerProps {
   draft: string;
-  title?: string;
-  timestamp?: string | Date;
-  confidence?: number;
-  citations?: Citation[];
-  onAccept: (finalDraft: string) => void;
-  onDiscard: () => void;
-  isAcceptPending?: boolean;
+  subject?: string;
+  generatedAt?: string;
+  onAccept?: (finalDraft: string) => void;
+  onDiscard?: () => void;
   acceptLabel?: string;
-  placeholder?: string;
   className?: string;
 }
 
 export function DraftComposer({
   draft,
-  title,
-  timestamp,
-  confidence,
-  citations,
+  subject,
+  generatedAt,
   onAccept,
   onDiscard,
-  isAcceptPending,
-  acceptLabel,
-  placeholder,
+  acceptLabel = "Accept Draft",
   className,
 }: DraftComposerProps) {
+  const [editing, setEditing] = useState(false);
   const [editedDraft, setEditedDraft] = useState(draft);
+  const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    setEditedDraft(draft);
-  }, [draft]);
+  const handleCopy = useCallback(() => {
+    void navigator.clipboard.writeText(editedDraft).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [editedDraft]);
 
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleEditToggle = useCallback(() => {
+    setEditing((prev) => !prev);
+  }, []);
+
+  const handleDraftChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setEditedDraft(e.target.value);
   }, []);
 
   const handleAccept = useCallback(() => {
-    onAccept(editedDraft);
+    onAccept?.(editedDraft);
+    toast.success("Draft ready to send");
   }, [onAccept, editedDraft]);
 
+  const handleDiscard = useCallback(() => {
+    onDiscard?.();
+  }, [onDiscard]);
+
   return (
-    <AiDraftCard
-      title={title}
-      timestamp={timestamp}
-      confidence={confidence}
-      citations={citations}
-      onAccept={handleAccept}
-      onDiscard={onDiscard}
-      acceptLabel={acceptLabel}
-      isAcceptPending={isAcceptPending}
-      className={cn(className)}
-    >
-      <div>
-        <textarea
-          value={editedDraft}
-          onChange={handleChange}
-          placeholder={placeholder}
-          className="w-full min-h-[100px] resize-y rounded-md border border-input bg-background px-2.5 py-2 text-[13px] leading-relaxed focus:outline-none focus:ring-1 focus:ring-ring"
-        />
-        <p className="text-[11px] text-muted-foreground mt-1">{editedDraft.length} chars</p>
+    <div className={cn("rounded-lg border border-border bg-muted/30 space-y-2 p-3", className)}>
+      <div className="flex items-center justify-between gap-2">
+        <AiGeneratedLabel timestamp={generatedAt} />
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {copied ? (
+              <CheckCheck className="h-3 w-3 text-emerald-500" />
+            ) : (
+              <Copy className="h-3 w-3" />
+            )}
+            {copied ? "Copied" : "Copy"}
+          </button>
+          <button
+            type="button"
+            onClick={handleEditToggle}
+            className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors ml-2"
+          >
+            {editing ? <Check className="h-3 w-3" /> : <Edit2 className="h-3 w-3" />}
+            {editing ? "Done" : "Edit"}
+          </button>
+        </div>
       </div>
-    </AiDraftCard>
+
+      {subject && (
+        <div>
+          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">Subject</p>
+          <p className="text-xs text-foreground">{subject}</p>
+        </div>
+      )}
+
+      <div>
+        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">Body</p>
+        {editing ? (
+          <Textarea
+            value={editedDraft}
+            onChange={handleDraftChange}
+            className="min-h-[120px] text-xs resize-none"
+          />
+        ) : (
+          <p className="text-xs text-foreground whitespace-pre-wrap leading-relaxed">{editedDraft}</p>
+        )}
+      </div>
+
+      <div className="flex items-center gap-2 pt-1">
+        {onAccept && (
+          <Button size="sm" className="h-7 text-xs gap-1" onClick={handleAccept}>
+            <Check className="h-3 w-3" />
+            {acceptLabel}
+          </Button>
+        )}
+        {onDiscard && (
+          <Button size="sm" variant="ghost" className="h-7 text-xs gap-1 text-muted-foreground" onClick={handleDiscard}>
+            <X className="h-3 w-3" />
+            Discard
+          </Button>
+        )}
+      </div>
+    </div>
   );
 }

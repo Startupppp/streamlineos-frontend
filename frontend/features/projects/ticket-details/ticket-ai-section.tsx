@@ -21,6 +21,7 @@ import {
   useTicketAiSummarize,
   useTicketAiImproveDescription,
   useTicketAiSuggestSubtasks,
+  useTicketHandoff,
 } from "@/hooks/api/projects/ticket-ai";
 import { useUpdateTicket } from "@/hooks/api/projects";
 import { useCreateTicket } from "@/hooks/api/projects/tickets";
@@ -101,6 +102,111 @@ function SuggestSubtasksTrigger({
       <SparklesIcon ref={iconRef} size={13} />
       Suggest subtasks
     </LoadingButton>
+  );
+}
+
+interface HandoffTriggerProps {
+  onClick: () => void;
+  isPending: boolean;
+}
+
+function HandoffTrigger({ onClick, isPending }: HandoffTriggerProps) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <LoadingButton
+      size="sm"
+      variant="outline"
+      isPending={isPending}
+      loadingText="Generating…"
+      onClick={onClick}
+      className="gap-1.5 text-xs border-border/60"
+      {...hoverHandlers}
+    >
+      <SparklesIcon ref={iconRef} size={13} />
+      Handoff brief
+    </LoadingButton>
+  );
+}
+
+interface HandoffPanelProps {
+  currentState: string;
+  keyDecisions: string[];
+  nextAction: string;
+  blockers: string[];
+  onDismiss: () => void;
+  onRegenerate: () => void;
+  isRegenerating: boolean;
+}
+
+function HandoffPanel({
+  currentState,
+  keyDecisions,
+  nextAction,
+  blockers,
+  onDismiss,
+  onRegenerate,
+  isRegenerating,
+}: HandoffPanelProps) {
+  return (
+    <div className="rounded-lg border border-border bg-primary/5 p-3 space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+          Handoff Brief
+        </span>
+        <div className="flex items-center gap-1">
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            onClick={onRegenerate}
+            disabled={isRegenerating}
+            className="h-6 w-6 text-muted-foreground hover:text-foreground"
+            aria-label="Regenerate handoff brief"
+          >
+            <RotateCcw className="h-3 w-3" />
+          </Button>
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            onClick={onDismiss}
+            className="h-6 w-6 text-muted-foreground hover:text-foreground"
+            aria-label="Dismiss handoff brief"
+          >
+            <XIcon size={12} />
+          </Button>
+        </div>
+      </div>
+      <p className="text-[13px] text-foreground leading-relaxed">{currentState}</p>
+      {keyDecisions.length > 0 ? (
+        <div>
+          <p className="text-[11px] font-medium text-muted-foreground mb-1">Key decisions</p>
+          <ul className="space-y-0.5">
+            {keyDecisions.map((d, i) => (
+              <li key={i} className="text-[12px] text-foreground/80 flex items-start gap-1.5">
+                <span className="mt-2 h-1 w-1 rounded-full bg-primary shrink-0" />
+                {d}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+      <div>
+        <p className="text-[11px] font-medium text-muted-foreground mb-0.5">Next action</p>
+        <p className="text-[12px] text-foreground/80">{nextAction}</p>
+      </div>
+      {blockers.length > 0 ? (
+        <div>
+          <p className="text-[11px] font-medium text-destructive mb-1">Blockers</p>
+          <ul className="space-y-0.5">
+            {blockers.map((b, i) => (
+              <li key={i} className="text-[12px] text-destructive/80 flex items-start gap-1.5">
+                <span className="mt-2 h-1 w-1 rounded-full bg-destructive shrink-0" />
+                {b}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -378,6 +484,7 @@ export function TicketAiSection({
   projectId,
 }: TicketAiSectionProps) {
   const [summaryVisible, setSummaryVisible] = useState(false);
+  const [handoffVisible, setHandoffVisible] = useState(false);
   const [improveOpen, setImproveOpen] = useState(false);
   const [subtasksOpen, setSubtasksOpen] = useState(false);
   const [selectedSubtasks, setSelectedSubtasks] = useState<Set<number>>(
@@ -386,6 +493,7 @@ export function TicketAiSection({
   const [creatingCount, setCreatingCount] = useState(0);
 
   const summarizeMutation = useTicketAiSummarize(projectId, ticketId);
+  const handoffMutation = useTicketHandoff(projectId, ticketId);
   const improveMutation = useTicketAiImproveDescription(projectId, ticketId);
   const suggestMutation = useTicketAiSuggestSubtasks(projectId, ticketId);
   const updateMutation = useUpdateTicket(projectId);
@@ -400,6 +508,17 @@ export function TicketAiSection({
 
   const handleDismissSummary = useCallback(() => {
     setSummaryVisible(false);
+  }, []);
+
+  const handleHandoff = useCallback(() => {
+    handoffMutation.mutate(undefined, {
+      onSuccess: () => setHandoffVisible(true),
+      onError: (err) => toast.error(getErrorMessage(err)),
+    });
+  }, [handoffMutation]);
+
+  const handleDismissHandoff = useCallback(() => {
+    setHandoffVisible(false);
   }, []);
 
   const handleImprove = useCallback(() => {
@@ -533,6 +652,10 @@ export function TicketAiSection({
             onClick={handleSuggestSubtasks}
             isPending={suggestMutation.isPending && !subtasksOpen}
           />
+          <HandoffTrigger
+            onClick={handleHandoff}
+            isPending={handoffMutation.isPending && !handoffVisible}
+          />
         </div>
 
         {summaryVisible && summarizeMutation.data && (
@@ -547,6 +670,26 @@ export function TicketAiSection({
         )}
 
         {summarizeMutation.isPending && !summaryVisible && (
+          <div className="rounded-lg border border-border bg-primary/5 p-3 space-y-2">
+            <Skeleton className="h-3.5 w-full rounded" />
+            <Skeleton className="h-3.5 w-4/5 rounded" />
+            <Skeleton className="h-3.5 w-3/4 rounded" />
+          </div>
+        )}
+
+        {handoffVisible && handoffMutation.data && (
+          <HandoffPanel
+            currentState={handoffMutation.data.currentState}
+            keyDecisions={handoffMutation.data.keyDecisions}
+            nextAction={handoffMutation.data.nextAction}
+            blockers={handoffMutation.data.blockers}
+            onDismiss={handleDismissHandoff}
+            onRegenerate={handleHandoff}
+            isRegenerating={handoffMutation.isPending}
+          />
+        )}
+
+        {handoffMutation.isPending && !handoffVisible && (
           <div className="rounded-lg border border-border bg-primary/5 p-3 space-y-2">
             <Skeleton className="h-3.5 w-full rounded" />
             <Skeleton className="h-3.5 w-4/5 rounded" />

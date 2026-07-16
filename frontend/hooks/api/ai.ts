@@ -8,6 +8,7 @@ import type {
   LeadScoreResult, EmailTone, GeneratedEmail, DealPredictionResult,
   NextActionResult, ChurnRiskResult, LeadEnrichmentResult,
   CandidateScoreResult, ReviewDraftResult, HelpdeskReplyResult, AttritionRiskResult,
+  PolicyQaResult, InterviewKitResult, LetterDraftResult, InterviewNotesSummaryResult,
 } from "@/lib/ai/schemas";
 
 export function useAIScoreLead() {
@@ -335,5 +336,55 @@ export function useAiUsage() {
     queryFn: () => apiClient.get<AiUsageData>("/settings/ai-usage"),
     enabled: canView,
     staleTime: 5 * 60_000,
+  });
+}
+
+export function useAIPolicyQa() {
+  return useMutation({
+    mutationKey: ["ai", "hr", "policy-qa"],
+    mutationFn: (question: string) =>
+      apiClient.post<PolicyQaResult>("/ai/hr/policy-qa", { question }),
+  });
+}
+
+export function useAIInterviewKit() {
+  return useMutation({
+    mutationKey: ["ai", "hr", "interview-kit"],
+    mutationFn: (jobPostingId: number) =>
+      apiClient.post<InterviewKitResult>("/ai/hr/interview-kit", { jobPostingId }),
+  });
+}
+
+interface LetterDraftInput {
+  userId: string;
+  letterType: "offer" | "appointment" | "appreciation" | "warning" | "promotion" | "termination_notice" | "experience";
+  details?: string;
+}
+
+export function useAILetterDraft() {
+  return useMutation({
+    mutationKey: ["ai", "hr", "letter-draft"],
+    mutationFn: (input: LetterDraftInput) =>
+      apiClient.post<LetterDraftResult>("/ai/hr/letter-draft", input),
+  });
+}
+
+export function useAIInterviewNotesSummary() {
+  return useMutation({
+    mutationKey: ["ai", "hr", "interview-notes-summary"],
+    mutationFn: (input: { candidateId: number; jobPostingId?: number }) =>
+      apiClient.post<InterviewNotesSummaryResult>("/ai/hr/interview-notes-summary", input),
+  });
+}
+
+export function useAcceptCandidateScore() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["ai", "hr", "accept-candidate-score"],
+    mutationFn: (input: { candidateId: number; aiScore: number }) =>
+      apiClient.post<{ accepted: boolean }>("/ai/hr/accept-candidate-score", input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.hr.candidates() });
+    },
   });
 }

@@ -26,6 +26,7 @@ export const DealPredictionSchema = z.object({
   riskFactors: z.array(z.string()),
   positiveSignals: z.array(z.string()),
   recommendedActions: z.array(z.string()),
+  estimateDisclaimer: z.string(),
 });
 export type DealPredictionResult = z.infer<typeof DealPredictionSchema>;
 
@@ -97,3 +98,65 @@ export const AttritionRiskSchema = z.object({
   retentionActions: z.array(z.string()),
 });
 export type AttritionRiskResult = z.infer<typeof AttritionRiskSchema>;
+
+export const PolicyQaSchema = z.object({
+  answer: z.string(),
+  confidence: z.enum(["high", "medium", "low", "not_found"]),
+  citations: z.array(z.object({
+    policyType: z.string(),
+    policyId: z.number(),
+    snippet: z.string(),
+  })),
+  shouldEscalate: z.boolean(),
+  escalationReason: z.string().optional(),
+  advisory: z.boolean().optional(),
+  disclaimer: z.string().optional(),
+  suggestTicket: z.boolean().optional(),
+});
+export type PolicyQaResult = z.infer<typeof PolicyQaSchema>;
+
+export const InterviewKitRoundSchema = z.object({
+  round: z.string(),
+  questions: z.array(z.object({
+    question: z.string(),
+    category: z.string(),
+    expectedAnswer: z.string(),
+    redFlags: z.array(z.string()),
+  })),
+  rubric: z.array(z.object({
+    criterion: z.string(),
+    weight: z.number(),
+    description: z.string(),
+  })),
+});
+
+export const InterviewKitSchema = z.object({
+  roundKits: z.array(InterviewKitRoundSchema),
+  advisory: z.boolean().optional(),
+  disclaimer: z.string().optional(),
+});
+export type InterviewKitResult = z.infer<typeof InterviewKitSchema>;
+
+export const LetterDraftSchema = z.object({
+  subject: z.string(),
+  body: z.string(),
+  disclaimer: z.string(),
+  advisory: z.boolean().optional(),
+});
+export type LetterDraftResult = z.infer<typeof LetterDraftSchema>;
+
+export const InterviewNotesSummarySchema = z.object({
+  overallRecommendation: z.string(),
+  confidence: z.enum(["low", "medium", "high"]),
+  strengthsSummary: z.string(),
+  concernsSummary: z.string(),
+  roundSummaries: z.array(z.object({
+    round: z.string(),
+    verdict: z.string(),
+    keyPoints: z.array(z.string()),
+  })),
+  suggestedNextStep: z.string(),
+  advisory: z.boolean().optional(),
+  disclaimer: z.string().optional(),
+});
+export type InterviewNotesSummaryResult = z.infer<typeof InterviewNotesSummarySchema>;
