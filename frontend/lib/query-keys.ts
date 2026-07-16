@@ -978,6 +978,7 @@ export const queryKeys = {
     settings: () => [...base, "inventory", "settings"] as const,
     numberSequences: () => [...base, "inventory", "numberSequences"] as const,
     aiInsights: (params?: object) => [...base, "inventory", "aiInsights", params] as const,
+    aiDigest: (narrate?: boolean) => [...base, "inventory", "aiDigest", narrate] as const,
     barcodeLookup: (code: string) => [...base, "inventory", "barcodeLookup", code] as const,
     qualityHold: (id: number) => [...base, "inventory", "qualityHold", id] as const,
     webhooks: () => [...base, "inventory", "webhooks"] as const,

@@ -247,7 +247,9 @@ export function WorkLogEntryRow({
         )}
 
         {highlighted && !hasUnsavedChanges && (
-          <TruncatedText text={highlighted} className="text-xs text-muted-foreground px-1" />
+          <span className="line-clamp-2 text-xs text-muted-foreground px-1" title={content}>
+            {highlighted}
+          </span>
         )}
 
         {hasUnsavedChanges && !readOnly && (
