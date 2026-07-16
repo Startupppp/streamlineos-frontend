@@ -1,8 +1,10 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { format } from "date-fns";
-import { Play, Pause, Square, Trash2, Timer, Loader2 } from "lucide-react";
+import { Square, Timer, Loader2, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { PlayIcon, PauseIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Switch } from "@/components/ui/switch";
@@ -185,20 +187,46 @@ export function TimerPanel({ weekStart, weekEnd }: TimerPanelProps) {
             </div>
             <div className="flex items-center gap-2 pt-1">
               {isRunning ? (
-                <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={handlePause} disabled={pauseTimer.isPending}>
-                  <Pause className="h-3 w-3" /> Pause
-                </Button>
+                <AnimatedIconButton
+                  icon={PauseIcon}
+                  iconSize={12}
+                  iconClassName="mr-1"
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs"
+                  onClick={handlePause}
+                  disabled={pauseTimer.isPending}
+                >
+                  Pause
+                </AnimatedIconButton>
               ) : (
-                <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={handleResume} disabled={resumeTimer.isPending}>
-                  <Play className="h-3 w-3" /> Resume
-                </Button>
+                <AnimatedIconButton
+                  icon={PlayIcon}
+                  iconSize={12}
+                  iconClassName="mr-1"
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs"
+                  onClick={handleResume}
+                  disabled={resumeTimer.isPending}
+                >
+                  Resume
+                </AnimatedIconButton>
               )}
               <Button size="sm" className="h-7 text-xs gap-1" onClick={handleOpenConvert}>
                 <Square className="h-3 w-3" /> Stop &amp; Save
               </Button>
-              <Button size="sm" variant="ghost" className="h-7 text-xs gap-1 text-destructive hover:text-destructive ml-auto" onClick={handleOpenDiscard}>
-                <Trash2 className="h-3 w-3" /> Discard
-              </Button>
+              <AnimatedIconButton
+                icon={Trash2Icon}
+                iconSize={12}
+                iconClassName="mr-1"
+                size="sm"
+                variant="ghost"
+                className="h-7 text-xs text-destructive hover:text-destructive ml-auto"
+                onClick={handleOpenDiscard}
+              >
+                Discard
+              </AnimatedIconButton>
             </div>
           </CardContent>
         </Card>

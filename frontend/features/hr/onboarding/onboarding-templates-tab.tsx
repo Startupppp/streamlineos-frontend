@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -218,9 +217,9 @@ export function OnboardingTemplatesTab() {
           Reusable onboarding plans with steps, owners, and due dates. Department-specific plans are applied
           automatically when launching onboarding for an employee in that department.
         </p>
-        <Button size="sm" className="gap-1.5 shrink-0" onClick={() => setSheetOpen(true)}>
-          <Plus className="h-3.5 w-3.5" /> New Plan
-        </Button>
+        <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1" size="sm" className="gap-1.5 shrink-0" onClick={() => setSheetOpen(true)}>
+          New Plan
+        </AnimatedIconButton>
       </div>
 
       {isLoading ? (

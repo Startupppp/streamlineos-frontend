@@ -15,7 +15,8 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { getTodayString } from "@/lib/date-utils";
-import { Plus } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import {
   useVendorSubmissions,
@@ -127,6 +128,7 @@ export function SubmissionSheet({ vendor, onClose }: SubmissionSheetProps) {
   const { data: submissions = [], isLoading } = useVendorSubmissions(vendor.id);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const { iconRef: plusIconRef, hoverHandlers: plusHoverHandlers } = useAnimatedIcon();
 
   const updateSubmission = useUpdateVendorSubmission(vendor.id);
 
@@ -156,8 +158,8 @@ export function SubmissionSheet({ vendor, onClose }: SubmissionSheetProps) {
               <SheetTitle>{vendor.name} — Submissions</SheetTitle>
               <SheetDescription>Candidates submitted by this vendor and invoice status</SheetDescription>
             </div>
-            <Button size="sm" variant="outline" className="gap-1 shrink-0" onClick={handleToggleAddForm}>
-              <Plus className="h-3.5 w-3.5" />
+            <Button size="sm" variant="outline" className="gap-1 shrink-0" onClick={handleToggleAddForm} {...plusHoverHandlers}>
+              <PlusIcon ref={plusIconRef} size={14} />
               Submit
             </Button>
           </div>

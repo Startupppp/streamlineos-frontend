@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback } from "react";
-import { Plus, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { PlusIcon, XIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -93,19 +93,22 @@ export function PolicyScopesEditor({ value, onChange, disabled }: Props) {
             disabled={disabled || row.scopeType === "organization"}
             readOnly={row.scopeType === "organization"}
           />
-          <Button
+          <AnimatedIconButton
+            icon={XIcon}
+            iconSize={14}
             type="button"
             variant="ghost"
             size="icon"
             className="w-8 shrink-0 text-muted-foreground hover:text-destructive"
             onClick={() => handleRemove(index)}
             disabled={disabled || value.length === 1}
-          >
-            <X className="h-3.5 w-3.5" />
-          </Button>
+          />
         </div>
       ))}
-      <Button
+      <AnimatedIconButton
+        icon={PlusIcon}
+        iconSize={12}
+        iconClassName="mr-1"
         type="button"
         variant="outline"
         size="sm"
@@ -113,9 +116,8 @@ export function PolicyScopesEditor({ value, onChange, disabled }: Props) {
         onClick={handleAdd}
         disabled={disabled}
       >
-        <Plus className="h-3 w-3" />
         Add Scope
-      </Button>
+      </AnimatedIconButton>
     </div>
   );
 }

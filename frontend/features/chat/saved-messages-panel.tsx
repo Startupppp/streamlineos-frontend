@@ -3,13 +3,28 @@
 import { useCallback, useMemo } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bookmark, Hash, Loader2, X } from "lucide-react";
+import { Bookmark, Hash, Loader2 } from "lucide-react";
+import { XIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import React from "react";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useSavedMessages, useUnsaveMessage, useChatOrgUsers } from "@/hooks/api";
 import { getInitials, formatMessageTime, buildChatUserMap, resolveChatUserName } from "./chat-helpers";
 import type { SavedMessage } from "@/types/chat";
+
+const UnsaveButton = React.forwardRef<
+  HTMLButtonElement,
+  React.ButtonHTMLAttributes<HTMLButtonElement>
+>(function UnsaveButton({ className, ...props }, ref) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <button ref={ref} {...hoverHandlers} className={className} {...props}>
+      <XIcon ref={iconRef} size={12} className="text-muted-foreground" />
+    </button>
+  );
+});
 
 function SavedMessageCard({
   item,
@@ -62,20 +77,30 @@ function SavedMessageCard({
             </p>
           )}
         </div>
-        <button
+        <UnsaveButton
           onClick={handleUnsave}
           className={cn(
             "h-6 w-6 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted",
           )}
           title="Unsave"
           aria-label="Unsave message"
-        >
-          <X className="h-3 w-3 text-muted-foreground" />
-        </button>
+        />
       </div>
     </div>
   );
 }
+
+const SavedPanelCloseButton = React.forwardRef<
+  HTMLButtonElement,
+  React.ButtonHTMLAttributes<HTMLButtonElement>
+>(function SavedPanelCloseButton({ className, ...props }, ref) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <button ref={ref} {...hoverHandlers} className={className} {...props}>
+      <XIcon ref={iconRef} size={16} className="text-muted-foreground" />
+    </button>
+  );
+});
 
 export function SavedMessagesPanel({
   onClose,
@@ -118,9 +143,7 @@ export function SavedMessagesPanel({
           <Bookmark className="h-4 w-4 text-amber-500 fill-amber-500" />
           <h3 className="text-[14px] font-bold">Saved Messages</h3>
         </div>
-        <button onClick={onClose} className="p-1.5 hover:bg-muted rounded-lg" aria-label="Close">
-          <X className="h-4 w-4 text-muted-foreground" />
-        </button>
+        <SavedPanelCloseButton onClick={onClose} className="p-1.5 hover:bg-muted rounded-lg" aria-label="Close" />
       </div>
 
       <ScrollArea className="flex-1">

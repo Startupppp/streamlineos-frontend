@@ -22,7 +22,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Target, User, ListChecks, Plus, Trash2 } from "lucide-react";
+import { Target, User, ListChecks } from "lucide-react";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
 import {
   useCreateGoal,
@@ -95,15 +97,15 @@ const KeyResultRow = memo(function KeyResultRow({ kr, index, onUpdate, onRemove 
           value={kr.title}
           onChange={handleTitleChange}
         />
-        <Button
+        <AnimatedIconButton
           type="button"
           variant="ghost"
           size="icon"
+          icon={Trash2Icon}
+          iconSize={14}
           className="w-8 text-destructive hover:text-destructive shrink-0"
           onClick={handleRemove}
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </Button>
+        />
       </div>
       <div className="grid grid-cols-2 gap-2">
         <Select value={kr.metricType} onValueChange={handleMetricTypeChange}>
@@ -409,15 +411,17 @@ export function GoalFormSheet({
                     <ListChecks className="h-4 w-4" />
                     <span>Key Results</span>
                   </div>
-                  <Button
+                  <AnimatedIconButton
                     type="button"
                     variant="outline"
                     size="sm"
-                    className=""
+                    icon={PlusIcon}
+                    iconSize={14}
+                    iconClassName="mr-1"
                     onClick={handleAddKeyResult}
                   >
-                    <Plus className="h-3.5 w-3.5 mr-1" /> Add
-                  </Button>
+                    Add
+                  </AnimatedIconButton>
                 </div>
 
                 {keyResults.length === 0 ? (

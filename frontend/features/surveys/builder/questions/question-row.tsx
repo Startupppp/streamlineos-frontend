@@ -1,5 +1,7 @@
-import { ArrowDown, ArrowUp, Copy, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp } from "lucide-react";
+import { CopyIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
 import { QUESTION_TYPE_META } from "@/features/surveys/shared/question-type-meta";
 import type { SurveyBuilderQuestion } from "@/hooks/api/surveys/builder";
@@ -45,12 +47,8 @@ export function QuestionRow({
         <Button variant="ghost" size="icon" className="h-7 w-7" disabled={isLast} onClick={() => onMoveDown(question.id)}>
           <ArrowDown className="h-3.5 w-3.5" />
         </Button>
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onDuplicate(question.id)}>
-          <Copy className="h-3.5 w-3.5" />
-        </Button>
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onDelete(question.id)}>
-          <Trash2 className="h-3.5 w-3.5 text-destructive" />
-        </Button>
+        <AnimatedIconButton icon={CopyIcon} iconSize={14} variant="ghost" size="icon" className="h-7 w-7" onClick={() => onDuplicate(question.id)} />
+        <AnimatedIconButton icon={Trash2Icon} iconSize={14} iconClassName="text-destructive" variant="ghost" size="icon" className="h-7 w-7" onClick={() => onDelete(question.id)} />
       </div>
     </div>
   );

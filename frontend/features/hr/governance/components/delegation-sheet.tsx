@@ -35,7 +35,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Plus } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { StateIllustration } from "@/components/illustrations";
 import { useCan } from "@/hooks/api/access";
 import { useOrgDelegations, useGrantProxy, useRevokeProxy, type ProxyAccess } from "../hooks/use-delegations";
@@ -167,7 +167,7 @@ export function DelegationSheet() {
         </p>
         {canManage && (
           <Button onClick={handleOpenSheet} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground">
-            <Plus className="h-4 w-4 mr-1.5" />
+            <PlusIcon size={16} className="mr-1.5" />
             Grant Proxy
           </Button>
         )}
@@ -185,7 +185,7 @@ export function DelegationSheet() {
             </div>
             {canManage && (
               <Button onClick={handleOpenSheet} size="sm" className="mt-1 bg-primary hover:bg-primary/90 text-primary-foreground">
-                <Plus className="h-4 w-4 mr-1.5" />
+                <PlusIcon size={16} className="mr-1.5" />
                 Grant Proxy
               </Button>
             )}

@@ -2,9 +2,11 @@
 
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
-import { Play, SkipForward, Eye, Square, Copy } from "lucide-react";
+import { SkipForward, Square } from "lucide-react";
+import { PlayIcon, EyeIcon, CopyIcon } from "@animateicons/react/lucide";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
@@ -64,9 +66,9 @@ export default function LiveSessionHostPage() {
                     <p className="text-xs text-muted-foreground">Join code</p>
                     <p className="font-mono text-2xl font-bold tracking-widest">{session.sessionCode}</p>
                   </div>
-                  <Button variant="outline" size="sm" onClick={handleCopyLink}>
-                    <Copy className="h-3.5 w-3.5" /> Copy join link
-                  </Button>
+                  <AnimatedIconButton icon={CopyIcon} iconSize={14} iconClassName="mr-1.5" variant="outline" size="sm" onClick={handleCopyLink}>
+                    Copy join link
+                  </AnimatedIconButton>
                   <div className="ml-auto text-sm text-muted-foreground">
                     {results?.participantCount ?? 0} joined
                   </div>
@@ -77,18 +79,18 @@ export default function LiveSessionHostPage() {
                 <CardContent className="space-y-4 pt-6">
                   <div className="flex flex-wrap gap-2">
                     {session.status !== "active" && session.status !== "ended" && (
-                      <Button size="sm" onClick={() => run(start, "start")} disabled={start.isPending}>
-                        <Play className="h-3.5 w-3.5" /> Start
-                      </Button>
+                      <AnimatedIconButton icon={PlayIcon} iconSize={14} iconClassName="mr-1.5" size="sm" onClick={() => run(start, "start")} disabled={start.isPending}>
+                        Start
+                      </AnimatedIconButton>
                     )}
                     {session.status === "active" && (
                       <>
                         <Button size="sm" variant="outline" onClick={() => run(next, "advance")} disabled={next.isPending}>
                           <SkipForward className="h-3.5 w-3.5" /> Next question
                         </Button>
-                        <Button size="sm" variant="outline" onClick={() => run(reveal, "reveal")} disabled={reveal.isPending}>
-                          <Eye className="h-3.5 w-3.5" /> Reveal
-                        </Button>
+                        <AnimatedIconButton icon={EyeIcon} iconSize={14} iconClassName="mr-1.5" size="sm" variant="outline" onClick={() => run(reveal, "reveal")} disabled={reveal.isPending}>
+                          Reveal
+                        </AnimatedIconButton>
                         <Button size="sm" variant="destructive" onClick={() => run(end, "end")} disabled={end.isPending}>
                           <Square className="h-3.5 w-3.5" /> End session
                         </Button>

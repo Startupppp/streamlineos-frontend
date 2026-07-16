@@ -66,13 +66,14 @@ interface NewMeetingButtonProps {
 
 export function NewMeetingButton({ onBlank, onTemplate }: NewMeetingButtonProps) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
+  const { iconRef: chevronRef } = useAnimatedIcon();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button size="sm" className="gap-1.5 text-xs" {...hoverHandlers}>
           <PlusIcon ref={iconRef} size={14} />
           New Meeting
-          <ChevronDown className="ml-0.5 h-3 w-3" />
+          <ChevronDownIcon ref={chevronRef} size={12} className="ml-0.5" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">

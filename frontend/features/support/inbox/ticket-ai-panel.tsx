@@ -456,7 +456,7 @@ export function TicketAiPanel({ ticketId, onInsertReply }: TicketAiPanelProps) {
                           {formatConfidence(suggestion.confidence)}
                         </span>
                       )}
-                      <Button
+                      <AnimatedIconButton
                         type="button"
                         variant="ghost"
                         size="icon"
@@ -465,10 +465,9 @@ export function TicketAiPanel({ ticketId, onInsertReply }: TicketAiPanelProps) {
                         title={`Helpful — ${acceptLabel(suggestion)}`}
                         disabled={resolveSuggestion.isPending}
                         onClick={() => handleAccept(suggestion)}
-                      >
-                        <ThumbsUp className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button
+                        icon={ThumbsUpIcon}
+                      />
+                      <AnimatedIconButton
                         type="button"
                         variant="ghost"
                         size="icon"
@@ -477,9 +476,8 @@ export function TicketAiPanel({ ticketId, onInsertReply }: TicketAiPanelProps) {
                         title="Not helpful — dismiss suggestion"
                         disabled={resolveSuggestion.isPending}
                         onClick={() => handleReject(suggestion.id)}
-                      >
-                        <ThumbsDown className="h-3.5 w-3.5" />
-                      </Button>
+                        icon={ThumbsDownIcon}
+                      />
                     </div>
                   </div>
                   <SuggestionBody suggestion={suggestion} macros={macroList} />

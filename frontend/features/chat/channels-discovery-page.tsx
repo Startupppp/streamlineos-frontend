@@ -11,7 +11,6 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { SearchInput } from "@/components/ui/search-input";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -173,7 +172,9 @@ export function ChannelsDiscoveryPage() {
                 {rangeStart}-{rangeEnd} / {filtered.length}
               </span>
               <div className="flex items-center gap-1">
-                <Button
+                <AnimatedIconButton
+                  icon={ChevronLeftIcon}
+                  iconSize={14}
                   type="button"
                   variant="outline"
                   size="icon"
@@ -181,10 +182,10 @@ export function ChannelsDiscoveryPage() {
                   onClick={handlePrevPage}
                   disabled={currentPage === 0}
                   aria-label="Previous page"
-                >
-                  <ChevronLeft className="h-3.5 w-3.5" />
-                </Button>
-                <Button
+                />
+                <AnimatedIconButton
+                  icon={ChevronRightIcon}
+                  iconSize={14}
                   type="button"
                   variant="outline"
                   size="icon"
@@ -192,9 +193,7 @@ export function ChannelsDiscoveryPage() {
                   onClick={handleNextPage}
                   disabled={currentPage >= totalPages - 1}
                   aria-label="Next page"
-                >
-                  <ChevronRight className="h-3.5 w-3.5" />
-                </Button>
+                />
               </div>
             </div>
           </div>

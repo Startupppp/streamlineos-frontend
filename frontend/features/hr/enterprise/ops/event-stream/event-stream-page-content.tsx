@@ -8,7 +8,8 @@ import type { DataTableColumn } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Download, Database } from "lucide-react";
+import { Database } from "lucide-react";
+import { DownloadIcon } from "@animateicons/react/lucide";
 import { useCan } from "@/hooks/api/access";
 import {
   useHrEvents,
@@ -132,7 +133,7 @@ export function EventStreamPageContent() {
             variant="outline"
             size="sm"
           >
-            <Download className="h-4 w-4 mr-1.5" />
+            <DownloadIcon size={16} className="mr-1.5" />
             Export
           </LoadingButton>
         ) : null

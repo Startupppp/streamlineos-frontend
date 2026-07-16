@@ -5,6 +5,7 @@ import { Pencil, Save, X } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { RichNotesEditor } from "@/features/crm/shared/rich-notes-editor";
 import { useUpdateCrmOrganization } from "@/hooks/api/crm";
 import { toast } from "sonner";
@@ -81,15 +82,16 @@ export function AccountNotes({
         placeholder="Add internal notes about this company..."
       />
       <div className="flex gap-2">
-        <Button
+        <LoadingButton
           size="sm"
           className="gap-1.5"
           onClick={handleSave}
-          disabled={updateMutation.isPending}
+          isPending={updateMutation.isPending}
+          loadingText="Saving..."
         >
           <Save className="h-3 w-3" />
           Save
-        </Button>
+        </LoadingButton>
         <Button
           size="sm"
           variant="outline"

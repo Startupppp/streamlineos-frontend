@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Copy, Plus, RefreshCcw } from "lucide-react";
+import { RefreshCcw } from "lucide-react";
+import { CopyIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { formatDistanceToNow } from "date-fns";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -397,10 +399,9 @@ export function ProjectFeedbucketPage({ projectId }: ProjectFeedbucketPageProps)
                     </p>
                   </div>
                   <div className="flex shrink-0 gap-2">
-                    <Button size="sm" variant="outline" onClick={handleCopySnippet}>
-                      <Copy className="mr-1.5 h-3.5 w-3.5" />
+                    <AnimatedIconButton size="sm" variant="outline" icon={CopyIcon} iconSize={14} iconClassName="mr-1.5" onClick={handleCopySnippet}>
                       Copy snippet
-                    </Button>
+                    </AnimatedIconButton>
                     <Button size="sm" variant="outline" onClick={handleOpenRotate}>
                       <RefreshCcw className="mr-1.5 h-3.5 w-3.5" />
                       Rotate key

@@ -3,7 +3,7 @@
 import React, { useState, useCallback } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { SearchInput } from "@/components/ui/search-input";
 import {
   Select,
@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DataTable } from "@/components/ui/data-table";
-import { Plus } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { StateIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
@@ -154,10 +154,16 @@ export function SafetyPageContent() {
       filters={activeTab === "incidents" ? filters : undefined}
       actions={
         activeTab === "incidents" ? (
-          <Button size="sm" className="gap-1.5 text-sm" onClick={() => setShowReport(true)}>
-            <Plus className="h-3.5 w-3.5" />
+          <AnimatedIconButton
+            icon={PlusIcon}
+            iconSize={14}
+            iconClassName="mr-1.5"
+            size="sm"
+            className="gap-1.5 text-sm"
+            onClick={() => setShowReport(true)}
+          >
             Report Incident
-          </Button>
+          </AnimatedIconButton>
         ) : undefined
       }
     >
@@ -191,10 +197,16 @@ export function SafetyPageContent() {
                   <p className="text-sm font-medium text-foreground">No safety incidents reported</p>
                   <p className="text-xs text-muted-foreground">Report workplace incidents, accidents, near-misses, and hazards here.</p>
                 </div>
-                <Button size="sm" className="mt-1 gap-1.5 h-8 text-sm" onClick={() => setShowReport(true)}>
-                  <Plus className="h-3.5 w-3.5" />
+                <AnimatedIconButton
+                  icon={PlusIcon}
+                  iconSize={14}
+                  iconClassName="mr-1.5"
+                  size="sm"
+                  className="mt-1 gap-1.5 h-8 text-sm"
+                  onClick={() => setShowReport(true)}
+                >
                   Report Incident
-                </Button>
+                </AnimatedIconButton>
               </div>
             }
           />

@@ -4,11 +4,10 @@ import { useState, useCallback, useTransition } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { Pin, PinOff, Users, Lock } from "lucide-react";
+import { Pin, PinOff, Users, Lock, ChevronDown } from "lucide-react";
 import {
   BookmarkIcon,
   BookmarkCheckIcon,
-  ChevronDownIcon,
   Trash2Icon,
 } from "@animateicons/react/lucide";
 import {

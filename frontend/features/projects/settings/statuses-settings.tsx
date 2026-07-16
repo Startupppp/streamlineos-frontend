@@ -2,8 +2,10 @@
 
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Columns3 } from "lucide-react";
+import { Columns3 } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import {
@@ -122,15 +124,16 @@ export function StatusesSettings({ projectId }: { projectId: number }) {
           </p>
         </div>
         {canManage && !showForm ? (
-          <Button
+          <AnimatedIconButton
             variant="outline"
             size="sm"
             onClick={handleShowForm}
             className="h-7 shrink-0 text-xs gap-1.5"
+            icon={PlusIcon}
+            iconSize={14}
           >
-            <Plus className="h-3.5 w-3.5" />
             Add Status
-          </Button>
+          </AnimatedIconButton>
         ) : null}
       </div>
 

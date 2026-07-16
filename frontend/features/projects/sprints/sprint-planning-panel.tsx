@@ -1,10 +1,12 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { ArrowLeftRight, Plus, Minus, CheckSquare, AlertTriangle, PackageOpen, X } from "lucide-react";
+import { ArrowLeftRight, CheckSquare, AlertTriangle, PackageOpen } from "lucide-react";
+import { PlusIcon, MinusIcon, XIcon } from "@animateicons/react/lucide";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { SearchInput } from "@/components/ui/search-input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -229,20 +231,17 @@ const PlanningCard = function PlanningCard({
           <TooltipProvider delayDuration={200}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
+                <AnimatedIconButton
                   type="button"
                   variant="ghost"
                   size="icon"
+                  icon={actionIcon === "plus" ? PlusIcon : MinusIcon}
+                  iconSize={14}
                   className="h-6 w-6 shrink-0 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
                   onClick={handleAction}
                   disabled={isPending}
                   aria-label={actionIcon === "plus" ? "Add to sprint" : "Remove from sprint"}
-                >
-                  {actionIcon === "plus"
-                    ? <Plus className="h-3.5 w-3.5" aria-hidden />
-                    : <Minus className="h-3.5 w-3.5" aria-hidden />
-                  }
-                </Button>
+                />
               </TooltipTrigger>
               <TooltipContent side="left" className="text-xs">
                 {actionIcon === "plus" ? "Add to sprint" : "Remove from sprint"}
@@ -414,18 +413,20 @@ export function SprintPlanningPanel({
                   Backlog ({backlogFilters.filtered.length}{backlogFilters.hasActiveFilters ? ` / ${backlogTickets.length}` : ""})
                 </h4>
                 {selectedBacklog.size > 0 && (
-                  <Button
+                  <AnimatedIconButton
                     type="button"
                     variant="default"
                     size="sm"
+                    icon={PlusIcon}
+                    iconSize={14}
+                    iconClassName="mr-0"
                     onClick={handleBulkAdd}
                     disabled={isMutating}
                     className="text-xs gap-1"
                     aria-label={`Add ${selectedBacklog.size} selected tickets to sprint`}
                   >
-                    <Plus className="h-3.5 w-3.5" aria-hidden />
                     Add {selectedBacklog.size} selected
-                  </Button>
+                  </AnimatedIconButton>
                 )}
               </div>
 
@@ -498,7 +499,7 @@ export function SprintPlanningPanel({
                       onClick={backlogFilters.clearFilters}
                       aria-label="Clear all filters"
                     >
-                      <X className="h-3 w-3" aria-hidden />
+                      <XIcon size={12} />
                       Clear
                     </Button>
                   )}
@@ -562,18 +563,20 @@ export function SprintPlanningPanel({
                   {sprint.name} ({sprintTickets.length})
                 </h4>
                 {selectedSprint.size > 0 && (
-                  <Button
+                  <AnimatedIconButton
                     type="button"
                     variant="outline"
                     size="sm"
+                    icon={MinusIcon}
+                    iconSize={14}
+                    iconClassName="mr-0"
                     onClick={handleBulkRemove}
                     disabled={isMutating}
                     className="text-xs gap-1"
                     aria-label={`Remove ${selectedSprint.size} selected tickets from sprint`}
                   >
-                    <Minus className="h-3.5 w-3.5" aria-hidden />
                     Remove {selectedSprint.size} selected
-                  </Button>
+                  </AnimatedIconButton>
                 )}
               </div>
 

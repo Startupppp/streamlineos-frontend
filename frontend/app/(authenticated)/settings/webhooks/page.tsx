@@ -2,9 +2,12 @@
 
 import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Plus, Trash2, ToggleLeft, ToggleRight, Copy, ExternalLink } from "lucide-react";
+import { ToggleLeft, ToggleRight, ExternalLink } from "lucide-react";
+import { PlusIcon, Trash2Icon, CopyIcon } from "@animateicons/react/lucide";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -189,10 +192,9 @@ export default function WebhooksPage() {
       title="Webhooks"
       subtitle="Send real-time events to external systems when actions occur in your workspace."
       actions={
-        <Button onClick={handleOpenCreate}>
-          <Plus className="h-4 w-4 mr-2" />
+        <AnimatedIconButton icon={PlusIcon} iconSize={16} iconClassName="mr-2" onClick={handleOpenCreate}>
           Add Webhook
-        </Button>
+        </AnimatedIconButton>
       }
     >
       {isLoading ? (
@@ -318,6 +320,15 @@ interface WebhookCardProps {
   onDelete: (id: number) => void;
 }
 
+function CopyUrlButton({ onCopy }: { onCopy: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <button onClick={onCopy} aria-label="Copy URL" {...hoverHandlers}>
+      <CopyIcon ref={iconRef} size={12} className="text-muted-foreground hover:text-foreground transition-colors" />
+    </button>
+  );
+}
+
 function WebhookCard({ webhook: wh, onCopyUrl, onToggle, onDelete }: WebhookCardProps) {
   const handleCopy = useCallback(() => onCopyUrl(wh.url), [wh.url, onCopyUrl]);
   const handleToggleClick = useCallback(() => onToggle(wh.id, wh.isActive), [wh.id, wh.isActive, onToggle]);
@@ -333,9 +344,7 @@ function WebhookCard({ webhook: wh, onCopyUrl, onToggle, onDelete }: WebhookCard
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <CardTitle className="text-sm truncate">{wh.url}</CardTitle>
-                  <button onClick={handleCopy} aria-label="Copy URL">
-                    <Copy className="h-3 w-3 text-muted-foreground hover:text-foreground transition-colors" />
-                  </button>
+                  <CopyUrlButton onCopy={handleCopy} />
                 </div>
                 {wh.description && (
                   <p className="text-xs text-muted-foreground mt-0.5">{wh.description}</p>
@@ -357,15 +366,15 @@ function WebhookCard({ webhook: wh, onCopyUrl, onToggle, onDelete }: WebhookCard
                   ? <ToggleRight className="h-4 w-4 text-emerald-500" />
                   : <ToggleLeft className="h-4 w-4 text-muted-foreground" />}
               </Button>
-              <Button
+              <AnimatedIconButton
+                icon={Trash2Icon}
+                iconSize={16}
                 variant="ghost"
                 size="icon"
                 className="w-7 text-destructive hover:text-destructive"
                 onClick={handleDeleteClick}
                 aria-label="Delete webhook"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              />
             </div>
           </div>
         </CardHeader>

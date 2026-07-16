@@ -2,7 +2,8 @@
 
 import { useState, useRef, useCallback, memo } from "react";
 import { motion } from "framer-motion";
-import { Trash2 } from "lucide-react";
+import { Trash2Icon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -120,6 +121,7 @@ export const StatusRow = memo(function StatusRow({
 
   const updateState = useUpdateCustomState(projectId);
   const deleteState = useDeleteCustomState(projectId);
+  const { iconRef: deleteIconRef, hoverHandlers: deleteHoverHandlers } = useAnimatedIcon();
 
   const stateType = resolveStateType(state.type);
   const typeConfig = TYPE_CONFIG[stateType];

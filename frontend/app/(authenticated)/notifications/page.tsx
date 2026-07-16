@@ -4,7 +4,8 @@ import { useState, useCallback, useMemo } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useRouter } from "next/navigation";
 import { keepPreviousData } from "@tanstack/react-query";
-import { CheckCheck, X } from "lucide-react";
+import { CheckCheck } from "lucide-react";
+import { XIcon } from "@animateicons/react/lucide";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
   useNotifications,

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Sparkles, Loader2, Zap } from "lucide-react";
+import { Sparkles, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Popover,
   PopoverContent,
@@ -57,20 +58,17 @@ export function AINextActionButton({
     return (
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button
+          <LoadingButton
             variant="ghost"
             size="sm"
             className="px-2 text-xs gap-1"
             onClick={handleCompactClick}
-            disabled={actionMutation.isPending}
+            isPending={actionMutation.isPending}
+            loadingText="..."
           >
-            {actionMutation.isPending ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
-            ) : (
-              <Zap className="h-3 w-3 text-primary" />
-            )}
+            <Zap className="h-3 w-3 text-primary" />
             Next Action
-          </Button>
+          </LoadingButton>
         </PopoverTrigger>
         {result && (
           <PopoverContent className="w-72 p-3" align="end">
@@ -83,25 +81,17 @@ export function AINextActionButton({
 
   return (
     <div className="space-y-3">
-      <Button
+      <LoadingButton
         variant="outline"
         size="sm"
         onClick={handleSuggest}
-        disabled={actionMutation.isPending}
+        isPending={actionMutation.isPending}
+        loadingText="Thinking..."
         className="w-full"
       >
-        {actionMutation.isPending ? (
-          <>
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            Thinking...
-          </>
-        ) : (
-          <>
-            <Sparkles className="h-4 w-4 mr-2 text-primary" />
-            Suggest Next Action
-          </>
-        )}
-      </Button>
+        <Sparkles className="h-4 w-4 mr-2 text-primary" />
+        Suggest Next Action
+      </LoadingButton>
       {result && <ActionDetails result={result} urgencyColor={urgencyColor} />}
     </div>
   );

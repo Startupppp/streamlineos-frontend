@@ -11,7 +11,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Trash2 } from "lucide-react";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { Trash2Icon } from "@animateicons/react/lucide";
 import { useSetAgentSkills } from "@/hooks/api/support/macros";
 import { getApiError } from "@/lib/api-client";
 import { toast } from "sonner";
@@ -21,14 +22,21 @@ interface SkillChipProps {
   onRemove: (skill: string) => void;
 }
 
-function SkillChip({ skill, onRemove }: SkillChipProps) {
+function SkillChipRemoveButton({ skill, onRemove }: { skill: string; onRemove: (s: string) => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
   const handleRemove = useCallback(() => onRemove(skill), [skill, onRemove]);
+  return (
+    <button type="button" aria-label={`Remove ${skill}`} onClick={handleRemove} {...hoverHandlers}>
+      <Trash2Icon ref={iconRef} size={10} />
+    </button>
+  );
+}
+
+function SkillChip({ skill, onRemove }: SkillChipProps) {
   return (
     <Badge variant="secondary" className="text-[10px] gap-1">
       {skill}
-      <button type="button" aria-label={`Remove ${skill}`} onClick={handleRemove}>
-        <Trash2 className="h-2.5 w-2.5" />
-      </button>
+      <SkillChipRemoveButton skill={skill} onRemove={onRemove} />
     </Badge>
   );
 }

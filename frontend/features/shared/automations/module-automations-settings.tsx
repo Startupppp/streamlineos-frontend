@@ -22,7 +22,9 @@ import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyActivityIllustration } from "@/components/illustrations";
-import { Plus, Pencil, Trash2, History, Building2 } from "lucide-react";
+import { Pencil, History, Building2 } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import {
@@ -147,14 +149,14 @@ function AutomationCard({
               <Button size="icon" variant="ghost" className="h-7 w-7" onClick={onEdit}>
                 <Pencil className="h-3.5 w-3.5" />
               </Button>
-              <Button
+              <AnimatedIconButton
+                icon={Trash2Icon}
+                iconSize={14}
                 size="icon"
                 variant="ghost"
                 className="h-7 w-7 text-destructive hover:text-destructive"
                 onClick={onDelete}
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
+              />
             </div>
           </div>
         </div>
@@ -289,9 +291,9 @@ export function ModuleAutomationsSettings({ config }: { config: ModuleAutomation
       ) : (
         <div className="space-y-3">
           <div className="flex items-center justify-end">
-            <Button size="sm" onClick={handleOpenCreate}>
-              <Plus className="h-4 w-4 mr-1" /> New Rule
-            </Button>
+            <AnimatedIconButton icon={PlusIcon} iconSize={16} iconClassName="mr-1.5" size="sm" onClick={handleOpenCreate}>
+              New Rule
+            </AnimatedIconButton>
           </div>
           {moduleRules.length === 0 ? (
             <div className="flex min-h-[20vh]">

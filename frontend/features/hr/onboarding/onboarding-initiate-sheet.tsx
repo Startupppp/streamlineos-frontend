@@ -2,7 +2,9 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { toast } from "sonner";
-import { UserPlus, Info } from "lucide-react";
+import { Info } from "lucide-react";
+import { UserPlusIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 
 import { Label } from "@/components/ui/label";
 import { HrSheet } from "@/features/hr/hr-sheet";
@@ -12,6 +14,16 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useInitiateOnboarding } from "@/hooks/api/hr/onboarding";
 import { useHrEmployees } from "@/hooks/api/hr";
 import type { Employee, PaginatedEmployees } from "@/types/hr";
+
+function StartOnboardingLabel() {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <span className="flex items-center gap-1.5" {...hoverHandlers}>
+      <UserPlusIcon ref={iconRef} size={14} />
+      Start Onboarding
+    </span>
+  );
+}
 
 interface OnboardingInitiateSheetProps {
   open: boolean;
@@ -70,12 +82,7 @@ export function OnboardingInitiateSheet({ open, onOpenChange }: OnboardingInitia
       title="Initiate Onboarding"
       description="Create an onboarding checklist for an employee using the active template."
       onSubmit={handleSubmit}
-      submitLabel={
-        <span className="flex items-center gap-1.5">
-          <UserPlus className="h-3.5 w-3.5" />
-          Start Onboarding
-        </span>
-      }
+      submitLabel={<StartOnboardingLabel />}
       isPending={initiate.isPending}
     >
       <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2.5 flex items-start gap-2 text-[12px] text-foreground">

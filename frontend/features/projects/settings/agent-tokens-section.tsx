@@ -5,7 +5,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format, formatDistanceToNow } from "date-fns";
-import { Copy, Plus, Bot } from "lucide-react";
+import { Bot } from "lucide-react";
+import { CopyIcon, PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
 import {
   useAgentTokens,
@@ -176,6 +179,8 @@ function TokenListSkeleton() {
 }
 
 function CopySnippetButton({ text }: { text: string }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+
   const handleCopy = useCallback(() => {
     void navigator.clipboard.writeText(text).then(() => {
       toast.success("Copied to clipboard");
@@ -188,8 +193,9 @@ function CopySnippetButton({ text }: { text: string }) {
       onClick={handleCopy}
       className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
       aria-label="Copy"
+      {...hoverHandlers}
     >
-      <Copy className="h-3.5 w-3.5" />
+      <CopyIcon ref={iconRef} size={14} />
     </button>
   );
 }
@@ -385,14 +391,18 @@ function CreateTokenDialog({
                 <p className="text-xs font-mono break-all pr-8 leading-relaxed select-all">
                   {created?.token}
                 </p>
-                <button
-                  type="button"
-                  onClick={handleCopyToken}
-                  className="absolute top-2 right-2 p-1 rounded hover:bg-background text-muted-foreground hover:text-foreground transition-colors"
-                  aria-label="Copy token"
-                >
-                  <Copy className="h-4 w-4" />
-                </button>
+                <div className="absolute top-2 right-2">
+                  <AnimatedIconButton
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 p-1 text-muted-foreground hover:text-foreground"
+                    onClick={handleCopyToken}
+                    aria-label="Copy token"
+                    icon={CopyIcon}
+                    iconSize={14}
+                  />
+                </div>
               </div>
               <div className="flex items-start gap-2 rounded-md border border-amber-400/40 bg-amber-50 dark:bg-amber-950/20 px-3 py-2.5">
                 <span className="text-amber-600 shrink-0 mt-px text-sm">⚠</span>
@@ -402,10 +412,15 @@ function CreateTokenDialog({
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={handleCopyToken}>
-                <Copy className="h-4 w-4 mr-1.5" />
+              <AnimatedIconButton
+                variant="outline"
+                onClick={handleCopyToken}
+                icon={CopyIcon}
+                iconSize={16}
+                iconClassName="mr-1.5"
+              >
                 Copy token
-              </Button>
+              </AnimatedIconButton>
               <Button onClick={handleDone}>Done</Button>
             </DialogFooter>
           </>
@@ -460,10 +475,16 @@ export function AgentTokensSection() {
             In Review — scoped to your project access only.
           </p>
         </div>
-        <Button size="sm" className="shrink-0" onClick={handleOpenDialog}>
-          <Plus className="mr-1 h-4 w-4" />
+        <AnimatedIconButton
+          size="sm"
+          className="shrink-0"
+          onClick={handleOpenDialog}
+          icon={PlusIcon}
+          iconSize={16}
+          iconClassName="mr-1"
+        >
           New token
-        </Button>
+        </AnimatedIconButton>
       </div>
 
       {isLoading ? (

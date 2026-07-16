@@ -3,9 +3,9 @@
 import { useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
-import { UserPlus, Send, Bell } from "lucide-react";
+import { UserPlusIcon, SendIcon, BellIcon } from "@animateicons/react/lucide";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -79,20 +79,20 @@ export default function SurveyParticipantsPage() {
           title="Participants"
           backHref={`/surveys/${surveyId}`}
           actions={
-            <Button size="sm" onClick={() => setAddOpen(true)}>
-              <UserPlus className="h-3.5 w-3.5" /> Add participants
-            </Button>
+            <AnimatedIconButton icon={UserPlusIcon} iconSize={14} iconClassName="mr-1.5" size="sm" onClick={() => setAddOpen(true)}>
+              Add participants
+            </AnimatedIconButton>
           }
           filters={
             <div className="flex items-center gap-2">
               {selected.size > 0 && (
                 <>
-                  <Button variant="outline" size="sm" onClick={handleInvite} disabled={invite.isPending}>
-                    <Send className="h-3.5 w-3.5" /> Invite ({selected.size})
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={handleRemind} disabled={remind.isPending}>
-                    <Bell className="h-3.5 w-3.5" /> Remind ({selected.size})
-                  </Button>
+                  <AnimatedIconButton icon={SendIcon} iconSize={14} iconClassName="mr-1.5" variant="outline" size="sm" onClick={handleInvite} disabled={invite.isPending}>
+                    Invite ({selected.size})
+                  </AnimatedIconButton>
+                  <AnimatedIconButton icon={BellIcon} iconSize={14} iconClassName="mr-1.5" variant="outline" size="sm" onClick={handleRemind} disabled={remind.isPending}>
+                    Remind ({selected.size})
+                  </AnimatedIconButton>
                 </>
               )}
               <Select value={status} onValueChange={(v) => setStatus(v as ParticipantStatus | "all")}>

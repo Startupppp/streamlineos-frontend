@@ -2,8 +2,10 @@
 
 import { useCallback } from "react";
 import { nanoid } from "nanoid";
-import { PlusCircle, Trash2 } from "lucide-react";
+import { PlusCircle } from "lucide-react";
+import { Trash2Icon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -82,15 +84,15 @@ export function SurveyEditor({ questions, onChange }: SurveyEditorProps) {
               />
               <span className="text-[11px] text-muted-foreground">Req</span>
             </div>
-            <Button
+            <AnimatedIconButton
+              icon={Trash2Icon}
+              iconSize={14}
               type="button"
               variant="ghost"
               size="icon"
               className="w-7 shrink-0 text-muted-foreground hover:text-destructive"
               onClick={() => handleRemove(q.id)}
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
+            />
           </div>
           {q.type === "multiple_choice" && (
             <div className="pl-7">

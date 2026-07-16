@@ -5,9 +5,12 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
-import { Receipt, Plus, Paperclip, Upload, X } from "lucide-react";
+import { Receipt, Paperclip, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { PlusIcon, XIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetBody } from "@/components/ui/sheet";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -88,6 +91,8 @@ function SubmitSheet({ open, onClose }: { open: boolean; onClose: () => void }) 
       },
     );
   }
+
+    const { iconRef: removeIconRef, hoverHandlers: removeHoverHandlers } = useAnimatedIcon();
 
   function handleRemoveReceipt() {
     setReceiptUrl(null);
@@ -205,8 +210,9 @@ function SubmitSheet({ open, onClose }: { open: boolean; onClose: () => void }) 
                     onClick={handleRemoveReceipt}
                     className="text-muted-foreground hover:text-foreground transition-colors"
                     aria-label="Remove receipt"
+                    {...removeHoverHandlers}
                   >
-                    <X className="h-3.5 w-3.5" />
+                    <XIcon ref={removeIconRef} size={14} />
                   </button>
                 </div>
               ) : (
@@ -253,10 +259,9 @@ export function EssReimbursementsSection() {
           <Receipt className="h-4 w-4 text-muted-foreground" />
           Reimbursements
         </h2>
-        <Button size="sm" className="text-xs gap-1.5" onClick={handleOpenSheet}>
-          <Plus className="h-3 w-3" />
+        <AnimatedIconButton icon={PlusIcon} iconClassName="mr-1.5" size="sm" className="text-xs" onClick={handleOpenSheet}>
           Submit Claim
-        </Button>
+        </AnimatedIconButton>
       </div>
 
       <div className="rounded-xl border border-border bg-card overflow-hidden">

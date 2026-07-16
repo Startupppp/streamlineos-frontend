@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Lock, Plus, CheckCircle } from "lucide-react";
+import { Lock } from "lucide-react";
 import { useCan } from "@/hooks/api/access";
 import {
   useAccommodation,

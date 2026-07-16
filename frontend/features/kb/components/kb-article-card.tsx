@@ -1,10 +1,12 @@
 "use client";
 
-import { Eye, Pencil, Trash2 } from "lucide-react";
+import { Eye, Pencil } from "lucide-react";
 import { format } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { Trash2Icon } from "@animateicons/react/lucide";
 import type { KbArticleListItem, KbArticleStatus, KbArticleVisibility } from "@/hooks/api/support/kb";
 
 const STATUS_VARIANT: Record<KbArticleStatus, "secondary" | "default" | "outline"> = {
@@ -85,15 +87,14 @@ export function KbArticleCard({ article, categoryName, onNavigate, onDelete }: K
             >
               <Pencil className="h-3.5 w-3.5" />
             </Button>
-            <Button
+            <AnimatedIconButton
               size="icon"
               variant="ghost"
               className="w-7 text-destructive hover:text-destructive"
               onClick={handleDelete}
               aria-label="Delete article"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
+              icon={Trash2Icon}
+            />
           </div>
         </div>
       </CardContent>

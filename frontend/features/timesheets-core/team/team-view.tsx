@@ -193,14 +193,14 @@ export function TeamView() {
 
   const weekNavActions = (
     <div className="flex items-center gap-1">
-      <Button
+      <AnimatedIconButton
+        icon={ChevronLeftIcon}
+        iconSize={16}
         variant="outline"
         size="icon"
         onClick={handlePrevWeek}
         aria-label="Previous week"
-      >
-        <ChevronLeft className="h-4 w-4" />
-      </Button>
+      />
       {weekOffset !== 0 && (
         <Button
           variant="outline"
@@ -210,14 +210,14 @@ export function TeamView() {
           This week
         </Button>
       )}
-      <Button
+      <AnimatedIconButton
+        icon={ChevronRightIcon}
+        iconSize={16}
         variant="outline"
         size="icon"
         onClick={handleNextWeek}
         aria-label="Next week"
-      >
-        <ChevronRight className="h-4 w-4" />
-      </Button>
+      />
     </div>
   );
 

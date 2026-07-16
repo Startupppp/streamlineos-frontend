@@ -63,24 +63,23 @@ export function RecipientsPanel({ envelopeId, recipients, editable }: Recipients
                 </p>
               </div>
               {editable && (
-                <Button
+                <AnimatedIconButton
                   variant="ghost"
                   size="icon"
+                  icon={Trash2Icon}
+                  iconSize={14}
                   className="size-7 shrink-0"
                   onClick={(e) => handleDelete(recipient.id, e)}
-                >
-                  <Trash2 className="size-3.5" />
-                </Button>
+                />
               )}
             </div>
           );
         })
       )}
       {editable && (
-        <Button variant="outline" size="sm" className="w-full" onClick={() => setAddOpen(true)}>
-          <Plus className="size-4" />
+        <AnimatedIconButton variant="outline" size="sm" icon={PlusIcon} iconClassName="mr-1.5" className="w-full" onClick={() => setAddOpen(true)}>
           Add recipient
-        </Button>
+        </AnimatedIconButton>
       )}
       <AddRecipientDialog envelopeId={envelopeId} open={addOpen} onOpenChange={setAddOpen} nextRoutingOrder={nextRoutingOrder} />
     </div>

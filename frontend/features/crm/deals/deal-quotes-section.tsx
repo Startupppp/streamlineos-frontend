@@ -10,10 +10,10 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -271,19 +271,16 @@ export function DealQuotesSection({ dealId }: DealQuotesSectionProps) {
             )}
           </div>
           <motion.div whileTap={{ scale: 0.97 }}>
-            <Button
+            <LoadingButton
               size="sm"
               onClick={handleCreateQuote}
-              disabled={createQuote.isPending}
+              isPending={createQuote.isPending}
+              loadingText="Creating..."
               className="text-xs"
             >
-              {createQuote.isPending ? (
-                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-              ) : (
-                <Plus className="h-3 w-3 mr-1" />
-              )}
+              <Plus className="h-3 w-3 mr-1" />
               New Quote
-            </Button>
+            </LoadingButton>
           </motion.div>
         </CardHeader>
         <CardContent className="px-4 pb-4">

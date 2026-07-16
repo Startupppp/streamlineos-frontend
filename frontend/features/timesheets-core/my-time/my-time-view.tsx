@@ -2,10 +2,11 @@
 import { useCallback, useMemo, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { motion, useReducedMotion } from "framer-motion";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { ChevronLeftIcon, ChevronRightIcon, XIcon } from "@animateicons/react/lucide";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
@@ -78,9 +79,14 @@ export function MyTimeView() {
   const weekNavActions = (
     <div className="flex items-center gap-2">
       <div className="flex items-center rounded-md border border-border overflow-hidden">
-        <Button variant="ghost" size="icon" className="rounded-none border-r border-border" onClick={goToPrev}>
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
+        <AnimatedIconButton
+          icon={ChevronLeftIcon}
+          iconSize={16}
+          variant="ghost"
+          size="icon"
+          className="rounded-none border-r border-border"
+          onClick={goToPrev}
+        />
         <Button
           variant="ghost"
           className={cn("px-3 rounded-none", isCurrentWeek && "text-primary font-medium")}
@@ -88,9 +94,14 @@ export function MyTimeView() {
         >
           This week
         </Button>
-        <Button variant="ghost" size="icon" className="rounded-none border-l border-border" onClick={goToNext}>
-          <ChevronRight className="h-4 w-4" />
-        </Button>
+        <AnimatedIconButton
+          icon={ChevronRightIcon}
+          iconSize={16}
+          variant="ghost"
+          size="icon"
+          className="rounded-none border-l border-border"
+          onClick={goToNext}
+        />
       </div>
 
       {canRecall ? (
@@ -143,14 +154,14 @@ export function MyTimeView() {
               )}
               <p className="text-xs text-red-600 dark:text-red-400 mt-1">Update your entries and resubmit.</p>
             </div>
-            <Button
+            <AnimatedIconButton
+              icon={XIcon}
+              iconSize={14}
               variant="ghost"
               size="icon"
               className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-500/10 shrink-0"
               onClick={handleDismissRejection}
-            >
-              <X className="h-3.5 w-3.5" />
-            </Button>
+            />
           </div>
         )}
 

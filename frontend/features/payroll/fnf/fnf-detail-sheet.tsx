@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Download } from "lucide-react";
+import { DownloadIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Sheet, SheetBody, SheetContent, SheetFooter } from "@/components/ui/sheet";
 import {
   AlertDialog,
@@ -123,16 +124,17 @@ function FnfDetailSheetInner({ settlementId, onClose }: FnfDetailSheetInnerProps
 
       <SheetFooter className="border-t px-6 py-4 flex flex-col gap-2">
         {settlement?.statementPublishedAt && (
-          <Button
+          <AnimatedIconButton
+            icon={DownloadIcon}
+            iconClassName="mr-1.5"
             variant="outline"
             size="sm"
-            className="w-full gap-1.5"
+            className="w-full"
             onClick={handleDownloadStatement}
             disabled={downloading || isLoading}
           >
-            <Download className="h-3.5 w-3.5" />
             {downloading ? "Downloading…" : "Download statement"}
-          </Button>
+          </AnimatedIconButton>
         )}
         <div className="grid grid-cols-2 gap-2">
         <Button variant="outline" size="sm" onClick={onClose}>

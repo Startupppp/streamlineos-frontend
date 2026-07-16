@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Copy, RefreshCw, ShieldCheck } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { CopyIcon, ShieldCheckIcon } from "@animateicons/react/lucide";
 import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -107,9 +109,7 @@ export function WebhooksTab({ providerKey, environment }: { providerKey: string;
             <code className="flex-1 truncate text-[11px] bg-background border border-border rounded px-2 py-1.5 font-mono">
               {generatedUrl}
             </code>
-            <Button size="icon" variant="outline" className="w-7 shrink-0" onClick={() => handleCopy(generatedUrl)}>
-              <Copy className="h-3 w-3" />
-            </Button>
+            <AnimatedIconButton icon={CopyIcon} iconSize={12} size="icon" variant="outline" className="w-7 shrink-0" onClick={() => handleCopy(generatedUrl)} />
           </div>
         ) : (
           <p className="text-[11px] text-muted-foreground">
@@ -117,10 +117,9 @@ export function WebhooksTab({ providerKey, environment }: { providerKey: string;
             Credentials. Verification happens automatically the first time a real event arrives.
           </p>
         )}
-        <Button size="sm" variant="outline" className="text-xs gap-1.5" onClick={handleGenerate} disabled={generate.isPending}>
-          <ShieldCheck className="h-3 w-3" />
+        <AnimatedIconButton icon={ShieldCheckIcon} iconSize={12} iconClassName="mr-1.5" size="sm" variant="outline" className="text-xs" onClick={handleGenerate} disabled={generate.isPending}>
           {generatedUrl ? "Regenerate" : "Generate endpoint"}
-        </Button>
+        </AnimatedIconButton>
         {provider && (
           <p className="text-[11px] text-muted-foreground">
             Expected events: card/UPI payments authorized, captured, failed; refunds; subscription charges.

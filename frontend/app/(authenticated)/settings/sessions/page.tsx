@@ -175,15 +175,17 @@ export default function SessionsPage() {
       title="Active Sessions"
       subtitle="Manage where you're signed in. Revoking a session signs you out on that device."
       actions={
-        <Button
+        <AnimatedIconButton
+          icon={LogoutIcon}
+          iconSize={16}
+          iconClassName="mr-1.5"
           variant="outline"
           size="sm"
           onClick={handleRevokeAllClick}
           disabled={revokeAll.isPending || allSessions.filter((s) => !s.isCurrent).length === 0}
         >
-          <LogOut className="h-4 w-4 mr-1.5" />
           Revoke all other sessions
-        </Button>
+        </AnimatedIconButton>
       }
       filters={
         <div className="min-w-0 max-w-[240px]">

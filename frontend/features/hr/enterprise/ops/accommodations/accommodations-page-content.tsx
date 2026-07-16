@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
-import { Plus, Lock } from "lucide-react";
+import { Lock } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { useCan } from "@/hooks/api/access";
 import {
   useAccommodations,
@@ -105,7 +106,7 @@ export function AccommodationsPageContent() {
         actions={
           canManage ? (
             <Button size="sm" onClick={() => setShowCreate(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-              <Plus className="h-4 w-4 mr-1.5" />
+              <PlusIcon size={16} className="mr-1.5" />
               New Request
             </Button>
           ) : null

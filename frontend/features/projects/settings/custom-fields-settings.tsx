@@ -19,7 +19,10 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Trash2, Plus, Sliders } from "lucide-react";
+import { Sliders } from "lucide-react";
+import { Trash2Icon, PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -82,6 +85,7 @@ const CustomFieldRow = memo(function CustomFieldRow({
   onDelete,
 }: CustomFieldRowProps) {
   const handleDelete = useCallback(() => onDelete(field.id), [field.id, onDelete]);
+  const { iconRef: deleteIconRef, hoverHandlers: deleteHoverHandlers } = useAnimatedIcon();
 
   return (
     <motion.div
@@ -121,8 +125,9 @@ const CustomFieldRow = memo(function CustomFieldRow({
             type="button"
             className="w-7 flex items-center justify-center rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors shrink-0"
             aria-label="Delete field"
+            {...deleteHoverHandlers}
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            <Trash2Icon ref={deleteIconRef} size={14} />
           </button>
         </AlertDialogTrigger>
         <AlertDialogContent>
@@ -233,15 +238,16 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
           </p>
         </div>
         {!showForm ? (
-          <Button
+          <AnimatedIconButton
             variant="outline"
             size="sm"
             onClick={handleShowForm}
             className="h-7 shrink-0 text-xs gap-1.5"
+            icon={PlusIcon}
+            iconSize={14}
           >
-            <Plus className="h-3.5 w-3.5" />
             Add Custom Field
-          </Button>
+          </AnimatedIconButton>
         ) : null}
       </div>
 

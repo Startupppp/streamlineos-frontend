@@ -92,8 +92,8 @@ export function VendorCard({ vendor, isHr, onEdit, onViewSubmissions, onDelete }
           {isHr && (
             <>
               <Button size="sm" variant="outline" onClick={handleEditClick}>Edit</Button>
-              <Button size="sm" variant="outline" className="gap-1" onClick={handleGenerateLink} disabled={generateLink.isPending}>
-                {portalLink ? <Copy className="h-3 w-3" /> : <Link2 className="h-3 w-3" />}
+              <Button size="sm" variant="outline" className="gap-1" onClick={handleGenerateLink} disabled={generateLink.isPending} {...(portalLink ? copyHoverHandlers : {})}>
+                {portalLink ? <CopyIcon ref={copyIconRef} size={12} /> : <Link2 className="h-3 w-3" />}
                 {generateLink.isPending ? "Generating…" : "Portal Link"}
               </Button>
               <Button size="sm" variant="ghost" onClick={handleDeleteClick} className="text-destructive hover:text-destructive hover:bg-destructive/10">

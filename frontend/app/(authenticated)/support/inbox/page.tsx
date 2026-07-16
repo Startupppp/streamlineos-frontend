@@ -3,8 +3,8 @@
 import { useState, useTransition, useCallback } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useSupportTickets, useSupportStats } from "@/hooks/api/support";
-import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { PlusIcon } from "@animateicons/react/lucide";
 import {
   Select,
   SelectContent,
@@ -150,9 +150,9 @@ function InboxContent() {
         actions={
           <div className="flex items-center gap-2">
             <AgentAvailabilityToggle />
-            <Button onClick={handleOpenCreate} size="sm" className="gap-1.5">
-              <Plus className="h-3.5 w-3.5" /> New Ticket
-            </Button>
+            <AnimatedIconButton onClick={handleOpenCreate} size="sm" icon={PlusIcon} iconClassName="mr-1.5">
+              New Ticket
+            </AnimatedIconButton>
           </div>
         }
         filters={

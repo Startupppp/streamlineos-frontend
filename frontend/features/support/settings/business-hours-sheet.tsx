@@ -2,8 +2,10 @@
 
 import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
-import { Plus, Clock, X, CalendarDays } from "lucide-react";
+import { Clock, X, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -189,9 +191,7 @@ export function BusinessHoursSheet({ open, onOpenChange, mode, form, onSubmit, i
                 </div>
                 <div className="flex items-center gap-2">
                   <DatePicker value={holidayInput ?? ""} onChange={handleHolidayInputChange} placeholder="Pick a date" className="h-8" />
-                  <Button type="button" variant="outline" size="sm" onClick={handleAddHoliday}>
-                    <Plus className="h-3.5 w-3.5" />
-                  </Button>
+                  <AnimatedIconButton type="button" variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={handleAddHoliday} icon={PlusIcon} />
                 </div>
                 {holidays.length > 0 && (
                   <div className="flex flex-wrap gap-1.5">

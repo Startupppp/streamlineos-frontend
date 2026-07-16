@@ -234,7 +234,7 @@ export function WorkflowUpsertSheet({ open, onOpenChange, editDefinition }: Prop
             <div className="flex items-center justify-between">
               <p className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">Approval Steps</p>
               <Button type="button" variant="outline" size="sm" onClick={handleAddStep} className="text-xs gap-1">
-                <Plus className="h-3 w-3" />Add Step
+                <PlusIcon size={12} />Add Step
               </Button>
             </div>
 
@@ -265,7 +265,7 @@ export function WorkflowUpsertSheet({ open, onOpenChange, editDefinition }: Prop
                     onClick={() => remove(index)}
                     disabled={fields.length === 1}
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <Trash2Icon size={14} />
                   </Button>
                 </div>
 

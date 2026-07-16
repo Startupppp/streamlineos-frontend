@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
@@ -113,12 +114,13 @@ export function MeetingDialog({ open, onOpenChange, onSubmit, isPending }: Meeti
         </div>
         <DialogFooter className="mt-4">
           <Button variant="outline" onClick={handleCancel}>Cancel</Button>
-          <Button
+          <LoadingButton
             onClick={handleSubmit}
-            disabled={isPending}
+            isPending={isPending}
+            loadingText="Saving..."
           >
-            {isPending ? "Saving..." : "Save Meeting"}
-          </Button>
+            Save Meeting
+          </LoadingButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -182,12 +184,13 @@ export function CreateProjectDialog({ open, onOpenChange, defaultName, onSubmit,
         </div>
         <DialogFooter className="mt-4">
           <Button variant="outline" onClick={handleCancel}>Cancel</Button>
-          <Button
+          <LoadingButton
             onClick={handleSubmit}
-            disabled={isPending}
+            isPending={isPending}
+            loadingText="Creating..."
           >
-            {isPending ? "Creating..." : "Create Project"}
-          </Button>
+            Create Project
+          </LoadingButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

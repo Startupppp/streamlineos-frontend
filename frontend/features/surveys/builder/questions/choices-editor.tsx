@@ -1,6 +1,6 @@
 import { useCallback } from "react";
-import { Plus, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { ChoiceInput } from "@/hooks/api/surveys/builder";
@@ -75,14 +75,12 @@ export function ChoicesEditor({ choices, onChange, showCorrectAnswer, showScore 
               className="h-8 w-20"
             />
           )}
-          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => handleRemove(index)}>
-            <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
-          </Button>
+          <AnimatedIconButton icon={Trash2Icon} iconSize={14} iconClassName="text-muted-foreground" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => handleRemove(index)} />
         </div>
       ))}
-      <Button variant="outline" size="sm" onClick={handleAdd}>
-        <Plus className="h-3.5 w-3.5" /> Add option
-      </Button>
+      <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1.5" variant="outline" size="sm" onClick={handleAdd}>
+        Add option
+      </AnimatedIconButton>
     </div>
   );
 }

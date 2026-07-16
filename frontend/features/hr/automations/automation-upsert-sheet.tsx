@@ -26,7 +26,8 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useHrAutomationEvents, useCreateHrAutomation, useUpdateHrAutomation } from "@/hooks/api/hr/hr-automations";
 import type { HrAutomationRule, HrAutomationAction, HrAutomationActionType } from "@/types/hr/automations";
-import { Plus, X } from "lucide-react";
+import { PlusIcon, XIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 
 const CONDITION_OPERATORS = [
   { value: "eq", label: "Equals" },
@@ -283,9 +284,9 @@ export function AutomationUpsertSheet({ rule, onClose }: Props) {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Conditions</h3>
-                <Button type="button" variant="ghost" size="sm" onClick={handleAddCondition}>
-                  <Plus className="h-3.5 w-3.5 mr-1" /> Add Condition
-                </Button>
+                <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1" type="button" variant="ghost" size="sm" onClick={handleAddCondition}>
+                  Add Condition
+                </AnimatedIconButton>
               </div>
               {conditionFields.length === 0 && (
                 <p className="text-xs text-muted-foreground">No conditions — rule fires on every trigger.</p>
@@ -318,9 +319,7 @@ export function AutomationUpsertSheet({ rule, onClose }: Props) {
                     placeholder="value"
                     className="text-xs"
                   />
-                  <Button type="button" variant="ghost" size="icon" className="w-8" onClick={() => removeCondition(idx)}>
-                    <X className="h-3.5 w-3.5" />
-                  </Button>
+                  <AnimatedIconButton icon={XIcon} iconSize={14} type="button" variant="ghost" size="icon" className="w-8" onClick={() => removeCondition(idx)} />
                 </div>
               ))}
             </div>
@@ -330,9 +329,9 @@ export function AutomationUpsertSheet({ rule, onClose }: Props) {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Actions</h3>
-                <Button type="button" variant="ghost" size="sm" onClick={handleAddAction}>
-                  <Plus className="h-3.5 w-3.5 mr-1" /> Add Action
-                </Button>
+                <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1" type="button" variant="ghost" size="sm" onClick={handleAddAction}>
+                  Add Action
+                </AnimatedIconButton>
               </div>
               {form.formState.errors.actions?.root && (
                 <p className="text-xs text-destructive">{form.formState.errors.actions.root.message}</p>
@@ -359,9 +358,7 @@ export function AutomationUpsertSheet({ rule, onClose }: Props) {
                           </Select>
                         )}
                       />
-                      <Button type="button" variant="ghost" size="icon" className="w-7 shrink-0" onClick={() => removeAction(idx)}>
-                        <X className="h-3.5 w-3.5" />
-                      </Button>
+                      <AnimatedIconButton icon={XIcon} iconSize={14} type="button" variant="ghost" size="icon" className="w-7 shrink-0" onClick={() => removeAction(idx)} />
                     </div>
                     <div>
                       <Textarea

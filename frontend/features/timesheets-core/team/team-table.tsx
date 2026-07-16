@@ -2,9 +2,9 @@
 
 import { memo, useMemo, useCallback } from "react";
 import { format, addDays } from "date-fns";
-import { Bell } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { BellIcon } from "@animateicons/react/lucide";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PERIOD_STATUS_BADGE, PERIOD_STATUS_LABEL } from "@/features/timesheets-core/types";
@@ -115,10 +115,17 @@ export function TeamTable({ rows, weekStart, isLoading, onRowClick, onRemindAll 
 
   const toolbar =
     missingCount > 0 ? (
-      <Button size="sm" variant="outline" className="h-7 text-xs gap-1.5" onClick={handleRemindAll}>
-        <Bell className="h-3 w-3" />
+      <AnimatedIconButton
+        icon={BellIcon}
+        iconSize={14}
+        iconClassName="mr-1.5"
+        size="sm"
+        variant="outline"
+        className="h-7 text-xs"
+        onClick={handleRemindAll}
+      >
         Remind {missingCount} not submitted
-      </Button>
+      </AnimatedIconButton>
     ) : undefined;
 
   return (

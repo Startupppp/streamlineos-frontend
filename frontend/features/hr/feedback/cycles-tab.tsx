@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { Plus, X } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { PlusIcon, XIcon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -53,6 +55,15 @@ interface CycleFormState {
   endDate: string;
   isAnonymous: boolean;
   questions: QuestionBuilder[];
+}
+
+function RemoveQuestionButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <button onClick={onClick} className="text-muted-foreground hover:text-red-500" {...hoverHandlers}>
+      <XIcon ref={iconRef} size={14} />
+    </button>
+  );
 }
 
 export function CyclesTab() {

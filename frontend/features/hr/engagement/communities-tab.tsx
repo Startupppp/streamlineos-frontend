@@ -2,8 +2,10 @@
 
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
-import { Plus, Users, UserCheck } from "lucide-react";
+import { Users, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -145,10 +147,16 @@ export function CommunitiesTab({ currentUserId }: { currentUserId: string }) {
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <Button size="sm" className="gap-1.5" onClick={() => setSheetOpen(true)}>
-          <Plus className="h-3.5 w-3.5" />
+        <AnimatedIconButton
+          icon={PlusIcon}
+          iconSize={14}
+          iconClassName="mr-1.5"
+          size="sm"
+          className="gap-1.5"
+          onClick={() => setSheetOpen(true)}
+        >
           New Community
-        </Button>
+        </AnimatedIconButton>
       </div>
 
       {(!communities || communities.length === 0) ? (

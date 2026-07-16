@@ -2,9 +2,10 @@
 
 import { memo, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { Download, FileText } from "lucide-react";
+import { FileText } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { DownloadIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -71,16 +72,17 @@ const DownloadButton = memo(function DownloadButton({ payslip }: DownloadButtonP
   };
 
   return (
-    <Button
+    <AnimatedIconButton
+      icon={DownloadIcon}
+      iconClassName="mr-1.5"
       variant="outline"
       size="sm"
-      className="text-xs gap-1.5"
+      className="text-xs"
       onClick={handleDownload}
       disabled={loading}
     >
-      <Download className="h-3 w-3" />
       {loading ? "Downloading…" : "Download"}
-    </Button>
+    </AnimatedIconButton>
   );
 });
 

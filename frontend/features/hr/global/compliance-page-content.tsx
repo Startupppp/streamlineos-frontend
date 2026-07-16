@@ -24,7 +24,7 @@ import {
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Globe } from "lucide-react";
+import { PlusIcon, GlobeIcon } from "@animateicons/react/lucide";
 import { StateIllustration } from "@/components/illustrations";
 import {
   useComplianceRequirements,
@@ -80,7 +80,7 @@ export function CompliancePageContent() {
       subtitle="Manage labor law requirements, work authorizations, and compliance calendars."
       actions={
         <Button size="sm" onClick={() => { setEditingReq(undefined); setReqSheetOpen(true); }} className="gap-1.5 h-8">
-          <Plus className="h-3.5 w-3.5" />
+          <PlusIcon size={14} />
           Add requirement
         </Button>
       }
@@ -126,7 +126,7 @@ export function CompliancePageContent() {
                 onClick={() => setSeedDialogOpen(true)}
                 className="text-xs gap-1.5"
               >
-                <Globe className="h-3 w-3" />
+                <GlobeIcon size={12} />
                 Seed country pack
               </LoadingButton>
             </div>
@@ -142,7 +142,7 @@ export function CompliancePageContent() {
                 <p className="text-xs text-muted-foreground">Add a requirement manually or seed a country compliance pack.</p>
               </div>
               <Button size="sm" onClick={() => { setEditingReq(undefined); setReqSheetOpen(true); }} className="mt-1 gap-1.5 h-8">
-                <Plus className="h-3.5 w-3.5" />
+                <PlusIcon size={14} />
                 Add requirement
               </Button>
             </div>
@@ -173,7 +173,7 @@ export function CompliancePageContent() {
         <TabsContent value="work-auth" className="mt-0">
           <div className="flex justify-end mb-4">
             <Button size="sm" onClick={() => { setEditingAuth(undefined); setAuthSheetOpen(true); }} className="gap-1.5 h-8">
-              <Plus className="h-3.5 w-3.5" />
+              <PlusIcon size={14} />
               Add authorization
             </Button>
           </div>
@@ -188,7 +188,7 @@ export function CompliancePageContent() {
                 <p className="text-xs text-muted-foreground">Track visa, work permit, and right-to-work documentation for employees.</p>
               </div>
               <Button size="sm" onClick={() => { setEditingAuth(undefined); setAuthSheetOpen(true); }} className="mt-1 gap-1.5 h-8">
-                <Plus className="h-3.5 w-3.5" />
+                <PlusIcon size={14} />
                 Add authorization
               </Button>
             </div>

@@ -3,7 +3,9 @@
 import { useState, useCallback, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Shield, Pencil, Trash2 } from "lucide-react";
+import { Shield, Pencil } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
@@ -197,9 +199,7 @@ export default function SupportSlaPage() {
           <Button variant="ghost" size="icon" className="w-7" onClick={makeEditHandler(policy)} aria-label="Edit">
             <Pencil className="h-3.5 w-3.5" />
           </Button>
-          <Button variant="ghost" size="icon" className="w-7 text-destructive" onClick={makeDeleteHandler(policy.id)} aria-label="Delete">
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
+          <AnimatedIconButton variant="ghost" size="icon" className="w-7 text-destructive" onClick={makeDeleteHandler(policy.id)} aria-label="Delete" icon={Trash2Icon} />
         </div>
       ),
     },
@@ -233,10 +233,9 @@ export default function SupportSlaPage() {
         actions={
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
             <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
+              <AnimatedIconButton icon={PlusIcon} iconClassName="mr-1.5">
                 New Policy
-              </Button>
+              </AnimatedIconButton>
             </DialogTrigger>
             <DialogContent className="sm:max-w-lg">
               <DialogHeader>

@@ -17,9 +17,10 @@ import {
   ImageIcon,
   Loader2,
   Pencil,
-  UserPlus,
-  X,
 } from "lucide-react";
+import { XIcon, UserPlusIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import React from "react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatDistanceToNow } from "date-fns";
@@ -43,6 +44,43 @@ import { getInitials } from "./chat-helpers";
 import { AddChannelMembersDialog } from "./add-channel-members-dialog";
 import { ChannelAvatar } from "./channel-avatar";
 import { ChannelMemberRow } from "./channel-member-row";
+
+const CloseButton = React.forwardRef<
+  HTMLButtonElement,
+  React.ButtonHTMLAttributes<HTMLButtonElement>
+>(function CloseButton({ className, ...props }, ref) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <button ref={ref} {...hoverHandlers} className={className} {...props}>
+      <XIcon ref={iconRef} size={16} className="text-muted-foreground" />
+    </button>
+  );
+});
+
+const UnpinButton = React.forwardRef<
+  HTMLButtonElement,
+  React.ButtonHTMLAttributes<HTMLButtonElement>
+>(function UnpinButton({ className, ...props }, ref) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <button ref={ref} {...hoverHandlers} className={className} {...props}>
+      <XIcon ref={iconRef} size={12} />
+    </button>
+  );
+});
+
+const AddMemberButton = React.forwardRef<
+  HTMLButtonElement,
+  React.ButtonHTMLAttributes<HTMLButtonElement>
+>(function AddMemberButton({ className, ...props }, ref) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <button ref={ref} type="button" {...hoverHandlers} className={className} {...props}>
+      <UserPlusIcon ref={iconRef} size={14} />
+      Add
+    </button>
+  );
+});
 
 export function ChannelInfoPanel({
   channelId,
@@ -260,13 +298,11 @@ export function ChannelInfoPanel({
               <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
             </button>
           )}
-          <button
+          <CloseButton
             onClick={onClose}
             className="p-1.5 hover:bg-muted rounded-lg"
             aria-label="Close"
-          >
-            <X className="h-4 w-4 text-muted-foreground" />
-          </button>
+          />
         </div>
       </div>
 
@@ -454,7 +490,7 @@ export function ChannelInfoPanel({
                             : "")}
                       </p>
                     </div>
-                    <button
+                    <UnpinButton
                       onClick={() =>
                         unpinMessage.mutate({
                           channelId,
@@ -464,9 +500,7 @@ export function ChannelInfoPanel({
                       className="shrink-0 p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground"
                       title="Unpin"
                       aria-label="Unpin message"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
+                    />
                   </div>
                 ))}
               </div>
@@ -479,14 +513,10 @@ export function ChannelInfoPanel({
                 Members ({channel?.members?.length ?? 0})
               </h5>
               {isAdmin && isMultiMemberChannel && (
-                <button
-                  type="button"
+                <AddMemberButton
                   onClick={() => setShowAddMembers(true)}
                   className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:text-primary/80 transition-colors"
-                >
-                  <UserPlus className="h-3.5 w-3.5" />
-                  Add
-                </button>
+                />
               )}
             </div>
 

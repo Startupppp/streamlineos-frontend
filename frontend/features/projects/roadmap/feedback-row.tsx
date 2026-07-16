@@ -2,8 +2,9 @@
 
 import { memo, useCallback } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowBigUp, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ArrowBigUp } from "lucide-react";
+import { Trash2Icon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -102,14 +103,14 @@ export const FeedbackRow = memo(function FeedbackRow({
                 </p>
               ) : null}
             </div>
-            <Button
+            <AnimatedIconButton
               size="icon"
               variant="ghost"
               className="h-6 w-6 shrink-0 text-destructive hover:text-destructive"
               onClick={handleDeleteClick}
-            >
-              <Trash2 className="h-3 w-3" />
-            </Button>
+              icon={Trash2Icon}
+              iconSize={12}
+            />
           </div>
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <Select value={post.status} onValueChange={handleStatusChange}>

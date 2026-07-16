@@ -2,7 +2,6 @@
 
 import { useCallback } from "react";
 import { format, parseISO } from "date-fns";
-import { Bell } from "lucide-react";
 import { toast } from "sonner";
 import {
   Sheet,
@@ -12,7 +11,8 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { BellIcon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePeriod } from "@/hooks/api/timesheets-core/periods";
@@ -78,15 +78,17 @@ export function MemberDetailSheet({
         {isMissingOrDraft && (
           <div className="flex items-center justify-between p-3 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 mb-4">
             <p className="text-xs text-amber-700 dark:text-amber-300">No timesheet submitted yet</p>
-            <Button
+            <AnimatedIconButton
+              icon={BellIcon}
+              iconSize={14}
+              iconClassName="mr-1.5"
               size="sm"
               variant="outline"
-              className="h-7 text-xs gap-1.5 border-amber-300"
+              className="h-7 text-xs border-amber-300"
               onClick={handleRemind}
             >
-              <Bell className="h-3 w-3" />
               Remind
-            </Button>
+            </AnimatedIconButton>
           </div>
         )}
 

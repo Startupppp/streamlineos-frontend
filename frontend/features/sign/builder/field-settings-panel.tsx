@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Trash2Icon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -87,10 +87,9 @@ export function FieldSettingsPanel({ envelopeId, field }: { envelopeId: number; 
         </div>
       )}
 
-      <Button variant="destructive" size="sm" className="w-full" onClick={handleDelete}>
-        <Trash2 className="size-4" />
+      <AnimatedIconButton variant="destructive" size="sm" icon={Trash2Icon} iconClassName="mr-1.5" className="w-full" onClick={handleDelete}>
         Delete field
-      </Button>
+      </AnimatedIconButton>
     </div>
   );
 }

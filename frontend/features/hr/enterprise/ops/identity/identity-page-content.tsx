@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, RefreshCw, AlertTriangle } from "lucide-react";
+import { RefreshCw, AlertTriangle } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { useCan } from "@/hooks/api/access";
 import {
   useAccessProvisioning,
@@ -197,11 +198,11 @@ export function IdentityPageContent() {
           canManage ? (
             <div className="flex gap-2">
               <Button size="sm" variant="outline" onClick={() => setShowTemplate(true)}>
-                <Plus className="h-4 w-4 mr-1.5" />
+                <PlusIcon size={16} className="mr-1.5" />
                 Template
               </Button>
               <Button size="sm" onClick={() => setShowCreate(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                <Plus className="h-4 w-4 mr-1.5" />
+                <PlusIcon size={16} className="mr-1.5" />
                 Provision
               </Button>
             </div>

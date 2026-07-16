@@ -3,12 +3,12 @@
 import { useState, useCallback } from "react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
-import { Plus } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePortalTickets } from "@/hooks/api/support/portal";
 import { NewTicketSheet } from "./new-ticket-sheet";
@@ -42,10 +42,9 @@ export function PortalTicketListPage() {
       title="My Support Tickets"
       subtitle="View and manage the support tickets you've raised"
       actions={
-        <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={handleOpenNewTicket}>
-          <Plus className="h-3.5 w-3.5" />
+        <AnimatedIconButton size="sm" className="h-8 text-xs" onClick={handleOpenNewTicket} icon={PlusIcon} iconClassName="mr-1.5">
           New Ticket
-        </Button>
+        </AnimatedIconButton>
       }
     >
       {isLoading ? (

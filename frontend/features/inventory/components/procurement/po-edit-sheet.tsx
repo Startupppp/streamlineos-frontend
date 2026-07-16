@@ -4,8 +4,9 @@ import { useCallback, useMemo } from "react";
 import { useForm, useFieldArray, useWatch, Controller, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -217,17 +218,17 @@ export function PoEditSheet({ open, onOpenChange, po }: PoEditSheetProps) {
       headerClassName: "w-[40px]",
       className: "w-[40px]",
       cell: (row) => (
-        <Button
+        <AnimatedIconButton
           type="button"
+          icon={Trash2Icon}
+          iconSize={14}
           variant="ghost"
           size="icon"
           className="w-7"
           onClick={() => handleRemoveAt(row.index)}
           disabled={fields.length === 1}
           aria-label={`Remove line ${row.index + 1}`}
-        >
-          <Trash2 className="size-3.5" />
-        </Button>
+        />
       ),
     },
   ], [control, variants, fields.length, handleRemoveAt]);
@@ -325,10 +326,9 @@ export function PoEditSheet({ open, onOpenChange, po }: PoEditSheetProps) {
                 <Label className="text-[13px] font-medium">
                   Lines <span className="text-destructive">*</span>
                 </Label>
-                <Button type="button" variant="outline" size="sm" className="text-xs" onClick={handleAddLine}>
-                  <Plus className="size-3.5 mr-1" />
+                <AnimatedIconButton type="button" icon={PlusIcon} iconSize={14} iconClassName="mr-1" variant="outline" size="sm" className="text-xs" onClick={handleAddLine}>
                   Add line
-                </Button>
+                </AnimatedIconButton>
               </div>
               <DataTable
                 data={fieldRows}

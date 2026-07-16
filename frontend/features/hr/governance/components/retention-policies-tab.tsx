@@ -34,7 +34,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Plus } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { StateIllustration } from "@/components/illustrations";
 import { useCan } from "@/hooks/api/access";
 import {
@@ -155,7 +155,7 @@ export function RetentionPoliciesTab() {
         <p className="text-sm text-muted-foreground">{data?.total ?? 0} policies</p>
         {canManage && (
           <Button onClick={handleOpenSheet} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground">
-            <Plus className="h-4 w-4 mr-1.5" />
+            <PlusIcon size={16} className="mr-1.5" />
             Add Policy
           </Button>
         )}
@@ -173,7 +173,7 @@ export function RetentionPoliciesTab() {
             </div>
             {canManage && (
               <Button onClick={handleOpenSheet} size="sm" className="mt-1 bg-primary hover:bg-primary/90 text-primary-foreground">
-                <Plus className="h-4 w-4 mr-1.5" />
+                <PlusIcon size={16} className="mr-1.5" />
                 Add Policy
               </Button>
             )}

@@ -2,7 +2,9 @@
 
 import { useState, useCallback, useRef } from "react";
 import { toast } from "sonner";
-import { Upload, FileType, Loader2 } from "lucide-react";
+import { FileType, Loader2, Upload } from "lucide-react";
+import { UploadIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -39,6 +41,7 @@ export function VaultUploadArea({ candidateId }: VaultUploadAreaProps) {
   const [dragging, setDragging] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const addDoc = useAddVaultDocument(candidateId);
+  const { iconRef: uploadIconRef, hoverHandlers: uploadHoverHandlers } = useAnimatedIcon();
 
   const handleFile = useCallback(
     async (file: File) => {
@@ -123,11 +126,12 @@ export function VaultUploadArea({ candidateId }: VaultUploadAreaProps) {
           className="text-xs gap-1.5 shrink-0"
           disabled={addDoc.isPending}
           onClick={handleUploadButtonClick}
+          {...uploadHoverHandlers}
         >
           {addDoc.isPending ? (
             <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
           ) : (
-            <Upload className="h-3 w-3" aria-hidden="true" />
+            <UploadIcon ref={uploadIconRef} size={12} />
           )}
           {addDoc.isPending ? "Uploading..." : "Browse"}
         </Button>

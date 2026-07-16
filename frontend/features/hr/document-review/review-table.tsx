@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
-import { Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EyeIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
@@ -98,6 +99,24 @@ function ProgressBar({ approved, total }: { approved: number; total: number }) {
   );
 }
 
+function ReviewActionButton({ label, emp, onOpenReview }: { label: string; emp: EmployeeDocSummary; onOpenReview: (emp: EmployeeDocSummary) => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  function handleClick() { onOpenReview(emp); }
+  return (
+    <Button
+      size="sm"
+      variant="outline"
+      className="gap-1.5 text-xs"
+      onClick={handleClick}
+      aria-label={`${label} documents for ${emp.userName}`}
+      {...hoverHandlers}
+    >
+      <EyeIcon ref={iconRef} size={14} />
+      {label}
+    </Button>
+  );
+}
+
 export function ReviewTable({ list, canReview, onOpenReview }: ReviewTableProps) {
   const columns = useMemo<DataTableColumn<EmployeeDocSummary>[]>(() => [
     {
@@ -151,21 +170,9 @@ export function ReviewTable({ list, canReview, onOpenReview }: ReviewTableProps)
       header: "Actions",
       headerClassName: "text-right",
       className: "text-right",
-      cell: (emp) => {
-        function handleClick() { onOpenReview(emp); }
-        return (
-          <Button
-            size="sm"
-            variant="outline"
-            className="gap-1.5 text-xs"
-            onClick={handleClick}
-            aria-label={`${canReview ? "Review" : "View"} documents for ${emp.userName}`}
-          >
-            <Eye className="h-3.5 w-3.5" />
-            {canReview ? "Review" : "View"}
-          </Button>
-        );
-      },
+      cell: (emp) => (
+        <ReviewActionButton label={canReview ? "Review" : "View"} emp={emp} onOpenReview={onOpenReview} />
+      ),
     },
   ], [canReview, onOpenReview]);
 

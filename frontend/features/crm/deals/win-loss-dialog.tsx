@@ -10,6 +10,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { cn } from "@/lib/utils";
 
 interface WinLossDialogProps {
@@ -110,7 +111,7 @@ export const WinLossDialog = memo(function WinLossDialog({
           <Button variant="outline" className="flex-1" onClick={onCancel}>
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             className={cn(
               "flex-1",
               dialog?.stage === "WON"
@@ -118,10 +119,11 @@ export const WinLossDialog = memo(function WinLossDialog({
                 : "bg-destructive hover:bg-destructive/90 text-white",
             )}
             onClick={onConfirm}
-            disabled={isPending}
+            isPending={isPending}
+            loadingText="Confirming..."
           >
             Confirm
-          </Button>
+          </LoadingButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

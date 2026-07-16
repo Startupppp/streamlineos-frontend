@@ -3,7 +3,10 @@
 import { useState, useRef, useCallback, useMemo } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, MessageSquare, Send, X } from "lucide-react";
+import { Loader2, MessageSquare } from "lucide-react";
+import { SendIcon, XIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import React from "react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn, resolveImageUrl } from "@/lib/utils";
@@ -79,6 +82,34 @@ function ThreadMessage({ message, currentUserId, isParent, resolveUserName }: Th
     </div>
   );
 }
+
+const ThreadCloseButton = React.forwardRef<
+  HTMLButtonElement,
+  React.ButtonHTMLAttributes<HTMLButtonElement>
+>(function ThreadCloseButton({ className, ...props }, ref) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <button ref={ref} {...hoverHandlers} className={className} {...props}>
+      <XIcon ref={iconRef} size={16} className="text-muted-foreground" />
+    </button>
+  );
+});
+
+const ThreadSendButton = React.forwardRef<
+  HTMLButtonElement,
+  React.ButtonHTMLAttributes<HTMLButtonElement> & { isPending: boolean; hasInput: boolean }
+>(function ThreadSendButton({ className, isPending, hasInput, ...props }, ref) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <button ref={ref} {...hoverHandlers} className={className} {...props}>
+      {isPending ? (
+        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+      ) : (
+        <SendIcon ref={iconRef} size={14} />
+      )}
+    </button>
+  );
+});
 
 export function ThreadPanel({
   channelId,
@@ -163,13 +194,11 @@ export function ThreadPanel({
           <MessageSquare className="h-4 w-4 text-muted-foreground" />
           <h3 className="text-[14px] font-bold">Thread</h3>
         </div>
-        <button
+        <ThreadCloseButton
           onClick={onClose}
           className="p-1.5 hover:bg-muted rounded-lg"
           aria-label="Close thread"
-        >
-          <X className="h-4 w-4 text-muted-foreground" />
-        </button>
+        />
       </div>
 
       <ScrollArea className="flex-1">
@@ -245,9 +274,11 @@ export function ThreadPanel({
             rows={1}
             className="flex-1 bg-transparent text-[13px] resize-none focus:outline-none min-h-[22px] max-h-[120px] leading-[1.5]"
           />
-          <button
+          <ThreadSendButton
             onClick={handleSend}
             disabled={!input.trim() || sendReply.isPending}
+            isPending={sendReply.isPending}
+            hasInput={!!input.trim()}
             className={cn(
               "shrink-0 h-7 w-7 rounded-lg flex items-center justify-center transition-colors",
               input.trim()
@@ -255,13 +286,7 @@ export function ThreadPanel({
                 : "bg-muted text-muted-foreground"
             )}
             aria-label="Send reply"
-          >
-            {sendReply.isPending ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Send className="h-3.5 w-3.5" />
-            )}
-          </button>
+          />
         </div>
       </div>
     </div>

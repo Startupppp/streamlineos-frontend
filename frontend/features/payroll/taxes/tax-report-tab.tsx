@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Download, Users, FileCheck, Clock } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Users, FileCheck, Clock } from "lucide-react";
+import { DownloadIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -107,16 +108,17 @@ export function TaxReportTab() {
         </Select>
 
         {canExport && (
-          <Button
+          <AnimatedIconButton
+            icon={DownloadIcon}
+            iconClassName="mr-1.5"
             size="sm"
             variant="outline"
-            className="text-xs gap-1.5"
+            className="text-xs"
             onClick={handleExportClick}
             disabled={exportMutation.isPending}
           >
-            <Download className="h-3.5 w-3.5" />
             Export Tax Report CSV
-          </Button>
+          </AnimatedIconButton>
         )}
       </div>
 

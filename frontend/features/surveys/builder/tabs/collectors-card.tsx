@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Copy, Plus } from "lucide-react";
+import { CopyIcon, PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -87,9 +88,7 @@ export function CollectorsCard({ surveyId }: { surveyId: number }) {
               </div>
               <div className="mt-2 flex items-center gap-2">
                 <Input readOnly value={publicLinkFor(collector.token)} className="flex-1" />
-                <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => handleCopyLink(collector.token)}>
-                  <Copy className="h-3.5 w-3.5" />
-                </Button>
+                <AnimatedIconButton icon={CopyIcon} iconSize={14} variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => handleCopyLink(collector.token)} />
                 <Button variant="outline" size="sm" onClick={() => handleToggleStatus(collector.id, collector.status)}>
                   {collector.status === "active" ? "Pause" : "Activate"}
                 </Button>
@@ -107,9 +106,9 @@ export function CollectorsCard({ surveyId }: { surveyId: number }) {
               ))}
             </SelectContent>
           </Select>
-          <Button size="sm" onClick={handleCreate} disabled={createCollector.isPending}>
-            <Plus className="h-3.5 w-3.5" /> Add collector
-          </Button>
+          <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1.5" size="sm" onClick={handleCreate} disabled={createCollector.isPending}>
+            Add collector
+          </AnimatedIconButton>
         </div>
       </CardContent>
     </Card>

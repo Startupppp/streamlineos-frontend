@@ -10,7 +10,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { toast } from "sonner";
-import { X, CheckCircle2, XCircle, Clock, CalendarClock, Users, MessageSquare } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, CalendarClock, Users, MessageSquare } from "lucide-react";
+import { XIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { format } from "date-fns";
 import { EmptyCalendarIllustration } from "@/components/illustrations";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
@@ -241,9 +243,7 @@ export function InterviewList() {
             >
               {bulkReschedule.isPending ? "Rescheduling…" : "Reschedule"}
             </Button>
-            <Button variant="ghost" size="icon" className="w-8" onClick={handleClearSelection}>
-              <X className="h-3.5 w-3.5" />
-            </Button>
+            <AnimatedIconButton icon={XIcon} iconSize={14} variant="ghost" size="icon" className="w-8" onClick={handleClearSelection} />
           </div>
         </div>
       )}

@@ -19,7 +19,9 @@ import {
 } from "@/components/ui/sheet";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { toast } from "sonner";
-import { Plus, Users, Calendar, CheckCircle, Pencil, TrendingUp } from "lucide-react";
+import { Users, Calendar, CheckCircle, Pencil, TrendingUp } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -178,10 +180,9 @@ export function CalibrationTab({ candidateId }: CalibrationTabProps) {
         <p className="text-xs text-muted-foreground max-w-sm leading-relaxed">
           Calibration sessions align the hiring team on a final decision after scorecards are submitted.
         </p>
-        <Button size="sm" onClick={handleOpenNew} className="gap-1.5 shrink-0">
-          <Plus className="h-3.5 w-3.5" />
+        <AnimatedIconButton icon={PlusIcon} size="sm" onClick={handleOpenNew} className="gap-1.5 shrink-0">
           New Session
-        </Button>
+        </AnimatedIconButton>
       </div>
 
       {!sessions?.length ? (

@@ -4,7 +4,8 @@ import { useCallback } from "react";
 import { format } from "date-fns";
 import { SearchInput } from "@/components/ui/search-input";
 import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react";
+import { XIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +26,20 @@ interface WorkLogFiltersPanelProps {
   departments: WorkLogFilterDepartment[] | undefined;
   searchTerm: string;
   setSearchTerm: React.Dispatch<React.SetStateAction<string>>;
+}
+
+function FilterClearButton({ onClick, ariaLabel }: { onClick: () => void; ariaLabel: string }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <button
+      onClick={onClick}
+      className="ml-0.5 hover:text-foreground rounded-full"
+      aria-label={ariaLabel}
+      {...hoverHandlers}
+    >
+      <XIcon ref={iconRef} size={10} />
+    </button>
+  );
 }
 
 export function WorkLogFiltersPanel({
@@ -97,13 +112,7 @@ export function WorkLogFiltersPanel({
             >
               {departments.find((d) => d.id.toString() === filters.departmentId)
                 ?.name ?? "Dept"}
-              <button
-                onClick={handleClearDepartment}
-                className="ml-0.5 hover:text-foreground rounded-full"
-                aria-label="Remove department filter"
-              >
-                <X className="h-2.5 w-2.5" />
-              </button>
+              <FilterClearButton onClick={handleClearDepartment} ariaLabel="Remove department filter" />
             </Badge>
           )}
           {filters.selectedUserId && employees && (
@@ -120,13 +129,7 @@ export function WorkLogFiltersPanel({
                       "Selected"
                   : "Selected";
               })()}
-              <button
-                onClick={handleClearEmployee}
-                className="ml-0.5 hover:text-foreground rounded-full"
-                aria-label="Remove employee filter"
-              >
-                <X className="h-2.5 w-2.5" />
-              </button>
+              <FilterClearButton onClick={handleClearEmployee} ariaLabel="Remove employee filter" />
             </Badge>
           )}
           {filters.month !== undefined && (
@@ -135,13 +138,7 @@ export function WorkLogFiltersPanel({
               className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-amber-200 bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-800 pr-1"
             >
               {format(new Date(filters.year, filters.month, 1), "MMMM")}
-              <button
-                onClick={handleClearMonth}
-                className="ml-0.5 hover:text-amber-900 dark:hover:text-amber-100 rounded-full"
-                aria-label="Remove month filter"
-              >
-                <X className="h-2.5 w-2.5" />
-              </button>
+              <FilterClearButton onClick={handleClearMonth} ariaLabel="Remove month filter" />
             </Badge>
           )}
           {(filters.dateFrom || filters.dateTo) && (
@@ -154,13 +151,7 @@ export function WorkLogFiltersPanel({
                 : filters.dateFrom
                   ? `From ${filters.dateFrom}`
                   : `Until ${filters.dateTo}`}
-              <button
-                onClick={handleClearDateRange}
-                className="ml-0.5 hover:text-foreground rounded-full"
-                aria-label="Remove date range filter"
-              >
-                <X className="h-2.5 w-2.5" />
-              </button>
+              <FilterClearButton onClick={handleClearDateRange} ariaLabel="Remove date range filter" />
             </Badge>
           )}
           <button

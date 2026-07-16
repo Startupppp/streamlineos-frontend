@@ -5,9 +5,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
-import { Coins, Plus } from "lucide-react";
+import { Coins } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -187,10 +189,9 @@ export function EssLoansSection({ allowRequests }: EssLoansSectionProps) {
           Loans & Advances
         </h2>
         {allowRequests && (
-          <Button size="sm" className="text-xs gap-1.5" onClick={handleOpenDialog}>
-            <Plus className="h-3 w-3" />
+          <AnimatedIconButton icon={PlusIcon} iconClassName="mr-1.5" size="sm" className="text-xs" onClick={handleOpenDialog}>
             Request Loan
-          </Button>
+          </AnimatedIconButton>
         )}
       </div>
 

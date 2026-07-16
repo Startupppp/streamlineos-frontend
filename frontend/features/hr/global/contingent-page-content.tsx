@@ -16,7 +16,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Users, FileText } from "lucide-react";
+import { Users, FileText } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
 import {
   useContracts,
   useEndContract,
@@ -102,7 +103,7 @@ export function ContingentPageContent() {
       subtitle="Manage contractor, intern, temporary, and agency engagements."
       actions={
         <Button size="sm" onClick={() => { setEditingContract(undefined); setSheetOpen(true); }} className="gap-1.5 h-8">
-          <Plus className="h-3.5 w-3.5" />
+          <PlusIcon size={14} />
           New contract
         </Button>
       }

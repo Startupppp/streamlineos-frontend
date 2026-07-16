@@ -38,7 +38,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { AlertTriangle, Plus } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { StateIllustration } from "@/components/illustrations";
 import { useCan } from "@/hooks/api/access";
 import {
@@ -232,7 +233,7 @@ export function LaborTabs() {
         <>
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm text-muted-foreground">{memberships?.total ?? 0} memberships</p>
-            {canManage && <Button onClick={handleOpenSheet} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground"><Plus className="h-4 w-4 mr-1.5" />Add</Button>}
+            {canManage && <Button onClick={handleOpenSheet} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground"><PlusIcon size={16} className="mr-1.5" />Add</Button>}
           </div>
           <DataTable columns={membershipColumns} data={memberships?.data ?? []} getRowKey={(r) => r.id}
             emptyState={
@@ -242,7 +243,7 @@ export function LaborTabs() {
                   <p className="text-sm font-medium text-foreground">No union memberships</p>
                   <p className="text-xs text-muted-foreground">Record union memberships to track employee union affiliations.</p>
                 </div>
-                {canManage && <Button onClick={handleOpenSheet} size="sm" className="mt-1 bg-primary hover:bg-primary/90 text-primary-foreground"><Plus className="h-4 w-4 mr-1.5" />Add</Button>}
+                {canManage && <Button onClick={handleOpenSheet} size="sm" className="mt-1 bg-primary hover:bg-primary/90 text-primary-foreground"><PlusIcon size={16} className="mr-1.5" />Add</Button>}
               </div>
             }
             pagination={{ mode: "server", page: membershipPage, pageSize: 20, total: memberships?.total ?? 0, onPageChange: setMembershipPage }}
@@ -252,7 +253,7 @@ export function LaborTabs() {
         <>
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm text-muted-foreground">{agreements?.total ?? 0} agreements</p>
-            {canManage && <Button onClick={handleOpenSheet} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground"><Plus className="h-4 w-4 mr-1.5" />Add</Button>}
+            {canManage && <Button onClick={handleOpenSheet} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground"><PlusIcon size={16} className="mr-1.5" />Add</Button>}
           </div>
           <DataTable columns={agreementColumns} data={agreements?.data ?? []} getRowKey={(r) => r.id}
             emptyState={
@@ -262,7 +263,7 @@ export function LaborTabs() {
                   <p className="text-sm font-medium text-foreground">No collective agreements</p>
                   <p className="text-xs text-muted-foreground">Record collective bargaining agreements with union bodies.</p>
                 </div>
-                {canManage && <Button onClick={handleOpenSheet} size="sm" className="mt-1 bg-primary hover:bg-primary/90 text-primary-foreground"><Plus className="h-4 w-4 mr-1.5" />Add</Button>}
+                {canManage && <Button onClick={handleOpenSheet} size="sm" className="mt-1 bg-primary hover:bg-primary/90 text-primary-foreground"><PlusIcon size={16} className="mr-1.5" />Add</Button>}
               </div>
             }
             pagination={{ mode: "server", page: agreementPage, pageSize: 20, total: agreements?.total ?? 0, onPageChange: setAgreementPage }}
@@ -272,7 +273,7 @@ export function LaborTabs() {
         <>
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm text-muted-foreground">{cases?.total ?? 0} cases</p>
-            {canManage && <Button onClick={handleOpenSheet} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground"><Plus className="h-4 w-4 mr-1.5" />New Case</Button>}
+            {canManage && <Button onClick={handleOpenSheet} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground"><PlusIcon size={16} className="mr-1.5" />New Case</Button>}
           </div>
           <DataTable columns={caseColumns} data={cases?.data ?? []} getRowKey={(r) => r.id}
             emptyState={
@@ -282,7 +283,7 @@ export function LaborTabs() {
                   <p className="text-sm font-medium text-foreground">No labor cases</p>
                   <p className="text-xs text-muted-foreground">Log labor disputes and grievances raised by union bodies.</p>
                 </div>
-                {canManage && <Button onClick={handleOpenSheet} size="sm" className="mt-1 bg-primary hover:bg-primary/90 text-primary-foreground"><Plus className="h-4 w-4 mr-1.5" />New Case</Button>}
+                {canManage && <Button onClick={handleOpenSheet} size="sm" className="mt-1 bg-primary hover:bg-primary/90 text-primary-foreground"><PlusIcon size={16} className="mr-1.5" />New Case</Button>}
               </div>
             }
             pagination={{ mode: "server", page: casePage, pageSize: 20, total: cases?.total ?? 0, onPageChange: setCasePage }}

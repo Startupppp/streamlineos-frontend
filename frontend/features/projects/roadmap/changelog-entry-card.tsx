@@ -98,14 +98,14 @@ export const ChangelogEntryCard = memo(function ChangelogEntryCard({
           <Button size="icon" variant="ghost" className="w-7" onClick={handleEdit}>
             <Pencil className="h-3 w-3" />
           </Button>
-          <Button
+          <AnimatedIconButton
             size="icon"
             variant="ghost"
             className="w-7 text-destructive hover:text-destructive"
             onClick={handleDelete}
-          >
-            <Trash2 className="h-3 w-3" />
-          </Button>
+            icon={Trash2Icon}
+            iconSize={12}
+          />
         </div>
       </div>
     </motion.div>

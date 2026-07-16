@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { KeyRound, Unlink } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { KeyRoundIcon, UnlinkIcon } from "@animateicons/react/lucide";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -87,9 +87,7 @@ export function CredentialsTab({ providerKey, environment, credential }: Credent
         {credential?.hasSecret && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button size="sm" variant="outline" className="text-xs gap-1.5 text-muted-foreground">
-                <Unlink className="h-3 w-3" /> Disconnect
-              </Button>
+              <AnimatedIconButton icon={UnlinkIcon} iconSize={12} iconClassName="mr-1.5" size="sm" variant="outline" className="text-xs text-muted-foreground">Disconnect</AnimatedIconButton>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
@@ -142,10 +140,9 @@ export function CredentialsTab({ providerKey, environment, credential }: Credent
         />
       </div>
 
-      <Button size="sm" className="text-xs gap-1.5" onClick={handleSave} disabled={save.isPending}>
-        <KeyRound className="h-3.5 w-3.5" />
+      <AnimatedIconButton icon={KeyRoundIcon} iconSize={14} iconClassName="mr-1.5" size="sm" className="text-xs" onClick={handleSave} disabled={save.isPending}>
         Save {environment} credentials
-      </Button>
+      </AnimatedIconButton>
     </div>
   );
 }

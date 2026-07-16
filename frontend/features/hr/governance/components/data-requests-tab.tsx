@@ -35,7 +35,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Plus, ShieldAlert } from "lucide-react";
+import { ShieldAlert } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { StateIllustration } from "@/components/illustrations";
 import { useCan } from "@/hooks/api/access";
 import { isApiError } from "@/lib/api-client";
@@ -210,7 +211,7 @@ export function DataRequestsTab() {
         <p className="text-sm text-muted-foreground">{data?.total ?? 0} requests</p>
         {canManage && (
           <Button onClick={handleOpenSheet} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground">
-            <Plus className="h-4 w-4 mr-1.5" />
+            <PlusIcon size={16} className="mr-1.5" />
             New Request
           </Button>
         )}
@@ -228,7 +229,7 @@ export function DataRequestsTab() {
             </div>
             {canManage && (
               <Button onClick={handleOpenSheet} size="sm" className="mt-1 bg-primary hover:bg-primary/90 text-primary-foreground">
-                <Plus className="h-4 w-4 mr-1.5" />
+                <PlusIcon size={16} className="mr-1.5" />
                 New Request
               </Button>
             )}

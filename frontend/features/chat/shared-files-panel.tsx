@@ -3,10 +3,25 @@
 import { useMemo } from "react";
 import Image from "next/image";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { FileText, Loader2, Paperclip, X } from "lucide-react";
+import { FileText, Loader2, Paperclip } from "lucide-react";
+import { XIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import React from "react";
 import { cn } from "@/lib/utils";
 import { useChannelFiles } from "@/hooks/api";
 import { formatFileSize, getFileExt, getFileColor, resolveFileUrl, isImageMime } from "./chat-helpers";
+
+const FilesPanelCloseButton = React.forwardRef<
+  HTMLButtonElement,
+  React.ButtonHTMLAttributes<HTMLButtonElement>
+>(function FilesPanelCloseButton({ className, ...props }, ref) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <button ref={ref} {...hoverHandlers} className={className} {...props}>
+      <XIcon ref={iconRef} size={16} className="text-muted-foreground" />
+    </button>
+  );
+});
 
 export function SharedFilesPanel({ channelId, onClose }: { channelId: number; onClose: () => void }) {
   const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } = useChannelFiles(channelId);
@@ -19,9 +34,7 @@ export function SharedFilesPanel({ channelId, onClose }: { channelId: number; on
           <Paperclip className="h-4 w-4 text-muted-foreground" />
           <h3 className="text-[14px] font-bold">Shared Files</h3>
         </div>
-        <button onClick={onClose} className="p-1.5 hover:bg-muted rounded-lg" aria-label="Close">
-          <X className="h-4 w-4 text-muted-foreground" />
-        </button>
+        <FilesPanelCloseButton onClick={onClose} className="p-1.5 hover:bg-muted rounded-lg" aria-label="Close" />
       </div>
 
       <ScrollArea className="flex-1">

@@ -5,7 +5,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Pencil, Trash2, Settings } from "lucide-react";
+import { Pencil } from "lucide-react";
+import { Trash2Icon, SettingsIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   Sheet,
   SheetBody,
@@ -259,10 +261,9 @@ export function AccountingMappingsSheet({ open: externalOpen, onOpenChange: exte
     <Sheet open={open} onOpenChange={handleOpenChange}>
       {!isControlled && canManage && (
         <SheetTrigger asChild>
-          <Button variant="outline" size="sm" className="gap-1.5 text-xs">
-            <Settings className="h-3.5 w-3.5" />
+          <AnimatedIconButton icon={SettingsIcon} iconClassName="mr-1.5" variant="outline" size="sm" className="text-xs">
             Manage Mappings
-          </Button>
+          </AnimatedIconButton>
         </SheetTrigger>
       )}
       <SheetContent className="p-0 w-full sm:max-w-md flex flex-col overflow-hidden">
@@ -298,15 +299,14 @@ export function AccountingMappingsSheet({ open: externalOpen, onOpenChange: exte
                       >
                         <Pencil className="h-3 w-3" />
                       </Button>
-                      <Button
+                      <AnimatedIconButton
+                        icon={Trash2Icon}
                         variant="ghost"
                         size="icon"
                         className="h-6 w-6 text-red-600 hover:text-red-700"
                         onClick={() => handleDelete(m.id)}
                         aria-label="Delete mapping"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
+                      />
                     </div>
                   )}
                 </div>

@@ -10,6 +10,7 @@ import { Package, Plus, ChevronDown, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -422,12 +423,13 @@ export function DealOrdersSection({ dealId, dealStage }: DealOrdersSectionProps)
                 <Button type="button" variant="outline" onClick={handleCloseCreate}>
                   Cancel
                 </Button>
-                <Button
+                <LoadingButton
                   type="submit"
-                  disabled={createOrder.isPending}
+                  isPending={createOrder.isPending}
+                  loadingText="Creating..."
                 >
-                  {createOrder.isPending ? "Creating..." : "Create Order"}
-                </Button>
+                  Create Order
+                </LoadingButton>
               </div>
             </form>
           </Form>

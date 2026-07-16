@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Phone, Mail, MessageSquare, Calendar, MapPin, Clock } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -90,13 +90,14 @@ export function ActivityForm({ onSubmit, isPending }: ActivityFormProps) {
         </div>
       </div>
 
-      <Button
+      <LoadingButton
         type="submit"
         className="w-full h-10 mt-2"
-        disabled={isPending}
+        isPending={isPending}
+        loadingText="Logging..."
       >
-        {isPending ?"Logging..." :"Log Activity"}
-      </Button>
+        Log Activity
+      </LoadingButton>
     </form>
   );
 }
