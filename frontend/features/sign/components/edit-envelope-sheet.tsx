@@ -2,72 +2,57 @@
 
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { EntityFormSheet } from "@/components/shared/entity-form-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useCreateSignEnvelope } from "@/hooks/api/sign/envelopes";
+import { useUpdateSignEnvelope } from "@/hooks/api/sign/envelopes";
+import type { SignEnvelope } from "@/types/sign";
 
-const createEnvelopeSchema = z.object({
+const editEnvelopeSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(200),
   message: z.string().trim().max(2000).optional(),
 });
-type CreateEnvelopeValues = z.infer<typeof createEnvelopeSchema>;
+type EditEnvelopeValues = z.infer<typeof editEnvelopeSchema>;
 
-interface CreateEnvelopeDialogProps {
+interface EditEnvelopeSheetProps {
+  envelope: SignEnvelope;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  defaultTitle?: string;
-  sourceModule?: string;
-  sourceEntityType?: string;
-  sourceEntityId?: string;
-  dialogTitle?: string;
-  dialogDescription?: string;
 }
 
-export function CreateEnvelopeDialog({
-  open,
-  onOpenChange,
-  defaultTitle,
-  sourceModule,
-  sourceEntityType,
-  sourceEntityId,
-  dialogTitle,
-  dialogDescription,
-}: CreateEnvelopeDialogProps) {
-  const router = useRouter();
-  const createEnvelope = useCreateSignEnvelope();
+export function EditEnvelopeSheet({ envelope, open, onOpenChange }: EditEnvelopeSheetProps) {
+  const updateEnvelope = useUpdateSignEnvelope(envelope.id);
 
-  async function handleSubmit(values: CreateEnvelopeValues) {
+  async function handleSubmit(values: EditEnvelopeValues) {
     try {
-      const envelope = await createEnvelope.mutateAsync({
+      await updateEnvelope.mutateAsync({
         title: values.title,
-        message: values.message,
-        sourceModule,
-        sourceEntityType,
-        sourceEntityId,
+        message: values.message || undefined,
       });
+      toast.success("Envelope updated");
       onOpenChange(false);
-      router.push(`/sign/envelopes/${envelope.id}`);
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
   }
 
   return (
-    <EntityFormSheet<CreateEnvelopeValues>
+    <EntityFormSheet<EditEnvelopeValues>
       open={open}
       onOpenChange={onOpenChange}
-      title={dialogTitle ?? "New envelope"}
-      description={dialogDescription ?? "Start with a title — you'll upload the document and add signers next."}
-      resolver={zodResolver(createEnvelopeSchema)}
-      defaultValues={{ title: defaultTitle ?? "", message: "" }}
+      title="Edit envelope"
+      description="Update the title or message for this draft envelope."
+      resolver={zodResolver(editEnvelopeSchema)}
+      defaultValues={{
+        title: envelope.title,
+        message: envelope.message ?? "",
+      }}
       onSubmit={handleSubmit}
-      isSubmitting={createEnvelope.isPending}
-      submitLabel="Create envelope"
+      isSubmitting={updateEnvelope.isPending}
+      submitLabel="Save changes"
       className="sm:max-w-md"
       resetOnOpen
     >
