@@ -7,7 +7,7 @@ export default function ModulesLoading() {
     <PageWrapper
       title="Modules"
       subtitle="Organize work into feature groups and track module progress"
-      actions={<Skeleton className="h-8 w-32 rounded-md" />}
+      actions={<Skeleton className="h-9 w-32 rounded-md" />}
     >
       <PmPageShell>
         <PmSection index={0}>

@@ -178,6 +178,7 @@ export function useToggleAutomation() {
 export function useDeleteAutomation() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["automations", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/settings/automations/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.automations.all }),
@@ -187,6 +188,7 @@ export function useDeleteAutomation() {
 export function useTestAutomation() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["automations", "test"],
     mutationFn: ({ id, payload }: { id: number; payload: Record<string, unknown> }) =>
       apiClient.post<AutomationTestResult>(`/settings/automations/${id}/test`, { payload }),
     onSuccess: (_data, variables) => {

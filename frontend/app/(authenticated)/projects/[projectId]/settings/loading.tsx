@@ -1,59 +1,33 @@
-import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { PmPageShell, PmPanel, PmSection } from "@/features/projects/shared/pm-chrome";
 
 export default function ProjectSettingsLoading() {
   return (
     <PageWrapper title="Settings">
-      <div className="space-y-6 pb-8">
-        <Card>
-          <CardContent className="pt-5 space-y-5">
-            <div className="flex items-center gap-2">
-              <Skeleton className="h-4 w-4 rounded" />
-              <Skeleton className="h-4 w-20" />
-            </div>
-            <div className="h-px bg-border" />
-
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-9 w-full rounded-md" />
-            </div>
-
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-20" />
-              <Skeleton className="h-20 w-full rounded-md" />
-            </div>
-
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-14" />
-              <Skeleton className="h-9 w-full rounded-md" />
-            </div>
-
-            <div className="space-y-2 pt-2">
-              <div className="flex items-center gap-2">
-                <Skeleton className="h-4 w-4 rounded" />
-                <Skeleton className="h-4 w-28" />
+      <PmPageShell>
+        <div className="flex flex-col gap-4 pb-8 md:flex-row">
+          <PmSection index={0} className="w-full shrink-0 md:w-48">
+            <PmPanel className="p-1.5">
+              <div className="flex w-full gap-0.5 overflow-x-auto md:flex-col md:overflow-visible">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-8 w-20 shrink-0 rounded-md md:w-full" />
+                ))}
               </div>
-              <Skeleton className="h-9 w-full rounded-md" />
-            </div>
-
-            <Skeleton className="h-9 w-full rounded-md" />
-          </CardContent>
-        </Card>
-
-        <Card className="border-destructive/30">
-          <CardContent className="pt-5 space-y-4">
-            <div className="flex items-center gap-2">
-              <Skeleton className="h-4 w-4 rounded" />
-              <Skeleton className="h-4 w-28" />
-            </div>
-            <div className="h-px bg-border" />
-            <Skeleton className="h-3.5 w-full" />
-            <Skeleton className="h-3.5 w-3/4" />
-            <Skeleton className="h-8 w-36 rounded-md" />
-          </CardContent>
-        </Card>
-      </div>
+            </PmPanel>
+          </PmSection>
+          <PmSection index={1} className="min-w-0 flex-1">
+            <PmPanel className="p-4" solid>
+              <div className="space-y-4">
+                <Skeleton className="h-9 w-full rounded-md" />
+                <Skeleton className="h-20 w-full rounded-md" />
+                <Skeleton className="h-9 w-full rounded-md" />
+                <Skeleton className="h-9 w-40 rounded-md" />
+              </div>
+            </PmPanel>
+          </PmSection>
+        </div>
+      </PmPageShell>
     </PageWrapper>
   );
 }

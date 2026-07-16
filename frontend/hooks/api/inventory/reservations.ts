@@ -46,6 +46,9 @@ export function useReservations(filters?: ReservationsFilters) {
         limit: filters?.limit ?? 50,
       }),
     staleTime: 30_000,
+    refetchInterval: 60_000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
   });
 }
 

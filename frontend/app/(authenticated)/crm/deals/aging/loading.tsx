@@ -4,7 +4,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 
 export default function CrmdealsagingLoading() {
   return (
-    <PageWrapper title="Deal Aging Report" subtitle="Loading...">
+    <PageWrapper title="Deal Aging Report" subtitle="Deals by time without progression">
       <Card>
         <CardContent className="p-6 space-y-3">
           {Array.from({ length: 12 }).map((_, i) => (

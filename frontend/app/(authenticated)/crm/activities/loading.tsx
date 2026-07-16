@@ -1,28 +1,28 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { StatCardGridSkeleton } from "@/components/ui/stat-card";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export default function CrmActivitiesLoading() {
   return (
     <PageWrapper
       title="Activities"
-      subtitle="All CRM interactions and follow-ups across leads, deals, and contacts"
+      subtitle="Track calls, emails, meetings, and tasks across your pipeline"
+      actions={<Skeleton className="h-9 w-28 rounded-md" />}
       filters={
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-9 w-32 rounded-md" />
-          <Skeleton className="h-9 w-32 rounded-md" />
-          <Skeleton className="h-9 w-32 rounded-md" />
+        <div className={FILTER_TOOLBAR_ROW}>
+          <Skeleton className="h-9 w-[200px] rounded-md" />
+          <Skeleton className="h-9 w-[120px] rounded-md" />
+          <Skeleton className="h-9 w-[120px] rounded-md" />
+          <Skeleton className="h-9 w-[120px] rounded-md" />
         </div>
       }
     >
-      <div className="space-y-4">
-        <div className="flex items-center gap-4 px-1 py-1">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <Skeleton key={i} className="h-4 w-16" />
-          ))}
-        </div>
+      <div className="flex flex-1 min-h-0 flex-col space-y-4">
+        <StatCardGridSkeleton cols={5} count={5} />
 
         <div className="space-y-3">
-          {Array.from({ length: 12 }).map((_, i) => (
+          {Array.from({ length: 10 }).map((_, i) => (
             <div
               key={i}
               className="bg-card rounded-xl border border-border p-4 space-y-2"

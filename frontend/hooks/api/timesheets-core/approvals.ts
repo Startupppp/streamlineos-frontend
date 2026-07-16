@@ -25,6 +25,7 @@ export function useApprovals(query: ApprovalsQuery = {}, enabled = true) {
     queryKey: queryKeys.timesheets.approvals(params),
     queryFn: () => apiClient.get<TimesheetPeriod[]>("/timesheets/approvals", params),
     staleTime: 30_000,
+    refetchOnWindowFocus: true,
     placeholderData: (prev) => prev,
     enabled,
   });

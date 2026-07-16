@@ -1,22 +1,26 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { StatCardGridSkeleton } from "@/components/ui/stat-card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { PmPageShell, PmPanel, PmSection } from "@/features/projects/shared/pm-chrome";
 
 export default function AnalyticsLoading() {
   return (
     <PageWrapper title="Analytics" subtitle="Project health, velocity, and performance charts">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <Card key={i}>
-            <CardHeader>
-              <Skeleton className="h-5 w-40" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-56 w-full rounded-md" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <PmPageShell>
+        <PmSection index={0}>
+          <StatCardGridSkeleton cols={6} className="mb-4" />
+        </PmSection>
+        <PmSection index={1}>
+          <div className="grid gap-3 md:grid-cols-2">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <PmPanel key={i} className="p-4">
+                <Skeleton className="mb-3 h-4 w-32" />
+                <Skeleton className="h-48 w-full rounded-md" />
+              </PmPanel>
+            ))}
+          </div>
+        </PmSection>
+      </PmPageShell>
     </PageWrapper>
   );
 }

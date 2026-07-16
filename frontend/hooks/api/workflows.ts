@@ -248,6 +248,9 @@ export function usePendingApprovals() {
     queryKey: queryKeys.workflows.approvals(),
     queryFn: () => apiClient.get<WorkflowApproval[]>("/workflows/approvals/pending"),
     staleTime: 30_000,
+    refetchOnWindowFocus: true,
+    refetchInterval: 60_000,
+    refetchIntervalInBackground: false,
   });
 }
 
@@ -296,6 +299,7 @@ export function useWorkflowSecrets(workflowId: string) {
 export function useCreateWorkflow() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["workflows", "create"],
     mutationFn: (input: CreateWorkflowInput) =>
       apiClient.post<Workflow>("/workflows", input),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.workflows.all }),
@@ -305,6 +309,7 @@ export function useCreateWorkflow() {
 export function useUpdateWorkflow() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["workflows", "update"],
     mutationFn: ({ id, ...input }: UpdateWorkflowInput & { id: string }) =>
       apiClient.patch<Workflow>(`/workflows/${id}`, input),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.workflows.all }),
@@ -314,6 +319,7 @@ export function useUpdateWorkflow() {
 export function useDeleteWorkflow() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["workflows", "delete"],
     mutationFn: (id: string) =>
       apiClient.delete<{ success: boolean }>(`/workflows/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.workflows.all }),
@@ -323,6 +329,7 @@ export function useDeleteWorkflow() {
 export function usePublishWorkflow() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["workflows", "publish"],
     mutationFn: ({ id, ...input }: PublishWorkflowInput & { id: string }) =>
       apiClient.post<WorkflowVersion>(`/workflows/${id}/publish`, input),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.workflows.all }),
@@ -332,6 +339,7 @@ export function usePublishWorkflow() {
 export function useDuplicateWorkflow() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["workflows", "duplicate"],
     mutationFn: (id: string) =>
       apiClient.post<Workflow>(`/workflows/${id}/duplicate`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.workflows.all }),
@@ -341,6 +349,7 @@ export function useDuplicateWorkflow() {
 export function useTriggerWorkflow() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["workflows", "trigger"],
     mutationFn: ({ id, data }: { id: string; data?: Record<string, unknown> }) =>
       apiClient.post<WorkflowExecution>(`/workflows/${id}/trigger`, data),
     onSuccess: (_data, variables) => {
@@ -353,6 +362,7 @@ export function useTriggerWorkflow() {
 export function useCancelExecution() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["workflows", "execution", "cancel"],
     mutationFn: ({ workflowId, executionId }: { workflowId: string; executionId: string }) =>
       apiClient.post<WorkflowExecution>(
         `/workflows/${workflowId}/executions/${executionId}/cancel`,

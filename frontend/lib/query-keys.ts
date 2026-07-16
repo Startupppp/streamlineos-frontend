@@ -1193,9 +1193,16 @@ export const queryKeys = {
     form: (slug: string) => [...base, "signPublic", "form", slug] as const,
   },
 
+  billing: {
+    all: [...base, "billing"] as const,
+    aiCredits: () => [...base, "billing", "ai-credits"] as const,
+    aiCreditTransactions: (params: Record<string, unknown>) => [...base, "billing", "ai-credits", "transactions", params] as const,
+    entitlements: () => [...base, "billing", "entitlements"] as const,
+  },
+
   crmDataQuality: {
-    all: ["crm", "data-quality"] as const,
-    report: () => ["crm", "data-quality", "report"] as const,
+    all: [...base, "crm", "data-quality"] as const,
+    report: () => [...base, "crm", "data-quality", "report"] as const,
   },
 
 } as const;

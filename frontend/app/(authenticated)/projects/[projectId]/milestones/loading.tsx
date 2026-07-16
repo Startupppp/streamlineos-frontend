@@ -7,7 +7,7 @@ export default function MilestonesLoading() {
     <PageWrapper
       title="Milestones"
       subtitle="Key checkpoints and target dates for this project"
-      actions={<Skeleton className="h-8 w-36 rounded-md" />}
+      actions={<Skeleton className="h-9 w-36 rounded-md" />}
     >
       <PmPageShell>
         <PmSection index={0}>

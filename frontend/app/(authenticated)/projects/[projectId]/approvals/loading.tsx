@@ -8,12 +8,12 @@ export default function ProjectApprovalsLoading() {
     <PageWrapper
       title="Approvals"
       subtitle="Review and manage approval requests for this project"
-      actions={<Skeleton className="h-4 w-36 rounded-md" />}
+      actions={<Skeleton className="h-9 w-36 rounded-md" />}
       filters={
         <div className={cn(PM_TOOLBAR, "w-full")}>
           <div className="flex items-center gap-2">
-            <Skeleton className="h-4 w-40 rounded-md" />{" "}
-            <Skeleton className="h-4 w-40 rounded-md" />{" "}
+            <Skeleton className="h-9 w-40 rounded-md" />
+            <Skeleton className="h-9 w-40 rounded-md" />
           </div>
         </div>
       }
