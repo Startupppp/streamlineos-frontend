@@ -4,15 +4,13 @@ import { memo, useCallback, useMemo, useRef, useState } from "react";
 import type { MouseEvent, KeyboardEvent, ChangeEvent } from "react";
 import {
   Layers,
-  ChevronDown,
-  ChevronRight,
   Pencil,
   Trash2,
-  Plus,
   Link2,
 } from "lucide-react";
-import { EllipsisIcon } from "@animateicons/react/lucide";
+import { EllipsisIcon, ChevronDownIcon, ChevronRightIcon, PlusIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -95,6 +93,8 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
   const [linkOpen, setLinkOpen] = useState(false);
   const editTriggerRef = useRef<HTMLButtonElement>(null);
   const { iconRef: actionsIconRef, hoverHandlers: actionsHoverHandlers } = useAnimatedIcon();
+  const { iconRef: expandIconRef, hoverHandlers: expandHoverHandlers } = useAnimatedIcon();
+  const { iconRef: addIconRef, hoverHandlers: addHoverHandlers } = useAnimatedIcon();
 
   const { totalItems, completedItems, inProgressItems, todoItems, totalPoints, completedPoints } = useMemo(() => {
     let done = 0, inProgress = 0, totalPts = 0, completedPts = 0;

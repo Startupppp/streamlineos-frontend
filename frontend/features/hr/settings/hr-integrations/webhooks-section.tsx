@@ -3,7 +3,8 @@
 import { useCallback, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Send, Activity } from "lucide-react";
+import { Pencil, Activity } from "lucide-react";
+import { PlusIcon, Trash2Icon, SendIcon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -101,7 +102,7 @@ function WebhookRow({
           isPending={test.isPending}
           onClick={handleTest}
         >
-          <Send className="h-3.5 w-3.5" />
+          <SendIcon size={14} />
         </LoadingButton>
         <Button
           variant="ghost"
@@ -120,7 +121,7 @@ function WebhookRow({
           isPending={remove.isPending}
           onClick={handleDelete}
         >
-          <Trash2 className="h-3.5 w-3.5" />
+          <Trash2Icon size={14} />
         </LoadingButton>
       </div>
     </div>
@@ -158,7 +159,7 @@ export function WebhooksSection() {
           </p>
         </div>
         <Button size="sm" variant="outline" onClick={handleNew} className="gap-1.5">
-          <Plus className="h-3.5 w-3.5" />
+          <PlusIcon size={14} />
           Add Webhook
         </Button>
       </div>
@@ -174,7 +175,7 @@ export function WebhooksSection() {
           <div className="flex flex-col items-center justify-center py-12 text-center text-sm text-muted-foreground">
             <p>No webhooks configured yet.</p>
             <Button size="sm" variant="ghost" onClick={handleNew} className="mt-3 gap-1.5">
-              <Plus className="h-3.5 w-3.5" />
+              <PlusIcon size={14} />
               Add your first webhook
             </Button>
           </div>

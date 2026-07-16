@@ -2,7 +2,6 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
   Popover,
   PopoverContent,
@@ -16,7 +15,9 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Plus, Trash2, ChevronsUpDown, Star } from "lucide-react";
+import { ChevronsUpDown, Star } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { cn } from "@/lib/utils";
 import {
   useVipClients,
@@ -41,15 +42,14 @@ function VipClientRow({ clientId, name, onRemove }: VipClientRowProps) {
         <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
         {name}
       </div>
-      <Button
+      <AnimatedIconButton
         variant="ghost"
         size="icon"
         className="h-7 w-7 text-destructive"
         onClick={handleRemove}
         aria-label={`Remove ${name} from VIP clients`}
-      >
-        <Trash2 className="h-3.5 w-3.5" />
-      </Button>
+        icon={Trash2Icon}
+      />
     </div>
   );
 }
@@ -96,10 +96,10 @@ export function VipClientsCard() {
         <CardTitle className="text-sm font-medium">VIP Clients</CardTitle>
         <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
           <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-1.5">
-              <Plus className="h-3.5 w-3.5" /> Add
+            <AnimatedIconButton variant="outline" size="sm" className="gap-1.5" icon={PlusIcon} iconClassName="mr-0">
+              Add
               <ChevronsUpDown className="h-3.5 w-3.5 opacity-50" />
-            </Button>
+            </AnimatedIconButton>
           </PopoverTrigger>
           <PopoverContent className="w-64 p-0" align="end">
             <Command>

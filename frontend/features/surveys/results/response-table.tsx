@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Download } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { DownloadIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { getApiError } from "@/lib/api-client";

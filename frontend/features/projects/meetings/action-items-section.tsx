@@ -2,9 +2,10 @@
 
 import { memo, useState, useCallback } from "react";
 import { toast } from "sonner";
-import { Plus, ArrowRightCircle } from "lucide-react";
-import { EllipsisIcon } from "@animateicons/react/lucide";
+import { ArrowRightCircle } from "lucide-react";
+import { EllipsisIcon, PlusIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   useCreateActionItem, useUpdateActionItem, useDeleteActionItem, useConvertActionItemToTask,
 } from "@/hooks/api/projects";

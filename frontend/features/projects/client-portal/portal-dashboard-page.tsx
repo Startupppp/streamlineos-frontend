@@ -9,9 +9,11 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Download, Plus, Diamond, CheckSquare, Paperclip, FileText } from "lucide-react";
+import { Diamond, CheckSquare, Paperclip, FileText } from "lucide-react";
+import { DownloadIcon, PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PortalCrSheet } from "./portal-cr-sheet";
 import type { ChangeRequestStatus } from "@/types/projects";
 import {
@@ -70,6 +72,22 @@ function SectionTitle({
       </div>
       {actions}
     </div>
+  );
+}
+
+function DownloadLink({ href }: { href: string }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex shrink-0 items-center gap-1 text-[10px] text-primary hover:underline"
+      {...hoverHandlers}
+    >
+      <DownloadIcon ref={iconRef} size={12} />
+      Download
+    </a>
   );
 }
 
@@ -252,15 +270,7 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
                   <span className={cn(TEXT_ONE_LINE, "flex-1 text-[11px]")} title={f.filename}>
                     {f.filename}
                   </span>
-                  <a
-                    href={f.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex shrink-0 items-center gap-1 text-[10px] text-primary hover:underline"
-                  >
-                    <Download className="h-3 w-3" />
-                    Download
-                  </a>
+                  <DownloadLink href={f.url} />
                 </div>
               ))}
             </PmPanel>
@@ -272,10 +282,16 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
             icon={FileText}
             title="Change Requests"
             actions={
-              <Button size="sm" className="text-[11px]" onClick={handleOpenCrSheet}>
-                <Plus className="mr-1 h-3.5 w-3.5" />
+              <AnimatedIconButton
+                size="sm"
+                className="text-[11px]"
+                onClick={handleOpenCrSheet}
+                icon={PlusIcon}
+                iconSize={14}
+                iconClassName="mr-1"
+              >
                 Submit Request
-              </Button>
+              </AnimatedIconButton>
             }
           />
 

@@ -1,10 +1,11 @@
 "use client";
 
 import { useMemo } from "react";
-import { Plus } from "lucide-react";
 import { format } from "date-fns";
-import { CheckCircle2, XCircle, Pencil, Eye } from "lucide-react";
+import { CheckCircle2, XCircle, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { PlusIcon, EyeIcon } from "@animateicons/react/lucide";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
@@ -372,15 +373,15 @@ export function MemberExpenseList({
           );
         }
         return (
-          <Button
+          <AnimatedIconButton
+            icon={EyeIcon}
+            iconSize={14}
             variant="ghost"
             size="icon"
             className="w-8 text-muted-foreground hover:text-foreground"
             onClick={handleView}
             aria-label="View"
-          >
-            <Eye className="h-3.5 w-3.5" />
-          </Button>
+          />
         );
       },
     },
@@ -411,14 +412,16 @@ export function MemberExpenseList({
           Show All Claims
         </Button>
       ) : (
-        <Button
+        <AnimatedIconButton
+          icon={PlusIcon}
+          iconSize={14}
+          iconClassName="mr-1.5"
           size="sm"
           className="text-xs gap-1.5 mt-1"
           onClick={onCreateNew}
         >
-          <Plus className="h-3.5 w-3.5" />
           Submit New Claim
-        </Button>
+        </AnimatedIconButton>
       )}
     </div>
   );

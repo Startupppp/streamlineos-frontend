@@ -7,7 +7,9 @@ import { z } from "zod";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Check, ChevronRight, Plus } from "lucide-react";
+import { Check, ChevronRight } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { getErrorMessage } from "@/lib/api-client";
 import {
   useMyCareerPlan,
@@ -394,16 +396,18 @@ export function MyCareerPlan() {
             onChange={setNewMilestoneDue}
             placeholder="Pick a date"
           />
-          <Button
+          <AnimatedIconButton
+            icon={PlusIcon}
+            iconSize={14}
+            iconClassName="mr-1"
             variant="outline"
             size="sm"
             className="shrink-0 gap-1 text-xs"
             onClick={handleAddMilestone}
             disabled={!newMilestoneTitle.trim() || !newMilestoneDue || savePlan.isPending}
           >
-            <Plus className="h-3.5 w-3.5" />
             Add
-          </Button>
+          </AnimatedIconButton>
         </div>
       </motion.div>
     </div>

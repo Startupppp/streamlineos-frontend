@@ -10,7 +10,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { AlertCircle, ChevronRight, LayoutGrid, LayoutList, ListPlus, Settings } from "lucide-react";
+import { AlertCircle, ListPlus } from "lucide-react";
+import { ChevronRightIcon, LayoutGridIcon, LayoutListIcon, SettingsIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import type { MyWorkItem } from "@/types/projects/my-work";
 import type { ProjectListItem } from "@/types/projects";
 import { PriorityBadge } from "@/features/projects/shared/priority-badge";
@@ -58,6 +60,7 @@ export const MyWorkRow = memo(function MyWorkRow({
 }) {
   const shouldReduceMotion = useReducedMotion();
   const overdue = isOverdue(item);
+  const { iconRef: chevronRef, hoverHandlers: chevronHoverHandlers } = useAnimatedIcon();
 
   return (
     <motion.div
@@ -69,6 +72,7 @@ export const MyWorkRow = memo(function MyWorkRow({
       <Link
         href={getTicketDetailHref(item.projectId, item.projectKey, item.ticketNumber)}
         className={PM_ROW}
+        {...chevronHoverHandlers}
       >
         <motion.div
           className="shrink-0"
@@ -111,7 +115,11 @@ export const MyWorkRow = memo(function MyWorkRow({
             </motion.span>
           ) : null}
           <StatusBadge status={item.status} className="text-[11px]" />
-          <ChevronRight className="h-3 w-3 -translate-x-1 text-muted-foreground opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100" />
+          <ChevronRightIcon
+            ref={chevronRef}
+            size={12}
+            className="-translate-x-1 text-muted-foreground opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100"
+          />
         </div>
       </Link>
     </motion.div>
@@ -129,6 +137,10 @@ export const ProjectCard = memo(function ProjectCard({
   const base = `/projects/${project.id}`;
   const shouldReduceMotion = useReducedMotion();
   const progress = project.progress.percentage;
+
+  const { iconRef: boardRef, hoverHandlers: boardHoverHandlers } = useAnimatedIcon();
+  const { iconRef: backlogRef, hoverHandlers: backlogHoverHandlers } = useAnimatedIcon();
+  const { iconRef: settingsRef, hoverHandlers: settingsHoverHandlers } = useAnimatedIcon();
 
   const handleCreateIssue = useCallback(
     (e: MouseEvent<HTMLButtonElement>) => {
@@ -219,8 +231,9 @@ export const ProjectCard = memo(function ProjectCard({
                     href={base}
                     className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-primary/10 hover:text-foreground"
                     aria-label="Open board"
+                    {...boardHoverHandlers}
                   >
-                    <LayoutGrid className="h-3 w-3" />
+                    <LayoutGridIcon ref={boardRef} size={12} />
                   </Link>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-xs">
@@ -233,8 +246,9 @@ export const ProjectCard = memo(function ProjectCard({
                     href={`${base}/backlog`}
                     className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-primary/10 hover:text-foreground"
                     aria-label="Open backlog"
+                    {...backlogHoverHandlers}
                   >
-                    <LayoutList className="h-3 w-3" />
+                    <LayoutListIcon ref={backlogRef} size={12} />
                   </Link>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-xs">
@@ -272,8 +286,9 @@ export const ProjectCard = memo(function ProjectCard({
                     href={`${base}/settings`}
                     className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-primary/10 hover:text-foreground"
                     aria-label="Settings"
+                    {...settingsHoverHandlers}
                   >
-                    <Settings className="h-3 w-3" />
+                    <SettingsIcon ref={settingsRef} size={12} />
                   </Link>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-xs">

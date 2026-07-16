@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { RotateCcw, Copy, Check } from "lucide-react";
-import { SparklesIcon } from "@animateicons/react/lucide";
+import { RotateCcw } from "lucide-react";
+import { SparklesIcon, CopyIcon, CheckIcon } from "@animateicons/react/lucide";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,6 +23,7 @@ export function ClientUpdateCard({ projectId, featureEnabled, requiredPlan }: Cl
   const result = mutation.data;
   const [copied, setCopied] = useState(false);
   const { iconRef, hoverHandlers } = useAnimatedIcon();
+  const { iconRef: copyIconRef, hoverHandlers: copyHoverHandlers } = useAnimatedIcon();
 
   const handleRun = useCallback(() => {
     mutation.mutate(undefined);
@@ -119,11 +120,12 @@ export function ClientUpdateCard({ projectId, featureEnabled, requiredPlan }: Cl
               size="sm"
               onClick={handleCopy}
               className="w-full gap-1.5 text-xs"
+              {...copyHoverHandlers}
             >
               {copied ? (
-                <Check className="h-3.5 w-3.5 text-emerald-500" />
+                <CheckIcon ref={copyIconRef} size={14} className="text-emerald-500" />
               ) : (
-                <Copy className="h-3.5 w-3.5" />
+                <CopyIcon ref={copyIconRef} size={14} />
               )}
               {copied ? "Copied" : "Copy"}
             </Button>

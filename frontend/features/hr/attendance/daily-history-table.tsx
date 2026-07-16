@@ -3,13 +3,14 @@
 import { memo } from "react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useHrAttendanceStatus } from "@/hooks/api/hr";
 import { toast } from "sonner";
-import { Download, ClipboardList } from "lucide-react";
+import { ClipboardList } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { DownloadIcon } from "@animateicons/react/lucide";
 import { AttendanceEmailDialog } from "./attendance-email-dialog";
 import { formatDuration } from "./attendance-utils";
 import { cn } from "@/lib/utils";
@@ -159,16 +160,18 @@ export const DailyHistoryTable = memo(function DailyHistoryTable() {
           </CardTitle>
           <div className="flex items-center gap-2">
             <AttendanceEmailDialog />
-            <Button
+            <AnimatedIconButton
               variant="outline"
               size="sm"
               className="gap-1.5 text-xs"
               disabled={logs.length === 0}
               onClick={handleDownloadClick}
+              icon={DownloadIcon}
+              iconSize={14}
+              iconClassName="mr-1.5"
             >
-              <Download className="h-3.5 w-3.5" />
               Download
-            </Button>
+            </AnimatedIconButton>
           </div>
         </div>
       </CardHeader>

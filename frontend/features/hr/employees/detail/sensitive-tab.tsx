@@ -63,7 +63,7 @@ function MaskedField({
           </span>
           {value && (
             <Button variant="ghost" size="icon" className="w-8 shrink-0" onClick={handleToggle}>
-              {revealed ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+              {revealed ? <EyeOffIcon size={14} /> : <EyeIcon size={14} />}
             </Button>
           )}
         </div>

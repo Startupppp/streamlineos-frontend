@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plus, Ban } from "lucide-react";
+import { Ban } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -70,10 +72,9 @@ export function BulkSendList() {
       title="Bulk Send"
       subtitle="Send one template to a list of people via CSV"
       actions={
-        <Button onClick={() => setCreateOpen(true)} disabled={!hasPublished}>
-          <Plus className="size-4" />
+        <AnimatedIconButton icon={PlusIcon} iconClassName="mr-1.5" onClick={() => setCreateOpen(true)} disabled={!hasPublished}>
           New bulk send
-        </Button>
+        </AnimatedIconButton>
       }
     >
       {isLoading ? (

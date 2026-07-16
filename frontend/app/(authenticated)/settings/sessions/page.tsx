@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, type ChangeEvent } from "react";
-import { Trash2, LogOut } from "lucide-react";
+import { LogoutIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { useSessions, useRevokeSession, useRevokeAllSessions, type UserSession } from "@/hooks/api/hr/sessions";
 import { getApiError } from "@/lib/api-client";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
 import { SearchInput } from "@/components/ui/search-input";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";

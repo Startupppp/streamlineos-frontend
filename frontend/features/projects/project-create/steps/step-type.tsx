@@ -1,9 +1,10 @@
 "use client";
 
-import { Zap, Columns, Building2, CheckSquare, Bug, Map, Megaphone, Cog, Layers, Headphones, X } from "lucide-react";
+import { Zap, Columns, Building2, CheckSquare, Bug, Map, Megaphone, Cog, Layers, Headphones } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { XIcon } from "@animateicons/react/lucide";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import type { StepSharedProps } from "../use-project-create";
 
 interface ProjectTypeOption {
@@ -42,16 +43,17 @@ export function StepType({ draft, updateDraft }: StepSharedProps) {
           Choose a project type to get tailored defaults. This step is optional.
         </p>
         {draft.projectType && (
-          <Button
+          <AnimatedIconButton
             type="button"
             variant="ghost"
             size="sm"
             className="text-xs shrink-0 text-muted-foreground gap-1 hover:text-foreground"
             onClick={handleClear}
+            icon={XIcon}
+            iconSize={12}
           >
-            <X className="h-3 w-3" />
             Clear
-          </Button>
+          </AnimatedIconButton>
         )}
       </div>
       <div className="grid grid-cols-2 gap-2">

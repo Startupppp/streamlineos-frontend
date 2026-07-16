@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Copy, Eye, EyeOff } from "lucide-react";
+import { CopyIcon, EyeIcon, EyeOffIcon } from "@animateicons/react/lucide";
 import {
   Sheet,
   SheetContent,
@@ -151,7 +151,7 @@ export function WebhookUpsertSheet({ open, onOpenChange, subscription }: Props) 
                 onClick={() => setShowSecret((p) => !p)}
                 className="shrink-0"
               >
-                {showSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showSecret ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
               </Button>
               <Button
                 variant="ghost"

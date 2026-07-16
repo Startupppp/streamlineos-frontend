@@ -6,7 +6,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { Pencil, UserX } from "lucide-react";
+import { Pencil } from "lucide-react";
+import { UserXIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { resolveImageUrl } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import {
@@ -29,6 +31,29 @@ interface HrEmployeeTableProps {
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
   onRequestDelete: (employee: Employee) => void;
+}
+
+function TerminateButton({
+  displayName,
+  onClick,
+}: {
+  displayName: string;
+  onClick: () => void;
+}) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+      aria-label={`Terminate ${displayName}`}
+      title={`Terminate ${displayName}`}
+      onClick={onClick}
+      {...hoverHandlers}
+    >
+      <UserXIcon ref={iconRef} size={14} />
+    </Button>
+  );
 }
 
 export function HrEmployeeTable({
@@ -153,16 +178,7 @@ export function HrEmployeeTable({
               </Link>
             </Button>
             {canTerminate && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
-                aria-label={`Terminate ${displayName}`}
-                title={`Terminate ${displayName}`}
-                onClick={handleTerminateClick}
-              >
-                <UserX className="h-3.5 w-3.5" />
-              </Button>
+              <TerminateButton displayName={displayName} onClick={handleTerminateClick} />
             )}
           </div>
         );

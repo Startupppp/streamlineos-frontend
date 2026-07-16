@@ -20,7 +20,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Users, CalendarCheck, Clock3, BadgeCheck } from "lucide-react";
-import { HomeIcon, PlusIcon } from "@animateicons/react/lucide";
+import { HouseIcon, PlusIcon } from "@animateicons/react/lucide";
 import { resolveImageUrl } from "@/lib/utils";
 
 import { LeaveRequestSheet } from "@/features/hr/leaves/leave-request-sheet";
@@ -104,7 +104,7 @@ export function LeavesWfhContent() {
         actions={
           <>
             <AnimatedIconButton
-              icon={HomeIcon}
+              icon={HouseIcon}
               iconSize={14}
               iconClassName="mr-1.5"
               variant="outline"

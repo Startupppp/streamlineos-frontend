@@ -1,9 +1,11 @@
-﻿"use client";
+"use client";
 
 import { useState, useCallback } from "react";
-import { ChevronLeft, ChevronRight, Wrench } from "lucide-react";
+import { Wrench } from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon } from "@animateicons/react/lucide";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   Sheet,
   SheetContent,
@@ -124,15 +126,15 @@ function ToolsHeader({
         <span className="text-[12px] font-semibold text-foreground">AI Tools</span>
       </div>
       {showClose && onClose ? (
-        <Button
+        <AnimatedIconButton
           variant="ghost"
           size="icon"
           onClick={onClose}
           aria-label="Collapse AI tools panel"
           className="h-10 w-10 text-muted-foreground hover:text-foreground"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
+          icon={ChevronRightIcon}
+          iconSize={16}
+        />
       ) : null}
     </div>
   );
@@ -230,15 +232,15 @@ export function AiToolsRail({
           transition={prefersReducedMotion ? undefined : { duration: 0.15 }}
           className="flex shrink-0 flex-col items-center gap-1 border-l border-border bg-card px-1 py-2"
         >
-          <Button
+          <AnimatedIconButton
             variant="ghost"
             size="icon"
             onClick={handleOpen}
             aria-label="Expand AI tools panel"
             className="h-10 w-10 text-muted-foreground hover:text-foreground"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
+            icon={ChevronLeftIcon}
+            iconSize={16}
+          />
           <Wrench className="h-3 w-3 text-muted-foreground" />
           <span
             className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground"

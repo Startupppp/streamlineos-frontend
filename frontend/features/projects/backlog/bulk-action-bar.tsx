@@ -143,7 +143,7 @@ export const BulkActionBar = memo(function BulkActionBar({
           onClick={onClear}
           aria-label="Clear selection"
         >
-          <X className="h-3.5 w-3.5" />
+          <XIcon size={14} />
         </Button>
       </div>
     </div>

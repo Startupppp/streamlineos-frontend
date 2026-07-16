@@ -1,7 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Edit2, Trash2 } from "lucide-react";
+import { Edit2 } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { Trash2Icon } from "@animateicons/react/lucide";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Badge } from "@/components/ui/badge";
