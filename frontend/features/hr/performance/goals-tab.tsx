@@ -40,12 +40,13 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import {
   Plus,
   Calendar,
-  MoreHorizontal,
   Trash2,
   Pencil,
   ChevronsUpDown,
   Check,
 } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { EmptyGoalsIllustration } from "@/components/illustrations";
 import {
   DropdownMenu,
@@ -337,13 +338,13 @@ export function GoalsTab() {
                     </Badge>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button
+                        <AnimatedIconButton
+                          icon={EllipsisIcon}
                           variant="ghost"
                           size="icon"
                           className="h-6 w-6 shrink-0 text-muted-foreground hover:text-foreground transition-colors duration-200"
-                        >
-                          <MoreHorizontal className="h-3.5 w-3.5" />
-                        </Button>
+                          aria-label="Goal actions"
+                        />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => handleOpenEdit(goal)}>

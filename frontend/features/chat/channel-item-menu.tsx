@@ -5,12 +5,13 @@ import {
   Bell,
   BellOff,
   EyeOff,
-  MoreHorizontal,
   Phone,
   Settings,
   Star,
   UserPlus,
 } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -177,6 +178,8 @@ export function ChannelItemMenu({
     [onOpenSettings, channel.id],
   );
 
+  const { iconRef: menuIconRef, hoverHandlers: menuHoverHandlers } = useAnimatedIcon();
+
   return (
     <>
       <DropdownMenu>
@@ -186,8 +189,9 @@ export function ChannelItemMenu({
             onClick={(event) => event.stopPropagation()}
             aria-label="Conversation options"
             className="absolute right-2 top-[11px] z-10 h-6 w-6 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-background/90 opacity-0 pointer-events-none group-hover/item:opacity-100 group-hover/item:pointer-events-auto transition-all duration-150 data-[state=open]:opacity-100 data-[state=open]:pointer-events-auto"
+            {...menuHoverHandlers}
           >
-            <MoreHorizontal className="h-3.5 w-3.5" />
+            <EllipsisIcon ref={menuIconRef} size={14} />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-64" onClick={(e) => e.stopPropagation()}>

@@ -6,11 +6,12 @@ import { useMutation } from "@tanstack/react-query";
 import {
   GitMerge,
   Link2,
-  MoreHorizontal,
   Pencil,
   Sparkles,
   Trash2,
 } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -84,14 +85,14 @@ export function ContactActionsMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
+        <AnimatedIconButton
+          icon={EllipsisIcon}
+          iconSize={16}
           variant="ghost"
           size="icon"
           className={cn("h-7 w-7", triggerClassName)}
           aria-label="More options"
-        >
-          <MoreHorizontal className="h-4 w-4" />
-        </Button>
+        />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={handleView}>

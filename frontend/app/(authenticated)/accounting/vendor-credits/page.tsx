@@ -21,7 +21,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { FinanceStatusBadge, Money } from "@/features/accounting/shared";
 import { VendorCreditFormSheet } from "@/features/accounting/purchases/vendor-credit-form-sheet";
@@ -75,9 +76,7 @@ function CreditRowActions({ credit, onViewDetail, onApply }: CreditRowActionsPro
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="w-7">
-          <MoreHorizontal className="h-4 w-4" />
-        </Button>
+        <AnimatedIconButton icon={EllipsisIcon} iconSize={16} variant="ghost" size="icon" className="w-7" aria-label="Credit actions" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-40">
         {credit.status === "DRAFT" && (

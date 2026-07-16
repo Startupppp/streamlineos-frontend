@@ -19,7 +19,6 @@ import {
   Send,
   Check,
   Ban,
-  MoreHorizontal,
   Trash2,
   IndianRupee,
   AlertCircle,

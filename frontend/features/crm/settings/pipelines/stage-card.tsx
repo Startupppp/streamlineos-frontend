@@ -2,7 +2,9 @@
 
 import { useCallback, useRef } from "react";
 import { Draggable } from "@hello-pangea/dnd";
-import { GripVertical, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { GripVertical, Pencil, Trash2 } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -131,9 +133,7 @@ export function StageCard({
           <CrmStageBadge stage={stage} size="table" />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0">
-                <MoreHorizontal className="h-3.5 w-3.5" />
-              </Button>
+              <AnimatedIconButton icon={EllipsisIcon} variant="ghost" size="icon" className="h-6 w-6 shrink-0" aria-label="Stage actions" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="text-xs">
               <DropdownMenuItem onClick={handleEditAdvanced}>

@@ -8,7 +8,6 @@ import {
   Download,
   Eye,
   Trash2,
-  MoreHorizontal,
   History,
   File,
   FileSpreadsheet,
@@ -18,8 +17,10 @@ import {
   Loader2,
   FileSignature,
 } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   DropdownMenu,
@@ -393,14 +394,13 @@ export function DocumentTable({
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild onClick={handleMenuTriggerClick}>
-                  <Button
+                  <AnimatedIconButton
+                    icon={EllipsisIcon}
                     variant="ghost"
                     size="icon"
                     className="w-7 text-muted-foreground hover:text-foreground"
                     aria-label="More options"
-                  >
-                    <MoreHorizontal className="h-3.5 w-3.5" />
-                  </Button>
+                  />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-44">
                   <DropdownMenuItem disabled={!hasFileUrl} onClick={handleView}>

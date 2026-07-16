@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Play, Pencil, Trash2, MoreHorizontal } from "lucide-react";
+import { Plus, Play, Pencil, Trash2 } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Button } from "@/components/ui/button";
@@ -80,9 +82,7 @@ function RecurringRowActions({ template, onEdit, onDelete }: RecurringRowActions
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="w-7" disabled={runNow.isPending}>
-          <MoreHorizontal className="h-4 w-4" />
-        </Button>
+        <AnimatedIconButton icon={EllipsisIcon} iconSize={16} variant="ghost" size="icon" className="w-7" disabled={runNow.isPending} aria-label="Journal actions" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-40">
         <DropdownMenuItem onClick={handleRunNow} disabled={runNow.isPending}>

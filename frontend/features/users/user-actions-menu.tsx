@@ -12,7 +12,9 @@ import { useUpdateUserStatus, useDeleteUser, useResetUserPassword } from "@/hook
 import type { User } from "@/hooks/api/users";
 import { getApiError } from "@/lib/api-client";
 import { toast } from "sonner";
-import { MoreHorizontal, ShieldCheck, ShieldOff, UserX, KeyRound, Trash2 } from "lucide-react";
+import { ShieldCheck, ShieldOff, UserX, KeyRound, Trash2 } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 
 interface UserActionsMenuProps {
   user: User;
@@ -64,10 +66,9 @@ export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" disabled={isLoading}>
-          <MoreHorizontal className="h-4 w-4" />
+        <AnimatedIconButton icon={EllipsisIcon} iconSize={16} variant="ghost" size="sm" className="h-7 w-7 p-0" disabled={isLoading}>
           <span className="sr-only">Actions</span>
-        </Button>
+        </AnimatedIconButton>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuItem onClick={onView}>View details</DropdownMenuItem>

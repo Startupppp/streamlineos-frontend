@@ -2,7 +2,9 @@
 
 import { memo, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, TrendingDown, CheckCircle2, MoreHorizontal } from "lucide-react";
+import { AlertTriangle, TrendingDown, CheckCircle2 } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -171,14 +173,13 @@ export const StockLevelsTable = memo(function StockLevelsTable({ rows, onShowAva
       cell: (row) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button
+            <AnimatedIconButton
+              icon={EllipsisIcon}
               variant="ghost"
               size="icon"
               className="h-6 w-6"
               aria-label={`Actions for ${row.productName}`}
-            >
-              <MoreHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
-            </Button>
+            />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             {row.variantId && onShowAvailability && (

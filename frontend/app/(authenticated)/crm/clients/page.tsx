@@ -4,7 +4,9 @@ import { useState, useCallback, useTransition, useEffect } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useReducedMotion, motion } from "framer-motion";
-import { MoreHorizontal, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SearchInput } from "@/components/ui/search-input";
@@ -74,15 +76,14 @@ function ClientRowActions({ account }: { account: ClientAccount }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
+        <AnimatedIconButton
+          icon={EllipsisIcon}
           variant="ghost"
           size="icon"
           className="w-7"
           onClick={handleTriggerClick}
           aria-label="Row actions"
-        >
-          <MoreHorizontal className="h-3.5 w-3.5" />
-        </Button>
+        />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem asChild>

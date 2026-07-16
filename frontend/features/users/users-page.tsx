@@ -52,10 +52,11 @@ import { Users,
   RefreshCw,
   UserCog,
   UserPlus,
-  MoreHorizontal,
   Download,
   Upload,
 } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { formatDistanceToNow } from "date-fns";
 
 function getInitials(name: string | null, email: string): string {
@@ -382,10 +383,9 @@ export function UsersPage() {
           <>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <MoreHorizontal className="h-3.5 w-3.5 mr-1.5" />
+                <AnimatedIconButton icon={EllipsisIcon} iconClassName="mr-1.5" variant="outline" size="sm">
                   More
-                </Button>
+                </AnimatedIconButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-44">
                 <DropdownMenuItem onClick={handleExport} disabled={isExporting}>

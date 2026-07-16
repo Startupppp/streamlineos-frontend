@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plus, MoreHorizontal } from "lucide-react";
+import { Plus } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
@@ -101,9 +103,7 @@ function CreditNoteRowActions({ credit, onApply, canManage }: RowActionsProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="w-7">
-          <MoreHorizontal className="h-4 w-4" />
-        </Button>
+        <AnimatedIconButton icon={EllipsisIcon} iconSize={16} variant="ghost" size="icon" className="w-7" aria-label="Credit note actions" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-44">
         {canManage && credit.status === "DRAFT" && (

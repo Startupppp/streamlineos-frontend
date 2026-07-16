@@ -10,7 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Loader2, Plus, ExternalLink, MoreHorizontal, Trash2 } from "lucide-react";
+import { Loader2, Plus, ExternalLink, Trash2 } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useJobBoardPostings,
@@ -140,9 +142,7 @@ export function ExternalBoardsSheet({ jobId, onClose }: ExternalBoardsSheetProps
                     )}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-6 w-6">
-                          <MoreHorizontal className="h-3.5 w-3.5" />
-                        </Button>
+                        <AnimatedIconButton icon={EllipsisIcon} variant="ghost" size="icon" className="h-6 w-6" aria-label="Posting actions" />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         {STATUS_OPTIONS.filter((s) => s !== posting.status).map((s) => (

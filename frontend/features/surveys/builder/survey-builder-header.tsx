@@ -1,6 +1,8 @@
 import { useCallback } from "react";
 import { toast } from "sonner";
-import { MoreHorizontal, Send, Pause, Lock, Archive, Copy, Users, Radio } from "lucide-react";
+import { Send, Pause, Lock, Archive, Copy, Users, Radio } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -118,9 +120,7 @@ export function SurveyBuilderHeader({ survey }: { survey: SurveyForm }) {
         )}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon" className="h-8 w-8" disabled={isBusy}>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
+            <AnimatedIconButton icon={EllipsisIcon} iconSize={16} variant="outline" size="icon" className="h-8 w-8" disabled={isBusy} aria-label="Survey actions" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={handleDuplicate}>

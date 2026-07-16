@@ -3,7 +3,9 @@
 import { memo, useState, useTransition, type ChangeEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Plus, MoreHorizontal, Store } from "lucide-react";
+import { Plus, Store } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
@@ -134,9 +136,7 @@ const PoRowActions = memo(function PoRowActions({ po }: { po: PurchaseOrderSumma
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="h-6 w-6 p-0" disabled={isPending}>
-            <MoreHorizontal className="h-3.5 w-3.5" />
-          </Button>
+          <AnimatedIconButton icon={EllipsisIcon} variant="ghost" size="sm" className="h-6 w-6 p-0" disabled={isPending} aria-label="Order actions" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="text-xs">
           {canApprove && (

@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { Plus, Calculator, LayoutTemplate, ChevronRight, MoreHorizontal, Pencil, Power, Trash2 } from "lucide-react";
+import { Plus, Calculator, LayoutTemplate, ChevronRight, Pencil, Power, Trash2 } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
@@ -144,9 +146,7 @@ function CoaActionsCell({ node, onEdit }: CoaActionsCellProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-6 w-6" disabled={isPending}>
-          <MoreHorizontal className="h-3.5 w-3.5" />
-        </Button>
+        <AnimatedIconButton icon={EllipsisIcon} variant="ghost" size="icon" className="h-6 w-6" disabled={isPending} aria-label="Account actions" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-40">
         <DropdownMenuItem onClick={handleEdit}>

@@ -24,8 +24,9 @@ import { RefreshCw,
   ShieldCheck,
   ShieldOff,
   Trash2,
-  MoreHorizontal,
 } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -85,15 +86,16 @@ function SuspendedActionsMenu({ user, onView }: SuspendedActionsMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
+        <AnimatedIconButton
+          icon={EllipsisIcon}
+          iconSize={16}
           variant="ghost"
           size="sm"
           className="h-7 w-7 p-0"
           disabled={isUpdating || isDeleting}
         >
-          <MoreHorizontal className="h-4 w-4" />
           <span className="sr-only">Actions</span>
-        </Button>
+        </AnimatedIconButton>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-44">
         <DropdownMenuItem onClick={onView}>View details</DropdownMenuItem>

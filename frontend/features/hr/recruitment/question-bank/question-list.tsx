@@ -12,7 +12,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { MoreHorizontal, Trash2, BookOpen, Pencil } from "lucide-react";
+import { Trash2, BookOpen, Pencil } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import type { InterviewQuestion } from "@/hooks/api/hr/recruitment";
 import { QuestionFormDialog } from "./question-form-dialog";
@@ -122,9 +124,7 @@ export function QuestionList({
       cell: (q) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
+            <AnimatedIconButton icon={EllipsisIcon} iconSize={16} variant="ghost" size="icon" aria-label="Question actions" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <QuestionFormDialog mode="edit" question={q} roleOptions={roleOptions}>

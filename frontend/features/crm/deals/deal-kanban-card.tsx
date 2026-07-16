@@ -2,7 +2,9 @@
 
 import { useCallback, memo, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { User, Calendar, MoreHorizontal, Trash2 } from "lucide-react";
+import { User, Calendar, Trash2 } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -84,9 +86,7 @@ export const DealKanbanCard = memo(function DealKanbanCard({ deal, onStageChange
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-6 w-6 -mr-1 -mt-0.5" aria-label="More options">
-                <MoreHorizontal className="h-3.5 w-3.5" />
-              </Button>
+              <AnimatedIconButton icon={EllipsisIcon} variant="ghost" size="icon" className="h-6 w-6 -mr-1 -mt-0.5" aria-label="More options" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {dealStages.filter(s => s.key !== deal.stage).map(s => {

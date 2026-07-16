@@ -2,7 +2,9 @@
 
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, Send, CheckCircle2, XCircle, Trash2, MoreHorizontal } from "lucide-react";
+import { Eye, Send, CheckCircle2, XCircle, Trash2 } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -53,14 +55,14 @@ export function QuoteRowActions({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
+        <AnimatedIconButton
+          icon={EllipsisIcon}
+          iconSize={16}
           variant="ghost"
           size="icon"
           className="w-7"
           aria-label="More options"
-        >
-          <MoreHorizontal className="h-4 w-4" />
-        </Button>
+        />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={handleView}>

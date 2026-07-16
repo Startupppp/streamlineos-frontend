@@ -26,9 +26,11 @@ import { resolveImageUrl, cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Separator } from "@/components/ui/separator";
 import {
-  Plus, MoreHorizontal, Trash2, Pencil,
+  Plus, Trash2, Pencil,
   CheckCircle2, Calendar, ChevronsUpDown, Check,
 } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -231,7 +233,7 @@ export function PIPTab() {
                     </Badge>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="w-7"><MoreHorizontal className="h-3.5 w-3.5" /></Button>
+                        <AnimatedIconButton icon={EllipsisIcon} variant="ghost" size="icon" className="w-7" aria-label="PIP actions" />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => handleOpenEdit(pip)}>

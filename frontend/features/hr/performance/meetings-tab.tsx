@@ -26,7 +26,9 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { resolveImageUrl, cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Plus, Clock, MoreHorizontal, Trash2, ChevronsUpDown, Check } from "lucide-react";
+import { Plus, Clock, Trash2, ChevronsUpDown, Check } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -164,7 +166,7 @@ export function MeetingsTab() {
                   {m.status}
                 </Badge>
                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="w-7"><MoreHorizontal className="h-3.5 w-3.5" /></Button></DropdownMenuTrigger>
+                  <DropdownMenuTrigger asChild><AnimatedIconButton icon={EllipsisIcon} variant="ghost" size="icon" className="w-7" aria-label="Meeting actions" /></DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     {m.status === "SCHEDULED" && <DropdownMenuItem onClick={() => handleStatusChange(m.id, "COMPLETED")}>Mark Completed</DropdownMenuItem>}
                     {m.status === "SCHEDULED" && <DropdownMenuItem onClick={() => handleStatusChange(m.id, "CANCELLED")}>Cancel</DropdownMenuItem>}

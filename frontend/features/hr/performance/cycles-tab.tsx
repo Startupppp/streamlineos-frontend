@@ -22,7 +22,9 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Plus, MoreHorizontal, Trash2, Pencil, Calendar, CheckCircle, Archive } from "lucide-react";
+import { Plus, Trash2, Pencil, Calendar, CheckCircle, Archive } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -243,9 +245,7 @@ export function CyclesTab() {
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="w-7 shrink-0 text-muted-foreground hover:text-foreground transition-colors duration-200">
-                          <MoreHorizontal className="h-3.5 w-3.5" />
-                        </Button>
+                        <AnimatedIconButton icon={EllipsisIcon} variant="ghost" size="icon" className="w-7 shrink-0 text-muted-foreground hover:text-foreground transition-colors duration-200" aria-label="Cycle actions" />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => openEdit(cycle)}>

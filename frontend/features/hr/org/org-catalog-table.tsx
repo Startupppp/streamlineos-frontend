@@ -8,7 +8,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { MoreHorizontal, Pencil, Trash2, Plus } from "lucide-react";
+import { Pencil, Trash2, Plus } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -271,13 +273,13 @@ export function OrgCatalogTable<T extends CatalogItem>({
                   {canManage && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button
+                        <AnimatedIconButton
+                          icon={EllipsisIcon}
                           variant="ghost"
                           size="icon"
                           className="w-7 shrink-0"
-                        >
-                          <MoreHorizontal className="h-3.5 w-3.5" />
-                        </Button>
+                          aria-label="Actions"
+                        />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-32">
                         <DropdownMenuItem

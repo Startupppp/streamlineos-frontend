@@ -5,7 +5,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format, isAfter, addDays } from "date-fns";
-import { Plus, Copy, MoreHorizontal, RefreshCw, Tag, CheckCircle2, TrendingUp, Clock } from "lucide-react";
+import { Plus, Copy, RefreshCw, Tag, CheckCircle2, TrendingUp, Clock } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -430,9 +432,7 @@ export default function CouponsPage() {
       cell: (coupon) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="w-7">
-              <MoreHorizontal className="h-3.5 w-3.5" />
-            </Button>
+            <AnimatedIconButton icon={EllipsisIcon} variant="ghost" size="icon" className="w-7" aria-label="Coupon actions" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => handleCopyCode(coupon.code)}>

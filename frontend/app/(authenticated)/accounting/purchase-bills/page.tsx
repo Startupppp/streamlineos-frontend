@@ -3,7 +3,9 @@
 import { useState, type ChangeEvent } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import Link from "next/link";
-import { Plus, MoreHorizontal } from "lucide-react";
+import { Plus } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SearchInput } from "@/components/ui/search-input";
@@ -128,9 +130,7 @@ function BillRowActions({ bill, canApprove }: BillRowActionsProps) {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="w-7">
-            <MoreHorizontal className="h-3.5 w-3.5" />
-          </Button>
+          <AnimatedIconButton icon={EllipsisIcon} variant="ghost" size="icon" className="w-7" aria-label="Bill actions" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-44">
           {showSubmit && (

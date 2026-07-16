@@ -3,7 +3,9 @@
 import { useState, useCallback } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, MoreHorizontal, Play, Pause, Trash2, History } from "lucide-react";
+import { Plus, Play, Pause, Trash2, History } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -127,9 +129,7 @@ function buildColumns(
           <div onClick={handleActionsClick}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="w-7 text-muted-foreground hover:text-foreground">
-                  <MoreHorizontal className="h-3.5 w-3.5" />
-                </Button>
+                <AnimatedIconButton icon={EllipsisIcon} variant="ghost" size="icon" className="w-7 text-muted-foreground hover:text-foreground" aria-label="Rule actions" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-44">
                 <DropdownMenuItem onClick={handleEdit}>

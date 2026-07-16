@@ -4,7 +4,9 @@ import { useCallback } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import { format, isToday, isPast } from "date-fns";
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
@@ -64,6 +66,7 @@ export function TaskRow({
   index,
 }: TaskRowProps) {
   const shouldReduceMotion = useReducedMotion();
+  const { iconRef: menuIconRef, hoverHandlers: menuHoverHandlers } = useAnimatedIcon();
   const isCompleted = task.status === "completed" || isOptimisticallyCompleted;
   const isOverdue =
     task.dueDate != null &&
@@ -148,8 +151,9 @@ export function TaskRow({
           <button
             aria-label="Task actions"
             className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-muted/50"
+            {...menuHoverHandlers}
           >
-            <MoreHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
+            <EllipsisIcon ref={menuIconRef} size={14} className="text-muted-foreground" />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-36">

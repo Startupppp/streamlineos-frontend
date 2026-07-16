@@ -4,6 +4,7 @@ import { useState, memo, useCallback } from "react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -12,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useHrHolidaysForYear, useAddLegacyHoliday, useDeleteLegacyHoliday, useUpdateLegacyHoliday } from "@/hooks/api/hr";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
-import { Loader2, Pencil, PartyPopper } from "lucide-react";
+import { Pencil, PartyPopper } from "lucide-react";
 import { PlusIcon, Trash2Icon, CheckIcon, XIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 
@@ -207,7 +208,7 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
                 placeholder="e.g. Republic Day"
                 value={name}
                 onChange={handleNameChange}
-                className="bg-background h-8 text-sm"
+                className="bg-card"
               />
             </div>
             <div className="space-y-2">
@@ -222,13 +223,13 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
               placeholder="Optional note for notification"
               value={message}
               onChange={handleMessageChange}
-              className="bg-background h-8 text-sm"
+              className="bg-card"
             />
           </div>
-          <Button type="submit" disabled={addMutation.isPending} size="sm" className="gap-1.5 duration-200">
-            {addMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+          <LoadingButton type="submit" isPending={addMutation.isPending} size="sm" className="gap-1.5 duration-200">
+            <PlusIcon size={14} />
             Add Holiday
-          </Button>
+          </LoadingButton>
         </form>
 
         <div className="space-y-2">
@@ -268,20 +269,16 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
                         className="text-sm"
                       />
                       <div className="flex gap-2">
-                        <Button
+                        <LoadingButton
                           type="button"
                           size="sm"
                           className="text-xs px-3 gap-1 duration-200"
                           onClick={handleEditSave}
-                          disabled={updateMutation.isPending}
+                          isPending={updateMutation.isPending}
                         >
-                          {updateMutation.isPending ? (
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                          ) : (
-                            <Check className="h-3 w-3" />
-                          )}
+                          <CheckIcon size={12} />
                           Save
-                        </Button>
+                        </LoadingButton>
                         <Button
                           type="button"
                           variant="outline"
@@ -290,7 +287,7 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
                           onClick={handleEditCancel}
                           disabled={updateMutation.isPending}
                         >
-                          <X className="h-3 w-3" />
+                          <XIcon size={12} />
                           Cancel
                         </Button>
                       </div>
@@ -325,7 +322,7 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
                           disabled={deleteMutation.isPending || updateMutation.isPending}
                           aria-label={`Remove ${h.name}`}
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
+                          <Trash2Icon size={14} />
                         </Button>
                       </div>
                     </>

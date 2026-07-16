@@ -4,7 +4,7 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Trash2Icon } from "@animateicons/react/lucide";
+import { Trash2Icon, PlusIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import {
   Dialog,
@@ -90,9 +90,6 @@ function AllocationRow({ index, register, onRemove }: AllocationRowProps) {
     </div>
   );
 }
-
-import { PlusIcon } from "@animateicons/react/lucide";
-import { Plus } from "lucide-react";
 
 interface AddAllocationButtonProps {
   onClick: () => void;
@@ -293,16 +290,7 @@ export function RecordPaymentDialog({
             </div>
           )}
 
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="text-xs gap-1"
-            onClick={handleAddAllocation}
-          >
-            <Plus className="h-3 w-3" />
-            Add allocation
-          </Button>
+          <AddAllocationButton onClick={handleAddAllocation} />
         </form>
 
         <DialogFooter>
