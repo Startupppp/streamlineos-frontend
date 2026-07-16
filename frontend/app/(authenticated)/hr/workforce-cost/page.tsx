@@ -32,7 +32,7 @@ export default function WorkforceCostPage() {
 
   if (!canView) {
     return (
-      <PageWrapper title="Workforce Costing" subtitle="Cost analytics by department and location">
+      <PageWrapper title="Workforce Costing" subtitle="Cost analytics by department and location" variant="display">
         <p className="text-sm text-muted-foreground">You do not have permission to view workforce cost data.</p>
       </PageWrapper>
     );
@@ -42,7 +42,7 @@ export default function WorkforceCostPage() {
     <PageWrapper
         title="Workforce Costing"
         subtitle="Real-time cost breakdown by department and location"
-      >
+ variant="display">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}

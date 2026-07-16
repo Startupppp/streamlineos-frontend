@@ -232,7 +232,7 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
         onSubmit={form.handleSubmit(onSubmit)}
         className="flex flex-col flex-1 min-h-0"
       >
-        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden flex flex-col flex-1 min-h-0">
+        <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden flex flex-col flex-1 min-h-0">
           <ScrollArea hideScrollbar className="flex-1 min-h-0">
             <div className="p-5">
               <PersonalInfoSection />

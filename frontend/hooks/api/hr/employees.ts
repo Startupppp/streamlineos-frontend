@@ -12,6 +12,8 @@ import type {
   CreateDepartmentInput,
   UpdateProfileInput,
   OnboardEmployeeInput,
+  BulkOnboardEmployeeRow,
+  BulkOnboardResult,
 } from "@/types/hr";
 import type {
   HrEmployment,
@@ -38,17 +40,81 @@ export function useCreateDepartment() {
   });
 }
 
-export function useHrEmployees(params?: {
+export type HrEmployeesParams = {
   page?: number;
   limit?: number;
   search?: string;
-}) {
+  departmentId?: number;
+  isActive?: "true" | "false" | "all";
+};
+
+/**
+ * Normalize any employees API payload to PaginatedEmployees.
+ * Backend always returns `{ data, pagination }`; older clients may still see arrays.
+ */
+export function normalizeEmployeesResponse(
+  res: Employee[] | PaginatedEmployees | null | undefined,
+  fallbackLimit = 20,
+): PaginatedEmployees {
+  if (!res) {
+    return {
+      data: [],
+      pagination: { page: 1, limit: fallbackLimit, total: 0, totalPages: 0 },
+    };
+  }
+  if (Array.isArray(res)) {
+    return {
+      data: res,
+      pagination: {
+        page: 1,
+        limit: res.length || fallbackLimit,
+        total: res.length,
+        totalPages: res.length > 0 ? 1 : 0,
+      },
+    };
+  }
+  const data = Array.isArray(res.data) ? res.data : [];
+  const pagination = res.pagination ?? {
+    page: 1,
+    limit: data.length || fallbackLimit,
+    total: data.length,
+    totalPages: data.length > 0 ? 1 : 0,
+  };
+  return { data, pagination };
+}
+
+/** Safe list extract for pickers / legacy call sites. */
+export function unwrapEmployees(
+  res: Employee[] | PaginatedEmployees | null | undefined,
+): Employee[] {
+  return normalizeEmployeesResponse(res).data;
+}
+
+export function useHrEmployees(params?: HrEmployeesParams) {
+  const limit = params?.limit ?? 20;
   return useQuery({
     queryKey: queryKeys.hr.employees(params),
-    queryFn: () =>
-      apiClient.get<Employee[] | PaginatedEmployees>("/hr/employees", params as Record<string, unknown>),
+    queryFn: async (): Promise<PaginatedEmployees> => {
+      const res = await apiClient.get<Employee[] | PaginatedEmployees>(
+        "/hr/employees",
+        params as Record<string, unknown>,
+      );
+      return normalizeEmployeesResponse(res, limit);
+    },
     staleTime: 2 * 60_000,
   });
+}
+
+/**
+ * Convenience for employee pickers (selects, assign dialogs).
+ * Fetches a large page and always returns a flat Employee[].
+ */
+export function useHrEmployeeOptions(params?: Omit<HrEmployeesParams, "page">) {
+  const query = useHrEmployees({ limit: 200, isActive: "true", ...params, page: 1 });
+  return {
+    ...query,
+    employees: unwrapEmployees(query.data),
+  };
 }
 
 export function useUpdateProfile() {
@@ -115,6 +181,17 @@ export function useOnboardEmployee() {
     mutationKey: ["hr", "employee", "onboard"],
     mutationFn: (data: OnboardEmployeeInput) =>
       apiClient.post<{ success: boolean; userId: string }>("/hr/employees/onboard", data),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: queryKeys.hr.all }),
+  });
+}
+
+export function useBulkOnboardEmployees() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["hr", "employee", "onboard", "bulk"],
+    mutationFn: (employees: BulkOnboardEmployeeRow[]) =>
+      apiClient.post<BulkOnboardResult>("/hr/employees/onboard/bulk", { employees }),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: queryKeys.hr.all }),
   });

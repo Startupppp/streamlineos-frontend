@@ -183,7 +183,7 @@ function DirectReportsSection({ employeeId }: { employeeId: string }) {
 
   if (isLoading) {
     return (
-      <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+      <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-3">
             <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -205,7 +205,7 @@ function DirectReportsSection({ employeeId }: { employeeId: string }) {
   if (!reports || reports.length === 0) return null;
 
   return (
-    <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+    <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
       <CardContent className="p-4">
         <div className="flex items-center gap-2 mb-3">
           <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -256,7 +256,7 @@ function ManagerScorecardSection({ employeeId }: { employeeId: string }) {
   if (!scorecard || scorecard.teamSize === 0) return null;
 
   return (
-    <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+    <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
       <CardContent className="p-4">
         <div className="flex items-center gap-2 mb-4">
           <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -419,7 +419,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
       >
         <Card
           className={cn(
-            "rounded-2xl border border-border bg-card shadow-sm overflow-hidden shrink-0 border-l-4",
+            "rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden shrink-0 border-l-4",
             isAlreadyTerminated ? "border-l-rose-500" : "border-l-emerald-500",
           )}
         >
@@ -632,7 +632,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
             <ScrollArea hideScrollbar className="min-h-0 flex-1">
               <div className="overscroll-contain space-y-3 pb-4">
               {skillsList.length > 0 && (
-                <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+                <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-2 mb-3">
                       <div className="w-7 rounded-lg bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center">
@@ -661,7 +661,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
               <DirectReportsSection employeeId={employee.id} />
 
               <div className="grid gap-3 lg:grid-cols-2">
-                <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+                <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-2 mb-3">
                       <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -680,7 +680,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                     />
                   </CardContent>
                 </Card>
-                <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+                <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-2 mb-3">
                       <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">

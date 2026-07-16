@@ -85,7 +85,7 @@ function ProbationRow({ review, onExtend, onConfirm }: ProbationRowProps) {
   const handleConfirm = useCallback(() => onConfirm(review), [review, onConfirm]);
 
   return (
-    <Card className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+    <Card className="rounded-2xl border border-border/70 bg-card/90 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_10px_28px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
       <CardContent className="p-4 flex items-center gap-4">
         <div className="w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
           <span className="text-[10px] font-bold text-primary">
@@ -175,7 +175,7 @@ export default function ProbationPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Probation Reviews" subtitle="Employees due for review or confirmation" backHref="/hr/onboarding">
+      <PageWrapper title="Probation Reviews" subtitle="Employees due for review or confirmation" backHref="/hr/onboarding" variant="display">
         <ProbationSkeletons />
       </PageWrapper>
     );
@@ -183,7 +183,7 @@ export default function ProbationPage() {
 
   if (isError) {
     return (
-      <PageWrapper title="Probation Reviews" subtitle="Employees due for review or confirmation" backHref="/hr/onboarding">
+      <PageWrapper title="Probation Reviews" subtitle="Employees due for review or confirmation" backHref="/hr/onboarding" variant="display">
         <EmptyState
           illustrationPreset="alert"
           title="Failed to load probation reviews"

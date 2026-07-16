@@ -176,7 +176,7 @@ export default function RecruitersPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Recruiters" subtitle="Team members involved in hiring">
+      <PageWrapper title="Recruiters" subtitle="Team members involved in hiring" variant="display">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-44 rounded-xl" />)}
         </div>
@@ -188,7 +188,7 @@ export default function RecruitersPage() {
     <PageWrapper
       title="Recruiters"
       subtitle="HR team members with active job assignments and activity tracking"
-    >
+ variant="display">
       {recruiters.length === 0 ? (
         <RecruitmentEmptyState
           illustration={<EmptyTeamIllustration />}

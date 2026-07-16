@@ -186,7 +186,7 @@ export default function LearningAnalyticsPage() {
       <PageWrapper
         title="Learning Analytics"
         subtitle="Track your learning progress and course completion"
-      >
+ variant="display">
         <EmptyState
           illustrationPreset="alert"
           title="Failed to load analytics"

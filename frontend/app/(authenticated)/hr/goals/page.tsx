@@ -279,7 +279,7 @@ export default function GoalsPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Goals & OKRs" subtitle="Track your personal and team goals">
+      <PageWrapper title="Goals & OKRs" subtitle="Track your personal and team goals" variant="display">
         <LoadingState variant="cards" rows={9} />
       </PageWrapper>
     );
@@ -287,7 +287,7 @@ export default function GoalsPage() {
 
   if (isError) {
     return (
-      <PageWrapper title="Goals & OKRs" subtitle="Track your personal and team goals">
+      <PageWrapper title="Goals & OKRs" subtitle="Track your personal and team goals" variant="display">
         <ErrorState
           title="Failed to load goals"
           description="We couldn't load your goals. Please try again."

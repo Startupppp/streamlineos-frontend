@@ -182,7 +182,7 @@ export default function HrPoliciesPage() {
 
   if (!canView) {
     return (
-      <PageWrapper title="HR Policies" subtitle="Configure HR rules and compliance policies">
+      <PageWrapper title="HR Policies" subtitle="Configure HR rules and compliance policies" variant="display">
         <NoPermissionState
           permission="hr:policies:view"
           title="Access Restricted"

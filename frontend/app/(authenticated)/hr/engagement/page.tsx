@@ -340,7 +340,7 @@ export default function EngagementPage() {
     <PageWrapper
       title="Employee Engagement"
       subtitle="Recognition, mood, communities, and culture"
-    >
+ variant="display">
       <div className="space-y-4">
         <div className="flex items-center gap-1 flex-wrap">
           {TABS.map((tab) => (

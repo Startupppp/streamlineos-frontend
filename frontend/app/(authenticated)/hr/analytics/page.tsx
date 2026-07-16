@@ -200,7 +200,7 @@ function AnalyticsContent() {
       <PageWrapper
         title="HR Analytics"
         subtitle="Workforce insights and operational metrics"
-      >
+ variant="display">
         <EmptyState
           illustrationPreset="alert"
           title="Failed to load analytics"
@@ -216,7 +216,7 @@ function AnalyticsContent() {
     <PageWrapper
       title="HR Analytics"
       subtitle="Workforce insights and operational metrics"
-    >
+ variant="display">
       <div className="flex min-h-0 flex-1 flex-col gap-4">
         <ExecutiveKPIs
           totalEmployees={totalEmployees}
@@ -246,7 +246,7 @@ function AnalyticsContent() {
             filters={<DateRangeSelector value={dateRange} onChange={setDateRange} />}
           />
 
-          <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden flex min-h-0 flex-1 flex-col">
+          <div className="rounded-2xl border border-border/70 bg-card/90 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_10px_28px_-14px_rgba(15,23,42,0.12)] overflow-hidden flex min-h-0 flex-1 flex-col">
             <div className="flex items-center gap-2 px-4 py-3 border-b border-border shrink-0">
               <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
                 <BarChart3

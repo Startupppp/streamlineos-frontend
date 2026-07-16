@@ -29,7 +29,8 @@ import {
 } from "@/components/ui/command";
 import { DatePicker } from "@/components/ui/date-picker";
 import { toast } from "sonner";
-import { useHrEmployees } from "@/hooks/api/hr";
+import { useHrEmployees,
+  unwrapEmployees} from "@/hooks/api/hr";
 import type { Employee, PaginatedEmployees } from "@/types/hr";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -167,9 +168,7 @@ export function AttendanceEmailDialog() {
   const { data: employeesData } = useHrEmployees({ limit: 200 });
   const allUsers = useMemo<UserOption[]>(() => {
     const raw = employeesData
-      ? Array.isArray(employeesData)
-        ? (employeesData as Employee[])
-        : ((employeesData as PaginatedEmployees).data ?? [])
+      ? unwrapEmployees(employeesData)
       : [];
     return (raw as Employee[])
       .filter((e) => e.isActive && e.email)

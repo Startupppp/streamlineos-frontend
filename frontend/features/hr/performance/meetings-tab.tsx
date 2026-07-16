@@ -7,6 +7,7 @@ import {
   useUpdateOneOnOne,
   useDeleteOneOnOne,
   useHrEmployees,
+  unwrapEmployees,
 } from "@/hooks/api/hr";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,7 +37,7 @@ import type { Employee, OneOnOneMeeting, MeetingStatus } from "@/types/hr";
 
 export function MeetingsTab() {
   const { data: meetings, isLoading } = useOneOnOneMeetings();
-  const { data: employeesRaw } = useHrEmployees();
+  const { data: employeesRaw } = useHrEmployees({ limit: 200 });
   const createMeeting = useCreateOneOnOne();
   const updateMeeting = useUpdateOneOnOne();
   const deleteMeeting = useDeleteOneOnOne();
@@ -50,8 +51,8 @@ export function MeetingsTab() {
   const [agenda, setAgenda] = useState("");
 
   const employees = useMemo(
-    () => ((Array.isArray(employeesRaw) ? employeesRaw : (employeesRaw as { data?: Employee[] })?.data ?? []) as Employee[]).filter((e) => !!e.id),
-    [employeesRaw]
+    () => unwrapEmployees(employeesRaw).filter((e) => !!e.id),
+    [employeesRaw],
   );
 
   const resetForm = useCallback(() => {

@@ -394,8 +394,7 @@ function AnnouncementsContent() {
           <Button
             size="sm"
             className="gap-1.5"
-            onClick={handleNewClick}
-          >
+            onClick={handleNewClick}>
             <Plus className="h-3.5 w-3.5" />
             New Announcement
           </Button>

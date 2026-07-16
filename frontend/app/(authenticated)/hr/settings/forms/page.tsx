@@ -42,7 +42,7 @@ export default function HrFormsSettingsPage() {
 
   if (!canView) {
     return (
-      <PageWrapper title="HR Forms" subtitle="Build forms for requests, intake, and approvals">
+      <PageWrapper title="HR Forms" subtitle="Build forms for requests, intake, and approvals" variant="display">
         <NoPermissionState
           permission="hr:forms:view"
           title="Access Restricted"

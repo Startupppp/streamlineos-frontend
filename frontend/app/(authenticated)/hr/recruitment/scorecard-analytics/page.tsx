@@ -67,7 +67,7 @@ export default function ScorecardAnalyticsPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Scorecard Analytics" subtitle="Interviewer performance and scoring patterns">
+      <PageWrapper title="Scorecard Analytics" subtitle="Interviewer performance and scoring patterns" variant="display">
         <div className="grid gap-4 sm:grid-cols-3 mb-4">
           <Skeleton className="h-24 rounded-xl" />
           <Skeleton className="h-24 rounded-xl" />

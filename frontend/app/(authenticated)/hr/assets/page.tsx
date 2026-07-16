@@ -50,6 +50,7 @@ import {
   useUpdateAsset,
   useAssignAsset,
   useHrEmployees,
+  unwrapEmployees,
 } from "@/hooks/api";
 import { AccessRequestsTab } from "@/features/hr/assets/access-requests-tab";
 import { useCan } from "@/hooks/api/access";
@@ -535,7 +536,7 @@ export default function HrAssetsPage() {
   const { data: employeesRaw } = useHrEmployees(undefined);
 
   const employees = useMemo(
-    () => (Array.isArray(employeesRaw) ? employeesRaw : []) as Employee[],
+    () => unwrapEmployees(employeesRaw),
     [employeesRaw],
   );
   const employeeOptions = buildEmployeeOptions(employees);
@@ -923,7 +924,7 @@ export default function HrAssetsPage() {
         </StatCardGrid>
 
         {isError ? (
-          <div className="flex flex-col items-center justify-center rounded-2xl border border-border bg-card shadow-sm py-16 gap-4">
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] py-16 gap-4">
             <p className="text-sm font-semibold text-foreground">Failed to load assets</p>
             <p className="text-xs text-muted-foreground">Something went wrong.</p>
             <Button variant="outline" size="sm" onClick={handleRetry}>Try Again</Button>
@@ -960,7 +961,7 @@ export default function HrAssetsPage() {
           />
         )}
 
-        <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+        <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
           <CardContent className="p-4">
             <AccessRequestsTab employees={employees} canManage={canManageAssets} />
           </CardContent>

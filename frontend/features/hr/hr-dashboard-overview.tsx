@@ -45,10 +45,10 @@ function LeaveCalendarWidget() {
   );
 
   return (
-    <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden flex flex-col">
-      <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/60 shrink-0">
+    <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden flex flex-col">
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/50 shrink-0 bg-gradient-to-r from-amber-500/[0.04] to-transparent">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 rounded-lg bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center shrink-0">
+          <div className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center shrink-0">
             <CalendarOff className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
           </div>
           <div>
@@ -135,10 +135,10 @@ function OnboardingStatusWidget() {
   const { data, isLoading } = useHrOnboardingStatus();
 
   return (
-    <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden flex flex-col">
-      <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/60 shrink-0">
+    <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden flex flex-col">
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/50 shrink-0 bg-gradient-to-r from-emerald-500/[0.04] to-transparent">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/40 flex items-center justify-center shrink-0">
+          <div className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950/40 flex items-center justify-center shrink-0">
             <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div>
@@ -294,7 +294,7 @@ const METRIC_CARDS = [
 export function HrDashboardOverview() {
   const { data: session } = useSession();
   const role = session?.user?.role;
-  const { data: metrics, isLoading } = useHrDashboardMetrics();
+  const { data: metrics, isLoading, isError, refetch } = useHrDashboardMetrics();
 
   if (!role || !HR_ADMIN_ROLES.includes(role)) return null;
 
@@ -303,31 +303,44 @@ export function HrDashboardOverview() {
     : 0;
 
   return (
-    <div className="mb-6 space-y-3">
-      <StatCardGrid cols={4}>
-        {METRIC_CARDS.map(({ key, label, icon, tone, href }) => {
-          const value = metrics?.[key] ?? 0;
-          const hint =
-            key === "activeEmployees" && !isLoading
-              ? `${activeRate}% rate`
-              : key === "pendingLeaveRequests" && !isLoading && value > 0
-                ? "Needs attention"
-                : undefined;
+    <div className="space-y-4">
+      {isError ? (
+        <div className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 flex items-center justify-between gap-3">
+          <p className="text-xs text-destructive">Metrics couldn’t load.</p>
+          <button
+            type="button"
+            onClick={() => void refetch()}
+            className="text-xs font-medium text-destructive underline-offset-2 hover:underline"
+          >
+            Retry
+          </button>
+        </div>
+      ) : (
+        <StatCardGrid cols={4}>
+          {METRIC_CARDS.map(({ key, label, icon, tone, href }) => {
+            const value = metrics?.[key] ?? 0;
+            const hint =
+              key === "activeEmployees" && !isLoading
+                ? `${activeRate}% active`
+                : key === "pendingLeaveRequests" && !isLoading && value > 0
+                  ? "Needs attention"
+                  : undefined;
 
-          return (
-            <StatCard
-              key={key}
-              label={label}
-              value={value}
-              icon={icon}
-              tone={tone}
-              href={href}
-              hint={hint}
-              isLoading={isLoading}
-            />
-          );
-        })}
-      </StatCardGrid>
+            return (
+              <StatCard
+                key={key}
+                label={label}
+                value={value}
+                icon={icon}
+                tone={tone}
+                href={href}
+                hint={hint}
+                isLoading={isLoading}
+              />
+            );
+          })}
+        </StatCardGrid>
+      )}
 
       <div className="grid sm:grid-cols-2 gap-3">
         <LeaveCalendarWidget />

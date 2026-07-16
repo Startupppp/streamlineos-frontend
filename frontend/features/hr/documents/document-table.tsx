@@ -479,7 +479,7 @@ export function DocumentTable({
     ) : undefined;
 
   return (
-    <Card className="rounded-lg border border-border bg-card shadow-sm overflow-hidden">
+    <Card className="rounded-2xl border border-border/70 bg-card/90 shadow-sm overflow-hidden">
       <CardContent className="p-0" aria-live="polite">
         {showFolders && folders.length > 0 && (
           <div className="px-5 pt-4 pb-3 border-b border-border/50">

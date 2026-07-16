@@ -69,7 +69,7 @@ export default function VendorsPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Vendors" subtitle="Recruitment agencies and staffing partners">
+      <PageWrapper title="Vendors" subtitle="Recruitment agencies and staffing partners" variant="display">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-44 rounded-xl" />)}
         </div>

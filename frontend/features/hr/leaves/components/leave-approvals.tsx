@@ -280,7 +280,7 @@ export function LeaveApprovalsContent({
   return (
     <>
       <div className="space-y-6">
-        <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+        <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
               <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -373,7 +373,7 @@ export function LeaveApprovalsContent({
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+        <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
               <div className="w-7 rounded-lg bg-muted flex items-center justify-center">

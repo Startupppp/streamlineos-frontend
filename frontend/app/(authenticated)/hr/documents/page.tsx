@@ -42,7 +42,7 @@ import { LetterGenerationSheet } from "@/features/hr/documents/letter-generation
 import { LettersHistoryTable } from "@/features/hr/documents/letters-history-table";
 import { ComplianceCalendar } from "@/features/hr/documents/compliance-calendar";
 import { ExpiringDocumentsTable } from "@/features/hr/documents/expiring-documents-table";
-import { useHrEmployees } from "@/hooks/api/hr";
+import { useHrEmployees, unwrapEmployees } from "@/hooks/api/hr";
 import { useSession } from "next-auth/react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -93,9 +93,9 @@ export default function DocumentsPage() {
   const canManageDocs = useCan("hr:documents:manage");
   const [isLetterGenOpen, setIsLetterGenOpen] = useState(false);
 
-  const { data: employeesRaw } = useHrEmployees();
+  const { data: employeesRaw } = useHrEmployees({ limit: 200 });
   const employees = useMemo(
-    () => (Array.isArray(employeesRaw) ? employeesRaw : []) as Employee[],
+    () => unwrapEmployees(employeesRaw),
     [employeesRaw],
   );
 
@@ -219,7 +219,7 @@ export default function DocumentsPage() {
       <PageWrapper
         title="Document Library"
         subtitle="Centralized repository for all HR documents, contracts, and policy files."
-      >
+ variant="display">
         <div className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {Array.from({ length: 10 }).map((_, i) => (
@@ -237,7 +237,7 @@ export default function DocumentsPage() {
       <PageWrapper
         title="Document Library"
         subtitle="Centralized repository for all HR documents, contracts, and policy files."
-      >
+ variant="display">
         <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
           <AlertCircle className="w-8 text-destructive" />
           <div>
@@ -480,7 +480,7 @@ function RichDocumentsSection() {
 
   if (isLoading) {
     return (
-      <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+      <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-3">
             <Skeleton className="h-4 w-32" />
@@ -499,7 +499,7 @@ function RichDocumentsSection() {
   if (!richDocs?.length) return null;
 
   return (
-    <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+    <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -537,7 +537,7 @@ function DocumentsExtendedSection() {
   );
 
   return (
-    <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+    <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
       <CardContent className="p-4">
         <Tabs defaultValue="letters">
           <TabsList className="mb-4">

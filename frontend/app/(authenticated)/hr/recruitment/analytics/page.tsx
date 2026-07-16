@@ -83,7 +83,7 @@ export default function RecruitmentAnalyticsPage() {
     <PageWrapper
       title="Recruitment Analytics"
       subtitle="Track hiring performance and pipeline health"
-    >
+ variant="display">
       <div className="space-y-6">
         {isLoading ? (
           <StatCardGridSkeleton cols={3} />

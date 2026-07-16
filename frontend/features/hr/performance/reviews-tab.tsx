@@ -8,6 +8,7 @@ import {
   useUpdatePerformanceReview,
   useDeletePerformanceReview,
   useHrEmployees,
+  unwrapEmployees,
 } from "@/hooks/api/hr";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -35,7 +36,7 @@ import { EmptyLeaderboardIllustration } from "@/components/illustrations";
 
 export function ReviewsTab() {
   const { data: reviews, isLoading } = useHrPerformanceReviews();
-  const { data: employeesRaw } = useHrEmployees();
+  const { data: employeesRaw } = useHrEmployees({ limit: 200 });
   const { data: cycles } = useReviewCycles();
   const createReview = useCreatePerformanceReview();
   const updateReview = useUpdatePerformanceReview();
@@ -51,8 +52,8 @@ export function ReviewsTab() {
   const [periodEnd, setPeriodEnd] = useState("");
 
   const employees = useMemo(
-    () => ((Array.isArray(employeesRaw) ? employeesRaw : (employeesRaw as { data?: Employee[] })?.data ?? []) as Employee[]).filter((e) => !!e.id),
-    [employeesRaw]
+    () => unwrapEmployees(employeesRaw).filter((e) => !!e.id),
+    [employeesRaw],
   );
 
   const handleCycleChange = useCallback((value: string) => {
@@ -226,7 +227,7 @@ export function ReviewsTab() {
             return (
               <Card
                 key={review.id}
-                className={`rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 transition-shadow duration-200 hover:shadow-md ${accentClass}`}
+                className={`rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden border-l-4 transition-shadow duration-200 hover:shadow-md ${accentClass}`}
               >
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-start justify-between gap-2">

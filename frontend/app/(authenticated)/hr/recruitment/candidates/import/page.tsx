@@ -223,7 +223,7 @@ export default function BulkImportPage() {
       title="Bulk Import Candidates"
       subtitle="Upload a CSV or Excel file to import candidates"
       backHref="/hr/recruitment/candidates"
-    >
+ variant="display">
       <div className="space-y-6">
       <div className="flex gap-2 text-xs">
         {(["upload", "map", "preview", "done"] as Step[]).map((s, i) => (

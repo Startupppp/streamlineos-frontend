@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Building2 } from "lucide-react";
+import { Building2, Plus } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
@@ -109,7 +109,7 @@ export function DepartmentsTab({ canManage }: Props) {
           )}
         </div>
       ) : (
-        <Card className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+        <Card className="rounded-2xl border border-border/70 bg-card/90 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_10px_28px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
           <CardContent className="p-0">
             <div className="divide-y divide-border">
               {filtered.map((dept) => (

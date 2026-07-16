@@ -8,7 +8,7 @@ import { CompetencyFrameworksTab } from "@/features/hr/kpis/competency-framework
 
 export default function KpisPage() {
   return (
-    <PageWrapper title="KPIs & Competencies" subtitle="Define performance indicators and competency frameworks">
+    <PageWrapper title="KPIs & Competencies" subtitle="Define performance indicators and competency frameworks" variant="display">
       <Tabs defaultValue="kpis">
         <TabsList className="bg-card/80 border border-border/80">
           <TabsTrigger value="kpis">KPI Library</TabsTrigger>

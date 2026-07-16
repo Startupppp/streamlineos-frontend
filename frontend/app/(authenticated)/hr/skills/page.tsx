@@ -135,7 +135,7 @@ export default function SkillsPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Skills Matrix" subtitle="Track team competencies">
+      <PageWrapper title="Skills Matrix" subtitle="Track team competencies" variant="display">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-40 rounded-2xl" />)}
         </div>
@@ -145,7 +145,7 @@ export default function SkillsPage() {
 
   if (isError) {
     return (
-      <PageWrapper title="Skills Matrix" subtitle="Track team competencies">
+      <PageWrapper title="Skills Matrix" subtitle="Track team competencies" variant="display">
         <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
           <AlertCircle className="w-8 text-destructive" />
           <div>
@@ -200,7 +200,7 @@ export default function SkillsPage() {
               <Card
                 key={name}
                 className={cn(
-                  "rounded-2xl border border-border bg-card shadow-sm overflow-hidden",
+                  "rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden",
                   "border-l-4 transition-shadow duration-200 hover:shadow-md",
                   accent,
                 )}

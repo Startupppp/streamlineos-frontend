@@ -149,7 +149,7 @@ export default function DiversityReportPage() {
     <PageWrapper
       title="Diversity Report"
       subtitle="Anonymized applicant pool demographics"
-    >
+ variant="display">
       <div className="flex flex-wrap items-end gap-3 mb-6 p-4 rounded-lg border bg-card">
         <div className="flex flex-col gap-1">
           <Label className="text-xs">From Date</Label>

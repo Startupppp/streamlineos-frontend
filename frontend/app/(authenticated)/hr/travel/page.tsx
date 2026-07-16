@@ -75,7 +75,7 @@ function getStatusConfig(status: TravelRequest["status"]) {
 
 function TravelLoading() {
   return (
-    <PageWrapper title="Travel Requests" subtitle="Plan and track your business travel">
+    <PageWrapper title="Travel Requests" subtitle="Plan and track your business travel" variant="display">
       <div className="space-y-4">
         <Skeleton className="h-16 w-full rounded-lg" />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -260,8 +260,7 @@ export default function TravelPage() {
       badge={undefined}
       actions={
         <Button
-          onClick={handleOpenSheet}
-        >
+          onClick={handleOpenSheet}>
           <Plus className="h-4 w-4 mr-2" />
           Request Travel
         </Button>

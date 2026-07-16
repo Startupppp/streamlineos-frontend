@@ -26,7 +26,7 @@ import {
   useHrEmployees,
   type Termination,
   type TerminationStatus,
-} from "@/hooks/api/hr";
+  unwrapEmployees} from "@/hooks/api/hr";
 import type { Employee } from "@/types/hr";
 
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -309,7 +309,7 @@ export default function TerminationPage() {
       <PageWrapper
         title="Termination Management"
         subtitle="Manage employee terminations"
-      >
+ variant="display">
         <div className="space-y-3">
           {Array.from({ length: 10 }).map((_, i) => (
             <Skeleton key={i} className="h-20 rounded-2xl" />
@@ -321,7 +321,7 @@ export default function TerminationPage() {
 
   if (isError) {
     return (
-      <PageWrapper title="Termination Management" subtitle="Manage employee terminations">
+      <PageWrapper title="Termination Management" subtitle="Manage employee terminations" variant="display">
         <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
           <AlertCircle className="w-8 text-destructive" />
           <div>

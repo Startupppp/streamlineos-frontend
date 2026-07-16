@@ -13,14 +13,12 @@ import {
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, CalendarCheck, Clock3, BadgeCheck } from "lucide-react";
-import { HomeIcon, PlusIcon } from "@animateicons/react/lucide";
+import { Users, CalendarCheck, Clock3, BadgeCheck, Home, Plus } from "lucide-react";
 import { resolveImageUrl } from "@/lib/utils";
 
 import { LeaveRequestSheet } from "@/features/hr/leaves/leave-request-sheet";
@@ -87,10 +85,14 @@ export function LeavesWfhContent() {
 
   if (contextLoading || myLoading) {
     return (
-      <PageWrapper title="Leaves & Time Off" subtitle="Manage your leave requests, work from home, and approvals.">
+      <PageWrapper
+        title="Leaves & Time Off"
+        subtitle="Manage your leave requests, work from home, and approvals."
+        variant="display"
+      >
         <div className="space-y-4">
           <StatCardGridSkeleton cols={3} count={3} />
-          <Skeleton className="h-64" />
+          <Skeleton className="h-64 rounded-2xl" />
         </div>
       </PageWrapper>
     );
@@ -101,29 +103,26 @@ export function LeavesWfhContent() {
       <PageWrapper
         title="Leaves & Time Off"
         subtitle="Manage your leave requests, work from home, and approvals."
+        variant="display"
         actions={
           <>
-            <AnimatedIconButton
-              icon={HomeIcon}
-              iconSize={14}
-              iconClassName="mr-1.5"
+            <Button
               variant="outline"
               size="sm"
               onClick={handleOpenWfhSheet}
               className="gap-1.5 h-8"
             >
+              <Home className="h-3.5 w-3.5" />
               Request WFH
-            </AnimatedIconButton>
-            <AnimatedIconButton
-              icon={PlusIcon}
-              iconSize={14}
-              iconClassName="mr-1.5"
+            </Button>
+            <Button
               size="sm"
               onClick={handleOpenLeaveSheet}
-              className="gap-1.5 h-8"
+              className="gap-1.5 h-8 shadow-sm"
             >
+              <Plus className="h-3.5 w-3.5" />
               Request Leave
-            </AnimatedIconButton>
+            </Button>
           </>
         }
       >

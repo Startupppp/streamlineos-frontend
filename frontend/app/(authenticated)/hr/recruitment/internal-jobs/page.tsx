@@ -167,7 +167,7 @@ export default function InternalJobsPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Internal Openings" subtitle="Open positions available exclusively for employees.">
+      <PageWrapper title="Internal Openings" subtitle="Open positions available exclusively for employees." variant="display">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-48 rounded-xl" />)}
         </div>
@@ -179,7 +179,7 @@ export default function InternalJobsPage() {
     <PageWrapper
       title="Internal Openings"
       subtitle="Open positions available exclusively for existing employees. Apply directly without going through external recruitment."
-    >
+ variant="display">
       {jobs.length === 0 ? (
         <RecruitmentEmptyState
           illustration={<EmptySearchIllustration />}

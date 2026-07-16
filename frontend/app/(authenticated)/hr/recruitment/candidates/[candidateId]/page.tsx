@@ -188,7 +188,7 @@ export default function CandidateDetailPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Candidate" subtitle="Loading...">
+      <PageWrapper title="Candidate" subtitle="Loading..." variant="display">
         <div className="space-y-4">
           <Skeleton className="h-32 w-full" />
           <Skeleton className="h-48 w-full" />
@@ -199,7 +199,7 @@ export default function CandidateDetailPage() {
 
   if (!candidate) {
     return (
-      <PageWrapper title="Not Found" subtitle="Candidate not found">
+      <PageWrapper title="Not Found" subtitle="Candidate not found" variant="display">
         <Button asChild>
           <Link href="/hr/recruitment/candidates">Back to Candidates</Link>
         </Button>

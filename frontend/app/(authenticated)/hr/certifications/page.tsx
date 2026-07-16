@@ -145,7 +145,7 @@ export default function CertificationsPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Certifications" subtitle="Track professional certifications and renewals">
+      <PageWrapper title="Certifications" subtitle="Track professional certifications and renewals" variant="display">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 10 }).map((_, i) => (
             <Skeleton key={i} className="h-44 rounded-2xl" />
@@ -157,7 +157,7 @@ export default function CertificationsPage() {
 
   if (isError) {
     return (
-      <PageWrapper title="Certifications" subtitle="Track professional certifications and renewals">
+      <PageWrapper title="Certifications" subtitle="Track professional certifications and renewals" variant="display">
         <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
           <AlertCircle className="w-8 text-destructive" />
           <div>
@@ -186,7 +186,7 @@ export default function CertificationsPage() {
       }
     >
       {!certs?.length ? (
-        <div className="flex-1 rounded-lg border border-border bg-card shadow-sm overflow-hidden">
+        <div className="flex-1 rounded-2xl border border-border/70 bg-card/90 shadow-sm overflow-hidden">
           <EmptyState
             illustrationPreset="learning"
             title="No certifications recorded"
@@ -268,7 +268,7 @@ export default function CertificationsPage() {
                   <Card
                     key={cert.id}
                     className={cn(
-                      "rounded-lg border border-border bg-card shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200 border-l-4",
+                      "rounded-2xl border border-border/70 bg-card/90 shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200 border-l-4",
                       cfg.accent,
                     )}
                   >

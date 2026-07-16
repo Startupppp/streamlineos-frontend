@@ -25,7 +25,8 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus, CheckCircle2, Laptop, AlertCircle } from "lucide-react";
 import { useCan } from "@/hooks/api/access";
-import { useHrEmployees, useHrAssets } from "@/hooks/api/hr";
+import { useHrEmployees, useHrAssets,
+  unwrapEmployees} from "@/hooks/api/hr";
 import { cn } from "@/lib/utils";
 import { EmptyDevicesIllustration } from "@/components/illustrations";
 import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
@@ -226,7 +227,7 @@ export default function AssetReturnsPage() {
   const qc = useQueryClient();
   const isAdmin = useCan("hr:employees:manage");
 
-  const { data: employeesRaw } = useHrEmployees();
+  const { data: employeesRaw } = useHrEmployees({ limit: 200 });
   const employees = useMemo<Employee[]>(() => {
     if (Array.isArray(employeesRaw)) return employeesRaw;
     return (employeesRaw as PaginatedEmployees | undefined)?.data ?? [];
@@ -436,8 +437,8 @@ export default function AssetReturnsPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Asset Returns" subtitle="Track company asset returns">
-        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+      <PageWrapper title="Asset Returns" subtitle="Track company asset returns" variant="display">
+        <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
           <div className="space-y-0 divide-y divide-border">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="p-4 flex gap-4">
@@ -457,7 +458,7 @@ export default function AssetReturnsPage() {
 
   if (isError) {
     return (
-      <PageWrapper title="Asset Returns" subtitle="Track company asset returns">
+      <PageWrapper title="Asset Returns" subtitle="Track company asset returns" variant="display">
         <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
           <AlertCircle className="w-8 text-destructive" />
           <div>

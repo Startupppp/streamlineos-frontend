@@ -68,7 +68,7 @@ export default function DocumentReviewPage() {
 
   if (isError) {
     return (
-      <PageWrapper title="Document Review" subtitle="Review employee onboarding documents">
+      <PageWrapper title="Document Review" subtitle="Review employee onboarding documents" variant="display">
         <ErrorState title="Failed to load document review data" onRetry={handleRetry} />
       </PageWrapper>
     );
@@ -76,7 +76,7 @@ export default function DocumentReviewPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Document Review" subtitle="Review employee onboarding documents">
+      <PageWrapper title="Document Review" subtitle="Review employee onboarding documents" variant="display">
         <Skeleton className="flex-1 rounded-lg" />
       </PageWrapper>
     );

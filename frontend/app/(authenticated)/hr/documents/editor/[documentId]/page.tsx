@@ -79,7 +79,7 @@ export default function DocumentEditorPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Document Editor" subtitle="Loading...">
+      <PageWrapper title="Document Editor" subtitle="Loading..." variant="display">
         <div className="space-y-4">
           <Skeleton className="h-10 w-full" />
           <Skeleton className="h-[400px] w-full" />
@@ -90,7 +90,7 @@ export default function DocumentEditorPage() {
 
   if (!doc) {
     return (
-      <PageWrapper title="Document Not Found" subtitle="The requested document could not be found.">
+      <PageWrapper title="Document Not Found" subtitle="The requested document could not be found." variant="display">
         <Button asChild><Link href="/hr/documents">Back to Documents</Link></Button>
       </PageWrapper>
     );

@@ -36,7 +36,7 @@ function PerformanceContent() {
   }, [searchParams, router]);
 
   return (
-    <PageWrapper title="Performance" subtitle="Reviews, goals, and team development">
+    <PageWrapper title="Performance" subtitle="Reviews, goals, and team development" variant="display">
       <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-col flex-1 min-h-0 gap-0">
         <TabsList className="bg-transparent border-b border-border rounded-none p-0 gap-0 w-full justify-start overflow-x-auto flex-nowrap scrollbar-none shrink-0">
           <TabsTrigger

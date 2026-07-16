@@ -333,7 +333,7 @@ function HandbookContent() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Employee Handbook" subtitle="Manage and publish handbook versions">
+      <PageWrapper title="Employee Handbook" subtitle="Manage and publish handbook versions" variant="display">
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <Skeleton className="h-8 w-48" />
@@ -353,7 +353,7 @@ function HandbookContent() {
 
   if (isError) {
     return (
-      <PageWrapper title="Employee Handbook" subtitle="Manage and publish handbook versions">
+      <PageWrapper title="Employee Handbook" subtitle="Manage and publish handbook versions" variant="display">
         <div className="flex-1 flex flex-col items-center justify-center gap-4 py-20">
           <AlertTriangle className="h-10 w-10 text-muted-foreground" />
           <div className="text-center space-y-1">
@@ -405,7 +405,7 @@ function HandbookContent() {
         </div>
 
         {!filteredVersions.length ? (
-          <div className="flex-1 rounded-lg border border-border bg-card shadow-sm overflow-hidden">
+          <div className="flex-1 rounded-2xl border border-border/70 bg-card/90 shadow-sm overflow-hidden">
             <div className="py-14 flex flex-col items-center justify-center gap-3">
               <EmptyDocumentsIllustration className="h-36 w-36 opacity-95" />
               <div className="text-center space-y-1">

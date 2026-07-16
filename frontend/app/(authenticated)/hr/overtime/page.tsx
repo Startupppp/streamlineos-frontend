@@ -26,8 +26,7 @@ export default function OvertimePage() {
       actions={
         <Button
           onClick={handleOpen}
-          className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200"
-        >
+          className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200">
           <Plus className="h-4 w-4 mr-2" />
           Request Overtime
         </Button>

@@ -502,7 +502,7 @@ export default function ReportsPage() {
     <PageWrapper
       title="Reports & Exports"
       subtitle="Build custom reports and export recruitment data"
-    >
+ variant="display">
       <div className="grid gap-4 lg:grid-cols-[300px_1fr]">
         <div className="space-y-4">
           <Card>

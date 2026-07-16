@@ -27,7 +27,7 @@ export default function CompanyHrProfilePage() {
     <PageWrapper
       title="Company HR Profile"
       subtitle="Organization-level HR configuration"
-    >
+ variant="display">
       <div className="py-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {LINKS.map((item) => (

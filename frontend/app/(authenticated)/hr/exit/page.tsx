@@ -335,7 +335,7 @@ export default function ExitManagementPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Exit Management" subtitle="Resignations and offboarding">
+      <PageWrapper title="Exit Management" subtitle="Resignations and offboarding" variant="display">
         <div className="space-y-3">
           {Array.from({ length: 10 }).map((_, i) => (
             <Skeleton key={i} className="h-24 rounded-2xl" />
@@ -347,7 +347,7 @@ export default function ExitManagementPage() {
 
   if (isError) {
     return (
-      <PageWrapper title="Exit Management" subtitle="Resignations and offboarding">
+      <PageWrapper title="Exit Management" subtitle="Resignations and offboarding" variant="display">
         <EmptyState
           illustrationPreset="alert"
           title="Failed to load resignations"
