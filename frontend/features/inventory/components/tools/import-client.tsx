@@ -3,7 +3,9 @@
 import * as React from "react";
 import { toast } from "sonner";
 import Link from "next/link";
-import { ArrowRight, Download } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { DownloadIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -107,6 +109,24 @@ interface ExportJobsTableProps {
   isDownloading: boolean;
 }
 
+function DownloadJobButton({ onClick, disabled }: { onClick: () => void; disabled: boolean }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`inline-flex items-center gap-1 text-[11px] font-medium transition-colors ${
+        !disabled ? "text-primary hover:text-primary/80" : "text-muted-foreground cursor-not-allowed"
+      }`}
+      {...hoverHandlers}
+    >
+      <DownloadIcon ref={iconRef} size={12} aria-hidden="true" />
+      Download
+    </button>
+  );
+}
+
 const EXPORT_JOBS_COLUMNS: (onDownload: (job: ExportJob) => void, isDownloading: boolean) => DataTableColumn<ExportJob>[] =
   (onDownload, isDownloading) => [
     {
@@ -144,21 +164,7 @@ const EXPORT_JOBS_COLUMNS: (onDownload: (job: ExportJob) => void, isDownloading:
         function handleDownloadClick(): void {
           onDownload(job);
         }
-        return (
-          <button
-            type="button"
-            onClick={handleDownloadClick}
-            disabled={!isCompleted || isDownloading}
-            className={`inline-flex items-center gap-1 text-[11px] font-medium transition-colors ${
-              isCompleted
-                ? "text-primary hover:text-primary/80"
-                : "text-muted-foreground cursor-not-allowed"
-            }`}
-          >
-            <Download className="h-3 w-3" aria-hidden="true" />
-            Download
-          </button>
-        );
+        return <DownloadJobButton onClick={handleDownloadClick} disabled={!isCompleted || isDownloading} />;
       },
     },
   ];

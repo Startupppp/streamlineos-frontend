@@ -3,7 +3,6 @@
 import { useState, useMemo } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -12,7 +11,8 @@ import { ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { EmptyActivityIllustration } from "@/components/illustrations";
-import { Download } from "lucide-react";
+import { DownloadIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useMovementsReport, type MovementType } from "@/hooks/api/inventory/reports";
 import { useWarehouses } from "@/hooks/api/inventory/warehouses";
 import { downloadCsv } from "@/features/inventory/lib";
@@ -247,7 +247,10 @@ export default function MovementsReportPage() {
       </Select>
       <DatePicker value={dateFrom} onChange={handleDateFromChange} placeholder="From" className="w-full sm:max-w-[160px] h-8 text-xs" />
       <DatePicker value={dateTo} onChange={handleDateToChange} placeholder="To" className="w-full sm:max-w-[160px] h-8 text-xs" />
-      <Button
+      <AnimatedIconButton
+        icon={DownloadIcon}
+        iconSize={14}
+        iconClassName="mr-1.5"
         variant="outline"
         size="sm"
         className="text-xs ml-auto shrink-0"
@@ -255,9 +258,8 @@ export default function MovementsReportPage() {
         disabled={rows.length === 0}
         aria-label="Export movements as CSV"
       >
-        <Download className="h-3.5 w-3.5 mr-1.5" />
         Export CSV
-      </Button>
+      </AnimatedIconButton>
     </div>
   );
 

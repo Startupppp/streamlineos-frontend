@@ -14,6 +14,7 @@ import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useLeadDetail, useLeadTimeline, useUpdateLead, useUpdateLeadStatus, useLogLeadActivity } from "@/hooks/api/leads";
 import { useCreateTask } from "@/hooks/api/tasks";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 import { LeadAttachmentsSection } from "@/features/crm/leads/detail/lead-attachments-section";
 import { LeadDetailHeader } from "@/features/crm/leads/detail/lead-detail-header";
@@ -95,7 +96,7 @@ export default function LeadDetailPage({
       toast.promise(promise, {
         loading: "Updating status...",
         success: "Status updated",
-        error: (err: Error) => err?.message || "Failed to update status",
+        error: (err: Error) => getErrorMessage(err),
       });
     },
     [leadId, updateStatusMutation, lead],
@@ -110,7 +111,7 @@ export default function LeadDetailPage({
             toast.success("Lead updated");
             setIsEditing(false);
           },
-          onError: (err) => toast.error(err.message),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -132,7 +133,7 @@ export default function LeadDetailPage({
             setActiveAction(null);
             noteForm.reset();
           },
-          onError: (err) => toast.error(err.message),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -159,7 +160,7 @@ export default function LeadDetailPage({
             setActiveAction(null);
             taskForm.reset();
           },
-          onError: (err) => toast.error(err.message),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -181,7 +182,7 @@ export default function LeadDetailPage({
             toast.success("Email sent");
             setActiveAction(null);
           },
-          onError: (err) => toast.error(err.message),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -219,7 +220,7 @@ export default function LeadDetailPage({
             setActiveAction(null);
             callForm.reset();
           },
-          onError: (err) => toast.error(err.message),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },

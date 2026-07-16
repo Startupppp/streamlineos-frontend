@@ -24,12 +24,13 @@ import {
   Phone,
   Briefcase,
   Pencil,
-  X,
   Linkedin,
   Twitter,
   Github,
   Globe,
 } from "lucide-react";
+import { XIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 
 interface UserDetailPageProps {
   userId: string;
@@ -107,15 +108,17 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
             Edit Profile
           </Button>
         ) : isEditing ? (
-          <Button
+          <AnimatedIconButton
+            icon={XIcon}
+            iconSize={14}
+            iconClassName="mr-1.5"
             variant="ghost"
             size="sm"
             className="h-8 text-xs"
             onClick={handleCancelEdit}
           >
-            <X className="h-3.5 w-3.5 mr-1.5" />
             Cancel
-          </Button>
+          </AnimatedIconButton>
         ) : undefined
       }
     >

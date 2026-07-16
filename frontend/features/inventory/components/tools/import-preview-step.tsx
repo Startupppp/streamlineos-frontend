@@ -1,8 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { Upload, AlertCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { AlertCircle } from "lucide-react";
+import { UploadIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import type { ImportPreviewResult } from "@/hooks/api/inventory/admin";

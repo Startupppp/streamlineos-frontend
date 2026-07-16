@@ -9,7 +9,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Loader2, Pencil, Upload, Palette } from "lucide-react";
+import { Loader2, Pencil, Palette } from "lucide-react";
+import { UploadIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
 import { useUpdateOrgSettings } from "@/hooks/api/organization";
 import { useUploadFile } from "@/hooks/api/use-upload-file";
@@ -64,6 +66,15 @@ function ColorField({
       </div>
       {error && <p className="text-[11px] text-destructive">{error}</p>}
     </div>
+  );
+}
+
+function UploadButton({ uploading, onClick }: { uploading: boolean; onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button type="button" variant="outline" size="sm" className="h-8 shrink-0 gap-1" disabled={uploading} onClick={onClick} {...hoverHandlers}>
+      {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UploadIcon ref={iconRef} size={14} />}
+    </Button>
   );
 }
 
@@ -218,9 +229,7 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
                 <Label className="text-sm font-medium">Logo</Label>
                 <div className="flex gap-2">
                   <Input {...form.register("logo")} placeholder="https://cdn.example.com/logo.png" className="h-8 flex-1 text-sm" />
-                  <Button type="button" variant="outline" size="sm" className="h-8 shrink-0 gap-1" disabled={logoUploading} onClick={() => logoInputRef.current?.click()}>
-                    {logoUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
-                  </Button>
+                  <UploadButton uploading={logoUploading} onClick={() => logoInputRef.current?.click()} />
                   <input ref={logoInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/svg+xml" className="hidden" onChange={handleLogoUpload} />
                 </div>
                 {logoVal && <Image src={logoVal} alt="Logo preview" width={200} height={40} className="h-10 w-auto rounded border mt-1 object-contain" />}
@@ -230,9 +239,7 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
                 <Label className="text-sm font-medium">Favicon <span className="text-muted-foreground font-normal">(max 256 KB)</span></Label>
                 <div className="flex gap-2">
                   <Input {...form.register("favicon")} placeholder="https://cdn.example.com/favicon.ico" className="h-8 flex-1 text-sm" />
-                  <Button type="button" variant="outline" size="sm" className="h-8 shrink-0 gap-1" disabled={faviconUploading} onClick={() => faviconInputRef.current?.click()}>
-                    {faviconUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
-                  </Button>
+                  <UploadButton uploading={faviconUploading} onClick={() => faviconInputRef.current?.click()} />
                   <input ref={faviconInputRef} type="file" accept="image/x-icon,image/vnd.microsoft.icon,image/png,image/jpeg" className="hidden" onChange={handleFaviconUpload} />
                 </div>
                 {faviconVal && <Image src={faviconVal} alt="Favicon preview" width={32} height={32} className="h-8 w-8 rounded border mt-1 object-contain" />}

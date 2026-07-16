@@ -2,7 +2,9 @@
 
 import { use, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft, ArrowRight, Package } from "lucide-react";
+import { ArrowRight, Package } from "lucide-react";
+import { ChevronLeftIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { EmptyTransferIllustration } from "@/components/illustrations";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -162,6 +164,18 @@ function TransferDetailSkeleton() {
   );
 }
 
+function BackToTransfersButton({ className }: { className?: string }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button variant="outline" size="sm" className={className} asChild>
+      <Link href="/inventory/stock/transfers" {...hoverHandlers}>
+        <ChevronLeftIcon ref={iconRef} size={14} aria-hidden="true" />
+        Back to Transfers
+      </Link>
+    </Button>
+  );
+}
+
 export default function TransferDetailPage({
   params,
 }: {
@@ -236,14 +250,7 @@ export default function TransferDetailPage({
     return (
       <PageWrapper
         title="Transfer"
-        actions={
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/inventory/stock/transfers">
-              <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
-              Back to Transfers
-            </Link>
-          </Button>
-        }
+        actions={<BackToTransfersButton />}
       >
         <ErrorState
           title="Failed to load transfer"
@@ -258,14 +265,7 @@ export default function TransferDetailPage({
     return (
       <PageWrapper
         title="Transfer not found"
-        actions={
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/inventory/stock/transfers">
-              <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
-              Back to Transfers
-            </Link>
-          </Button>
-        }
+        actions={<BackToTransfersButton />}
       >
         <InventoryEmptyState
           illustration={<EmptyTransferIllustration />}
@@ -296,12 +296,7 @@ export default function TransferDetailPage({
       }
       actions={
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="text-xs" asChild>
-            <Link href="/inventory/stock/transfers">
-              <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
-              Back to Transfers
-            </Link>
-          </Button>
+          <BackToTransfersButton className="text-xs" />
           {transfer.status === "PENDING" && (
             <Button
               size="sm"

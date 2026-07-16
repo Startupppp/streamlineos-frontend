@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Check, Copy } from "lucide-react";
+import { Check } from "lucide-react";
+import { CopyIcon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Input } from "@/components/ui/input";
 import {
   Dialog,
@@ -16,6 +18,15 @@ interface TokenCreatedDialogProps {
   open: boolean;
   rawToken: string | null;
   onClose: () => void;
+}
+
+function CopyTokenButton({ copied, onCopy }: { copied: boolean; onCopy: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button size="sm" variant="outline" onClick={onCopy} className="shrink-0" {...hoverHandlers}>
+      {copied ? <Check className="h-4 w-4 text-green-600" /> : <CopyIcon ref={iconRef} size={16} />}
+    </Button>
+  );
 }
 
 export function TokenCreatedDialog({
@@ -49,9 +60,7 @@ export function TokenCreatedDialog({
           </div>
           <div className="flex items-center gap-2">
             <Input readOnly value={rawToken ?? ""} className="font-mono text-xs" />
-            <Button size="sm" variant="outline" onClick={handleCopy} className="shrink-0">
-              {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
-            </Button>
+            <CopyTokenButton copied={copied} onCopy={handleCopy} />
           </div>
         </div>
         <DialogFooter>

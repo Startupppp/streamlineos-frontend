@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Mic, MicOff, Hand, PhoneOff, Monitor, MonitorOff, Settings, VolumeX, Volume2, MessageSquare, Smile, PauseCircle, PlayCircle } from "lucide-react";
 import { MicIcon, MicOffIcon, ChevronDownIcon, ChevronUpIcon, UserPlusIcon, UserMinusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -124,21 +124,6 @@ interface HuddlePanelProps {
   channelId: number;
   currentUserId: string;
 }
-
-const ExpandToggleChevron = React.forwardRef<HTMLButtonElement, React.ButtonHTMLAttributes<HTMLButtonElement> & { expanded: boolean }>(
-  function ExpandToggleChevron({ expanded, className, ...props }, ref) {
-    const { iconRef, hoverHandlers } = useAnimatedIcon();
-    return (
-      <button ref={ref} {...hoverHandlers} className={className} {...props}>
-        {expanded ? (
-          <ChevronDownIcon ref={iconRef} size={16} className="text-muted-foreground" />
-        ) : (
-          <ChevronUpIcon ref={iconRef} size={16} className="text-muted-foreground" />
-        )}
-      </button>
-    );
-  },
-);
 
 export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelProps) {
   const [expanded, setExpanded] = useState(false);
@@ -616,6 +601,7 @@ interface ParticipantCardProps {
 function ParticipantCard({ participant, audioLevel, isCurrentUser, isHost, onKick, peerConnection }: ParticipantCardProps) {
   const isSpeaking = audioLevel > 0.05;
   const networkQuality = useNetworkQuality(peerConnection);
+  const { iconRef: kickIconRef, hoverHandlers: kickHoverHandlers } = useAnimatedIcon();
   const qualityColor =
     networkQuality === "excellent"
       ? "bg-emerald-500"
@@ -664,10 +650,11 @@ function ParticipantCard({ participant, audioLevel, isCurrentUser, isHost, onKic
       {isHost && !isCurrentUser && onKick && (
         <button
           onClick={onKick}
+          {...kickHoverHandlers}
           className="text-[10px] text-red-500/60 hover:text-red-500 transition-colors flex items-center gap-0.5"
           aria-label="Remove from huddle"
         >
-          <UserMinus className="h-2.5 w-2.5" />
+          <UserMinusIcon ref={kickIconRef} size={10} />
           Remove
         </button>
       )}

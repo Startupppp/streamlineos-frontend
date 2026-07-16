@@ -67,6 +67,7 @@ import {
   EditOptionRow,
 } from "@/features/crm/settings/custom-fields/field-row";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 export default function CustomFieldsPage() {
   const [entityType, setEntityType] = useState<EntityType>("lead");
@@ -141,7 +142,7 @@ export default function CustomFieldsPage() {
         { id, entityType: et, isActive: !currentActive },
         {
           onSuccess: () => toast.success("Field updated"),
-          onError: (err) => toast.error(err.message),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -166,7 +167,7 @@ export default function CustomFieldsPage() {
             setCreateOpen(false);
             createForm.reset({ label: "", fieldType: "text", isRequired: false, options: [] });
           },
-          onError: (err) => toast.error(err.message),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -186,7 +187,7 @@ export default function CustomFieldsPage() {
         },
         {
           onSuccess: () => { toast.success("Field updated"); setEditTarget(null); },
-          onError: (err) => toast.error(err.message),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -199,7 +200,7 @@ export default function CustomFieldsPage() {
       { id: deleteTargetId, entityType },
       {
         onSuccess: () => { toast.success("Field deleted"); setDeleteTargetId(null); },
-        onError: (err) => { toast.error(err.message); setDeleteTargetId(null); },
+        onError: (err) => { toast.error(getErrorMessage(err)); setDeleteTargetId(null); },
       },
     );
   }, [deleteField, deleteTargetId, entityType]);

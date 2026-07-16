@@ -3,10 +3,11 @@
 import { Suspense, useEffect, useMemo, useState, type ChangeEvent } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
-import { Package, AlertTriangle, AlertCircle, Download } from "lucide-react";
+import { Package, AlertTriangle, AlertCircle } from "lucide-react";
+import { DownloadIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
@@ -191,7 +192,10 @@ function ReorderReportContent() {
       filters={
         <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0 lg:gap-3">
           <SearchInput className="min-w-0 flex-1 lg:max-w-md" value={search} onValueChange={handleSearchChange} placeholder="Search products, SKU, category…" />
-          <Button
+          <AnimatedIconButton
+            icon={DownloadIcon}
+            iconSize={14}
+            iconClassName="mr-1.5"
             variant="outline"
             size="sm"
             className="text-xs ml-auto shrink-0"
@@ -199,9 +203,8 @@ function ReorderReportContent() {
             disabled={filtered.length === 0}
             aria-label="Export reorder report as CSV"
           >
-            <Download className="h-3.5 w-3.5 mr-1.5" />
             Export CSV
-          </Button>
+          </AnimatedIconButton>
         </div>
       }
     >

@@ -9,9 +9,9 @@ import {
 } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
-import { Download } from "lucide-react";
+import { DownloadIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SearchInput } from "@/components/ui/search-input";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
@@ -292,7 +292,10 @@ function StockSummaryContent() {
               ))}
             </SelectContent>
           </Select>
-          <Button
+          <AnimatedIconButton
+            icon={DownloadIcon}
+            iconSize={14}
+            iconClassName="mr-1.5"
             variant="outline"
             size="sm"
             className="text-xs ml-auto shrink-0"
@@ -300,9 +303,8 @@ function StockSummaryContent() {
             disabled={filtered.length === 0}
             aria-label="Export stock summary as CSV"
           >
-            <Download className="h-3.5 w-3.5 mr-1.5" />
             Export CSV
-          </Button>
+          </AnimatedIconButton>
         </div>
       }
     >

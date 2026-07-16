@@ -33,6 +33,7 @@ import {
   useEmailTemplates, useCreateEmailTemplate, useUpdateEmailTemplate, useDeleteEmailTemplate,
 } from "@/hooks/api/crm-settings";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const VARIABLES = [
   "{{lead.name}}",
@@ -193,7 +194,7 @@ export default function EmailTemplatesPage() {
       data,
       {
         onSuccess: () => { toast.success("Template created"); setCreateOpen(false); createForm.reset(); },
-        onError: (err) => toast.error(err.message),
+        onError: (err) => toast.error(getErrorMessage(err)),
       }
     );
   }, [createTemplate, createForm]);
@@ -204,7 +205,7 @@ export default function EmailTemplatesPage() {
       { id: editingId, ...data },
       {
         onSuccess: () => { toast.success("Template updated"); setEditingId(null); },
-        onError: (err) => toast.error(err.message),
+        onError: (err) => toast.error(getErrorMessage(err)),
       }
     );
   }, [editingId, updateTemplate]);
@@ -226,7 +227,7 @@ export default function EmailTemplatesPage() {
     if (deleteTargetId === null) return;
     deleteTemplate.mutate(deleteTargetId, {
       onSuccess: () => { toast.success("Template deleted"); setDeleteTargetId(null); },
-      onError: (err) => { toast.error(err.message); setDeleteTargetId(null); },
+      onError: (err) => { toast.error(getErrorMessage(err)); setDeleteTargetId(null); },
     });
   }, [deleteTemplate, deleteTargetId]);
 

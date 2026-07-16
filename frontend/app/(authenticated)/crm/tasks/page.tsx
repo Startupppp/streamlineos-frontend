@@ -12,6 +12,7 @@ import {
   CheckCheck,
 } from "lucide-react";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -171,7 +172,7 @@ function CrmTasksContent() {
             });
           },
           onError: (err) => {
-            toast.error(err.message || "Failed to complete task");
+            toast.error(getErrorMessage(err));
             setOptimisticCompletedIds((prev) => {
               const next = new Set(prev);
               next.delete(taskId);
@@ -188,7 +189,7 @@ function CrmTasksContent() {
     (taskId: number) => {
       deleteTaskMutation.mutate(taskId, {
         onSuccess: () => toast.success("Task deleted"),
-        onError: (err) => toast.error(err.message || "Failed to delete task"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       });
     },
     [deleteTaskMutation],

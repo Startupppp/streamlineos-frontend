@@ -3,8 +3,8 @@
 import React, { useCallback, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { ArrowDown, CalendarClock, CheckCheck, FileText, Forward, Link, ListPlus, Loader2, MessageSquare, Pencil, Pin, Smile, Ticket, UserPlus } from "lucide-react";
-import { ReplyIcon, BookmarkCheckIcon, BookmarkPlusIcon, CopyIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { ArrowDown, CalendarClock, CheckCheck, FileText, Forward, Link, ListPlus, Loader2, MessageSquare, Pencil, Pin, Smile, Ticket, Trash2 } from "lucide-react";
+import { ReplyIcon, BookmarkCheckIcon, BookmarkPlusIcon, CopyIcon, Trash2Icon, UserPlusIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -83,6 +83,17 @@ const DeleteButton = React.forwardRef<HTMLButtonElement, React.ButtonHTMLAttribu
     return (
       <button ref={ref} {...hoverHandlers} className={className} {...props}>
         <Trash2Icon ref={iconRef} size={14} />
+      </button>
+    );
+  },
+);
+
+const UserPlusButton = React.forwardRef<HTMLButtonElement, React.ButtonHTMLAttributes<HTMLButtonElement>>(
+  function UserPlusButton({ className, ...props }, ref) {
+    const { iconRef, hoverHandlers } = useAnimatedIcon();
+    return (
+      <button ref={ref} {...hoverHandlers} className={className} {...props}>
+        <UserPlusIcon ref={iconRef} size={14} />
       </button>
     );
   },
@@ -715,14 +726,12 @@ export function ChatBubble({
                 </button>
               )}
               {canAssignTicket && (
-                <button
+                <UserPlusButton
                   onClick={handleOpenAssignDialog}
                   className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground"
                   title="Assign ticket"
                   aria-label="Assign ticket"
-                >
-                  <UserPlus className="h-3.5 w-3.5" />
-                </button>
+                />
               )}
               {canSetDueDate && (
                 <button

@@ -5,7 +5,9 @@ import { formatDistanceToNow } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, Loader2, ShieldCheck, Monitor, Smartphone, Trash2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, ShieldCheck, Monitor, Smartphone } from "lucide-react";
+import { Trash2Icon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useChangePassword } from "@/hooks/api/hr";
 import { useSessions, useRevokeSession, useRevokeAllSessions } from "@/hooks/api/hr";
 import { toast } from "sonner";
@@ -361,16 +363,16 @@ function SessionRow({ session: s, onRevoke, revokePending }: SessionRowProps) {
         </p>
       </div>
       {!s.isCurrent && (
-        <Button
-          variant="ghost"
+        <AnimatedIconButton
+          icon={Trash2Icon}
+          iconSize={14}
           size="icon"
+          variant="ghost"
           className="h-7 w-7 flex-shrink-0 text-muted-foreground hover:text-destructive"
           onClick={handleRevoke}
           disabled={revokePending}
           aria-label="Revoke session"
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </Button>
+        />
       )}
     </div>
   );

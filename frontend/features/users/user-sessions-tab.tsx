@@ -8,7 +8,8 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useUserSessions, useRevokeSession, useRevokeAllSessions } from "@/hooks/api/users";
 import { getApiError } from "@/lib/api-client";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
+import { Trash2Icon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { formatDistanceToNow } from "date-fns";
 
 interface UserSessionsTabProps {
@@ -151,16 +152,18 @@ export function UserSessionsTab({ userId }: UserSessionsTabProps) {
     <div className="space-y-3 pt-1">
       {activeSessions.length > 0 && (
         <div className="flex justify-end">
-          <Button
+          <AnimatedIconButton
+            icon={Trash2Icon}
+            iconSize={14}
+            iconClassName="mr-1"
             variant="outline"
             size="sm"
             onClick={handleRevokeAll}
             disabled={isRevokingAll}
             className="text-red-600 border-red-200 hover:bg-red-50 dark:hover:bg-red-500/10 h-7 text-xs"
           >
-            <Trash2 className="h-3.5 w-3.5 mr-1" />
             Revoke all ({activeSessions.length})
-          </Button>
+          </AnimatedIconButton>
         </div>
       )}
       <DataTable

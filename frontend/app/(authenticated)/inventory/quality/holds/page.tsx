@@ -201,9 +201,9 @@ function HoldsPageInner() {
         title="Quality Holds"
         subtitle={total > 0 ? `${total} ${total === 1 ? "hold" : "holds"}` : "Manage inventory quality holds"}
         actions={
-          <Button size="sm" onClick={handleOpenCreate}>
-            <Plus className="mr-1.5 h-3.5 w-3.5" />Create Hold
-          </Button>
+          <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1.5" size="sm" onClick={handleOpenCreate}>
+            Create Hold
+          </AnimatedIconButton>
         }
         filters={filtersRow}
       >

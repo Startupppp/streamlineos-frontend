@@ -35,6 +35,7 @@ import {
   useScoringRules, useCreateScoringRule, useUpdateScoringRule, useDeleteScoringRule,
 } from "@/hooks/api/crm-settings";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const FIELDS = [
   { value: "source", label: "Source" },
@@ -187,7 +188,7 @@ export default function ScoringRulesPage() {
       { ...data, points: Number(data.points) },
       {
         onSuccess: () => { toast.success("Rule created"); setCreateOpen(false); form.reset(); },
-        onError: (err) => toast.error(err.message),
+        onError: (err) => toast.error(getErrorMessage(err)),
       }
     );
   }, [createRule, form]);
@@ -198,7 +199,7 @@ export default function ScoringRulesPage() {
       { id: editingId, ...data, points: Number(data.points) },
       {
         onSuccess: () => { toast.success("Rule updated"); setEditingId(null); },
-        onError: (err) => toast.error(err.message),
+        onError: (err) => toast.error(getErrorMessage(err)),
       }
     );
   }, [editingId, updateRule]);
@@ -220,7 +221,7 @@ export default function ScoringRulesPage() {
     if (deleteTargetId === null) return;
     deleteRule.mutate(deleteTargetId, {
       onSuccess: () => { toast.success("Rule deleted"); setDeleteTargetId(null); },
-      onError: (err) => { toast.error(err.message); setDeleteTargetId(null); },
+      onError: (err) => { toast.error(getErrorMessage(err)); setDeleteTargetId(null); },
     });
   }, [deleteRule, deleteTargetId]);
 

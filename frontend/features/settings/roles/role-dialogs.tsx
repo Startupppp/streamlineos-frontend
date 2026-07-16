@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback } from "react";
-import { Copy, AlertCircle, RefreshCw, FileX } from "lucide-react";
+import { AlertCircle, RefreshCw, FileX } from "lucide-react";
+import { CopyIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -128,9 +130,9 @@ function TemplateRow({ template, clonePending, onClone }: TemplateRowProps) {
           {template.permissions.length} permission{template.permissions.length !== 1 ? "s" : ""}
         </p>
       </div>
-      <Button size="sm" variant="outline" disabled={clonePending} onClick={handleClone}>
-        <Copy className="h-3.5 w-3.5 mr-1" /> Clone
-      </Button>
+      <AnimatedIconButton icon={CopyIcon} iconSize={14} iconClassName="mr-1" size="sm" variant="outline" disabled={clonePending} onClick={handleClone}>
+        Clone
+      </AnimatedIconButton>
     </div>
   );
 }

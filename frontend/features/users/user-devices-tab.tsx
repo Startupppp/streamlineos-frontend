@@ -8,7 +8,8 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useUserDevices, useRemoveDevice } from "@/hooks/api/users";
 import { getApiError } from "@/lib/api-client";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
+import { Trash2Icon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { formatDistanceToNow } from "date-fns";
 
 interface UserDevicesTabProps {
@@ -104,16 +105,18 @@ export function UserDevicesTab({ userId }: UserDevicesTabProps) {
       headerClassName: "w-20",
       cell: (row) => (
         <div onClick={(e) => e.stopPropagation()}>
-          <Button
+          <AnimatedIconButton
+            icon={Trash2Icon}
+            iconSize={12}
+            iconClassName="mr-1"
             variant="ghost"
             size="sm"
             className="h-6 text-[11px] text-red-600 hover:text-red-700 hover:bg-red-50"
             onClick={() => handleRemove(row.id)}
             disabled={isPending}
           >
-            <Trash2 className="h-3 w-3 mr-1" />
             Remove
-          </Button>
+          </AnimatedIconButton>
         </div>
       ),
     },

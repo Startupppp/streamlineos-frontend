@@ -8,7 +8,9 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import NextImage from "next/image";
-import { Loader2, Globe, Image as ImageIcon, Clock, IndianRupee, CalendarRange, Users, Upload, Palette } from "lucide-react";
+import { Loader2, Globe, Image as ImageIcon, Clock, IndianRupee, CalendarRange, Users, Palette } from "lucide-react";
+import { UploadIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 
 const CURRENCIES = [
   { value: "USD", label: "USD — US Dollar" },
@@ -84,6 +86,16 @@ interface OrgConfigSectionProps {
   onLoginBgUrlChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
+function LogoUploadButton({ uploading, onClick }: { uploading: boolean; onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button type="button" variant="outline" size="sm" className="shrink-0" disabled={uploading} onClick={onClick} {...hoverHandlers}>
+      {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <UploadIcon ref={iconRef} size={14} className="mr-1" />}
+      Upload
+    </Button>
+  );
+}
+
 export function OrgConfigSection({
   org,
   isEditingConfig,
@@ -145,21 +157,7 @@ export function OrgConfigSection({
                   aria-label="Logo URL"
                   className="flex-1"
                 />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="shrink-0"
-                  disabled={logoUploading}
-                  onClick={onLogoUploadClick}
-                >
-                  {logoUploading ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <Upload className="h-3.5 w-3.5 mr-1" />
-                  )}
-                  Upload
-                </Button>
+                <LogoUploadButton uploading={logoUploading} onClick={onLogoUploadClick} />
                 <input
                   ref={logoInputRef}
                   type="file"
