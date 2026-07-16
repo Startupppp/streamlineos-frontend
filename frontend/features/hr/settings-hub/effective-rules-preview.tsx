@@ -9,6 +9,7 @@ import { useEffectiveRules } from "@/hooks/api/hr/settings-hub";
 import type { EffectiveRuleItem } from "@/hooks/api/hr/settings-hub";
 import { POLICY_TYPE_LABELS } from "@/types/hr/policies";
 import type { HrPolicyType } from "@/types/hr/policies";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 function isPolicyType(t: string): t is HrPolicyType {
   return t in POLICY_TYPE_LABELS;
@@ -26,9 +27,7 @@ function RuleCard({ item }: { item: EffectiveRuleItem }) {
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
             {getTypeLabel(item.policyType)}
           </p>
-          <p className="text-sm font-medium text-foreground mt-0.5 truncate">
-            {item.matchedPolicy.name}
-          </p>
+          <TruncatedText text={item.matchedPolicy.name} className="text-sm font-medium text-foreground mt-0.5" />
         </div>
         <span className="text-xs font-mono text-muted-foreground shrink-0">
           v{item.matchedPolicy.version}

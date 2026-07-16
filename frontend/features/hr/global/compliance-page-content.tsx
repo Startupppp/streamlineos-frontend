@@ -39,6 +39,7 @@ import {
 import { ComplianceEventsTab } from "./compliance-events-tab";
 import { ComplianceRequirementSheet } from "./compliance-requirement-sheet";
 import { WorkAuthSheet } from "./work-auth-sheet";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 function WorkAuthStatusBadge({ status }: { status: WorkAuthorization["status"] }) {
   if (status === "expired") return <Badge className="bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30">Expired</Badge>;
@@ -151,7 +152,7 @@ export function CompliancePageContent() {
               {(reqData?.data ?? []).map((req) => (
                 <div key={req.id} className="flex items-center gap-3 rounded-lg border border-border bg-card p-3">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{req.name}</p>
+                    <TruncatedText text={req.name} className="text-sm font-medium" />
                     <p className="text-xs text-muted-foreground capitalize">
                       {req.frequency} · {req.category.replace(/_/g, " ")}
                       {req.countryCode && ` · ${req.countryCode}`}
@@ -197,9 +198,7 @@ export function CompliancePageContent() {
               {(authData?.data ?? []).map((auth) => (
                 <div key={auth.id} className="flex items-center gap-3 rounded-lg border border-border bg-card p-3">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate capitalize">
-                      {auth.authType.replace(/_/g, " ")} · {auth.countryCode}
-                    </p>
+                    <TruncatedText text={`${auth.authType.replace(/_/g, " ")} · ${auth.countryCode}`} className="text-sm font-medium capitalize" />
                     <p className="text-xs text-muted-foreground font-mono">
                       {auth.documentNumberMasked ? `••••${auth.documentNumberMasked}` : "No document ref"}
                       {auth.validUntil && ` · Exp: ${auth.validUntil}`}

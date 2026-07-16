@@ -51,6 +51,7 @@ import { LeavesTabContent } from "./leaves-tab-content";
 import { WfhTabContent } from "./wfh-tab-content";
 import { LeaveApprovalsContent } from "./leave-approvals";
 import { useCan } from "@/hooks/api/access";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 export function LeavesWfhContent() {
   const { data: session } = useSession();
@@ -162,9 +163,7 @@ export function LeavesWfhContent() {
                         </AvatarFallback>
                       </Avatar>
                       <div className="min-w-0">
-                        <p className="text-xs font-medium text-foreground truncate">
-                          {leave.user?.firstName} {leave.user?.lastName}
-                        </p>
+                        <TruncatedText text={`${leave.user?.firstName ?? ""} ${leave.user?.lastName ?? ""}`.trim()} className="text-xs font-medium text-foreground" />
                         <p className="text-[10px] text-muted-foreground">
                           {format(new Date(leave.startDate),"MMM dd")} –{" "}
                           {format(new Date(leave.endDate),"MMM dd")}

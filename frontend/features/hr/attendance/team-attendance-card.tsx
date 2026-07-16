@@ -12,6 +12,7 @@ import { useHrTeamAttendanceStatus } from "@/hooks/api/hr";
 import { resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "@/lib/format-utils";
 import type { TeamAttendanceEntry } from "@/types/hr";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 function StatusBadge({ status }: { status: TeamAttendanceEntry["status"] }) {
   switch (status) {
@@ -138,11 +139,9 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
                 </Avatar>
 
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{entry.name}</p>
+                  <TruncatedText text={entry.name} className="text-sm font-medium" />
                   {entry.department && (
-                    <p className="text-xs text-muted-foreground truncate">
-                      {entry.department}
-                    </p>
+                    <TruncatedText text={entry.department} className="text-xs text-muted-foreground" />
                   )}
                 </div>
 

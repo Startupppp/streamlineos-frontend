@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { getInitials } from "@/lib/format-utils";
 
 import type { Termination } from "@/hooks/api/hr";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 function terminationStatusBadgeClass(status: string | null): string {
   if (status === "APPROVED" || status === "COMPLETED")
@@ -122,9 +123,7 @@ export function TerminationDetailSheet({
             </Avatar>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <p className="text-sm font-semibold truncate">
-                  {reviewRecord.employee?.name ?? "Employee"}
-                </p>
+                <TruncatedText text={reviewRecord.employee?.name ?? "Employee"} className="text-sm font-semibold" />
                 <span
                   className={cn(
                     "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",

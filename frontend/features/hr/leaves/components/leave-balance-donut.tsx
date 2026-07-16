@@ -5,6 +5,7 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp } from "lucide-react";
 import type { LeaveBalance } from "./leaves-shared";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const DONUT_COLORS = ["#06b6d4", "#3b82f6", "#ef4444", "#10b981", "#8b5cf6"];
 
@@ -100,9 +101,7 @@ export function LeaveBalanceDonut({ balances, allowedNames }: { balances: LeaveB
                         backgroundColor: DONUT_COLORS[i % DONUT_COLORS.length],
                       }}
                     />
-                    <span className="text-[11px] font-medium text-muted-foreground truncate">
-                      {item.name}
-                    </span>
+                    <TruncatedText text={item.name} className="text-[11px] font-medium text-muted-foreground" />
                   </div>
                   <span className="text-[11px] font-semibold text-foreground shrink-0 tabular-nums">
                     {item.remaining}/{item.total}

@@ -20,6 +20,7 @@ import {
   useHrImportJob,
   useRollbackImportJob,
 } from "@/hooks/api/hr/import-export";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 type ErrorRow = { row: number; field?: string | null; message: string; _idx: number };
 
@@ -61,9 +62,7 @@ export function JobErrorsSheet({ jobId, open, onOpenChange }: JobErrorsSheetProp
         <SheetHeader className="px-6 pt-6 pb-4 border-b border-border shrink-0">
           <SheetTitle>Import Details</SheetTitle>
           {job && (
-            <p className="text-xs text-muted-foreground mt-0.5 truncate">
-              {job.fileName}
-            </p>
+            <TruncatedText text={job.fileName} className="text-xs text-muted-foreground mt-0.5" />
           )}
         </SheetHeader>
 

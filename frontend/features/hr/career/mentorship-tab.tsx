@@ -17,6 +17,7 @@ import {
   getUserDisplayName,
   type NamedUser,
 } from "@/features/projects/shared/resolve-user-name";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const STATUS_CONFIG = {
   active: { label: "Active", className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" },
@@ -46,7 +47,7 @@ const MentorshipRow = memo(function MentorshipRow({
       <CardContent className="py-3 px-4 flex items-center justify-between gap-4">
         <div className="min-w-0">
           <p className="text-sm font-medium">{mentorLabel} → {menteeLabel}</p>
-          {goal && <p className="text-xs text-muted-foreground mt-0.5 truncate">{goal}</p>}
+          {goal && <TruncatedText text={goal} className="text-xs text-muted-foreground mt-0.5" />}
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <Badge variant="outline" className={`text-xs ${statusClassName}`}>{statusLabel}</Badge>

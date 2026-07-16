@@ -36,6 +36,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { ReviewCycle } from "@/types/hr";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const cycleSchema = z.object({
   name: z.string()
@@ -241,7 +242,7 @@ export function CyclesTab() {
                   <div className="flex items-start gap-3">
                     <div className="min-w-0 flex-1 space-y-2.5">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-sm font-semibold text-foreground truncate">{cycle.name}</p>
+                        <TruncatedText text={cycle.name ?? ""} className="text-sm font-semibold text-foreground" />
                         <Badge className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${badgeClass}`}>
                           {cycle.status ?? "DRAFT"}
                         </Badge>

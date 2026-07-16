@@ -50,9 +50,9 @@ const MemberBreakdownCell = memo(function MemberBreakdownCell({
         </AvatarFallback>
       </Avatar>
       <div className="min-w-0">
-        <p className={cn("text-sm font-medium", TEXT_ONE_LINE)}>{displayName}</p>
+        <TruncatedText text={displayName} className="text-sm font-medium" />
         {email ? (
-          <p className={cn("text-[11px] text-muted-foreground", TEXT_ONE_LINE)}>{email}</p>
+          <TruncatedText text={email} className="text-[11px] text-muted-foreground" />
         ) : null}
       </div>
     </div>

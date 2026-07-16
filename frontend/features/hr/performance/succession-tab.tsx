@@ -25,6 +25,7 @@ import {
   getUserDisplayName,
   type NamedUser,
 } from "@/features/projects/shared/resolve-user-name";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const READINESS_CONFIG: Record<SuccessionReadiness, { label: string; className: string }> = {
   ready_now: { label: "Ready Now", className: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" },
@@ -141,7 +142,7 @@ export function SuccessionTab() {
               <Card key={plan.id}>
                 <CardContent className="py-3 px-4 flex items-center justify-between gap-4">
                   <div className="min-w-0">
-                    <p className="font-medium text-sm truncate">{plan.roleName}</p>
+                    <TruncatedText text={plan.roleName} className="font-medium text-sm" />
                     <p className="text-xs text-muted-foreground mt-0.5">
                       Successor: {resolveMemberName(plan.successorId) ?? plan.successorId}
                       {plan.incumbentId && (

@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { format } from "date-fns";
 import { Users2 } from "lucide-react";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const STATUS_CONFIG: Record<ExternalReferralStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   SUBMITTED: { label: "Submitted", variant: "secondary" },
@@ -146,8 +147,8 @@ function ReferrerRow({ id, name, email, status, referralCount }: { id: number; n
   return (
     <div className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2.5">
       <div className="min-w-0">
-        <p className="text-sm font-medium text-foreground truncate">{name}</p>
-        <p className="text-[11px] text-muted-foreground truncate">{email} · {referralCount} referral{referralCount === 1 ? "" : "s"}</p>
+        <TruncatedText text={name} className="text-sm font-medium text-foreground" />
+        <TruncatedText text={`${email} · ${referralCount} referral${referralCount === 1 ? "" : "s"}`} className="text-[11px] text-muted-foreground" />
       </div>
       <div className="flex items-center gap-2 shrink-0">
         <Badge variant={status === "ACTIVE" ? "secondary" : "destructive"} className="text-[10px]">{status}</Badge>

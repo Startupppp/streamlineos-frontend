@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { getColorSafe, wfhStatusColors } from "@/lib/theme-constants";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 export interface LeaveBalance {
   id: number;
@@ -307,17 +308,13 @@ export const WfhRequestItem = React.memo(function WfhRequestItem({
         )}
         <div className="min-w-0 flex-1">
           {showUser && request.user && (
-            <p className="text-sm font-semibold text-foreground truncate">
-              {request.user.firstName} {request.user.lastName}
-            </p>
+            <TruncatedText text={`${request.user.firstName ?? ""} ${request.user.lastName ?? ""}`.trim()} className="text-sm font-semibold text-foreground" />
           )}
           <p className="text-sm font-medium text-foreground">
             {format(new Date(request.date), "EEE, MMM dd, yyyy")}
           </p>
           {request.reason && (
-            <p className="text-xs text-muted-foreground mt-0.5 truncate">
-              {request.reason}
-            </p>
+            <TruncatedText text={request.reason} className="text-xs text-muted-foreground mt-0.5" />
           )}
           {status === "REJECTED" && request.rejectionReason && (
             <p className="text-xs text-rose-600 dark:text-rose-400 mt-0.5 truncate">
@@ -442,9 +439,7 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
             />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-foreground leading-tight truncate">
-              {typeName.replace(" Leave", "")}
-            </p>
+            <TruncatedText text={typeName.replace(" Leave", "")} className="text-sm font-semibold text-foreground leading-tight" />
             <p className="text-[10px] text-muted-foreground">Leave</p>
           </div>
         </div>
@@ -477,12 +472,7 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
             {status.charAt(0) + status.slice(1).toLowerCase()}
           </span>
           {request.managerComment && (
-            <span
-              className="text-[10px] text-muted-foreground truncate max-w-[120px]"
-              title={request.managerComment}
-            >
-              &ldquo;{request.managerComment}&rdquo;
-            </span>
+            <TruncatedText text={`“${request.managerComment}”`} className="text-[10px] text-muted-foreground max-w-[120px]" />
           )}
           {status === "REJECTED" && request.rejectionReason && (
             <span

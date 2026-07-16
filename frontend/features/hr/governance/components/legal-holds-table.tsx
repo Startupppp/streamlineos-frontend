@@ -10,6 +10,7 @@ import { StateIllustration } from "@/components/illustrations";
 import { useCan } from "@/hooks/api/access";
 import { useLegalHolds, useReleaseLegalHold, useDeleteLegalHold, type LegalHold } from "../hooks/use-legal-holds";
 import { LegalHoldSheet } from "./legal-hold-sheet";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { format } from "date-fns";
 
 export function LegalHoldsTable() {
@@ -63,7 +64,7 @@ export function LegalHoldsTable() {
     {
       key: "reason",
       header: "Reason",
-      cell: (row) => <span className="text-sm max-w-xs truncate block">{row.reason}</span>,
+      cell: (row) => <TruncatedText text={row.reason ?? ""} className="text-sm max-w-xs" />,
     },
     {
       key: "placedAt",

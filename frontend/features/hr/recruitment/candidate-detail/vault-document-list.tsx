@@ -28,6 +28,7 @@ import {
 } from "@/hooks/api/hr/recruitment";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const DOCUMENT_TYPES = [
   { value: "AADHAR", label: "Aadhar Card" },
@@ -198,9 +199,7 @@ export function VaultDocumentList({ candidateId }: VaultDocumentListProps) {
                   />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-semibold text-foreground truncate">
-                    {doc.filename}
-                  </p>
+                  <TruncatedText text={doc.filename} className="text-xs font-semibold text-foreground" />
                   <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                     <span
                       className={cn(

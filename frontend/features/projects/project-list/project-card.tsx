@@ -22,7 +22,8 @@ import {
 import { cn } from "@/lib/utils";
 import { useCan } from "@/hooks/api/access";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { TEXT_ONE_LINE, TEXT_TWO_LINES, TEXT_FLEX_CHILD } from "@/features/projects/shared/text-overflow";
+import { TEXT_TWO_LINES, TEXT_FLEX_CHILD } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import type { ProjectListItem } from "@/types/projects/projects";
 import { ProjectCardDialogs } from "./project-card-dialogs";
 import {
@@ -141,17 +142,12 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
                   {project.key}
                 </span>
                 <h3
-                  className={cn(
-                    TEXT_ONE_LINE,
-                    "text-[13px] font-semibold leading-tight text-foreground transition-colors group-hover:text-primary",
-                  )}
+                  className="text-[13px] font-semibold leading-tight text-foreground transition-colors group-hover:text-primary min-w-0"
                 >
                   {canEdit ? (
                     <InlineProjectTitle projectId={project.id} currentName={project.name} />
                   ) : (
-                    <span className={TEXT_ONE_LINE} title={project.name}>
-                      {project.name}
-                    </span>
+                    <TruncatedText text={project.name} />
                   )}
                 </h3>
               </div>

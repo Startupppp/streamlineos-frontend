@@ -6,8 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { MeetingTypeBadge, MeetingStatusBadge } from "./meeting-badges";
 import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
-import { cn } from "@/lib/utils";
-import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TABLE_TITLE_CELL } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import type { Meeting, ProjectMemberRecord } from "@/types/projects";
 
 interface Sprint {
@@ -44,15 +44,14 @@ export function buildMeetingsColumns(
         <div className="flex min-w-0 flex-col gap-0.5 overflow-hidden">
           <Link
             href={`/projects/${projectId}/meetings/${row.id}`}
-            className={cn("font-medium text-foreground hover:text-primary", TEXT_ONE_LINE)}
-            title={row.title}
+            className="font-medium text-foreground hover:text-primary min-w-0 block"
           >
-            {row.title}
+            <TruncatedText text={row.title} />
           </Link>
           {row.sprintId != null && sprintMap.has(row.sprintId) ? (
             <span className="flex max-w-full min-w-0 items-center gap-1 text-[11px] text-muted-foreground">
               <Layers className="h-3 w-3 shrink-0" />
-              <span className={TEXT_ONE_LINE}>{sprintMap.get(row.sprintId)?.name}</span>
+              <TruncatedText text={sprintMap.get(row.sprintId)?.name ?? ""} className="text-[11px]" />
             </span>
           ) : null}
         </div>
@@ -107,9 +106,7 @@ export function buildMeetingsColumns(
         if (!host) return <span className="text-sm text-muted-foreground">—</span>;
         const label = getUserDisplayName(host);
         return (
-          <span className={cn("max-w-[120px] text-sm text-foreground", TEXT_ONE_LINE)} title={host.email}>
-            {label}
-          </span>
+          <TruncatedText text={label} className="max-w-[120px] text-sm text-foreground" />
         );
       },
     },

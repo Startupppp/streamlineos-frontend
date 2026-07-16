@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBiometricDevices, type BiometricDevice } from "@/hooks/api/hr/biometric";
 import { format } from "date-fns";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface Props {
   canManage: boolean;
@@ -51,7 +52,7 @@ export function BiometricDevicesList({ canManage, onEdit }: Props) {
         >
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-foreground truncate">{device.name}</p>
+              <TruncatedText text={device.name} className="text-sm font-semibold text-foreground" />
               <div className="flex items-center gap-1.5 mt-1">
                 <Badge variant="secondary" className="text-[11px]">{device.vendor}</Badge>
                 <span className="flex items-center gap-1 text-[11px]">
@@ -86,7 +87,7 @@ export function BiometricDevicesList({ canManage, onEdit }: Props) {
             {device.location && (
               <div className="flex items-center justify-between">
                 <span>Location</span>
-                <span className="font-medium text-foreground truncate max-w-[120px]">{device.location}</span>
+                <TruncatedText text={device.location} className="font-medium text-foreground max-w-[120px]" />
               </div>
             )}
             {device.lastSyncAt && (

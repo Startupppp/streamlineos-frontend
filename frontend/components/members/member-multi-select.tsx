@@ -74,8 +74,8 @@ function MemberRow({ member, selected, onToggle }: RowProps) {
         <AvatarFallback className="text-[10px]">{getInitials(name)}</AvatarFallback>
       </Avatar>
       <div className="flex min-w-0 flex-1 flex-col">
-        <span className={cn("truncate text-sm", selected && "font-medium")}>{name}</span>
-        <span className="truncate text-xs text-muted-foreground">{member.email}</span>
+        <TruncatedText text={name} className={cn("text-sm", selected && "font-medium")} />
+        <TruncatedText text={member.email ?? ""} className="text-xs text-muted-foreground" />
       </div>
       <span
         className={cn(

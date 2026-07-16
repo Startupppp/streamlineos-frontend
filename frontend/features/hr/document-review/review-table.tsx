@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 export interface EmployeeDocSummary {
   userId: string;
@@ -133,13 +134,8 @@ export function ReviewTable({ list, canReview, onOpenReview }: ReviewTableProps)
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-foreground truncate">
-              {emp.userName ?? "Unknown"}
-            </p>
-            <p className="text-[11px] text-muted-foreground truncate">
-              {emp.designation ?? "—"}
-              {emp.employeeId ? ` · ${emp.employeeId}` : ""}
-            </p>
+            <TruncatedText text={emp.userName ?? "Unknown"} className="text-sm font-semibold text-foreground" />
+            <TruncatedText text={`${emp.designation ?? "—"}${emp.employeeId ? ` · ${emp.employeeId}` : ""}`} className="text-[11px] text-muted-foreground" />
           </div>
         </div>
       ),

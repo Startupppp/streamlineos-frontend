@@ -33,6 +33,7 @@ const WellnessTrendChart = dynamic(
 );
 import { BurnoutFlagsList } from "./burnout-flags-list";
 import { formatDistanceToNow } from "date-fns";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const SENTINEL = "__ALL__";
 
@@ -106,7 +107,7 @@ export function SafetyPageContent() {
     {
       key: "location",
       header: "Location",
-      cell: (row) => <span className="text-sm truncate max-w-[160px]">{row.location}</span>,
+      cell: (row) => <TruncatedText text={row.location ?? ""} className="text-sm max-w-[160px]" />,
     },
     {
       key: "occurredAt",

@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useRosters, useRosterEntries, usePublishRoster } from "@/hooks/api/hr/rosters";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api-client";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface Props {
   canManage: boolean;
@@ -48,7 +49,7 @@ function RosterCard({ roster, canManage }: RosterCardProps) {
     <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
       <div className="p-4 flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-foreground truncate">{roster.name}</p>
+          <TruncatedText text={roster.name} className="text-sm font-semibold text-foreground" />
           <p className="text-xs text-muted-foreground mt-0.5">{roster.weekStart} – {roster.weekEnd}</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">

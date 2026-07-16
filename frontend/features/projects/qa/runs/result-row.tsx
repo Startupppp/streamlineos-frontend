@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { Bug as BugIcon } from "lucide-react";
 import { useUpdateTestResult } from "@/hooks/api/projects/qa";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { PM_PANEL } from "@/features/projects/shared/pm-chrome";
 import type { TestRunResult, TestResultStatus, TestCasePriority } from "@/types/projects";
 
@@ -92,9 +92,7 @@ export const ResultRow = memo(function ResultRow({
         <span className="shrink-0 font-mono text-[11px] text-muted-foreground">
           {caseLabel}
         </span>
-        <span className={cn(TEXT_ONE_LINE, "min-w-0 flex-1 text-[11px] font-medium")} title={title}>
-          {title}
-        </span>
+        <TruncatedText text={title} className="min-w-0 flex-1 text-[11px] font-medium" />
         {tc?.priority ? (
           <Badge variant="outline" className={cn("shrink-0 text-[10px] capitalize", PRIORITY_STYLES[tc.priority])}>
             {tc.priority}

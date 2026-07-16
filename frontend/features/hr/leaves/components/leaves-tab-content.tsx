@@ -61,6 +61,7 @@ import type {
 import { BalanceCard, balanceCardConfig, DEFAULT_CARD_CONFIG, priorityConfig } from "./leaves-shared";
 import { useCan } from "@/hooks/api/access";
 import { useLeavePolicy } from "@/hooks/api/hr";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 function LeaveCalendarWidget({
   approvedLeaves,
@@ -442,9 +443,7 @@ export function LeavesTabContent({
                 />
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-foreground leading-tight truncate">
-                  {typeName.replace(" Leave", "")}
-                </p>
+                <TruncatedText text={typeName.replace(" Leave", "")} className="text-sm font-semibold text-foreground leading-tight" />
                 <p className="text-[10px] text-muted-foreground">Leave</p>
               </div>
             </div>
@@ -547,12 +546,7 @@ export function LeavesTabContent({
                 {status.charAt(0) + status.slice(1).toLowerCase()}
               </span>
               {row.managerComment && (
-                <span
-                  className="text-[10px] text-muted-foreground truncate max-w-[120px]"
-                  title={row.managerComment}
-                >
-                  &ldquo;{row.managerComment}&rdquo;
-                </span>
+                <TruncatedText text={`“${row.managerComment}”`} className="text-[10px] text-muted-foreground max-w-[120px]" />
               )}
               {status === "REJECTED" && row.rejectionReason && (
                 <span

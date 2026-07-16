@@ -33,6 +33,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Employee, OneOnOneMeeting, MeetingStatus } from "@/types/hr";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 export function MeetingsTab() {
   const { data: meetings, isLoading } = useOneOnOneMeetings();
@@ -156,7 +157,7 @@ export function MeetingsTab() {
                   </Avatar>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{m.manager?.name} & {m.employee?.name}</p>
+                  <TruncatedText text={`${m.manager?.name ?? ""} & ${m.employee?.name ?? ""}`} className="text-sm font-medium" />
                   <p className="text-[10px] text-muted-foreground flex items-center gap-1">
                     <Clock className="h-3 w-3" />
                     {format(new Date(m.scheduledAt), "PPp")} &middot; {m.duration}min

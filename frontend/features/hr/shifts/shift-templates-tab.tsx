@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api-client";
 import { useHrShifts, useDeleteShift, type ShiftTemplate } from "@/hooks/api/hr/shifts";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface Props {
   canManage: boolean;
@@ -62,7 +63,7 @@ export function ShiftTemplatesTab({ canManage, onEdit }: Props) {
         >
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-foreground truncate">{shift.name}</p>
+              <TruncatedText text={shift.name} className="text-sm font-semibold text-foreground" />
               <div className="flex items-center gap-1.5 mt-1">
                 <Badge variant="secondary" className="text-[11px]">{shift.type}</Badge>
                 {shift.isNightShift && (

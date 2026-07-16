@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useComplianceCalendar } from "@/hooks/api/hr/compliance-calendar";
 import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const EVENT_TYPE_STYLES: Record<string, string> = {
   document_expiry: "bg-amber-100 border-amber-200 text-amber-700 dark:bg-amber-900/40 dark:border-amber-800 dark:text-amber-300",
@@ -79,7 +80,7 @@ export function ComplianceCalendar() {
                 </p>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">{ev.entityName}</p>
+                <TruncatedText text={ev.entityName} className="text-sm font-medium text-foreground" />
               </div>
               <span
                 className={cn(

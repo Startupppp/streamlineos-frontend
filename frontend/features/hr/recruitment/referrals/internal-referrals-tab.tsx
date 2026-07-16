@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { format } from "date-fns";
 import type { CandidateReferral, ReferralStatus } from "@/types/hr/recruitment";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const STATUS_CONFIG: Record<ReferralStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   SUBMITTED: { label: "Submitted", variant: "secondary" },
@@ -128,7 +129,7 @@ function ReferralCard({ referral, onStatusChange, onMarkBonus, isUpdating }: Ref
               )}
             </div>
             {referral.notes && (
-              <p className="text-xs text-muted-foreground mt-1 truncate">{referral.notes}</p>
+              <TruncatedText text={referral.notes} className="text-xs text-muted-foreground mt-1" />
             )}
           </div>
           <div className="flex items-center gap-2 shrink-0">
