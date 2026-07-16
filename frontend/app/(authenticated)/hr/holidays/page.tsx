@@ -594,9 +594,9 @@ export default function HolidaysPage() {
             })}
           </div>
           {canManage && (
-            <Button onClick={handleCreateClick} size="sm" className="">
-              <Plus className="h-3.5 w-3.5 mr-1.5" /> Add Holiday
-            </Button>
+            <AnimatedIconButton icon={PlusIcon} iconSize={14} onClick={handleCreateClick} size="sm">
+              {" Add Holiday"}
+            </AnimatedIconButton>
           )}
         </div>
       }

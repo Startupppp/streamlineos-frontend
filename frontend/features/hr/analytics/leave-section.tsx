@@ -1,31 +1,28 @@
 "use client";
 
 import { useHrLeaveAnalytics } from "@/hooks/api/hr/leaves-expenses";
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts";
+import dynamic from "next/dynamic";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   AnalyticsChartCard,
   AnalyticsSectionHeader,
-  CHART_SEMANTIC,
   EmptyChart,
-  PIE_COLORS,
   SectionSkeleton,
   SimpleBar,
-  chartAxisTick,
-  chartGridProps,
-  chartTooltipStyle,
 } from "./shared";
+
+const LeaveDeptChart = dynamic(
+  () => import("./leave-charts").then((m) => ({ default: m.LeaveDeptChart })),
+  { ssr: false, loading: () => <Skeleton className="h-[220px] w-full" /> },
+);
+const LeaveMonthlyChart = dynamic(
+  () => import("./leave-charts").then((m) => ({ default: m.LeaveMonthlyChart })),
+  { ssr: false, loading: () => <Skeleton className="h-[220px] w-full" /> },
+);
+const LeaveTypePieChart = dynamic(
+  () => import("./leave-charts").then((m) => ({ default: m.LeaveTypePieChart })),
+  { ssr: false, loading: () => <Skeleton className="h-[200px] w-full" /> },
+);
 
 interface LeaveSectionProps {
   year: number;

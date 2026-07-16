@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { Languages, Loader2 } from "lucide-react";
+import { Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,

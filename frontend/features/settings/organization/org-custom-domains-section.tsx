@@ -154,10 +154,9 @@ export function OrgCustomDomainsSection({ canEdit }: OrgCustomDomainsSectionProp
               {form.formState.errors.domain && <p className="text-[11px] text-destructive">{form.formState.errors.domain.message}</p>}
             </div>
             <div className="flex gap-2">
-              <Button type="submit" size="sm" disabled={addMutation.isPending} className="gap-1.5 h-8">
-                {addMutation.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              <LoadingButton type="submit" size="sm" isPending={addMutation.isPending} className="gap-1.5 h-8" loadingText="Adding…">
                 Add
-              </Button>
+              </LoadingButton>
               <Button type="button" variant="ghost" size="sm" className="h-8" onClick={() => { setShowAdd(false); form.reset(); }}>
                 Cancel
               </Button>
@@ -211,10 +210,9 @@ export function OrgCustomDomainsSection({ canEdit }: OrgCustomDomainsSectionProp
                     </div>
                     <CopyableToken token={d.verificationToken} />
                     {canEdit && (
-                      <Button size="sm" variant="outline" className="h-7 text-xs gap-1" disabled={verifyMutation.isPending} onClick={() => verifyMutation.mutate(d.id)}>
-                        {verifyMutation.isPending && <Loader2 className="h-3 w-3 animate-spin" />}
+                      <LoadingButton size="sm" variant="outline" className="h-7 text-xs gap-1" isPending={verifyMutation.isPending} onClick={() => verifyMutation.mutate(d.id)} loadingText="Verifying…">
                         Verify now
-                      </Button>
+                      </LoadingButton>
                     )}
                   </div>
                 )}

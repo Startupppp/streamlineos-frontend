@@ -516,9 +516,11 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                 </div>
 
                 {(employeeAsEmployee as Employee).bio && (
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {(employeeAsEmployee as Employee).bio}
-                  </p>
+                  <TruncatedText
+                    text={(employeeAsEmployee as Employee).bio ?? ""}
+                    lines={2}
+                    className="text-sm text-muted-foreground"
+                  />
                 )}
 
                 {isSelf && completeness < 100 && (

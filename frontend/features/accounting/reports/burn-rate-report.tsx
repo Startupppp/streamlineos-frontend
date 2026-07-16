@@ -1,8 +1,6 @@
 "use client";
 
-import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer,
-} from "recharts";
+import dynamic from "next/dynamic";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";

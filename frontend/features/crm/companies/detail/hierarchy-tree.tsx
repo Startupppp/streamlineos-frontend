@@ -26,7 +26,7 @@ function HierarchyNodeCard({ node, currentId, depth = 0 }: HierarchyNodeProps) {
         )}
       >
         <Building2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-        <span className="truncate">{node.name}</span>
+        <TruncatedText text={node.name} />
         {node.industry && (
           <span className="text-xs text-muted-foreground ml-auto shrink-0">{node.industry}</span>
         )}

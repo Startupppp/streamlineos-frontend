@@ -16,6 +16,19 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import dynamic from "next/dynamic";
 
+const ScorecardCharts = dynamic(
+  () => import("@/features/hr/recruitment/components/scorecard-charts").then((m) => ({ default: m.ScorecardCharts })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Skeleton className="h-[268px] rounded-xl" />
+        <Skeleton className="h-[268px] rounded-xl" />
+      </div>
+    ),
+  },
+);
+
 interface InterviewerStat {
   interviewerId: string;
   name: string | null;

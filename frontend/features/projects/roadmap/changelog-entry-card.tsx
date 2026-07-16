@@ -12,7 +12,8 @@ import type { ChangelogEntry } from "@/types/projects";
 import { cn } from "@/lib/utils";
 import { PM_PANEL } from "@/features/projects/shared/pm-chrome";
 import { listItem, listItemReduced, pmSnappy } from "@/features/projects/shared/pm-motion";
-import { TEXT_ONE_LINE, TEXT_TWO_LINES } from "@/features/projects/shared/text-overflow";
+import { TEXT_TWO_LINES } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { CHANGELOG_TYPE_OPTIONS, CHANGELOG_TYPE_VARIANT } from "./roadmap-constants";
 
 export interface ChangelogEntryCardProps {
@@ -56,9 +57,7 @@ export const ChangelogEntryCard = memo(function ChangelogEntryCard({
       <div className="flex min-w-0 items-start justify-between gap-2">
         <div className="min-w-0 space-y-1.5">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <p className={cn(TEXT_ONE_LINE, "text-sm font-medium")} title={entry.title}>
-              {entry.title}
-            </p>
+            <TruncatedText text={entry.title} className="text-sm font-medium" />
             <Badge variant={CHANGELOG_TYPE_VARIANT[entry.type]} className="text-[10px]">
               {CHANGELOG_TYPE_OPTIONS.find((o) => o.value === entry.type)?.label}
             </Badge>

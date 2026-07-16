@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Loader2, FileCheck } from "lucide-react";
+import { FileCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Dialog,
   DialogContent,
