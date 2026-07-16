@@ -7,6 +7,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Label } from "@/components/ui/label";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -44,7 +45,7 @@ function CategoryMappingRow({ original, mapped, onValueChange }: CategoryMapping
   );
   return (
     <div className="flex items-center gap-2">
-      <span className="text-xs text-muted-foreground truncate w-24">&quot;{original}&quot;</span>
+      <TruncatedText text={`"${original}"`} className="text-xs text-muted-foreground w-24" />
       <span className="text-xs text-muted-foreground">→</span>
       <Select value={mapped} onValueChange={handleChange}>
         <SelectTrigger className="text-xs w-36">

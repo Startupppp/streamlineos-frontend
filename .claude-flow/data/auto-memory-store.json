@@ -1,0 +1,14 @@
+[
+  {
+    "id": "task-ai-action-copilot-task13",
+    "key": "ai-action-copilot-task13",
+    "content": "Task completed: ai-action-copilot-task13",
+    "namespace": "tasks",
+    "type": "task-outcome",
+    "metadata": {
+      "success": true,
+      "quality": 0.85
+    },
+    "createdAt": 1784216992419
+  }
+]

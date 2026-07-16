@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, memo } from "react";
+import { useCallback, memo, useState } from "react";
 import { Sparkles } from "lucide-react";
 import { CheckCheckIcon, XIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState } from "@/components/shared";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { InsightExplanationPanel } from "@/features/inventory/components/insight-explanation-panel";
 import { useInventoryInsights, useGenerateInsights, useUpdateInsight } from "@/hooks/api/inventory/ai";
 import type { AiInsight } from "@/hooks/api/inventory/reports";
 
@@ -47,6 +48,8 @@ const InsightRow = memo(function InsightRow({
   onDismiss,
   isPending,
 }: InsightRowProps) {
+  const [expanded, setExpanded] = useState(false);
+
   function handleAcknowledge(): void {
     onAcknowledge(insight.id);
   }
@@ -55,42 +58,62 @@ const InsightRow = memo(function InsightRow({
     onDismiss(insight.id);
   }
 
+  function handleToggleExpand(): void {
+    setExpanded((v) => !v);
+  }
+
   return (
-    <div className="flex items-start gap-3 rounded-lg border border-border bg-card p-3">
-      <Badge
-        variant="outline"
-        className={`text-[9px] h-4 px-1.5 py-0 shrink-0 mt-0.5 ${getSeverityClass(insight.severity)}`}
-      >
-        {getSeverityLabel(insight.severity)}
-      </Badge>
-      <div className="flex-1 min-w-0">
-        <p className="text-[11px] font-semibold text-foreground">{insight.title}</p>
-        <TruncatedText text={insight.body} className="text-[11px] text-muted-foreground" lines={2} />
+    <div className="rounded-lg border border-border bg-card">
+      <div className="flex items-start gap-3 p-3">
+        <Badge
+          variant="outline"
+          className={`text-[9px] h-4 px-1.5 py-0 shrink-0 mt-0.5 ${getSeverityClass(insight.severity)}`}
+        >
+          {getSeverityLabel(insight.severity)}
+        </Badge>
+        <div className="flex-1 min-w-0">
+          <p className="text-[11px] font-semibold text-foreground">{insight.title}</p>
+          <TruncatedText text={insight.body} className="text-[11px] text-muted-foreground" lines={2} />
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 text-[9px]"
+            title={expanded ? "Collapse" : "Explain"}
+            onClick={handleToggleExpand}
+          >
+            <Sparkles className="h-3 w-3 text-blue-500" aria-hidden="true" />
+          </Button>
+          <AnimatedIconButton
+            icon={CheckCheckIcon}
+            iconSize={12}
+            iconClassName="text-emerald-600"
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+            title="Acknowledge"
+            onClick={handleAcknowledge}
+            disabled={isPending}
+          />
+          <AnimatedIconButton
+            icon={XIcon}
+            iconSize={12}
+            iconClassName="text-muted-foreground"
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+            title="Dismiss"
+            onClick={handleDismiss}
+            disabled={isPending}
+          />
+        </div>
       </div>
-      <div className="flex items-center gap-1 shrink-0">
-        <AnimatedIconButton
-          icon={CheckCheckIcon}
-          iconSize={12}
-          iconClassName="text-emerald-600"
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6"
-          title="Acknowledge"
-          onClick={handleAcknowledge}
-          disabled={isPending}
-        />
-        <AnimatedIconButton
-          icon={XIcon}
-          iconSize={12}
-          iconClassName="text-muted-foreground"
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6"
-          title="Dismiss"
-          onClick={handleDismiss}
-          disabled={isPending}
-        />
-      </div>
+      {expanded && (
+        <div className="px-3 pb-3">
+          <InsightExplanationPanel insight={insight} />
+        </div>
+      )}
     </div>
   );
 });

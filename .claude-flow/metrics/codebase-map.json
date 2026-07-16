@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-07-16T15:56:20.402Z",
+  "projectRoot": "D:\\projects\\personal\\Streamlineos",
+  "structure": {
+    "hasPackageJson": false,
+    "hasTsConfig": false,
+    "hasClaudeConfig": true,
+    "hasClaudeFlow": true
+  },
+  "scannedAt": 1784217380402
+}

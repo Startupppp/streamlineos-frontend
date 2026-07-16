@@ -141,6 +141,8 @@ export type PermissionKey =
   | "support:kb:manage"
   | "support:macros:view"
   | "support:macros:manage"
+  | "support:knowledge-gaps:view"
+  | "support:knowledge-gaps:manage"
   | "inventory:products:read"
   | "inventory:products:create"
   | "inventory:products:update"
@@ -480,4 +482,7 @@ export type PermissionKey =
   | "crm:deals:approve"
   | "crm:deals:forecast"
   | "crm:deals:manage"
-  | "hr:email-templates:manage";
+  | "hr:email-templates:manage"
+  | "ai:search:use"
+  | "ai:chat:use"
+  | "ai:feedback:create";
