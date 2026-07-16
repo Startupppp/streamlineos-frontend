@@ -2,7 +2,8 @@
 
 import { memo, useCallback } from "react";
 import { Controller, useFormContext } from "react-hook-form";
-import { Trash2 } from "lucide-react";
+import { Trash2Icon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -46,6 +47,7 @@ export const InspectionLineRow = memo(function InspectionLineRow({
   const serials = serialsData?.items ?? [];
 
   const handleRemove = useCallback(() => onRemove(index), [index, onRemove]);
+  const { iconRef: removeIconRef, hoverHandlers: removeHoverHandlers } = useAnimatedIcon();
 
   return (
     <div className="rounded-md border border-border p-3 space-y-2 relative">
@@ -56,8 +58,9 @@ export const InspectionLineRow = memo(function InspectionLineRow({
             type="button"
             onClick={handleRemove}
             className="text-muted-foreground hover:text-destructive transition-colors"
+            {...removeHoverHandlers}
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            <Trash2Icon ref={removeIconRef} size={14} />
           </button>
         )}
       </div>

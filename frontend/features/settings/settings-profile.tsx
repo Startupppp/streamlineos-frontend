@@ -5,9 +5,11 @@ import { useState, useRef, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AvatarCropDialog } from "@/components/ui/avatar-crop-dialog";
-import { Camera, Loader2, Trash2, Check, X } from "lucide-react";
+import { Camera, Loader2 } from "lucide-react";
+import { Trash2Icon, CheckIcon, XIcon } from "@animateicons/react/lucide";
 import { useUpdateProfile } from "@/hooks/api/hr";
 import { apiClient, getApiError } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -218,15 +220,18 @@ export function SettingsProfile() {
               )}
             </Button>
             {session?.user?.image && (
-              <Button
+              <AnimatedIconButton
+                icon={Trash2Icon}
+                iconSize={12}
+                iconClassName="mr-1"
                 variant="ghost"
                 size="sm"
                 className="h-7 text-xs text-muted-foreground hover:text-destructive"
                 disabled={isPhotoBusy}
                 onClick={handleRemovePhoto}
               >
-                <Trash2 className="h-3 w-3 mr-1" />Remove
-              </Button>
+                Remove
+              </AnimatedIconButton>
             )}
           </div>
         </div>
@@ -247,26 +252,30 @@ export function SettingsProfile() {
                 autoFocus
                 className="h-8 text-sm flex-1"
               />
-              <Button
-                size="icon"
-                className="h-9 w-9 shrink-0"
-                onClick={handleSaveName}
-                disabled={isSavingName || !editName.trim()}
-              >
-                {isSavingName ? (
+              {isSavingName ? (
+                <Button size="icon" className="h-9 w-9 shrink-0" disabled aria-label="Saving">
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Check className="h-3.5 w-3.5" />
-                )}
-              </Button>
-              <Button
+                </Button>
+              ) : (
+                <AnimatedIconButton
+                  icon={CheckIcon}
+                  iconSize={14}
+                  size="icon"
+                  className="h-9 w-9 shrink-0"
+                  onClick={handleSaveName}
+                  disabled={!editName.trim()}
+                  aria-label="Save name"
+                />
+              )}
+              <AnimatedIconButton
+                icon={XIcon}
+                iconSize={14}
                 size="icon"
                 variant="ghost"
                 className="h-9 w-9 shrink-0"
                 onClick={handleCancelEditName}
-              >
-                <X className="h-3.5 w-3.5" />
-              </Button>
+                aria-label="Cancel editing"
+              />
             </div>
           ) : (
             <button

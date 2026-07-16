@@ -3,9 +3,11 @@
 import { useState, useCallback, memo } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, ArrowRight } from "lucide-react";
+import { Pencil, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
@@ -116,15 +118,16 @@ const TemplateCard = memo(function TemplateCard({ template, index, onEdit, onDel
           <Pencil className="h-3 w-3" />
           Edit
         </Button>
-        <Button
+        <AnimatedIconButton
+          icon={Trash2Icon}
+          iconClassName="mr-1.5"
           size="sm"
           variant="ghost"
-          className="px-3 text-xs gap-1.5 text-destructive hover:text-destructive"
+          className="px-3 text-xs text-destructive hover:text-destructive"
           onClick={handleDelete}
         >
-          <Trash2 className="h-3 w-3" />
           Delete
-        </Button>
+        </AnimatedIconButton>
       </div>
     </motion.div>
   );
@@ -225,10 +228,9 @@ export function SalaryStructuresPageContent() {
       title="Salary Structure Templates"
       subtitle="Reusable compensation templates — per-employee structures are managed from Employees."
       actions={
-        <Button size="sm" className="gap-1.5" onClick={handleOpenCreate}>
-          <Plus className="h-3.5 w-3.5" />
+        <AnimatedIconButton icon={PlusIcon} iconClassName="mr-1.5" size="sm" onClick={handleOpenCreate}>
           Add Template
-        </Button>
+        </AnimatedIconButton>
       }
     >
       <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">

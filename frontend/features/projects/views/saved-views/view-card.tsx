@@ -10,8 +10,9 @@ import {
   Pin,
   PinOff,
   ArrowRight,
-  Trash2,
 } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { Trash2Icon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -102,14 +103,14 @@ export const ViewCard = memo(function ViewCard({
           </Button>
         )}
         {isOwner && (
-          <Button
+          <AnimatedIconButton
             variant="ghost"
             size="sm"
             className="h-7 w-7 p-0 text-destructive hover:text-destructive"
             onClick={handleDelete}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
+            icon={Trash2Icon}
+            iconSize={14}
+          />
         )}
         <ArrowRight className="h-4 w-4 text-muted-foreground ml-1" />
       </div>

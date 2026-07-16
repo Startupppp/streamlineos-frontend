@@ -2,9 +2,9 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { format, parseISO } from "date-fns";
-import { Download } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { DownloadIcon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -181,15 +181,15 @@ function DownloadButton({
   );
 
   return (
-    <Button
+    <AnimatedIconButton
+      icon={DownloadIcon}
+      iconSize={14}
       variant="ghost"
       size="icon"
       className="h-7 w-7"
       onClick={handleClick}
       disabled={loading}
       aria-label="Download export"
-    >
-      <Download className="h-3.5 w-3.5" />
-    </Button>
+    />
   );
 }

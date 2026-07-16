@@ -11,7 +11,9 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { cn, resolveImageUrl } from "@/lib/utils";
-import { ChevronRight, Plus, X, User } from "lucide-react";
+import { User } from "lucide-react";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { ChevronRightIcon, PlusIcon, XIcon } from "@animateicons/react/lucide";
 import { TicketTypeIcon } from "../shared/ticket-type-icon";
 import { getStatusDotClass } from "../shared/status-badge";
 import { formatTicketKey } from "../shared/format-ticket-key";
@@ -40,6 +42,7 @@ export interface ListViewItemProps {
 export const ListViewItem = memo(function ListViewItem({ ticket, projectKey, projectId, projectStatuses, onClick, displayOptions }: ListViewItemProps) {
   const handleClick = useCallback(() => onClick(ticket.id), [onClick, ticket.id]);
   const shouldReduceMotion = useReducedMotion();
+  const { iconRef: chevronIconRef, hoverHandlers: chevronHoverHandlers } = useAnimatedIcon();
 
   const showId = displayOptions?.showId ?? true;
   const showPriority = displayOptions?.showPriority ?? true;
@@ -149,8 +152,9 @@ export const ListViewItem = memo(function ListViewItem({ ticket, projectKey, pro
           onClick={handleClick}
           className="ml-1 flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors"
           aria-label="Open ticket"
+          {...chevronHoverHandlers}
         >
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRightIcon ref={chevronIconRef} size={16} />
         </button>
       </div>
       <div className="pr-2 flex-shrink-0">
@@ -173,6 +177,8 @@ export interface InlineGroupCreateProps {
 export function InlineGroupCreate({ groupKey, projectId, status }: InlineGroupCreateProps) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
+  const { iconRef: plusIconRef, hoverHandlers: plusHoverHandlers } = useAnimatedIcon();
+  const { iconRef: cancelIconRef, hoverHandlers: cancelHoverHandlers } = useAnimatedIcon();
   const createTicket = useCreateTicket({
     onSuccess: () => { setTitle(""); setOpen(false); },
     onError: (e) => toast.error(getErrorMessage(e)),
@@ -199,8 +205,9 @@ export function InlineGroupCreate({ groupKey, projectId, status }: InlineGroupCr
         onClick={handleOpenCreate}
         className="flex h-6 w-6 items-center justify-center rounded hover:bg-muted/60 transition-colors text-muted-foreground hover:text-foreground"
         aria-label={`Add ticket to ${groupKey}`}
+        {...plusHoverHandlers}
       >
-        <Plus className="h-3.5 w-3.5" />
+        <PlusIcon ref={plusIconRef} size={14} />
       </button>
     );
   }
@@ -221,8 +228,9 @@ export function InlineGroupCreate({ groupKey, projectId, status }: InlineGroupCr
         onClick={handleCancel}
         className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
         aria-label="Cancel"
+        {...cancelHoverHandlers}
       >
-        <X className="h-3.5 w-3.5" />
+        <XIcon ref={cancelIconRef} size={14} />
       </button>
     </div>
   );

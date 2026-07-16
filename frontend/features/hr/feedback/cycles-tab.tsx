@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { Plus, X } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { PlusIcon, XIcon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -53,6 +55,15 @@ interface CycleFormState {
   endDate: string;
   isAnonymous: boolean;
   questions: QuestionBuilder[];
+}
+
+function RemoveQuestionButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <button onClick={onClick} className="text-muted-foreground hover:text-red-500" {...hoverHandlers}>
+      <XIcon ref={iconRef} size={14} />
+    </button>
+  );
 }
 
 export function CyclesTab() {
@@ -166,10 +177,9 @@ export function CyclesTab() {
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetTrigger asChild>
             <motion.div whileTap={{ scale: 0.97 }}>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
+              <AnimatedIconButton icon={PlusIcon} iconSize={16} iconClassName="mr-2">
                 Create Cycle
-              </Button>
+              </AnimatedIconButton>
             </motion.div>
           </SheetTrigger>
           <SheetContent className="flex w-[480px] flex-col gap-0 overflow-hidden p-0">
@@ -228,18 +238,16 @@ export function CyclesTab() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label>Questions</Label>
-                  <Button type="button" size="sm" variant="outline" onClick={addQuestion}>
-                    <Plus className="w-3.5 h-3.5 mr-1" /> Add
-                  </Button>
+                  <AnimatedIconButton type="button" icon={PlusIcon} iconSize={14} iconClassName="mr-1" size="sm" variant="outline" onClick={addQuestion}>
+                    Add
+                  </AnimatedIconButton>
                 </div>
                 {form.questions.map((q, idx) => (
                   <div key={q.id} className="bg-muted rounded-xl p-3 space-y-2 border border-border">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-medium text-muted-foreground">Q{idx + 1}</span>
                       {form.questions.length > 1 && (
-                        <button onClick={() => removeQuestion(q.id)} className="text-muted-foreground hover:text-red-500">
-                          <X className="w-3.5 h-3.5" />
-                        </button>
+                        <RemoveQuestionButton onClick={() => removeQuestion(q.id)} />
                       )}
                     </div>
                     <Input

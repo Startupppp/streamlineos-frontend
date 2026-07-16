@@ -1,9 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { ChevronLeftIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { useCreateProduct } from "@/hooks/api/inventory";
@@ -11,6 +12,18 @@ import {
   NewProductForm,
   type ProductFormValues,
 } from "@/features/inventory/components/new-product-form";
+
+function BackToProductsButton() {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button variant="ghost" size="sm" asChild>
+      <Link href="/inventory/products" {...hoverHandlers}>
+        <ChevronLeftIcon ref={iconRef} size={14} className="mr-1" aria-hidden="true" />
+        Back to Products
+      </Link>
+    </Button>
+  );
+}
 
 export default function NewProductPage() {
   const router = useRouter();
@@ -49,14 +62,7 @@ export default function NewProductPage() {
     <PageWrapper
       title="New Product"
       subtitle="Add a new product to your catalogue."
-      actions={
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/inventory/products">
-            <ChevronLeft className="mr-1 h-4 w-4" />
-            Back to Products
-          </Link>
-        </Button>
-      }
+      actions={<BackToProductsButton />}
     >
       <NewProductForm
         onSubmit={onSubmit}

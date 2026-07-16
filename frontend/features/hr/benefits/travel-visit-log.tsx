@@ -5,8 +5,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, MapPin } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { MapPin } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -106,10 +107,9 @@ export function TravelVisitLog({ travelRequestId }: Props) {
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-foreground">Field Visit Log</p>
-        <Button size="sm" variant="outline" className="text-xs gap-1" onClick={handleOpenSheet}>
-          <Plus className="h-3 w-3" />
+        <AnimatedIconButton size="sm" variant="outline" className="text-xs gap-1" onClick={handleOpenSheet} icon={PlusIcon} iconSize={12} iconClassName="mr-1">
           Log Visit
-        </Button>
+        </AnimatedIconButton>
       </div>
 
       {isLoading ? (

@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Send, Loader2, MessageSquare, AlertTriangle, X } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { Loader2, MessageSquare, AlertTriangle } from "lucide-react";
+import { SendIcon, XIcon } from "@animateicons/react/lucide";
 import { useAddComment } from "@/hooks/api/projects";
 import { useCreateTicket } from "@/hooks/api/projects/tickets";
 import { useUpdateComment, useDeleteComment } from "@/hooks/api/projects/comment-mutations";
@@ -255,20 +257,16 @@ export function ActivityFeed({
             className="min-h-[80px] text-sm"
             users={members}
           />
-          <Button
+          <AnimatedIconButton
             type="button"
             size="icon-sm"
+            icon={SendIcon}
+            iconSize={14}
             className="shrink-0"
             onClick={handleSubmit}
             disabled={!newComment.trim() || addComment.isPending}
             aria-label="Post comment"
-          >
-            {addComment.isPending ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Send className="h-3.5 w-3.5" />
-            )}
-          </Button>
+          />
         </div>
       </div>
 
@@ -282,7 +280,7 @@ export function ActivityFeed({
             aria-label="Dismiss"
             className="shrink-0 text-amber-500 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors"
           >
-            <X className="h-3.5 w-3.5" />
+            <XIcon size={14} />
           </button>
         </div>
       )}

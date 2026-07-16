@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Plus, Shield } from "lucide-react";
+import { Shield } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
@@ -131,10 +133,9 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
       <div className="flex items-center justify-between gap-2">
         <p className="text-sm font-semibold text-foreground whitespace-nowrap">Software &amp; System Access</p>
         {canManage && (
-          <Button size="sm" className="gap-1.5 h-7 text-xs shrink-0" onClick={handleOpenCreate}>
-            <Plus className="h-3.5 w-3.5" />
+          <AnimatedIconButton size="sm" className="gap-1.5 h-7 text-xs shrink-0" onClick={handleOpenCreate} icon={PlusIcon} iconSize={14} iconClassName="mr-1.5">
             Request Access
-          </Button>
+          </AnimatedIconButton>
         )}
       </div>
 
@@ -150,10 +151,9 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
             </p>
           </div>
           {canManage && (
-            <Button size="sm" variant="outline" className="text-xs gap-1.5" onClick={handleOpenCreate}>
-              <Plus className="h-3 w-3" />
+            <AnimatedIconButton size="sm" variant="outline" className="text-xs gap-1.5" onClick={handleOpenCreate} icon={PlusIcon} iconSize={14} iconClassName="mr-1.5">
               Request Access
-            </Button>
+            </AnimatedIconButton>
           )}
         </div>
       ) : (

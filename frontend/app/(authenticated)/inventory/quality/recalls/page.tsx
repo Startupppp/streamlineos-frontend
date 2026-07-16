@@ -2,7 +2,8 @@
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Plus } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { format } from "date-fns";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -225,9 +226,9 @@ function RecallsPageInner() {
         title="Recalls"
         subtitle={total > 0 ? `${total} ${total === 1 ? "recall" : "recalls"}` : "Manage product recalls"}
         actions={
-          <Button size="sm" onClick={handleOpenCreate}>
-            <Plus className="mr-1.5 h-3.5 w-3.5" />New Recall
-          </Button>
+          <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1.5" size="sm" onClick={handleOpenCreate}>
+            New Recall
+          </AnimatedIconButton>
         }
       >
         {recallsQuery.error ? (

@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -157,10 +158,9 @@ export function TaxWindowsTab() {
         isLoading={isLoading}
         minWidth="720px"
         toolbar={
-          <Button size="sm" className="text-xs gap-1" onClick={handleAddClick}>
-            <Plus className="h-3.5 w-3.5" />
+          <AnimatedIconButton icon={PlusIcon} iconClassName="mr-1.5" size="sm" className="text-xs" onClick={handleAddClick}>
             Add Window
-          </Button>
+          </AnimatedIconButton>
         }
         emptyState={
           <EmptyState

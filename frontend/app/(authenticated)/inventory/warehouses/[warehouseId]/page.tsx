@@ -2,9 +2,10 @@
 
 import { useState, useCallback, useMemo, use } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { Plus, MapPin } from "lucide-react";
+import { MapPin } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { EmptyWarehouseIllustration } from "@/components/illustrations";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -197,10 +198,9 @@ export default function WarehouseDetailPage({
       }
       badge={`${locations.length} location${locations.length !== 1 ? "s" : ""}`}
       actions={
-        <Button size="sm" className="gap-1.5 text-xs" onClick={handleOpenSheet}>
-          <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+        <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1" size="sm" className="text-xs" onClick={handleOpenSheet}>
           Add Location
-        </Button>
+        </AnimatedIconButton>
       }
     >
       <Tabs defaultValue="locations">

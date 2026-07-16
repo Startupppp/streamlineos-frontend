@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
-import { Plus, AlertTriangle } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { StateIllustration } from "@/components/illustrations";
 import { useCan } from "@/hooks/api/access";
 import {
@@ -83,7 +84,7 @@ export function EmergencyPageContent() {
         actions={
           canManage ? (
             <Button size="sm" onClick={() => setShowCreate(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-              <Plus className="h-4 w-4 mr-1.5" />
+              <PlusIcon size={16} className="mr-1.5" />
               Declare Event
             </Button>
           ) : null
@@ -104,7 +105,7 @@ export function EmergencyPageContent() {
               </div>
               {canManage && (
                 <Button size="sm" onClick={() => setShowCreate(true)} className="mt-1 bg-primary hover:bg-primary/90 text-primary-foreground">
-                  <Plus className="h-4 w-4 mr-1.5" />
+                  <PlusIcon size={16} className="mr-1.5" />
                   Declare Event
                 </Button>
               )}

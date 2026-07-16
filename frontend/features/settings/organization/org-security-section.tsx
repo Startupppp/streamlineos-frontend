@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Shield, Clock, Globe, Network, X, Plus, Users } from "lucide-react";
+import { Loader2, Shield, Clock, Globe, Network, X, Users } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 
 interface OrgSecuritySectionProps {
   mfaEnforced: boolean;
@@ -172,10 +174,9 @@ export function OrgSecuritySection({
                 className="w-full max-w-sm"
                 aria-label="Email domain to add"
               />
-              <Button type="button" variant="outline" size="sm" onClick={onAddDomain}>
-                <Plus className="h-3.5 w-3.5 mr-1" />
+              <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1" type="button" variant="outline" size="sm" onClick={onAddDomain}>
                 Add
-              </Button>
+              </AnimatedIconButton>
             </div>
           </div>
 
@@ -233,10 +234,9 @@ export function OrgSecuritySection({
               className="w-full max-w-sm font-mono text-sm"
               aria-label="IP address or prefix to add"
             />
-            <Button type="button" variant="outline" size="sm" onClick={onAddIp}>
-              <Plus className="h-3.5 w-3.5 mr-1" />
+            <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1" type="button" variant="outline" size="sm" onClick={onAddIp}>
               Add
-            </Button>
+            </AnimatedIconButton>
           </div>
           <div className="pt-1">
             <Button onClick={onSaveIpAllowlist} disabled={isUpdatingOrg} size="sm">

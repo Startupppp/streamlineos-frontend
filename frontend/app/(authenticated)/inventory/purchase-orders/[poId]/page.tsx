@@ -2,7 +2,9 @@
 
 import { use, useMemo, useState } from "react";
 import Link from "next/link";
-import { Send, PackageCheck, CheckCircle, XCircle, Pencil, Lock } from "lucide-react";
+import { PackageCheck, CheckCircle, XCircle, Pencil } from "lucide-react";
+import { SendIcon, LockIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -286,10 +288,9 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
               </Button>
             )}
             {canSend && (
-              <Button size="sm" onClick={handleSendPO} disabled={sendMutation.isPending}>
-                <Send className="mr-1 h-3.5 w-3.5" />
+              <AnimatedIconButton icon={SendIcon} iconSize={14} iconClassName="mr-1" size="sm" onClick={handleSendPO} disabled={sendMutation.isPending}>
                 {sendMutation.isPending ? "Sending…" : "Send PO"}
-              </Button>
+              </AnimatedIconButton>
             )}
             {canReceive && (
               <Button size="sm" variant="outline" onClick={handleOpenReceive}>
@@ -298,15 +299,9 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
               </Button>
             )}
             {canClose && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleRequestClose}
-                disabled={anyPending}
-              >
-                <Lock className="mr-1 h-3.5 w-3.5" />
+              <AnimatedIconButton icon={LockIcon} iconSize={14} iconClassName="mr-1" size="sm" variant="outline" onClick={handleRequestClose} disabled={anyPending}>
                 Close PO
-              </Button>
+              </AnimatedIconButton>
             )}
             {canCancel && (
               <Button

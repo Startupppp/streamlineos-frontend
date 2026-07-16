@@ -14,6 +14,8 @@ import { Badge } from "@/components/ui/badge";
 import { Inbox } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { Trash2Icon } from "@animateicons/react/lucide";
 import {
   useHelpdeskTickets,
   useHelpdeskRoutingRules,
@@ -28,7 +30,6 @@ import { TicketDetailSheet } from "./ticket-detail-sheet";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Trash2 } from "lucide-react";
 
 const STATUS_COLORS: Record<TicketStatus, string> = {
   TODO: "bg-muted text-muted-foreground dark:bg-slate-800/40 dark:text-slate-400",
@@ -50,6 +51,22 @@ const PRIORITY_COLORS: Record<string, string> = {
   HIGH: "text-amber-600 dark:text-amber-400",
   URGENT: "text-red-600 dark:text-red-400",
 };
+
+function DeleteRoutingButton({ isPending, onClick }: { isPending: boolean; onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <LoadingButton
+      variant="ghost"
+      size="icon"
+      className="h-6 w-6 text-destructive hover:text-destructive"
+      isPending={isPending}
+      onClick={onClick}
+      {...hoverHandlers}
+    >
+      <Trash2Icon ref={iconRef} size={14} />
+    </LoadingButton>
+  );
+}
 
 export function QueueTab() {
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
@@ -142,15 +159,10 @@ export function QueueTab() {
                   <span className="font-medium">{HELPDESK_CATEGORY_LABELS[rule.category as keyof typeof HELPDESK_CATEGORY_LABELS] ?? rule.category}</span>
                   <span className="text-muted-foreground"> → {rule.assigneeName ?? rule.assigneeUserId}</span>
                 </span>
-                <LoadingButton
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 text-destructive hover:text-destructive"
+                <DeleteRoutingButton
                   isPending={deleteRouting.isPending}
                   onClick={() => handleDeleteRouting(rule.id)}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </LoadingButton>
+                />
               </div>
             ))}
           </div>

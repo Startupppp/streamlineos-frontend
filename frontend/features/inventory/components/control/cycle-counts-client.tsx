@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Eye } from "lucide-react";
-import { PlusIcon } from "@animateicons/react/lucide";
+import { EyeIcon, PlusIcon } from "@animateicons/react/lucide";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -42,6 +41,17 @@ import {
 } from "@/features/inventory/lib/inventory-status";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { getErrorMessage } from "@/lib/get-error-message";
+
+function ViewCountButton({ href }: { href: string }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button variant="ghost" size="icon" className="w-7" asChild>
+      <Link href={href} {...hoverHandlers}>
+        <EyeIcon ref={iconRef} size={14} aria-hidden="true" />
+      </Link>
+    </Button>
+  );
+}
 
 const STATUS_OPTIONS: CycleCountStatus[] = ["PLANNED", "COUNTING", "REVIEW", "POSTED", "CANCELLED"];
 const PAGE_LIMIT = 20;
@@ -262,11 +272,7 @@ export function CycleCountsClient() {
       header: "",
       headerClassName: "w-[60px]",
       cell: (row) => (
-        <Button variant="ghost" size="icon" className="w-7" asChild>
-          <Link href={`/inventory/cycle-counts/${row.id}`}>
-            <Eye className="h-3.5 w-3.5" aria-hidden="true" />
-          </Link>
-        </Button>
+        <ViewCountButton href={`/inventory/cycle-counts/${row.id}`} />
       ),
     },
   ];

@@ -4,7 +4,8 @@ import { useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useRoles, useDeleteRole, useRolesAnalytics, useRolePermissionsMatrix } from "@/hooks/api/roles";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
-import { Plus, Loader2, Trash2, Shield, Copy, ClipboardList } from "lucide-react";
+import { Loader2, Shield, ClipboardList } from "lucide-react";
+import { PlusIcon, Trash2Icon, CopyIcon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,6 +26,8 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getApiError } from "@/lib/api-client";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import type { Role } from "@/types/organization";
 import { PermissionMatrix } from "@/components/rbac/permission-matrix";
 import { CreateRoleDialog } from "@/components/rbac/create-role-dialog";
@@ -104,18 +107,19 @@ function RolesContent() {
               <ClipboardList className="h-4 w-4" /> Audit log
             </Link>
           </Button>
-          <Button variant="outline" size="icon" className="sm:hidden" onClick={handleOpenTemplate} aria-label="Use template">
-            <Copy className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" onClick={handleOpenTemplate} className="hidden sm:inline-flex gap-2">
-            <Copy className="h-4 w-4" /> Use template
-          </Button>
-          <Button
+          <AnimatedIconButton icon={CopyIcon} iconSize={16} variant="outline" size="icon" className="sm:hidden" onClick={handleOpenTemplate} aria-label="Use template" />
+          <AnimatedIconButton icon={CopyIcon} iconSize={16} iconClassName="mr-2" variant="outline" onClick={handleOpenTemplate} className="hidden sm:inline-flex">
+            Use template
+          </AnimatedIconButton>
+          <AnimatedIconButton
+            icon={PlusIcon}
+            iconSize={16}
+            iconClassName="mr-0 sm:mr-1"
             onClick={handleOpenCreate}
             className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground"
           >
-            <Plus className="h-4 w-4" /><span className="hidden sm:inline">New role</span>
-          </Button>
+            <span className="hidden sm:inline">New role</span>
+          </AnimatedIconButton>
         </div>
       }
     >
@@ -174,7 +178,7 @@ function RolesContent() {
                   <p className="text-xs text-muted-foreground mt-0.5">Create a role to manage permissions</p>
                 </div>
                 <Button size="sm" onClick={handleOpenCreate} className="gap-1.5">
-                  <Plus className="h-3.5 w-3.5" /> New role
+                  <PlusIcon size={14} /> New role
                 </Button>
               </div>
             ) : (
@@ -247,6 +251,20 @@ function RolesContent() {
   );
 }
 
+function DeleteRoleButton({ onClick }: { onClick: (e: React.MouseEvent) => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <button
+      onClick={onClick}
+      className="inline-flex h-9 w-9 items-center justify-center rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+      aria-label="Delete role"
+      {...hoverHandlers}
+    >
+      <Trash2Icon ref={iconRef} size={14} />
+    </button>
+  );
+}
+
 interface RoleListItemProps {
   role: Role;
   isSelected: boolean;
@@ -298,13 +316,7 @@ function RoleListItem({ role, isSelected, onSelect, onDelete, permCount }: RoleL
           </Badge>
         )}
         {!role.isSystem && (
-          <button
-            onClick={handleDelete}
-            className="inline-flex h-9 w-9 items-center justify-center rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-            aria-label="Delete role"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
+          <DeleteRoleButton onClick={handleDelete} />
         )}
       </div>
     </div>

@@ -32,8 +32,10 @@ import {
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient, getApiError } from "@/lib/api-client";
 import { toast } from "sonner";
-import { Plus, ArrowLeftRight, X, Loader2 } from "lucide-react";
+import { ArrowLeftRight, Loader2 } from "lucide-react";
+import { PlusIcon, XIcon } from "@animateicons/react/lucide";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { formatRelative } from "date-fns";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { useOrgMembers } from "@/hooks/api/organization";
@@ -155,14 +157,16 @@ function DelegationsContent() {
       title="Delegations"
       subtitle="Share specific permissions with other team members for a period of time"
       actions={
-        <Button
+        <AnimatedIconButton
           size="sm"
-          className="gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground"
+          icon={PlusIcon}
+          iconSize={14}
+          iconClassName="mr-1"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground"
           onClick={() => setSheetOpen(true)}
         >
-          <Plus className="h-3.5 w-3.5" />
           Delegate
-        </Button>
+        </AnimatedIconButton>
       }
     >
       <div className="space-y-4">
@@ -339,20 +343,27 @@ function DelegationRow({
         </p>
       </div>
       {canRevoke && !isInactive && onRevoke && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="w-7 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-          onClick={handleRevoke}
-          disabled={isRevoking}
-          aria-label="Revoke delegation"
-        >
-          {isRevoking ? (
+        isRevoking ? (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="w-7 shrink-0 text-muted-foreground"
+            disabled
+            aria-label="Revoking"
+          >
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <X className="h-3.5 w-3.5" />
-          )}
-        </Button>
+          </Button>
+        ) : (
+          <AnimatedIconButton
+            icon={XIcon}
+            iconSize={14}
+            variant="ghost"
+            size="icon"
+            className="w-7 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+            onClick={handleRevoke}
+            aria-label="Revoke delegation"
+          />
+        )
       )}
     </div>
   );

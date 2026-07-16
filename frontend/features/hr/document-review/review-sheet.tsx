@@ -4,7 +4,10 @@ import { useState, useCallback, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { CheckCircle2, RefreshCw, ExternalLink, Upload, X, FileText } from "lucide-react";
+import { CheckCircle2, RefreshCw, FileText } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { ExternalLinkIcon, UploadIcon, XIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -178,6 +181,23 @@ interface DocCardProps {
   onRequestReupload: (doc: OnboardingDoc) => void;
 }
 
+function DocFileLink({ href, fileName, ariaLabel }: { href: string; fileName: string; ariaLabel: string }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-0.5 text-primary hover:text-primary/80 hover:underline transition-colors duration-200"
+      aria-label={ariaLabel}
+      {...hoverHandlers}
+    >
+      {fileName}
+      <ExternalLinkIcon ref={iconRef} size={12} className="ml-0.5" />
+    </a>
+  );
+}
+
 function DocCard({ doc, canReview, onApprove, onRequestReupload }: DocCardProps) {
   const handleApproveClick = useCallback(() => onApprove(doc), [doc, onApprove]);
   const handleReuploadClick = useCallback(() => onRequestReupload(doc), [doc, onRequestReupload]);
@@ -201,16 +221,7 @@ function DocCard({ doc, canReview, onApprove, onRequestReupload }: DocCardProps)
               )}
             </div>
             <div className="flex items-center gap-3 mt-1 flex-wrap text-[11px] text-muted-foreground">
-              <a
-                href={doc.fileUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-0.5 text-primary hover:text-primary/80 hover:underline transition-colors duration-200"
-                aria-label={`Download ${doc.fileName}`}
-              >
-                {doc.fileName}
-                <ExternalLink className="h-3 w-3 ml-0.5" />
-              </a>
+              <DocFileLink href={doc.fileUrl} fileName={doc.fileName} ariaLabel={`Download ${doc.fileName}`} />
               {doc.fileSize != null && <span>{formatBytes(doc.fileSize)}</span>}
               {doc.version != null && <span>v{doc.version}</span>}
             </div>
@@ -448,15 +459,17 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
                 </SheetDescription>
               </div>
               {canReview && (
-                <Button
+                <AnimatedIconButton
                   size="sm"
                   variant="outline"
                   className="gap-1.5 text-xs shrink-0"
                   onClick={handleOpenUploadSheet}
+                  icon={UploadIcon}
+                  iconSize={12}
+                  iconClassName="mr-1.5"
                 >
-                  <Upload className="h-3 w-3" />
                   Upload
-                </Button>
+                </AnimatedIconButton>
               )}
             </div>
           </SheetHeader>
@@ -592,28 +605,30 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
                   <span className="text-xs truncate text-foreground flex-1 min-w-0">
                     {uploadFile.name}
                   </span>
-                  <Button
+                  <AnimatedIconButton
                     type="button"
                     variant="ghost"
                     size="icon"
                     className="h-5 w-5 shrink-0 hover:text-destructive transition-colors duration-200"
                     onClick={handleClearFile}
                     aria-label="Remove file"
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
+                    icon={XIcon}
+                    iconSize={12}
+                  />
                 </div>
               ) : (
-                <Button
+                <AnimatedIconButton
                   type="button"
                   variant="outline"
                   className="h-9 w-full gap-1.5 text-xs border-dashed"
                   onClick={handleChooseFile}
                   disabled={isUploading}
+                  icon={UploadIcon}
+                  iconSize={14}
+                  iconClassName="mr-1.5"
                 >
-                  <Upload className="h-3.5 w-3.5" />
                   Choose File
-                </Button>
+                </AnimatedIconButton>
               )}
               <input
                 ref={fileInputRef}

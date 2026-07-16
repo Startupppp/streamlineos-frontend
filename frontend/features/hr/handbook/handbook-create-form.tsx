@@ -1,6 +1,8 @@
 "use client";
 
-import { Upload, Link2 } from "lucide-react";
+import { Link2 } from "lucide-react";
+import { UploadIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -46,6 +48,8 @@ export function HandbookCreateForm({
   onSwitchToFile,
   fileInputRef,
 }: HandbookCreateFormProps) {
+  const { iconRef: uploadIconRef, hoverHandlers: uploadHoverHandlers } = useAnimatedIcon();
+
   return (
     <div className="space-y-5">
       <div className="space-y-1.5">
@@ -103,8 +107,9 @@ export function HandbookCreateForm({
                 ? "bg-primary text-primary-foreground shadow-sm"
                 : "text-muted-foreground hover:bg-muted"
             )}
+            {...uploadHoverHandlers}
           >
-            <Upload className="h-3 w-3" />
+            <UploadIcon ref={uploadIconRef} size={12} />
             Upload File
           </button>
         </div>
@@ -127,7 +132,7 @@ export function HandbookCreateForm({
               className="flex flex-col items-center justify-center gap-2.5 rounded-xl border-2 border-dashed border-border px-4 py-6 cursor-pointer hover:bg-muted/40 transition-colors duration-200"
             >
               <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
-                <Upload className="h-4 w-4 text-muted-foreground" />
+                <UploadIcon size={16} className="text-muted-foreground" />
               </div>
               {values.selectedFile ? (
                 <span className="text-xs font-medium text-foreground truncate max-w-full">

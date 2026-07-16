@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { Clock, Link2, ToggleLeft, ToggleRight, Trash2 } from "lucide-react";
+import { Clock, Link2, ToggleLeft, ToggleRight } from "lucide-react";
+import { Trash2Icon } from "@animateicons/react/lucide";
 import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Card, CardContent } from "@/components/ui/card";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -109,15 +111,15 @@ function ScheduleRow({ schedule, onToggle, onDelete, isToggling }: ScheduleRowPr
                 <ToggleLeft className="h-4 w-4 text-muted-foreground" />
               )}
             </Button>
-            <Button
+            <AnimatedIconButton
+              icon={Trash2Icon}
+              iconSize={14}
               size="icon"
               variant="ghost"
               className="w-8 text-destructive hover:text-destructive"
               onClick={handleDelete}
               aria-label="Delete schedule"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
+            />
           </div>
         </div>
       </CardContent>

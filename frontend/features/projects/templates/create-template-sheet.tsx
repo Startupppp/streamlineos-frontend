@@ -3,7 +3,8 @@
 import { useState, useCallback } from "react";
 import type { ChangeEvent } from "react";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
@@ -147,15 +148,18 @@ export function CreateTemplateSheet({ open, onClose }: CreateTemplateSheetProps)
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label>Default Tasks ({tickets.length})</Label>
-              <Button
+              <AnimatedIconButton
                 type="button"
                 variant="outline"
                 size="sm"
+                icon={PlusIcon}
+                iconSize={16}
+                iconClassName="mr-1"
                 onClick={addTicket}
                 className="active:scale-[0.98]"
               >
-                <Plus className="h-4 w-4 mr-1" /> Add Task
-              </Button>
+                Add Task
+              </AnimatedIconButton>
             </div>
             {tickets.map((ticket, idx) => (
               <TicketRow

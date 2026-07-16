@@ -2,9 +2,11 @@
 
 import { useState, type ChangeEvent } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { Loader2, MessagesSquare, Send, Trash2 } from "lucide-react";
+import { Loader2, MessagesSquare, Send } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { Trash2Icon } from "@animateicons/react/lucide";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -64,16 +66,15 @@ function CommentItem({ comment, isPendingDelete, onDelete }: CommentItemProps) {
             </span>
           )}
         </div>
-        <Button
+        <AnimatedIconButton
           variant="ghost"
           size="icon"
           className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
           onClick={handleDelete}
           disabled={isPendingDelete}
           aria-label="Delete comment"
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </Button>
+          icon={Trash2Icon}
+        />
       </div>
       <p className="text-xs text-foreground mt-1 whitespace-pre-wrap break-words">
         {comment.body}

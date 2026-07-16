@@ -69,7 +69,7 @@ interface VerifySubscriptionResponse {
   status: "ACTIVE";
 }
 
-const SUBSCRIPTION_QUERY_KEY = ["subscription"] as const;
+const SUBSCRIPTION_QUERY_KEY = ["billing", "subscription"] as const;
 const BILLING_SUMMARY_QUERY_KEY = ["billing", "summary"] as const;
 
 export function useSubscription() {
@@ -85,6 +85,7 @@ export function useSubscription() {
 
 export function useCreateSubscriptionOrder() {
   return useMutation<CreateOrderResponse, Error, { plan: SubscriptionPlan; billingCycle?: BillingCycle; couponId?: number }>({
+    mutationKey: ["billing", "razorpay", "create-order"],
     mutationFn: (data) => apiClient.post<CreateOrderResponse>("/billing/razorpay", data),
   });
 }
@@ -92,10 +93,13 @@ export function useCreateSubscriptionOrder() {
 export function useVerifySubscription() {
   const queryClient = useQueryClient();
   return useMutation<VerifySubscriptionResponse, Error, VerifySubscriptionInput>({
+    mutationKey: ["billing", "razorpay", "verify"],
     mutationFn: (data) => apiClient.patch<VerifySubscriptionResponse>("/billing/razorpay", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: SUBSCRIPTION_QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: BILLING_SUMMARY_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: ["billing", "entitlements"] });
+      queryClient.invalidateQueries({ queryKey: ["billing", "seats"] });
     },
   });
 }
@@ -171,7 +175,7 @@ export function useValidateCoupon(code: string, plan: SubscriptionPlan | null) {
 
 export interface BillingProfile {
   id: number;
-  orgId: number;
+  orgId: string;
   gstin: string | null;
   pan: string | null;
   billingName: string | null;
@@ -202,6 +206,7 @@ export function useBillingProfile() {
 export function useUpdateBillingProfile() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["billing", "profile", "update"],
     mutationFn: (data: Partial<BillingProfile>) =>
       apiClient.patch<BillingProfile>("/billing/profile", data),
     onSuccess: () => {
@@ -209,7 +214,7 @@ export function useUpdateBillingProfile() {
       toast.success("Billing profile updated");
     },
     onError: (e: Error) =>
-      toast.error(e.message ?? "Failed to update profile"),
+      toast.error(e.message),
   });
 }
 

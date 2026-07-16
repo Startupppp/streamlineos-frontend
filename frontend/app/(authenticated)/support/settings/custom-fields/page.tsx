@@ -47,8 +47,9 @@ import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyInboxIllustration } from "@/components/illustrations";
-import { PlusIcon } from "@animateicons/react/lucide";
-import { Pencil, Trash2 } from "lucide-react";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { Pencil } from "lucide-react";
 import {
   useSupportCustomFields,
   useCreateCustomField,
@@ -337,15 +338,14 @@ function FieldRow({ field, onToggle, onEdit, onDelete }: FieldRowProps) {
             <Button variant="ghost" size="icon" className="w-7" onClick={handleEdit} aria-label="Edit field">
               <Pencil className="h-3.5 w-3.5" />
             </Button>
-            <Button
+            <AnimatedIconButton
               variant="ghost"
               size="icon"
               className="w-7 text-destructive"
               onClick={handleDelete}
               aria-label="Delete field"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
+              icon={Trash2Icon}
+            />
           </div>
         </div>
       </CardContent>
@@ -411,9 +411,9 @@ export default function SupportCustomFieldsPage() {
       title="Custom Fields"
       subtitle="Fields captured at ticket creation, on top of title/description/priority/category"
       actions={
-        <Button size="sm" onClick={handleOpenCreate}>
-          <PlusIcon className="h-3.5 w-3.5 mr-1" /> New Field
-        </Button>
+        <AnimatedIconButton size="sm" onClick={handleOpenCreate} icon={PlusIcon} iconClassName="mr-1.5">
+          New Field
+        </AnimatedIconButton>
       }
     >
       {isLoading ? (

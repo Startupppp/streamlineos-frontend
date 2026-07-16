@@ -11,7 +11,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { GripVertical, Trash2 } from "lucide-react";
+import { GripVertical } from "lucide-react";
+import { Trash2Icon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 
 export interface TicketDraft {
   title: string;
@@ -44,6 +46,8 @@ export const TicketRow = memo(function TicketRow({
   onUpdate,
   onRemove,
 }: TicketRowProps) {
+  const { iconRef: trashRef, hoverHandlers: trashHandlers } = useAnimatedIcon();
+
   function handleTitleChange(e: ChangeEvent<HTMLInputElement>) {
     onUpdate(index, "title", e.target.value);
   }
@@ -105,8 +109,9 @@ export const TicketRow = memo(function TicketRow({
           className="text-destructive shrink-0 active:scale-[0.98]"
           disabled={isOnlyTicket}
           onClick={handleRemove}
+          {...trashHandlers}
         >
-          <Trash2 className="h-4 w-4" />
+          <Trash2Icon ref={trashRef} size={16} />
         </Button>
       </div>
       <div className="flex gap-2">

@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Trash2 } from "lucide-react";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { UserCombobox } from "@/components/ui/user-combobox";
@@ -104,7 +104,7 @@ export function DelegationSettings({ open, onOpenChange }: Props) {
                   className="h-6 w-6 text-destructive shrink-0"
                   onClick={() => handleRemove(d.id)}
                 >
-                  <Trash2 className="h-3 w-3" />
+                  <Trash2Icon size={12} />
                 </Button>
               </div>
             ))}
@@ -189,7 +189,7 @@ export function DelegationSettings({ open, onOpenChange }: Props) {
             onClick={form.handleSubmit(onSubmit)}
             className="gap-1"
           >
-            <Plus className="h-3.5 w-3.5" />
+            <PlusIcon size={14} />
             Add Delegation
           </LoadingButton>
         </DialogFooter>

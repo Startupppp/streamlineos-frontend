@@ -4,7 +4,9 @@ import { useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, Loader2 } from "lucide-react";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { EyeIcon, EyeOffIcon } from "@animateicons/react/lucide";
 import { resolveImageUrl } from "@/lib/utils";
 import { MemberPicker } from "@/components/members/member-picker";
 import { useWatchers, useToggleWatch, useAddWatcher } from "@/hooks/api/projects";
@@ -16,6 +18,7 @@ interface WatcherListProps {
 }
 
 export function WatcherList({ projectId, ticketId }: WatcherListProps) {
+  const { iconRef: watchIconRef, hoverHandlers: watchHoverHandlers } = useAnimatedIcon();
   const { data: session } = useSession();
   const { data: watchers = [], isLoading } = useWatchers(projectId, ticketId);
   const toggleWatch = useToggleWatch(projectId);
@@ -58,14 +61,15 @@ export function WatcherList({ projectId, ticketId }: WatcherListProps) {
           className="h-6 px-2 text-xs"
           onClick={handleToggleWatch}
           disabled={toggleWatch.isPending}
+          {...watchHoverHandlers}
         >
           {isWatching ? (
             <>
-              <EyeOff className="h-3 w-3 mr-1" /> Unwatch
+              <EyeOffIcon ref={watchIconRef} size={12} className="mr-1" /> Unwatch
             </>
           ) : (
             <>
-              <Eye className="h-3 w-3 mr-1" /> Watch
+              <EyeIcon ref={watchIconRef} size={12} className="mr-1" /> Watch
             </>
           )}
         </Button>

@@ -22,6 +22,7 @@ import { ContactNotes } from "@/features/crm/contacts/detail/contact-notes";
 import { ContactRolesCard } from "@/features/crm/contacts/detail/contact-roles-card";
 import { ContactDuplicateBanner } from "@/features/crm/contacts/detail/contact-merge-dialog";
 import { CreateTaskDialog } from "@/features/crm/tasks/create-task-dialog";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 function ContactDetailSkeleton() {
   return (
@@ -80,7 +81,7 @@ export default function ContactDetailPage({
         toast.success("Contact deleted");
         router.push("/crm/contacts");
       },
-      onError: (e) => toast.error(e.message),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [id, deleteMutation, router]);
 

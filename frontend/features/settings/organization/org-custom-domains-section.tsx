@@ -11,7 +11,10 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2, Trash2, Globe, Plus, CheckCircle2, Copy, Check } from "lucide-react";
+import { Loader2, Globe, CheckCircle2, Check } from "lucide-react";
+import { Trash2Icon, PlusIcon, CopyIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
 import { apiClient, getApiError } from "@/lib/api-client";
 
@@ -72,6 +75,18 @@ function useRemoveDomain() {
   });
 }
 
+function CopyTokenButton({ token, copied, onCopy }: { token: string; copied: boolean; onCopy: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  if (copied) {
+    return <Check className="h-3.5 w-3.5 text-green-600 shrink-0" />;
+  }
+  return (
+    <button type="button" onClick={onCopy} className="shrink-0 text-muted-foreground hover:text-foreground" {...hoverHandlers}>
+      <CopyIcon ref={iconRef} size={14} />
+    </button>
+  );
+}
+
 function CopyableToken({ token }: { token: string }) {
   const [copied, setCopied] = useState(false);
   const handleCopy = useCallback(() => {
@@ -83,9 +98,7 @@ function CopyableToken({ token }: { token: string }) {
   return (
     <div className="flex items-center gap-1.5 rounded border bg-muted px-2 py-1.5 mt-1">
       <code className="text-[11px] flex-1 break-all">{token}</code>
-      <button type="button" onClick={handleCopy} className="shrink-0 text-muted-foreground hover:text-foreground">
-        {copied ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5" />}
-      </button>
+      <CopyTokenButton token={token} copied={copied} onCopy={handleCopy} />
     </div>
   );
 }
@@ -126,9 +139,9 @@ export function OrgCustomDomainsSection({ canEdit }: OrgCustomDomainsSectionProp
           <CardDescription>Verify a custom domain for your organization portal.</CardDescription>
         </div>
         {canEdit && !showAdd && (
-          <Button variant="outline" size="sm" onClick={() => setShowAdd(true)} className="gap-1.5 h-8 text-xs">
-            <Plus className="h-3 w-3" /> Add domain
-          </Button>
+          <AnimatedIconButton icon={PlusIcon} iconSize={12} iconClassName="mr-1.5" variant="outline" size="sm" onClick={() => setShowAdd(true)} className="h-8 text-xs">
+            Add domain
+          </AnimatedIconButton>
         )}
       </CardHeader>
       <CardContent className="pb-5 space-y-4">
@@ -169,14 +182,17 @@ export function OrgCustomDomainsSection({ canEdit }: OrgCustomDomainsSectionProp
                     <Badge variant="secondary" className="h-5 text-[10px]">Pending verification</Badge>
                   )}
                   {canEdit && (
-                    <button
+                    <AnimatedIconButton
+                      icon={Trash2Icon}
+                      iconSize={16}
                       type="button"
+                      size="icon"
+                      variant="ghost"
+                      className="h-7 w-7 text-muted-foreground hover:text-destructive"
                       onClick={() => removeMutation.mutate(d.id)}
                       disabled={removeMutation.isPending}
-                      className="text-muted-foreground hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                      aria-label="Remove domain"
+                    />
                   )}
                 </div>
                 {!d.verifiedAt && (

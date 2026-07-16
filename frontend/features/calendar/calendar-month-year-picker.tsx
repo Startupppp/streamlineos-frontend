@@ -2,8 +2,8 @@
 
 import { memo, useCallback, useMemo, useState } from "react";
 import { setMonth, setYear } from "date-fns";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ChevronLeftIcon, ChevronRightIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   Popover,
   PopoverContent,
@@ -128,15 +128,15 @@ export const CalendarMonthYearPicker = memo(function CalendarMonthYearPicker({
         {pickerMode === "month" ? (
           <>
             <div className="mb-3 flex items-center justify-between">
-              <Button
+              <AnimatedIconButton
+                icon={ChevronLeftIcon}
+                iconSize={16}
                 variant="ghost"
                 size="icon"
                 className="w-7"
                 aria-label="Previous year"
                 onClick={handlePrevYear}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
+              />
               <button
                 type="button"
                 onClick={handleShowYearPicker}
@@ -145,15 +145,15 @@ export const CalendarMonthYearPicker = memo(function CalendarMonthYearPicker({
               >
                 {pickerYear}
               </button>
-              <Button
+              <AnimatedIconButton
+                icon={ChevronRightIcon}
+                iconSize={16}
                 variant="ghost"
                 size="icon"
                 className="w-7"
                 aria-label="Next year"
                 onClick={handleNextYear}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+              />
             </div>
             <div className="grid grid-cols-3 gap-1">
               {MONTHS_SHORT.map((label, index) => {
@@ -180,27 +180,27 @@ export const CalendarMonthYearPicker = memo(function CalendarMonthYearPicker({
         ) : (
           <>
             <div className="mb-3 flex items-center justify-between">
-              <Button
+              <AnimatedIconButton
+                icon={ChevronLeftIcon}
+                iconSize={16}
                 variant="ghost"
                 size="icon"
                 className="w-7"
                 aria-label="Previous years"
                 onClick={handlePrevYearRange}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
+              />
               <span className="text-sm font-semibold tabular-nums">
                 {yearRangeStart} – {yearRangeEnd}
               </span>
-              <Button
+              <AnimatedIconButton
+                icon={ChevronRightIcon}
+                iconSize={16}
                 variant="ghost"
                 size="icon"
                 className="w-7"
                 aria-label="Next years"
                 onClick={handleNextYearRange}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+              />
             </div>
             <div className="grid grid-cols-3 gap-1">
               {yearOptions.map((year) => {

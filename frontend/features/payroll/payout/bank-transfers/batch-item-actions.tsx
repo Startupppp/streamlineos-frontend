@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { Loader2, Eye, EyeOff } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { EyeIcon, EyeOffIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import {
   Dialog,
   DialogContent,
@@ -123,6 +125,8 @@ export function RevealCell({ userId, masked }: RevealCellProps) {
   const [revealed, setRevealed] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { data: bankDetails } = useEmployeeBankDetails(userId, revealed);
+  const { iconRef: hideIconRef, hoverHandlers: hideHoverHandlers } = useAnimatedIcon();
+  const { iconRef: revealIconRef, hoverHandlers: revealHoverHandlers } = useAnimatedIcon();
 
   function handleReveal() {
     setRevealed(true);
@@ -158,8 +162,9 @@ export function RevealCell({ userId, masked }: RevealCellProps) {
           onClick={handleHide}
           className="ml-1 text-muted-foreground hover:text-foreground transition-colors"
           aria-label="Hide bank details"
+          {...hideHoverHandlers}
         >
-          <EyeOff className="h-3.5 w-3.5" />
+          <EyeOffIcon ref={hideIconRef} size={14} />
         </button>
       </div>
     );
@@ -173,8 +178,9 @@ export function RevealCell({ userId, masked }: RevealCellProps) {
         onClick={handleReveal}
         className="text-muted-foreground hover:text-foreground transition-colors"
         aria-label="Reveal bank details"
+        {...revealHoverHandlers}
       >
-        <Eye className="h-3.5 w-3.5" />
+        <EyeIcon ref={revealIconRef} size={14} />
       </button>
     </div>
   );

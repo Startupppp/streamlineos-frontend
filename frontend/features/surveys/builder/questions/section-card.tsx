@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp } from "lucide-react";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { QuestionRow } from "./question-row";
@@ -61,9 +63,7 @@ export function SectionCard({
           <Button variant="ghost" size="icon" className="h-7 w-7" disabled={isLast} onClick={() => onMoveSectionDown(section.id)}>
             <ArrowDown className="h-3.5 w-3.5" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onDeleteSection(section.id)}>
-            <Trash2 className="h-3.5 w-3.5 text-destructive" />
-          </Button>
+          <AnimatedIconButton icon={Trash2Icon} iconSize={14} iconClassName="text-destructive" variant="ghost" size="icon" className="h-7 w-7" onClick={() => onDeleteSection(section.id)} />
         </div>
       </CardHeader>
       <CardContent className="space-y-2">
@@ -80,9 +80,9 @@ export function SectionCard({
             onMoveDown={(questionId) => onMoveQuestionDown(section.id, questionId)}
           />
         ))}
-        <Button variant="outline" size="sm" onClick={() => onAddQuestion(section.id)}>
-          <Plus className="h-3.5 w-3.5" /> Add question
-        </Button>
+        <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1.5" variant="outline" size="sm" onClick={() => onAddQuestion(section.id)}>
+          Add question
+        </AnimatedIconButton>
       </CardContent>
     </Card>
   );

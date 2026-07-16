@@ -1,7 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { Upload, AlertCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
+import { UploadIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -92,16 +94,18 @@ export function ImportPreviewStep({
           className="hidden"
           onChange={handleFileChange}
         />
-        <Button
+        <AnimatedIconButton
           type="button"
+          icon={UploadIcon}
+          iconSize={16}
+          iconClassName="mr-1"
           variant="outline"
           onClick={handleBrowseClick}
           disabled={isPreviewing}
           className="gap-2"
         >
-          <Upload className="h-4 w-4" />
           {isPreviewing ? "Uploading…" : "Select file (.csv, .xlsx)"}
-        </Button>
+        </AnimatedIconButton>
         <span className="text-xs text-muted-foreground">
           Importing: <strong>{importType}</strong>
         </span>

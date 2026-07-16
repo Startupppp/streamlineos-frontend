@@ -1,8 +1,9 @@
 "use client";
 
 import React from "react";
-import { Filter, Download } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Filter } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { DownloadIcon } from "@animateicons/react/lucide";
 import {
   Select,
   SelectContent,
@@ -246,14 +247,14 @@ export function MemberExpenseFilters({
           filters={filters}
           categories={categories}
           trigger={
-            <Button
+            <AnimatedIconButton
+              icon={DownloadIcon}
+              iconSize={14}
               variant="outline"
               size="icon"
               className="w-8"
               aria-label="Download report"
-            >
-              <Download className="h-3.5 w-3.5" />
-            </Button>
+            />
           }
         />
       </div>

@@ -7,7 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Copy, Link2 } from "lucide-react";
+import { Link2 } from "lucide-react";
+import { CopyIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useGenerateVendorPortalLink, type RecruitmentVendor } from "@/hooks/api";
 
 interface VendorCardProps {
@@ -27,6 +29,7 @@ const CONTRACT_TYPE_LABEL: Record<RecruitmentVendor["contractType"], string> = {
 export function VendorCard({ vendor, isHr, onEdit, onViewSubmissions, onDelete }: VendorCardProps) {
   const generateLink = useGenerateVendorPortalLink(vendor.id);
   const [portalLink, setPortalLink] = useState<string | null>(null);
+  const { iconRef: copyIconRef, hoverHandlers: copyHoverHandlers } = useAnimatedIcon();
 
   const handleEditClick = useCallback(() => onEdit(vendor), [onEdit, vendor]);
   const handleSubmissionsClick = useCallback(() => onViewSubmissions(vendor), [onViewSubmissions, vendor]);
@@ -89,8 +92,8 @@ export function VendorCard({ vendor, isHr, onEdit, onViewSubmissions, onDelete }
           {isHr && (
             <>
               <Button size="sm" variant="outline" onClick={handleEditClick}>Edit</Button>
-              <Button size="sm" variant="outline" className="gap-1" onClick={handleGenerateLink} disabled={generateLink.isPending}>
-                {portalLink ? <Copy className="h-3 w-3" /> : <Link2 className="h-3 w-3" />}
+              <Button size="sm" variant="outline" className="gap-1" onClick={handleGenerateLink} disabled={generateLink.isPending} {...(portalLink ? copyHoverHandlers : {})}>
+                {portalLink ? <CopyIcon ref={copyIconRef} size={12} /> : <Link2 className="h-3 w-3" />}
                 {generateLink.isPending ? "Generating…" : "Portal Link"}
               </Button>
               <Button size="sm" variant="ghost" onClick={handleDeleteClick} className="text-destructive hover:text-destructive hover:bg-destructive/10">

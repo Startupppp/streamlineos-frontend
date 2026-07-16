@@ -3,8 +3,10 @@
 import { memo } from "react";
 import { format } from "date-fns";
 import { motion, useReducedMotion } from "framer-motion";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil } from "lucide-react";
+import { Trash2Icon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
 import type { ChangelogEntry } from "@/types/projects";
 import { cn } from "@/lib/utils";
@@ -96,14 +98,14 @@ export const ChangelogEntryCard = memo(function ChangelogEntryCard({
           <Button size="icon" variant="ghost" className="w-7" onClick={handleEdit}>
             <Pencil className="h-3 w-3" />
           </Button>
-          <Button
+          <AnimatedIconButton
             size="icon"
             variant="ghost"
             className="w-7 text-destructive hover:text-destructive"
             onClick={handleDelete}
-          >
-            <Trash2 className="h-3 w-3" />
-          </Button>
+            icon={Trash2Icon}
+            iconSize={12}
+          />
         </div>
       </div>
     </motion.div>

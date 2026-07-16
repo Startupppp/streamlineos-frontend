@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback } from "react";
-import { Plus, Minus, CheckSquare, AlertTriangle } from "lucide-react";
+import { CheckSquare, AlertTriangle } from "lucide-react";
+import { PlusIcon, MinusIcon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Draggable } from "@hello-pangea/dnd";
@@ -132,20 +133,17 @@ export const PlanningCard = function PlanningCard({
           <TooltipProvider delayDuration={200}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
+                <AnimatedIconButton
                   type="button"
                   variant="ghost"
                   size="icon"
+                  icon={actionIcon === "plus" ? PlusIcon : MinusIcon}
+                  iconSize={14}
                   className="h-6 w-6 shrink-0 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
                   onClick={handleAction}
                   disabled={isPending}
                   aria-label={actionIcon === "plus" ? "Add to sprint" : "Remove from sprint"}
-                >
-                  {actionIcon === "plus"
-                    ? <Plus className="h-3.5 w-3.5" aria-hidden />
-                    : <Minus className="h-3.5 w-3.5" aria-hidden />
-                  }
-                </Button>
+                />
               </TooltipTrigger>
               <TooltipContent side="left" className="text-xs">
                 {actionIcon === "plus" ? "Add to sprint" : "Remove from sprint"}

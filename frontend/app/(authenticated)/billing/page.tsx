@@ -1,364 +1,100 @@
 "use client";
 
-import Link from "next/link";
-import { useState, type ReactNode } from "react";
-import { EmptyDocumentsIllustration } from "@/components/illustrations";
-import { EmptyState } from "@/components/ui/empty-state";
-import { format, isPast } from "date-fns";
-import {
-  FileText,
-  AlertCircle,
-  CheckCircle2,
-  Clock,
-  ChevronRight,
-  CreditCard,
-} from "lucide-react";
-import { PlusIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { ErrorState } from "@/components/shared/error-state";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { useCallback, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { CreditCard, Receipt, Building2 } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { useInvoiceStats, useInvoices } from "@/hooks/api/invoice";
-import { useSubscription } from "@/hooks/api/subscription";
-import type { InvoiceStatus } from "@/types/invoice";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PlanTab } from "@/features/billing/components/plan-tab";
+import { PaymentsTab } from "@/features/billing/components/payments-tab";
+import { BillingProfileTab } from "@/features/billing/components/billing-profile-tab";
 
-const PLAN_LABELS: Record<string, string> = {
-  STARTER: "Starter",
-  PROFESSIONAL: "Professional",
-  ENTERPRISE: "Enterprise",
-};
+type BillingTab = "plan" | "payments" | "profile";
 
-const SUB_STATUS_BADGE: Record<
-  string,
-  {
-    label: string;
-    variant: "default" | "secondary" | "destructive" | "outline";
-  }
-> = {
-  TRIAL: { label: "Trial", variant: "secondary" },
-  ACTIVE: { label: "Active", variant: "default" },
-  PAST_DUE: { label: "Past Due", variant: "destructive" },
-  CANCELLED: { label: "Cancelled", variant: "outline" },
-  EXPIRED: { label: "Expired", variant: "outline" },
-};
+const VALID_TABS: BillingTab[] = ["plan", "payments", "profile"];
 
-const STATUS_BADGE: Record<
-  InvoiceStatus,
-  {
-    label: string;
-    variant: "default" | "secondary" | "destructive" | "outline";
-  }
-> = {
-  DRAFT: { label: "Draft", variant: "secondary" },
-  ISSUED: { label: "Issued", variant: "default" },
-  PAID: { label: "Paid", variant: "outline" },
-  FAILED: { label: "Failed", variant: "destructive" },
-  VOIDED: { label: "Voided", variant: "secondary" },
-};
-
-function fmt(amount: string | number) {
-  return `₹${Number(amount).toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+function resolveTab(raw: string | null): BillingTab {
+  if (raw && (VALID_TABS as string[]).includes(raw)) return raw as BillingTab;
+  return "plan";
 }
 
-export default function BillingPage() {
-  const { iconRef: plusRef, hoverHandlers: plusHoverHandlers } =
-    useAnimatedIcon();
+const TAB_TRIGGER_CLASS =
+  "text-xs gap-1.5 px-3 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground text-muted-foreground hover:text-foreground transition-colors duration-200";
 
-  const {
-    data: stats,
-    isLoading: statsLoading,
-    isError: statsError,
-    error: statsErrorObj,
-    refetch: refetchStats,
-  } = useInvoiceStats();
-  const { data: recentData, isLoading: recentLoading } = useInvoices({
-    limit: 5,
-  });
-  const { data: overdueData } = useInvoices({ status: "FAILED", limit: 5 });
-  const { data: subData } = useSubscription();
+function BillingPageContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const activeTab = resolveTab(searchParams.get("tab"));
 
-  const [now] = useState(() => Date.now());
-
-  function handleRetryStats() {
-    void refetchStats();
-  }
-
-  const recentInvoices = recentData?.items ?? [];
-  const overdueInvoices = overdueData?.items ?? [];
-
-  const sub = subData?.subscription;
-  const subStatusInfo = sub ? SUB_STATUS_BADGE[sub.status] : null;
-  const trialDaysRemaining =
-    sub?.status === "TRIAL" && sub.trialEndsAt
-      ? Math.max(
-          0,
-          Math.ceil(
-            (new Date(sub.trialEndsAt).getTime() - now) / 86_400_000,
-          ),
-        )
-      : null;
+  const handleTabChange = useCallback(
+    (tab: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (tab === "plan") {
+        params.delete("tab");
+      } else {
+        params.set("tab", tab);
+      }
+      router.replace(`?${params.toString()}`, { scroll: false });
+    },
+    [searchParams, router],
+  );
 
   return (
     <PageWrapper
-      title="Billing & Finance"
-      subtitle="Track invoices, payments, and revenue"
-      actions={
-        <Link href="/billing/invoices/new">
-          <Button size="sm" {...plusHoverHandlers}>
-            <PlusIcon ref={plusRef} size={14} className="mr-1.5" />
-            New Invoice
-          </Button>
-        </Link>
-      }
+      title="Billing & Plan"
+      subtitle="Manage your subscription, payments, and billing details"
     >
-      <div className="flex flex-1 min-h-0 flex-col gap-4">
-        {sub && (
-          <div className="flex items-center gap-3 rounded-lg bg-primary/5 border border-primary/20 px-4 py-3">
-            <CreditCard className="h-5 w-5 text-muted-foreground shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground">
-                {PLAN_LABELS[sub.plan] ?? sub.plan} Plan
-              </p>
-              {sub.status === "TRIAL" && trialDaysRemaining !== null && (
-                <p className="text-xs text-amber-600 mt-0.5">
-                  Trial ends in{" "}
-                  {trialDaysRemaining === 0
-                    ? "today"
-                    : `${trialDaysRemaining} day${trialDaysRemaining !== 1 ? "s" : ""}`}
-                  {sub.trialEndsAt && (
-                    <>
-                      {" "}
-                      ·{" "}
-                      {new Date(sub.trialEndsAt).toLocaleDateString("en-IN", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </>
-                  )}
-                </p>
-              )}
-              {sub.status === "ACTIVE" && sub.currentPeriodEnd && (
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Renews{" "}
-                  {new Date(sub.currentPeriodEnd).toLocaleDateString("en-IN", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  })}
-                </p>
-              )}
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              {subStatusInfo && (
-                <Badge variant={subStatusInfo.variant} className="text-xs">
-                  {subStatusInfo.label}
-                </Badge>
-              )}
-              <Link href="/settings/subscription">
-                <Button variant="outline" size="sm" className="text-xs">
-                  Manage
-                </Button>
-              </Link>
-            </div>
-          </div>
-        )}
+      <Tabs
+        value={activeTab}
+        onValueChange={handleTabChange}
+        className="flex flex-col flex-1 min-h-0 gap-0"
+      >
+        <TabsList className="bg-transparent border-b border-border rounded-none p-0 gap-0 w-full justify-start overflow-x-auto flex-nowrap scrollbar-none shrink-0 mb-5">
+          <TabsTrigger value="plan" className={TAB_TRIGGER_CLASS}>
+            <CreditCard className="h-3.5 w-3.5" />
+            Plan
+          </TabsTrigger>
+          <TabsTrigger value="payments" className={TAB_TRIGGER_CLASS}>
+            <Receipt className="h-3.5 w-3.5" />
+            Invoices & Payments
+          </TabsTrigger>
+          <TabsTrigger value="profile" className={TAB_TRIGGER_CLASS}>
+            <Building2 className="h-3.5 w-3.5" />
+            Billing Profile
+          </TabsTrigger>
+        </TabsList>
 
-        {statsError ? (
-          <ErrorState
-            compact
-            title="Failed to load billing stats"
-            description={getErrorMessage(statsErrorObj)}
-            onRetry={handleRetryStats}
-          />
-        ) : (
-          <StatCardGrid cols={5}>
-            <StatCard
-              label="Total Invoiced"
-              value={fmt(stats ? stats.totalOutstanding + stats.totalPaid : 0)}
-              icon={FileText}
-              tone="blue"
-              isLoading={statsLoading}
-            />
-            <StatCard
-              label="Received (Paid)"
-              value={fmt(stats?.totalPaid ?? 0)}
-              icon={CheckCircle2}
-              tone="emerald"
-              isLoading={statsLoading}
-            />
-            <StatCard
-              label="Outstanding"
-              value={fmt(stats?.totalOutstanding ?? 0)}
-              icon={Clock}
-              tone="amber"
-              isLoading={statsLoading}
-            />
-            <StatCard
-              label="Issued"
-              value={stats?.issued ?? 0}
-              icon={CreditCard}
-              tone="default"
-              href="/billing/invoices?status=ISSUED"
-              isLoading={statsLoading}
-            />
-            <StatCard
-              label="Failed"
-              value={stats?.failed ?? 0}
-              icon={AlertCircle}
-              tone="red"
-              href="/billing/invoices?status=FAILED"
-              isLoading={statsLoading}
-            />
-          </StatCardGrid>
-        )}
+        <TabsContent value="plan" className="flex-1 min-h-0 mt-0 overflow-y-auto">
+          <PlanTab />
+        </TabsContent>
 
-        <div className="rounded-lg border border-border bg-card overflow-hidden">
-          <div className="px-4 py-3 flex items-center justify-between border-b border-border">
-            <p className="text-sm font-semibold">Recent Invoices</p>
-            <Link href="/billing/invoices">
-              <Button variant="ghost" size="sm" className="text-xs gap-1">
-                View all <ChevronRight className="h-3 w-3" />
-              </Button>
-            </Link>
-          </div>
-          <InvoiceTable invoices={recentInvoices} isLoading={recentLoading} />
-        </div>
+        <TabsContent value="payments" className="flex-1 min-h-0 mt-0 overflow-y-auto">
+          <PaymentsTab />
+        </TabsContent>
 
-        {overdueInvoices.length > 0 && (
-          <div className="rounded-lg border border-destructive/30 bg-card overflow-hidden">
-            <div className="px-4 py-3 flex items-center justify-between border-b border-destructive/30 bg-destructive/5">
-              <div className="flex items-center gap-2">
-                <AlertCircle className="h-4 w-4 text-destructive" />
-                <p className="text-sm font-semibold text-destructive">
-                  Failed Invoices
-                </p>
-              </div>
-              <Link href="/billing/invoices?status=FAILED">
-                <Button variant="ghost" size="sm" className="text-xs gap-1">
-                  View all <ChevronRight className="h-3 w-3" />
-                </Button>
-              </Link>
-            </div>
-            <InvoiceTable invoices={overdueInvoices} />
-          </div>
-        )}
-      </div>
+        <TabsContent value="profile" className="flex-1 min-h-0 mt-0 overflow-y-auto">
+          <BillingProfileTab />
+        </TabsContent>
+      </Tabs>
     </PageWrapper>
   );
 }
 
-type InvoiceRow = {
-  id: number;
-  invoiceNumber: string;
-  status: InvoiceStatus;
-  total: string;
-  dueDate: string | null;
-  client: { id: number; name: string } | null;
-  createdAt: Date;
-};
-
-const INVOICE_COLUMNS: DataTableColumn<InvoiceRow>[] = [
-  {
-    key: "invoiceNumber",
-    header: "Invoice #",
-    className: "font-mono text-xs font-medium",
-    cell: (inv): ReactNode => inv.invoiceNumber,
-  },
-  {
-    key: "client",
-    header: "Client",
-    className: "text-sm",
-    cell: (inv): ReactNode =>
-      inv.client?.name ?? (
-        <span className="text-muted-foreground">—</span>
-      ),
-  },
-  {
-    key: "status",
-    header: "Status",
-    cell: (inv): ReactNode => {
-      const badge = STATUS_BADGE[inv.status];
-      return (
-        <Badge variant={badge.variant} className="text-[11px]">
-          {badge.label}
-        </Badge>
-      );
-    },
-  },
-  {
-    key: "dueDate",
-    header: "Due Date",
-    cell: (inv): ReactNode => {
-      const overdue =
-        inv.status !== "PAID" &&
-        inv.status !== "VOIDED" &&
-        inv.dueDate &&
-        isPast(new Date(inv.dueDate));
-      return (
-        <span
-          className={`text-xs ${overdue ? "text-destructive font-medium" : "text-muted-foreground"}`}
-        >
-          {inv.dueDate ? format(new Date(inv.dueDate), "dd MMM yyyy") : "—"}
-        </span>
-      );
-    },
-  },
-  {
-    key: "total",
-    header: "Amount",
-    headerClassName: "text-right",
-    className: "text-right font-mono font-medium text-sm",
-    cell: (inv): ReactNode => fmt(inv.total),
-  },
-  {
-    key: "actions",
-    header: "",
-    cell: (inv): ReactNode => (
-      <Link href={`/billing/invoices/${inv.id}`}>
-        <Button variant="ghost" size="sm" className="text-xs">
-          View
-        </Button>
-      </Link>
-    ),
-  },
-];
-
-const INVOICE_EMPTY_STATE = (
-  <EmptyState
-    className="border-0 bg-transparent py-10"
-    illustration={
-      <EmptyDocumentsIllustration className="h-28 w-28 opacity-95" />
-    }
-    title="No invoices found"
-    description="Create your first invoice to start tracking revenue."
-    action={{ label: "New Invoice", href: "/billing/invoices/new" }}
-  />
-);
-
-function getInvoiceRowKey(inv: InvoiceRow): string | number {
-  return inv.id;
-}
-
-function InvoiceTable({
-  invoices,
-  isLoading,
-}: {
-  invoices: InvoiceRow[];
-  isLoading?: boolean;
-}) {
+export default function BillingPage() {
   return (
-    <DataTable
-      data={invoices}
-      columns={INVOICE_COLUMNS}
-      getRowKey={getInvoiceRowKey}
-      isLoading={isLoading}
-      emptyState={INVOICE_EMPTY_STATE}
-      className="border-0 rounded-none"
-    />
+    <Suspense
+      fallback={
+        <PageWrapper title="Billing & Plan" subtitle="Manage your subscription, payments, and billing details">
+          <div className="space-y-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-10 w-full rounded-lg" />
+            ))}
+          </div>
+        </PageWrapper>
+      }
+    >
+      <BillingPageContent />
+    </Suspense>
   );
 }

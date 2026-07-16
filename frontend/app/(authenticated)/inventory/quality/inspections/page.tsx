@@ -2,10 +2,10 @@
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Plus } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { format } from "date-fns";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SearchInput } from "@/components/ui/search-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -168,9 +168,9 @@ function InspectionsPageInner() {
         title="Inspections"
         subtitle={total > 0 ? `${total} ${total === 1 ? "inspection" : "inspections"}` : "Manage quality inspections"}
         actions={
-          <Button size="sm" onClick={handleOpenCreate}>
-            <Plus className="mr-1.5 h-3.5 w-3.5" />New Inspection
-          </Button>
+          <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1.5" size="sm" onClick={handleOpenCreate}>
+            New Inspection
+          </AnimatedIconButton>
         }
         filters={filtersRow}
       >

@@ -6,9 +6,10 @@ import {
   Maximize2,
   Minimize2,
   Share2,
-  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { ExternalLinkIcon } from "@animateicons/react/lucide";
 import {
   Tooltip,
   TooltipContent,
@@ -116,15 +117,15 @@ export function WhiteboardToolbar({
         {shareToken !== null && (
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
+              <AnimatedIconButton
                 size="icon"
                 variant="ghost"
                 className="h-8 w-8 active:scale-[0.98]"
                 onClick={handleOpenPublicLink}
                 aria-label="Open public link"
-              >
-                <ExternalLink className="h-4 w-4" />
-              </Button>
+                icon={ExternalLinkIcon}
+                iconSize={16}
+              />
             </TooltipTrigger>
             <TooltipContent>Open public link</TooltipContent>
           </Tooltip>

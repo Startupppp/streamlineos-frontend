@@ -2,14 +2,12 @@
 
 import { useRef, useState, type ChangeEvent } from "react";
 import {
-  Download,
   FileText,
   ImageIcon,
   Loader2,
   Paperclip,
   RefreshCw,
   Sparkles,
-  Trash2,
   Upload,
 } from "lucide-react";
 import {
@@ -23,6 +21,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { DownloadIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -83,26 +83,24 @@ function AttachmentRowItem({
           </p>
         )}
       </div>
-      <Button
+      <AnimatedIconButton
         variant="ghost"
         size="icon"
         className="h-6 w-6 shrink-0 text-muted-foreground hover:text-foreground"
         onClick={handleDownload}
         disabled={isDownloadPending}
         aria-label={`Download ${attachment.fileName}`}
-      >
-        <Download className="h-3.5 w-3.5" />
-      </Button>
-      <Button
+        icon={DownloadIcon}
+      />
+      <AnimatedIconButton
         variant="ghost"
         size="icon"
         className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
         onClick={handleDelete}
         disabled={isDeletePending}
         aria-label={`Delete ${attachment.fileName}`}
-      >
-        <Trash2 className="h-3.5 w-3.5" />
-      </Button>
+        icon={Trash2Icon}
+      />
     </div>
   );
 }

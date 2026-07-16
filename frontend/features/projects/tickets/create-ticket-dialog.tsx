@@ -3,7 +3,6 @@
 import dynamic from "next/dynamic";
 import { useRef, useCallback, useEffect, useState, useMemo } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
-import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -28,14 +27,13 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import {
-  Plus,
-  Paperclip,
-  X,
   FileText,
   File,
   AlertTriangle,
-  Link as LinkIcon,
 } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { PlusIcon, PaperclipIcon, XIcon, LinkIcon } from "@animateicons/react/lucide";
 import { useProjects } from "@/hooks/api/projects/projects";
 import { useTicketSearch } from "@/hooks/api/projects/ticket-search";
 import { useCreateTicketForm } from "./use-create-ticket-form";
@@ -80,6 +78,7 @@ function AttachmentPreview({
   previewUrl,
   onRemove,
 }: AttachmentPreviewProps) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
   const isImage = isImageMime(file.type);
 
   return (
@@ -110,8 +109,9 @@ function AttachmentPreview({
         onClick={onRemove}
         aria-label={`Remove ${file.name}`}
         className="text-muted-foreground hover:text-destructive transition-colors shrink-0"
+        {...hoverHandlers}
       >
-        <X className="h-3.5 w-3.5" />
+        <XIcon ref={iconRef} size={14} />
       </button>
     </div>
   );
@@ -156,6 +156,8 @@ export function CreateTicketDialog({
   externalOpen,
   onExternalOpenChange,
 }: CreateTicketDialogProps) {
+  const { iconRef: attachIconRef, hoverHandlers: attachHoverHandlers } = useAnimatedIcon();
+  const { iconRef: linksIconRef, hoverHandlers: linksHoverHandlers } = useAnimatedIcon();
   const projectLocked = lockedProjectId != null;
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(
     lockedProjectId ?? null,
@@ -372,19 +374,18 @@ export function CreateTicketDialog({
     <>
       {!hideTrigger &&
         (variant === "fab" ? (
-          <Button
+          <AnimatedIconButton
             size="lg"
+            icon={PlusIcon}
+            iconSize={24}
             className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-shadow"
             aria-label="Create Issue"
             onClick={handleOpenTrigger}
-          >
-            <Plus className="h-6 w-6" />
-          </Button>
+          />
         ) : (
-          <Button onClick={handleOpenTrigger}>
-            <Plus className="mr-2 h-4 w-4" />
+          <AnimatedIconButton icon={PlusIcon} iconSize={16} iconClassName="mr-2" onClick={handleOpenTrigger}>
             Create Issue
-          </Button>
+          </AnimatedIconButton>
         ))}
 
       <Dialog open={resolvedOpen} onOpenChange={handleOpenChange}>
@@ -561,8 +562,9 @@ export function CreateTicketDialog({
                     disabled={files.length >= MAX_FILES}
                     aria-label="Attach file"
                     className="inline-flex items-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-xs text-muted-foreground transition-colors hover:border-border hover:bg-muted/60 hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+                    {...attachHoverHandlers}
                   >
-                    <Paperclip className="h-3.5 w-3.5" />
+                    <PaperclipIcon ref={attachIconRef} size={14} />
                     {files.length >= MAX_FILES ? "Limit reached" : "Attach"}
                   </button>
                   <button
@@ -570,8 +572,9 @@ export function CreateTicketDialog({
                     onClick={handleShowLinksEditor}
                     aria-label="Add related links"
                     className="inline-flex items-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-xs text-muted-foreground transition-colors hover:border-border hover:bg-muted/60 hover:text-foreground"
+                    {...linksHoverHandlers}
                   >
-                    <LinkIcon className="h-3.5 w-3.5" />
+                    <LinkIcon ref={linksIconRef} size={14} />
                     Links
                   </button>
                   <input

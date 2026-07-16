@@ -2,8 +2,9 @@
 
 import { memo, useCallback, type MouseEvent } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { Warehouse, MapPin, Star } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Warehouse, MapPin } from "lucide-react";
+import { StarIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -104,7 +105,10 @@ export const WarehouseCard = memo(function WarehouseCard({ warehouse }: { wareho
             </div>
             {!warehouse.isDefault && (
               <div className="mt-2 pt-2 border-t border-border/50">
-                <Button
+                <AnimatedIconButton
+                  icon={StarIcon}
+                  iconSize={12}
+                  iconClassName="mr-0.5"
                   variant="ghost"
                   size="sm"
                   className="text-xs gap-1.5 text-muted-foreground hover:text-foreground"
@@ -112,9 +116,8 @@ export const WarehouseCard = memo(function WarehouseCard({ warehouse }: { wareho
                   disabled={setDefault.isPending}
                   aria-label={`Set ${warehouse.name} as default warehouse`}
                 >
-                  <Star className="h-3 w-3" aria-hidden="true" />
                   {setDefault.isPending ? "Updating…" : "Set as Default"}
-                </Button>
+                </AnimatedIconButton>
               </div>
             )}
           </CardContent>

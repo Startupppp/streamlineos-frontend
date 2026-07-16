@@ -16,7 +16,9 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { cn } from "@/lib/utils";
-import { FileText, StickyNote, Lock, Loader2, Plus } from "lucide-react";
+import { FileText, StickyNote, Lock, Loader2 } from "lucide-react";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { PlusIcon } from "@animateicons/react/lucide";
 import {
   useHrCase,
   useCaseNotes,
@@ -32,6 +34,22 @@ interface Props {
   caseId: number;
   open: boolean;
   onOpenChange: (v: boolean) => void;
+}
+
+function AddNoteButton({ isPending, disabled, onClick }: { isPending: boolean; disabled: boolean; onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <LoadingButton
+      size="sm"
+      isPending={isPending}
+      onClick={onClick}
+      disabled={disabled}
+      {...hoverHandlers}
+    >
+      <PlusIcon ref={iconRef} size={12} className="mr-1" />
+      Add Note
+    </LoadingButton>
+  );
 }
 
 function NoteThread({ caseId }: { caseId: number }) {
@@ -85,15 +103,11 @@ function NoteThread({ caseId }: { caseId: number }) {
             <Switch checked={isConfidential} onCheckedChange={setIsConfidential} className="scale-75" />
             <span>Confidential</span>
           </div>
-          <LoadingButton
-            size="sm"
+          <AddNoteButton
             isPending={addNote.isPending}
             onClick={handleAdd}
             disabled={!text.trim()}
-          >
-            <Plus className="h-3 w-3 mr-1" />
-            Add Note
-          </LoadingButton>
+          />
         </div>
       </div>
     </div>

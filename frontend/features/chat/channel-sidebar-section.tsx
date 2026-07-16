@@ -1,7 +1,26 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDownIcon, ChevronRightIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import React from "react";
+
+const SectionToggleButton = React.forwardRef<
+  HTMLButtonElement,
+  React.ButtonHTMLAttributes<HTMLButtonElement> & { collapsed: boolean }
+>(function SectionToggleButton({ collapsed, className, children, ...props }, ref) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <button ref={ref} {...hoverHandlers} className={className} {...props}>
+      {collapsed ? (
+        <ChevronRightIcon ref={iconRef} size={12} />
+      ) : (
+        <ChevronDownIcon ref={iconRef} size={12} />
+      )}
+      {children}
+    </button>
+  );
+});
 
 export function ChannelSidebarSection({
   title,
@@ -20,15 +39,11 @@ export function ChannelSidebarSection({
 }) {
   return (
     <div className="mb-1">
-      <button
+      <SectionToggleButton
+        collapsed={collapsed}
         onClick={onToggle}
         className="w-full flex items-center gap-1 px-2 py-1.5 text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-wider hover:text-foreground transition-colors"
       >
-        {collapsed ? (
-          <ChevronRight className="h-3 w-3" />
-        ) : (
-          <ChevronDown className="h-3 w-3" />
-        )}
         {icon}
         <span className="flex-1 text-left">{title}</span>
         {count > 0 && (
@@ -36,7 +51,7 @@ export function ChannelSidebarSection({
             {count > 99 ? "99+" : count}
           </span>
         )}
-      </button>
+      </SectionToggleButton>
       <AnimatePresence initial={false}>
         {!collapsed && (
           <motion.div

@@ -4,15 +4,13 @@ import { memo, useCallback, useMemo, useRef, useState } from "react";
 import type { MouseEvent, KeyboardEvent, ChangeEvent } from "react";
 import {
   Layers,
-  ChevronDown,
-  ChevronRight,
   Pencil,
   Trash2,
-  Plus,
   Link2,
 } from "lucide-react";
-import { EllipsisIcon } from "@animateicons/react/lucide";
+import { EllipsisIcon, ChevronDownIcon, ChevronRightIcon, PlusIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -95,6 +93,8 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
   const [linkOpen, setLinkOpen] = useState(false);
   const editTriggerRef = useRef<HTMLButtonElement>(null);
   const { iconRef: actionsIconRef, hoverHandlers: actionsHoverHandlers } = useAnimatedIcon();
+  const { iconRef: expandIconRef, hoverHandlers: expandHoverHandlers } = useAnimatedIcon();
+  const { iconRef: addIconRef, hoverHandlers: addHoverHandlers } = useAnimatedIcon();
 
   const { totalItems, completedItems, inProgressItems, todoItems, totalPoints, completedPoints } = useMemo(() => {
     let done = 0, inProgress = 0, totalPts = 0, completedPts = 0;
@@ -193,8 +193,9 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
                 size="icon"
                 className="mt-0.5 h-5 w-5 shrink-0"
                 aria-label={isExpanded ? "Collapse epic" : "Expand epic"}
+                {...expandHoverHandlers}
               >
-                {isExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                {isExpanded ? <ChevronDownIcon ref={expandIconRef} size={14} /> : <ChevronRightIcon ref={expandIconRef} size={14} />}
               </Button>
               <div className="min-w-0 space-y-0.5">
                 <CardTitle className="flex min-w-0 items-center gap-1.5 text-[13px] font-semibold">
@@ -326,8 +327,8 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
                   className="min-w-0 flex-1 border-border/70 bg-background/60 text-xs backdrop-blur-sm"
                   onKeyDown={handleTitleKeyDown}
                 />
-                <Button size="sm" className="px-2.5 text-xs" onClick={handleAddStory} disabled={!newStoryTitle.trim()}>
-                  <Plus className="mr-1 h-3.5 w-3.5" />
+                <Button size="sm" className="px-2.5 text-xs" onClick={handleAddStory} disabled={!newStoryTitle.trim()} {...addHoverHandlers}>
+                  <PlusIcon ref={addIconRef} size={14} className="mr-1" />
                   Add
                 </Button>
                 {unlinkedStories.length > 0 ? (

@@ -2,8 +2,10 @@
 
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
-import { Plus, BarChart3, Vote } from "lucide-react";
+import { BarChart3, Vote } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -239,10 +241,16 @@ export function PollsTab() {
     <div className="space-y-4">
       {canManage && (
         <div className="flex justify-end">
-          <Button size="sm" className="gap-1.5" onClick={() => setSheetOpen(true)}>
-            <Plus className="h-3.5 w-3.5" />
+          <AnimatedIconButton
+            icon={PlusIcon}
+            iconSize={14}
+            iconClassName="mr-1.5"
+            size="sm"
+            className="gap-1.5"
+            onClick={() => setSheetOpen(true)}
+          >
             New Poll
-          </Button>
+          </AnimatedIconButton>
         </div>
       )}
 

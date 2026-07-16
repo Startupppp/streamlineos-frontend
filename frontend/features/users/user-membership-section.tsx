@@ -15,7 +15,9 @@ import { useOrgBranches, useOrgDepartments } from "@/hooks/api/org-hierarchy";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { toast } from "sonner";
 import { getApiError } from "@/lib/api-client";
-import { Building2, GitBranch, Network, Pencil, Check, X } from "lucide-react";
+import { Building2, GitBranch, Network, Pencil } from "lucide-react";
+import { CheckIcon, XIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 
 const NO_BRANCH = "none";
 const NO_DEPARTMENT = "none";
@@ -170,14 +172,12 @@ export function UserMembershipSection({ userId }: UserMembershipSectionProps) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button size="sm" className="h-7 text-xs" onClick={handleSave} disabled={isPending}>
-            <Check className="h-3.5 w-3.5 mr-1" />
+          <AnimatedIconButton icon={CheckIcon} iconSize={14} iconClassName="mr-1" size="sm" className="h-7 text-xs" onClick={handleSave} disabled={isPending}>
             Save
-          </Button>
-          <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setIsEditing(false)} disabled={isPending}>
-            <X className="h-3.5 w-3.5 mr-1" />
+          </AnimatedIconButton>
+          <AnimatedIconButton icon={XIcon} iconSize={14} iconClassName="mr-1" size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setIsEditing(false)} disabled={isPending}>
             Cancel
-          </Button>
+          </AnimatedIconButton>
         </div>
       </div>
     );

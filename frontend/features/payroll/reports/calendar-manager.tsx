@@ -5,8 +5,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, CalendarDays } from "lucide-react";
+import { Pencil, CalendarDays } from "lucide-react";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   Form,
   FormControl,
@@ -281,15 +283,16 @@ export function CalendarManager({ month }: CalendarManagerProps) {
           >
             Generate Calendar
           </Button>
-          <Button
+          <AnimatedIconButton
+            icon={PlusIcon}
+            iconClassName="mr-1.5"
             variant="outline"
             size="sm"
-            className="text-xs gap-1"
+            className="text-xs"
             onClick={handleAddNew}
           >
-            <Plus className="h-3 w-3" />
             Add Event
-          </Button>
+          </AnimatedIconButton>
         </div>
       </div>
 
@@ -365,15 +368,14 @@ export function CalendarManager({ month }: CalendarManagerProps) {
                 >
                   <Pencil className="h-3 w-3" />
                 </Button>
-                <Button
+                <AnimatedIconButton
+                  icon={Trash2Icon}
                   variant="ghost"
                   size="icon"
                   className="h-6 w-6 text-red-600 hover:text-red-700"
                   onClick={() => handleDelete(event.id)}
                   aria-label="Delete event"
-                >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
+                />
               </div>
             </div>
           ))}

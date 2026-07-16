@@ -5,7 +5,9 @@ import { useLogTime } from "@/hooks/api/projects";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Timer, Play, Square, Plus, Clock } from "lucide-react";
+import { Timer, Square, Clock } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { PlayIcon, PlusIcon } from "@animateicons/react/lucide";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -118,14 +120,17 @@ export function TicketTimeTracker({ ticketId, projectId, timeSpent }: TicketTime
             <span className="text-foreground font-semibold">{totalSpent}h logged</span>
           )}
         </h4>
-        <Button
+        <AnimatedIconButton
           variant="ghost"
           size="sm"
+          icon={PlusIcon}
+          iconSize={12}
+          iconClassName="mr-1"
           className="h-6 text-xs px-2"
           onClick={() => setShowManual((v) => !v)}
         >
-          <Plus className="h-3 w-3 mr-1" />Log
-        </Button>
+          Log
+        </AnimatedIconButton>
       </div>
 
       <div className="flex items-center gap-2 mb-2">
@@ -137,9 +142,9 @@ export function TicketTimeTracker({ ticketId, projectId, timeSpent }: TicketTime
           <span>{formatElapsed(elapsed)}</span>
         </div>
         {!running ? (
-          <Button size="sm" variant="outline" className="text-xs px-3 gap-1" onClick={handleStart}>
-            <Play className="h-3 w-3" />Start
-          </Button>
+          <AnimatedIconButton size="sm" variant="outline" icon={PlayIcon} iconSize={12} iconClassName="mr-1" className="text-xs px-3" onClick={handleStart}>
+            Start
+          </AnimatedIconButton>
         ) : (
           <>
             <Button size="sm" variant="outline" className="text-xs px-3 gap-1" onClick={handleStop}>

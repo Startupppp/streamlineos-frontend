@@ -2,7 +2,8 @@
 
 import { format, isWeekend, isToday } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDownIcon, ChevronRightIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { cn } from "@/lib/utils";
 import { WorkLogEntryRow } from "./work-log-entry-row";
 
@@ -57,6 +58,7 @@ export function WorkLogMonthGroup({
   const weekdays = allDays.filter((d) => !isWeekend(d)).length;
   const regionId = `month-content-${monthKey}`;
   const totalHours = filled * 8;
+  const { iconRef: chevronRef, hoverHandlers: chevronHoverHandlers } = useAnimatedIcon();
 
   const handleToggle = () => onToggle(monthKey);
 
@@ -80,14 +82,15 @@ export function WorkLogMonthGroup({
         aria-expanded={!isCollapsed}
         aria-controls={regionId}
         onKeyDown={handleKeyDown}
+        {...chevronHoverHandlers}
       >
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             <div className="w-7 rounded-lg bg-muted/60 flex items-center justify-center shrink-0">
               {isCollapsed ? (
-                <ChevronRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                <ChevronRightIcon ref={chevronRef} size={16} className="text-muted-foreground" aria-hidden="true" />
               ) : (
-                <ChevronDown className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                <ChevronDownIcon ref={chevronRef} size={16} className="text-muted-foreground" aria-hidden="true" />
               )}
             </div>
             <CardTitle className="text-sm font-semibold text-foreground truncate">{label}</CardTitle>

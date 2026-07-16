@@ -4,7 +4,7 @@ import { useState, useCallback, type ChangeEvent } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, Pencil, Trash2, Archive, RotateCcw } from "lucide-react";
+import { Pencil, Archive, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import {
   useOrgLocations,
@@ -46,6 +46,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import type { OrgLocation, LocationType } from "@/types/org-hierarchy";
 import { RequireModule } from "@/components/auth/require-module";
 
@@ -308,9 +310,15 @@ export default function OrgLocationsPage() {
               <Button variant="ghost" size="sm" onClick={makeRestoreHandler(l)} title="Restore">
                 <RotateCcw className="h-4 w-4 text-primary" />
               </Button>
-              <Button variant="ghost" size="sm" onClick={makeSetDeletingHandler(l)} title="Delete permanently">
-                <Trash2 className="h-4 w-4 text-destructive" />
-              </Button>
+              <AnimatedIconButton
+                icon={Trash2Icon}
+                iconSize={16}
+                variant="ghost"
+                size="sm"
+                onClick={makeSetDeletingHandler(l)}
+                title="Delete permanently"
+                className="text-destructive"
+              />
             </>
           ) : (
             <>
@@ -357,10 +365,15 @@ export default function OrgLocationsPage() {
       title="Locations"
       subtitle="Physical work locations and offices."
       actions={
-        <Button size="sm" onClick={handleOpenCreate}>
-          <Plus className="h-4 w-4 mr-1.5" />
+        <AnimatedIconButton
+          icon={PlusIcon}
+          iconSize={16}
+          iconClassName="mr-1.5"
+          size="sm"
+          onClick={handleOpenCreate}
+        >
           Add Location
-        </Button>
+        </AnimatedIconButton>
       }
       filters={
         <>

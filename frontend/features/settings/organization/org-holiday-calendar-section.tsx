@@ -12,7 +12,10 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2, Trash2, CalendarDays, Plus } from "lucide-react";
+import { Loader2, CalendarDays } from "lucide-react";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
 import { apiClient, getApiError } from "@/lib/api-client";
 import { format, parseISO } from "date-fns";
@@ -69,6 +72,21 @@ interface OrgHolidayCalendarSectionProps {
   canEdit: boolean;
 }
 
+function DeleteHolidayButton({ onClick, disabled }: { onClick: () => void; disabled: boolean }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"
+      {...hoverHandlers}
+    >
+      <Trash2Icon ref={iconRef} size={16} />
+    </button>
+  );
+}
+
 export function OrgHolidayCalendarSection({ canEdit }: OrgHolidayCalendarSectionProps) {
   const { data: holidays, isLoading } = useOrgHolidays();
   const createMutation = useCreateHoliday();
@@ -100,9 +118,9 @@ export function OrgHolidayCalendarSection({ canEdit }: OrgHolidayCalendarSection
           <CardDescription>Public holidays and non-working days for your organization.</CardDescription>
         </div>
         {canEdit && !showAdd && (
-          <Button variant="outline" size="sm" onClick={() => setShowAdd(true)} className="gap-1.5 h-8 text-xs">
-            <Plus className="h-3 w-3" /> Add
-          </Button>
+          <AnimatedIconButton icon={PlusIcon} iconSize={12} iconClassName="mr-1.5" variant="outline" size="sm" onClick={() => setShowAdd(true)} className="h-8 text-xs">
+            Add
+          </AnimatedIconButton>
         )}
       </CardHeader>
       <CardContent className="pb-5 space-y-3">
@@ -160,14 +178,7 @@ export function OrgHolidayCalendarSection({ canEdit }: OrgHolidayCalendarSection
                   </p>
                 </div>
                 {canEdit && (
-                  <button
-                    type="button"
-                    onClick={() => deleteMutation.mutate(h.id)}
-                    disabled={deleteMutation.isPending}
-                    className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  <DeleteHolidayButton onClick={() => deleteMutation.mutate(h.id)} disabled={deleteMutation.isPending} />
                 )}
               </div>
             ))}

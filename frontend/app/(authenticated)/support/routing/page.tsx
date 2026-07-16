@@ -48,7 +48,10 @@ import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptySearchIllustration } from "@/components/illustrations";
-import { Plus, Trash2, Pencil, ChevronUp, ChevronDown } from "lucide-react";
+import { Pencil } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { PlusIcon, Trash2Icon, ChevronUpIcon, ChevronDownIcon } from "@animateicons/react/lucide";
 import {
   useRoutingRules,
   useCreateRoutingRule,
@@ -191,16 +194,15 @@ function ConditionRow({ index, control, showRemove, onRemove }: ConditionRowProp
         )}
       />
       {showRemove && (
-        <Button
+        <AnimatedIconButton
           type="button"
           variant="ghost"
           size="icon"
           className="w-8 text-destructive shrink-0"
           onClick={handleRemove}
           aria-label="Remove condition"
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </Button>
+          icon={Trash2Icon}
+        />
       )}
     </div>
   );
@@ -234,14 +236,21 @@ interface SkillBadgeProps {
   onRemove: (skill: string) => void;
 }
 
-function SkillBadge({ skill, onRemove }: SkillBadgeProps) {
+function SkillBadgeRemoveButton({ skill, onRemove }: { skill: string; onRemove: (s: string) => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
   const handleRemove = useCallback(() => onRemove(skill), [skill, onRemove]);
+  return (
+    <button type="button" aria-label={`Remove ${skill}`} onClick={handleRemove} {...hoverHandlers}>
+      <Trash2Icon ref={iconRef} size={10} />
+    </button>
+  );
+}
+
+function SkillBadge({ skill, onRemove }: SkillBadgeProps) {
   return (
     <Badge variant="secondary" className="text-[10px] gap-1">
       {skill}
-      <button type="button" aria-label={`Remove ${skill}`} onClick={handleRemove}>
-        <Trash2 className="h-2.5 w-2.5" />
-      </button>
+      <SkillBadgeRemoveButton skill={skill} onRemove={onRemove} />
     </Badge>
   );
 }
@@ -424,15 +433,17 @@ function RuleSheet({ rule, members, onClose }: RuleSheetProps) {
                     />
                   ))}
                 </div>
-                <Button
+                <AnimatedIconButton
                   type="button"
                   variant="outline"
                   size="sm"
                   className="mt-2 text-xs"
                   onClick={handleAddCondition}
+                  icon={PlusIcon}
+                  iconClassName="mr-1"
                 >
-                  <Plus className="h-3 w-3 mr-1" /> Add Condition
-                </Button>
+                  Add Condition
+                </AnimatedIconButton>
               </div>
 
               <FormField
@@ -625,26 +636,26 @@ function RuleCard({
       <CardContent className="p-4">
         <div className="flex items-center gap-3">
           <div className="flex flex-col gap-0.5">
-            <Button
+            <AnimatedIconButton
               variant="ghost"
               size="icon"
               className="h-5 w-5"
               disabled={index === 0}
               onClick={handleMoveUp}
               aria-label="Move rule up"
-            >
-              <ChevronUp className="h-3 w-3" />
-            </Button>
-            <Button
+              icon={ChevronUpIcon}
+              iconSize={12}
+            />
+            <AnimatedIconButton
               variant="ghost"
               size="icon"
               className="h-5 w-5"
               disabled={index === total - 1}
               onClick={handleMoveDown}
               aria-label="Move rule down"
-            >
-              <ChevronDown className="h-3 w-3" />
-            </Button>
+              icon={ChevronDownIcon}
+              iconSize={12}
+            />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
@@ -686,15 +697,14 @@ function RuleCard({
             <Button variant="ghost" size="icon" className="w-7" onClick={handleEdit} aria-label="Edit rule">
               <Pencil className="h-3.5 w-3.5" />
             </Button>
-            <Button
+            <AnimatedIconButton
               variant="ghost"
               size="icon"
               className="w-7 text-destructive"
               onClick={handleDelete}
               aria-label="Delete rule"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
+              icon={Trash2Icon}
+            />
           </div>
         </div>
       </CardContent>
@@ -798,9 +808,9 @@ export default function SupportRoutingPage() {
       title="Routing Rules"
       subtitle="Auto-assign and prioritise incoming tickets"
       actions={
-        <Button size="sm" onClick={handleOpenCreate}>
-          <Plus className="h-4 w-4 mr-1" /> New Rule
-        </Button>
+        <AnimatedIconButton size="sm" onClick={handleOpenCreate} icon={PlusIcon} iconClassName="mr-1.5">
+          New Rule
+        </AnimatedIconButton>
       }
     >
       {isLoading ? (

@@ -1,9 +1,11 @@
 "use client";
 
-import { FolderTree, Pencil, Trash2 } from "lucide-react";
+import { FolderTree, Pencil } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { Trash2Icon } from "@animateicons/react/lucide";
 import type { KbCategory } from "@/hooks/api/support/kb";
 
 export interface KbCategoryListItemProps {
@@ -50,15 +52,14 @@ export function KbCategoryListItem({ category, onEdit, onDelete }: KbCategoryLis
           >
             <Pencil className="h-3.5 w-3.5" />
           </Button>
-          <Button
+          <AnimatedIconButton
             size="icon"
             variant="ghost"
             className="w-7 text-destructive hover:text-destructive"
             onClick={handleDelete}
             aria-label="Delete category"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
+            icon={Trash2Icon}
+          />
         </div>
       </CardContent>
     </Card>

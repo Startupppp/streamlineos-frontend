@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { format } from "date-fns";
 import {
   Sheet,
@@ -79,6 +80,13 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
   const numericEventId = event ? extractEventNumericId(event.id) : null;
   const isCalendarEvent = event?.source === "event";
   const canUpdate = isCalendarEvent;
+
+  const { iconRef: acceptIconRef, hoverHandlers: acceptHoverHandlers } = useAnimatedIcon();
+  const { iconRef: declineIconRef, hoverHandlers: declineHoverHandlers } = useAnimatedIcon();
+  const { iconRef: unlinkIconRef, hoverHandlers: unlinkHoverHandlers } = useAnimatedIcon();
+  const { iconRef: huddleIconRef, hoverHandlers: huddleHoverHandlers } = useAnimatedIcon();
+  const { iconRef: deleteIconRef, hoverHandlers: deleteHoverHandlers } = useAnimatedIcon();
+  const { iconRef: downloadIconRef, hoverHandlers: downloadHoverHandlers } = useAnimatedIcon();
 
   const handleUnlink = useCallback(async () => {
     if (numericEventId === null) return;
@@ -247,10 +255,11 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                               <button
                                 type="button"
                                 onClick={() => setUnlinkConfirmOpen(true)}
+                                {...unlinkHoverHandlers}
                                 className="text-xs text-muted-foreground hover:text-destructive transition-colors duration-150 flex items-center gap-1 shrink-0"
                                 aria-label="Unlink ticket"
                               >
-                                <XIcon size={12} />
+                                <XIcon ref={unlinkIconRef} size={12} />
                                 Unlink
                               </button>
                             )}
@@ -264,10 +273,11 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                               <button
                                 type="button"
                                 onClick={() => setUnlinkConfirmOpen(true)}
+                                {...unlinkHoverHandlers}
                                 className="text-xs text-muted-foreground hover:text-destructive transition-colors duration-150 flex items-center gap-1 shrink-0"
                                 aria-label="Unlink ticket"
                               >
-                                <XIcon size={12} />
+                                <XIcon ref={unlinkIconRef} size={12} />
                                 Unlink
                               </button>
                             )}
@@ -294,8 +304,9 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                             }
                             onClick={() => handleRsvp("accepted")}
                             aria-label="Accept event"
+                            {...acceptHoverHandlers}
                           >
-                            <CheckIcon size={12} />
+                            <CheckIcon ref={acceptIconRef} size={12} />
                             Accept
                           </Button>
                           <Button
@@ -316,8 +327,9 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                             disabled={rsvpMutationIsPending}
                             onClick={() => handleRsvp("declined")}
                             aria-label="Decline event"
+                            {...declineHoverHandlers}
                           >
-                            <XIcon size={12} />
+                            <XIcon ref={declineIconRef} size={12} />
                             Decline
                           </Button>
                         </div>
@@ -382,8 +394,9 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                 <Button
                   size="sm"
                   className="w-full h-8 text-xs gap-1.5 bg-orange-500 hover:bg-orange-600 text-white"
+                  {...huddleHoverHandlers}
                 >
-                  <MicIcon size={14} />
+                  <MicIcon ref={huddleIconRef} size={14} />
                   Join Huddle
                 </Button>
               </Link>
@@ -396,8 +409,9 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                 size="sm"
                 className="text-destructive hover:text-destructive hover:bg-destructive/10"
                 onClick={() => setConfirmOpen(true)}
+                {...deleteHoverHandlers}
               >
-                <Trash2Icon size={14} className="mr-1.5" />
+                <Trash2Icon ref={deleteIconRef} size={14} className="mr-1.5" />
                 Delete
               </Button>
             ) : (
@@ -409,8 +423,9 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                 size="sm"
                 onClick={handleExportIcs}
                 aria-label="Export as .ics"
+                {...downloadHoverHandlers}
               >
-                <DownloadIcon size={14} className="mr-1.5" />
+                <DownloadIcon ref={downloadIconRef} size={14} className="mr-1.5" />
                 .ics
               </Button>
               {isCalendarEvent && event?.category !== "huddle" && (

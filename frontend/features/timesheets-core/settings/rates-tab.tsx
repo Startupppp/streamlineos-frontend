@@ -1,13 +1,15 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { useRates, useDeleteRate } from "@/hooks/api/timesheets-core/rates";
 import { useCan } from "@/hooks/api/access";
 import type { TimesheetRate } from "@/features/timesheets-core/types";
 import { BILLING_TYPE_LABEL } from "@/features/timesheets-core/types";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -163,14 +165,14 @@ export function RatesTab() {
                   >
                     <Pencil className="h-3 w-3" />
                   </Button>
-                  <Button
+                  <AnimatedIconButton
+                    icon={Trash2Icon}
+                    iconSize={12}
                     variant="ghost"
                     size="icon"
                     className="h-6 w-6 text-destructive hover:text-destructive"
                     onClick={() => handleDeleteRequest(row.id)}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
+                  />
                 </div>
               ),
             },
@@ -191,10 +193,16 @@ export function RatesTab() {
   }
 
   const toolbar = canManage ? (
-    <Button size="sm" className="h-8 text-xs gap-1.5" onClick={handleAddOpen}>
-      <Plus className="h-3.5 w-3.5" />
+    <AnimatedIconButton
+      icon={PlusIcon}
+      iconSize={14}
+      iconClassName="mr-1.5"
+      size="sm"
+      className="h-8 text-xs"
+      onClick={handleAddOpen}
+    >
       Add rate
-    </Button>
+    </AnimatedIconButton>
   ) : undefined;
 
   return (

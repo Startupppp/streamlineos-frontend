@@ -13,7 +13,10 @@ import { INTERVIEW_ROUND_OPTIONS, NO_HIRING_FLOW, SCREENING_QUESTION_TYPES, type
 import { SectionTitle, Field, FieldError, ToggleRow, type SectionProps } from "./job-basics-sections";
 import { cn } from "@/lib/utils";
 import { useHiringFlows } from "@/hooks/api/hr/recruitment";
-import { Users, Settings, Plus, Trash2 } from "lucide-react";
+import React, { forwardRef } from "react";
+import { Users, Settings } from "lucide-react";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 
 const SCREENING_QUESTION_TYPE_LABELS: Record<(typeof SCREENING_QUESTION_TYPES)[number], string> = {
   TEXT: "Text answer",
@@ -109,6 +112,37 @@ export function Section7({ form }: SectionProps) {
   );
 }
 
+const AddQuestionButton = forwardRef<HTMLButtonElement, React.ComponentProps<typeof Button>>(
+  function AddQuestionButton(props, ref) {
+    const { iconRef, hoverHandlers } = useAnimatedIcon();
+    return (
+      <Button ref={ref} type="button" size="sm" variant="outline" className="gap-1.5 text-xs" {...hoverHandlers} {...props}>
+        <PlusIcon ref={iconRef} size={12} />
+        Add question
+      </Button>
+    );
+  }
+);
+
+const RemoveQuestionButton = forwardRef<HTMLButtonElement, React.ComponentProps<typeof Button>>(
+  function RemoveQuestionButton(props, ref) {
+    const { iconRef, hoverHandlers } = useAnimatedIcon();
+    return (
+      <Button
+        ref={ref}
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="h-9 w-9 shrink-0 text-muted-foreground hover:text-destructive"
+        {...hoverHandlers}
+        {...props}
+      >
+        <Trash2Icon ref={iconRef} size={14} />
+      </Button>
+    );
+  }
+);
+
 export function Section8({ form }: SectionProps) {
   const { register, control, watch, setValue } = form;
   const questions = watch("screeningQuestions") ?? [];
@@ -166,10 +200,7 @@ export function Section8({ form }: SectionProps) {
         <div className="space-y-1.5 mt-2">
           <div className="flex items-center justify-between">
             <Label className="text-xs font-semibold text-foreground/80">Screening Questions</Label>
-            <Button type="button" size="sm" variant="outline" className="gap-1.5 text-xs" onClick={handleAddQuestion}>
-              <Plus className="h-3 w-3" />
-              Add question
-            </Button>
+            <AddQuestionButton onClick={handleAddQuestion} />
           </div>
           <p className="text-[10px] text-muted-foreground">
             Shown to applicants on the public apply form. Knockout questions flag the application for review — they
@@ -190,15 +221,7 @@ export function Section8({ form }: SectionProps) {
                       onChange={(e) => handleUpdateQuestion(q.id, { question: e.target.value })}
                       className="flex-1"
                     />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-9 w-9 shrink-0 text-muted-foreground hover:text-destructive"
-                      onClick={() => handleRemoveQuestion(q.id)}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
+                    <RemoveQuestionButton onClick={() => handleRemoveQuestion(q.id)} />
                   </div>
                   <div className="flex flex-wrap items-center gap-3 pl-6">
                     <Select value={q.type} onValueChange={(v) => handleUpdateQuestion(q.id, { type: v as ScreeningQuestionValues["type"] })}>

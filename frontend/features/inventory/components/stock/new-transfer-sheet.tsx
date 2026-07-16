@@ -4,8 +4,9 @@ import { useCallback, useMemo } from "react";
 import { useForm, useFieldArray, useWatch, Controller, type Control, type UseFormSetValue, type UseFormRegister, type FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -260,17 +261,17 @@ function LineRow({
           )}
         </div>
         {canRemove && (
-          <Button
+          <AnimatedIconButton
             type="button"
+            icon={Trash2Icon}
+            iconSize={16}
             variant="ghost"
             size="icon"
             aria-label="Remove line"
             className="mt-0.5 h-7 w-7 shrink-0 text-destructive hover:text-destructive"
             data-line-idx={index}
             onClick={onRemove}
-          >
-            <Trash2 className="h-4 w-4" aria-hidden="true" />
-          </Button>
+          />
         )}
       </div>
       <TrackingPicker index={index} productVariantId={productVariantId} control={control} />
@@ -412,10 +413,9 @@ export function NewTransferSheet({ open, onOpenChange }: { open: boolean; onOpen
                 <Label className="text-[13px] font-medium">
                   Lines <span className="text-destructive">*</span>
                 </Label>
-                <Button type="button" variant="outline" size="sm" className="text-xs" onClick={handleAddLine}>
-                  <Plus className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
+                <AnimatedIconButton type="button" icon={PlusIcon} iconSize={14} iconClassName="mr-1" variant="outline" size="sm" className="text-xs" onClick={handleAddLine}>
                   Add line
-                </Button>
+                </AnimatedIconButton>
               </div>
               {errors.lines?.root && (
                 <p className="text-xs text-destructive">{errors.lines.root.message}</p>

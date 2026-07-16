@@ -1,9 +1,9 @@
 "use client";
 
 import { memo, useCallback } from "react";
-import { ChevronUp, ChevronDown, X, Plus } from "lucide-react";
+import { ChevronUpIcon, ChevronDownIcon, XIcon, PlusIcon } from "@animateicons/react/lucide";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -87,10 +87,9 @@ export function FormFieldEditor({ fields, onChange }: FormFieldEditorProps) {
           onRemove={handleRemove}
         />
       ))}
-      <Button type="button" variant="outline" size="sm" className="text-xs w-full" onClick={handleAdd}>
-        <Plus className="h-3.5 w-3.5 mr-1" />
+      <AnimatedIconButton type="button" variant="outline" size="sm" icon={PlusIcon} iconSize={14} iconClassName="mr-1" className="text-xs w-full" onClick={handleAdd}>
         Add Field
-      </Button>
+      </AnimatedIconButton>
     </div>
   );
 }
@@ -124,18 +123,14 @@ const FieldRow = memo(function FieldRow({
     <div className="rounded-lg border bg-card p-3 space-y-2">
       <div className="flex items-center gap-2">
         <div className="flex flex-col gap-0.5 shrink-0">
-          <Button
-            type="button" variant="ghost" size="icon" className="h-5 w-5"
+          <AnimatedIconButton
+            type="button" variant="ghost" size="icon" icon={ChevronUpIcon} iconSize={12} className="h-5 w-5"
             onClick={() => onMoveUp(index)} disabled={index === 0} aria-label="Move field up"
-          >
-            <ChevronUp className="h-3 w-3" />
-          </Button>
-          <Button
-            type="button" variant="ghost" size="icon" className="h-5 w-5"
+          />
+          <AnimatedIconButton
+            type="button" variant="ghost" size="icon" icon={ChevronDownIcon} iconSize={12} className="h-5 w-5"
             onClick={() => onMoveDown(index)} disabled={index === total - 1} aria-label="Move field down"
-          >
-            <ChevronDown className="h-3 w-3" />
-          </Button>
+          />
         </div>
         <Input
           value={field.label}
@@ -157,13 +152,11 @@ const FieldRow = memo(function FieldRow({
           <Label className="text-xs text-muted-foreground">Req</Label>
           <Switch checked={field.required} onCheckedChange={(v) => onRequiredChange(index, v)} />
         </div>
-        <Button
-          type="button" variant="ghost" size="icon"
+        <AnimatedIconButton
+          type="button" variant="ghost" size="icon" icon={XIcon} iconSize={14}
           className="w-7 shrink-0 text-muted-foreground hover:text-destructive"
           onClick={() => onRemove(index)} aria-label="Remove field"
-        >
-          <X className="h-3.5 w-3.5" />
-        </Button>
+        />
       </div>
       {meta.needsOptions && (
         <Textarea

@@ -18,7 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Download, Loader2 } from "lucide-react";
+import { Download } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { useLeads } from "@/hooks/api/leads";
 import { DatePicker } from "@/components/ui/date-picker";
 import { toast } from "sonner";
@@ -257,13 +258,14 @@ export function LeadExportDialog() {
           <Button variant="outline" onClick={handleClose}>
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             onClick={handleExport}
+            isPending={isExporting}
+            loadingText="Exporting..."
             disabled={isExporting || !data?.leads?.length}
           >
-            {isExporting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             Export ({data?.totalCount ?? 0})
-          </Button>
+          </LoadingButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

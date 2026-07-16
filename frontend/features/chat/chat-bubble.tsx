@@ -1,9 +1,11 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import React, { useCallback, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { ArrowDown, BookmarkCheck, BookmarkPlus, CalendarClock, CheckCheck, Copy, FileText, Forward, Link, ListPlus, Loader2, MessageSquare, Pencil, Pin, Reply, Smile, Ticket, Trash2, UserPlus } from "lucide-react";
+import { ArrowDown, CalendarClock, CheckCheck, FileText, Forward, Link, ListPlus, Loader2, MessageSquare, Pencil, Pin, Smile, Ticket, Trash2 } from "lucide-react";
+import { ReplyIcon, BookmarkCheckIcon, BookmarkPlusIcon, CopyIcon, Trash2Icon, UserPlusIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -37,6 +39,65 @@ import { InternalLinkPreview } from "./internal-link-preview";
 import { getStatusBadgeClass } from "@/features/projects/shared/status-badge";
 import { formatTicketKey } from "@/features/projects/shared/format-ticket-key";
 import { renderFormattedContent } from "./formatted-message-content";
+
+const ReplyButton = React.forwardRef<HTMLButtonElement, React.ButtonHTMLAttributes<HTMLButtonElement>>(
+  function ReplyButton({ className, ...props }, ref) {
+    const { iconRef, hoverHandlers } = useAnimatedIcon();
+    return (
+      <button ref={ref} {...hoverHandlers} className={className} {...props}>
+        <ReplyIcon ref={iconRef} size={14} />
+      </button>
+    );
+  },
+);
+
+const SaveButton = React.forwardRef<HTMLButtonElement, React.ButtonHTMLAttributes<HTMLButtonElement> & { isSaved: boolean }>(
+  function SaveButton({ className, isSaved, ...props }, ref) {
+    const { iconRef, hoverHandlers } = useAnimatedIcon();
+    return (
+      <button ref={ref} {...hoverHandlers} className={className} {...props}>
+        {isSaved ? (
+          <BookmarkCheckIcon ref={iconRef} size={14} className="fill-amber-500" />
+        ) : (
+          <BookmarkPlusIcon ref={iconRef} size={14} />
+        )}
+      </button>
+    );
+  },
+);
+
+const CopyButton = React.forwardRef<HTMLButtonElement, React.ButtonHTMLAttributes<HTMLButtonElement>>(
+  function CopyButton({ className, ...props }, ref) {
+    const { iconRef, hoverHandlers } = useAnimatedIcon();
+    return (
+      <button ref={ref} {...hoverHandlers} className={className} {...props}>
+        <CopyIcon ref={iconRef} size={14} />
+      </button>
+    );
+  },
+);
+
+const DeleteButton = React.forwardRef<HTMLButtonElement, React.ButtonHTMLAttributes<HTMLButtonElement>>(
+  function DeleteButton({ className, ...props }, ref) {
+    const { iconRef, hoverHandlers } = useAnimatedIcon();
+    return (
+      <button ref={ref} {...hoverHandlers} className={className} {...props}>
+        <Trash2Icon ref={iconRef} size={14} />
+      </button>
+    );
+  },
+);
+
+const UserPlusButton = React.forwardRef<HTMLButtonElement, React.ButtonHTMLAttributes<HTMLButtonElement>>(
+  function UserPlusButton({ className, ...props }, ref) {
+    const { iconRef, hoverHandlers } = useAnimatedIcon();
+    return (
+      <button ref={ref} {...hoverHandlers} className={className} {...props}>
+        <UserPlusIcon ref={iconRef} size={14} />
+      </button>
+    );
+  },
+);
 
 const TICKET_STATUS_DISPLAY: Record<string, string> = {
   TODO: "Todo",
@@ -594,21 +655,23 @@ export function ChatBubble({
             )}
           >
             <div className="relative flex items-center bg-background border border-border/60 rounded-lg shadow-md overflow-visible pointer-events-auto">
-              <button onClick={onReply} className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground" title="Reply" aria-label="Reply">
-                <Reply className="h-3.5 w-3.5" />
-              </button>
+              <ReplyButton
+                onClick={onReply}
+                className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground"
+                title="Reply"
+                aria-label="Reply"
+              />
               <button onClick={onOpenThread} className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground" title="Open thread" aria-label="Open thread">
                 <MessageSquare className="h-3.5 w-3.5" />
               </button>
               {onSave && (
-                <button
+                <SaveButton
+                  isSaved={isSaved ?? false}
                   onClick={isSaved ? onUnsaveMsg : onSave}
                   className={cn("p-1.5 hover:bg-muted/50 hover:text-foreground", isSaved ? "text-amber-500" : "text-muted-foreground")}
                   title={isSaved ? "Unsave" : "Save message"}
                   aria-label={isSaved ? "Unsave message" : "Save message"}
-                >
-                  {isSaved ? <BookmarkCheck className="h-3.5 w-3.5 fill-amber-500" /> : <BookmarkPlus className="h-3.5 w-3.5" />}
-                </button>
+                />
               )}
               <button
                 onClick={handlePinToggle}
@@ -627,14 +690,12 @@ export function ChatBubble({
                 <Smile className="h-3.5 w-3.5" />
               </button>
               {message.content && (
-                <button
+                <CopyButton
                   onClick={handleCopy}
                   className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground"
                   title="Copy"
                   aria-label="Copy"
-                >
-                  <Copy className="h-3.5 w-3.5" />
-                </button>
+                />
               )}
               <button
                 onClick={handleCopyLink}
@@ -665,14 +726,12 @@ export function ChatBubble({
                 </button>
               )}
               {canAssignTicket && (
-                <button
+                <UserPlusButton
                   onClick={handleOpenAssignDialog}
                   className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground"
                   title="Assign ticket"
                   aria-label="Assign ticket"
-                >
-                  <UserPlus className="h-3.5 w-3.5" />
-                </button>
+                />
               )}
               {canSetDueDate && (
                 <button
@@ -691,9 +750,11 @@ export function ChatBubble({
               )}
               {isOwn && (
                 <div className="relative group/delete">
-                  <button className="p-1.5 hover:bg-red-500/10 text-muted-foreground hover:text-red-400" title="Delete" aria-label="Delete">
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
+                  <DeleteButton
+                    className="p-1.5 hover:bg-red-500/10 text-muted-foreground hover:text-red-400"
+                    title="Delete"
+                    aria-label="Delete"
+                  />
                   <div className="absolute right-0 top-full mt-1 hidden group-hover/delete:flex flex-col bg-background border border-border rounded-lg shadow-lg overflow-hidden z-50 min-w-[160px]">
                     <button
                       onClick={onDelete}

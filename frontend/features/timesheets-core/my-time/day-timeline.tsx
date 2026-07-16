@@ -1,8 +1,10 @@
 "use client";
 import { memo, useCallback, useMemo, useState } from "react";
 import { format, isToday, parseISO } from "date-fns";
-import { Clock, Edit2, Trash2, Plus } from "lucide-react";
+import { Clock, Edit2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
@@ -73,9 +75,14 @@ const EntryRow = memo(function EntryRow({ entry, onEdit, onVoid }: EntryRowProps
           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleEdit}>
             <Edit2 className="h-3 w-3" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive" onClick={handleVoid}>
-            <Trash2 className="h-3 w-3" />
-          </Button>
+          <AnimatedIconButton
+            icon={Trash2Icon}
+            iconSize={12}
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 text-destructive hover:text-destructive"
+            onClick={handleVoid}
+          />
         </div>
       )}
     </div>
@@ -180,9 +187,17 @@ export function DayTimeline({ entries, days }: DayTimelineProps) {
               <span className="text-xs font-semibold tabular-nums text-foreground">{dayTotal.toFixed(1)}h</span>
             )}
           </div>
-          <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={handleLogOpen}>
-            <Plus className="h-3.5 w-3.5" /> Log time
-          </Button>
+          <AnimatedIconButton
+            icon={PlusIcon}
+            iconSize={14}
+            iconClassName="mr-1.5"
+            variant="outline"
+            size="sm"
+            className="h-7 text-xs"
+            onClick={handleLogOpen}
+          >
+            Log time
+          </AnimatedIconButton>
         </div>
 
         {dayEntries.length === 0 ? (

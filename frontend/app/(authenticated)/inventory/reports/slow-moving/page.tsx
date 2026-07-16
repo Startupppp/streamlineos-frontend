@@ -2,9 +2,9 @@
 
 import { Suspense, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Download } from "lucide-react";
+import { DownloadIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -176,7 +176,10 @@ function SlowMovingReportContent() {
               ))}
             </SelectContent>
           </Select>
-          <Button
+          <AnimatedIconButton
+            icon={DownloadIcon}
+            iconSize={14}
+            iconClassName="mr-1.5"
             variant="outline"
             size="sm"
             className="text-xs ml-auto shrink-0"
@@ -184,9 +187,8 @@ function SlowMovingReportContent() {
             disabled={items.length === 0}
             aria-label="Export slow-moving report as CSV"
           >
-            <Download className="h-3.5 w-3.5 mr-1.5" />
             Export CSV
-          </Button>
+          </AnimatedIconButton>
         </div>
       }
     >

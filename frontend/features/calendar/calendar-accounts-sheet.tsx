@@ -17,7 +17,9 @@ import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyCalendarIllustration } from "@/components/illustrations";
-import { Loader2, RefreshCw, Star, Unplug } from "lucide-react";
+import { Loader2, RefreshCw, Unplug } from "lucide-react";
+import { StarIcon, XIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -114,15 +116,15 @@ const AccountRow = memo(function AccountRow({
         />
       )}
       {canManage && !connection.isPrimary && connection.status === "active" && (
-        <Button
+        <AnimatedIconButton
+          icon={StarIcon}
+          iconSize={14}
           variant="ghost"
           size="icon"
           className="w-7 shrink-0"
           onClick={handleMakePrimary}
           aria-label="Make default"
-        >
-          <Star className="h-3.5 w-3.5" />
-        </Button>
+        />
       )}
       {canManage && (
         <Button

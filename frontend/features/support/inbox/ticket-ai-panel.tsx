@@ -5,8 +5,6 @@ import {
   Sparkles,
   ChevronDown,
   RefreshCw,
-  ThumbsUp,
-  ThumbsDown,
   AlertTriangle,
   Reply,
   Wand2,
@@ -15,6 +13,9 @@ import {
   GitBranch,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { ThumbsUpIcon, ThumbsDownIcon } from "@animateicons/react/lucide";
+import { ThumbsUp, ThumbsDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -456,7 +457,7 @@ export function TicketAiPanel({ ticketId, onInsertReply }: TicketAiPanelProps) {
                           {formatConfidence(suggestion.confidence)}
                         </span>
                       )}
-                      <Button
+                      <AnimatedIconButton
                         type="button"
                         variant="ghost"
                         size="icon"
@@ -465,10 +466,9 @@ export function TicketAiPanel({ ticketId, onInsertReply }: TicketAiPanelProps) {
                         title={`Helpful — ${acceptLabel(suggestion)}`}
                         disabled={resolveSuggestion.isPending}
                         onClick={() => handleAccept(suggestion)}
-                      >
-                        <ThumbsUp className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button
+                        icon={ThumbsUpIcon}
+                      />
+                      <AnimatedIconButton
                         type="button"
                         variant="ghost"
                         size="icon"
@@ -477,9 +477,8 @@ export function TicketAiPanel({ ticketId, onInsertReply }: TicketAiPanelProps) {
                         title="Not helpful — dismiss suggestion"
                         disabled={resolveSuggestion.isPending}
                         onClick={() => handleReject(suggestion.id)}
-                      >
-                        <ThumbsDown className="h-3.5 w-3.5" />
-                      </Button>
+                        icon={ThumbsDownIcon}
+                      />
                     </div>
                   </div>
                   <SuggestionBody suggestion={suggestion} macros={macroList} />

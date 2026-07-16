@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Mic, MicOff, Hand, PhoneOff, ChevronUp, ChevronDown, Monitor, MonitorOff, Settings, UserMinus, VolumeX, Volume2, MessageSquare, UserPlus, Smile, PauseCircle, PlayCircle } from "lucide-react";
+import { Mic, MicOff, Hand, PhoneOff, Monitor, MonitorOff, Settings, VolumeX, Volume2, MessageSquare, Smile, PauseCircle, PlayCircle } from "lucide-react";
+import { MicIcon, MicOffIcon, ChevronDownIcon, ChevronUpIcon, UserPlusIcon, UserMinusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, resolveImageUrl } from "@/lib/utils";
@@ -314,9 +317,9 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
         </div>
         <div className="flex items-center gap-1 shrink-0">
           {expanded ? (
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            <ChevronDownIcon size={16} className="text-muted-foreground" />
           ) : (
-            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+            <ChevronUpIcon size={16} className="text-muted-foreground" />
           )}
         </div>
       </button>
@@ -351,7 +354,9 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
           </div>
 
           <div className="relative flex items-center justify-center gap-2 flex-wrap">
-            <Button
+            <AnimatedIconButton
+              icon={isMuted ? MicOffIcon : MicIcon}
+              iconSize={16}
               variant="ghost"
               size="sm"
               className={cn(
@@ -360,9 +365,7 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
               )}
               onClick={handleToggleMute}
               aria-label={isMuted ? "Unmute" : "Mute"}
-            >
-              {isMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-            </Button>
+            />
 
             <Button
               variant="ghost"
@@ -458,15 +461,15 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
               )}
             </div>
 
-            <Button
+            <AnimatedIconButton
+              icon={UserPlusIcon}
+              iconSize={16}
               variant="ghost"
               size="sm"
               className="h-9 w-9 rounded-full p-0"
               onClick={() => setShowInviteDialog((p) => !p)}
               aria-label="Invite users"
-            >
-              <UserPlus className="h-4 w-4" />
-            </Button>
+            />
 
             <Button
               variant="ghost"
@@ -557,7 +560,9 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
             ))}
           </div>
           <div className="flex items-center gap-1 ml-auto">
-            <Button
+            <AnimatedIconButton
+              icon={isMuted ? MicOffIcon : MicIcon}
+              iconSize={12}
               variant="ghost"
               size="sm"
               className={cn(
@@ -566,9 +571,7 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
               )}
               onClick={handleToggleMute}
               aria-label={isMuted ? "Unmute" : "Mute"}
-            >
-              {isMuted ? <MicOff className="h-3 w-3" /> : <Mic className="h-3 w-3" />}
-            </Button>
+            />
             <Button
               variant="ghost"
               size="sm"
@@ -598,6 +601,7 @@ interface ParticipantCardProps {
 function ParticipantCard({ participant, audioLevel, isCurrentUser, isHost, onKick, peerConnection }: ParticipantCardProps) {
   const isSpeaking = audioLevel > 0.05;
   const networkQuality = useNetworkQuality(peerConnection);
+  const { iconRef: kickIconRef, hoverHandlers: kickHoverHandlers } = useAnimatedIcon();
   const qualityColor =
     networkQuality === "excellent"
       ? "bg-emerald-500"
@@ -646,10 +650,11 @@ function ParticipantCard({ participant, audioLevel, isCurrentUser, isHost, onKic
       {isHost && !isCurrentUser && onKick && (
         <button
           onClick={onKick}
+          {...kickHoverHandlers}
           className="text-[10px] text-red-500/60 hover:text-red-500 transition-colors flex items-center gap-0.5"
           aria-label="Remove from huddle"
         >
-          <UserMinus className="h-2.5 w-2.5" />
+          <UserMinusIcon ref={kickIconRef} size={10} />
           Remove
         </button>
       )}

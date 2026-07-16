@@ -2,9 +2,9 @@
 
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2 } from "lucide-react";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -126,15 +126,18 @@ function CreateTemplateSheet({ open, onOpenChange }: { open: boolean; onOpenChan
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label>Steps</Label>
-            <Button
+            <AnimatedIconButton
+              icon={PlusIcon}
+              iconSize={12}
+              iconClassName="mr-1"
               type="button"
               size="sm"
               variant="outline"
               className="text-xs gap-1"
               onClick={() => setSteps((prev) => [...prev, emptyStep()])}
             >
-              <Plus className="h-3 w-3" /> Add step
-            </Button>
+              Add step
+            </AnimatedIconButton>
           </div>
 
           {steps.map((step, i) => (
@@ -148,16 +151,16 @@ function CreateTemplateSheet({ open, onOpenChange }: { open: boolean; onOpenChan
                     className="text-sm flex-1"
                   />
                   {steps.length > 1 && (
-                    <Button
+                    <AnimatedIconButton
+                      icon={Trash2Icon}
+                      iconSize={14}
                       type="button"
                       size="icon"
                       variant="ghost"
                       className="h-9 w-9 shrink-0 text-muted-foreground hover:text-destructive"
                       onClick={() => setSteps((prev) => prev.filter((_, idx) => idx !== i))}
                       aria-label="Remove step"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
+                    />
                   )}
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -214,9 +217,9 @@ export function OnboardingTemplatesTab() {
           Reusable onboarding plans with steps, owners, and due dates. Department-specific plans are applied
           automatically when launching onboarding for an employee in that department.
         </p>
-        <Button size="sm" className="gap-1.5 shrink-0" onClick={() => setSheetOpen(true)}>
-          <Plus className="h-3.5 w-3.5" /> New Plan
-        </Button>
+        <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1" size="sm" className="gap-1.5 shrink-0" onClick={() => setSheetOpen(true)}>
+          New Plan
+        </AnimatedIconButton>
       </div>
 
       {isLoading ? (

@@ -4,7 +4,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useAbly } from "ably/react";
 import type { InboundMessage } from "ably";
 import { useSession } from "next-auth/react";
-import { MessageSquare, Send, X } from "lucide-react";
+import { MessageSquare } from "lucide-react";
+import { XIcon, SendIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
@@ -39,6 +41,8 @@ export function HuddleChatPanel({
   const ably = useAbly();
   const orgId = session?.orgId;
   const userName = session?.user?.name ?? "Unknown";
+  const { iconRef: closeIconRef, hoverHandlers: closeHoverHandlers } = useAnimatedIcon();
+  const { iconRef: sendIconRef, hoverHandlers: sendHoverHandlers } = useAnimatedIcon();
 
   useEffect(() => {
     if (!orgId) return;
@@ -127,10 +131,11 @@ export function HuddleChatPanel({
         </div>
         <button
           onClick={onClose}
+          {...closeHoverHandlers}
           className="p-1 hover:bg-white/10 rounded-lg"
           aria-label="Close"
         >
-          <X className="h-3.5 w-3.5 text-white/60" />
+          <XIcon ref={closeIconRef} size={14} className="text-white/60" />
         </button>
       </div>
 
@@ -172,11 +177,12 @@ export function HuddleChatPanel({
           />
           <button
             onClick={handleSend}
+            {...sendHoverHandlers}
             disabled={!input.trim()}
             className="h-6 w-6 rounded-lg bg-primary flex items-center justify-center disabled:opacity-40 hover:bg-primary/90 transition-colors"
             aria-label="Send"
           >
-            <Send className="h-3 w-3 text-white" />
+            <SendIcon ref={sendIconRef} size={12} className="text-white" />
           </button>
         </div>
       </div>

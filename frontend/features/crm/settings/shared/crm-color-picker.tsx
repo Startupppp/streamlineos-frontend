@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { getCrmTokenClasses } from "@/features/crm/shared/metadata";
@@ -29,9 +30,9 @@ interface CrmColorPickerProps {
 export function CrmColorPicker({ value, onChange, className }: CrmColorPickerProps) {
   const { dotClass } = getCrmTokenClasses(value);
 
-  function handleSelect(token: CrmColorToken) {
+  const handleSelect = useCallback((token: CrmColorToken) => {
     onChange(token);
-  }
+  }, [onChange]);
 
   return (
     <Popover>
@@ -50,30 +51,47 @@ export function CrmColorPicker({ value, onChange, className }: CrmColorPickerPro
           {COLOR_TOKENS.map((token) => {
             const { dotClass: dc } = getCrmTokenClasses(token);
             const isSelected = value === token;
-
-            function handleClick() {
-              handleSelect(token);
-            }
-
             return (
-              <button
+              <ColorTokenButton
                 key={token}
-                type="button"
-                aria-label={token}
-                onClick={handleClick}
-                className={cn(
-                  "h-7 w-7 rounded-md border-2 flex items-center justify-center transition-colors",
-                  isSelected
-                    ? "border-primary ring-2 ring-primary/20"
-                    : "border-border",
-                )}
-              >
-                <span className={cn("h-2 w-2 rounded-full", dc)} />
-              </button>
+                token={token}
+                dotClass={dc}
+                isSelected={isSelected}
+                onSelect={handleSelect}
+              />
             );
           })}
         </div>
       </PopoverContent>
     </Popover>
+  );
+}
+
+function ColorTokenButton({
+  token,
+  dotClass,
+  isSelected,
+  onSelect,
+}: {
+  token: CrmColorToken;
+  dotClass: string;
+  isSelected: boolean;
+  onSelect: (token: CrmColorToken) => void;
+}) {
+  const handleClick = useCallback(() => onSelect(token), [token, onSelect]);
+  return (
+    <button
+      type="button"
+      aria-label={token}
+      onClick={handleClick}
+      className={cn(
+        "h-7 w-7 rounded-md border-2 flex items-center justify-center transition-colors",
+        isSelected
+          ? "border-primary ring-2 ring-primary/20"
+          : "border-border",
+      )}
+    >
+      <span className={cn("h-2 w-2 rounded-full", dotClass)} />
+    </button>
   );
 }

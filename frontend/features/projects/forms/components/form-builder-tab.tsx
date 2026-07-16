@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Copy, ExternalLink } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { CopyIcon, ExternalLinkIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -185,26 +185,26 @@ export function FormBuilderTab({ projectId, formId }: FormBuilderTabProps) {
         {effectiveIsPublic && publicUrl && (
           <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2 text-xs text-muted-foreground">
             <span className="flex-1 truncate font-mono">{publicUrl}</span>
-            <Button
+            <AnimatedIconButton
               type="button"
               variant="ghost"
               size="icon"
+              icon={CopyIcon}
+              iconSize={14}
               className="h-6 w-6 shrink-0"
               onClick={handleCopyLink}
               aria-label="Copy public link"
-            >
-              <Copy className="h-3.5 w-3.5" />
-            </Button>
-            <Button
+            />
+            <AnimatedIconButton
               type="button"
               variant="ghost"
               size="icon"
+              icon={ExternalLinkIcon}
+              iconSize={14}
               className="h-6 w-6 shrink-0"
               onClick={handleOpenPublic}
               aria-label="Open public form"
-            >
-              <ExternalLink className="h-3.5 w-3.5" />
-            </Button>
+            />
           </div>
         )}
       </div>

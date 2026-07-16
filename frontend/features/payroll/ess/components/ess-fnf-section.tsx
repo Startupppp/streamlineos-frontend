@@ -2,9 +2,10 @@
 
 import { memo, useState } from "react";
 import { motion } from "framer-motion";
-import { FileCheck, Download } from "lucide-react";
+import { FileCheck } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { DownloadIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EssStatusBadge } from "./ess-status-badge";
 import { useEssFnf } from "@/hooks/api/payroll/ess";
@@ -71,16 +72,17 @@ export function EssFnfSection() {
         <div className="flex items-center gap-2">
           <EssStatusBadge status={settlement.status} />
           {settlement.statementPublishedAt && (
-            <Button
+            <AnimatedIconButton
+              icon={DownloadIcon}
+              iconClassName="mr-1.5"
               variant="outline"
               size="sm"
-              className="text-xs gap-1.5"
+              className="text-xs"
               onClick={handleDownloadStatement}
               disabled={downloading}
             >
-              <Download className="h-3 w-3" />
               {downloading ? "Downloading…" : "Download statement"}
-            </Button>
+            </AnimatedIconButton>
           )}
         </div>
       </div>

@@ -5,7 +5,9 @@ import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Plus, Trash2, AlertTriangle } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
@@ -129,16 +131,18 @@ const LineRow = memo(function LineRow({
       <div className="flex items-center justify-between mb-1">
         <span className="text-xs font-medium text-muted-foreground">Line {index + 1}</span>
         {canRemove && (
-          <Button
+          <AnimatedIconButton
             type="button"
+            icon={Trash2Icon}
+            iconSize={14}
+            iconClassName="mr-1"
             variant="ghost"
             size="sm"
             className="h-6 px-2 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
             onClick={handleRemove}
           >
-            <Trash2 className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
             Remove
-          </Button>
+          </AnimatedIconButton>
         )}
       </div>
 
@@ -398,16 +402,18 @@ export function OpeningStockSheet({ open, onOpenChange }: OpeningStockSheetProps
             />
           ))}
 
-          <Button
+          <AnimatedIconButton
             type="button"
+            icon={PlusIcon}
+            iconSize={14}
+            iconClassName="mr-1"
             variant="outline"
             size="sm"
             className="w-full h-8 text-xs border-dashed"
             onClick={handleAddLine}
           >
-            <Plus className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
             Add Line
-          </Button>
+          </AnimatedIconButton>
         </div>
 
         <div className="rounded-lg border border-border bg-muted/30 px-3 py-2 grid grid-cols-3 gap-2 text-center">

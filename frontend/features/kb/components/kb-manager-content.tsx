@@ -37,7 +37,9 @@ import {
   EmptyKnowledgeIllustration,
   EmptySearchIllustration,
 } from "@/components/illustrations";
-import { CheckCircle2, FileText, FolderTree, Globe, Loader2, Plus, Sparkles } from "lucide-react";
+import { CheckCircle2, FileText, FolderTree, Globe, Loader2, Sparkles } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { KbArticleCard } from "./kb-article-card";
 import { KbCategoryListItem } from "./kb-category-list-item";
 import { KbCategoryDialog } from "./kb-category-dialog";
@@ -333,9 +335,9 @@ export function KbManagerContent() {
           <Button variant="outline" size="sm" onClick={handleOpenCategoryDialog}>
             <FolderTree className="h-3.5 w-3.5 mr-1" /> New Category
           </Button>
-          <Button size="sm" onClick={handleOpenNewArticle}>
-            <Plus className="h-3.5 w-3.5 mr-1" /> New Article
-          </Button>
+          <AnimatedIconButton size="sm" onClick={handleOpenNewArticle} icon={PlusIcon} iconClassName="mr-1.5">
+            New Article
+          </AnimatedIconButton>
         </>
       }
     >

@@ -8,12 +8,15 @@ import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger, SheetBody,
 } from "@/components/ui/sheet";
 import { toast } from "sonner";
-import { Share2, Copy } from "lucide-react";
+import { ShareIcon, CopyIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 
 export function InviteReferrersSheet() {
   const { data: session } = useSession();
   const orgId = session?.orgId as string | null | undefined;
   const [copied, setCopied] = useState(false);
+  const { iconRef: shareIconRef, hoverHandlers: shareHoverHandlers } = useAnimatedIcon();
+  const { iconRef: copyIconRef, hoverHandlers: copyHoverHandlers } = useAnimatedIcon();
 
   const link = typeof window !== "undefined" && orgId ? `${window.location.origin}/refer/${orgId}` : "";
 
@@ -28,8 +31,8 @@ export function InviteReferrersSheet() {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button size="sm" className="gap-1.5">
-          <Share2 className="h-3.5 w-3.5" />
+        <Button size="sm" className="gap-1.5" {...shareHoverHandlers}>
+          <ShareIcon ref={shareIconRef} size={14} />
           Invite Referrers
         </Button>
       </SheetTrigger>
@@ -44,8 +47,8 @@ export function InviteReferrersSheet() {
         <SheetBody className="space-y-3 px-6 py-5">
           <div className="flex items-center gap-2">
             <Input readOnly value={link} className="text-xs" />
-            <Button variant="outline" size="icon" className="shrink-0" onClick={handleCopy}>
-              <Copy className="h-3.5 w-3.5" />
+            <Button variant="outline" size="icon" className="shrink-0" onClick={handleCopy} {...copyHoverHandlers}>
+              <CopyIcon ref={copyIconRef} size={14} />
             </Button>
           </div>
           {copied && <p className="text-xs text-green-600">Copied to clipboard.</p>}

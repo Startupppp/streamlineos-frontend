@@ -14,7 +14,9 @@ import {
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { Users, Check, ChevronDown, SlidersHorizontal, CalendarDays, Download } from "lucide-react";
+import { Users, Check, ChevronDown, CalendarDays } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { DownloadIcon, SlidersHorizontalIcon } from "@animateicons/react/lucide";
 
 export interface WorkLogFilters {
   year: number;
@@ -271,15 +273,14 @@ export function WorkLogFilterActions({
 
       <Sheet onOpenChange={handleSheetOpen}>
         <SheetTrigger asChild>
-          <Button variant="outline" size="sm" className="relative gap-1.5 text-xs">
-            <SlidersHorizontal className="h-3 w-3" />
+          <AnimatedIconButton icon={SlidersHorizontalIcon} iconSize={12} iconClassName="mr-0" variant="outline" size="sm" className="relative gap-1.5 text-xs">
             <span className="hidden sm:inline">Filters</span>
             {activeFilterCount > 0 && (
               <Badge className="absolute -top-1.5 -right-1.5 h-4 w-4 p-0 flex items-center justify-center text-[9px] bg-primary text-primary-foreground border-0 font-bold">
                 {activeFilterCount}
               </Badge>
             )}
-          </Button>
+          </AnimatedIconButton>
         </SheetTrigger>
         <SheetContent className="w-full sm:max-w-sm overflow-y-auto p-0">
           <SheetHeader className="p-5 pb-4 border-b border-border">
@@ -437,10 +438,9 @@ export function WorkLogFilterActions({
       </Sheet>
 
       {isAdminOrCeo && (
-        <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={onExport}>
-          <Download className="h-3 w-3" />
+        <AnimatedIconButton icon={DownloadIcon} iconSize={12} iconClassName="mr-0" variant="outline" size="sm" className="gap-1.5 text-xs" onClick={onExport}>
           <span className="hidden sm:inline">Export</span>
-        </Button>
+        </AnimatedIconButton>
       )}
     </div>
   );

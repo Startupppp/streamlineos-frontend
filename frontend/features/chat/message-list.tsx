@@ -4,7 +4,9 @@ import { Fragment, useCallback, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ArrowDown, Loader2, Send } from "lucide-react";
+import { Loader2, Send, ArrowDown } from "lucide-react";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import React from "react";
 import { cn } from "@/lib/utils";
 import type { Message } from "./chat-types";
 import { ChatBubble } from "./chat-bubble";
@@ -148,6 +150,18 @@ interface MessageListProps {
   scrollContainerRef: React.RefObject<HTMLDivElement | null>;
   onScroll: (e: React.UIEvent<HTMLDivElement>) => void;
 }
+
+const ScrollToBottomButton = React.forwardRef<
+  HTMLButtonElement,
+  React.ButtonHTMLAttributes<HTMLButtonElement>
+>(function ScrollToBottomButton({ className, children, ...props }, ref) {
+  return (
+    <button ref={ref} className={className} {...props}>
+      <ArrowDown className="h-3.5 w-3.5" />
+      {children}
+    </button>
+  );
+});
 
 export function MessageList({
   groupedMessages,
@@ -336,14 +350,13 @@ export function MessageList({
             exit={{ opacity: 0, y: 8 }}
             className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 pointer-events-none"
           >
-            <button
+            <ScrollToBottomButton
               type="button"
               onClick={() => scrollToBottom()}
               className="pointer-events-auto h-8 rounded-full bg-background border border-border/60 shadow-lg flex items-center gap-1.5 px-3 hover:bg-muted transition-colors"
             >
-              <ArrowDown className="h-3.5 w-3.5" />
               <span className="text-[11px] font-medium">New messages</span>
-            </button>
+            </ScrollToBottomButton>
           </motion.div>
         )}
       </AnimatePresence>

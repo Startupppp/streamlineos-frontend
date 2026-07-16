@@ -103,7 +103,7 @@ export function DepartmentsTab({ canManage }: Props) {
               className="mt-3 h-8 gap-1.5"
               onClick={handleCreate}
             >
-              <Plus className="h-3.5 w-3.5" />
+              <PlusIcon size={14} />
               Add first department
             </Button>
           )}

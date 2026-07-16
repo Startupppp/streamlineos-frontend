@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2 } from "lucide-react";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Switch } from "@/components/ui/switch";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useDeleteWatermarkPolicy, useSignWatermarkPolicies, useUpdateWatermarkPolicy } from "@/hooks/api/sign/settings";
@@ -37,10 +37,9 @@ export function WatermarkPoliciesPanel() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-sm font-semibold">Watermark policies</CardTitle>
-        <Button size="sm" onClick={() => setCreateOpen(true)}>
-          <Plus className="size-4" />
+        <AnimatedIconButton size="sm" icon={PlusIcon} iconClassName="mr-1.5" onClick={() => setCreateOpen(true)}>
           New policy
-        </Button>
+        </AnimatedIconButton>
       </CardHeader>
       <CardContent className="space-y-2">
         {!policies || policies.length === 0 ? (
@@ -56,9 +55,7 @@ export function WatermarkPoliciesPanel() {
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <Switch checked={policy.enabled} onCheckedChange={(v) => handleToggle(policy.id, v)} />
-                <Button variant="ghost" size="icon" className="size-8" onClick={() => handleDelete(policy.id)}>
-                  <Trash2 className="size-4" />
-                </Button>
+                <AnimatedIconButton variant="ghost" size="icon" icon={Trash2Icon} className="size-8" onClick={() => handleDelete(policy.id)} />
               </div>
             </div>
           ))

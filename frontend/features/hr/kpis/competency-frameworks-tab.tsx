@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { Plus, X } from "lucide-react";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { PlusIcon, XIcon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -67,6 +69,15 @@ interface CompetencyFormState {
   category: string;
   description: string;
   weight: string;
+}
+
+function RemoveLevelButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <button onClick={onClick} className="text-muted-foreground hover:text-destructive" {...hoverHandlers}>
+      <XIcon ref={iconRef} size={14} />
+    </button>
+  );
 }
 
 export function CompetencyFrameworksTab() {
@@ -180,10 +191,9 @@ export function CompetencyFrameworksTab() {
         <Sheet open={frameworkSheetOpen} onOpenChange={setFrameworkSheetOpen}>
           <SheetTrigger asChild>
             <motion.div whileTap={{ scale: 0.97 }}>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
+              <AnimatedIconButton icon={PlusIcon} iconSize={16} iconClassName="mr-2">
                 Add Framework
-              </Button>
+              </AnimatedIconButton>
             </motion.div>
           </SheetTrigger>
           <SheetContent className="flex w-[480px] flex-col gap-0 overflow-hidden p-0">
@@ -206,18 +216,16 @@ export function CompetencyFrameworksTab() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label>Levels</Label>
-                  <Button type="button" size="sm" variant="outline" onClick={addLevel}>
-                    <Plus className="w-3.5 h-3.5 mr-1" /> Add Level
-                  </Button>
+                  <AnimatedIconButton type="button" icon={PlusIcon} iconSize={14} iconClassName="mr-1" size="sm" variant="outline" onClick={addLevel}>
+                    Add Level
+                  </AnimatedIconButton>
                 </div>
                 {frameworkForm.levels.map((level, idx) => (
                   <div key={idx} className="bg-muted rounded-xl p-3 space-y-2 border border-border">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-medium text-muted-foreground">Level {idx + 1}</span>
                       {frameworkForm.levels.length > 1 && (
-                        <button onClick={() => removeLevel(idx)} className="text-muted-foreground hover:text-destructive">
-                          <X className="w-3.5 h-3.5" />
-                        </button>
+                        <RemoveLevelButton onClick={() => removeLevel(idx)} />
                       )}
                     </div>
                     <Input
@@ -310,10 +318,9 @@ export function CompetencyFrameworksTab() {
                       }}
                     >
                       <DialogTrigger asChild>
-                        <Button size="sm" variant="outline" className="text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-500/30 dark:hover:bg-blue-500/10">
-                          <Plus className="w-3.5 h-3.5 mr-1.5" />
+                        <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1.5" size="sm" variant="outline" className="text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-500/30 dark:hover:bg-blue-500/10">
                           Add Competency
-                        </Button>
+                        </AnimatedIconButton>
                       </DialogTrigger>
                       <DialogContent>
                         <DialogHeader>

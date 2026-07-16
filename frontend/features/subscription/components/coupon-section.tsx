@@ -1,9 +1,31 @@
 "use client";
 
-import { Check, Loader2, Tag, X } from "lucide-react";
+import { forwardRef } from "react";
+import { Check, Loader2, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { CouponValidationResult } from "@/hooks/api/subscription";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { XIcon } from "@animateicons/react/lucide";
+
+const RemoveCouponButton = forwardRef<HTMLButtonElement, { onClick: () => void }>(
+  ({ onClick }, ref) => {
+    const { iconRef, hoverHandlers } = useAnimatedIcon();
+    return (
+      <button
+        ref={ref}
+        type="button"
+        onClick={onClick}
+        className="text-emerald-600 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-200 rounded"
+        aria-label="Remove coupon"
+        {...hoverHandlers}
+      >
+        <XIcon ref={iconRef} size={16} />
+      </button>
+    );
+  }
+);
+RemoveCouponButton.displayName = "RemoveCouponButton";
 
 function CouponIllustration({ className }: { className?: string }) {
   return (
@@ -35,6 +57,7 @@ interface CouponSectionProps {
   appliedCoupon: CouponValidationResult | null;
   couponResult: CouponValidationResult | undefined;
   isValidatingCoupon: boolean;
+  helperText?: string;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onApply: () => void;
   onRemove: () => void;
@@ -45,6 +68,7 @@ export function CouponSection({
   appliedCoupon,
   couponResult,
   isValidatingCoupon,
+  helperText,
   onInputChange,
   onApply,
   onRemove,
@@ -61,14 +85,7 @@ export function CouponSection({
             <div className="flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 dark:border-emerald-500/30 dark:bg-emerald-500/10 px-3 py-2">
               <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
               <p className="text-sm text-emerald-700 dark:text-emerald-300 flex-1">{appliedCoupon.message}</p>
-              <button
-                type="button"
-                onClick={onRemove}
-                className="text-emerald-600 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-200 rounded"
-                aria-label="Remove coupon"
-              >
-                <X className="h-4 w-4" />
-              </button>
+              <RemoveCouponButton onClick={onRemove} />
             </div>
           ) : (
             <div className="flex gap-2">
@@ -93,7 +110,11 @@ export function CouponSection({
               </Button>
             </div>
           )}
-          {couponInput.trim().length >= 3 &&
+          {helperText && couponInput.trim().length >= 3 && !appliedCoupon && (
+            <p className="text-xs text-muted-foreground">{helperText}</p>
+          )}
+          {!helperText &&
+            couponInput.trim().length >= 3 &&
             !appliedCoupon &&
             couponResult &&
             !isValidatingCoupon &&

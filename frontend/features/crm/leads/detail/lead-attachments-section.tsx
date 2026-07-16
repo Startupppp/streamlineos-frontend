@@ -3,7 +3,7 @@
 import { useRef, useCallback } from "react";
 import { Paperclip, Upload, File, Trash2, Download } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
@@ -73,13 +73,14 @@ export function LeadAttachmentsSection({ leadId }: LeadAttachmentsSectionProps) 
     [uploadMutation],
   );
 
-  function handleUploadClick() {
+  const handleUploadClick = useCallback(() => {
     fileInputRef.current?.click();
-  }
+  }, []);
 
-  function handleDelete(attachmentId: number) {
-    return () => deleteMutation.mutate(attachmentId);
-  }
+  const handleDelete = useCallback(
+    (attachmentId: number) => () => deleteMutation.mutate(attachmentId),
+    [deleteMutation],
+  );
 
   const attachments = data?.attachments ?? [];
 
@@ -91,16 +92,17 @@ export function LeadAttachmentsSection({ leadId }: LeadAttachmentsSectionProps) 
           Attachments
         </h3>
         <motion.div whileTap={{ scale: 0.97 }}>
-          <Button
+          <LoadingButton
             variant="outline"
             size="sm"
             className="gap-1.5 text-xs"
             onClick={handleUploadClick}
-            disabled={uploadMutation.isPending}
+            isPending={uploadMutation.isPending}
+            loadingText="Uploading..."
           >
             <Upload className="h-3.5 w-3.5" />
             Attach File
-          </Button>
+          </LoadingButton>
         </motion.div>
         <input
           ref={fileInputRef}

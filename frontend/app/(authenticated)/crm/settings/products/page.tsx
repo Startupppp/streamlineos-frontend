@@ -31,6 +31,7 @@ import {
   defaultProductValues,
 } from "@/features/crm/settings/products/product-form";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type { Product } from "@/types/crm/products";
 
 export default function ProductCatalogPage() {
@@ -103,7 +104,7 @@ export default function ProductCatalogPage() {
     if (deleteTargetId === null) return;
     deleteProduct.mutate(deleteTargetId, {
       onSuccess: () => { toast.success("Product deleted"); setDeleteTargetId(null); },
-      onError: (err) => { toast.error(err.message); setDeleteTargetId(null); },
+      onError: (err) => { toast.error(getErrorMessage(err)); setDeleteTargetId(null); },
     });
   }, [deleteProduct, deleteTargetId]);
 
@@ -117,13 +118,13 @@ export default function ProductCatalogPage() {
           { id: editTarget.id, ...payload },
           {
             onSuccess: () => { toast.success("Product updated"); setSheetOpen(false); setEditTarget(null); },
-            onError: (err) => toast.error(err.message),
+            onError: (err) => toast.error(getErrorMessage(err)),
           },
         );
       } else {
         createProduct.mutate(payload, {
           onSuccess: () => { toast.success("Product created"); setSheetOpen(false); },
-          onError: (err) => toast.error(err.message),
+          onError: (err) => toast.error(getErrorMessage(err)),
         });
       }
     },

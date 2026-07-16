@@ -15,13 +15,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Camera,
-  ChevronRight,
   Globe,
   Hash,
   Lock,
   Loader2,
   Users,
 } from "lucide-react";
+import { ChevronRightIcon, UsersIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -184,15 +185,15 @@ export function NewGroupDialog({
     <Dialog open={open} onOpenChange={resetAndClose}>
       {!hideTrigger && (
         <DialogTrigger asChild>
-          <Button
+          <AnimatedIconButton
+            icon={UsersIcon}
+            iconSize={14}
             variant="ghost"
             size="icon"
             className="w-7 rounded-lg"
             title="New Channel"
             aria-label="New Channel"
-          >
-            <Users className="h-3.5 w-3.5" />
-          </Button>
+          />
         </DialogTrigger>
       )}
       <DialogContent className="flex max-h-[90dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
@@ -294,10 +295,16 @@ export function NewGroupDialog({
               />
             </div>
 
-            <Button onClick={handleGoToMembers} disabled={!name.trim()} className="h-9 w-full">
+            <AnimatedIconButton
+              icon={ChevronRightIcon}
+              iconSize={16}
+              iconClassName="ml-1"
+              onClick={handleGoToMembers}
+              disabled={!name.trim()}
+              className="h-9 w-full"
+            >
               Next: Add Members
-              <ChevronRight className="ml-1 h-4 w-4" />
-            </Button>
+            </AnimatedIconButton>
           </DialogBody>
         ) : (
           <>

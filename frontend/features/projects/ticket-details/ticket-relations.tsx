@@ -21,7 +21,10 @@ import {
 } from "@/components/ui/command";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Link2, X, Plus, ArrowRight, ArrowLeft, Copy, Minus } from "lucide-react";
+import { Link2, ArrowRight, ArrowLeft, Copy, Minus } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { PlusIcon, XIcon } from "@animateicons/react/lucide";
 import { cn } from "@/lib/utils";
 
 interface TicketRelationsProps {
@@ -59,7 +62,23 @@ const RELATION_LABELS: Record<WorkItemRelationType, { label: string; icon: React
   },
 };
 
+function RemoveRelationButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive shrink-0"
+      aria-label="Remove relation"
+      {...hoverHandlers}
+    >
+      <XIcon ref={iconRef} size={12} />
+    </button>
+  );
+}
+
 export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
+  const { iconRef: plusIconRef, hoverHandlers: plusHoverHandlers } = useAnimatedIcon();
   const { data: relations, isLoading } = useTicketRelations(ticketId, projectId);
   const { data: boardTickets } = useProjectBoardTickets(projectId);
   const addRelation = useAddTicketRelation(ticketId, projectId);
@@ -123,8 +142,8 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
         </h4>
         <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
           <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="h-6 text-xs px-2 bg-muted/50 hover:bg-muted">
-              <Plus className="h-3 w-3 mr-1" />Add
+            <Button variant="outline" size="sm" className="h-6 text-xs px-2 bg-muted/50 hover:bg-muted" {...plusHoverHandlers}>
+              <PlusIcon ref={plusIconRef} size={12} className="mr-1" />Add
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-80 p-3 space-y-3" align="end">
@@ -202,14 +221,7 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
                           </Badge>
                         )}
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveRelation(t.id)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive shrink-0"
-                        aria-label="Remove relation"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
+                      <RemoveRelationButton onClick={() => handleRemoveRelation(t.id)} />
                     </div>
                   );
                 })}

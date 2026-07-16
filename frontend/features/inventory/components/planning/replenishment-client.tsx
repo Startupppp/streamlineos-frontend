@@ -3,7 +3,9 @@
 import { useState, useCallback } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Settings2, ShoppingCart, ClipboardList } from "lucide-react";
+import { Settings2, ClipboardList } from "lucide-react";
+import { ShoppingCartIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -211,14 +213,16 @@ export function ReplenishmentClient() {
       actions={
         <div className="flex items-center gap-2">
           {selectedIds.size > 0 && (
-            <Button
+            <AnimatedIconButton
+              icon={ShoppingCartIcon}
+              iconSize={16}
+              iconClassName="mr-1.5"
               size="sm"
               onClick={handleCreateDraftPO}
               disabled={!canCreatePO || generatePO.isPending}
             >
-              <ShoppingCart className="h-4 w-4 mr-1.5" />
               Create Draft PO ({selectedIds.size})
-            </Button>
+            </AnimatedIconButton>
           )}
           <Button variant="outline" size="sm" asChild>
             <Link href="/inventory/reports/reorder">

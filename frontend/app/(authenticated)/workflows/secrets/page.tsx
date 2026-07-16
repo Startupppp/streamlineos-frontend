@@ -6,10 +6,12 @@ import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, Trash2, KeyRound } from "lucide-react";
+import { KeyRound } from "lucide-react";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -88,15 +90,15 @@ function SecretCard({ secret, index, onDelete }: SecretCardProps) {
                 Added {format(new Date(secret.createdAt), "MMM d, yyyy")}
               </p>
             </div>
-            <Button
+            <AnimatedIconButton
+              icon={Trash2Icon}
+              iconSize={14}
               size="icon"
               variant="ghost"
               className="w-8 text-destructive hover:text-destructive shrink-0"
               onClick={handleDelete}
               aria-label="Delete secret"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
+            />
           </div>
         </CardContent>
       </Card>
@@ -269,13 +271,16 @@ export default function SecretsManagerPage() {
       title="Secrets Manager"
       subtitle="Manage encrypted secrets used by your workflows"
       actions={
-        <Button
+        <AnimatedIconButton
+          icon={PlusIcon}
+          iconSize={16}
+          iconClassName="mr-1"
           size="sm"
           onClick={handleOpenSheet}
           className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition-all duration-200"
         >
-          <Plus className="h-4 w-4 mr-1" /> New Secret
-        </Button>
+          New Secret
+        </AnimatedIconButton>
       }
     >
       {isLoading ? (

@@ -4,8 +4,9 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Plus, Inbox } from "lucide-react";
+import { Inbox } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { cn } from "@/lib/utils";
 import {
   useHelpdeskTickets,
@@ -48,10 +49,15 @@ export function MyTicketsTab() {
         <p className="text-sm text-muted-foreground">
           {data ? `${data.total} ticket${data.total !== 1 ? "s" : ""}` : ""}
         </p>
-        <Button size="sm" onClick={() => setCreateOpen(true)}>
-          <Plus className="h-3.5 w-3.5 mr-1.5" />
+        <AnimatedIconButton
+          icon={PlusIcon}
+          iconSize={14}
+          iconClassName="mr-1.5"
+          size="sm"
+          onClick={() => setCreateOpen(true)}
+        >
           New Request
-        </Button>
+        </AnimatedIconButton>
       </div>
 
       {isLoading ? (
@@ -65,10 +71,15 @@ export function MyTicketsTab() {
           <Inbox className="h-10 w-10 text-muted-foreground/40 mb-3" />
           <p className="text-sm font-medium text-foreground">No tickets yet</p>
           <p className="text-xs text-muted-foreground mt-1 mb-4">Submit a request when you need HR support.</p>
-          <Button size="sm" onClick={() => setCreateOpen(true)}>
-            <Plus className="h-3.5 w-3.5 mr-1.5" />
+          <AnimatedIconButton
+            icon={PlusIcon}
+            iconSize={14}
+            iconClassName="mr-1.5"
+            size="sm"
+            onClick={() => setCreateOpen(true)}
+          >
             New Request
-          </Button>
+          </AnimatedIconButton>
         </div>
       ) : (
         <div className="divide-y divide-border rounded-lg border border-border overflow-hidden">

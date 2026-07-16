@@ -2,8 +2,11 @@
 
 import { useCallback } from "react";
 import { format } from "date-fns";
-import { FileText, Pencil, Trash2, ExternalLink, Globe, EyeOff } from "lucide-react";
+import { FileText, Pencil, Globe } from "lucide-react";
+import { Trash2Icon, ExternalLinkIcon, EyeOffIcon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { cn } from "@/lib/utils";
 
 interface HandbookVersion {
@@ -41,6 +44,7 @@ export function HandbookVersionCard({
   const handleEdit = useCallback(() => onEdit(v), [v, onEdit]);
   const handleDelete = useCallback(() => onDelete(v.id), [v.id, onDelete]);
   const handleDocLinkClick = useCallback((e: React.MouseEvent) => e.stopPropagation(), []);
+  const { iconRef: extLinkRef, hoverHandlers: extLinkHoverHandlers } = useAnimatedIcon();
 
   return (
     <div
@@ -98,8 +102,9 @@ export function HandbookVersionCard({
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-0.5 text-primary hover:text-primary/80 hover:underline transition-colors duration-200"
                 onClick={handleDocLinkClick}
+                {...extLinkHoverHandlers}
               >
-                <ExternalLink className="h-2.5 w-2.5" />
+                <ExternalLinkIcon ref={extLinkRef} size={10} />
                 View Document
               </a>
             )}
@@ -137,26 +142,28 @@ export function HandbookVersionCard({
               Publish
             </Button>
           ) : (
-            <Button
+            <AnimatedIconButton
+              icon={EyeOffIcon}
+              iconSize={12}
+              iconClassName="mr-1"
               size="sm"
               variant="outline"
               className="text-xs gap-1.5 transition-colors duration-200"
               onClick={handleUnpublish}
               disabled={isUpdating}
             >
-              <EyeOff className="h-3 w-3" />
               Unpublish
-            </Button>
+            </AnimatedIconButton>
           )}
-          <Button
+          <AnimatedIconButton
+            icon={Trash2Icon}
+            iconSize={14}
             size="sm"
             variant="ghost"
             className="w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 transition-colors duration-200"
             onClick={handleDelete}
             aria-label="Delete version"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
+          />
         </div>
       </div>
     </div>

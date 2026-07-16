@@ -3,10 +3,10 @@
 import { useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { User } from "lucide-react";
+import { UserIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
 import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -154,7 +154,7 @@ export function AllWorkPage() {
               <div className="flex min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto scrollbar-hide sm:gap-2 [&>*]:shrink-0">
                 <AllWorkViewSwitcher activeView={view} onViewChange={handleViewChangeWithReset} />
                 <AllWorkViewsMenu activeView={view} hasActiveFilters={hasActiveFilters} />
-                <Button
+                <AnimatedIconButton
                   type="button"
                   variant="outline"
                   size="icon"
@@ -171,14 +171,10 @@ export function AllWorkPage() {
                     scopeMine &&
                       "border-primary bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground",
                   )}
-                >
-                  <User
-                    className={cn(
-                      "h-3.5 w-3.5",
-                      scopeMine ? "text-primary-foreground" : undefined,
-                    )}
-                  />
-                </Button>
+                  icon={UserIcon}
+                  iconSize={14}
+                  iconClassName={cn(scopeMine ? "text-primary-foreground" : undefined)}
+                />
               </div>
             }
             filters={

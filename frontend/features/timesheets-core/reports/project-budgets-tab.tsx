@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { Plus, Pencil, Trash2, Target } from "lucide-react";
+import { Pencil, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -83,14 +85,14 @@ function BudgetCard({ budget, canManage, onEdit, onDelete }: BudgetCardProps) {
                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleEdit}>
                   <Pencil className="h-3 w-3" />
                 </Button>
-                <Button
+                <AnimatedIconButton
+                  icon={Trash2Icon}
+                  iconSize={12}
                   variant="ghost"
                   size="icon"
                   className="h-6 w-6 text-destructive hover:text-destructive"
                   onClick={handleDelete}
-                >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
+                />
               </>
             )}
           </div>
@@ -193,9 +195,16 @@ export function ProjectBudgetsTab() {
           <StatCard label="Over budget" value={stats.over} icon={Target} tone="red" />
         </StatCardGrid>
         {canManage && (
-          <Button size="sm" className="h-8 text-xs gap-1.5 shrink-0" onClick={handleAdd}>
-            <Plus className="h-3.5 w-3.5" /> Add budget
-          </Button>
+          <AnimatedIconButton
+            icon={PlusIcon}
+            iconSize={14}
+            iconClassName="mr-1.5"
+            size="sm"
+            className="h-8 text-xs shrink-0"
+            onClick={handleAdd}
+          >
+            Add budget
+          </AnimatedIconButton>
         )}
       </div>
 

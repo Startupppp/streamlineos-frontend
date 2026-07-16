@@ -9,7 +9,8 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AlertTriangle, Plus } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { useCan } from "@/hooks/api/access";
 import {
   useHrBudgetVsActual,
@@ -248,7 +249,7 @@ function HiringPlansTab() {
     <>
       <div className="flex justify-end">
         <Button size="sm" onClick={handleAdd}>
-          <Plus className="mr-1.5 h-3.5 w-3.5" />
+          <PlusIcon size={14} className="mr-1.5" />
           Add Plan
         </Button>
       </div>

@@ -2,7 +2,10 @@
 
 import { use, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { ChevronLeft, Pencil, Plus } from "lucide-react";
+import { Pencil } from "lucide-react";
+import { ChevronLeftIcon, PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -87,14 +90,17 @@ function ProductStatusBadge({
   );
 }
 
-const BACK_LINK = (
-  <Button variant="ghost" size="sm" asChild>
-    <Link href="/inventory/products">
-      <ChevronLeft className="mr-1 h-3.5 w-3.5" />
-      Back to Products
-    </Link>
-  </Button>
-);
+function BackLink() {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button variant="ghost" size="sm" asChild>
+      <Link href="/inventory/products" {...hoverHandlers}>
+        <ChevronLeftIcon ref={iconRef} size={14} className="mr-1" aria-hidden="true" />
+        Back to Products
+      </Link>
+    </Button>
+  );
+}
 
 interface VariantEditCellProps {
   variant: ProductVariantForSheet;
@@ -161,7 +167,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     return (
       <PageWrapper
         title="Product"
-        actions={BACK_LINK}
+        actions={<BackLink />}
       >
         <LoadingState variant="page" />
       </PageWrapper>
@@ -172,7 +178,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     return (
       <PageWrapper
         title="Product"
-        actions={BACK_LINK}
+        actions={<BackLink />}
       >
         <ErrorState
           title="Product not found"
@@ -278,7 +284,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
               Edit
             </Button>
           )}
-          {BACK_LINK}
+          {<BackLink />}
         </div>
       }
     >
@@ -394,10 +400,9 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-sm font-semibold">Variants</CardTitle>
-              <Button size="sm" variant="outline" onClick={handleAddVariantClick}>
-                <Plus className="mr-1 h-3.5 w-3.5" />
+              <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1" size="sm" variant="outline" onClick={handleAddVariantClick}>
                 Add Variant
-              </Button>
+              </AnimatedIconButton>
             </CardHeader>
             <CardContent className="p-0">
               {variants.length === 0 ? (

@@ -2,7 +2,9 @@
 
 import { useState, useRef, useCallback, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckSquare, Plus, Trash2 } from "lucide-react";
+import { CheckSquare } from "lucide-react";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -16,6 +18,36 @@ import {
   useDeleteChecklistItem,
 } from "@/hooks/api/projects/checklists";
 import type { Checklist, ChecklistItem } from "@/types/projects";
+
+function DeleteItemButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="opacity-0 group-hover:opacity-100 h-5 w-5 flex items-center justify-center rounded text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
+      aria-label="Delete item"
+      {...hoverHandlers}
+    >
+      <Trash2Icon ref={iconRef} size={12} />
+    </button>
+  );
+}
+
+function DeleteChecklistButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="opacity-0 group-hover:opacity-100 h-5 w-5 flex items-center justify-center rounded text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
+      aria-label="Delete checklist"
+      {...hoverHandlers}
+    >
+      <Trash2Icon ref={iconRef} size={12} />
+    </button>
+  );
+}
 
 interface TicketChecklistsProps {
   projectId: number;
@@ -150,14 +182,7 @@ const ChecklistItemRow = memo(function ChecklistItemRow({
         </span>
       )}
 
-      <button
-        type="button"
-        onClick={handleDelete}
-        className="opacity-0 group-hover:opacity-100 h-5 w-5 flex items-center justify-center rounded text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
-        aria-label="Delete item"
-      >
-        <Trash2 className="h-3 w-3" />
-      </button>
+      <DeleteItemButton onClick={handleDelete} />
     </motion.div>
   );
 });
@@ -280,14 +305,7 @@ function ChecklistSection({
         <span className="text-[10px] text-muted-foreground font-mono">
           {completed}/{total}
         </span>
-        <button
-          type="button"
-          onClick={handleDeleteChecklist}
-          className="opacity-0 group-hover:opacity-100 h-5 w-5 flex items-center justify-center rounded text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
-          aria-label="Delete checklist"
-        >
-          <Trash2 className="h-3 w-3" />
-        </button>
+        <DeleteChecklistButton onClick={handleDeleteChecklist} />
       </div>
 
       {total > 0 && (
@@ -347,7 +365,7 @@ function ChecklistSection({
               onClick={() => setAddingItem(true)}
               className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors py-1 mt-1"
             >
-              <Plus className="h-3 w-3" />
+              <PlusIcon size={12} />
               Add item
             </button>
           )}
@@ -405,7 +423,7 @@ export function TicketChecklists({ projectId, ticketId }: TicketChecklistsProps)
         disabled={createChecklist.isPending}
         className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
-        <Plus className="h-4 w-4" />
+        <PlusIcon size={16} />
         Add checklist
       </button>
     </div>

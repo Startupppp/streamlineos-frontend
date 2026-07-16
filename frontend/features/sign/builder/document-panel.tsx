@@ -2,8 +2,10 @@
 
 import { useRef } from "react";
 import { toast } from "sonner";
-import { FileText, Trash2, UploadCloud, Loader2 } from "lucide-react";
+import { FileText, Loader2 } from "lucide-react";
+import { Trash2Icon, CloudUploadIcon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useDeleteSignDocument, useUploadSignDocument } from "@/hooks/api/sign/documents";
 import type { SignDocument } from "@/types/sign";
@@ -74,9 +76,7 @@ export function DocumentPanel({ envelopeId, documents, editable }: DocumentPanel
               <p className="text-xs text-muted-foreground">{doc.pageCount ?? "?"} page(s)</p>
             </div>
             {editable && (
-              <Button variant="ghost" size="icon" className="size-7 shrink-0" onClick={(e) => handleDelete(doc.id, e)}>
-                <Trash2 className="size-3.5" />
-              </Button>
+              <AnimatedIconButton variant="ghost" size="icon" icon={Trash2Icon} iconSize={14} className="size-7 shrink-0" onClick={(e) => handleDelete(doc.id, e)} />
             )}
           </div>
         ))
@@ -84,10 +84,16 @@ export function DocumentPanel({ envelopeId, documents, editable }: DocumentPanel
       {editable && (
         <>
           <input ref={fileInputRef} type="file" accept="application/pdf" className="hidden" onChange={handleFileChange} />
-          <Button variant="outline" size="sm" className="w-full" disabled={upload.isPending} onClick={() => fileInputRef.current?.click()}>
-            {upload.isPending ? <Loader2 className="size-4 animate-spin" /> : <UploadCloud className="size-4" />}
-            Upload PDF
-          </Button>
+          {upload.isPending ? (
+            <Button variant="outline" size="sm" className="w-full" disabled>
+              <Loader2 className="size-4 animate-spin" />
+              Upload PDF
+            </Button>
+          ) : (
+            <AnimatedIconButton variant="outline" size="sm" icon={CloudUploadIcon} iconClassName="mr-1.5" className="w-full" onClick={() => fileInputRef.current?.click()}>
+              Upload PDF
+            </AnimatedIconButton>
+          )}
         </>
       )}
     </div>

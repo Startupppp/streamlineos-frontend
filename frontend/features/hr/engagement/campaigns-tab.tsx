@@ -2,8 +2,10 @@
 
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
-import { Plus, Megaphone, Trash2 } from "lucide-react";
+import { Megaphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -130,10 +132,16 @@ export function CampaignsTab() {
     <div className="space-y-4">
       {canManage && (
         <div className="flex justify-end">
-          <Button size="sm" className="gap-1.5" onClick={() => setSheetOpen(true)}>
-            <Plus className="h-3.5 w-3.5" />
+          <AnimatedIconButton
+            icon={PlusIcon}
+            iconSize={14}
+            iconClassName="mr-1.5"
+            size="sm"
+            className="gap-1.5"
+            onClick={() => setSheetOpen(true)}
+          >
             New Campaign
-          </Button>
+          </AnimatedIconButton>
         </div>
       )}
 
@@ -180,14 +188,14 @@ export function CampaignsTab() {
                     >
                       <span className="text-xs">✏</span>
                     </Button>
-                    <Button
+                    <AnimatedIconButton
+                      icon={Trash2Icon}
+                      iconSize={14}
                       variant="ghost"
                       size="icon"
                       className="w-7 text-muted-foreground hover:text-destructive"
                       onClick={() => setDeleteId(c.id)}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
+                    />
                   </div>
                 )}
               </div>

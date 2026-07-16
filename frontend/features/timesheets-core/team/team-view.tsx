@@ -2,11 +2,12 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { format, startOfWeek, endOfWeek, addWeeks } from "date-fns";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { ChevronLeftIcon, ChevronRightIcon } from "@animateicons/react/lucide";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
@@ -192,14 +193,14 @@ export function TeamView() {
 
   const weekNavActions = (
     <div className="flex items-center gap-1">
-      <Button
+      <AnimatedIconButton
+        icon={ChevronLeftIcon}
+        iconSize={16}
         variant="outline"
         size="icon"
         onClick={handlePrevWeek}
         aria-label="Previous week"
-      >
-        <ChevronLeft className="h-4 w-4" />
-      </Button>
+      />
       {weekOffset !== 0 && (
         <Button
           variant="outline"
@@ -209,14 +210,14 @@ export function TeamView() {
           This week
         </Button>
       )}
-      <Button
+      <AnimatedIconButton
+        icon={ChevronRightIcon}
+        iconSize={16}
         variant="outline"
         size="icon"
         onClick={handleNextWeek}
         aria-label="Next week"
-      >
-        <ChevronRight className="h-4 w-4" />
-      </Button>
+      />
     </div>
   );
 

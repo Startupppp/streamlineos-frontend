@@ -14,7 +14,9 @@ import {
 } from "@/components/ui/sheet";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { toast } from "sonner";
-import { Plus, Gift } from "lucide-react";
+import { Gift } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 
 interface Props {
   candidateId: number;
@@ -24,6 +26,7 @@ export function ReferralsTab({ candidateId }: Props) {
   const { data: referrals, isLoading } = useCandidateReferrals(candidateId);
   const createReferral = useCreateReferral(candidateId);
   const updateReferral = useUpdateReferral(candidateId);
+  const { iconRef: plusIconRef, hoverHandlers: plusHoverHandlers } = useAnimatedIcon();
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [referredBy, setReferredBy] = useState("");
@@ -81,8 +84,8 @@ export function ReferralsTab({ candidateId }: Props) {
         </p>
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetTrigger asChild>
-            <Button size="sm" variant="outline" className="gap-1.5 text-xs">
-              <Plus className="h-3.5 w-3.5" />
+            <Button size="sm" variant="outline" className="gap-1.5 text-xs" {...plusHoverHandlers}>
+              <PlusIcon ref={plusIconRef} size={14} />
               Record Referral
             </Button>
           </SheetTrigger>

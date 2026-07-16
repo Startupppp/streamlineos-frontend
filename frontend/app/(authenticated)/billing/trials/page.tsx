@@ -100,7 +100,7 @@ export default function TrialsPage() {
               </p>
             )}
             <Button variant="outline" size="sm" asChild>
-              <Link href="/settings/subscription">Manage Subscription</Link>
+              <Link href="/billing?tab=plan">Manage Subscription</Link>
             </Button>
           </div>
         </div>

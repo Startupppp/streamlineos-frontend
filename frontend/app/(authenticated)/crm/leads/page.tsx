@@ -257,7 +257,7 @@ export default function LeadsPipelinePage() {
           {
             onSuccess: () =>
               toast.success("Lead converted — client account created"),
-            onError: (err) => toast.error(`Conversion failed: ${err.message}`),
+            onError: (err) => toast.error(getErrorMessage(err)),
           },
         );
 
@@ -274,7 +274,7 @@ export default function LeadsPipelinePage() {
               onSuccess: () =>
                 toast.success("Deal created from converted lead"),
               onError: (err) =>
-                toast.error(`Deal creation failed: ${err.message}`),
+                toast.error(getErrorMessage(err)),
             },
           );
         }
@@ -283,7 +283,7 @@ export default function LeadsPipelinePage() {
           { leadId: id, status: "LOST", lostReason: extra.lostReason },
           {
             onSuccess: () => toast.success("Lead marked as lost"),
-            onError: (err) => toast.error(err.message),
+            onError: (err) => toast.error(getErrorMessage(err)),
           }
         );
       } else {
@@ -291,7 +291,7 @@ export default function LeadsPipelinePage() {
           { leadId: id, status: status as LeadStatus },
           {
             onSuccess: () => toast.success("Status updated"),
-            onError: (err) => toast.error(err.message),
+            onError: (err) => toast.error(getErrorMessage(err)),
           }
         );
       }
@@ -305,7 +305,7 @@ export default function LeadsPipelinePage() {
         { id, priority: priority as "HOT" | "WARM" | "COLD" },
         {
           onSuccess: () => toast.success("Priority updated"),
-          onError: (err) => toast.error(err.message),
+          onError: (err) => toast.error(getErrorMessage(err)),
         }
       );
     },
@@ -318,7 +318,7 @@ export default function LeadsPipelinePage() {
         { leadId: id, assignedToId: userId },
         {
           onSuccess: () => toast.success("Lead assigned"),
-          onError: (err) => toast.error(err.message),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -347,7 +347,7 @@ export default function LeadsPipelinePage() {
         },
         {
           onSuccess: (data) => toast.success(`${data.updated} leads updated`),
-          onError: (err) => toast.error(err.message),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -363,7 +363,7 @@ export default function LeadsPipelinePage() {
             toast.success(`${data.deleted} leads deleted`);
             if (tablePage > 1) setTablePage(1);
           },
-          onError: (err) => toast.error(err.message),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },

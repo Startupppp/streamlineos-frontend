@@ -3,8 +3,11 @@
 import { useFormContext } from "react-hook-form";
 import * as z from "zod";
 import { format } from "date-fns";
-import { CalendarIcon, X, Plus, Shield, Globe } from "lucide-react";
+import { CalendarIcon, Shield, Globe } from "lucide-react";
+import { XIcon, PlusIcon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import {
   FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage,
 } from "@/components/ui/form";
@@ -39,6 +42,22 @@ export const formSchema = z.object({
 });
 
 export type DocumentFormData = z.infer<typeof formSchema>;
+
+function TagRemoveButton({ tag, onClick }: { tag: string; onClick: (e: React.MouseEvent<HTMLButtonElement>) => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <button
+      type="button"
+      data-tag={tag}
+      onClick={onClick}
+      aria-label={`Remove tag ${tag}`}
+      className="text-muted-foreground hover:text-foreground transition-colors"
+      {...hoverHandlers}
+    >
+      <XIcon ref={iconRef} size={12} />
+    </button>
+  );
+}
 
 interface DocumentFormFieldsProps {
   filteredDocumentTypes: { value: string; label: string }[];
@@ -254,7 +273,9 @@ export function DocumentFormFields({
             onKeyDown={onTagKeyDown}
             className="flex-1 h-8"
           />
-          <Button
+          <AnimatedIconButton
+            icon={PlusIcon}
+            iconSize={16}
             type="button"
             variant="outline"
             size="icon"
@@ -262,9 +283,7 @@ export function DocumentFormFields({
             onClick={onAddTag}
             disabled={!tagInput.trim()}
             aria-label="Add tag"
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
+          />
         </div>
         {tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5 pt-1">
@@ -274,15 +293,7 @@ export function DocumentFormFields({
                 className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-muted text-foreground border border-border"
               >
                 {tag}
-                <button
-                  type="button"
-                  data-tag={tag}
-                  onClick={onRemoveTag}
-                  aria-label={`Remove tag ${tag}`}
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <X className="h-3 w-3" />
-                </button>
+                <TagRemoveButton tag={tag} onClick={onRemoveTag} />
               </span>
             ))}
           </div>

@@ -4,7 +4,8 @@ import { useState, useCallback, useMemo } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useRouter } from "next/navigation";
 import { keepPreviousData } from "@tanstack/react-query";
-import { CheckCheck, X } from "lucide-react";
+import { CheckCheck } from "lucide-react";
+import { XIcon } from "@animateicons/react/lucide";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
   useNotifications,
@@ -27,6 +28,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { NotificationCard } from "@/features/notifications/notification-card";
@@ -40,6 +42,15 @@ import type {
   NotificationPriority,
 } from "@/features/notifications/notification-types";
 import type { Notification } from "@/types/notifications";
+
+function DeselectAllButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <button type="button" onClick={onClick} className="ml-auto text-muted-foreground hover:text-foreground" {...hoverHandlers}>
+      <XIcon ref={iconRef} size={12} />
+    </button>
+  );
+}
 
 export default function NotificationsPage() {
   const router = useRouter();
@@ -318,9 +329,7 @@ export default function NotificationsPage() {
             <Button size="sm" variant="ghost" className="h-6 text-xs px-2" onClick={handleSelectAll}>
               Select all
             </Button>
-            <button type="button" onClick={handleDeselectAll} className="ml-auto text-muted-foreground hover:text-foreground">
-              <X className="h-3 w-3" />
-            </button>
+            <DeselectAllButton onClick={handleDeselectAll} />
           </div>
         )}
 

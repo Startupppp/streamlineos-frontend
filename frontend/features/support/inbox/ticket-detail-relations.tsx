@@ -1,8 +1,10 @@
 "use client";
 
 import { memo, useState, useCallback } from "react";
-import { ChevronDown, Tag as TagIcon, Link2, GitMerge, Split, X, Plus } from "lucide-react";
+import { ChevronDown, Tag as TagIcon, Link2, GitMerge, Split, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -227,7 +229,7 @@ export function TicketDetailRelations({ ticketId }: TicketDetailRelationsProps) 
                   ))}
                 </SelectContent>
               </Select>
-              <Button
+              <AnimatedIconButton
                 type="button"
                 variant="outline"
                 size="icon"
@@ -235,9 +237,8 @@ export function TicketDetailRelations({ ticketId }: TicketDetailRelationsProps) 
                 disabled={!selectedTagId || attachTag.isPending}
                 onClick={handleAttachTag}
                 aria-label="Add tag"
-              >
-                <Plus className="h-3.5 w-3.5" />
-              </Button>
+                icon={PlusIcon}
+              />
             </div>
           </div>
 

@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, memo, forwardRef } from "react";
-import { Check, AlertTriangle, ArrowUp, Minus, ArrowDown, User, Zap, Tag, X } from "lucide-react";
+import { Check, AlertTriangle, ArrowUp, Minus, ArrowDown, User, Zap, Tag } from "lucide-react";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { XIcon } from "@animateicons/react/lucide";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -51,6 +53,21 @@ interface TicketCreatePropertiesProps {
   members: ProjectMemberRecord[];
   labels: TicketLabel[];
   cycles: Cycle[];
+}
+
+function RemoveLabelChipButton({ labelId, labelName, onRemove }: { labelId: number; labelName: string; onRemove: (id: number) => () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <button
+      type="button"
+      onClick={onRemove(labelId)}
+      aria-label={`Remove ${labelName}`}
+      className="hover:text-destructive transition-colors"
+      {...hoverHandlers}
+    >
+      <XIcon ref={iconRef} size={10} />
+    </button>
+  );
 }
 
 const PillButton = forwardRef<
@@ -416,14 +433,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
               style={{ borderLeft: `2px solid ${label.color ?? "#3b82f6"}` }}
             >
               {label.name}
-              <button
-                type="button"
-                onClick={makeLabelToggleHandler(label.id)}
-                aria-label={`Remove ${label.name}`}
-                className="hover:text-destructive transition-colors"
-              >
-                <X className="h-2.5 w-2.5" />
-              </button>
+              <RemoveLabelChipButton labelId={label.id} labelName={label.name} onRemove={makeLabelToggleHandler} />
             </Badge>
           ))}
         </div>

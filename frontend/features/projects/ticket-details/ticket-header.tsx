@@ -9,7 +9,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Trash2, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { Trash2Icon } from "@animateicons/react/lucide";
 import { PriorityBadge } from "../shared/priority-badge";
 import { StatusBadge } from "../shared/status-badge";
 
@@ -66,14 +68,14 @@ export function TicketHeader({
             <div className="flex items-center gap-2 shrink-0">
               <Popover open={deleteOpen} onOpenChange={setDeleteOpen}>
                 <PopoverTrigger asChild>
-                  <Button
+                  <AnimatedIconButton
                     variant="ghost"
                     size="icon"
+                    icon={Trash2Icon}
+                    iconSize={14}
                     className="w-7 text-muted-foreground hover:text-destructive"
                     aria-label="Delete ticket"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
+                  />
                 </PopoverTrigger>
                 <PopoverContent className="w-64 p-3" align="end">
                   <p className="text-sm font-medium text-destructive mb-1">Delete Ticket</p>

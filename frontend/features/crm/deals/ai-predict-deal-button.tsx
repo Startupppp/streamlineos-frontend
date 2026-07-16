@@ -3,12 +3,12 @@
 import { useState, useCallback } from "react";
 import {
   Sparkles,
-  Loader2,
   TrendingUp,
   AlertTriangle,
   Lightbulb,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Popover,
   PopoverContent,
@@ -78,18 +78,15 @@ export function AIPredictDealButton({
     return (
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button
+          <LoadingButton
             variant="ghost"
             size="sm"
             className="px-2 text-xs gap-1"
             onClick={handleCompactClick}
-            disabled={predictMutation.isPending}
+            isPending={predictMutation.isPending}
+            loadingText="..."
           >
-            {predictMutation.isPending ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
-            ) : (
-              <Sparkles className="h-3 w-3 text-primary" />
-            )}
+            <Sparkles className="h-3 w-3 text-primary" />
             {result ? (
               <span
                 className={cn("font-bold", probColor(result.winProbability))}
@@ -99,7 +96,7 @@ export function AIPredictDealButton({
             ) : (
               "Predict"
             )}
-          </Button>
+          </LoadingButton>
         </PopoverTrigger>
         {result && (
           <PopoverContent className="w-80 p-3" align="end">
@@ -117,25 +114,17 @@ export function AIPredictDealButton({
 
   return (
     <div className="space-y-3">
-      <Button
+      <LoadingButton
         variant="outline"
         size="sm"
         onClick={handlePredict}
-        disabled={predictMutation.isPending}
+        isPending={predictMutation.isPending}
+        loadingText="Predicting..."
         className="w-full"
       >
-        {predictMutation.isPending ? (
-          <>
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            Predicting...
-          </>
-        ) : (
-          <>
-            <Sparkles className="h-4 w-4 mr-2 text-primary" />
-            AI Predict Win Probability
-          </>
-        )}
-      </Button>
+        <Sparkles className="h-4 w-4 mr-2 text-primary" />
+        AI Predict Win Probability
+      </LoadingButton>
       {result && (
         <PredictDetails
           result={result}

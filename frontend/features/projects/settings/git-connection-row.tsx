@@ -1,8 +1,9 @@
 "use client";
 
 import { memo, useState, useCallback } from "react";
-import { GitBranch, Github, Gitlab, Trash2, Copy, Eye, EyeOff } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { GitBranch, Github, Gitlab } from "lucide-react";
+import { Trash2Icon, CopyIcon, EyeIcon, EyeOffIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -37,16 +38,16 @@ export const CopyButton = memo(function CopyButton({
   }, [value, label]);
 
   return (
-    <Button
+    <AnimatedIconButton
       type="button"
       variant="ghost"
       size="icon"
       className="w-7 shrink-0"
       onClick={handleCopy}
       aria-label={`Copy ${label.toLowerCase()}`}
-    >
-      <Copy className="h-3.5 w-3.5" />
-    </Button>
+      icon={CopyIcon}
+      iconSize={14}
+    />
   );
 });
 
@@ -115,15 +116,15 @@ export const ConnectionRow = memo(function ConnectionRow({
               }
             />
           </div>
-          <Button
+          <AnimatedIconButton
             variant="ghost"
             size="icon"
             className="w-7 text-destructive hover:text-destructive"
             onClick={handleDelete}
             aria-label="Delete connection"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+            icon={Trash2Icon}
+            iconSize={16}
+          />
         </div>
       </div>
       <div className="space-y-3 px-4 py-3">
@@ -142,16 +143,16 @@ export const ConnectionRow = memo(function ConnectionRow({
             <code className={cn(TEXT_ONE_LINE, "flex-1 font-mono text-xs")}>
               {revealed ? connection.maskedSecret : "••••••••••••"}
             </code>
-            <Button
+            <AnimatedIconButton
               type="button"
               variant="ghost"
               size="icon"
               className="w-7 shrink-0"
               onClick={handleToggleReveal}
               aria-label={revealed ? "Hide secret" : "Reveal secret"}
-            >
-              {revealed ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-            </Button>
+              icon={revealed ? EyeOffIcon : EyeIcon}
+              iconSize={14}
+            />
           </div>
           <p className="text-[11px] text-muted-foreground/80">
             The full secret is shown only once at creation. Recreate the connection if it is lost.

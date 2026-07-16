@@ -2196,15 +2196,10 @@ export const NAV_GROUPS: NavGroup[] = [
     requiredPermission: "settings:manage",
     routes: [
       {
-        label: "Current Plan",
+        label: "Billing & Plan",
         icon: CreditCard,
-        href: "/settings/subscription",
-        requiredPermission: "settings:manage",
-      },
-      {
-        label: "Seats",
-        icon: Users,
-        href: "/billing/seats",
+        href: "/billing",
+        exact: true,
         requiredPermission: "settings:manage",
       },
       {
@@ -2212,19 +2207,6 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: Zap,
         href: "/billing/ai-credits",
         requiredPermission: "billing:ai-credits:view",
-      },
-      {
-        label: "Billing",
-        icon: Wallet,
-        href: "/billing",
-        exact: true,
-        requiredPermission: "settings:manage",
-      },
-      {
-        label: "Invoices",
-        icon: FileText,
-        href: "/billing/invoices",
-        requiredPermission: "settings:manage",
       },
     ],
   },

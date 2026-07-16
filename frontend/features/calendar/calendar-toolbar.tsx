@@ -3,9 +3,6 @@
 import { memo, useCallback, useMemo } from "react";
 import { format } from "date-fns";
 import {
-  ChevronLeft,
-  ChevronRight,
-  Plus,
   Share2,
   Calendar as CalendarIcon,
   List,
@@ -15,7 +12,13 @@ import {
   Building2,
   Handshake,
 } from "lucide-react";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  PlusIcon,
+} from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { ViewToggle, type ViewOption } from "@/components/ui/view-toggle";
 import {
   Select,
@@ -103,24 +106,24 @@ export const CalendarToolbar = memo(function CalendarToolbar({
         </Button>
 
         <div className="flex items-center shrink-0">
-          <Button
+          <AnimatedIconButton
+            icon={ChevronLeftIcon}
+            iconSize={16}
             variant="outline"
             size="icon"
             className="w-8 rounded-r-none border-r-0"
             aria-label="Previous"
             onClick={onPrev}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button
+          />
+          <AnimatedIconButton
+            icon={ChevronRightIcon}
+            iconSize={16}
             variant="outline"
             size="icon"
             className="w-8 rounded-l-none"
             aria-label="Next"
             onClick={onNext}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+          />
         </div>
 
         <CalendarMonthYearPicker
@@ -209,17 +212,19 @@ export const CalendarToolbar = memo(function CalendarToolbar({
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button
+            <AnimatedIconButton
+              icon={PlusIcon}
+              iconSize={14}
+              iconClassName="mr-0"
               size="sm"
               className="text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground gap-1"
             >
-              <Plus className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Add</span>
-            </Button>
+            </AnimatedIconButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-44">
             <DropdownMenuItem className="text-xs" onClick={onOpenCreate}>
-              <Plus className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+              <PlusIcon size={14} className="mr-2 text-muted-foreground" />
               Add event
             </DropdownMenuItem>
             <DropdownMenuItem className="text-xs" onClick={onOpenCreateTicket}>

@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { X, RotateCcw, Check } from "lucide-react";
-import { SparklesIcon } from "@animateicons/react/lucide";
+import { RotateCcw, Check } from "lucide-react";
+import { SparklesIcon, XIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -145,7 +145,7 @@ function SummaryPanel({
             className="h-6 w-6 text-muted-foreground hover:text-foreground"
             aria-label="Dismiss summary"
           >
-            <X className="h-3 w-3" />
+            <XIcon size={12} />
           </Button>
         </div>
       </div>

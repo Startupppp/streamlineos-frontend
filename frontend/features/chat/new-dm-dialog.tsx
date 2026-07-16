@@ -8,12 +8,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Users } from "lucide-react";
+import { Users } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
 import {
   useChatOrgUsers,
@@ -127,15 +128,15 @@ export function NewDMDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       {!hideTrigger && (
         <DialogTrigger asChild>
-          <Button
+          <AnimatedIconButton
+            icon={PlusIcon}
+            iconSize={14}
             variant="ghost"
             size="icon"
             className="w-7 rounded-lg"
             title="New Direct Message"
             aria-label="New Direct Message"
-          >
-            <Plus className="h-3.5 w-3.5" />
-          </Button>
+          />
         </DialogTrigger>
       )}
       <DialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden">

@@ -3,8 +3,9 @@
 import { useFieldArray, FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus } from "lucide-react";
 import { toast } from "sonner";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { AppSheet } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -109,9 +110,9 @@ export function CreateInspectionSheet({ open, onOpenChange }: Props) {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <p className="text-xs font-semibold text-foreground/80">Lines</p>
-              <Button type="button" size="sm" variant="outline" className="h-6 text-xs px-2" onClick={handleAddLine}>
-                <Plus className="h-3 w-3 mr-1" />Add Line
-              </Button>
+              <AnimatedIconButton type="button" icon={PlusIcon} iconSize={12} iconClassName="mr-1" size="sm" variant="outline" className="h-6 text-xs px-2" onClick={handleAddLine}>
+                Add Line
+              </AnimatedIconButton>
             </div>
 
             {form.formState.errors.lines?.root && (

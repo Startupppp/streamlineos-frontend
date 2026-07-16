@@ -4,7 +4,9 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { Lock, Pencil, Trash2 } from "lucide-react";
+import { Lock, Pencil } from "lucide-react";
+import { Trash2Icon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { CustomFieldUpsertSheet } from "./custom-field-upsert-sheet";
@@ -24,6 +26,15 @@ const emptyState = (
 
 function getRowKey(row: HrCustomFieldDefinition) {
   return row.id;
+}
+
+function DeleteFieldButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button variant="ghost" size="icon" className="w-7 text-destructive" onClick={onClick} {...hoverHandlers}>
+      <Trash2Icon ref={iconRef} size={14} />
+    </Button>
+  );
 }
 
 export function CustomFieldsDataTable({ entityType, fields }: CustomFieldsDataTableProps) {
@@ -107,9 +118,7 @@ export function CustomFieldsDataTable({ entityType, fields }: CustomFieldsDataTa
           <Button variant="ghost" size="icon" className="w-7" onClick={() => handleEditClick(row)}>
             <Pencil className="h-3.5 w-3.5" />
           </Button>
-          <Button variant="ghost" size="icon" className="w-7 text-destructive" onClick={() => handleDelete(row.id)}>
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
+          <DeleteFieldButton onClick={() => handleDelete(row.id)} />
         </div>
       ),
     },

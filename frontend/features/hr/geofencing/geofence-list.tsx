@@ -1,7 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Edit2, Trash2 } from "lucide-react";
+import { Edit2 } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { Trash2Icon } from "@animateicons/react/lucide";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Badge } from "@/components/ui/badge";
@@ -74,15 +76,15 @@ export function GeofenceList({ canManage, onEdit }: Props) {
                 >
                   <Edit2 className="h-3.5 w-3.5" />
                 </Button>
-                <Button
+                <AnimatedIconButton
+                  icon={Trash2Icon}
+                  iconSize={14}
                   variant="ghost"
                   size="icon"
                   className="w-7 text-destructive hover:text-destructive"
                   onClick={() => handleDelete(fence.id)}
                   disabled={deleteFence.isPending}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
+                />
               </div>
             )}
           </div>

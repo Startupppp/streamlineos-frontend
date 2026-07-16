@@ -2,8 +2,8 @@
 
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import { Eye } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { EyeIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   Dialog,
   DialogContent,
@@ -46,10 +46,9 @@ export function TemplatePreviewDialog({ template }: TemplatePreviewDialogProps) 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-1.5">
-          <Eye className="h-3.5 w-3.5" />
+        <AnimatedIconButton icon={EyeIcon} iconSize={14} iconClassName="mr-1" variant="outline" size="sm" className="gap-1.5">
           Preview
-        </Button>
+        </AnimatedIconButton>
       </DialogTrigger>
       <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>

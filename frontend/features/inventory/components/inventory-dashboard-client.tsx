@@ -7,13 +7,14 @@ import {
   AlertTriangle,
   ShoppingCart,
   ArrowRight,
-  Plus,
   DollarSign,
   Calendar,
   ShieldAlert,
   Truck,
   BookOpen,
 } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Badge } from "@/components/ui/badge";
@@ -30,15 +31,19 @@ import {
 import { RecentMovementsTable } from "./inventory-recent-movements";
 import { DashboardInsightsPanel } from "./dashboard-insights-panel";
 
-const ADD_PRODUCT_LINK = (
-  <Link
-    href="/inventory/products/new"
-    className="inline-flex items-center gap-1.5 h-8 rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
-  >
-    <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-    Add Product
-  </Link>
-);
+function AddProductLink() {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Link
+      href="/inventory/products/new"
+      className="inline-flex items-center gap-1.5 h-8 rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+      {...hoverHandlers}
+    >
+      <PlusIcon ref={iconRef} size={14} aria-hidden="true" />
+      Add Product
+    </Link>
+  );
+}
 
 const URGENCY_CONFIG: Record<
   ReorderReportRow["urgency"],
@@ -243,7 +248,7 @@ export function InventoryDashboardClient() {
     <PageWrapper
       title="Inventory Dashboard"
       subtitle="Track stock levels, movements, and reorder alerts."
-      actions={ADD_PRODUCT_LINK}
+      actions={<AddProductLink />}
     >
       <div className="space-y-6">
         {isKpiLoading ? (

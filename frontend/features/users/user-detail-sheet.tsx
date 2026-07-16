@@ -29,12 +29,13 @@ import {
   Phone,
   Briefcase,
   Pencil,
-  X,
   Linkedin,
   Twitter,
   Github,
   Globe,
 } from "lucide-react";
+import { XIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 
 interface UserDetailSheetProps {
   userId: string | null;
@@ -98,15 +99,17 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
               </Button>
             )}
             {isEditing && (
-              <Button
+              <AnimatedIconButton
+                icon={XIcon}
+                iconSize={14}
+                iconClassName="mr-1"
                 variant="ghost"
                 size="sm"
                 className="h-7 text-xs"
                 onClick={() => setIsEditing(false)}
               >
-                <X className="h-3.5 w-3.5 mr-1" />
                 Cancel
-              </Button>
+              </AnimatedIconButton>
             )}
           </div>
         </SheetHeader>

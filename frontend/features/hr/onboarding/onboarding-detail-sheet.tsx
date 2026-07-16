@@ -11,8 +11,11 @@ import {
   FileText,
   ExternalLink,
   Circle,
+  Upload,
+  ArrowLeft,
+  ArrowRight,
 } from "lucide-react";
-import { UploadIcon, ArrowLeftIcon, ArrowRightIcon } from "@animateicons/react/lucide";
+import { UploadIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 
 import { Button } from "@/components/ui/button";
@@ -471,16 +474,16 @@ export function EmployeeDocumentsTab({ onBack, onContinue }: EmployeeDocumentsTa
                   </div>
 
                   {canUpload(submission?.status) && (
-                    <Button
+                    <AnimatedIconButton
+                      icon={UploadIcon}
                       size="sm"
                       variant="outline"
                       className="text-xs shrink-0 gap-1.5 duration-200"
                       onClick={() => handleOpenUpload(docType, submission)}
                       aria-label={`Upload ${docType.name}`}
                     >
-                      <Upload className="h-3.5 w-3.5" />
                       {submission ? "Re-upload" : "Upload"}
-                    </Button>
+                    </AnimatedIconButton>
                   )}
                 </div>
               </CardContent>

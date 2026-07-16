@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { ChevronDownIcon, ChevronUpIcon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -80,24 +81,17 @@ export function CareerPathsList({ canManage: _canManage }: Props) {
               <span className="text-xs bg-blue-50 text-blue-700 rounded-full px-2 py-0.5 font-medium dark:bg-blue-500/10 dark:text-blue-300">
                 {path.levels.length} {path.levels.length === 1 ? "level" : "levels"}
               </span>
-              <Button
+              <AnimatedIconButton
+                icon={isExpanded ? ChevronUpIcon : ChevronDownIcon}
+                iconSize={14}
+                iconClassName="mr-1"
                 variant="ghost"
                 size="sm"
                 className="px-2 text-xs text-muted-foreground"
                 onClick={() => handleToggle(path.id)}
               >
-                {isExpanded ? (
-                  <>
-                    <ChevronUp className="h-3.5 w-3.5 mr-1" />
-                    Collapse
-                  </>
-                ) : (
-                  <>
-                    <ChevronDown className="h-3.5 w-3.5 mr-1" />
-                    Expand
-                  </>
-                )}
-              </Button>
+                {isExpanded ? "Collapse" : "Expand"}
+              </AnimatedIconButton>
             </div>
 
             {isExpanded && (

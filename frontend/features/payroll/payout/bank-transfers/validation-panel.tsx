@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CheckCircle2, AlertCircle, AlertTriangle, ChevronRight } from "lucide-react";
+import { CheckCircle2, AlertCircle, AlertTriangle } from "lucide-react";
+import { ChevronRightIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { cn } from "@/lib/utils";
 import { usePayoutValidation } from "@/hooks/api/payroll/payout-batches";
 
@@ -19,6 +21,7 @@ export function ValidationPanel({ runId }: ValidationPanelProps) {
 
   const [openOverride, setOpenOverride] = useState<boolean | null>(null);
   const isExpanded = openOverride !== null ? openOverride : hasBlockers;
+  const { iconRef: chevronIconRef, hoverHandlers: chevronHoverHandlers } = useAnimatedIcon();
 
   function handleToggle() {
     setOpenOverride(!isExpanded);
@@ -39,8 +42,9 @@ export function ValidationPanel({ runId }: ValidationPanelProps) {
         type="button"
         onClick={handleToggle}
         className="flex items-center gap-1.5 text-sm font-semibold text-foreground hover:text-foreground/80 transition-colors"
+        {...chevronHoverHandlers}
       >
-        <ChevronRight className={cn("h-4 w-4 transition-transform", isExpanded && "rotate-90")} />
+        <ChevronRightIcon ref={chevronIconRef} size={16} className={cn("transition-transform", isExpanded && "rotate-90")} />
         Bank Validation
         {hasBlockers && (
           <span className="ml-1 text-xs font-medium text-red-600">({blockers.length} blockers)</span>

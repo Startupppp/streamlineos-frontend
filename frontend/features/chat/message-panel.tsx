@@ -1,17 +1,18 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 import {
-  ArrowLeft,
-  Bookmark,
-  Mic,
-  Paperclip,
-  Users,
-} from "lucide-react";
+  BookmarkIcon,
+  MicIcon,
+  PaperclipIcon,
+  UsersIcon,
+} from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { AnimatePresence, motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, resolveImageUrl } from "@/lib/utils";
@@ -55,6 +56,34 @@ import { SavedMessagesPanel } from "./saved-messages-panel";
 import { SharedFilesPanel } from "./shared-files-panel";
 import { ForwardMessageDialog } from "./forward-message-dialog";
 import { ChannelSidebarCollapseButton } from "./channel-sidebar-collapse-button";
+
+const PaperclipButton = React.forwardRef<
+  HTMLButtonElement,
+  React.ButtonHTMLAttributes<HTMLButtonElement>
+>(function PaperclipButton({ className, ...props }, ref) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <button ref={ref} {...hoverHandlers} className={className} {...props}>
+      <PaperclipIcon ref={iconRef} size={16} />
+    </button>
+  );
+});
+
+const BookmarkButton = React.forwardRef<
+  HTMLButtonElement,
+  React.ButtonHTMLAttributes<HTMLButtonElement> & { active: boolean }
+>(function BookmarkButton({ className, active, ...props }, ref) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <button ref={ref} {...hoverHandlers} className={className} {...props}>
+      <BookmarkIcon
+        ref={iconRef}
+        size={16}
+        className={cn(active && "fill-amber-500 text-amber-500")}
+      />
+    </button>
+  );
+});
 
 export function MessagePanel({
   channelId,
@@ -902,7 +931,10 @@ export function MessagePanel({
               </div>
             )}
             {!isInHuddle && (
-              <Button
+              <AnimatedIconButton
+                icon={MicIcon}
+                iconSize={14}
+                iconClassName="mr-0"
                 variant="ghost"
                 size="sm"
                 className={cn(
@@ -921,15 +953,14 @@ export function MessagePanel({
                 disabled={startHuddle.isPending || joinHuddle.isPending}
                 aria-label={activeHuddle ? "Join huddle" : "Start huddle"}
               >
-                <Mic className="h-3.5 w-3.5" />
                 {activeHuddle ? (
                   <span>Join ({activeHuddle.participants.length})</span>
                 ) : (
                   <span>Huddle</span>
                 )}
-              </Button>
+              </AnimatedIconButton>
             )}
-            <button
+            <PaperclipButton
               onClick={() => {
                 setShowFilesPanel((p) => !p);
                 setShowSavedPanel(false);
@@ -942,10 +973,9 @@ export function MessagePanel({
               )}
               title="Shared files"
               aria-label="Shared files"
-            >
-              <Paperclip className="h-4 w-4" />
-            </button>
-            <button
+            />
+            <BookmarkButton
+              active={showSavedPanel}
               onClick={() => {
                 setShowSavedPanel((p) => !p);
                 setShowFilesPanel(false);
@@ -958,20 +988,16 @@ export function MessagePanel({
               )}
               title="Saved messages"
               aria-label="Saved messages"
-            >
-              <Bookmark
-                className={cn("h-4 w-4", showSavedPanel && "fill-amber-500")}
-              />
-            </button>
-            <Button
+            />
+            <AnimatedIconButton
+              icon={UsersIcon}
+              iconSize={16}
               variant="ghost"
               size="icon"
               className={cn("w-8 rounded-lg", showInfoPanel && "bg-muted")}
               onClick={onToggleInfo}
               aria-label="Toggle member info"
-            >
-              <Users className="h-4 w-4" />
-            </Button>
+            />
           </div>
         </div>
 

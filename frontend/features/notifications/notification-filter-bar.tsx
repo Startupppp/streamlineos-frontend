@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { Check, ChevronDown, SlidersHorizontal, X } from "lucide-react";
+import { Check, ChevronDown, SlidersHorizontal } from "lucide-react";
+import { XIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import {
@@ -69,6 +71,23 @@ function FilterMenuItem({
         </span>
       )}
     </DropdownMenuItem>
+  );
+}
+
+function ClearFiltersButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="hidden sm:inline-flex h-8 shrink-0 gap-1.5 px-2 text-xs text-muted-foreground hover:text-foreground focus-visible:border-transparent focus-visible:ring-border focus-visible:ring-[3px] transition-colors"
+      onClick={onClick}
+      aria-label="Clear filters"
+      {...hoverHandlers}
+    >
+      <XIcon ref={iconRef} size={14} />
+      Clear
+    </Button>
   );
 }
 
@@ -232,16 +251,7 @@ export function NotificationFilterBar({
       </Select>
 
       {hasFilters && (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="hidden sm:inline-flex h-8 shrink-0 gap-1.5 px-2 text-xs text-muted-foreground hover:text-foreground focus-visible:border-transparent focus-visible:ring-border focus-visible:ring-[3px] transition-colors"
-          onClick={onClearFilters}
-          aria-label="Clear filters"
-        >
-          <X className="h-3.5 w-3.5" />
-          Clear
-        </Button>
+        <ClearFiltersButton onClick={onClearFilters} />
       )}
     </div>
   );

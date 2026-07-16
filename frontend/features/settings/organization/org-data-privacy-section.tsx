@@ -12,7 +12,9 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Loader2, Download, Trash2, AlertTriangle } from "lucide-react";
+import { Loader2, AlertTriangle } from "lucide-react";
+import { DownloadIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { getApiError } from "@/lib/api-client";
@@ -101,20 +103,18 @@ export function OrgDataPrivacySection({ canEdit }: OrgDataPrivacySectionProps) {
                 Request a full export of all organization data. You will receive a download link by email.
               </p>
             </div>
-            <Button
+            <AnimatedIconButton
+              icon={DownloadIcon}
+              iconSize={14}
+              iconClassName="mr-0.5"
               variant="outline"
               size="sm"
-              className="gap-2"
+              className="gap-1"
               onClick={handleExport}
               disabled={!canEdit || isExporting}
             >
-              {isExporting ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Download className="h-3.5 w-3.5" />
-              )}
-              Request data export
-            </Button>
+              {isExporting ? <><Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />Exporting…</> : "Request data export"}
+            </AnimatedIconButton>
           </div>
 
           {canEdit && (
@@ -128,15 +128,17 @@ export function OrgDataPrivacySection({ canEdit }: OrgDataPrivacySectionProps) {
                   </p>
                 </div>
               </div>
-              <Button
+              <AnimatedIconButton
+                icon={Trash2Icon}
+                iconSize={14}
+                iconClassName="mr-0.5"
                 variant="destructive"
                 size="sm"
-                className="gap-2"
+                className="gap-1"
                 onClick={handleOpenDeleteDialog}
               >
-                <Trash2 className="h-3.5 w-3.5" />
                 Request organization deletion
-              </Button>
+              </AnimatedIconButton>
             </div>
           )}
         </CardContent>

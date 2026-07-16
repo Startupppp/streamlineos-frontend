@@ -3,7 +3,9 @@
 import { useState, useCallback, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Pencil } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -145,9 +147,7 @@ export default function BusinessHoursPage() {
           <Button variant="ghost" size="icon" className="w-7" onClick={makeEditBhHandler(bh)} aria-label="Edit">
             <Pencil className="h-3.5 w-3.5" />
           </Button>
-          <Button variant="ghost" size="icon" className="w-7 text-destructive" onClick={makeDeleteBhHandler(bh.id)} aria-label="Delete">
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
+          <AnimatedIconButton variant="ghost" size="icon" className="w-7 text-destructive" onClick={makeDeleteBhHandler(bh.id)} aria-label="Delete" icon={Trash2Icon} />
         </div>
       ),
     },
@@ -199,10 +199,9 @@ export default function BusinessHoursPage() {
         title="Business Hours"
         subtitle={isLoading ? undefined : `${count} calendar${count !== 1 ? "s" : ""}`}
         actions={
-          <Button onClick={handleOpenCreate}>
-            <Plus className="h-4 w-4 mr-2" />
+          <AnimatedIconButton onClick={handleOpenCreate} icon={PlusIcon} iconClassName="mr-1.5">
             New Calendar
-          </Button>
+          </AnimatedIconButton>
         }
       >
         {isError ? (

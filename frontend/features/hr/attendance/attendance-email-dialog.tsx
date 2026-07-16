@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import { Mail, X, Loader2, ChevronsUpDown, Check } from "lucide-react";
+import { Loader2, ChevronsUpDown, Check } from "lucide-react";
+import { MailIcon, XIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -49,6 +51,59 @@ interface MultiSelectFieldProps {
   onRemove: (email: string) => void;
   options: UserOption[];
   excludedEmails: string[];
+}
+
+function BadgeRemoveButton({ name, onClick }: { name: string; onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <button
+      type="button"
+      className="rounded-sm hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+      onClick={onClick}
+      aria-label={`Remove ${name}`}
+      {...hoverHandlers}
+    >
+      <XIcon ref={iconRef} size={12} />
+    </button>
+  );
+}
+
+function SendReportButton({ isSending, disabled, onClick }: { isSending: boolean; disabled: boolean; onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button
+      onClick={onClick}
+      disabled={disabled}
+      className="h-9 gap-1.5 flex-1"
+      {...hoverHandlers}
+    >
+      {isSending ? (
+        <>
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          Sending...
+        </>
+      ) : (
+        <>
+          <MailIcon ref={iconRef} size={14} />
+          Send Report
+        </>
+      )}
+    </Button>
+  );
+}
+
+function MailTriggerButton() {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <button
+      className="text-xs font-semibold text-primary hover:text-primary/80 flex items-center gap-1.5 transition-colors duration-200"
+      type="button"
+      {...hoverHandlers}
+    >
+      <MailIcon ref={iconRef} size={14} />
+      Email Report
+    </button>
+  );
 }
 
 function MultiSelectField({
@@ -140,14 +195,7 @@ function MultiSelectField({
               className="gap-1 pr-1 text-[10px] font-semibold"
             >
               {opt.name}
-              <button
-                type="button"
-                className="rounded-sm hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                onClick={() => onRemove(opt.email)}
-                aria-label={`Remove ${opt.name}`}
-              >
-                <X className="h-3 w-3" />
-              </button>
+              <BadgeRemoveButton name={opt.name} onClick={() => onRemove(opt.email)} />
             </Badge>
           ))}
         </div>
@@ -266,20 +314,14 @@ export function AttendanceEmailDialog() {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <button
-          className="text-xs font-semibold text-primary hover:text-primary/80 flex items-center gap-1.5 transition-colors duration-200"
-          type="button"
-        >
-          <Mail className="h-3.5 w-3.5" />
-          Email Report
-        </button>
+        <MailTriggerButton />
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-md">
         <DialogHeader className="space-y-1">
           <DialogTitle className="flex items-center gap-2 text-base font-semibold">
             <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-              <Mail className="h-3.5 w-3.5 text-primary" />
+              <MailIcon size={14} className="text-primary" />
             </div>
             Email Attendance Report
           </DialogTitle>
@@ -393,23 +435,11 @@ export function AttendanceEmailDialog() {
           >
             Cancel
           </Button>
-          <Button
-            onClick={handleSend}
+          <SendReportButton
+            isSending={isSending}
             disabled={isSending || toEmails.length === 0 || !!dateError}
-            className="h-9 gap-1.5 flex-1"
-          >
-            {isSending ? (
-              <>
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                Sending...
-              </>
-            ) : (
-              <>
-                <Mail className="h-3.5 w-3.5" />
-                Send Report
-              </>
-            )}
-          </Button>
+            onClick={handleSend}
+          />
         </DialogFooter>
       </DialogContent>
     </Dialog>

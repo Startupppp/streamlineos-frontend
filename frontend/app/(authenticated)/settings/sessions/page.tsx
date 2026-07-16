@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, type ChangeEvent } from "react";
-import { Trash2, LogOut } from "lucide-react";
+import { LogoutIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { useSessions, useRevokeSession, useRevokeAllSessions, type UserSession } from "@/hooks/api/hr/sessions";
 import { getApiError } from "@/lib/api-client";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
 import { SearchInput } from "@/components/ui/search-input";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -141,15 +142,16 @@ export default function SessionsPage() {
       headerClassName: "w-16",
       cell: (s) =>
         s.isCurrent ? null : (
-          <Button
+          <AnimatedIconButton
+            icon={Trash2Icon}
+            iconSize={16}
             variant="ghost"
             size="sm"
             onClick={makeRevokeHandler(s)}
             disabled={revokeOne.isPending}
             title="Revoke session"
-          >
-            <Trash2 className="h-4 w-4 text-destructive" />
-          </Button>
+            className="text-destructive hover:text-destructive"
+          />
         ),
     },
   ];
@@ -173,15 +175,17 @@ export default function SessionsPage() {
       title="Active Sessions"
       subtitle="Manage where you're signed in. Revoking a session signs you out on that device."
       actions={
-        <Button
+        <AnimatedIconButton
+          icon={LogoutIcon}
+          iconSize={16}
+          iconClassName="mr-1.5"
           variant="outline"
           size="sm"
           onClick={handleRevokeAllClick}
           disabled={revokeAll.isPending || allSessions.filter((s) => !s.isCurrent).length === 0}
         >
-          <LogOut className="h-4 w-4 mr-1.5" />
           Revoke all other sessions
-        </Button>
+        </AnimatedIconButton>
       }
       filters={
         <div className="min-w-0 max-w-[240px]">

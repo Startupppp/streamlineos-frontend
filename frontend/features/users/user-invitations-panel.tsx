@@ -4,7 +4,8 @@ import { useState, useCallback, useTransition, useEffect } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { format, isPast } from "date-fns";
-import { Mail, RefreshCw, X } from "lucide-react";
+import { RefreshCw } from "lucide-react";
+import { MailIcon, XIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -30,6 +31,7 @@ import {
 } from "@/hooks/api/users";
 import type { Invitation } from "@/hooks/api/users";
 import { getApiError } from "@/lib/api-client";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 
 type InvStatus = "pending" | "accepted" | "expired";
 type StatusFilter = "all" | InvStatus;
@@ -211,16 +213,16 @@ export function UserInvitationsPanel() {
               </Button>
             )}
             {canCancel && (
-              <Button
+              <AnimatedIconButton
+                icon={XIcon}
+                iconSize={16}
                 variant="ghost"
                 size="icon"
                 className="h-7 w-7 text-destructive hover:text-destructive"
                 onClick={() => handleCancelRequest(inv.id)}
                 disabled={isResending || isCancelling}
                 aria-label="Cancel invitation"
-              >
-                <X className="h-4 w-4" />
-              </Button>
+              />
             )}
           </div>
         );
@@ -252,10 +254,9 @@ export function UserInvitationsPanel() {
         title="Invitations"
         subtitle="Manage and track team invitations."
         actions={
-          <Button size="sm" onClick={handleOpenInvite}>
-            <Mail className="h-3.5 w-3.5 mr-1.5" />
+          <AnimatedIconButton icon={MailIcon} iconSize={14} iconClassName="mr-1.5" size="sm" onClick={handleOpenInvite}>
             Invite User
-          </Button>
+          </AnimatedIconButton>
         }
         filters={
           <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">

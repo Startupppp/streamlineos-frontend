@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Lock, Unlock } from "lucide-react";
-import { ChevronDownIcon, ChevronUpIcon } from "@animateicons/react/lucide";
+import { Unlock } from "lucide-react";
+import { ChevronDownIcon, ChevronUpIcon, LockIcon } from "@animateicons/react/lucide";
 import { motion } from "framer-motion";
 import { PageWrapper, PageSection } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,7 @@ interface LotDetailClientProps {
 export function LotDetailClient({ lotId }: LotDetailClientProps) {
   const [showTraceability, setShowTraceability] = useState(false);
   const { iconRef: traceChevronRef, hoverHandlers: traceHoverHandlers } = useAnimatedIcon();
+  const { iconRef: lockIconRef, hoverHandlers: lockHoverHandlers } = useAnimatedIcon();
 
   const { data: lot, isLoading, isError, refetch } = useLot(lotId);
   const canAdjust = useCan("inventory:stock:adjust");
@@ -100,10 +101,11 @@ export function LotDetailClient({ lotId }: LotDetailClientProps) {
             className="text-xs gap-1.5"
             onClick={handleBlockUnblock}
             disabled={updateStatus.isPending}
+            {...lockHoverHandlers}
           >
             {lot.status === "ACTIVE" ? (
               <>
-                <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+                <LockIcon ref={lockIconRef} size={14} aria-hidden="true" />
                 Block Lot
               </>
             ) : (

@@ -2,9 +2,10 @@
 
 import { Progress } from "@/components/ui/progress";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Clock, User, Calendar, XIcon } from "lucide-react";
+import { Clock, User, Calendar } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { XIcon } from "@animateicons/react/lucide";
 import { format } from "date-fns";
 import { resolveImageUrl } from "@/lib/utils";
 import { useEpics, useModules, useCycles } from "@/hooks/api/projects";
@@ -197,16 +198,16 @@ export function TicketSidebar({
               className="text-xs"
             />
             {ticket.startDate && (
-              <Button
+              <AnimatedIconButton
                 type="button"
                 variant="ghost"
                 size="icon"
+                icon={XIcon}
+                iconSize={14}
                 onClick={handleClearStartDate}
                 className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
                 aria-label="Clear start date"
-              >
-                <XIcon className="h-3.5 w-3.5" />
-              </Button>
+              />
             )}
           </div>
         </div>
@@ -224,16 +225,16 @@ export function TicketSidebar({
               className="text-xs"
             />
             {ticket.dueDate && (
-              <Button
+              <AnimatedIconButton
                 type="button"
                 variant="ghost"
                 size="icon"
+                icon={XIcon}
+                iconSize={14}
                 onClick={handleClearDueDate}
                 className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
                 aria-label="Clear due date"
-              >
-                <XIcon className="h-3.5 w-3.5" />
-              </Button>
+              />
             )}
           </div>
         </div>

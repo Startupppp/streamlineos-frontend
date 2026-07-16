@@ -5,8 +5,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Trash2, UserRound } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { UserRound } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -62,9 +63,7 @@ function DependentRow({ dep, onDelete }: { dep: Dependent; onDelete: () => void 
           </div>
         </div>
       </div>
-      <Button size="icon" variant="ghost" className="w-7 text-muted-foreground hover:text-destructive" onClick={onDelete}>
-        <Trash2 className="h-3.5 w-3.5" />
-      </Button>
+      <AnimatedIconButton size="icon" variant="ghost" className="w-7 text-muted-foreground hover:text-destructive" onClick={onDelete} icon={Trash2Icon} iconSize={14} />
     </div>
   );
 }
@@ -126,10 +125,9 @@ export function DependentsManager() {
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-foreground">Dependents</p>
-        <Button size="sm" variant="outline" className="text-xs gap-1" onClick={handleOpenSheet}>
-          <Plus className="h-3 w-3" />
+        <AnimatedIconButton size="sm" variant="outline" className="text-xs gap-1" onClick={handleOpenSheet} icon={PlusIcon} iconSize={12} iconClassName="mr-1">
           Add
-        </Button>
+        </AnimatedIconButton>
       </div>
 
       <Card>

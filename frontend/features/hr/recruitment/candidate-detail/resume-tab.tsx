@@ -2,7 +2,8 @@
 
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { Button } from "@/components/ui/button";
-import { ExternalLink } from "lucide-react";
+import { ExternalLinkIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 
 interface Props {
   resumeUrl: string | null;
@@ -10,6 +11,8 @@ interface Props {
 }
 
 export function ResumeTab({ resumeUrl, resumeText }: Props) {
+  const { iconRef: externalLinkIconRef, hoverHandlers: externalLinkHoverHandlers } = useAnimatedIcon();
+
   if (!resumeUrl && !resumeText) {
     return (
       <RecruitmentEmptyState
@@ -27,9 +30,9 @@ export function ResumeTab({ resumeUrl, resumeText }: Props) {
         <div className="rounded-2xl border border-border bg-card overflow-hidden">
           <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/60 bg-muted/30">
             <span className="text-xs font-semibold text-foreground">Resume</span>
-            <Button variant="ghost" size="sm" className="gap-1.5 text-xs" asChild>
+            <Button variant="ghost" size="sm" className="gap-1.5 text-xs" asChild {...externalLinkHoverHandlers}>
               <a href={resumeUrl} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="h-3 w-3" />
+                <ExternalLinkIcon ref={externalLinkIconRef} size={12} />
                 Open
               </a>
             </Button>

@@ -4,6 +4,7 @@ import React, { useState, useCallback } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { SearchInput } from "@/components/ui/search-input";
 import {
   Select,
@@ -14,7 +15,8 @@ import {
 } from "@/components/ui/select";
 import { DataTable } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, ShieldAlert } from "lucide-react";
+import { ShieldAlert } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { useCan } from "@/hooks/api/access";
 import { useHrCases, useDisciplinaryActions } from "@/hooks/api/hr/cases";
 import type { HrCase, CaseCategory, CaseStatus, CaseSeverity } from "@/hooks/api/hr/cases";
@@ -183,10 +185,16 @@ export function CasesPageContent() {
             Anonymous Report
           </Button>
           {canManage && (
-            <Button size="sm" className="gap-1.5 text-sm" onClick={() => setShowNew(true)}>
-              <Plus className="h-3.5 w-3.5" />
+            <AnimatedIconButton
+              icon={PlusIcon}
+              iconSize={14}
+              iconClassName="mr-1.5"
+              size="sm"
+              className="gap-1.5 text-sm"
+              onClick={() => setShowNew(true)}
+            >
               New Case
-            </Button>
+            </AnimatedIconButton>
           )}
         </div>
       }
@@ -223,10 +231,16 @@ export function CasesPageContent() {
           <div className="flex flex-col gap-4">
             {canManage && (
               <div className="flex justify-end">
-                <Button size="sm" className="gap-1.5 text-sm" onClick={() => setShowWarning(true)}>
-                  <Plus className="h-3.5 w-3.5" />
+                <AnimatedIconButton
+                  icon={PlusIcon}
+                  iconSize={14}
+                  iconClassName="mr-1.5"
+                  size="sm"
+                  className="gap-1.5 text-sm"
+                  onClick={() => setShowWarning(true)}
+                >
                   Issue Action
-                </Button>
+                </AnimatedIconButton>
               </div>
             )}
             <DataTable

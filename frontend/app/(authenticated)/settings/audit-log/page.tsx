@@ -4,7 +4,8 @@ import { useState, useCallback, useTransition, useMemo } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { format } from "date-fns";
-import { Shield, Activity, Info } from "lucide-react";
+import { Shield, Activity } from "lucide-react";
+import { InfoIcon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/shared/error-state";
 import { Input } from "@/components/ui/input";
@@ -21,6 +22,7 @@ import {
 } from "@/components/ui/sheet";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   useAuditLogs,
   useAuditLogActions,
@@ -243,9 +245,7 @@ const AUDIT_LOG_COLUMNS: DataTableColumn<AuditLogRow>[] = [
     key: "details",
     header: "",
     cell: () => (
-      <Button variant="ghost" size="icon" className="w-7" aria-label="View details">
-        <Info className="h-3.5 w-3.5 text-muted-foreground" />
-      </Button>
+      <AnimatedIconButton icon={InfoIcon} iconSize={14} variant="ghost" size="icon" className="w-7" aria-label="View details" iconClassName="text-muted-foreground" />
     ),
     className: "w-[50px]",
   },

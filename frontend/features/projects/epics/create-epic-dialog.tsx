@@ -3,8 +3,9 @@
 import { ReactNode, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Layers, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Layers } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { EntityFormSheet } from "@/components/shared";
 import {
   FormControl,
@@ -84,10 +85,9 @@ export function CreateEpicDialog({ projectId, trigger }: CreateEpicDialogProps) 
           {trigger}
         </span>
       ) : (
-        <Button size="sm" onClick={handleOpen}>
-          <Plus className="h-4 w-4 mr-2" />
+        <AnimatedIconButton size="sm" icon={PlusIcon} iconSize={16} iconClassName="mr-2" onClick={handleOpen}>
           Create Epic
-        </Button>
+        </AnimatedIconButton>
       )}
       <EntityFormSheet<CreateEpicInput>
         open={open}

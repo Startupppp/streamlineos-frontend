@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, memo } from "react";
-import { Sparkles, CheckCheck, X } from "lucide-react";
+import { Sparkles } from "lucide-react";
+import { CheckCheckIcon, XIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent, CardAction } from "@/components/ui/card";
@@ -65,26 +67,28 @@ const InsightRow = memo(function InsightRow({
         <p className="text-[11px] text-muted-foreground truncate">{insight.body}</p>
       </div>
       <div className="flex items-center gap-1 shrink-0">
-        <Button
+        <AnimatedIconButton
+          icon={CheckCheckIcon}
+          iconSize={12}
+          iconClassName="text-emerald-600"
           variant="ghost"
           size="icon"
           className="h-6 w-6"
           title="Acknowledge"
           onClick={handleAcknowledge}
           disabled={isPending}
-        >
-          <CheckCheck className="h-3 w-3 text-emerald-600" aria-hidden="true" />
-        </Button>
-        <Button
+        />
+        <AnimatedIconButton
+          icon={XIcon}
+          iconSize={12}
+          iconClassName="text-muted-foreground"
           variant="ghost"
           size="icon"
           className="h-6 w-6"
           title="Dismiss"
           onClick={handleDismiss}
           disabled={isPending}
-        >
-          <X className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
-        </Button>
+        />
       </div>
     </div>
   );

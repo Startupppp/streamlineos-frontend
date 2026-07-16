@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { EmptyTargetIllustration } from "@/components/illustrations";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 export default function TerritoriesError({
   error,
@@ -19,7 +20,7 @@ export default function TerritoriesError({
       <EmptyState
         illustration={<EmptyTargetIllustration />}
         title="Something went wrong"
-        description={error.message ?? "Failed to load territories."}
+        description={getErrorMessage(error)}
         action={{ label: "Try again", onClick: handleReset }}
         className={CONTENT_FILL_PANEL}
       />

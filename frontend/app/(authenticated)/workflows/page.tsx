@@ -11,17 +11,16 @@ import { z } from "zod";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import {
-  Plus,
-  Copy,
-  Trash2,
   Pencil,
   GitBranch,
   Activity,
   CheckCircle2,
   Clock,
 } from "lucide-react";
+import { PlusIcon, CopyIcon, Trash2Icon } from "@animateicons/react/lucide";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -161,24 +160,24 @@ const WorkflowCard = memo(function WorkflowCard({
                 <Pencil className="h-3.5 w-3.5" />
               </Link>
             </Button>
-            <Button
+            <AnimatedIconButton
+              icon={CopyIcon}
+              iconSize={14}
               size="icon"
               variant="ghost"
               className="w-7"
               title="Duplicate"
               onClick={onDuplicate}
-            >
-              <Copy className="h-3.5 w-3.5" />
-            </Button>
-            <Button
+            />
+            <AnimatedIconButton
+              icon={Trash2Icon}
+              iconSize={14}
               size="icon"
               variant="ghost"
               className="w-7 text-destructive hover:text-destructive"
               title="Delete"
               onClick={onDelete}
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
+            />
           </div>
         </div>
       </CardContent>
@@ -396,13 +395,16 @@ export default function WorkflowsPage() {
       title="Workflows"
       subtitle="Build, automate, and monitor your business processes"
       actions={
-        <Button
+        <AnimatedIconButton
+          icon={PlusIcon}
+          iconSize={16}
+          iconClassName="mr-1"
           size="sm"
           onClick={handleOpenCreate}
           className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition-all duration-200"
         >
-          <Plus className="h-4 w-4 mr-1" /> New Workflow
-        </Button>
+          New Workflow
+        </AnimatedIconButton>
       }
       filters={
         <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">

@@ -24,7 +24,8 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { Plus, Trash2 } from "lucide-react";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useCreateTestCase, useUpdateTestCase } from "@/hooks/api/projects/qa";
@@ -277,16 +278,18 @@ export function TestCaseSheet({
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label className="text-[11px]">Steps</Label>
-                <Button
+                <AnimatedIconButton
                   type="button"
                   variant="ghost"
                   size="sm"
                   className="h-6 text-[10px]"
                   onClick={addStep}
+                  icon={PlusIcon}
+                  iconSize={12}
+                  iconClassName="mr-1"
                 >
-                  <Plus className="h-3 w-3 mr-1" />
                   Add step
-                </Button>
+                </AnimatedIconButton>
               </div>
               {fields.length === 0 && (
                 <p className="text-[10px] text-muted-foreground">No steps yet.</p>
@@ -303,15 +306,15 @@ export function TestCaseSheet({
                     className="text-[10px]"
                     placeholder="Expected result"
                   />
-                  <Button
+                  <AnimatedIconButton
                     type="button"
                     variant="ghost"
                     size="icon"
                     className="w-7 text-muted-foreground hover:text-destructive"
                     onClick={() => remove(idx)}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
+                    icon={Trash2Icon}
+                    iconSize={12}
+                  />
                 </div>
               ))}
             </div>

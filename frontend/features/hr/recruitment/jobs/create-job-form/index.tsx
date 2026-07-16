@@ -22,7 +22,10 @@ import { JobPostingPreview } from "./job-posting-preview";
 import { PublishReadiness } from "./publish-readiness";
 import type { JobPosting } from "@/types/hr/recruitment";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, ChevronRight, Save, Send } from "lucide-react";
+import { Save } from "lucide-react";
+import { SendIcon, ChevronLeftIcon, ChevronRightIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 
 const STEPS = [
   { title: "Basic Job Details", subtitle: "Title, dept, type" },
@@ -183,6 +186,7 @@ export function CreateJobForm({ job }: CreateJobFormProps) {
   const handleNext = useCallback(() => setActiveStep((p) => p + 1), []);
 
   const isPending = createJob.isPending || updateJob.isPending;
+  const { iconRef: nextIconRef, hoverHandlers: nextHoverHandlers } = useAnimatedIcon();
 
   const steps = STEPS.map((s, i) => ({
     ...s,
@@ -248,10 +252,9 @@ export function CreateJobForm({ job }: CreateJobFormProps) {
                   <Save className="h-3.5 w-3.5" />
                   Save Draft
                 </Button>
-                <Button size="sm" onClick={handlePublish} disabled={isPending} className="gap-1.5">
-                  <Send className="h-3.5 w-3.5" />
+                <AnimatedIconButton icon={SendIcon} size="sm" onClick={handlePublish} disabled={isPending} className="gap-1.5">
                   Publish Job
-                </Button>
+                </AnimatedIconButton>
               </>
             )}
           </div>
@@ -274,30 +277,29 @@ export function CreateJobForm({ job }: CreateJobFormProps) {
         </div>
 
         <div className="shrink-0 flex items-center justify-between px-6 py-3 border-t bg-card gap-3">
-          <Button
+          <AnimatedIconButton
+            icon={ChevronLeftIcon}
             variant="outline"
             size="sm"
             disabled={activeStep === 0}
             onClick={handlePrev}
             className="gap-1.5"
           >
-            <ChevronLeft className="h-3.5 w-3.5" />
             Previous
-          </Button>
+          </AnimatedIconButton>
 
           <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
             {activeStep + 1} / {STEPS.length}
           </span>
 
           {isLastStep ? (
-            <Button size="sm" onClick={handlePublish} disabled={isPending} className="gap-1.5">
-              <Send className="h-3.5 w-3.5" />
+            <AnimatedIconButton icon={SendIcon} size="sm" onClick={handlePublish} disabled={isPending} className="gap-1.5">
               {isEdit ? "Save Changes" : "Publish Job"}
-            </Button>
+            </AnimatedIconButton>
           ) : (
-            <Button size="sm" onClick={handleNext} className="gap-1.5">
+            <Button size="sm" onClick={handleNext} className="gap-1.5" {...nextHoverHandlers}>
               Next
-              <ChevronRight className="h-3.5 w-3.5" />
+              <ChevronRightIcon ref={nextIconRef} size={14} />
             </Button>
           )}
         </div>

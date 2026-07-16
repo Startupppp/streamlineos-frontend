@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { AutomationsIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -106,9 +107,7 @@ export function AutomationsTab({ survey }: { survey: SurveyForm }) {
               <span className="text-muted-foreground"> + follow-up task</span>
             )}
           </span>
-          <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => handleDelete(rule.id)}>
-            <Trash2 className="h-3.5 w-3.5 text-destructive" />
-          </Button>
+          <AnimatedIconButton icon={Trash2Icon} iconSize={14} iconClassName="text-destructive" variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => handleDelete(rule.id)} />
         </div>
       ))}
 
@@ -163,9 +162,9 @@ export function AutomationsTab({ survey }: { survey: SurveyForm }) {
           </div>
         </div>
       ) : (
-        <Button variant="outline" size="sm" onClick={() => setAdding(true)}>
-          <Plus className="h-3.5 w-3.5" /> Add automation
-        </Button>
+        <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1.5" variant="outline" size="sm" onClick={() => setAdding(true)}>
+          Add automation
+        </AnimatedIconButton>
       )}
     </div>
   );

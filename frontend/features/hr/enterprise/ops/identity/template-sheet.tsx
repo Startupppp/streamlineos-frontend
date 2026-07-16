@@ -30,7 +30,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Plus, Trash2 } from "lucide-react";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { useCreateProvisioningTemplate } from "@/hooks/api/hr/enterprise-ops-identity";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -173,7 +173,7 @@ export function TemplateSheet({ open, onOpenChange }: Props) {
                   </SelectContent>
                 </Select>
                 <Button type="button" size="icon" variant="outline" onClick={addSystem}>
-                  <Plus className="h-4 w-4" />
+                  <PlusIcon size={16} />
                 </Button>
               </div>
               {systemsError && (
@@ -185,7 +185,7 @@ export function TemplateSheet({ open, onOpenChange }: Props) {
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground capitalize">{s.action}</span>
                     <Button type="button" size="icon" variant="ghost" className="h-6 w-6 text-red-500" onClick={() => removeSystem(i)}>
-                      <Trash2 className="h-3 w-3" />
+                      <Trash2Icon size={12} />
                     </Button>
                   </div>
                 </div>

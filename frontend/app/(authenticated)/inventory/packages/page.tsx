@@ -2,7 +2,8 @@
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Plus } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -192,10 +193,9 @@ function PackagesPageInner() {
         title="Packages"
         subtitle={total > 0 ? `${total} ${total === 1 ? "package" : "packages"}` : "Manage shipping packages"}
         actions={
-          <Button size="sm" onClick={handleNewPackage}>
-            <Plus className="mr-1.5 h-3.5 w-3.5" />
+          <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1.5" size="sm" onClick={handleNewPackage}>
             New Package
-          </Button>
+          </AnimatedIconButton>
         }
         filters={filtersRow}
       >

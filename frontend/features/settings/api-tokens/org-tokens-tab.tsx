@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Shield, ShieldOff, Clock, Trash2 } from "lucide-react";
+import { Shield, ShieldOff, Clock } from "lucide-react";
+import { Trash2Icon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import {
   useApiTokens,
@@ -12,6 +13,7 @@ import {
 } from "@/hooks/api/api-tokens";
 import { getApiError } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -186,15 +188,15 @@ export function OrgTokensTab({ showCreate, onShowCreateChange }: OrgTokensTabPro
               <ShieldOff className="h-4 w-4 text-amber-600" />
             </Button>
           )}
-          <Button
+          <AnimatedIconButton
+            icon={Trash2Icon}
+            iconSize={16}
             variant="ghost"
             size="icon"
-            className="h-7 w-7"
+            className="h-7 w-7 text-destructive hover:text-destructive"
             onClick={() => setDeleting(t)}
             aria-label="Delete token"
-          >
-            <Trash2 className="h-4 w-4 text-destructive" />
-          </Button>
+          />
         </div>
       ),
     },

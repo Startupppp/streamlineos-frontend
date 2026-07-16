@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Label } from "@/components/ui/label";
 import type { SurveyQuestionType } from "@/features/surveys/shared/question-type-meta";
 
@@ -71,14 +71,12 @@ export function QuestionTypeSettings({ type, settings, onChange }: QuestionTypeS
         {rows.map((row, index) => (
           <div key={index} className="flex items-center gap-2">
             <Input value={row} onChange={(e) => handleRowChange(index, e.target.value)} placeholder={`Row ${index + 1}`} className="h-8" />
-            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => handleRemoveRow(index)}>
-              <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
-            </Button>
+            <AnimatedIconButton icon={Trash2Icon} iconSize={14} iconClassName="text-muted-foreground" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => handleRemoveRow(index)} />
           </div>
         ))}
-        <Button variant="outline" size="sm" onClick={handleAddRow}>
-          <Plus className="h-3.5 w-3.5" /> Add row
-        </Button>
+        <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1.5" variant="outline" size="sm" onClick={handleAddRow}>
+          Add row
+        </AnimatedIconButton>
       </div>
     );
   }

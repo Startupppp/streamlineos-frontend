@@ -10,7 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { ChevronLeftIcon, ChevronRightIcon } from "@animateicons/react/lucide";
 import { cn } from "@/lib/utils";
 import { getStatusDotClass } from "../shared/status-badge";
 import { TicketQuickActions } from "./ticket-quick-actions";
@@ -105,15 +106,11 @@ export function CalendarView({ tickets, onTicketClick, projectId }: CalendarView
           </Select>
         </div>
         <div className="flex items-center gap-1">
-          <Button variant="outline" size="icon" onClick={handlePrevMonth} aria-label="Previous month">
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
+          <AnimatedIconButton variant="outline" size="icon" icon={ChevronLeftIcon} iconSize={16} onClick={handlePrevMonth} aria-label="Previous month" />
           <Button variant="outline" size="sm" onClick={handleTodayClick}>
             Today
           </Button>
-          <Button variant="outline" size="icon" onClick={handleNextMonth} aria-label="Next month">
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+          <AnimatedIconButton variant="outline" size="icon" icon={ChevronRightIcon} iconSize={16} onClick={handleNextMonth} aria-label="Next month" />
         </div>
       </div>
 

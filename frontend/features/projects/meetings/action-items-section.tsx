@@ -2,9 +2,10 @@
 
 import { memo, useState, useCallback } from "react";
 import { toast } from "sonner";
-import { Plus, ArrowRightCircle } from "lucide-react";
-import { EllipsisIcon } from "@animateicons/react/lucide";
+import { ArrowRightCircle } from "lucide-react";
+import { EllipsisIcon, PlusIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   useCreateActionItem, useUpdateActionItem, useDeleteActionItem, useConvertActionItemToTask,
 } from "@/hooks/api/projects";
@@ -180,9 +181,17 @@ export function ActionItemsSection({
           ) : null}
         </h3>
         {canManage ? (
-          <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={handleOpenCreate}>
-            <Plus className="h-3.5 w-3.5" /> Add
-          </Button>
+          <AnimatedIconButton
+            icon={PlusIcon}
+            iconSize={14}
+            iconClassName="mr-1"
+            size="sm"
+            variant="outline"
+            className="gap-1.5 text-xs"
+            onClick={handleOpenCreate}
+          >
+            Add
+          </AnimatedIconButton>
         ) : null}
       </div>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Sparkles, Loader2, Building2, Target, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,7 +38,7 @@ export function AIEnrichLeadButton({
   const result = enrichMutation.data;
   const { enabled: featureEnabled, requiredPlan } = useFeature("ai.enrichment");
 
-  const handleEnrich = () => {
+  const handleEnrich = useCallback(() => {
     if (!featureEnabled) {
       toast.error(
         `AI lead enrichment requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`,
@@ -55,7 +55,7 @@ export function AIEnrichLeadButton({
       },
       { onError: (e) => toast.error(getErrorMessage(e)) },
     );
-  };
+  }, [featureEnabled, requiredPlan, enrichMutation, leadName, company, email, designation, city]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

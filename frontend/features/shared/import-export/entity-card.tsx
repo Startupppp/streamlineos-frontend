@@ -3,13 +3,13 @@
 import { useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
-  Upload,
-  Download,
   FileSpreadsheet,
   CheckCircle2,
   AlertCircle,
   Loader2,
 } from "lucide-react";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { UploadIcon, DownloadIcon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -51,6 +51,8 @@ export function EntityCard({
 }: EntityCardProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const Icon = entity.icon;
+  const { iconRef: uploadIconRef, hoverHandlers: uploadHoverHandlers } = useAnimatedIcon();
+  const { iconRef: downloadIconRef, hoverHandlers: downloadHoverHandlers } = useAnimatedIcon();
 
   const handleImportClick = useCallback(() => {
     fileInputRef.current?.click();
@@ -154,14 +156,15 @@ export function EntityCard({
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex-1 text-xs h-8"
+                  className="flex-1 text-xs h-8 gap-1.5"
                   onClick={handleImportClick}
                   disabled={upload.status === "uploading"}
+                  {...uploadHoverHandlers}
                 >
                   {upload.status === "uploading" ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : (
-                    <Upload className="h-3.5 w-3.5" />
+                    <UploadIcon ref={uploadIconRef} size={14} />
                   )}
                   Import
                 </Button>
@@ -172,16 +175,17 @@ export function EntityCard({
                 variant="outline"
                 size="sm"
                 className={cn(
-                  "text-xs h-8",
+                  "text-xs h-8 gap-1.5",
                   entity.supported.import ? "flex-1" : "w-full",
                 )}
                 onClick={handleExportClick}
                 disabled={isExporting}
+                {...downloadHoverHandlers}
               >
                 {isExporting ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 ) : (
-                  <Download className="h-3.5 w-3.5" />
+                  <DownloadIcon ref={downloadIconRef} size={14} />
                 )}
                 Export
               </Button>

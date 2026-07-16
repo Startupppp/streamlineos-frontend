@@ -1,13 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import {
   CheckCircle2,
   Circle,
-  ChevronDown,
-  ChevronUp,
-  X,
   LayoutGrid,
   Users,
   Package,
@@ -20,6 +17,8 @@ import {
   Target,
   type LucideIcon,
 } from "lucide-react";
+import { ChevronDownIcon, ChevronUpIcon, XIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Progress } from "@/components/ui/progress";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -75,6 +74,8 @@ function ModuleSetupBanner({ checklist }: { checklist: ModuleChecklist }) {
   const [isOpen, setIsOpen] = useState(false);
   const completeItem = useCompleteChecklistItem();
   const dismissChecklist = useDismissModuleChecklist();
+  const { iconRef: toggleIconRef, hoverHandlers: toggleHoverHandlers } = useAnimatedIcon();
+  const { iconRef: dismissIconRef, hoverHandlers: dismissHoverHandlers } = useAnimatedIcon();
 
   const sortedItems = [...checklist.items].sort((a, b) => a.sortOrder - b.sortOrder);
   const label = MODULE_LABELS[checklist.moduleKey] ?? `Set up ${checklist.moduleKey}`;
@@ -114,19 +115,25 @@ function ModuleSetupBanner({ checklist }: { checklist: ModuleChecklist }) {
           <button
             type="button"
             onClick={() => setIsOpen((prev) => !prev)}
+            {...toggleHoverHandlers}
             aria-label={isOpen ? "Collapse checklist" : "Expand checklist"}
             className="w-7 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
           >
-            {isOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+            {isOpen ? (
+              <ChevronUpIcon ref={toggleIconRef} size={14} />
+            ) : (
+              <ChevronDownIcon ref={toggleIconRef} size={14} />
+            )}
           </button>
           <button
             type="button"
             onClick={handleDismiss}
+            {...dismissHoverHandlers}
             disabled={dismissChecklist.isPending}
             aria-label={`Dismiss ${label} checklist`}
             className="w-7 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
           >
-            <X className="h-3.5 w-3.5" />
+            <XIcon ref={dismissIconRef} size={14} />
           </button>
         </div>
       </div>

@@ -1,9 +1,9 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useState, type ReactNode } from "react";
 import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
 import { SourceRefsPopover } from "./source-refs-popover";
@@ -432,10 +432,9 @@ export function InputsSectionTabs({ periodId, isLocked, onCreateAdjustment }: In
           <TabsTrigger value="adjustments" className="text-xs">Adjustments</TabsTrigger>
         </TabsList>
         {!isLocked && (
-          <Button variant="outline" size="sm" className="text-xs gap-1" onClick={onCreateAdjustment}>
-            <Plus className="h-3 w-3" />
+          <AnimatedIconButton icon={PlusIcon} iconClassName="mr-1.5" variant="outline" size="sm" className="text-xs" onClick={onCreateAdjustment}>
             Add Adjustment
-          </Button>
+          </AnimatedIconButton>
         )}
       </div>
       <TabsContent value="attendance" className="mt-0">

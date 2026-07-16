@@ -1,7 +1,7 @@
 "use client";
 
-import { Plus, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { PlusIcon, XIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import type { FormAction, FormField } from "@/types/projects/forms";
@@ -79,19 +79,16 @@ export function FormActionsEditor({ actions, fields, onChange }: FormActionsEdit
               </Select>
             </div>
           )}
-          <Button
-            type="button" variant="ghost" size="icon"
+          <AnimatedIconButton
+            type="button" variant="ghost" size="icon" icon={XIcon} iconSize={14}
             className="w-8 ml-auto text-muted-foreground hover:text-destructive"
             onClick={() => handleRemove(idx)} aria-label="Remove action"
-          >
-            <X className="h-3.5 w-3.5" />
-          </Button>
+          />
         </div>
       ))}
-      <Button type="button" variant="outline" size="sm" className="text-xs w-full" onClick={handleAdd}>
-        <Plus className="h-3.5 w-3.5 mr-1" />
+      <AnimatedIconButton type="button" variant="outline" size="sm" icon={PlusIcon} iconSize={14} iconClassName="mr-1" className="text-xs w-full" onClick={handleAdd}>
         Add Action
-      </Button>
+      </AnimatedIconButton>
     </div>
   );
 }

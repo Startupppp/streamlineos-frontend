@@ -3,8 +3,8 @@
 import { memo, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Check, X, Copy } from "lucide-react";
+import { CheckIcon, XIcon, CopyIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PriorityBadge } from "@/features/projects/shared/priority-badge";
 import { PM_PANEL } from "@/features/projects/shared/pm-chrome";
 import { TEXT_ONE_LINE, TEXT_TWO_LINES } from "@/features/projects/shared/text-overflow";
@@ -94,19 +94,36 @@ export const IntakeItemCard = memo(function IntakeItemCard({ item, onAccept, onD
       </div>
       {item.status === "pending" && (
         <div className="flex items-center gap-1 shrink-0 py-3 pr-3">
-          <Button
+          <AnimatedIconButton
+            icon={CheckIcon}
+            iconSize={14}
+            iconClassName="mr-1"
             size="sm"
             className="text-xs h-7"
             onClick={handleAccept}
           >
-            <Check className="h-3.5 w-3.5 mr-1" /> Accept
-          </Button>
-          <Button size="sm" variant="outline" className="text-xs h-7" onClick={handleDecline}>
-            <X className="h-3.5 w-3.5 mr-1" /> Decline
-          </Button>
-          <Button size="sm" variant="ghost" className="w-7" onClick={handleDuplicate} aria-label="Mark as duplicate">
-            <Copy className="h-3.5 w-3.5" />
-          </Button>
+            Accept
+          </AnimatedIconButton>
+          <AnimatedIconButton
+            icon={XIcon}
+            iconSize={14}
+            iconClassName="mr-1"
+            size="sm"
+            variant="outline"
+            className="text-xs h-7"
+            onClick={handleDecline}
+          >
+            Decline
+          </AnimatedIconButton>
+          <AnimatedIconButton
+            icon={CopyIcon}
+            iconSize={14}
+            size="sm"
+            variant="ghost"
+            className="w-7"
+            onClick={handleDuplicate}
+            aria-label="Mark as duplicate"
+          />
         </div>
       )}
     </div>

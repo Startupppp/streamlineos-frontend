@@ -1,8 +1,8 @@
 "use client";
 
-import { Download } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { exportToCsv } from "@/lib/export-csv";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { DownloadIcon } from "@animateicons/react/lucide";
 
 interface ExportCsvButtonProps {
   filename: string;
@@ -16,15 +16,16 @@ export function ExportCsvButton({ filename, rows, disabled }: ExportCsvButtonPro
   }
 
   return (
-    <Button
+    <AnimatedIconButton
       type="button"
       variant="outline"
       size="sm"
       disabled={disabled || rows.length === 0}
       onClick={handleExport}
+      icon={DownloadIcon}
+      iconClassName="mr-1.5"
     >
-      <Download className="h-3.5 w-3.5 mr-1.5" />
       Export CSV
-    </Button>
+    </AnimatedIconButton>
   );
 }

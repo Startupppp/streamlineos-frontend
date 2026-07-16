@@ -8,7 +8,6 @@ import { toast } from "sonner";
 import {
   ArrowLeft,
   Pencil,
-  Play,
   Clock,
   CheckCircle2,
   XCircle,
@@ -19,9 +18,11 @@ import {
   User,
   RefreshCcw,
 } from "lucide-react";
+import { PlayIcon } from "@animateicons/react/lucide";
 import { motion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LoadingState } from "@/components/shared/loading-state";
@@ -233,15 +234,17 @@ export default function WorkflowDetailPage() {
             <ArrowLeft className="h-3.5 w-3.5 mr-1.5" />
             Back
           </Button>
-          <Button
+          <AnimatedIconButton
+            icon={PlayIcon}
+            iconSize={14}
+            iconClassName="mr-1.5"
             variant="outline"
             size="sm"
             onClick={handleTrigger}
             disabled={workflow.status !== "published" || trigger.isPending}
           >
-            <Play className="h-3.5 w-3.5 mr-1.5" />
             {trigger.isPending ? "Triggering…" : "Run Now"}
-          </Button>
+          </AnimatedIconButton>
           <Button
             size="sm"
             asChild

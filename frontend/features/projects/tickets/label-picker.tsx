@@ -10,7 +10,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Plus, X, Tag } from "lucide-react";
+import { Tag } from "lucide-react";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { PlusIcon, XIcon } from "@animateicons/react/lucide";
 import {
   useLabels,
   useCreateOrgLabel,
@@ -30,11 +32,26 @@ interface LabelPickerProps {
   }>;
 }
 
+function RemoveLabelButton({ labelId, labelName, onRemove }: { labelId: number; labelName: string; onRemove: (id: number) => () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <button
+      onClick={onRemove(labelId)}
+      aria-label={`Remove ${labelName} label`}
+      className="hover:bg-destructive/20 rounded-full p-0.5 transition-colors"
+      {...hoverHandlers}
+    >
+      <XIcon ref={iconRef} size={10} />
+    </button>
+  );
+}
+
 export function LabelPicker({
   ticketId,
   projectId,
   currentLabels,
 }: LabelPickerProps) {
+  const { iconRef: plusIconRef, hoverHandlers: plusHoverHandlers } = useAnimatedIcon();
   const [open, setOpen] = useState(false);
   const [newLabelName, setNewLabelName] = useState("");
   const [selectedColor, setSelectedColor] = useState<string>(DEFAULT_LABEL_COLOR);
@@ -102,13 +119,7 @@ export function LabelPicker({
             style={{ borderLeft: `3px solid ${label.color || "#3b82f6"}` }}
           >
             {label.name}
-            <button
-              onClick={handleRemoveLabel(label.id)}
-              aria-label={`Remove ${label.name} label`}
-              className="hover:bg-destructive/20 rounded-full p-0.5 transition-colors"
-            >
-              <X className="h-2.5 w-2.5" />
-            </button>
+            <RemoveLabelButton labelId={label.id} labelName={label.name} onRemove={handleRemoveLabel} />
           </Badge>
         ))}
         <Popover open={open} onOpenChange={setOpen}>
@@ -118,8 +129,9 @@ export function LabelPicker({
               size="sm"
               aria-label="Add label"
               className="h-6 w-6 p-0 rounded-full"
+              {...plusHoverHandlers}
             >
-              <Plus className="h-3.5 w-3.5" />
+              <PlusIcon ref={plusIconRef} size={14} />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-80 p-4" align="start">

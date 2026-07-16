@@ -2,8 +2,10 @@
 
 import { useCallback } from "react";
 import { nanoid } from "nanoid";
-import { GripVertical, PlusCircle, Trash2 } from "lucide-react";
+import { GripVertical, PlusCircle } from "lucide-react";
+import { Trash2Icon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -100,15 +102,15 @@ export function ChecklistEditor({ items, onChange }: ChecklistEditorProps) {
             />
             <span className="text-[11px] text-muted-foreground">Req</span>
           </div>
-          <Button
+          <AnimatedIconButton
+            icon={Trash2Icon}
+            iconSize={14}
             type="button"
             variant="ghost"
             size="icon"
             className="w-7 shrink-0 text-muted-foreground hover:text-destructive"
             onClick={() => handleRemove(item.id)}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
+          />
         </div>
       ))}
       <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={handleAdd}>

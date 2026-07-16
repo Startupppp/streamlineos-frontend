@@ -3,10 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Inbox, Send, CheckCircle2, Clock, AlertTriangle, Plus, FileStack, UploadCloud } from "lucide-react";
+import { Inbox, Send, CheckCircle2, Clock, AlertTriangle, FileStack, UploadCloud } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { ErrorState } from "@/components/shared/error-state";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
@@ -42,10 +43,9 @@ export function SignDashboard() {
       title="SignOS"
       subtitle="Envelopes, signatures, and completion status at a glance"
       actions={
-        <Button onClick={() => setCreateOpen(true)}>
-          <Plus className="size-4" />
+        <AnimatedIconButton icon={PlusIcon} iconClassName="mr-1.5" onClick={() => setCreateOpen(true)}>
           New envelope
-        </Button>
+        </AnimatedIconButton>
       }
     >
       <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-6">

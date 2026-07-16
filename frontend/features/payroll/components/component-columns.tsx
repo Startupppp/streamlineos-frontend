@@ -1,8 +1,10 @@
 "use client";
 
 import { memo } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Trash2Icon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PayrollStatusBadge, formatMoney } from "@/features/payroll/shared";
 import type { SalaryComponent } from "@/types/payroll/setup";
 import type { DataTableColumn } from "@/components/ui/data-table";
@@ -101,16 +103,15 @@ export function buildComponentColumns(
           >
             <Pencil className="h-3 w-3" />
           </Button>
-          <Button
+          <AnimatedIconButton
+            icon={Trash2Icon}
             variant="ghost"
             size="icon"
             className="h-6 w-6 text-destructive hover:text-destructive"
             onClick={(e) => { e.stopPropagation(); onDelete(row); }}
             aria-label="Delete component"
             disabled={row.isStatutory}
-          >
-            <Trash2 className="h-3 w-3" />
-          </Button>
+          />
         </div>
       ),
     },

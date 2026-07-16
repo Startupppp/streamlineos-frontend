@@ -4,7 +4,8 @@ import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { AlertCircle, Archive, Flag, Loader2, Plus } from "lucide-react";
+import { AlertCircle, Archive, Flag, Loader2 } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import {
   useFeatureFlags,
@@ -18,6 +19,7 @@ import { getApiError } from "@/lib/api-client";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -254,9 +256,9 @@ function FeatureFlagsContent() {
       <p className="text-xs text-muted-foreground max-w-xs">
         Create a flag to control feature rollouts across your platform.
       </p>
-      <Button onClick={handleOpenCreate} className="mt-2 gap-2">
-        <Plus className="h-4 w-4" /> New Flag
-      </Button>
+      <AnimatedIconButton icon={PlusIcon} iconSize={16} iconClassName="mr-1" onClick={handleOpenCreate} className="mt-2 gap-2">
+        New Flag
+      </AnimatedIconButton>
     </div>
   );
 
@@ -265,9 +267,9 @@ function FeatureFlagsContent() {
       title="Feature Flags"
       subtitle="Control feature availability across your platform"
       actions={
-        <Button onClick={handleOpenCreate} className="gap-2">
-          <Plus className="h-4 w-4" /> New Flag
-        </Button>
+        <AnimatedIconButton icon={PlusIcon} iconSize={16} iconClassName="mr-1" onClick={handleOpenCreate} className="gap-2">
+          New Flag
+        </AnimatedIconButton>
       }
     >
       <DataTable

@@ -10,6 +10,7 @@ import { Package, Plus, ChevronDown, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -48,7 +49,7 @@ interface Order {
 
 const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
   CREATED: "bg-muted text-muted-foreground border-0",
-  PROCESSING: "bg-blue-500/10 text-blue-700 border-0",
+  PROCESSING: "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-0",
   SHIPPED: "bg-amber-500/10 text-amber-700 border-0",
   DELIVERED: "bg-emerald-500/10 text-emerald-700 border-0",
   CANCELLED: "bg-red-500/10 text-red-700 border-0",
@@ -422,12 +423,13 @@ export function DealOrdersSection({ dealId, dealStage }: DealOrdersSectionProps)
                 <Button type="button" variant="outline" onClick={handleCloseCreate}>
                   Cancel
                 </Button>
-                <Button
+                <LoadingButton
                   type="submit"
-                  disabled={createOrder.isPending}
+                  isPending={createOrder.isPending}
+                  loadingText="Creating..."
                 >
-                  {createOrder.isPending ? "Creating..." : "Create Order"}
-                </Button>
+                  Create Order
+                </LoadingButton>
               </div>
             </form>
           </Form>

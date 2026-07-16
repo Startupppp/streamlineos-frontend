@@ -5,9 +5,10 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Trash2 } from "lucide-react";
 import { PageSection } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -178,30 +179,30 @@ export function FxRatesSection({ policy, activeVersion }: FxRatesSectionProps) {
                   <p className="text-xs text-destructive">{errors.rates[idx].rate?.message}</p>
                 )}
               </div>
-              <Button
+              <AnimatedIconButton
+                icon={Trash2Icon}
                 type="button"
                 variant="ghost"
                 size="icon"
                 className="w-8 shrink-0 text-muted-foreground hover:text-destructive"
                 onClick={() => remove(idx)}
                 aria-label="Remove rate"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
+              />
             </div>
           ))}
         </div>
 
-        <Button
+        <AnimatedIconButton
+          icon={PlusIcon}
           type="button"
           variant="outline"
           size="sm"
-          className="text-xs gap-1"
+          className="text-xs"
+          iconClassName="mr-1.5"
           onClick={handleAddRate}
         >
-          <Plus className="h-3 w-3" />
           Add Currency
-        </Button>
+        </AnimatedIconButton>
 
         <div className="flex gap-2 justify-end pt-2">
           <Button type="button" variant="outline" size="sm" onClick={handleCancel}>

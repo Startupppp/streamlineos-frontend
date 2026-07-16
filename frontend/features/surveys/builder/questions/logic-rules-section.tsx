@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -114,9 +115,7 @@ export function LogicRulesSection({ surveyId, question, sections, rules }: Logic
       {questionRules.map((rule) => (
         <div key={rule.id} className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm">
           <span className="flex-1 truncate">{summarizeRule(rule)}</span>
-          <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => handleDelete(rule.id)}>
-            <Trash2 className="h-3.5 w-3.5 text-destructive" />
-          </Button>
+          <AnimatedIconButton icon={Trash2Icon} iconSize={14} iconClassName="text-destructive" variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => handleDelete(rule.id)} />
         </div>
       ))}
 
@@ -172,9 +171,9 @@ export function LogicRulesSection({ surveyId, question, sections, rules }: Logic
           </div>
         </div>
       ) : (
-        <Button variant="outline" size="sm" onClick={() => setAdding(true)}>
-          <Plus className="h-3.5 w-3.5" /> Add logic rule
-        </Button>
+        <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1.5" variant="outline" size="sm" onClick={() => setAdding(true)}>
+          Add logic rule
+        </AnimatedIconButton>
       )}
     </div>
   );

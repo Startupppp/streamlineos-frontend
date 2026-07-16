@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OrgTokensTab } from "@/features/settings/api-tokens/org-tokens-tab";
@@ -23,10 +23,9 @@ export default function ApiTokensPage() {
       title="API Tokens"
       subtitle="Create and manage tokens for programmatic access."
       actions={
-        <Button size="sm" onClick={handleNewToken}>
-          <Plus className="h-3.5 w-3.5 mr-1.5" />
+        <AnimatedIconButton size="sm" onClick={handleNewToken} icon={PlusIcon} iconSize={14} iconClassName="mr-1.5">
           New Token
-        </Button>
+        </AnimatedIconButton>
       }
     >
       <div className="flex flex-1 min-h-0 flex-col">

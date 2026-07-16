@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { Download } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { DownloadIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -220,16 +220,17 @@ export function DeclarationsTab() {
               </SelectContent>
             </Select>
             {canExport && (
-              <Button
+              <AnimatedIconButton
+                icon={DownloadIcon}
+                iconClassName="mr-1.5"
                 size="sm"
                 variant="outline"
-                className="text-xs gap-1"
+                className="text-xs"
                 onClick={handleExportClick}
                 disabled={exportMutation.isPending}
               >
-                <Download className="h-3.5 w-3.5" />
                 Export CSV
-              </Button>
+              </AnimatedIconButton>
             )}
           </div>
         }

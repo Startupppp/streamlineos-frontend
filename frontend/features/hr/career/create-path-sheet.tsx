@@ -5,7 +5,8 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { X, Plus } from "lucide-react";
+import { XIcon, PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { getErrorMessage } from "@/lib/api-client";
 import { useCreateCareerPath } from "@/hooks/api/hr/career";
@@ -19,7 +20,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
 
 const levelSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -169,10 +169,9 @@ export function CreatePathSheet({ open, onOpenChange }: Props) {
               <span className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
                 Career Levels
               </span>
-              <Button variant="outline" size="sm" className="text-xs gap-1" onClick={handleAddLevel} type="button">
-                <Plus className="h-3.5 w-3.5" />
+              <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1" variant="outline" size="sm" className="text-xs gap-1" onClick={handleAddLevel} type="button">
                 Add Level
-              </Button>
+              </AnimatedIconButton>
             </div>
 
             {fields.map((field, idx) => (
@@ -199,15 +198,15 @@ export function CreatePathSheet({ open, onOpenChange }: Props) {
                     />
                   </div>
                   {fields.length > 1 && (
-                    <Button
+                    <AnimatedIconButton
+                      icon={XIcon}
+                      iconSize={14}
                       variant="ghost"
                       size="icon"
                       className="w-7 shrink-0 text-muted-foreground hover:text-destructive"
                       onClick={() => remove(idx)}
                       type="button"
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </Button>
+                    />
                   )}
                 </div>
 

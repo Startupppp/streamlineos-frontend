@@ -46,6 +46,7 @@ import { DealInfoCard } from "@/features/crm/deals/detail/deal-info-card";
 import { DealSidebarCards } from "@/features/crm/deals/detail/deal-sidebar-cards";
 import { DealOrdersSection } from "@/features/crm/deals/deal-orders-section";
 import { DealQuotesSection } from "@/features/crm/deals/deal-quotes-section";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 
 function formatINR(v: number) {
@@ -114,7 +115,7 @@ export default function DealDetailPage({
               toast.success("Stage updated");
             }
           },
-          onError: (err) => toast.error(err.message),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -142,7 +143,7 @@ export default function DealDetailPage({
             toast.success("Deal updated");
             setIsEditing(false);
           },
-          onError: (err) => toast.error(err.message),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -183,7 +184,7 @@ export default function DealDetailPage({
             toast.success("Activity logged");
             setPendingAction(null);
           },
-          onError: (err) => toast.error(err.message),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },

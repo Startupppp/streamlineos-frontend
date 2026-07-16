@@ -14,10 +14,10 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { UserCombobox } from "@/components/ui/user-combobox";
-import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { SimulationResult } from "./simulation-result";
-import { Plus, Trash2 } from "lucide-react";
 import { useSimulatePayrollImpact } from "@/hooks/api/hr/enterprise-ops-simulator";
 
 const schema = z.object({
@@ -95,9 +95,14 @@ export function PayrollSimulator() {
                   <option value="earning">Earning</option>
                   <option value="deduction">Deduction</option>
                 </select>
-                <Button type="button" size="icon" variant="outline" onClick={addComponent}>
-                  <Plus className="h-4 w-4" />
-                </Button>
+                <AnimatedIconButton
+                  icon={PlusIcon}
+                  iconSize={16}
+                  type="button"
+                  size="icon"
+                  variant="outline"
+                  onClick={addComponent}
+                />
               </div>
               {components.map((c, i) => (
                 <div key={i} className="flex items-center justify-between text-sm rounded-md border border-border px-3 py-1.5">
@@ -106,9 +111,15 @@ export function PayrollSimulator() {
                     <span className={c.type === "earning" ? "text-emerald-600" : "text-red-600"}>
                       {c.type === "earning" ? "+" : "-"}{c.amount}
                     </span>
-                    <Button type="button" size="icon" variant="ghost" className="h-5 w-5 text-red-500" onClick={() => setComponents((cs) => cs.filter((_, idx) => idx !== i))}>
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
+                    <AnimatedIconButton
+                      icon={Trash2Icon}
+                      iconSize={12}
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      className="h-5 w-5 text-red-500"
+                      onClick={() => setComponents((cs) => cs.filter((_, idx) => idx !== i))}
+                    />
                   </div>
                 </div>
               ))}

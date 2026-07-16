@@ -3,8 +3,9 @@
 import { useRef, useState } from "react";
 import Papa from "papaparse";
 import { toast } from "sonner";
-import { UploadCloud } from "lucide-react";
+import { CloudUploadIcon } from "@animateicons/react/lucide";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -88,10 +89,9 @@ export function CreateBulkSendDialog({ open, onOpenChange }: { open: boolean; on
           <div className="space-y-1.5">
             <Label>CSV file</Label>
             <input ref={fileInputRef} type="file" accept=".csv" className="hidden" onChange={handleFileChange} />
-            <Button variant="outline" className="w-full" onClick={() => fileInputRef.current?.click()}>
-              <UploadCloud className="size-4" />
+            <AnimatedIconButton icon={CloudUploadIcon} iconClassName="mr-1.5" variant="outline" className="w-full" onClick={() => fileInputRef.current?.click()}>
               {rows.length > 0 ? `${rows.length} rows loaded` : "Upload CSV"}
-            </Button>
+            </AnimatedIconButton>
           </div>
 
           {headers.length > 0 && (

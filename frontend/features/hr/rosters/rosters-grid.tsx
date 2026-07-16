@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { ChevronDownIcon, ChevronUpIcon } from "@animateicons/react/lucide";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
@@ -59,9 +60,14 @@ function RosterCard({ roster, canManage }: RosterCardProps) {
               Publish
             </Button>
           )}
-          <Button variant="ghost" size="icon" className="w-7" onClick={handleToggle}>
-            {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          </Button>
+          <AnimatedIconButton
+            icon={expanded ? ChevronUpIcon : ChevronDownIcon}
+            iconSize={16}
+            variant="ghost"
+            size="icon"
+            className="w-7"
+            onClick={handleToggle}
+          />
         </div>
       </div>
 

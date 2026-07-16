@@ -5,7 +5,8 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { GitBranch, Eye } from "lucide-react";
+import { GitBranch } from "lucide-react";
+import { EyeIcon } from "@animateicons/react/lucide";
 import { useCan } from "@/hooks/api/access";
 import {
   useReorgScenarios,
@@ -61,7 +62,7 @@ export function ReorgScenariosTab() {
       cell: (row) => (
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => handleSimulate(row.id)}>
-            <Eye className="h-3.5 w-3.5 mr-1" />
+            <EyeIcon size={14} className="mr-1" />
             Simulate
           </Button>
           {canManage && (

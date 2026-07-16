@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { DollarSign, Layers, Eye } from "lucide-react";
+import { DollarSign, Layers } from "lucide-react";
+import { EyeIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
@@ -145,6 +147,16 @@ function LayersSheet({
   );
 }
 
+function ViewLayersButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={onClick} {...hoverHandlers}>
+      <EyeIcon ref={iconRef} size={14} aria-hidden="true" />
+      Layers
+    </Button>
+  );
+}
+
 function buildValuationColumns(
   onViewLayers: (variantId: number) => void,
 ): DataTableColumn<ValuationRow>[] {
@@ -199,17 +211,7 @@ function buildValuationColumns(
     {
       key: "actions",
       header: "",
-      cell: (row) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-xs gap-1"
-          onClick={() => handleViewLayersFor(row)}
-        >
-          <Eye className="h-3.5 w-3.5" />
-          Layers
-        </Button>
-      ),
+      cell: (row) => <ViewLayersButton onClick={() => handleViewLayersFor(row)} />,
     },
   ];
 }

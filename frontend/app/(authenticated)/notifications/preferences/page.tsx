@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback } from "react";
-import { Bell, Mail, Smartphone, MessageSquare, Slack, Volume2, Moon, BellOff, X } from "lucide-react";
+import { Bell, Mail, Smartphone, MessageSquare, Slack, Volume2, Moon, BellOff } from "lucide-react";
+import { XIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Switch } from "@/components/ui/switch";
@@ -11,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { ErrorState } from "@/components/shared/error-state";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -55,6 +57,22 @@ const DIGEST_OPTIONS: Array<{ value: DigestMode; label: string }> = [
   { value: "daily", label: "Daily digest" },
   { value: "weekly", label: "Weekly digest" },
 ];
+
+function RemoveSuppressionButton({ onClick, isPending }: { onClick: () => void; isPending: boolean }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <LoadingButton
+      variant="ghost"
+      size="sm"
+      className="shrink-0 h-7 px-2 text-muted-foreground hover:text-destructive"
+      onClick={onClick}
+      isPending={isPending}
+      {...hoverHandlers}
+    >
+      <XIcon ref={iconRef} size={14} />
+    </LoadingButton>
+  );
+}
 
 export default function NotificationPreferencesPage() {
   const { data: prefs, isLoading, isError, refetch } = useNotificationPreferences();
@@ -325,15 +343,10 @@ export default function NotificationPreferencesPage() {
                         </div>
                       </div>
                     </div>
-                    <LoadingButton
-                      variant="ghost"
-                      size="sm"
-                      className="shrink-0 h-7 px-2 text-muted-foreground hover:text-destructive"
+                    <RemoveSuppressionButton
                       onClick={() => handleRemoveSuppression(rule.id)}
                       isPending={removeSuppression.isPending && removeSuppression.variables === rule.id}
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </LoadingButton>
+                    />
                   </div>
                 ))}
               </div>

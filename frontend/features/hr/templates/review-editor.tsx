@@ -2,8 +2,10 @@
 
 import { useCallback } from "react";
 import { nanoid } from "nanoid";
-import { PlusCircle, Trash2 } from "lucide-react";
+import { PlusCircle } from "lucide-react";
+import { Trash2Icon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -93,15 +95,15 @@ export function ReviewEditor({ sections, onChange }: ReviewEditorProps) {
               onChange={(e) => handleSectionTitle(section.id, e.target.value)}
               className="flex-1 text-sm font-medium"
             />
-            <Button
+            <AnimatedIconButton
+              icon={Trash2Icon}
+              iconSize={14}
               type="button"
               variant="ghost"
               size="icon"
               className="w-7 text-muted-foreground hover:text-destructive"
               onClick={() => handleRemoveSection(section.id)}
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
+            />
           </div>
           <div className="p-3 space-y-2">
             {section.questions.map((q) => (
@@ -133,15 +135,15 @@ export function ReviewEditor({ sections, onChange }: ReviewEditorProps) {
                   />
                   <span className="text-[10px] text-muted-foreground">Req</span>
                 </div>
-                <Button
+                <AnimatedIconButton
+                  icon={Trash2Icon}
+                  iconSize={14}
                   type="button"
                   variant="ghost"
                   size="icon"
                   className="w-7 text-muted-foreground hover:text-destructive"
                   onClick={() => handleRemoveQuestion(section.id, q.id)}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
+                />
               </div>
             ))}
             <Button

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Sparkles, Loader2, Copy, Check, Mail } from "lucide-react";
+import { Sparkles, Copy, Check, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -182,23 +183,15 @@ export function AIEmailDialog({
             />
           </div>
 
-          <Button
+          <LoadingButton
             onClick={handleGenerate}
-            disabled={generateMutation.isPending}
+            isPending={generateMutation.isPending}
+            loadingText="Generating..."
             className="w-full"
           >
-            {generateMutation.isPending ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>
-                <Sparkles className="h-4 w-4 mr-2" />
-                {email ? "Regenerate" : "Generate Email"}
-              </>
-            )}
-          </Button>
+            <Sparkles className="h-4 w-4 mr-2" />
+            {email ? "Regenerate" : "Generate Email"}
+          </LoadingButton>
 
           {email && (
             <div className="space-y-3 border rounded-lg p-3 bg-muted/30">

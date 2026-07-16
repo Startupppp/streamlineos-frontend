@@ -6,8 +6,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
@@ -514,10 +515,9 @@ export function BonusesTab() {
         </SelectContent>
       </Select>
       {canManage && (
-        <Button size="sm" className="gap-1.5 ml-auto" onClick={handleOpenCreate}>
-          <Plus className="h-3.5 w-3.5" />
+        <AnimatedIconButton icon={PlusIcon} iconClassName="mr-1.5" size="sm" className="ml-auto" onClick={handleOpenCreate}>
           Add Bonus
-        </Button>
+        </AnimatedIconButton>
       )}
     </div>
   );

@@ -125,7 +125,7 @@ export function ActivityCard({ activity, index }: ActivityCardProps) {
                 href={entityPath}
                 className="inline-flex items-center gap-1 text-[10px] text-primary hover:text-primary/80 font-medium transition-colors"
               >
-                {ENTITY_LABELS[activity.entityType]} #{activity.entityId}
+                {ENTITY_LABELS[activity.entityType]}
                 <ExternalLink className="h-2.5 w-2.5" />
               </Link>
             )}

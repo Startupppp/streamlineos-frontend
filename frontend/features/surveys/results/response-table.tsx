@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Download } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { DownloadIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { getApiError } from "@/lib/api-client";
@@ -43,9 +43,9 @@ export function ResponseTable({ surveyId }: { surveyId: number }) {
   return (
     <div className="space-y-3">
       <div className="flex justify-end">
-        <Button variant="outline" size="sm" onClick={handleExport} disabled={exportResponses.isPending}>
-          <Download className="h-3.5 w-3.5" /> Export CSV
-        </Button>
+        <AnimatedIconButton icon={DownloadIcon} iconSize={14} iconClassName="mr-1.5" variant="outline" size="sm" onClick={handleExport} disabled={exportResponses.isPending}>
+          Export CSV
+        </AnimatedIconButton>
       </div>
       <DataTable
         data={responses ?? []}

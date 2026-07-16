@@ -3,7 +3,6 @@
 import { useTransition, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Plus } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";

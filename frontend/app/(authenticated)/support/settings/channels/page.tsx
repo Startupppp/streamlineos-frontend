@@ -49,8 +49,9 @@ import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyInboxIllustration } from "@/components/illustrations";
-import { PlusIcon, MailIcon, MessageCircleIcon, PhoneIcon } from "@animateicons/react/lucide";
-import { Pencil, Trash2 } from "lucide-react";
+import { PlusIcon, MailIcon, MessageCircleIcon, PhoneIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { Pencil } from "lucide-react";
 import {
   useSupportChannels,
   useCreateSupportChannel,
@@ -330,15 +331,14 @@ function ChannelCard({ channel, onToggle, onEdit, onDelete }: ChannelCardProps) 
             <Button variant="ghost" size="icon" className="w-7" onClick={handleEdit} aria-label="Edit channel">
               <Pencil className="h-3.5 w-3.5" />
             </Button>
-            <Button
+            <AnimatedIconButton
               variant="ghost"
               size="icon"
               className="w-7 text-destructive"
               onClick={handleDelete}
               aria-label="Delete channel"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
+              icon={Trash2Icon}
+            />
           </div>
         </div>
       </CardContent>
@@ -408,9 +408,9 @@ export default function SupportChannelsPage() {
       title="Channels"
       subtitle="Configure inbound sources that create support tickets"
       actions={
-        <Button size="sm" onClick={handleOpenCreate}>
-          <PlusIcon className="h-3.5 w-3.5 mr-1" /> New Channel
-        </Button>
+        <AnimatedIconButton size="sm" onClick={handleOpenCreate} icon={PlusIcon} iconClassName="mr-1.5">
+          New Channel
+        </AnimatedIconButton>
       }
     >
       {isLoading ? (

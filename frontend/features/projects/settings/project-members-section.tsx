@@ -37,10 +37,11 @@ import {
   ChevronsUpDown,
   User,
   AlertTriangle,
-  Trash2,
   UserX,
 } from "lucide-react";
-import { useHrEmployees, unwrapEmployees } from "@/hooks/api/hr";
+import { Trash2Icon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { useHrEmployees } from "@/hooks/api/hr";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
@@ -315,14 +316,16 @@ export const DangerZoneSection = memo(function DangerZoneSection({
           Deleting a project is irreversible. It will remove all tickets,
           sprints, and associated data.
         </p>
-        <Button
+        <AnimatedIconButton
           variant="destructive"
           size="sm"
           onClick={onDeleteClick}
+          icon={Trash2Icon}
+          iconSize={14}
+          iconClassName="mr-1.5"
         >
-          <Trash2 className="h-3.5 w-3.5 mr-1.5" />
           Delete Project
-        </Button>
+        </AnimatedIconButton>
         <ConfirmDialog
           open={deleteDialogOpen}
           onOpenChange={onDeleteDialogChange}

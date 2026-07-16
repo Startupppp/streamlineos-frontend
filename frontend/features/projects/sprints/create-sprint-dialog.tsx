@@ -3,9 +3,9 @@
 import { ReactNode, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus } from "lucide-react";
 import { addDays, format } from "date-fns";
-import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { EntityFormSheet } from "@/components/shared";
 import { SprintFormFields } from "./sprint-form-fields";
 import { useCreateSprint } from "@/hooks/api/projects";
@@ -85,10 +85,9 @@ export function CreateSprintDialog({ projectId, trigger }: CreateSprintDialogPro
           {trigger}
         </span>
       ) : (
-        <Button size="sm" onClick={handleOpen}>
-          <Plus className="h-4 w-4 mr-2" />
+        <AnimatedIconButton size="sm" onClick={handleOpen} icon={PlusIcon} iconSize={16} iconClassName="mr-2">
           Create Sprint
-        </Button>
+        </AnimatedIconButton>
       )}
       <EntityFormSheet<CreateSprintInput>
         open={open}

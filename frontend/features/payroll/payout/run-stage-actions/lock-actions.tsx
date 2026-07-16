@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Lock, LockOpen } from "lucide-react";
+import { LockOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LockIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Textarea } from "@/components/ui/textarea";
 import {
   AlertDialog,
@@ -45,9 +47,9 @@ function LockButton({ runId, onChanged }: { runId: number; onChanged?: () => voi
 
   return (
     <>
-      <Button size="sm" className="h-9" onClick={handleOpen}>
-        <Lock className="mr-2 h-4 w-4" /> Lock Payroll
-      </Button>
+      <AnimatedIconButton icon={LockIcon} iconSize={16} iconClassName="mr-1.5" size="sm" className="h-9" onClick={handleOpen}>
+        Lock Payroll
+      </AnimatedIconButton>
       <AlertDialog open={open} onOpenChange={setOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

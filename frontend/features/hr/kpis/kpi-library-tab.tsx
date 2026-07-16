@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { Plus, Trash2 } from "lucide-react";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
@@ -40,6 +42,19 @@ interface KpiFormState {
   unit: string;
   target: string;
   weight: string;
+}
+
+function KpiDeleteButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <button
+      onClick={onClick}
+      className="ml-2 p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+      {...hoverHandlers}
+    >
+      <Trash2Icon ref={iconRef} size={14} />
+    </button>
+  );
 }
 
 export function KpiLibraryTab() {
@@ -155,10 +170,9 @@ export function KpiLibraryTab() {
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetTrigger asChild>
             <motion.div whileTap={{ scale: 0.97 }}>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
+              <AnimatedIconButton icon={PlusIcon} iconSize={16} iconClassName="mr-2">
                 Add KPI
-              </Button>
+              </AnimatedIconButton>
             </motion.div>
           </SheetTrigger>
           <SheetContent className="flex w-[420px] flex-col gap-0 overflow-hidden p-0">
@@ -225,12 +239,7 @@ export function KpiLibraryTab() {
                     <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{kpi.description}</p>
                   )}
                 </div>
-                <button
-                  onClick={() => handleDelete(kpi.id)}
-                  className="ml-2 p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
+                <KpiDeleteButton onClick={() => handleDelete(kpi.id)} />
               </div>
               <div className="flex flex-wrap gap-1.5">
                 <Badge className={`text-xs ${getCategoryColor(kpi.category)}`}>{kpi.category}</Badge>

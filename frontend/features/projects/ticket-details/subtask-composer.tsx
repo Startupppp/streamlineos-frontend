@@ -2,7 +2,6 @@
 
 import { useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Command,
@@ -13,8 +12,10 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Plus, Check, User } from "lucide-react";
+import { Check, User } from "lucide-react";
 import { AlertTriangle, ArrowUp, Minus, ArrowDown } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { useCreateTicket } from "@/hooks/api";
 import { useProjectMembers } from "@/hooks/api/projects/projects";
@@ -253,15 +254,15 @@ export function SubtaskComposer({ ticketId, projectId, projectStatuses }: Subtas
         </PopoverContent>
       </Popover>
 
-      <Button
+      <AnimatedIconButton
         size="sm"
+        icon={PlusIcon}
+        iconSize={12}
         className="h-6 w-6 shrink-0 p-0"
         onClick={handleCreate}
         disabled={!title.trim() || createSubtask.isPending}
         aria-label="Create subtask"
-      >
-        <Plus className="h-3 w-3" />
-      </Button>
+      />
     </div>
   );
 }

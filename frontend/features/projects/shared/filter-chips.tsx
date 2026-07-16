@@ -1,6 +1,7 @@
 "use client";
 
-import { X } from "lucide-react";
+import { XIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Label } from "@/components/ui/label";
 
 export interface FilterChipProps {
@@ -10,6 +11,7 @@ export interface FilterChipProps {
 }
 
 export function FilterChip({ label, color, onRemove }: FilterChipProps) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
     <span className="inline-flex h-5 items-center gap-1 rounded-full border border-border bg-card pl-1.5 pr-1 text-[10px] text-foreground">
       {color && (
@@ -24,8 +26,9 @@ export function FilterChip({ label, color, onRemove }: FilterChipProps) {
         onClick={onRemove}
         className="ml-0.5 rounded-full text-muted-foreground hover:text-foreground transition-colors"
         aria-label={`Remove ${label} filter`}
+        {...hoverHandlers}
       >
-        <X className="h-2.5 w-2.5" />
+        <XIcon ref={iconRef} size={10} />
       </button>
     </span>
   );

@@ -2,7 +2,9 @@
 
 import { memo } from "react";
 import Link from "next/link";
-import { FileText, Download, Eye } from "lucide-react";
+import { FileText } from "lucide-react";
+import { EyeIcon, DownloadIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -63,24 +65,24 @@ function DocumentItem({ doc }: DocumentItemProps) {
         </div>
       </div>
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-        <Button
+        <AnimatedIconButton
+          icon={EyeIcon}
+          iconSize={14}
           variant="ghost"
           size="icon"
           className="w-7"
           onClick={handleViewClick}
           aria-label="View"
-        >
-          <Eye className="h-3.5 w-3.5" />
-        </Button>
-        <Button
+        />
+        <AnimatedIconButton
+          icon={DownloadIcon}
+          iconSize={14}
           variant="ghost"
           size="icon"
           className="w-7"
           onClick={handleDownload}
           aria-label="Download"
-        >
-          <Download className="h-3.5 w-3.5" />
-        </Button>
+        />
       </div>
     </div>
   );
