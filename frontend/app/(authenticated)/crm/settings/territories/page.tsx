@@ -130,6 +130,15 @@ function PreviewPanel() {
   );
 }
 
+function DeleteTerritoryButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button variant="ghost" size="icon" className="w-7 text-destructive" onClick={onClick} {...hoverHandlers}>
+      <TrashIcon ref={iconRef} size={14} />
+    </Button>
+  );
+}
+
 function buildColumns(
   onEdit: (t: Territory) => void,
   onToggle: (id: number, isActive: boolean) => void,

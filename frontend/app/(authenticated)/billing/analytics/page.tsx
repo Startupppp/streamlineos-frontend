@@ -38,10 +38,6 @@ type Period = "3m" | "6m" | "12m";
 const TAB_IDS = ["executive", "finance", "growth", "sales"] as const;
 type TabId = (typeof TAB_IDS)[number];
 
-function fmt(paise: number) {
-  return `₹${(paise / 100).toLocaleString("en-IN")}`;
-}
-
 function isTabId(value: string): value is TabId {
   return (TAB_IDS as readonly string[]).includes(value);
 }

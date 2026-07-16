@@ -148,9 +148,7 @@ export const ActionNodeCard = memo(function ActionNodeCard({ node, actions, drag
                 </SelectContent>
               </Select>
             </div>
-            <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive shrink-0" onClick={handleRemove}>
-              <X className="h-3 w-3" />
-            </Button>
+            <AnimatedIconButton icon={XIcon} iconSize={12} variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive shrink-0" onClick={handleRemove} />
           </div>
           {schemaKeys.length > 0 && (
             <div className="grid grid-cols-2 gap-2 pl-7">

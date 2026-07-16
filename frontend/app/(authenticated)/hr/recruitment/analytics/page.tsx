@@ -1,18 +1,6 @@
 "use client";
 
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
-} from "recharts";
+import dynamic from "next/dynamic";
 import {
   Briefcase,
   Users,
@@ -22,9 +10,7 @@ import {
   Percent,
 } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import {
   StatCard,
   StatCardGrid,
@@ -34,6 +20,20 @@ import {
   useRecruitmentStats,
   useRecruitmentAnalytics,
 } from "@/hooks/api/hr/recruitment";
+
+const RecruitmentAnalyticsCharts = dynamic(
+  () => import("@/features/hr/recruitment/components/recruitment-analytics-charts").then((m) => ({ default: m.RecruitmentAnalyticsCharts })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Skeleton className="h-[268px] rounded-xl" />
+        <Skeleton className="h-[268px] rounded-xl" />
+        <Skeleton className="lg:col-span-2 h-[248px] rounded-xl" />
+      </div>
+    ),
+  },
+);
 
 const FUNNEL_STAGES = [
   "NEW",

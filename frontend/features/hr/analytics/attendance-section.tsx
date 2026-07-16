@@ -3,26 +3,20 @@
 import { useHrAttendanceAnalytics } from "@/hooks/api/hr/analytics";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Clock, Building2, CalendarCheck } from "lucide-react";
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-} from "recharts";
+import dynamic from "next/dynamic";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   AnalyticsChartCard,
   AnalyticsSectionHeader,
-  CHART_SEMANTIC,
   EmptyChart,
   SectionSkeleton,
   SimpleBar,
-  chartAxisTick,
-  chartGridProps,
-  chartTooltipStyle,
 } from "./shared";
+
+const AttendanceTrendChart = dynamic(
+  () => import("./attendance-trend-chart").then((m) => ({ default: m.AttendanceTrendChart })),
+  { ssr: false, loading: () => <Skeleton className="h-[200px] w-full" /> },
+);
 
 interface AttendanceSectionProps {
   year: number;

@@ -23,9 +23,7 @@ export function KeyResultRow({ keyResult, onCheckIn }: KeyResultRowProps) {
   return (
     <div className={cn(PM_PANEL, "space-y-2 p-3")}>
       <div className="flex min-w-0 items-start justify-between gap-2">
-        <p className={cn(TEXT_ONE_LINE, "text-sm font-medium")} title={keyResult.title}>
-          {keyResult.title}
-        </p>
+        <TruncatedText text={keyResult.title} className="text-sm font-medium" />
         <Button size="sm" variant="outline" className="h-7 shrink-0" onClick={handleCheckIn}>
           Check in
         </Button>

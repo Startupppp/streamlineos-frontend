@@ -132,14 +132,14 @@ function HolidayItem({
           <Button variant="ghost" size="icon" className="w-7" onClick={handleEditClick}>
             <Pencil className="h-3.5 w-3.5" />
           </Button>
-          <Button
+          <AnimatedIconButton
+            icon={TrashIcon}
             variant="ghost"
             size="icon"
             className="w-7 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
+            iconSize={14}
             onClick={handleDeleteClick}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
+          />
         </div>
       )}
     </motion.div>

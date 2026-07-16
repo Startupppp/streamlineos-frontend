@@ -209,10 +209,9 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
               </div>
             </div>
             <div className="flex gap-2 pt-2">
-              <Button type="submit" disabled={isPending} size="sm" className="gap-1.5">
-                {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                {isPending ? "Saving…" : "Save changes"}
-              </Button>
+              <LoadingButton type="submit" isPending={isPending} size="sm" className="gap-1.5" loadingText="Saving…">
+                Save changes
+              </LoadingButton>
               <Button type="button" variant="ghost" size="sm" onClick={handleCancel} disabled={isPending}>
                 Cancel
               </Button>

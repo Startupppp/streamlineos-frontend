@@ -22,7 +22,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { useCourses, useMyEnrollments } from "@/hooks/api/hr/courses";
 import { useTrainingPrograms } from "@/hooks/api/hr/training";
 

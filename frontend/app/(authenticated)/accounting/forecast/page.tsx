@@ -363,46 +363,7 @@ export default function ForecastPage() {
                 </Card>
               </div>
 
-              <Card className="bg-card border border-border rounded-xl shadow-sm">
-                <CardHeader className="pb-2 pt-4 px-4">
-                  <CardTitle className="text-sm font-semibold">
-                    Closing Cash Position
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="px-2 pb-4">
-                  <ResponsiveContainer width="100%" height={260}>
-                    <AreaChart data={forecastData}>
-                      <defs>
-                        <linearGradient id="cashGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.18} />
-                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="weekStart" tick={AXIS_TICK} />
-                      <YAxis tick={AXIS_TICK} width={70} />
-                      <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
-                      <ReferenceLine y={0} stroke="#ef4444" strokeDasharray="4 4" />
-                      {warningWeeks.map((w) => (
-                        <ReferenceLine
-                          key={w.rawWeekStart}
-                          x={w.weekStart}
-                          stroke="#f59e0b"
-                          strokeDasharray="3 3"
-                        />
-                      ))}
-                      <Area
-                        type="monotone"
-                        dataKey="closingCash"
-                        name="Closing Cash"
-                        stroke="#3b82f6"
-                        strokeWidth={2}
-                        fill="url(#cashGradient)"
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
+              <ForecastAreaChart forecastData={forecastData} warningWeeks={warningWeeks} />
 
               <DataTable
                 className="flex-1 min-h-0"
