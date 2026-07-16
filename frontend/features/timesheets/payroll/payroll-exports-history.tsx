@@ -181,15 +181,15 @@ function DownloadButton({
   );
 
   return (
-    <Button
+    <AnimatedIconButton
+      icon={DownloadIcon}
+      iconSize={14}
       variant="ghost"
       size="icon"
       className="h-7 w-7"
       onClick={handleClick}
       disabled={loading}
       aria-label="Download export"
-    >
-      <Download className="h-3.5 w-3.5" />
-    </Button>
+    />
   );
 }

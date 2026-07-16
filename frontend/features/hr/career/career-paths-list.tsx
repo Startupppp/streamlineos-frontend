@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { ChevronDownIcon, ChevronUpIcon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";

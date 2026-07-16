@@ -14,6 +14,8 @@ import { Badge } from "@/components/ui/badge";
 import { Inbox } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { Trash2Icon } from "@animateicons/react/lucide";
 import {
   useHelpdeskTickets,
   useHelpdeskRoutingRules,

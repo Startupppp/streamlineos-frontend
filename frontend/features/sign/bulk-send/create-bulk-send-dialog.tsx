@@ -3,8 +3,9 @@
 import { useRef, useState } from "react";
 import Papa from "papaparse";
 import { toast } from "sonner";
-import { UploadCloud } from "lucide-react";
+import { CloudUploadIcon } from "@animateicons/react/lucide";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";

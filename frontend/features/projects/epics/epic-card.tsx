@@ -193,8 +193,9 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
                 size="icon"
                 className="mt-0.5 h-5 w-5 shrink-0"
                 aria-label={isExpanded ? "Collapse epic" : "Expand epic"}
+                {...expandHoverHandlers}
               >
-                {isExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                {isExpanded ? <ChevronDownIcon ref={expandIconRef} size={14} /> : <ChevronRightIcon ref={expandIconRef} size={14} />}
               </Button>
               <div className="min-w-0 space-y-0.5">
                 <CardTitle className="flex min-w-0 items-center gap-1.5 text-[13px] font-semibold">
@@ -326,8 +327,8 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
                   className="min-w-0 flex-1 border-border/70 bg-background/60 text-xs backdrop-blur-sm"
                   onKeyDown={handleTitleKeyDown}
                 />
-                <Button size="sm" className="px-2.5 text-xs" onClick={handleAddStory} disabled={!newStoryTitle.trim()}>
-                  <Plus className="mr-1 h-3.5 w-3.5" />
+                <Button size="sm" className="px-2.5 text-xs" onClick={handleAddStory} disabled={!newStoryTitle.trim()} {...addHoverHandlers}>
+                  <PlusIcon ref={addIconRef} size={14} className="mr-1" />
                   Add
                 </Button>
                 {unlinkedStories.length > 0 ? (

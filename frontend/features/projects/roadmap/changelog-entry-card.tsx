@@ -3,8 +3,10 @@
 import { memo } from "react";
 import { format } from "date-fns";
 import { motion, useReducedMotion } from "framer-motion";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil } from "lucide-react";
+import { Trash2Icon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
 import type { ChangelogEntry } from "@/types/projects";
 import { cn } from "@/lib/utils";

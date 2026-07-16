@@ -97,10 +97,9 @@ export function BulkSendList() {
             </p>
           </div>
           {hasPublished && (
-            <Button onClick={() => setCreateOpen(true)}>
-              <Plus className="size-4" />
+            <AnimatedIconButton icon={PlusIcon} iconClassName="mr-1.5" onClick={() => setCreateOpen(true)}>
               New bulk send
-            </Button>
+            </AnimatedIconButton>
           )}
         </div>
       ) : (

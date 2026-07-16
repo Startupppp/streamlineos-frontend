@@ -142,15 +142,16 @@ export default function SessionsPage() {
       headerClassName: "w-16",
       cell: (s) =>
         s.isCurrent ? null : (
-          <Button
+          <AnimatedIconButton
+            icon={Trash2Icon}
+            iconSize={16}
             variant="ghost"
             size="sm"
             onClick={makeRevokeHandler(s)}
             disabled={revokeOne.isPending}
             title="Revoke session"
-          >
-            <Trash2 className="h-4 w-4 text-destructive" />
-          </Button>
+            className="text-destructive hover:text-destructive"
+          />
         ),
     },
   ];

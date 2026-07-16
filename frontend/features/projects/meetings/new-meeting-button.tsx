@@ -1,7 +1,7 @@
 "use client";
 
-import { FileText, Zap, ChevronDown } from "lucide-react";
-import { PlusIcon } from "@animateicons/react/lucide";
+import { FileText, Zap } from "lucide-react";
+import { PlusIcon, ChevronDownIcon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,

@@ -159,7 +159,7 @@ export function WebhookUpsertSheet({ open, onOpenChange, subscription }: Props) 
                 onClick={handleCopySecret}
                 className="shrink-0"
               >
-                <Copy className="h-4 w-4" />
+                <CopyIcon size={16} />
               </Button>
             </div>
             <Button onClick={() => onOpenChange(false)} className="mt-auto">

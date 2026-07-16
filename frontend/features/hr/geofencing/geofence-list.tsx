@@ -76,15 +76,15 @@ export function GeofenceList({ canManage, onEdit }: Props) {
                 >
                   <Edit2 className="h-3.5 w-3.5" />
                 </Button>
-                <Button
+                <AnimatedIconButton
+                  icon={Trash2Icon}
+                  iconSize={14}
                   variant="ghost"
                   size="icon"
                   className="w-7 text-destructive hover:text-destructive"
                   onClick={() => handleDelete(fence.id)}
                   disabled={deleteFence.isPending}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
+                />
               </div>
             )}
           </div>

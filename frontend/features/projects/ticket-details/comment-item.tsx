@@ -15,7 +15,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Send, Loader2, Link, Pencil, Trash2, X, CirclePlus } from "lucide-react";
+import { Loader2, Pencil } from "lucide-react";
+import { SendIcon, LinkIcon, Trash2Icon, XIcon, CirclePlusIcon } from "@animateicons/react/lucide";
 import { resolveImageUrl } from "@/lib/utils";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -235,7 +236,7 @@ function CommentItemComponent({
                 className="px-2 text-xs"
                 disabled={isSavingEdit}
               >
-                <X className="h-3 w-3 mr-1" />
+                <XIcon size={12} className="mr-1" />
                 Cancel
               </Button>
               <Button
@@ -247,7 +248,7 @@ function CommentItemComponent({
                 {isSavingEdit ? (
                   <Loader2 className="h-3 w-3 mr-1 animate-spin" />
                 ) : (
-                  <Send className="h-3 w-3 mr-1" />
+                  <SendIcon size={12} className="mr-1" />
                 )}
                 Save
               </Button>

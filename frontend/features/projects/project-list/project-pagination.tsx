@@ -40,16 +40,16 @@ export function ProjectPagination({ page, totalPages, onPageChange }: ProjectPag
       aria-label="Projects pagination"
       className={cn(PM_PANEL, "flex shrink-0 items-center justify-center gap-0.5 px-2 py-1.5")}
     >
-      <Button
+      <AnimatedIconButton
         variant="ghost"
         size="icon"
         className="w-7"
         disabled={page <= 1}
         onClick={() => onPageChange(page - 1)}
         aria-label="Previous page"
-      >
-        <ChevronLeft className="h-3.5 w-3.5" />
-      </Button>
+        icon={ChevronLeftIcon}
+        iconSize={14}
+      />
 
       {pages.map((p, i) =>
         p === "ellipsis" ? (
@@ -74,16 +74,16 @@ export function ProjectPagination({ page, totalPages, onPageChange }: ProjectPag
         ),
       )}
 
-      <Button
+      <AnimatedIconButton
         variant="ghost"
         size="icon"
         className="w-7"
         disabled={page >= totalPages}
         onClick={() => onPageChange(page + 1)}
         aria-label="Next page"
-      >
-        <ChevronRight className="h-3.5 w-3.5" />
-      </Button>
+        icon={ChevronRightIcon}
+        iconSize={14}
+      />
     </nav>
   );
 }

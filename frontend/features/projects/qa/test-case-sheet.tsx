@@ -306,15 +306,15 @@ export function TestCaseSheet({
                     className="text-[10px]"
                     placeholder="Expected result"
                   />
-                  <Button
+                  <AnimatedIconButton
                     type="button"
                     variant="ghost"
                     size="icon"
                     className="w-7 text-muted-foreground hover:text-destructive"
                     onClick={() => remove(idx)}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
+                    icon={Trash2Icon}
+                    iconSize={12}
+                  />
                 </div>
               ))}
             </div>

@@ -9,7 +9,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Trash2, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { Trash2Icon } from "@animateicons/react/lucide";
 import { PriorityBadge } from "../shared/priority-badge";
 import { StatusBadge } from "../shared/status-badge";
 

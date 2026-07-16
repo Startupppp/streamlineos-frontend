@@ -4,23 +4,21 @@ import { useState, useCallback, useTransition } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
+import { Pin, PinOff, Users, Lock } from "lucide-react";
 import {
-  Bookmark,
-  BookmarkCheck,
-  ChevronDown,
-  Pin,
-  PinOff,
-  Trash2,
-  Users,
-  Lock,
-} from "lucide-react";
+  BookmarkIcon,
+  BookmarkCheckIcon,
+  ChevronDownIcon,
+  Trash2Icon,
+} from "@animateicons/react/lucide";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import {
   SaveViewDialog,
   type SaveViewMeta,
@@ -107,6 +105,8 @@ function ViewRow({
   onTogglePin,
   onDelete,
 }: ViewRowProps) {
+  const { iconRef: deleteIconRef, hoverHandlers: deleteHoverHandlers } =
+    useAnimatedIcon();
   const isOwner =
     !view.createdBy || !currentUserId || view.createdBy === currentUserId;
   const isShared = view.visibility === "shared";
@@ -171,8 +171,9 @@ function ViewRow({
             onClick={handleDelete}
             title="Delete view"
             className="shrink-0 rounded p-0.5 text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-destructive transition-opacity"
+            {...deleteHoverHandlers}
           >
-            <Trash2 className="h-3 w-3" />
+            <Trash2Icon ref={deleteIconRef} size={12} />
           </button>
         </>
       )}
@@ -198,6 +199,9 @@ export function AllWorkViewsMenu({
   const [open, setOpen] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
   const [saveName, setSaveName] = useState("");
+
+  const { iconRef: saveInlineIconRef, hoverHandlers: saveInlineHoverHandlers } =
+    useAnimatedIcon();
 
   const { data: views, isLoading, isError } = useWorkspaceViews();
   const createView = useCreateWorkspaceView();
@@ -283,14 +287,15 @@ export function AllWorkViewsMenu({
       <div className="flex items-center gap-1">
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
-            <Button
+            <AnimatedIconButton
               variant="outline"
               className="shrink-0 gap-1 px-2.5 text-xs font-normal"
+              icon={BookmarkCheckIcon}
+              iconSize={14}
             >
-              <BookmarkCheck className="h-3.5 w-3.5 shrink-0" />
               <span>Views</span>
               <ChevronDown className="h-3 w-3 shrink-0 text-muted-foreground" />
-            </Button>
+            </AnimatedIconButton>
           </PopoverTrigger>
           <PopoverContent align="start" className="w-72 p-1">
             {isLoading && (
@@ -333,8 +338,13 @@ export function AllWorkViewsMenu({
                   type="button"
                   onClick={handleOpenSave}
                   className="mt-1 flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+                  {...saveInlineHoverHandlers}
                 >
-                  <Bookmark className="h-3.5 w-3.5 shrink-0" />
+                  <BookmarkIcon
+                    ref={saveInlineIconRef}
+                    size={14}
+                    className="shrink-0"
+                  />
                   Save current view...
                 </button>
               </>
@@ -343,7 +353,7 @@ export function AllWorkViewsMenu({
         </Popover>
 
         {hasActiveFilters && (
-          <Button
+          <AnimatedIconButton
             type="button"
             variant="outline"
             size="icon"
@@ -351,9 +361,9 @@ export function AllWorkViewsMenu({
             title="Save current filters as a view"
             aria-label="Save current filters as a view"
             className="shrink-0"
-          >
-            <Bookmark className="h-3.5 w-3.5" />
-          </Button>
+            icon={BookmarkIcon}
+            iconSize={14}
+          />
         )}
       </div>
 

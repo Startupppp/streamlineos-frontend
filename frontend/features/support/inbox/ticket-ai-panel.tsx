@@ -5,8 +5,6 @@ import {
   Sparkles,
   ChevronDown,
   RefreshCw,
-  ThumbsUp,
-  ThumbsDown,
   AlertTriangle,
   Reply,
   Wand2,
@@ -15,6 +13,8 @@ import {
   GitBranch,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { ThumbsUpIcon, ThumbsDownIcon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";

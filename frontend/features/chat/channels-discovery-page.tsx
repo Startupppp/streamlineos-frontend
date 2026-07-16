@@ -2,7 +2,12 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  PlusIcon,
+} from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { SearchInput } from "@/components/ui/search-input";
@@ -101,10 +106,16 @@ export function ChannelsDiscoveryPage() {
               private channels live under Discuss.
             </p>
           </div>
-          <Button size="sm" className="gap-1.5 shrink-0" onClick={handleOpenCreate}>
-            <Plus className="h-3.5 w-3.5" />
+          <AnimatedIconButton
+            icon={PlusIcon}
+            iconSize={14}
+            iconClassName="mr-0"
+            size="sm"
+            className="gap-1.5 shrink-0"
+            onClick={handleOpenCreate}
+          >
             Create Channel
-          </Button>
+          </AnimatedIconButton>
         </div>
         <div className="min-w-0 mt-3 max-w-sm bg-muted/30 border-border/30">
           <SearchInput placeholder="Search channels..." value={search} onValueChange={handleSearchChange} />

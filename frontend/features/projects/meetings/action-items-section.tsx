@@ -181,9 +181,17 @@ export function ActionItemsSection({
           ) : null}
         </h3>
         {canManage ? (
-          <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={handleOpenCreate}>
-            <Plus className="h-3.5 w-3.5" /> Add
-          </Button>
+          <AnimatedIconButton
+            icon={PlusIcon}
+            iconSize={14}
+            iconClassName="mr-1"
+            size="sm"
+            variant="outline"
+            className="gap-1.5 text-xs"
+            onClick={handleOpenCreate}
+          >
+            Add
+          </AnimatedIconButton>
         ) : null}
       </div>
 

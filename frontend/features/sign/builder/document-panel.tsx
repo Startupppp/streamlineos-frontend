@@ -84,10 +84,16 @@ export function DocumentPanel({ envelopeId, documents, editable }: DocumentPanel
       {editable && (
         <>
           <input ref={fileInputRef} type="file" accept="application/pdf" className="hidden" onChange={handleFileChange} />
-          <Button variant="outline" size="sm" className="w-full" disabled={upload.isPending} onClick={() => fileInputRef.current?.click()}>
-            {upload.isPending ? <Loader2 className="size-4 animate-spin" /> : <UploadCloud className="size-4" />}
-            Upload PDF
-          </Button>
+          {upload.isPending ? (
+            <Button variant="outline" size="sm" className="w-full" disabled>
+              <Loader2 className="size-4 animate-spin" />
+              Upload PDF
+            </Button>
+          ) : (
+            <AnimatedIconButton variant="outline" size="sm" icon={CloudUploadIcon} iconClassName="mr-1.5" className="w-full" onClick={() => fileInputRef.current?.click()}>
+              Upload PDF
+            </AnimatedIconButton>
+          )}
         </>
       )}
     </div>

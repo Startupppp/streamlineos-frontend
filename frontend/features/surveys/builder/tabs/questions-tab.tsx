@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -171,9 +171,9 @@ export function QuestionsTab({ survey }: { survey: SurveyForm }) {
         ))
       )}
       {sections.length > 0 && (
-        <Button variant="outline" size="sm" onClick={handleAddSection}>
-          <Plus className="h-3.5 w-3.5" /> Add section
-        </Button>
+        <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1.5" variant="outline" size="sm" onClick={handleAddSection}>
+          Add section
+        </AnimatedIconButton>
       )}
       <QuestionEditorSheet
         surveyId={surveyId}

@@ -2,11 +2,12 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { format, startOfWeek, endOfWeek, addWeeks } from "date-fns";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { ChevronLeftIcon, ChevronRightIcon } from "@animateicons/react/lucide";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,

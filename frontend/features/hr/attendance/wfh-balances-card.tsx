@@ -8,6 +8,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useHrWfhRequests, useLeavePolicy } from "@/hooks/api/hr";
 import { RequestWfhDialog } from "@/components/hr/request-wfh-dialog";
 import { Home } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { HouseIcon } from "@animateicons/react/lucide";
 
 export const WfhBalancesCard = memo(function WfhBalancesCard() {
   const { data: requests, isLoading } = useHrWfhRequests();
@@ -109,13 +111,15 @@ export const WfhBalancesCard = memo(function WfhBalancesCard() {
 
         <RequestWfhDialog
           trigger={
-            <Button
+            <AnimatedIconButton
               className="w-full gap-1.5 h-9 duration-200"
               variant="outline"
+              icon={HouseIcon}
+              iconSize={16}
+              iconClassName="mr-1.5"
             >
-              <Home className="h-4 w-4" />
               Apply for WFH
-            </Button>
+            </AnimatedIconButton>
           }
         />
       </CardContent>
