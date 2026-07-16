@@ -42,7 +42,7 @@ export function useChatChannels(enabled = true) {
   return useQuery({
     queryKey: queryKeys.chat.myChannels(),
     queryFn: () => apiClient.get<Channel[]>("/chat/channels"),
-    staleTime: 2 * 60_000,
+    staleTime: 300_000,
     refetchOnWindowFocus: true,
     enabled,
   });
@@ -109,7 +109,7 @@ export function useChatUnreadTotal(enabled = true) {
   return useQuery({
     queryKey: queryKeys.chat.unreadTotal(),
     queryFn: () => apiClient.get<{ total: number }>("/chat/unread"),
-    staleTime: 2 * 60_000,
+    staleTime: 300_000,
     refetchOnWindowFocus: true,
     enabled: !!orgId && enabled,
   });

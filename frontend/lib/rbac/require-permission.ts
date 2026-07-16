@@ -3,7 +3,7 @@ import "server-only";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import type { Session } from "next-auth";
-import { auth } from "@/lib/auth";
+import { getServerAuth } from "@/lib/get-server-auth";
 import { getSessionAbility } from "@/lib/abilities-server";
 import type { AppAbility } from "@/lib/abilities";
 import type { PermissionKey } from "@/lib/rbac/permissions";
@@ -41,7 +41,7 @@ async function getCurrentPath(): Promise<string | null> {
 }
 
 export async function requireSession(): Promise<Session> {
-  const session = (await auth()) as Session | null;
+  const session = (await getServerAuth()) as Session | null;
   if (!session?.user) redirect("/signin");
   return session;
 }
@@ -50,7 +50,7 @@ export async function requirePermission(
   permission: PermissionKey | PermissionKey[],
   options: { redirectTo?: string } = {},
 ): Promise<RequirePermissionResult> {
-  const session = (await auth()) as Session | null;
+  const session = (await getServerAuth()) as Session | null;
   if (!session?.user) {
     if (options.redirectTo) redirect(options.redirectTo);
     redirect("/signin");

@@ -30,6 +30,7 @@ import { TicketDetailSheet } from "./ticket-detail-sheet";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const STATUS_COLORS: Record<TicketStatus, string> = {
   TODO: "bg-muted text-muted-foreground dark:bg-slate-800/40 dark:text-slate-400",
@@ -199,7 +200,7 @@ function AdminTicketRow({ ticket, onClick }: { ticket: HelpdeskTicket; onClick: 
             <Badge variant="secondary" className="text-[10px] h-4 px-1">Confidential</Badge>
           )}
         </div>
-        <p className="text-sm font-medium text-foreground truncate">{ticket.title}</p>
+        <TruncatedText text={ticket.title} className="text-sm font-medium text-foreground" />
         <p className="text-[11px] text-muted-foreground mt-0.5">
           {ticket.authorName ?? "Employee"} · {format(new Date(ticket.createdAt), "MMM d, yyyy")}
           <span className={cn("ml-2 font-medium", PRIORITY_COLORS[ticket.priority])}>{ticket.priority}</span>

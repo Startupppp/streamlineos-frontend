@@ -31,7 +31,8 @@ import {
   PM_FILL_PANEL,
   PM_TOOLBAR,
 } from "@/features/projects/shared/pm-chrome";
-import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TABLE_TITLE_CELL } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -142,12 +143,7 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
       header: "Title",
       className: TABLE_TITLE_CELL,
       cell: (row) => (
-        <span
-          className={cn("text-[11px] font-medium", TEXT_ONE_LINE)}
-          title={row.title}
-        >
-          {row.title}
-        </span>
+        <TruncatedText text={row.title} className="text-[11px] font-medium" />
       ),
     },
     {

@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { type Task, type TaskEntityType } from "@/hooks/api/tasks";
 import { TaskTypeIcon } from "./task-type-icon";
@@ -110,14 +111,10 @@ export function TaskRow({
       />
 
       <div className="flex-1 min-w-0">
-        <p
-          className={cn(
-            "text-sm truncate",
-            isCompleted && "line-through text-muted-foreground",
-          )}
-        >
-          {task.title}
-        </p>
+        <TruncatedText
+          text={task.title}
+          className={cn("text-sm", isCompleted && "line-through text-muted-foreground")}
+        />
         {task.entityType && task.entityId != null && (
           <Link
             href={`${ENTITY_PATHS[task.entityType]}/${task.entityId}`}

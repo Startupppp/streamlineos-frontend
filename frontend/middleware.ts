@@ -206,9 +206,6 @@ function canAccessRoute(
 
 export default async function middleware(req: NextRequest) {
   const { pathname, searchParams } = req.nextUrl;
-  const nonceBytes = new Uint8Array(16);
-  crypto.getRandomValues(nonceBytes);
-  const nonce = btoa(String.fromCharCode(...nonceBytes));
 
   if (
     process.env.NODE_ENV === "production" &&
@@ -223,6 +220,10 @@ export default async function middleware(req: NextRequest) {
   if (pathname.startsWith("/api/")) {
     return NextResponse.next();
   }
+
+  const nonceBytes = new Uint8Array(16);
+  crypto.getRandomValues(nonceBytes);
+  const nonce = btoa(String.fromCharCode(...nonceBytes));
 
   const token = await getToken({
     req,

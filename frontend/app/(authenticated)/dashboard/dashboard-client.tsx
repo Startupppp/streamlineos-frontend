@@ -149,13 +149,8 @@ export function DashboardClient() {
   const { data: todayActivities } = useTodayActivities();
 
   const prevUnreadRef = useRef<number | null>(null);
-  const { data: unreadData } = useUnreadNotificationCount({
-    refetchInterval: 15000,
-  });
-  const { data: latestNotifications } = useNotifications(
-    { limit: 5 },
-    { refetchInterval: 15000 },
-  );
+  const { data: unreadData } = useUnreadNotificationCount();
+  const { data: latestNotifications } = useNotifications({ limit: 5 });
 
   useEffect(() => {
     if (unreadData === undefined) return;

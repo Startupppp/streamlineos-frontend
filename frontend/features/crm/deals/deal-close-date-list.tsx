@@ -4,6 +4,7 @@ import { useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { formatINRCompact } from "@/lib/format-utils";
 import type { Deal, DealStage } from "@/types/crm";
 
@@ -74,7 +75,7 @@ function DealRow({ deal, delay, onNavigate, shouldReduceMotion }: DealRowProps) 
       className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-muted/30 border border-transparent hover:border-border transition-all duration-150 text-left"
     >
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium truncate">{deal.name}</p>
+        <TruncatedText text={deal.name} className="text-sm font-medium" />
         <div className="flex items-center gap-1.5 mt-0.5">
           <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${STAGE_DOT[deal.stage] ?? "bg-muted-foreground"}`} />
           <span className="text-[11px] text-muted-foreground">

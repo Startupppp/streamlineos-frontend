@@ -97,11 +97,12 @@ export function ContactTableView({
     {
       key: "company",
       header: "Company",
-      cell: (c) => (
-        {c.company
-          ? <TruncatedText text={c.company} className="text-muted-foreground max-w-[100px] block" />
-          : <span className="text-muted-foreground">—</span>}
-      ),
+      cell: (c) =>
+        c.company ? (
+          <TruncatedText text={c.company} className="text-muted-foreground max-w-[100px] block" />
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        ),
     },
     {
       key: "source",

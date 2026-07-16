@@ -48,6 +48,7 @@ import {
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { EmptyGoalsIllustration } from "@/components/illustrations";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -375,9 +376,10 @@ export function GoalsTab() {
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
-                  <p className="text-sm font-semibold text-foreground leading-tight">
-                    {goal.title}
-                  </p>
+                  <TruncatedText
+                    text={goal.title}
+                    className="text-sm font-semibold text-foreground leading-tight"
+                  />
                   {goal.endDate && (
                     <div className="flex items-center gap-1.5">
                       <div className="h-5 w-5 rounded-md bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center shrink-0">

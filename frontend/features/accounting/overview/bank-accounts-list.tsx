@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Landmark } from "lucide-react";
 import { Money } from "@/features/accounting/shared";
 import type { BankAccountSummary } from "@/hooks/api/accounting/overview";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface BankAccountsListProps {
   accounts: BankAccountSummary[];
@@ -30,7 +31,7 @@ export function BankAccountsList({ accounts }: BankAccountsListProps) {
             <div className="w-7 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
               <Landmark className="h-3.5 w-3.5 text-primary" />
             </div>
-            <span className="text-sm text-foreground truncate">{acct.name}</span>
+            <TruncatedText text={acct.name} className="text-sm text-foreground" />
           </div>
           <Money value={Number(acct.balance)} compact className="text-sm font-medium" />
         </div>

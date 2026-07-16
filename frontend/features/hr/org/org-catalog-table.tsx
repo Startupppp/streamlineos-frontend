@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import type { OrgCatalogInput } from "@/types/hr/core";
 import type { UseMutationResult } from "@tanstack/react-query";
 
@@ -255,7 +256,7 @@ export function OrgCatalogTable<T extends CatalogItem>({
                   className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/40 transition-colors"
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{item.name}</p>
+                    <TruncatedText text={item.name} className="text-sm font-medium" />
                     {item.code && (
                       <p className="text-[11px] text-muted-foreground font-mono">
                         {item.code}

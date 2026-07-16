@@ -7,6 +7,7 @@ import { FinanceStatusBadge, Money } from "@/features/accounting/shared";
 import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
 import type { FinReceiptInboxItem } from "@/types/accounting/expenses";
 import { ReceiptEditSheet } from "./receipt-edit-sheet";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 function formatDate(value: string): string {
   const d = new Date(value);
@@ -31,7 +32,7 @@ export function ReceiptCard({ item }: ReceiptCardProps) {
     <div className="rounded-lg border border-border bg-card px-4 py-3 flex flex-col gap-2">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-sm font-medium truncate">{item.merchant ?? item.category}</p>
+          <TruncatedText text={item.merchant ?? item.category} className="text-sm font-medium" />
           <p className="text-xs text-muted-foreground">
             {getUserDisplayName(item.user)} · {formatDate(item.expenseDate)}
           </p>

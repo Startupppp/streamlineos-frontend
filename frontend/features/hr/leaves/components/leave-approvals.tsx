@@ -22,6 +22,7 @@ import { staggerContainer, fadeIn } from "@/lib/motion-variants";
 
 import type { LeaveRequest, WfhRequest } from "./leaves-shared";
 import { WfhRequestItem, priorityConfig } from "./leaves-shared";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 function LeaveStatusBadge({ status }: { status: string }) {
   const config: Record<string, { label: string; className: string; icon: React.ComponentType<{ className?: string }> }> = {
@@ -112,7 +113,7 @@ function LeaveApprovalItem({
               {format(new Date(req.startDate), "MMM dd")} – {format(new Date(req.endDate), "MMM dd, yyyy")}
             </p>
             {req.reason && (
-              <p className="text-xs text-muted-foreground mt-0.5 truncate">{req.reason}</p>
+              <TruncatedText text={req.reason} className="text-xs text-muted-foreground mt-0.5" />
             )}
             {!isPending && req.approver?.name && (
               <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">

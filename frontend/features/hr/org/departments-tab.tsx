@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface Props {
   canManage: boolean;
@@ -120,9 +121,7 @@ export function DepartmentsTab({ canManage }: Props) {
                   <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                     <Building2 className="h-3.5 w-3.5 text-primary" />
                   </div>
-                  <p className="text-sm font-medium flex-1 truncate">
-                    {dept.name}
-                  </p>
+                  <TruncatedText text={dept.name} className="text-sm font-medium flex-1" />
                 </div>
               ))}
             </div>

@@ -35,6 +35,7 @@ import {
 } from "@/features/inventory/lib";
 import type { StockReservationStatus } from "@/types/inventory";
 import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 type ReservationItem = {
@@ -119,9 +120,7 @@ export function ReservationsPanel() {
       header: "Product / Variant",
       cell: (row) => (
         <>
-          <div className="font-medium truncate max-w-[140px]">
-            {row.productVariant?.name ?? "—"}
-          </div>
+          <TruncatedText text={row.productVariant?.name ?? "—"} className="font-medium" />
           <div className="font-mono text-muted-foreground">{row.productVariant?.sku ?? "—"}</div>
         </>
       ),

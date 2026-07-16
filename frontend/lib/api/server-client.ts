@@ -1,7 +1,7 @@
 import "server-only";
 import axios, { isAxiosError, type AxiosRequestConfig } from "axios";
 import { SignJWT } from "jose";
-import { auth } from "@/lib/auth";
+import { getServerAuth } from "@/lib/get-server-auth";
 import { ApiError } from "@/lib/api-client";
 
 const BACKEND = process.env.NEXT_PUBLIC_API_URL;
@@ -91,7 +91,7 @@ function normalizeRequestError(error: unknown): never {
 }
 
 async function mintBackendToken(): Promise<string | null> {
-  const session = await auth();
+  const session = await getServerAuth();
   if (!session?.user?.id || !session.orgId) return null;
   const secret = process.env.BACKEND_JWT_SECRET;
   if (!secret) return null;

@@ -20,9 +20,8 @@ export function useApprovalInbox() {
   return useQuery<ApprovalInboxItem[]>({
     queryKey: queryKeys.projects.approvals.inbox(),
     queryFn: () => apiClient.get<ApprovalInboxItem[]>("/projects/approvals/inbox"),
-    staleTime: 30_000,
-    refetchOnWindowFocus: true,
-    refetchInterval: 60_000,
+    staleTime: 120_000,
+    refetchInterval: 120_000,
     refetchIntervalInBackground: false,
   });
 }

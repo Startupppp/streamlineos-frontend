@@ -247,9 +247,8 @@ export function usePendingApprovals() {
   return useQuery({
     queryKey: queryKeys.workflows.approvals(),
     queryFn: () => apiClient.get<WorkflowApproval[]>("/workflows/approvals/pending"),
-    staleTime: 30_000,
-    refetchOnWindowFocus: true,
-    refetchInterval: 60_000,
+    staleTime: 120_000,
+    refetchInterval: 120_000,
     refetchIntervalInBackground: false,
   });
 }

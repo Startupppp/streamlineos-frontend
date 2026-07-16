@@ -14,6 +14,7 @@ import {
 import { useCan } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
@@ -59,7 +60,8 @@ import {
   PM_FILL_PANEL,
   PM_TOOLBAR,
 } from "@/features/projects/shared/pm-chrome";
-import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TABLE_TITLE_CELL } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const STATUS_OPTIONS: { value: string; label: string }[] = [
   { value: "all", label: "All statuses" },
@@ -313,12 +315,7 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
       header: "Title",
       className: TABLE_TITLE_CELL,
       cell: (row) => (
-        <span
-          className={cn("font-medium text-foreground", TEXT_ONE_LINE)}
-          title={row.title}
-        >
-          {row.title}
-        </span>
+        <TruncatedText text={row.title} className="font-medium text-foreground" />
       ),
       sortable: true,
       sortValue: (row) => row.title,
@@ -329,9 +326,7 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
       cell: (row) => {
         const name = memberName(row.approverId);
         return (
-          <span className={cn("max-w-[8rem] text-muted-foreground", TEXT_ONE_LINE)} title={name}>
-            {name}
-          </span>
+          <TruncatedText text={name} className="max-w-[8rem] text-muted-foreground" />
         );
       },
     },

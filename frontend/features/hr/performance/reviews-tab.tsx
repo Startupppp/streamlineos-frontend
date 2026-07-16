@@ -32,6 +32,7 @@ import { Plus, Star, CheckCircle2, Trash2, ChevronsUpDown, Check, Pencil } from 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Employee, PerformanceReview, ReviewCycle } from "@/types/hr";
 import { EmptyLeaderboardIllustration } from "@/components/illustrations";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 export function ReviewsTab() {
   const { data: reviews, isLoading } = useHrPerformanceReviews();
@@ -262,9 +263,15 @@ export function ReviewsTab() {
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-foreground truncate">{review.user?.name ?? "Employee"}</p>
+                      <TruncatedText
+                        text={review.user?.name ?? "Employee"}
+                        className="text-sm font-semibold text-foreground"
+                      />
                       {review.reviewer?.name && (
-                        <p className="text-[10px] text-muted-foreground truncate">by {review.reviewer.name}</p>
+                        <TruncatedText
+                          text={`by ${review.reviewer.name}`}
+                          className="text-[10px] text-muted-foreground"
+                        />
                       )}
                     </div>
                   </div>

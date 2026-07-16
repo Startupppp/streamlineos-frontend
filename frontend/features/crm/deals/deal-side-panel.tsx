@@ -18,6 +18,7 @@ import {
 } from "@/hooks/api/crm";
 import { ActivityTimeline } from "./detail/activity-timeline";
 import { DealEditForm, type EditFormValues } from "./detail/deal-edit-form";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { toast } from "sonner";
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
@@ -91,8 +92,8 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
             <SheetHeader className="px-6 pt-5 pb-4 border-b shrink-0">
               <div className="flex items-center justify-between">
                 <div className="space-y-1 min-w-0">
-                  <SheetTitle className="text-base truncate">
-                    {deal.name}
+                  <SheetTitle className="text-base">
+                    <TruncatedText text={deal.name} />
                   </SheetTitle>
                   <div className="flex items-center gap-2">
                     {stage && <CrmStageBadge stage={stage} size="card" />}

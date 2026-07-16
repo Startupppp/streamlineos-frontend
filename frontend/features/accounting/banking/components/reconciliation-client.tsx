@@ -24,6 +24,7 @@ import { useCan } from "@/hooks/api/access";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { ReconciliationTxn } from "@/hooks/api/accounting/banking";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 type TabValue = "unmatched" | "suggested";
 
@@ -216,11 +217,7 @@ export function ReconciliationClient() {
                             <p className="text-[11px] text-muted-foreground tabular-nums">
                               {txn.txnDate}
                             </p>
-                            <p className="text-xs font-medium text-foreground truncate mt-0.5">
-                              {txn.description.length > 38
-                                ? `${txn.description.slice(0, 38)}…`
-                                : txn.description}
-                            </p>
+                            <TruncatedText text={txn.description} className="text-xs font-medium text-foreground mt-0.5" />
                           </div>
                           <div className="shrink-0 flex flex-col items-end gap-1">
                             <Money

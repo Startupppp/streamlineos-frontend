@@ -13,6 +13,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn, resolveImageUrl } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { formatINRCompact, formatDealId } from "@/lib/format-utils";
 import { useCrmStages } from "@/hooks/api/crm/metadata";
 import { getCrmTokenClasses } from "@/features/crm/shared/metadata";
@@ -78,7 +79,7 @@ export const DealKanbanCard = memo(function DealKanbanCard({ deal, onStageChange
       <CardContent className="p-3">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0 mr-1">
-            <h4 className="text-sm font-medium line-clamp-1">{deal.name}</h4>
+            <TruncatedText text={deal.name} className="text-sm font-medium" />
             <div className="flex items-center gap-1.5 mt-0.5">
               <span className="font-mono text-[10px] text-muted-foreground/70 select-all">{formatDealId(deal.id)}</span>
               <DealHealthBadge expectedCloseDate={deal.expectedCloseDate} />

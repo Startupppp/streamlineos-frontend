@@ -24,6 +24,7 @@ import {
 import { useReportsCatalog, type ReportCatalogItem } from "@/hooks/api/accounting/reports";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { AnimatedNavIconComponent } from "@/components/layout/sidebar/sidebar-animated-nav";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const CATEGORY_ICONS: Record<string, AnimatedNavIconComponent> = {
   Core: FiBookOpenIcon,
@@ -86,10 +87,8 @@ function ReportCard({ item, category }: ReportCardProps) {
         <Icon ref={iconRef} className={`h-4 w-4 ${tone.text}`} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-foreground truncate">{item.name}</p>
-        <p className="mt-0.5 text-xs text-muted-foreground leading-snug line-clamp-2">
-          {item.description}
-        </p>
+        <TruncatedText text={item.name} className="text-sm font-semibold text-foreground" />
+        <TruncatedText text={item.description} lines={2} className="mt-0.5 text-xs text-muted-foreground leading-snug" />
         {item.exportable && (
           <span className="inline-flex mt-1.5 items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/70 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
             Exportable

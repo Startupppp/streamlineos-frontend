@@ -12,6 +12,7 @@ import {
   SheetFooter,
   SheetBody,
 } from "@/components/ui/sheet";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import type { TransferDetail } from "@/hooks/api/inventory/stock";
 
@@ -87,9 +88,7 @@ function ReceiveTransferForm({
       header: "Product / SKU",
       cell: (ld) => (
         <>
-          <p className="font-medium leading-tight truncate max-w-[140px]">
-            {ld.line.productName}
-          </p>
+          <TruncatedText text={ld.line.productName} className="font-medium leading-tight" />
           <p className="text-[10px] text-muted-foreground font-mono">{ld.line.sku}</p>
         </>
       ),

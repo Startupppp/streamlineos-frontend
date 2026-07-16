@@ -28,6 +28,7 @@ import {
   useReorderReport,
   type ReorderReportRow,
 } from "@/hooks/api/inventory/reports";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { RecentMovementsTable } from "./inventory-recent-movements";
 import { DashboardInsightsPanel } from "./dashboard-insights-panel";
 
@@ -120,7 +121,7 @@ function LowStockAlertSection() {
           >
             <div className={`h-2 w-2 rounded-full shrink-0 ${urgency.dotClass}`} />
             <div className="flex-1 min-w-0">
-              <p className="text-[11px] font-semibold text-foreground truncate">{item.productName}</p>
+              <TruncatedText text={item.productName} className="text-[11px] font-semibold text-foreground" />
               <p className="text-[11px] text-muted-foreground font-mono">{item.variantSku}</p>
             </div>
             <div className="text-right shrink-0">

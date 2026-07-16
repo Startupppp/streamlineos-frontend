@@ -3,12 +3,12 @@
 import { useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import type { Approval, ApprovalStatus } from "@/types/projects";
 import { ApprovalStatusBadge, entityTypeLabel } from "./approval-status-badge";
 import { ApprovalActions } from "./approval-actions";
-import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TABLE_TITLE_CELL } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const DECIDABLE = new Set<ApprovalStatus>(["pending", "requested", "escalated", "changes_requested"]);
 
@@ -52,12 +52,7 @@ export function useApprovalColumns({
         header: "Title",
         className: TABLE_TITLE_CELL,
         cell: (row) => (
-          <span
-            className={cn("font-medium text-foreground", TEXT_ONE_LINE)}
-            title={row.title}
-          >
-            {row.title}
-          </span>
+          <TruncatedText text={row.title} className="font-medium text-foreground" />
         ),
         sortable: true,
         sortValue: (row) => row.title,
@@ -68,12 +63,7 @@ export function useApprovalColumns({
         cell: (row) => {
           const name = memberName(row.approverId);
           return (
-            <span
-              className={cn("max-w-[8rem] text-muted-foreground", TEXT_ONE_LINE)}
-              title={name}
-            >
-              {name}
-            </span>
+            <TruncatedText text={name} className="max-w-[8rem] text-muted-foreground" />
           );
         },
       },

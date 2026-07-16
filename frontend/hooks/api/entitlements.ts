@@ -45,8 +45,7 @@ export function useEntitlements() {
   return useQuery<Entitlements, Error>({
     queryKey: ENTITLEMENTS_QUERY_KEY,
     queryFn: () => apiClient.get<Entitlements>("/billing/entitlements"),
-    staleTime: 60_000,
-    refetchOnWindowFocus: true,
+    staleTime: 900_000,
     retry: false,
   });
 }

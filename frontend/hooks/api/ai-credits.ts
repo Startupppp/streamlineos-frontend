@@ -43,8 +43,7 @@ export function useAiCreditsWallet() {
   return useQuery<AiCreditsWallet>({
     queryKey: ["billing", "ai-credits"],
     queryFn: () => apiClient.get<AiCreditsWallet>("/billing/ai-credits"),
-    staleTime: 60 * 1000,
-    refetchOnWindowFocus: true,
+    staleTime: 300_000,
   });
 }
 

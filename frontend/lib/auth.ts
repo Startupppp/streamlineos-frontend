@@ -4,13 +4,58 @@ import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import axios, { AxiosError } from "axios";
 import { randomUUID } from "crypto";
-import { SignJWT } from "jose";
+import { SignJWT, decodeJwt } from "jose";
 import type { Plan } from "@/lib/billing/feature-gates";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL;
 const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET ?? "";
 
 if (!BACKEND_URL) throw new Error("NEXT_PUBLIC_API_URL is not set");
+
+const SESSION_DATA_TTL_MS = 30_000;
+const sessionDataStore = new Map<string, { data: SessionData; expiresAt: number }>();
+
+function getSessionDataFromStore(key: string): SessionData | null {
+  const entry = sessionDataStore.get(key);
+  if (!entry) return null;
+  if (Date.now() > entry.expiresAt) {
+    sessionDataStore.delete(key);
+    return null;
+  }
+  return entry.data;
+}
+
+function setSessionDataInStore(key: string, data: SessionData): void {
+  sessionDataStore.set(key, { data, expiresAt: Date.now() + SESSION_DATA_TTL_MS });
+}
+
+interface BackendJwtEntry {
+  token: string;
+  expiresAt: number;
+}
+const backendJwtStore = new Map<string, BackendJwtEntry>();
+
+function getBackendJwtFromStore(key: string): string | null {
+  const entry = backendJwtStore.get(key);
+  if (!entry) return null;
+  if (Date.now() > entry.expiresAt) {
+    backendJwtStore.delete(key);
+    return null;
+  }
+  return entry.token;
+}
+
+function setBackendJwtInStore(key: string, token: string): void {
+  try {
+    const claims = decodeJwt(token);
+    const exp = typeof claims.exp === "number" ? claims.exp : 0;
+    const expiresAt = exp * 1000 - 60_000;
+    if (expiresAt > Date.now()) {
+      backendJwtStore.set(key, { token, expiresAt });
+    }
+  } catch {
+  }
+}
 
 interface SessionData {
   userId: string;
@@ -56,7 +101,16 @@ async function fetchSessionData(userId: string): Promise<SessionData | null> {
   return null;
 }
 
-const fetchSessionDataCached = cache(fetchSessionData);
+async function fetchSessionDataWithCache(userId: string, orgId: string | null): Promise<SessionData | null> {
+  const storeKey = `${userId}:${orgId ?? ""}`;
+  const cached = getSessionDataFromStore(storeKey);
+  if (cached) return cached;
+  const data = await fetchSessionData(userId);
+  if (data) setSessionDataInStore(storeKey, data);
+  return data;
+}
+
+const fetchSessionDataCached = cache(fetchSessionDataWithCache);
 
 function parsePlatformAdminEmails(): ReadonlySet<string> {
   const raw = process.env.PLATFORM_ADMIN_EMAILS ?? "";
@@ -356,9 +410,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
 
     async session({ session, token }) {
-      // Volatile data (permissions, modules, plan, org context) is resolved live here, never from the cookie — 485 permission keys once ballooned it to ~16KB (5 chunks), breaking every auth request with 431s.
+      const tokenOrgId = (token.orgId as string | null | undefined) ?? null;
       const fresh = token.id
-        ? await fetchSessionDataCached(token.id as string)
+        ? await fetchSessionDataCached(token.id as string, tokenOrgId)
         : null;
 
       const orgId = fresh
@@ -400,22 +454,31 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       const jwtSecret = process.env.BACKEND_JWT_SECRET;
       const sessionId = (token.sessionId as string | undefined)?.trim();
       if (jwtSecret && token.id && sessionId) {
-        session.backendJwt = await new SignJWT({
-          orgId,
-          branchId,
-          role,
-          enabledModules,
-          plan,
-          isPlatformAdmin:
-            (token.isPlatformAdmin as boolean | undefined) === true,
-          isOrgOwner,
-          sessionId,
-        })
-          .setProtectedHeader({ alg: "HS256" })
-          .setSubject(token.id as string)
-          .setIssuedAt()
-          .setExpirationTime("10m")
-          .sign(new TextEncoder().encode(jwtSecret));
+        const userId = token.id as string;
+        const jwtCacheKey = `${userId}:${orgId ?? ""}`;
+        const cachedJwt = getBackendJwtFromStore(jwtCacheKey);
+        if (cachedJwt) {
+          session.backendJwt = cachedJwt;
+        } else {
+          const minted = await new SignJWT({
+            orgId,
+            branchId,
+            role,
+            enabledModules,
+            plan,
+            isPlatformAdmin:
+              (token.isPlatformAdmin as boolean | undefined) === true,
+            isOrgOwner,
+            sessionId,
+          })
+            .setProtectedHeader({ alg: "HS256" })
+            .setSubject(userId)
+            .setIssuedAt()
+            .setExpirationTime("10m")
+            .sign(new TextEncoder().encode(jwtSecret));
+          setBackendJwtInStore(jwtCacheKey, minted);
+          session.backendJwt = minted;
+        }
       }
 
       return session;

@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import type { Contact } from "@/types/crm";
 import { AiAssistantPanel } from "@/features/crm/shared/ai-assistant-panel";
@@ -88,13 +89,12 @@ export function ContactInfoCard({ contact, onEdit, onSendEmail, onLogCall, entit
               {getInitials(contact.name)}
             </div>
             <div className="flex-1 min-w-0 pt-1">
-              <h2 className="text-base font-semibold text-foreground truncate leading-tight">
-                {contact.name}
-              </h2>
+              <TruncatedText text={contact.name} className="text-base font-semibold text-foreground leading-tight" />
               {(contact.title || contact.company) && (
-                <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                  {[contact.title, contact.company].filter(Boolean).join(" · ")}
-                </p>
+                <TruncatedText
+                  text={[contact.title, contact.company].filter(Boolean).join(" · ")}
+                  className="text-xs text-muted-foreground mt-0.5"
+                />
               )}
               {contact.status && (
                 <Badge

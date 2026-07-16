@@ -3,11 +3,12 @@
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { useClientOpportunities } from "@/hooks/api/crm/clients";
 import { formatAmount, formatDate } from "./utils";
 import type { ClientOpportunity } from "@/types/crm";
-import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
+import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 
 const OPP_STAGE_LABELS: Record<ClientOpportunity["stage"], string> = {
   identified: "Identified",
@@ -31,9 +32,7 @@ const columns: DataTableColumn<ClientOpportunity>[] = [
     header: "Title",
     className: TABLE_TITLE_CELL,
     cell: (row) => (
-      <span className={cn("text-[11px] font-medium", TEXT_ONE_LINE)} title={row.title}>
-        {row.title}
-      </span>
+      <TruncatedText text={row.title} className="text-[11px] font-medium" />
     ),
   },
   {

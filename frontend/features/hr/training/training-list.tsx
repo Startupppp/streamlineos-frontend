@@ -184,7 +184,11 @@ export function TrainingList({ canManage, onSelectProgram, selectedProgramId }: 
               </div>
 
               {program.description && (
-                <p className="text-xs text-muted-foreground line-clamp-2">{program.description}</p>
+                <TruncatedText
+                  text={program.description}
+                  lines={2}
+                  className="text-xs text-muted-foreground"
+                />
               )}
 
               <div className="space-y-1 text-xs text-muted-foreground">
@@ -198,7 +202,7 @@ export function TrainingList({ canManage, onSelectProgram, selectedProgramId }: 
                 {program.venue && (
                   <div className="flex items-center gap-1.5">
                     <MapPin className="h-3 w-3 shrink-0" />
-                    <span className="truncate">{program.venue}</span>
+                    <TruncatedText text={program.venue} className="text-xs text-muted-foreground" />
                   </div>
                 )}
                 {program.virtualLink && (

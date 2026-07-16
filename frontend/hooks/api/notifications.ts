@@ -54,7 +54,6 @@ export const useNotifications = (
         params ? toStringParams(params as Record<string, unknown>) : undefined,
       ),
     staleTime: 30_000,
-    refetchOnWindowFocus: true,
     ...options,
   });
 };
@@ -67,8 +66,7 @@ export const useUnreadNotificationCount = (
   return useQuery<UnreadCount, Error>({
     queryKey: queryKeys.notifications.unreadCount(),
     queryFn: () => apiClient.get<UnreadCount>("/notifications/unread-count"),
-    staleTime: 30_000,
-    refetchOnWindowFocus: true,
+    staleTime: 120_000,
     refetchInterval: 60_000,
     refetchIntervalInBackground: false,
     ...options,

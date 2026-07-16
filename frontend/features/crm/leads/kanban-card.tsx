@@ -21,6 +21,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn, resolveImageUrl } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { formatINRCompact, getInitials } from "@/lib/format-utils";
 import { toast } from "sonner";
 import { useSelfAssignLead } from "@/hooks/api";
@@ -288,9 +289,7 @@ export const KanbanCard = memo(function KanbanCard({
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">
-                        {lead.name}
-                      </p>
+                      <TruncatedText text={lead.name} className="text-sm font-medium" />
                       <p className="text-[10px] font-mono text-muted-foreground/50 leading-none mt-0.5">
                         LD-{String(lead.id).padStart(5, "0")}
                       </p>
