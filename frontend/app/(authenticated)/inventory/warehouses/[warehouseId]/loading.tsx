@@ -4,9 +4,8 @@ export default function WarehouseDetailLoading() {
   return (
     <InventoryDetailPageLoading
       title="Warehouse"
-      subtitle="Loading..."
       backHref="/inventory/warehouses"
-      actions={null}
+      statCount={4}
     />
   );
 }

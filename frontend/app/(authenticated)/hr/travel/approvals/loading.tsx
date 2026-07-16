@@ -10,7 +10,7 @@ export default function TravelApprovalsLoading() {
           <div key={si} className="space-y-3">
             <Skeleton className="h-5 w-48" />
             {Array.from({ length: 2 }).map((_, i) => (
-              <Card key={i} className="rounded-2xl">
+              <Card key={i} className="rounded-xl">
                 <CardContent className="p-5">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-2">

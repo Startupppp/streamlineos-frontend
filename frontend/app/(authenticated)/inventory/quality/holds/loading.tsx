@@ -1,23 +1,21 @@
-import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Skeleton } from "@/components/ui/skeleton";
+import { DataTableSkeleton } from "@/components/ui/data-table";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export default function HoldsLoading() {
   return (
     <PageWrapper
       title="Quality Holds"
       subtitle="Manage inventory quality holds"
-      actions={<Skeleton className="h-8 w-28 rounded-md" />}
+      actions={<Skeleton className="h-9 w-36" />}
       filters={
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-8 w-44 rounded-md" />
+        <div className={FILTER_TOOLBAR_ROW}>
+          <Skeleton className="h-9 w-44" />
         </div>
       }
     >
-      <div className="space-y-1">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <Skeleton key={i} className="h-4 w-full rounded" />
-        ))}
-      </div>
+      <DataTableSkeleton rows={10} className="flex-1 min-h-0" />
     </PageWrapper>
   );
 }

@@ -374,6 +374,8 @@ Edit `access.ts` → `pnpm -C backend db:generate` → `db:push`/`db:migrate` (n
 
 Bundle size · lazy loading · dynamic imports · query optimization · cache efficiency · deduped requests · parallel (not sequential) data fetching · granular Suspense streaming.
 
+- **AI endpoint efficiency (living rule, 2026-07-16):** every AI endpoint must be super efficient end-to-end. Assemble prompt context in the fewest queries possible (`Promise.all` for independent fetches, explicit column projection, hard caps on row counts and text lengths — never dump whole entities into prompts). Default to the fast/cheap model tier and cap max output tokens per feature; use the standard tier only where quality demonstrably requires it. Short-circuit BEFORE any provider call when the org/user has no eligible context. Never re-embed unchanged content (content-hash guard). Dedupe identical in-flight AI requests. Cache derived AI context/results tenant-scoped with explicit invalidation where staleness is acceptable. Vector queries always run against a proper ANN index (HNSW). Every AI call records latency/tokens/cost through the AI gateway.
+
 ## 24. Reliability & Future-Proofing
 
 - **Deny by default; fail fast at boundaries.** Validate every external input; return typed, consistent errors.

@@ -3,9 +3,9 @@ import { InventoryDetailPageLoading } from "@/features/inventory/components/inve
 export default function SerialDetailLoading() {
   return (
     <InventoryDetailPageLoading
-      title="Loading…"
+      title="Serial Number"
       backHref="/inventory/serials"
-      actions={null}
+      statCount={4}
     />
   );
 }

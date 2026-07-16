@@ -1,24 +1,22 @@
-import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Skeleton } from "@/components/ui/skeleton";
+import { DataTableSkeleton } from "@/components/ui/data-table";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export default function InspectionsLoading() {
   return (
     <PageWrapper
       title="Inspections"
       subtitle="Manage quality inspections"
-      actions={<Skeleton className="h-4 w-32 rounded-md" />}
+      actions={<Skeleton className="h-9 w-40" />}
       filters={
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-8 w-56 rounded-md" />{" "}
-          <Skeleton className="h-8 w-48 rounded-md" />
+        <div className={FILTER_TOOLBAR_ROW}>
+          <Skeleton className="h-9 flex-1 max-w-xs" />
+          <Skeleton className="h-9 w-[192px]" />
         </div>
       }
     >
-      <div className="space-y-1">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <Skeleton key={i} className="h-4 w-full rounded" />
-        ))}
-      </div>
+      <DataTableSkeleton rows={10} className="flex-1 min-h-0" />
     </PageWrapper>
   );
 }

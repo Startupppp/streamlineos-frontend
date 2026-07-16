@@ -7,7 +7,7 @@ export default function NewDocumentLoading() {
     <PageWrapper
       title="New Document"
       subtitle="Choose a template to get started"
-      actions={<Skeleton className="h-8 w-20 rounded-md" />}
+      actions={<Skeleton className="h-9 w-20 rounded-md" />}
     >
       <div className="space-y-6">
         <Card>

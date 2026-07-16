@@ -1,15 +1,20 @@
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function WorkforceCostLoading() {
   return (
-    <div className="p-6 space-y-4">
-      <Skeleton className="h-8 w-56" />
-      <Skeleton className="h-4 w-80" />
-      <div className="grid grid-cols-3 gap-4 mt-6">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <Skeleton key={i} className="h-20 rounded-xl" />
-        ))}
+    <PageWrapper
+      title="Workforce Costing"
+      subtitle="Real-time cost breakdown by department and location"
+    >
+      <div className="space-y-5">
+        <StatCardGridSkeleton cols={3} count={3} />
+        <div className="grid gap-4 md:grid-cols-2">
+          <Skeleton className="h-[240px] rounded-xl" />
+          <Skeleton className="h-[240px] rounded-xl" />
+        </div>
       </div>
-    </div>
+    </PageWrapper>
   );
 }

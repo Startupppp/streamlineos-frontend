@@ -5,7 +5,7 @@ export default function CycleCountDetailLoading() {
     <InventoryDetailPageLoading
       title="Cycle Count"
       backHref="/inventory/cycle-counts"
-      actions={null}
+      statCount={4}
     />
   );
 }

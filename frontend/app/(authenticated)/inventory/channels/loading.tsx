@@ -1,17 +1,15 @@
-import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 
 export default function ChannelsLoading() {
   return (
     <PageWrapper
       title="Channels"
-      actions={<Skeleton className="h-4 w-28" />}
+      subtitle="Manage sales and fulfilment channels"
+      actions={<Skeleton className="h-9 w-32" />}
     >
-      <div className="space-y-1">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <Skeleton key={i} className="h-4 w-full rounded" />
-        ))}
-      </div>
+      <DataTableSkeleton rows={8} className="flex-1 min-h-0" />
     </PageWrapper>
   );
 }
