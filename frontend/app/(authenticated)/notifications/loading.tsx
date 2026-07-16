@@ -6,11 +6,12 @@ export default function NotificationsLoading() {
     <PageWrapper
       title="Notifications"
       subtitle="Stay up to date with everything happening in your workspace"
-      actions={<Skeleton className="h-8 w-32 rounded-md" />}
+      actions={<Skeleton className="h-9 w-32 rounded-md" />}
       filters={
-        <div className="flex items-center gap-1">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <Skeleton key={i} className="h-8 w-14 rounded-md" />
+        <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+          <Skeleton className="h-9 w-48 rounded-md" />
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-9 w-20 rounded-full" />
           ))}
         </div>
       }

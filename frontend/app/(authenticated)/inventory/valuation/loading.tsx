@@ -1,14 +1,24 @@
-import { InventoryListPageLoading } from "@/features/inventory/components/inventory-list-page-loading";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Skeleton } from "@/components/ui/skeleton";
+import { DataTableSkeleton } from "@/components/ui/data-table";
+import { StatCardGridSkeleton } from "@/components/ui/stat-card";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export default function ValuationLoading() {
   return (
-    <InventoryListPageLoading
+    <PageWrapper
       title="Inventory Valuation"
       subtitle="Total stock value by costing method."
-      actions={null}
-      filters={null}
-      showStats
-      statCols={4}
-    />
+      filters={
+        <div className={FILTER_TOOLBAR_ROW}>
+          <Skeleton className="h-9 flex-1 max-w-md" />
+          <Skeleton className="h-9 w-[160px]" />
+        </div>
+      }
+      actions={<Skeleton className="h-9 w-32" />}
+    >
+      <StatCardGridSkeleton cols={4} count={4} />
+      <DataTableSkeleton rows={10} className="flex-1 min-h-0" />
+    </PageWrapper>
   );
 }

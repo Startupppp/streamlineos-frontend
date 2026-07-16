@@ -5,6 +5,7 @@ export default function SalesOrderDetailLoading() {
     <InventoryDetailPageLoading
       title="Sales Order"
       backHref="/inventory/sales-orders"
+      statCount={4}
     />
   );
 }

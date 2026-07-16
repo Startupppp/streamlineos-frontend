@@ -5,6 +5,8 @@ export default function TransferDetailLoading() {
     <InventoryDetailPageLoading
       title="Transfer"
       subtitle="Transfer details."
+      backHref="/inventory/stock/transfers"
+      statCount={4}
       actions={null}
     />
   );

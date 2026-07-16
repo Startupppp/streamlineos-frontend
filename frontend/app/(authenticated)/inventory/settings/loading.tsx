@@ -8,8 +8,8 @@ export default function InventorySettingsLoading() {
       subtitle="Configure stock policies, procurement rules, and system sequences."
     >
       <div className="space-y-4">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <Skeleton key={i} className="h-32 w-full rounded-xl" />
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-40 w-full rounded-xl" />
         ))}
       </div>
     </PageWrapper>
