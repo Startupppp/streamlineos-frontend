@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Mail, Building2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { resolveImageUrl } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import type { Employee } from "@/types/hr";
@@ -34,25 +35,27 @@ export function EmployeeCard({ employee: emp, department }: EmployeeCardProps) {
             </AvatarFallback>
           </Avatar>
           <div className="w-full space-y-0.5">
-            <p className="font-semibold text-sm leading-tight truncate text-foreground">
-              {displayName}
-            </p>
+            <TruncatedText
+              text={displayName}
+              className="font-semibold text-sm leading-tight text-foreground"
+            />
             {emp.designation && (
-              <p className="text-[11px] text-muted-foreground truncate">
-                {emp.designation}
-              </p>
+              <TruncatedText
+                text={emp.designation}
+                className="text-[11px] text-muted-foreground"
+              />
             )}
           </div>
           {department && (
             <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-primary/10 text-foreground border-primary/30 max-w-full">
               <Building2 className="h-3 w-3 shrink-0" />
-              <span className="truncate">{department}</span>
+              <TruncatedText text={department} className="text-[10px] font-semibold" />
             </span>
           )}
           {emp.email && (
             <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground w-full justify-center min-w-0">
               <Mail className="h-3 w-3 shrink-0" />
-              <span className="truncate">{emp.email}</span>
+              <TruncatedText text={emp.email} className="text-[11px] text-muted-foreground" />
             </div>
           )}
           <span

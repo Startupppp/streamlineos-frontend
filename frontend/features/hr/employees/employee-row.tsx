@@ -59,8 +59,8 @@ export function EmployeeRow({ employee: emp, department }: EmployeeRowProps) {
           <span className="text-xs text-muted-foreground">—</span>
         )}
       </TableCell>
-      <TableCell className="text-xs text-muted-foreground truncate max-w-[180px]">
-        {emp.email}
+      <TableCell className="text-xs text-muted-foreground max-w-[180px]">
+        <TruncatedText text={emp.email ?? ""} className="text-xs text-muted-foreground" />
       </TableCell>
       <TableCell>
         <span

@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { staggerContainer } from "@/lib/motion-variants";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { useCampaigns } from "@/hooks/api/crm/campaigns";
@@ -55,10 +56,10 @@ function buildColumns(onRowClick: (id: number) => void): DataTableColumn<CrmCamp
       header: "Campaign",
       cell: (row) => (
         <button
-          className="text-left font-medium text-foreground hover:text-primary transition-colors truncate max-w-[180px]"
+          className="text-left font-medium text-foreground hover:text-primary transition-colors max-w-[180px]"
           onClick={() => onRowClick(row.id)}
         >
-          {row.name}
+          <TruncatedText text={row.name} />
         </button>
       ),
     },

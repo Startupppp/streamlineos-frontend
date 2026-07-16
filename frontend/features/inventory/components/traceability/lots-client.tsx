@@ -30,6 +30,7 @@ import {
   LOT_STATUS_LABEL,
   type LotStatus,
 } from "@/features/inventory/lib";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 
 function LotViewButton({ id, lotNumber }: { id: number; lotNumber: string }) {

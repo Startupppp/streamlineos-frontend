@@ -9,6 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { AiConversation } from "@/hooks/api/chat-ai-assistant";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 export interface AskOsConversationListProps {
   conversations: AiConversation[];
@@ -151,7 +152,7 @@ export function AskOsConversationList({
                       <button type="button" data-id={String(conv.id)} onClick={handleSelectBtn}
                         className={cn("flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition-colors hover:bg-muted",
                           conv.id === activeConversationId && "bg-muted font-medium")}>
-                        <span className="flex-1 truncate text-foreground">{conv.title ?? "New conversation"}</span>
+                        <TruncatedText text={conv.title ?? "New conversation"} className="flex-1 text-foreground" />
                         <span className="shrink-0 text-[10px] text-muted-foreground/60">{relativeTime(conv.updatedAt)}</span>
                       </button>
                     )}

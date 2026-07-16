@@ -21,6 +21,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyActivityIllustration } from "@/components/illustrations";
 import { resolveImageUrl } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { getApiError } from "@/lib/api-client";
 import { getInitials } from "@/lib/format-utils";
 import {
@@ -105,9 +106,7 @@ export function SupportActivityLog({ supportTicketId }: SupportActivityLogProps)
                     {getInitials(entry.userName)}
                   </AvatarFallback>
                 </Avatar>
-                <span className="text-xs font-medium truncate">
-                  {entry.userName ?? "System"}
-                </span>
+                <TruncatedText text={entry.userName ?? "System"} className="text-xs font-medium" />
                 <span className="text-xs text-muted-foreground">{entry.label}</span>
                 {entry.createdAt && (
                   <span className="text-[10px] text-muted-foreground">

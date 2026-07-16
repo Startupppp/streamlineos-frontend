@@ -7,6 +7,7 @@ import { ChevronRight, ChevronDown } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { flattenNavRoutes, type NavGroup, type NavRoute, type ModuleAccent } from "./sidebar-nav-items";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 function hoistSingletonParentRoutes(routes: NavRoute[]): NavRoute[] {
   if (routes.length !== 1) return routes;

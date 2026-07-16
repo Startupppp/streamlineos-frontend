@@ -5,6 +5,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { Settings2, ClipboardList } from "lucide-react";
 import { ShoppingCartIcon } from "@animateicons/react/lucide";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -55,7 +56,7 @@ function buildColumns(
       header: "Product / SKU",
       cell: (row) => (
         <div>
-          <p className="text-[11px] font-medium truncate max-w-[180px]">{row.productName}</p>
+          <TruncatedText text={row.productName} className="text-[11px] font-medium" />
           <p className="text-[11px] text-muted-foreground font-mono">{row.variantSku}</p>
         </div>
       ),
@@ -96,11 +97,8 @@ function buildColumns(
     {
       key: "reason",
       header: "Reason",
-      className: "max-w-[160px] truncate",
       cell: (row) => (
-        <span className="text-[11px] text-muted-foreground" title={row.reason}>
-          {row.reason}
-        </span>
+        <TruncatedText text={row.reason} className="text-[11px] text-muted-foreground max-w-[160px]" />
       ),
     },
   ];

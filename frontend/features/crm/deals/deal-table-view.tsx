@@ -75,10 +75,10 @@ function DealNameButton({ dealId, name, onNavigate }: DealNameButtonProps) {
   const handleClick = useCallback(() => onNavigate(dealId), [dealId, onNavigate]);
   return (
     <button
-      className="font-medium text-[12px] hover:text-primary hover:underline text-left truncate max-w-[160px] block"
+      className="font-medium text-[12px] hover:text-primary hover:underline text-left block max-w-[160px]"
       onClick={handleClick}
     >
-      {name}
+      <TruncatedText text={name} />
     </button>
   );
 }
@@ -204,7 +204,7 @@ export function DealTableView({
             <AvatarImage src={row.assignedTo.image || ""} />
             <AvatarFallback className="text-[7px]">{row.assignedTo.name.charAt(0)}</AvatarFallback>
           </Avatar>
-          <span className="truncate max-w-[70px]">{row.assignedTo.name}</span>
+          <TruncatedText text={row.assignedTo.name ?? "—"} className="max-w-[70px]" />
         </div>
       ) : <span className="text-muted-foreground/50">—</span>,
     },

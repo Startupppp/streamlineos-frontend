@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AIScoreCandidateButton } from "@/features/hr/recruitment/ai-score-candidate-button";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import type { Candidate, CandidateStatus } from "@/types/hr";
 
@@ -213,14 +214,15 @@ export function CandidateCard({
             {getInitials(candidate.firstName, candidate.lastName)}
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-sm text-foreground truncate leading-tight">
-              {candidate.firstName} {candidate.lastName}
-            </h3>
+            <TruncatedText
+              text={`${candidate.firstName} ${candidate.lastName}`}
+              className="font-semibold text-sm text-foreground leading-tight"
+            />
             {candidate.currentRole && (
-              <p className="text-xs text-muted-foreground truncate mt-0.5">
-                {candidate.currentRole}
-                {candidate.currentCompany && ` · ${candidate.currentCompany}`}
-              </p>
+              <TruncatedText
+                text={`${candidate.currentRole}${candidate.currentCompany ? ` · ${candidate.currentCompany}` : ""}`}
+                className="text-xs text-muted-foreground mt-0.5"
+              />
             )}
           </div>
         </div>
@@ -228,7 +230,7 @@ export function CandidateCard({
         <div className="space-y-1.5 mb-2">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Mail className="h-3 w-3 shrink-0" />
-            <span className="truncate">{candidate.email}</span>
+            <TruncatedText text={candidate.email} className="text-xs text-muted-foreground" />
           </div>
           {candidate.phone && (
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">

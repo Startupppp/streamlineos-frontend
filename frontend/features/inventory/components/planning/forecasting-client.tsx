@@ -9,6 +9,7 @@ import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { Card, CardContent } from "@/components/ui/card";
 import { ErrorState } from "@/components/shared";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { useForecasting, type ForecastRow } from "@/hooks/api/inventory/planning";
 
@@ -39,7 +40,7 @@ const columns: DataTableColumn<ForecastRow>[] = [
     header: "Product / SKU",
     cell: (row) => (
       <div>
-        <p className="text-sm font-medium text-foreground truncate max-w-[180px]">{row.productName}</p>
+        <TruncatedText text={row.productName} className="text-sm font-medium text-foreground" />
         <p className="text-xs text-muted-foreground font-mono">{row.variantSku}</p>
       </div>
     ),

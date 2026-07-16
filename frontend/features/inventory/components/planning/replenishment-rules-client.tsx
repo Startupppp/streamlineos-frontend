@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ErrorState } from "@/components/shared";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import {
   useReplenishmentRules,
@@ -80,7 +81,7 @@ function buildColumns(
       header: "Product / SKU",
       cell: (rule) => (
         <div>
-          <p className="text-sm font-medium text-foreground truncate max-w-[180px]">{rule.productName}</p>
+          <TruncatedText text={rule.productName} className="text-sm font-medium text-foreground" />
           <p className="text-xs text-muted-foreground font-mono">{rule.variantSku}</p>
         </div>
       ),

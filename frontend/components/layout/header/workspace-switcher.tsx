@@ -13,6 +13,7 @@ import {
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
+import { TruncatedText } from "@/components/ui/truncated-text"
 import { useGetOrganizations, useSwitchOrg } from "@/hooks/common/auth-hooks"
 import { CreateWorkspaceDialog } from "@/features/workspace/create-workspace-dialog"
 
@@ -76,7 +77,7 @@ function WorkspaceSwitcherPanel({
         </div>
         <DropdownMenuItem className="gap-2 text-foreground data-[disabled]:opacity-100" disabled>
           <Check className="h-3.5 w-3.5 text-primary shrink-0" />
-          <span className="font-medium truncate text-sm text-foreground">{activeOrg?.name}</span>
+          <TruncatedText text={activeOrg?.name ?? ""} className="font-medium text-sm text-foreground" />
         </DropdownMenuItem>
         {otherOrgs.length > 0 && (
           <>
@@ -89,7 +90,7 @@ function WorkspaceSwitcherPanel({
                 disabled={isPending}
               >
                 <span className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate text-sm text-foreground">{org.name}</span>
+                <TruncatedText text={org.name} className="text-sm text-foreground" />
               </DropdownMenuItem>
             ))}
           </>
@@ -119,7 +120,7 @@ function WorkspaceSwitcherPanel({
       </div>
       <div className="flex items-center gap-2 rounded-md px-2 py-2 text-sm text-foreground">
         <Check className="h-3.5 w-3.5 text-blue-600 shrink-0" />
-        <span className="font-medium truncate text-foreground">{activeOrg?.name}</span>
+        <TruncatedText text={activeOrg?.name ?? ""} className="font-medium text-foreground" />
       </div>
       {otherOrgs.map((org) => (
         <button
@@ -130,7 +131,7 @@ function WorkspaceSwitcherPanel({
           className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm text-foreground hover:bg-muted transition-colors disabled:opacity-50"
         >
           <span className="h-3.5 w-3.5 shrink-0" />
-          <span className="truncate text-foreground">{org.name}</span>
+          <TruncatedText text={org.name} className="text-foreground" />
         </button>
       ))}
       {isOrgOwner && (
@@ -242,9 +243,7 @@ export function WorkspaceSwitcher({
       />
       {!isLabelHidden && (
         <>
-          <span className="min-w-0 flex-1 truncate text-left text-sm font-medium text-sidebar-foreground">
-            {workspaceName}
-          </span>
+          <TruncatedText text={workspaceName} className="flex-1 text-sm font-medium text-sidebar-foreground" />
           <ChevronsUpDown className="h-3 w-3 shrink-0 text-sidebar-foreground/50" />
         </>
       )}

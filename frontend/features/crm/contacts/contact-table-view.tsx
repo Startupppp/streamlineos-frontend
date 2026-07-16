@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -56,9 +57,9 @@ export function ContactTableView({
           </div>
           <Link
             href={`/crm/contacts/${c.id}`}
-            className="font-medium truncate max-w-[120px] hover:text-primary hover:underline transition-colors"
+            className="font-medium max-w-[120px] hover:text-primary hover:underline transition-colors"
           >
-            {c.name}
+            <TruncatedText text={c.name} />
           </Link>
         </div>
       ),
@@ -97,9 +98,9 @@ export function ContactTableView({
       key: "company",
       header: "Company",
       cell: (c) => (
-        <span className="text-muted-foreground truncate block max-w-[100px]">
-          {c.company || "—"}
-        </span>
+        {c.company
+          ? <TruncatedText text={c.company} className="text-muted-foreground max-w-[100px] block" />
+          : <span className="text-muted-foreground">—</span>}
       ),
     },
     {

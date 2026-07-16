@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   Building2,
   ChevronLeft,
@@ -80,13 +81,9 @@ export function ContactCardView({
                   {contact.name[0]?.toUpperCase() ?? "?"}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">
-                    {contact.name}
-                  </p>
+                  <TruncatedText text={contact.name} className="text-sm font-medium group-hover:text-primary transition-colors" />
                   {contact.title && (
-                    <p className="text-xs text-muted-foreground truncate">
-                      {contact.title}
-                    </p>
+                    <TruncatedText text={contact.title} className="text-xs text-muted-foreground" />
                   )}
                 </div>
                 <ContactActionsMenu
@@ -124,7 +121,7 @@ export function ContactCardView({
                 {contact.company && (
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Building2 className="h-3 w-3 shrink-0" />
-                    <span className="truncate">{contact.company}</span>
+                    <TruncatedText text={contact.company} />
                   </div>
                 )}
               </div>

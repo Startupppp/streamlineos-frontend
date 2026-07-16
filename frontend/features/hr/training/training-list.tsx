@@ -33,6 +33,7 @@ import {
   useEnrollTraining,
   type TrainingProgram,
 } from "@/hooks/api/hr/training";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface Props {
   canManage: boolean;
@@ -166,7 +167,7 @@ export function TrainingList({ canManage, onSelectProgram, selectedProgramId }: 
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-foreground truncate">{program.name}</p>
+                  <TruncatedText text={program.name} className="text-sm font-semibold text-foreground" />
                   <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
                     <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[11px] font-medium border ${TYPE_COLORS[program.type]}`}>
                       {program.type}
