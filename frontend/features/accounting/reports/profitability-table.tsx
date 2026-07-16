@@ -67,7 +67,7 @@ export function ProfitabilityTable({ data, nameKey }: ProfitabilityTableProps) {
             <span
               className={cn(
                 "text-sm font-mono tabular-nums font-medium",
-                isPositive ? "text-emerald-600" : "text-red-600",
+                isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400",
               )}
             >
               {formatCurrencyFull(Number(row.margin))}
@@ -96,7 +96,7 @@ export function ProfitabilityTable({ data, nameKey }: ProfitabilityTableProps) {
               <span
                 className={cn(
                   "text-xs font-mono tabular-nums w-12 text-right shrink-0",
-                  isPositive ? "text-emerald-600" : "text-red-600",
+                  isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400",
                 )}
               >
                 {pct.toFixed(1)}%
@@ -111,6 +111,7 @@ export function ProfitabilityTable({ data, nameKey }: ProfitabilityTableProps) {
 
   return (
     <DataTable
+      className="flex-1 min-h-0"
       data={indexedData}
       columns={columns}
       getRowKey={getProfitabilityRowKey}

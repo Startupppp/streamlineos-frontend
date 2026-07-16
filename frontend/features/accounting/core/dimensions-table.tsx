@@ -2,13 +2,16 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plus, Pencil, ChevronRight } from "lucide-react";
+import { Pencil, ChevronRight } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { StateIllustration } from "@/components/illustrations";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import {
   useDimensions,
   useUpdateDimension,
@@ -39,6 +42,16 @@ function DimensionActiveToggle({ dimension, canManage }: ActiveToggleProps) {
       disabled={update.isPending || !canManage}
       aria-label={`Toggle ${dimension.name} active state`}
     />
+  );
+}
+
+function NewDimensionButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button size="sm" onClick={onClick} {...hoverHandlers}>
+      <PlusIcon ref={iconRef} size={14} className="mr-1.5" />
+      New Dimension
+    </Button>
   );
 }
 
@@ -167,26 +180,17 @@ export function DimensionsTable({ canManage }: Props) {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center flex-1 py-16 text-center">
-        <p className="text-sm text-destructive">{getErrorMessage(error)}</p>
-      </div>
+      <ErrorState title="Failed to load dimensions" description={getErrorMessage(error)} />
     );
   }
 
   const emptyState = (
-    <div className="flex flex-col items-center justify-center flex-1 py-16 text-center">
-      <StateIllustration preset="settings" className="h-32 w-32 mb-4 opacity-70" />
-      <h3 className="text-sm font-semibold text-foreground">No dimensions yet</h3>
-      <p className="mt-1 text-sm text-muted-foreground max-w-xs">
-        Add cost centres, projects, or departments to tag GL entries for richer reporting.
-      </p>
-      {canManage && (
-        <Button size="sm" className="mt-4" onClick={handleOpenCreate}>
-          <Plus className="size-3.5 mr-1.5" />
-          New Dimension
-        </Button>
-      )}
-    </div>
+    <EmptyState
+      illustrationPreset="settings"
+      title="No dimensions yet"
+      description="Add cost centres, projects, or departments to tag GL entries for richer reporting."
+      action={canManage ? { label: "New Dimension", onClick: handleOpenCreate } : undefined}
+    />
   );
 
   return (
@@ -197,12 +201,7 @@ export function DimensionsTable({ canManage }: Props) {
             ? "No dimensions configured yet."
             : `${items.length} dimension${items.length !== 1 ? "s" : ""}`}
         </p>
-        {canManage && (
-          <Button size="sm" onClick={handleOpenCreate}>
-            <Plus className="size-3.5 mr-1.5" />
-            New Dimension
-          </Button>
-        )}
+        {canManage && <NewDimensionButton onClick={handleOpenCreate} />}
       </div>
 
       <DataTable

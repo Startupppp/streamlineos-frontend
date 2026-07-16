@@ -5,7 +5,8 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SearchInput } from "@/components/ui/search-input";
-import { LoadingState, ErrorState } from "@/components/shared";
+import { ErrorState } from "@/components/shared";
+import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -43,7 +44,7 @@ const CATEGORY_TONES: Record<string, { bg: string; text: string }> = {
   Sales: { bg: "bg-cyan-50 dark:bg-cyan-500/10", text: "text-cyan-600 dark:text-cyan-400" },
   Expenses: { bg: "bg-amber-50 dark:bg-amber-500/10", text: "text-amber-600 dark:text-amber-400" },
   Tax: { bg: "bg-blue-50 dark:bg-blue-500/10", text: "text-blue-600 dark:text-blue-400" },
-  Analytics: { bg: "bg-blue-50 dark:bg-blue-500/10", text: "text-blue-600 dark:text-blue-400" },
+  Analytics: { bg: "bg-sky-50 dark:bg-sky-500/10", text: "text-sky-600 dark:text-sky-400" },
   Budgeting: { bg: "bg-pink-50 dark:bg-pink-500/10", text: "text-pink-600 dark:text-pink-400" },
   Overview: { bg: "bg-muted", text: "text-muted-foreground" },
 };
@@ -141,43 +142,65 @@ export function ReportsHubClient() {
         </div>
       }
     >
-      {isLoading ? (
-        <LoadingState variant="cards" rows={9} />
-      ) : error ? (
-        <ErrorState
-          title="Failed to load reports catalog"
-          description={getErrorMessage(error)}
-          onRetry={handleRetry}
-        />
-      ) : filtered.length === 0 ? (
-        <EmptyState
-          illustration={<EmptyReportIllustration />}
-          title={search ? "No reports match your search" : "No reports available"}
-          description={search ? "Try a different search term." : "Reports will appear here once the accounting module is configured."}
-        />
-      ) : (
-        <div className="space-y-8">
-          {Object.entries(grouped).map(([category, items]) => (
-            <motion.div
-              key={category}
-              initial="initial"
-              animate="animate"
-              variants={{ animate: { transition: { staggerChildren: 0.06 } } }}
-            >
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 px-0.5">
-                {category}
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                {items.map((item) => (
-                  <motion.div key={item.id} variants={ITEM_VARIANTS}>
-                    <ReportCard item={item} category={category} />
-                  </motion.div>
-                ))}
+      <div className="flex flex-1 min-h-0 flex-col">
+        {isLoading ? (
+          <div className="space-y-8">
+            {[0, 1, 2].map((group) => (
+              <div key={group}>
+                <Skeleton className="h-4 w-24 mb-3" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="rounded-xl border border-border bg-card p-4 space-y-2">
+                      <div className="flex items-start gap-3">
+                        <Skeleton className="h-9 w-9 rounded-lg shrink-0" />
+                        <div className="flex-1 space-y-1.5">
+                          <Skeleton className="h-3.5 w-28" />
+                          <Skeleton className="h-3 w-full" />
+                          <Skeleton className="h-3 w-3/4" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </motion.div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        ) : error ? (
+          <ErrorState
+            title="Failed to load reports catalog"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+          />
+        ) : filtered.length === 0 ? (
+          <EmptyState
+            illustration={<EmptyReportIllustration />}
+            title={search ? "No reports match your search" : "No reports available"}
+            description={search ? "Try a different search term." : "Reports will appear here once the accounting module is configured."}
+          />
+        ) : (
+          <div className="space-y-8">
+            {Object.entries(grouped).map(([category, items]) => (
+              <motion.div
+                key={category}
+                initial="initial"
+                animate="animate"
+                variants={{ animate: { transition: { staggerChildren: 0.06 } } }}
+              >
+                <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 px-0.5">
+                  {category}
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                  {items.map((item) => (
+                    <motion.div key={item.id} variants={ITEM_VARIANTS}>
+                      <ReportCard item={item} category={category} />
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </div>
     </PageWrapper>
   );
 }

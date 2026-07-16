@@ -24,7 +24,8 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { Download } from "lucide-react";
+import { DownloadIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import {
   useTaxReportOutput,
   useTaxReportInput,
@@ -280,6 +281,9 @@ export default function TaxReportsPage() {
   const [rate, setRate] = useState("");
   const [activeTab, setActiveTab] = useState("output");
 
+  const { iconRef: outputDownloadRef, hoverHandlers: outputDownloadHover } = useAnimatedIcon();
+  const { iconRef: inputDownloadRef, hoverHandlers: inputDownloadHover } = useAnimatedIcon();
+
   const outputParams = { from, to, ...(rate ? { rate } : {}) };
   const inputParams = { from, to, ...(rate ? { rate } : {}) };
 
@@ -368,13 +372,13 @@ export default function TaxReportsPage() {
       backHref="/accounting/taxes"
       actions={
         activeTab === "output" ? (
-          <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={handleExportOutput}>
-            <Download className="h-3.5 w-3.5" />
+          <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={handleExportOutput} {...outputDownloadHover}>
+            <DownloadIcon ref={outputDownloadRef} size={14} className="shrink-0" />
             Export CSV
           </Button>
         ) : activeTab === "input" ? (
-          <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={handleExportInput}>
-            <Download className="h-3.5 w-3.5" />
+          <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={handleExportInput} {...inputDownloadHover}>
+            <DownloadIcon ref={inputDownloadRef} size={14} className="shrink-0" />
             Export CSV
           </Button>
         ) : undefined

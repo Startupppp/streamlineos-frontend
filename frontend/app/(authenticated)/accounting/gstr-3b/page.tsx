@@ -142,7 +142,7 @@ export default function Gstr3BPage() {
           </div>
 
           <div className="rounded-lg border border-border overflow-hidden">
-            <div className="px-4 py-3 font-medium bg-emerald-50 border-b border-emerald-200/60 dark:bg-emerald-500/10 dark:border-emerald-500/30">
+            <div className="px-4 py-3 font-medium bg-emerald-500/10 text-emerald-700 border-b border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
               3.1 Outward supplies
             </div>
             <Table>

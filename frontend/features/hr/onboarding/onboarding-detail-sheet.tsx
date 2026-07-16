@@ -10,11 +10,10 @@ import {
   RefreshCw,
   FileText,
   ExternalLink,
-  Upload,
   Circle,
-  ArrowLeft,
-  ArrowRight,
 } from "lucide-react";
+import { UploadIcon, ArrowLeftIcon, ArrowRightIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";

@@ -1,8 +1,9 @@
 "use client";
 
 import { memo } from "react";
-import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { XIcon } from "@animateicons/react/lucide";
 import {
   Select,
   SelectContent,

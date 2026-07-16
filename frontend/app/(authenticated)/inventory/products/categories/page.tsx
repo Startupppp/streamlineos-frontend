@@ -4,11 +4,12 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Plus,
-  MoreHorizontal,
   Pencil,
   Archive,
   RotateCcw,
 } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   EmptyProductsIllustration,
   EmptySearchIllustration,
@@ -270,14 +271,14 @@ function categoriesColumns(
       cell: (cat) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button
+            <AnimatedIconButton
+              icon={EllipsisIcon}
+              iconSize={16}
               variant="ghost"
               size="icon"
               className="w-7"
               aria-label={`Actions for ${cat.name}`}
-            >
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
+            />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => onEdit(cat)}>

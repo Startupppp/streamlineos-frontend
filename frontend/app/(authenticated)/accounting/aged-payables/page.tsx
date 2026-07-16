@@ -25,7 +25,10 @@ const agedPayablesColumns: DataTableColumn<AgedPayablesRow>[] = [
     key: "vendorName",
     header: "Vendor",
     cell: (row) => (
-      <Link href={"/accounting/vendors/" + String(row.vendorId)} className="text-primary hover:underline">
+      <Link
+        href={"/accounting/vendors/" + String(row.vendorId)}
+        className="text-primary hover:underline"
+      >
         {row.vendorName}
       </Link>
     ),
@@ -33,7 +36,9 @@ const agedPayablesColumns: DataTableColumn<AgedPayablesRow>[] = [
   {
     key: "current",
     header: "Current",
-    cell: (row) => <span className="tabular-nums font-mono text-sm">{fmt(row.current)}</span>,
+    cell: (row) => (
+      <span className="tabular-nums font-mono text-sm">{fmt(row.current)}</span>
+    ),
     className: "text-right",
     sortable: true,
     sortValue: (row) => parseFloat(row.current),
@@ -41,7 +46,9 @@ const agedPayablesColumns: DataTableColumn<AgedPayablesRow>[] = [
   {
     key: "d1_30",
     header: "1–30 days",
-    cell: (row) => <span className="tabular-nums font-mono text-sm">{fmt(row.d1_30)}</span>,
+    cell: (row) => (
+      <span className="tabular-nums font-mono text-sm">{fmt(row.d1_30)}</span>
+    ),
     className: "text-right",
     sortable: true,
     sortValue: (row) => parseFloat(row.d1_30),
@@ -49,7 +56,9 @@ const agedPayablesColumns: DataTableColumn<AgedPayablesRow>[] = [
   {
     key: "d31_60",
     header: "31–60 days",
-    cell: (row) => <span className="tabular-nums font-mono text-sm">{fmt(row.d31_60)}</span>,
+    cell: (row) => (
+      <span className="tabular-nums font-mono text-sm">{fmt(row.d31_60)}</span>
+    ),
     className: "text-right",
     sortable: true,
     sortValue: (row) => parseFloat(row.d31_60),
@@ -57,7 +66,9 @@ const agedPayablesColumns: DataTableColumn<AgedPayablesRow>[] = [
   {
     key: "d61_90",
     header: "61–90 days",
-    cell: (row) => <span className="tabular-nums font-mono text-sm">{fmt(row.d61_90)}</span>,
+    cell: (row) => (
+      <span className="tabular-nums font-mono text-sm">{fmt(row.d61_90)}</span>
+    ),
     className: "text-right",
     sortable: true,
     sortValue: (row) => parseFloat(row.d61_90),
@@ -65,7 +76,11 @@ const agedPayablesColumns: DataTableColumn<AgedPayablesRow>[] = [
   {
     key: "d91_plus",
     header: "90+ days",
-    cell: (row) => <span className="tabular-nums text-rose-600 font-mono text-sm">{fmt(row.d91_plus)}</span>,
+    cell: (row) => (
+      <span className="tabular-nums text-rose-600 dark:text-rose-400 font-mono text-sm">
+        {fmt(row.d91_plus)}
+      </span>
+    ),
     className: "text-right",
     sortable: true,
     sortValue: (row) => parseFloat(row.d91_plus),
@@ -73,7 +88,11 @@ const agedPayablesColumns: DataTableColumn<AgedPayablesRow>[] = [
   {
     key: "total",
     header: "Total",
-    cell: (row) => <span className="tabular-nums font-medium font-mono text-sm">{fmt(row.total)}</span>,
+    cell: (row) => (
+      <span className="tabular-nums font-medium font-mono text-sm">
+        {fmt(row.total)}
+      </span>
+    ),
     className: "text-right",
     sortable: true,
     sortValue: (row) => parseFloat(row.total),
@@ -100,41 +119,67 @@ export default function AgedPayablesPage() {
       filters={
         <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
           <div className="flex flex-col gap-1">
-            <label htmlFor="aged-payables-asof" className="text-[11px] font-medium text-muted-foreground leading-none">As of</label>
-            <DatePicker id="aged-payables-asof" value={asOf ?? ""} onChange={handleAsOfChange} placeholder="Pick a date" className="w-full sm:w-[160px] h-8 text-sm" />
+            <label
+              htmlFor="aged-payables-asof"
+              className="text-[11px] font-medium text-muted-foreground leading-none"
+            >
+              As of
+            </label>
+            <DatePicker
+              id="aged-payables-asof"
+              value={asOf ?? ""}
+              onChange={handleAsOfChange}
+              placeholder="Pick a date"
+              className="w-full sm:w-[160px] h-8 text-sm"
+            />
           </div>
         </div>
       }
     >
-      {query.error ? (
-        <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} />
-      ) : (
-        <DataTable
-          className="flex-1 min-h-0"
-          data={report?.rows ?? []}
-          columns={agedPayablesColumns}
-          getRowKey={(row) => row.vendorId}
-          isLoading={query.isLoading}
-          emptyState={
-            <EmptyState
-              illustration={<EmptyExpensesIllustration />}
-              title="No outstanding payables"
-              description={`No vendor balances are overdue as of ${asOf}.`}
-            />
-          }
-          footer={report ? (
-            <div className="grid grid-cols-7 gap-2 text-xs font-semibold tabular-nums font-mono">
-              <span>Total</span>
-              <span className="text-right">{fmt(report.totals.current)}</span>
-              <span className="text-right">{fmt(report.totals.d1_30)}</span>
-              <span className="text-right">{fmt(report.totals.d31_60)}</span>
-              <span className="text-right">{fmt(report.totals.d61_90)}</span>
-              <span className="text-right text-rose-600">{fmt(report.totals.d91_plus)}</span>
-              <span className="text-right">{fmt(report.totals.total)}</span>
-            </div>
-          ) : undefined}
-        />
-      )}
+      <div className="flex flex-1 min-h-0 flex-col">
+        {query.error ? (
+          <ErrorState
+            description={getErrorMessage(query.error)}
+            onRetry={handleRetry}
+          />
+        ) : (
+          <DataTable
+            className="flex-1 min-h-0"
+            data={report?.rows ?? []}
+            columns={agedPayablesColumns}
+            getRowKey={(row) => row.vendorId}
+            isLoading={query.isLoading}
+            emptyState={
+              <EmptyState
+                illustration={<EmptyExpensesIllustration />}
+                title="No outstanding payables"
+                description={`No vendor balances are overdue as of ${asOf}.`}
+              />
+            }
+            footer={
+              report ? (
+                <div className="grid grid-cols-7 gap-2 text-xs font-semibold tabular-nums font-mono">
+                  <span>Total</span>
+                  <span className="text-right">
+                    {fmt(report.totals.current)}
+                  </span>
+                  <span className="text-right">{fmt(report.totals.d1_30)}</span>
+                  <span className="text-right">
+                    {fmt(report.totals.d31_60)}
+                  </span>
+                  <span className="text-right">
+                    {fmt(report.totals.d61_90)}
+                  </span>
+                  <span className="text-right text-rose-600 dark:text-rose-400">
+                    {fmt(report.totals.d91_plus)}
+                  </span>
+                  <span className="text-right">{fmt(report.totals.total)}</span>
+                </div>
+              ) : undefined
+            }
+          />
+        )}
+      </div>
     </PageWrapper>
   );
 }

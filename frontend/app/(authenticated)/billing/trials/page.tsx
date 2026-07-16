@@ -4,19 +4,16 @@ import Link from "next/link";
 import { differenceInDays, format, subDays } from "date-fns";
 import {
   CheckCircle2,
+  Clock,
   ShieldCheck,
   FileDown,
   Lock,
-  AlertTriangle,
-  RefreshCw,
-  Clock,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useSubscription } from "@/hooks/api/subscription";
@@ -69,16 +66,7 @@ export default function TrialsPage() {
       {isLoading ? (
         <TrialPageSkeleton />
       ) : isError ? (
-        <div className="flex flex-col items-center justify-center flex-1 py-16 gap-3">
-          <AlertTriangle className="w-8 text-muted-foreground/40" />
-          <p className="text-sm text-muted-foreground">
-            Failed to load subscription info
-          </p>
-          <Button variant="outline" size="sm" onClick={handleRetry}>
-            <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-            Retry
-          </Button>
-        </div>
+        <ErrorState title="Failed to load subscription info" description={getErrorMessage(error)} onRetry={handleRetry} className="flex-1" />
       ) : !data?.subscription ? (
         <div className="flex flex-col items-center justify-center flex-1 py-16 gap-3">
           <Clock className="h-10 w-10 text-muted-foreground/40" />

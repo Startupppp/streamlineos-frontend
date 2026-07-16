@@ -13,12 +13,14 @@ import {
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Users, Home, CalendarCheck, Clock3, BadgeCheck } from "lucide-react";
+import { Users, CalendarCheck, Clock3, BadgeCheck } from "lucide-react";
+import { HomeIcon, PlusIcon } from "@animateicons/react/lucide";
 import { resolveImageUrl } from "@/lib/utils";
 
 import { LeaveRequestSheet } from "@/features/hr/leaves/leave-request-sheet";
@@ -101,23 +103,27 @@ export function LeavesWfhContent() {
         subtitle="Manage your leave requests, work from home, and approvals."
         actions={
           <>
-            <Button
+            <AnimatedIconButton
+              icon={HomeIcon}
+              iconSize={14}
+              iconClassName="mr-1.5"
               variant="outline"
               size="sm"
               onClick={handleOpenWfhSheet}
               className="gap-1.5 h-8"
             >
-              <Home className="h-3.5 w-3.5" />
               Request WFH
-            </Button>
-            <Button
+            </AnimatedIconButton>
+            <AnimatedIconButton
+              icon={PlusIcon}
+              iconSize={14}
+              iconClassName="mr-1.5"
               size="sm"
               onClick={handleOpenLeaveSheet}
               className="gap-1.5 h-8"
             >
-              <Plus className="h-3.5 w-3.5" />
               Request Leave
-            </Button>
+            </AnimatedIconButton>
           </>
         }
       >

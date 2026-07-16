@@ -112,30 +112,32 @@ export function SalesByCustomerReport() {
         />
       }
     >
-      {error ? (
-        <ErrorState
-          title="Failed to load report"
-          description={getErrorMessage(error)}
-          onRetry={handleRetry}
-        />
-      ) : (
-        <DataTable
-          className="flex-1 min-h-0"
-          data={data ?? []}
-          columns={SALES_BY_CUSTOMER_COLUMNS}
-          getRowKey={getSalesByCustomerRowKey}
-          isLoading={isLoading}
-          minWidth="640px"
-          emptyState={
-            <EmptyState
-              illustration={<EmptyReportIllustration />}
-              title="No sales data"
-              description="No invoices found in the selected date range."
-              compact
-            />
-          }
-        />
-      )}
+      <div className="flex flex-1 min-h-0 flex-col">
+        {error ? (
+          <ErrorState
+            title="Failed to load report"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+          />
+        ) : (
+          <DataTable
+            className="flex-1 min-h-0"
+            data={data ?? []}
+            columns={SALES_BY_CUSTOMER_COLUMNS}
+            getRowKey={getSalesByCustomerRowKey}
+            isLoading={isLoading}
+            minWidth="640px"
+            emptyState={
+              <EmptyState
+                illustration={<EmptyReportIllustration />}
+                title="No sales data"
+                description="No invoices found in the selected date range."
+                compact
+              />
+            }
+          />
+        )}
+      </div>
     </ReportShell>
   );
 }

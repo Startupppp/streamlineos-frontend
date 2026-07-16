@@ -27,6 +27,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { LoadingState, ErrorState } from "@/components/shared";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Money, FiBanknoteIcon, FiCheckIcon, FiClockIcon, FiLayersIcon } from "@/features/accounting/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
@@ -308,7 +309,7 @@ export default function PaymentRunDetailPage({
       }
     >
       <div className="space-y-4">
-        {query.isLoading && <LoadingState variant="page" />}
+        {query.isLoading && <LoadingState variant="table" rows={12} />}
         {query.error && (
           <ErrorState
             title="Failed to load payment run"
@@ -392,9 +393,7 @@ export default function PaymentRunDetailPage({
               getRowKey={(item) => item.id}
               isLoading={query.isLoading}
               emptyState={
-                <div className="py-12 text-center text-sm text-muted-foreground">
-                  No items in this payment run.
-                </div>
+                <EmptyState compact title="No items in this payment run" description="Add vendor bills to this run to process payments." />
               }
             />
           </>

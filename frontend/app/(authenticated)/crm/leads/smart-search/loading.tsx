@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function SmartLeadSearchLoading() {
   return (
     <PageWrapper title="Smart Lead Search" subtitle='Search leads using natural language — "hot leads from Mumbai above 5L"'>
-      <div className="space-y-6">
+      <div className="flex flex-1 min-h-0 flex-col space-y-6">
         <div className="flex gap-2">
           <Skeleton className="flex-1 h-11" />
           <Skeleton className="w-28 h-11" />

@@ -11,9 +11,11 @@ import {
   CheckCircle2,
   Clock,
   ChevronRight,
-  Plus,
   CreditCard,
 } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { ErrorState } from "@/components/shared/error-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -63,10 +65,14 @@ function fmt(amount: string | number) {
 }
 
 export default function BillingPage() {
+  const { iconRef: plusRef, hoverHandlers: plusHoverHandlers } =
+    useAnimatedIcon();
+
   const {
     data: stats,
     isLoading: statsLoading,
     isError: statsError,
+    error: statsErrorObj,
     refetch: refetchStats,
   } = useInvoiceStats();
   const { data: recentData, isLoading: recentLoading } = useInvoices({
@@ -102,14 +108,14 @@ export default function BillingPage() {
       subtitle="Track invoices, payments, and revenue"
       actions={
         <Link href="/billing/invoices/new">
-          <Button size="sm">
-            <Plus className="h-3.5 w-3.5 mr-1.5" />
+          <Button size="sm" {...plusHoverHandlers}>
+            <PlusIcon ref={plusRef} size={14} className="mr-1.5" />
             New Invoice
           </Button>
         </Link>
       }
     >
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         {sub && (
           <div className="flex items-center gap-3 rounded-lg bg-primary/5 border border-primary/20 px-4 py-3">
             <CreditCard className="h-5 w-5 text-muted-foreground shrink-0" />
@@ -118,7 +124,7 @@ export default function BillingPage() {
                 {PLAN_LABELS[sub.plan] ?? sub.plan} Plan
               </p>
               {sub.status === "TRIAL" && trialDaysRemaining !== null && (
-                <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
+                <p className="text-xs text-amber-600 mt-0.5">
                   Trial ends in{" "}
                   {trialDaysRemaining === 0
                     ? "today"
@@ -166,7 +172,7 @@ export default function BillingPage() {
           <ErrorState
             compact
             title="Failed to load billing stats"
-            description="Could not load billing statistics."
+            description={getErrorMessage(statsErrorObj)}
             onRetry={handleRetryStats}
           />
         ) : (

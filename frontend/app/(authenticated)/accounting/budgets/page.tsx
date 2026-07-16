@@ -2,13 +2,13 @@
 
 import { useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -242,10 +242,9 @@ export default function BudgetsListPage() {
       subtitle="Annual and departmental budgets."
       actions={
         canCreate ? (
-          <Button size="sm" onClick={handleOpenCreate}>
-            <Plus className="size-4 mr-1" />
+          <AnimatedIconButton size="sm" icon={PlusIcon} iconSize={14} onClick={handleOpenCreate}>
             New Budget
-          </Button>
+          </AnimatedIconButton>
         ) : undefined
       }
       filters={
@@ -271,31 +270,32 @@ export default function BudgetsListPage() {
         </div>
       }
     >
-      {query.error && (
-        <ErrorState
-          title="Failed to load budgets"
-          description={getErrorMessage(query.error)}
-          onRetry={handleRetry}
-        />
-      )}
-      {!query.error && (
-        <DataTable
-          className="flex-1 min-h-0"
-          data={items}
-          columns={budgetColumns}
-          getRowKey={(row) => row.id}
-          isLoading={query.isLoading}
-          onRowClick={handleRowClickRow}
-          emptyState={
-            <EmptyState
-              illustration={<EmptyReportIllustration />}
-              title="No budgets yet"
-              description="Create a budget to start tracking planned vs actual spend."
-            />
-          }
-          minWidth="700px"
-        />
-      )}
+      <div className="flex flex-1 min-h-0 flex-col">
+        {query.error ? (
+          <ErrorState
+            title="Failed to load budgets"
+            description={getErrorMessage(query.error)}
+            onRetry={handleRetry}
+          />
+        ) : (
+          <DataTable
+            className="flex-1 min-h-0"
+            data={items}
+            columns={budgetColumns}
+            getRowKey={(row) => row.id}
+            isLoading={query.isLoading}
+            onRowClick={handleRowClickRow}
+            emptyState={
+              <EmptyState
+                illustration={<EmptyReportIllustration />}
+                title="No budgets yet"
+                description="Create a budget to start tracking planned vs actual spend."
+              />
+            }
+            minWidth="700px"
+          />
+        )}
+      </div>
 
       <EntityFormSheet<CreateBudgetForm>
         open={sheetOpen}

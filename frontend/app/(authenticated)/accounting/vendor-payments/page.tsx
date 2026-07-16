@@ -14,6 +14,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { FinanceStatusBadge, Money } from "@/features/accounting/shared";
 import { usePurchaseBills, useVendorsOutstanding } from "@/hooks/api/accounting";
 import type { PurchaseBillSummary } from "@/types/accounting";
@@ -47,6 +49,12 @@ export default function VendorPaymentsPage() {
 
   const vendors = vendorsQuery.data?.items ?? [];
   const isLoading = paidQuery.isLoading || partialQuery.isLoading;
+  const queryError = paidQuery.error ?? partialQuery.error;
+
+  function handleRetry(): void {
+    void paidQuery.refetch();
+    void partialQuery.refetch();
+  }
 
   function handleOpenAllocationDialog(): void {
     setAllocationDialogOpen(true);
@@ -132,7 +140,7 @@ export default function VendorPaymentsPage() {
       }
       filters={
         <Select value={vendorFilter} onValueChange={handleVendorFilterChange}>
-          <SelectTrigger className="w-[180px] text-xs">
+          <SelectTrigger className="h-9 w-[180px] text-xs">
             <SelectValue placeholder="All vendors" />
           </SelectTrigger>
           <SelectContent>
@@ -146,6 +154,13 @@ export default function VendorPaymentsPage() {
         </Select>
       }
     >
+      {queryError && (
+        <ErrorState
+          title="Failed to load vendor payments"
+          description={getErrorMessage(queryError)}
+          onRetry={handleRetry}
+        />
+      )}
       <DataTable
         data={filteredItems}
         columns={columns}

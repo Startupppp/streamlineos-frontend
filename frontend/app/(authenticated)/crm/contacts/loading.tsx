@@ -8,11 +8,11 @@ export default function ContactsLoading() {
       subtitle="People directory"
       actions={
         <>
-          <Skeleton className="h-8 w-16 rounded-md" />
-          <Skeleton className="h-8 w-32 rounded-md" />
+          <Skeleton className="h-9 w-16 rounded-md" />
+          <Skeleton className="h-9 w-32 rounded-md" />
         </>
       }
-      filters={<Skeleton className="h-8 w-72 rounded-md" />}
+      filters={<Skeleton className="h-9 w-72 rounded-md" />}
     >
       <div className="border border-border rounded-md">
         <div className="border-b border-border bg-muted/40 px-3 py-2 flex items-center gap-3">

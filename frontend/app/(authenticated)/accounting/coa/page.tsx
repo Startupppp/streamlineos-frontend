@@ -6,7 +6,7 @@ import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -51,10 +51,10 @@ function isTypeFilter(value: string): value is TypeFilter {
 
 const TYPE_BADGE_CLASSES: Record<string, string> = {
   ASSET: "border-primary/30 text-foreground bg-primary/5",
-  LIABILITY: "border-orange-500/30 text-orange-700 bg-orange-500/5 dark:text-orange-300",
+  LIABILITY: "border-orange-500/30 text-orange-700 bg-orange-500/5 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/30",
   EQUITY: "border-primary/30 text-foreground bg-primary/5",
-  INCOME: "border-emerald-500/30 text-emerald-700 bg-emerald-500/5 dark:text-emerald-300",
-  EXPENSE: "border-amber-500/30 text-amber-700 bg-amber-500/5 dark:text-amber-300",
+  INCOME: "border-emerald-500/30 text-emerald-700 bg-emerald-500/5 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  EXPENSE: "border-amber-500/30 text-amber-700 bg-amber-500/5 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
 };
 
 interface FlatNode {

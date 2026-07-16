@@ -10,8 +10,9 @@ import {
 } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { Activity, ChevronLeft, ChevronRight } from "lucide-react";
+import { Activity } from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAttendanceHeatmap } from "@/hooks/api/hr";
 
 const MONTH_LABELS = [
@@ -101,28 +102,28 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
             Attendance Heatmap
           </CardTitle>
           <div className="flex items-center gap-0.5 rounded-lg border border-border bg-muted/30 p-0.5">
-            <Button
+            <AnimatedIconButton
+              icon={ChevronLeftIcon}
+              iconSize={16}
               variant="ghost"
               size="icon"
               className="w-8 duration-200"
               onClick={handlePrevYear}
               aria-label="Previous year"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
+            />
             <span className="text-sm font-semibold min-w-[50px] text-center text-foreground">
               {year}
             </span>
-            <Button
+            <AnimatedIconButton
+              icon={ChevronRightIcon}
+              iconSize={16}
               variant="ghost"
               size="icon"
               className="w-8 duration-200"
               onClick={handleNextYear}
               disabled={year >= new Date().getFullYear()}
               aria-label="Next year"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+            />
           </div>
         </div>
         {data?.summary && (

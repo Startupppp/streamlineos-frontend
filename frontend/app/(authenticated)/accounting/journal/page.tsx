@@ -318,7 +318,7 @@ export default function JournalListPage() {
         ) : undefined
       }
     >
-      <div className="flex flex-1 min-h-0 flex-col space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         <div className="flex border-b border-border gap-1">
           <button
             type="button"

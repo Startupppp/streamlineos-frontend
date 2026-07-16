@@ -13,9 +13,10 @@ import {
   FileLock,
   FileKey,
   Smile,
-  MoreHorizontal,
   AlertCircle,
 } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
@@ -257,15 +258,15 @@ function buildTemplateColumns(
       cell: (template) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button
+            <AnimatedIconButton
+              icon={EllipsisIcon}
+              iconSize={16}
               variant="ghost"
               size="icon"
               className="w-7 hover:bg-muted transition-colors duration-200"
               aria-label="Template actions"
               onClick={(e) => e.stopPropagation()}
-            >
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
+            />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => router.push(`/hr/documents/templates/${template.id}/edit`)}>

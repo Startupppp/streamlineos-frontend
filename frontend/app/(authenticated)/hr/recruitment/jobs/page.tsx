@@ -24,9 +24,11 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ExternalBoardsSheet } from "@/features/hr/recruitment/jobs/external-boards-sheet";
 import { toast } from "sonner";
 import {
-  Plus, MoreHorizontal, Trash2, Play, Pause, Share2, Loader2, Copy,
+  Plus, Trash2, Play, Pause, Share2, Loader2, Copy,
   ExternalLink, MapPin, Users, Briefcase, Building2, Pencil, ListChecks,
 } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import type { JobPostingStatus } from "@/types/hr";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
@@ -294,13 +296,14 @@ export default function JobPostingsPage() {
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button
+                          <AnimatedIconButton
+                            icon={EllipsisIcon}
+                            iconSize={16}
                             variant="ghost"
                             size="icon"
                             className="w-7 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
+                            aria-label="Job actions"
+                          />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-44">
                           <DropdownMenuItem onClick={() => router.push(`/hr/recruitment/jobs/${job.id}/edit`)}>

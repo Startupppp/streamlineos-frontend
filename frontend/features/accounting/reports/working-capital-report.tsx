@@ -6,7 +6,8 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyReportIllustration } from "@/components/illustrations";
-import { LoadingState, ErrorState } from "@/components/shared";
+import { ErrorState } from "@/components/shared";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ReportShell } from "./report-shell";
 import { useWorkingCapital } from "@/hooks/api/accounting/reports";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -55,82 +56,95 @@ export function WorkingCapitalReport() {
         </div>
       }
     >
-      {isLoading ? (
-        <LoadingState variant="cards" rows={3} />
-      ) : error ? (
-        <ErrorState
-          title="Failed to load working capital"
-          description={getErrorMessage(error)}
-          onRetry={handleRetry}
-        />
-      ) : !data ? (
-        <EmptyState
-          illustration={<EmptyReportIllustration />}
-          title="No data available"
-          description="No balance sheet data found as of the selected date."
-          compact
-        />
-      ) : (
-        <div className="space-y-6">
-          <StatCardGrid cols={4}>
-            <StatCard
-              label="Current Assets"
-              value={formatCurrencyFull(Number(data.currentAssets))}
-              icon={TrendingUp}
-              tone="emerald"
-              hint={`as of ${data.asOf}`}
-            />
-            <StatCard
-              label="Current Liabilities"
-              value={formatCurrencyFull(Number(data.currentLiabilities))}
-              icon={TrendingDown}
-              tone="red"
-              hint={`as of ${data.asOf}`}
-            />
-            <StatCard
-              label="Working Capital"
-              value={formatCurrencyFull(Number(data.workingCapital))}
-              icon={Scale}
-              tone={isPositive ? "emerald" : "red"}
-              delta={{ value: isPositive ? "Positive" : "Negative", direction: isPositive ? "up" : "down" }}
-            />
-            <StatCard
-              label="Current Ratio"
-              value={Number(data.ratio).toFixed(2)}
-              icon={Scale}
-              tone={Number(data.ratio) >= 1 ? "blue" : "amber"}
-              hint={Number(data.ratio) >= 2 ? "Healthy" : Number(data.ratio) >= 1 ? "Adequate" : "Below threshold"}
-            />
-          </StatCardGrid>
+      <div className="flex flex-1 min-h-0 flex-col">
+        {isLoading ? (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} className="rounded-xl border border-border bg-card p-4 space-y-2">
+                  <Skeleton className="h-3 w-24" />
+                  <Skeleton className="h-7 w-32" />
+                  <Skeleton className="h-3 w-20" />
+                </div>
+              ))}
+            </div>
+            <Skeleton className="h-[160px] w-full rounded-xl" />
+          </div>
+        ) : error ? (
+          <ErrorState
+            title="Failed to load working capital"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+          />
+        ) : !data ? (
+          <EmptyState
+            illustration={<EmptyReportIllustration />}
+            title="No data available"
+            description="No balance sheet data found as of the selected date."
+            compact
+          />
+        ) : (
+          <div className="space-y-6">
+            <StatCardGrid cols={4}>
+              <StatCard
+                label="Current Assets"
+                value={formatCurrencyFull(Number(data.currentAssets))}
+                icon={TrendingUp}
+                tone="emerald"
+                hint={`as of ${data.asOf}`}
+              />
+              <StatCard
+                label="Current Liabilities"
+                value={formatCurrencyFull(Number(data.currentLiabilities))}
+                icon={TrendingDown}
+                tone="red"
+                hint={`as of ${data.asOf}`}
+              />
+              <StatCard
+                label="Working Capital"
+                value={formatCurrencyFull(Number(data.workingCapital))}
+                icon={Scale}
+                tone={isPositive ? "emerald" : "red"}
+                delta={{ value: isPositive ? "Positive" : "Negative", direction: isPositive ? "up" : "down" }}
+              />
+              <StatCard
+                label="Current Ratio"
+                value={Number(data.ratio).toFixed(2)}
+                icon={Scale}
+                tone={Number(data.ratio) >= 1 ? "blue" : "amber"}
+                hint={Number(data.ratio) >= 2 ? "Healthy" : Number(data.ratio) >= 1 ? "Adequate" : "Below threshold"}
+              />
+            </StatCardGrid>
 
-          <div className="rounded-xl border border-border bg-card p-4">
-            <p className="text-sm font-semibold text-foreground mb-1">Working Capital = Current Assets − Current Liabilities</p>
-            <p className="text-xs text-muted-foreground">
-              A current ratio of 2 or above is considered healthy. Below 1 indicates the company may have difficulty meeting short-term obligations.
-            </p>
-            <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
-              <div className="rounded-lg bg-emerald-50 border border-emerald-200/60 px-4 py-3 dark:bg-emerald-500/10 dark:border-emerald-500/30">
-                <p className="text-xs text-emerald-700 font-medium dark:text-emerald-300">Current Assets</p>
-                <p className="text-xl font-bold tabular-nums text-emerald-700 dark:text-emerald-300 mt-1">
-                  {formatCurrencyFull(Number(data.currentAssets))}
-                </p>
-              </div>
-              <div className="rounded-lg bg-red-50 border border-red-200/60 px-4 py-3 dark:bg-red-500/10 dark:border-red-500/30">
-                <p className="text-xs text-red-700 font-medium dark:text-red-300">Current Liabilities</p>
-                <p className="text-xl font-bold tabular-nums text-red-700 dark:text-red-300 mt-1">
-                  {formatCurrencyFull(Number(data.currentLiabilities))}
-                </p>
-              </div>
-              <div className={`rounded-lg border px-4 py-3 ${isPositive ? "bg-blue-50 border-blue-200/60 dark:bg-blue-500/10 dark:border-blue-500/30" : "bg-amber-50 border-amber-200/60 dark:bg-amber-500/10 dark:border-amber-500/30"}`}>
-                <p className={`text-xs font-medium ${isPositive ? "text-blue-700 dark:text-blue-300" : "text-amber-700 dark:text-amber-300"}`}>Net Working Capital</p>
-                <p className={`text-xl font-bold tabular-nums mt-1 ${isPositive ? "text-blue-700 dark:text-blue-300" : "text-amber-700 dark:text-amber-300"}`}>
-                  {formatCurrencyFull(Number(data.workingCapital))}
-                </p>
+            <div className="rounded-xl border border-border bg-card p-4">
+              <p className="text-sm font-semibold text-foreground mb-1">Working Capital = Current Assets − Current Liabilities</p>
+              <p className="text-xs text-muted-foreground">
+                A current ratio of 2 or above is considered healthy. Below 1 indicates the company may have difficulty meeting short-term obligations.
+              </p>
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+                <div className="rounded-lg bg-emerald-50 border border-emerald-200/60 px-4 py-3 dark:bg-emerald-500/10 dark:border-emerald-500/30">
+                  <p className="text-xs text-emerald-700 font-medium dark:text-emerald-300">Current Assets</p>
+                  <p className="text-xl font-bold tabular-nums text-emerald-700 dark:text-emerald-300 mt-1">
+                    {formatCurrencyFull(Number(data.currentAssets))}
+                  </p>
+                </div>
+                <div className="rounded-lg bg-red-50 border border-red-200/60 px-4 py-3 dark:bg-red-500/10 dark:border-red-500/30">
+                  <p className="text-xs text-red-700 font-medium dark:text-red-300">Current Liabilities</p>
+                  <p className="text-xl font-bold tabular-nums text-red-700 dark:text-red-300 mt-1">
+                    {formatCurrencyFull(Number(data.currentLiabilities))}
+                  </p>
+                </div>
+                <div className={`rounded-lg border px-4 py-3 ${isPositive ? "bg-blue-50 border-blue-200/60 dark:bg-blue-500/10 dark:border-blue-500/30" : "bg-amber-50 border-amber-200/60 dark:bg-amber-500/10 dark:border-amber-500/30"}`}>
+                  <p className={`text-xs font-medium ${isPositive ? "text-blue-700 dark:text-blue-300" : "text-amber-700 dark:text-amber-300"}`}>Net Working Capital</p>
+                  <p className={`text-xl font-bold tabular-nums mt-1 ${isPositive ? "text-blue-700 dark:text-blue-300" : "text-amber-700 dark:text-amber-300"}`}>
+                    {formatCurrencyFull(Number(data.workingCapital))}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </ReportShell>
   );
 }

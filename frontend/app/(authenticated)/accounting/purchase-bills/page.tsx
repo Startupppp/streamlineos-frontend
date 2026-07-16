@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
+import { useState } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import Link from "next/link";
 import { Plus } from "lucide-react";
@@ -130,7 +130,7 @@ function BillRowActions({ bill, canApprove }: BillRowActionsProps) {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <AnimatedIconButton icon={EllipsisIcon} variant="ghost" size="icon" className="w-7" aria-label="Bill actions" />
+          <AnimatedIconButton icon={EllipsisIcon} iconSize={14} variant="ghost" size="icon" className="w-7" aria-label="Bill actions" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-44">
           {showSubmit && (

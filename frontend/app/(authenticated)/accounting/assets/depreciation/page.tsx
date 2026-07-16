@@ -54,8 +54,10 @@ const runDepreciationSchema = z.object({
 type RunFormValues = z.infer<typeof runDepreciationSchema>;
 
 const RUN_STATUS_CLASSES: Record<DepreciationRun["status"], string> = {
-  PENDING: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  COMPLETED: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  PENDING:
+    "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  COMPLETED:
+    "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
   REVERSED: "bg-muted text-foreground border-border",
 };
 
@@ -67,7 +69,10 @@ const RUN_STATUS_LABELS: Record<DepreciationRun["status"], string> = {
 
 function RunStatusBadge({ status }: { status: DepreciationRun["status"] }) {
   return (
-    <Badge variant="outline" className={`text-[9px] px-1.5 py-0 h-4 ${RUN_STATUS_CLASSES[status]}`}>
+    <Badge
+      variant="outline"
+      className={`text-[9px] px-1.5 py-0 h-4 ${RUN_STATUS_CLASSES[status]}`}
+    >
       {RUN_STATUS_LABELS[status]}
     </Badge>
   );
@@ -119,14 +124,19 @@ function ReverseRow({ run, canManage }: ReverseRowProps) {
       <AlertDialog open={confirmOpen} onOpenChange={handleDialogChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Reverse depreciation run for {run.periodKey}?</AlertDialogTitle>
+            <AlertDialogTitle>
+              Reverse depreciation run for {run.periodKey}?
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              This will reverse the journal entry and mark this run as reversed. This affects{" "}
-              {run.assetCount} asset{run.assetCount !== 1 ? "s" : ""}. This action cannot be undone.
+              This will reverse the journal entry and mark this run as reversed.
+              This affects {run.assetCount} asset
+              {run.assetCount !== 1 ? "s" : ""}. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={reverseMutation.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={reverseMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleReverseConfirm}
               disabled={reverseMutation.isPending}
@@ -217,8 +227,16 @@ export default function DepreciationRunsPage() {
     },
   ];
 
+  function handleOpenCreate(): void {
+    setCreateOpen(true);
+  }
+
   function handleRetry(): void {
     void runsQuery.refetch();
+  }
+
+  function handleGetRunKey(row: DepreciationRun): number {
+    return row.id;
   }
 
   function handleCreateRun(values: RunFormValues): void {
@@ -241,43 +259,45 @@ export default function DepreciationRunsPage() {
         subtitle="View and manage monthly depreciation postings"
         actions={
           canManage && (
-            <Button size="sm" onClick={() => setCreateOpen(true)}>
+            <Button size="sm" onClick={handleOpenCreate}>
               <Play className="size-4 mr-1" />
               Run Depreciation
             </Button>
           )
         }
       >
-        {runsQuery.error && (
-          <ErrorState
-            title="Failed to load depreciation runs"
-            description={getErrorMessage(runsQuery.error)}
-            onRetry={handleRetry}
-          />
-        )}
+        <div className="flex flex-1 min-h-0 flex-col">
+          {runsQuery.error && (
+            <ErrorState
+              title="Failed to load depreciation runs"
+              description={getErrorMessage(runsQuery.error)}
+              onRetry={handleRetry}
+            />
+          )}
 
-        {!runsQuery.error && (
-          <DataTable
-            className="flex-1 min-h-0"
-            data={runs}
-            columns={depreciationRunColumns}
-            getRowKey={(row) => row.id}
-            isLoading={runsQuery.isLoading}
-            emptyState={
-              <EmptyState
-                illustration={<EmptyReportIllustration />}
-                title="No depreciation runs yet"
-                description="Run depreciation for a period to post entries for all active assets."
-                action={
-                  canManage
-                    ? { label: "Run Depreciation", onClick: () => setCreateOpen(true) }
-                    : undefined
-                }
-              />
-            }
-            minWidth="640px"
-          />
-        )}
+          {!runsQuery.error && (
+            <DataTable
+              className="flex-1 min-h-0"
+              data={runs}
+              columns={depreciationRunColumns}
+              getRowKey={handleGetRunKey}
+              isLoading={runsQuery.isLoading}
+              emptyState={
+                <EmptyState
+                  illustration={<EmptyReportIllustration />}
+                  title="No depreciation runs yet"
+                  description="Run depreciation for a period to post entries for all active assets."
+                  action={
+                    canManage
+                      ? { label: "Run Depreciation", onClick: handleOpenCreate }
+                      : undefined
+                  }
+                />
+              }
+              minWidth="640px"
+            />
+          )}
+        </div>
       </PageWrapper>
 
       <EntityFormDialog
@@ -303,12 +323,15 @@ export default function DepreciationRunsPage() {
                 className="font-mono"
               />
               {form.formState.errors.periodKey && (
-                <p className="text-xs text-destructive">{form.formState.errors.periodKey.message}</p>
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.periodKey.message}
+                </p>
               )}
             </div>
             <div className="rounded-md bg-primary/5 border border-primary/20 px-3 py-2.5 text-xs text-foreground">
-              This will create depreciation journal entries for all active assets in the specified period.
-              Ensure the period has not been run previously.
+              This will create depreciation journal entries for all active
+              assets in the specified period. Ensure the period has not been run
+              previously.
             </div>
           </>
         )}

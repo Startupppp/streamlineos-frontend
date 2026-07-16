@@ -252,6 +252,18 @@ export default function FinanceApprovalsPage() {
     setStatusFilter(value);
   }
 
+  function makeRecordTypeHandler(rt: RecordTypeFilter) {
+    return function handleSelectRecordType() {
+      setRecordTypeFilter(rt);
+    };
+  }
+
+  function makeStatusTabHandler(value: ApprovalStatus | "ALL") {
+    return function handleSelectStatusTab() {
+      handleStatusTab(value);
+    };
+  }
+
   function handleRetry() {
     void approvalsQuery.refetch();
   }
@@ -299,7 +311,7 @@ export default function FinanceApprovalsPage() {
           {RECORD_TYPE_OPTIONS.map((rt) => (
             <button
               key={rt}
-              onClick={() => setRecordTypeFilter(rt)}
+              onClick={makeRecordTypeHandler(rt)}
               className={cn(
                 "px-2.5 py-1 rounded-md text-xs font-medium transition-colors",
                 recordTypeFilter === rt
@@ -316,7 +328,7 @@ export default function FinanceApprovalsPage() {
           {STATUS_TABS.map((tab) => (
             <button
               key={tab.value}
-              onClick={() => handleStatusTab(tab.value)}
+              onClick={makeStatusTabHandler(tab.value)}
               className={cn(
                 "relative px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors",
                 statusFilter === tab.value

@@ -7,12 +7,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
-import { Plus, AlertCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
-import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -48,7 +50,6 @@ import {
   type EnterpriseQuoteStatus,
   type EnterpriseQuoteListItem,
 } from "@/hooks/api/enterprise-quotes";
-import { getApiError } from "@/lib/api-client";
 
 const STATUS_CONFIG: Record<
   EnterpriseQuoteStatus,
@@ -180,7 +181,7 @@ function NewQuoteSheet({
           onOpenChange(false);
           router.push(`/billing/enterprise-quotes/${data.id}`);
         },
-        onError: (err) => toast.error(getApiError(err)),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }
@@ -188,6 +189,10 @@ function NewQuoteSheet({
   function handleOpenChange(nextOpen: boolean) {
     if (!nextOpen) form.reset();
     onOpenChange(nextOpen);
+  }
+
+  function handleCancelSheet() {
+    handleOpenChange(false);
   }
 
   return (
@@ -393,13 +398,18 @@ function NewQuoteSheet({
           <Button
             type="button"
             variant="outline"
-            onClick={() => handleOpenChange(false)}
+            onClick={handleCancelSheet}
           >
             Cancel
           </Button>
-          <Button type="submit" form="new-quote-form" disabled={createQuote.isPending}>
-            {createQuote.isPending ? "Creating…" : "Create Quote"}
-          </Button>
+          <LoadingButton
+            type="submit"
+            form="new-quote-form"
+            isPending={createQuote.isPending}
+            loadingText="Creating…"
+          >
+            Create Quote
+          </LoadingButton>
         </SheetFooter>
       </SheetContent>
     </Sheet>
@@ -413,8 +423,9 @@ export default function EnterpriseQuotesPage() {
   const [page, setPage] = useState(1);
   const [sheetOpen, setSheetOpen] = useState(false);
   const router = useRouter();
+  const { iconRef: plusRef, hoverHandlers: plusHoverHandlers } = useAnimatedIcon();
 
-  const { data, isLoading, isError, refetch } = useEnterpriseQuotes({
+  const { data, isLoading, isError, error, refetch } = useEnterpriseQuotes({
     status: statusFilter === "ALL" ? undefined : statusFilter,
     page,
   });
@@ -435,6 +446,10 @@ export default function EnterpriseQuotesPage() {
 
   function getQuoteRowKey(q: EnterpriseQuoteListItem) {
     return q.id;
+  }
+
+  function handleRetry() {
+    void refetch();
   }
 
   const columns: DataTableColumn<EnterpriseQuoteListItem>[] = [
@@ -526,14 +541,14 @@ export default function EnterpriseQuotesPage() {
       title="Enterprise Quotes"
       subtitle="Custom pricing and seat negotiation for enterprise clients"
       actions={
-        <Button size="sm" onClick={handleOpenSheet}>
-          <Plus className="h-4 w-4 mr-1.5" />
+        <Button size="sm" onClick={handleOpenSheet} {...plusHoverHandlers}>
+          <PlusIcon ref={plusRef} size={14} className="mr-1.5" />
           New Quote
         </Button>
       }
       filters={
         <Select value={statusFilter} onValueChange={handleStatusChange}>
-          <SelectTrigger className={cn("w-44", FILTER_SELECT_TRIGGER)}>
+          <SelectTrigger className="w-44 h-8 text-sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -546,18 +561,14 @@ export default function EnterpriseQuotesPage() {
         </Select>
       }
     >
-      <div className="flex flex-1 min-h-0 flex-col space-y-3">
+      <div className="flex flex-1 min-h-0 flex-col gap-3">
         {isError ? (
-          <div className="flex flex-col items-center justify-center flex-1 gap-3 text-center">
-            <AlertCircle className="h-10 w-10 text-destructive" />
-            <p className="text-sm text-muted-foreground">
-              Failed to load enterprise quotes.
-            </p>
-            <Button variant="outline" size="sm" onClick={() => void refetch()}>
-              <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-              Retry
-            </Button>
-          </div>
+          <ErrorState
+            title="Failed to load enterprise quotes"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+            className="flex-1"
+          />
         ) : (
           <DataTable
             className="flex-1 min-h-0"

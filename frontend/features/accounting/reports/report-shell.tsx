@@ -1,10 +1,11 @@
 "use client";
 
 import { type ReactNode } from "react";
-import { Download } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useCan } from "@/hooks/api/access";
+import { DownloadIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 
 interface ReportShellProps {
   title: string;
@@ -26,6 +27,7 @@ export function ReportShell({
   children,
 }: ReportShellProps) {
   const canExport = useCan("accounting:reports:export");
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
 
   return (
     <PageWrapper
@@ -42,8 +44,9 @@ export function ReportShell({
             isPending={exportPending}
             loadingText="Exporting…"
             onClick={onExport}
+            {...hoverHandlers}
           >
-            <Download className="h-3.5 w-3.5" />
+            <DownloadIcon ref={iconRef} className="h-3.5 w-3.5" />
             {exportLabel}
           </LoadingButton>
         ) : undefined

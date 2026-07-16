@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -227,49 +228,50 @@ export default function ScenariosPage() {
             >
               Seed Defaults
             </LoadingButton>
-            <Button size="sm" onClick={handleOpenCreate}>
-              <Plus className="size-4 mr-1" />
+            <AnimatedIconButton size="sm" icon={PlusIcon} iconSize={14} onClick={handleOpenCreate}>
               Add Scenario
-            </Button>
+            </AnimatedIconButton>
           </div>
         ) : undefined
       }
     >
-      {scenariosQuery.isLoading && <LoadingState variant="cards" rows={9} />}
-      {scenariosQuery.error && (
-        <ErrorState
-          title="Failed to load scenarios"
-          description={getErrorMessage(scenariosQuery.error)}
-          onRetry={handleRetry}
-        />
-      )}
+      <div className="flex flex-1 min-h-0 flex-col">
+        {scenariosQuery.isLoading && <LoadingState variant="cards" rows={9} />}
+        {scenariosQuery.error && (
+          <ErrorState
+            title="Failed to load scenarios"
+            description={getErrorMessage(scenariosQuery.error)}
+            onRetry={handleRetry}
+          />
+        )}
 
-      {!scenariosQuery.isLoading && !scenariosQuery.error && items.length === 0 && (
-        <EmptyState
-          illustration={<EmptyReportIllustration />}
-          title="No scenarios yet"
-          description="Seed defaults or create a custom planning scenario."
-          action={
-            canManage
-              ? { label: "Add Scenario", onClick: handleOpenCreate }
-              : undefined
-          }
-        />
-      )}
+        {!scenariosQuery.isLoading && !scenariosQuery.error && items.length === 0 && (
+          <EmptyState
+            illustration={<EmptyReportIllustration />}
+            title="No scenarios yet"
+            description="Seed defaults or create a custom planning scenario."
+            action={
+              canManage
+                ? { label: "Add Scenario", onClick: handleOpenCreate }
+                : undefined
+            }
+          />
+        )}
 
-      {items.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {items.map((scenario) => (
-            <ScenarioCard
-              key={scenario.id}
-              scenario={scenario}
-              canManage={canManage}
-              onEdit={handleOpenEdit}
-              onDelete={handleOpenDelete}
-            />
-          ))}
-        </div>
-      )}
+        {items.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {items.map((scenario) => (
+              <ScenarioCard
+                key={scenario.id}
+                scenario={scenario}
+                canManage={canManage}
+                onEdit={handleOpenEdit}
+                onDelete={handleOpenDelete}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
       <EntityFormSheet<ScenarioForm>
         key={editScenario?.id ?? "create"}

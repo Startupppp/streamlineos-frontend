@@ -7,6 +7,8 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,7 +53,10 @@ const STATUS_OPTIONS: ReadonlyArray<{ value: StatusFilter; label: string }> = [
   { value: "DISPOSED", label: "Disposed" },
 ];
 
-const METHOD_OPTIONS: ReadonlyArray<{ value: DepreciationMethod; label: string }> = [
+const METHOD_OPTIONS: ReadonlyArray<{
+  value: DepreciationMethod;
+  label: string;
+}> = [
   { value: "STRAIGHT_LINE", label: "Straight Line" },
   { value: "DECLINING_BALANCE", label: "Declining Balance" },
   { value: "UNITS_OF_PRODUCTION", label: "Units of Production" },
@@ -64,7 +69,11 @@ const createAssetSchema = z.object({
   acquisitionCost: z.string().min(1, "Cost is required"),
   salvageValue: z.string(),
   usefulLifeMonths: z.number().min(1, "Useful life is required"),
-  depreciationMethod: z.enum(["STRAIGHT_LINE", "DECLINING_BALANCE", "UNITS_OF_PRODUCTION"]),
+  depreciationMethod: z.enum([
+    "STRAIGHT_LINE",
+    "DECLINING_BALANCE",
+    "UNITS_OF_PRODUCTION",
+  ]),
   vendorId: z.number().optional(),
   billId: z.number().optional(),
 });
@@ -73,9 +82,11 @@ type CreateAssetFormValues = z.infer<typeof createAssetSchema>;
 
 const ASSET_STATUS_CLASSES: Record<AssetStatus, string> = {
   DRAFT: "bg-primary/5 text-foreground border-primary/20",
-  ACTIVE: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  ACTIVE:
+    "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
   FULLY_DEPRECIATED: "bg-muted text-foreground border-border",
-  DISPOSED: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  DISPOSED:
+    "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
 };
 
 const ASSET_STATUS_LABELS: Record<AssetStatus, string> = {
@@ -87,7 +98,10 @@ const ASSET_STATUS_LABELS: Record<AssetStatus, string> = {
 
 function AssetStatusBadge({ status }: { status: AssetStatus }) {
   return (
-    <Badge variant="outline" className={`text-[9px] px-1.5 py-0 h-4 ${ASSET_STATUS_CLASSES[status]}`}>
+    <Badge
+      variant="outline"
+      className={`text-[9px] px-1.5 py-0 h-4 ${ASSET_STATUS_CLASSES[status]}`}
+    >
       {ASSET_STATUS_LABELS[status]}
     </Badge>
   );
@@ -111,7 +125,9 @@ const ASSET_COLUMNS: DataTableColumn<AssetListItem>[] = [
   {
     key: "assetNumber",
     header: "Asset #",
-    cell: (row) => <span className="font-mono text-xs">{row.asset.assetNumber}</span>,
+    cell: (row) => (
+      <span className="font-mono text-xs">{row.asset.assetNumber}</span>
+    ),
   },
   {
     key: "name",
@@ -129,12 +145,18 @@ const ASSET_COLUMNS: DataTableColumn<AssetListItem>[] = [
   {
     key: "category",
     header: "Category",
-    cell: (row) => <span className="text-muted-foreground">{row.categoryName ?? "—"}</span>,
+    cell: (row) => (
+      <span className="text-muted-foreground">{row.categoryName ?? "—"}</span>
+    ),
   },
   {
     key: "acquired",
     header: "Acquired",
-    cell: (row) => <span className="text-muted-foreground">{formatDate(row.asset.acquisitionDate)}</span>,
+    cell: (row) => (
+      <span className="text-muted-foreground">
+        {formatDate(row.asset.acquisitionDate)}
+      </span>
+    ),
   },
   {
     key: "cost",
@@ -148,7 +170,9 @@ const ASSET_COLUMNS: DataTableColumn<AssetListItem>[] = [
     header: "Accum. Depr.",
     headerClassName: "text-right",
     className: "text-right",
-    cell: (row) => <Money value={parseFloat(row.asset.accumulatedDepreciation)} />,
+    cell: (row) => (
+      <Money value={parseFloat(row.asset.accumulatedDepreciation)} />
+    ),
   },
   {
     key: "bookValue",
@@ -158,7 +182,8 @@ const ASSET_COLUMNS: DataTableColumn<AssetListItem>[] = [
     cell: (row) => {
       const bookValue = Math.max(
         0,
-        parseFloat(row.asset.acquisitionCost) - parseFloat(row.asset.accumulatedDepreciation),
+        parseFloat(row.asset.acquisitionCost) -
+          parseFloat(row.asset.accumulatedDepreciation),
       );
       return <Money value={bookValue} />;
     },
@@ -178,7 +203,9 @@ export default function FixedAssetsPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>("ALL");
   const [createOpen, setCreateOpen] = useState(false);
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<AssetCategory | null>(null);
+  const [editingCategory, setEditingCategory] = useState<AssetCategory | null>(
+    null,
+  );
 
   const categoriesQuery = useAssetCategories({ pageSize: 100 });
   const categories = categoriesQuery.data?.items ?? [];
@@ -192,6 +219,11 @@ export default function FixedAssetsPage() {
 
   const createAsset = useCreateAsset();
 
+  const handleEditCategory = useCallback((cat: AssetCategory) => {
+    setEditingCategory(cat);
+    setCategoryDialogOpen(true);
+  }, []);
+
   const categoryColumns = useMemo<DataTableColumn<AssetCategory>[]>(
     () => [
       {
@@ -203,7 +235,9 @@ export default function FixedAssetsPage() {
         key: "defaultMethod",
         header: "Default Method",
         cell: (row) => (
-          <span className="text-muted-foreground">{row.defaultMethod.replace(/_/g, " ")}</span>
+          <span className="text-muted-foreground">
+            {row.defaultMethod.replace(/_/g, " ")}
+          </span>
         ),
       },
       {
@@ -211,7 +245,9 @@ export default function FixedAssetsPage() {
         header: "Default Life",
         cell: (row) => (
           <span className="text-muted-foreground">
-            {row.defaultUsefulLifeMonths != null ? `${row.defaultUsefulLifeMonths} mo` : "—"}
+            {row.defaultUsefulLifeMonths != null
+              ? `${row.defaultUsefulLifeMonths} mo`
+              : "—"}
           </span>
         ),
       },
@@ -219,20 +255,24 @@ export default function FixedAssetsPage() {
         key: "actions",
         header: "",
         className: "text-right",
-        cell: (row) => (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-xs"
-            onClick={() => handleEditCategory(row)}
-          >
-            Edit
-          </Button>
-        ),
+        cell: (row) => {
+          function handleEditClick(): void {
+            handleEditCategory(row);
+          }
+          return (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs"
+              onClick={handleEditClick}
+            >
+              Edit
+            </Button>
+          );
+        },
       },
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
+    [handleEditCategory],
   );
 
   function handleStatusChange(value: string): void {
@@ -278,15 +318,14 @@ export default function FixedAssetsPage() {
     void categoriesQuery.refetch();
   }
 
+  function handleOpenCreateAsset(): void {
+    setCreateOpen(true);
+  }
+
   function handleOpenCreateCategory(): void {
     setEditingCategory(null);
     setCategoryDialogOpen(true);
   }
-
-  const handleEditCategory = useCallback((cat: AssetCategory) => {
-    setEditingCategory(cat);
-    setCategoryDialogOpen(true);
-  }, []);
 
   function getAssetRowKey(row: AssetListItem): number {
     return row.asset.id;
@@ -304,10 +343,12 @@ export default function FixedAssetsPage() {
         actions={
           <div className="flex items-center gap-2">
             <Button size="sm" variant="outline" asChild>
-              <Link href="/accounting/assets/depreciation">Depreciation Runs</Link>
+              <Link href="/accounting/assets/depreciation">
+                Depreciation Runs
+              </Link>
             </Button>
             {canCreate && (
-              <Button size="sm" onClick={() => setCreateOpen(true)}>
+              <Button size="sm" onClick={handleOpenCreateAsset}>
                 <Plus className="size-4 mr-1" />
                 Add Asset
               </Button>
@@ -324,7 +365,9 @@ export default function FixedAssetsPage() {
           <TabsContent value="assets">
             <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0 mb-4">
               <Select value={statusFilter} onValueChange={handleStatusChange}>
-                <SelectTrigger className="w-[180px] text-xs">
+                <SelectTrigger
+                  className={cn("w-[180px]", FILTER_SELECT_TRIGGER)}
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -335,8 +378,13 @@ export default function FixedAssetsPage() {
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={categoryFilter} onValueChange={handleCategoryFilterChange}>
-                <SelectTrigger className="w-[180px] text-xs">
+              <Select
+                value={categoryFilter}
+                onValueChange={handleCategoryFilterChange}
+              >
+                <SelectTrigger
+                  className={cn("w-[180px]", FILTER_SELECT_TRIGGER)}
+                >
                   <SelectValue placeholder="All categories" />
                 </SelectTrigger>
                 <SelectContent>
@@ -371,7 +419,11 @@ export default function FixedAssetsPage() {
                     illustration={<EmptyReportIllustration />}
                     title="No assets yet"
                     description="Add your first fixed asset to start tracking depreciation."
-                    action={canCreate ? { label: "Add Asset", onClick: () => setCreateOpen(true) } : undefined}
+                    action={
+                      canCreate
+                        ? { label: "Add Asset", onClick: handleOpenCreateAsset }
+                        : undefined
+                    }
                   />
                 }
               />
@@ -407,7 +459,14 @@ export default function FixedAssetsPage() {
                     illustration={<EmptyReportIllustration />}
                     title="No categories yet"
                     description="Create a category to group your fixed assets."
-                    action={canCreate ? { label: "Add Category", onClick: handleOpenCreateCategory } : undefined}
+                    action={
+                      canCreate
+                        ? {
+                            label: "Add Category",
+                            onClick: handleOpenCreateCategory,
+                          }
+                        : undefined
+                    }
                   />
                 }
               />
@@ -440,9 +499,15 @@ export default function FixedAssetsPage() {
           <>
             <div className="space-y-1.5">
               <Label htmlFor="asset-name">Name</Label>
-              <Input id="asset-name" {...form.register("name")} placeholder="e.g. Office Laptop" />
+              <Input
+                id="asset-name"
+                {...form.register("name")}
+                placeholder="e.g. Office Laptop"
+              />
               {form.formState.errors.name && (
-                <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.name.message}
+                </p>
               )}
             </div>
             <div className="space-y-1.5">
@@ -456,54 +521,95 @@ export default function FixedAssetsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={String(cat.id)}>{cat.name}</SelectItem>
+                    <SelectItem key={cat.id} value={String(cat.id)}>
+                      {cat.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               {form.formState.errors.categoryId && (
-                <p className="text-xs text-destructive">{form.formState.errors.categoryId.message}</p>
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.categoryId.message}
+                </p>
               )}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="asset-date">Acquisition Date</Label>
-              <Input id="asset-date" type="date" {...form.register("acquisitionDate")} />
+              <Input
+                id="asset-date"
+                type="date"
+                {...form.register("acquisitionDate")}
+              />
               {form.formState.errors.acquisitionDate && (
-                <p className="text-xs text-destructive">{form.formState.errors.acquisitionDate.message}</p>
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.acquisitionDate.message}
+                </p>
               )}
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="asset-cost">Acquisition Cost</Label>
-                <Input id="asset-cost" type="number" min={0} step="0.01" {...form.register("acquisitionCost")} placeholder="0.00" />
+                <Input
+                  id="asset-cost"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  {...form.register("acquisitionCost")}
+                  placeholder="0.00"
+                />
                 {form.formState.errors.acquisitionCost && (
-                  <p className="text-xs text-destructive">{form.formState.errors.acquisitionCost.message}</p>
+                  <p className="text-xs text-destructive">
+                    {form.formState.errors.acquisitionCost.message}
+                  </p>
                 )}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="asset-salvage">Salvage Value</Label>
-                <Input id="asset-salvage" type="number" min={0} step="0.01" {...form.register("salvageValue")} placeholder="0.00" />
+                <Input
+                  id="asset-salvage"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  {...form.register("salvageValue")}
+                  placeholder="0.00"
+                />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="asset-life">Useful Life (months)</Label>
-                <Input id="asset-life" type="number" min={1} {...form.register("usefulLifeMonths", { valueAsNumber: true })} placeholder="60" />
+                <Input
+                  id="asset-life"
+                  type="number"
+                  min={1}
+                  {...form.register("usefulLifeMonths", {
+                    valueAsNumber: true,
+                  })}
+                  placeholder="60"
+                />
                 {form.formState.errors.usefulLifeMonths && (
-                  <p className="text-xs text-destructive">{form.formState.errors.usefulLifeMonths.message}</p>
+                  <p className="text-xs text-destructive">
+                    {form.formState.errors.usefulLifeMonths.message}
+                  </p>
                 )}
               </div>
               <div className="space-y-1.5">
                 <Label>Depreciation Method</Label>
                 <Select
                   value={form.watch("depreciationMethod")}
-                  onValueChange={(v) => { if (isDepreciationMethod(v)) form.setValue("depreciationMethod", v); }}
+                  onValueChange={(v) => {
+                    if (isDepreciationMethod(v))
+                      form.setValue("depreciationMethod", v);
+                  }}
                 >
                   <SelectTrigger className="text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {METHOD_OPTIONS.map((m) => (
-                      <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                      <SelectItem key={m.value} value={m.value}>
+                        {m.label}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

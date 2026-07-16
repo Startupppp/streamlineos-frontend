@@ -65,7 +65,7 @@ const agedReceivablesColumns: DataTableColumn<AgedReceivablesRow>[] = [
   {
     key: "d91_plus",
     header: "90+ days",
-    cell: (row) => <span className="tabular-nums text-rose-600 font-mono text-sm">{formatAmount(row.d91_plus)}</span>,
+    cell: (row) => <span className="tabular-nums text-rose-600 dark:text-rose-400 font-mono text-sm">{formatAmount(row.d91_plus)}</span>,
     className: "text-right",
     sortable: true,
     sortValue: (row) => parseFloat(row.d91_plus),
@@ -106,35 +106,37 @@ export default function AgedReceivablesPage() {
         </div>
       }
     >
-      {query.error ? (
-        <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} />
-      ) : (
-        <DataTable
-          className="flex-1 min-h-0"
-          data={report?.rows ?? []}
-          columns={agedReceivablesColumns}
-          getRowKey={(row) => row.clientId}
-          isLoading={query.isLoading}
-          emptyState={
-            <EmptyState
-              illustration={<EmptyExpensesIllustration />}
-              title="No outstanding receivables"
-              description={`No customer balances are overdue as of ${asOf}.`}
-            />
-          }
-          footer={report ? (
-            <div className="grid grid-cols-7 gap-2 text-xs font-semibold tabular-nums font-mono">
-              <span>Total</span>
-              <span className="text-right">{formatAmount(report.totals.current)}</span>
-              <span className="text-right">{formatAmount(report.totals.d1_30)}</span>
-              <span className="text-right">{formatAmount(report.totals.d31_60)}</span>
-              <span className="text-right">{formatAmount(report.totals.d61_90)}</span>
-              <span className="text-right text-rose-600">{formatAmount(report.totals.d91_plus)}</span>
-              <span className="text-right">{formatAmount(report.totals.total)}</span>
-            </div>
-          ) : undefined}
-        />
-      )}
+      <div className="flex flex-1 min-h-0 flex-col">
+        {query.error ? (
+          <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} />
+        ) : (
+          <DataTable
+            className="flex-1 min-h-0"
+            data={report?.rows ?? []}
+            columns={agedReceivablesColumns}
+            getRowKey={(row) => row.clientId}
+            isLoading={query.isLoading}
+            emptyState={
+              <EmptyState
+                illustration={<EmptyExpensesIllustration />}
+                title="No outstanding receivables"
+                description={`No customer balances are overdue as of ${asOf}.`}
+              />
+            }
+            footer={report ? (
+              <div className="grid grid-cols-7 gap-2 text-xs font-semibold tabular-nums font-mono">
+                <span>Total</span>
+                <span className="text-right">{formatAmount(report.totals.current)}</span>
+                <span className="text-right">{formatAmount(report.totals.d1_30)}</span>
+                <span className="text-right">{formatAmount(report.totals.d31_60)}</span>
+                <span className="text-right">{formatAmount(report.totals.d61_90)}</span>
+                <span className="text-right text-rose-600 dark:text-rose-400">{formatAmount(report.totals.d91_plus)}</span>
+                <span className="text-right">{formatAmount(report.totals.total)}</span>
+              </div>
+            ) : undefined}
+          />
+        )}
+      </div>
     </PageWrapper>
   );
 }

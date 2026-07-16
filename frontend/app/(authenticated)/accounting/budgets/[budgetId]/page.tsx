@@ -423,23 +423,25 @@ export default function BudgetDetailPage() {
       ) : !budget ? (
         <ErrorState title="Budget not found" description={`No budget found for ID ${budgetId}.`} />
       ) : (
-        <Tabs defaultValue="matrix">
-          <TabsList className="mb-4">
-            <TabsTrigger value="matrix">Budget Matrix</TabsTrigger>
-            <TabsTrigger value="vs-actual">vs Actual</TabsTrigger>
-          </TabsList>
+        <div className="flex flex-1 min-h-0 flex-col">
+          <Tabs defaultValue="matrix">
+            <TabsList className="mb-4">
+              <TabsTrigger value="matrix">Budget Matrix</TabsTrigger>
+              <TabsTrigger value="vs-actual">vs Actual</TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="matrix">
-            <BudgetMatrix
-              budget={budget}
-              readOnly={status !== "DRAFT"}
-            />
-          </TabsContent>
+            <TabsContent value="matrix">
+              <BudgetMatrix
+                budget={budget}
+                readOnly={status !== "DRAFT"}
+              />
+            </TabsContent>
 
-          <TabsContent value="vs-actual">
-            <BvaTab budgetId={budgetId} />
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="vs-actual">
+              <BvaTab budgetId={budgetId} />
+            </TabsContent>
+          </Tabs>
+        </div>
       )}
 
       {budget && (

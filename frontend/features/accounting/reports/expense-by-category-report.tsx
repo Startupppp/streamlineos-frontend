@@ -22,8 +22,8 @@ function currentMonthRange(): { from: string; to: string } {
 }
 
 const CHART_COLORS = [
-  "#3b82f6", "#f59e0b", "#10b981", "#ef4444", "#8b5cf6",
-  "#06b6d4", "#f97316", "#84cc16", "#ec4899", "#6366f1",
+  "#3b82f6", "#f59e0b", "#10b981", "#ef4444", "#0ea5e9",
+  "#06b6d4", "#f97316", "#84cc16", "#ec4899", "#1d4ed8",
 ];
 
 type ExpenseByCategoryRow = NonNullable<ReturnType<typeof useExpenseByCategory>["data"]>[number];
@@ -111,42 +111,45 @@ export function ExpenseByCategoryReport() {
         />
       }
     >
-      {error ? (
-        <ErrorState
-          title="Failed to load report"
-          description={getErrorMessage(error)}
-          onRetry={handleRetry}
-        />
-      ) : !isLoading && (data?.length ?? 0) === 0 ? (
-        <EmptyState
-          illustration={<EmptyReportIllustration />}
-          title="No expense data"
-          description="No expenses found in the selected date range."
-          compact
-        />
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-6 items-start">
-          <DataTable
-            data={data ?? []}
-            columns={EXPENSE_BY_CATEGORY_COLUMNS}
-            getRowKey={getExpenseCategoryRowKey}
-            isLoading={isLoading}
-            minWidth="400px"
+      <div className="flex flex-1 min-h-0 flex-col">
+        {error ? (
+          <ErrorState
+            title="Failed to load report"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
           />
-          {!isLoading && (data?.length ?? 0) > 0 && (
-            <div className="rounded-xl border border-border bg-card p-4 flex flex-col items-center">
-              <p className="text-sm font-semibold text-foreground mb-4 self-start">Distribution</p>
-              <MiniDonutChart
-                data={donutData}
-                size={160}
-                strokeWidth={24}
-                centerLabel="categories"
-                centerValue={data?.length ?? 0}
-              />
-            </div>
-          )}
-        </div>
-      )}
+        ) : !isLoading && (data?.length ?? 0) === 0 ? (
+          <EmptyState
+            illustration={<EmptyReportIllustration />}
+            title="No expense data"
+            description="No expenses found in the selected date range."
+            compact
+          />
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-6 items-start">
+            <DataTable
+              className="flex-1 min-h-0"
+              data={data ?? []}
+              columns={EXPENSE_BY_CATEGORY_COLUMNS}
+              getRowKey={getExpenseCategoryRowKey}
+              isLoading={isLoading}
+              minWidth="400px"
+            />
+            {!isLoading && (data?.length ?? 0) > 0 && (
+              <div className="rounded-xl border border-border bg-card p-4 flex flex-col items-center">
+                <p className="text-sm font-semibold text-foreground mb-4 self-start">Distribution</p>
+                <MiniDonutChart
+                  data={donutData}
+                  size={160}
+                  strokeWidth={24}
+                  centerLabel="categories"
+                  centerValue={data?.length ?? 0}
+                />
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </ReportShell>
   );
 }

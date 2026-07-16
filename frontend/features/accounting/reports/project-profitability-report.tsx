@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyReportIllustration } from "@/components/illustrations";
-import { LoadingState, ErrorState } from "@/components/shared";
+import { ErrorState } from "@/components/shared";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ReportShell } from "./report-shell";
 import { DateRangeFilter } from "./date-range-filter";
 import { ProfitabilityTable } from "./profitability-table";
@@ -69,24 +70,37 @@ export function ProjectProfitabilityReport() {
         />
       }
     >
-      {isLoading ? (
-        <LoadingState variant="table" rows={12} />
-      ) : error ? (
-        <ErrorState
-          title="Failed to load report"
-          description={getErrorMessage(error)}
-          onRetry={handleRetry}
-        />
-      ) : !data || data.length === 0 ? (
-        <EmptyState
-          illustration={<EmptyReportIllustration />}
-          title="No project data"
-          description="No project profitability data found for the selected period."
-          compact
-        />
-      ) : (
-        <ProfitabilityTable data={data} nameKey="projectName" />
-      )}
+      <div className="flex flex-1 min-h-0 flex-col">
+        {isLoading ? (
+          <div className="space-y-2">
+            <Skeleton className="h-9 w-full" />
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div key={i} className="flex gap-4">
+                <Skeleton className="h-8 w-1/4" />
+                <Skeleton className="h-8 w-1/5" />
+                <Skeleton className="h-8 w-1/5" />
+                <Skeleton className="h-8 w-1/5" />
+                <Skeleton className="h-8 w-1/5" />
+              </div>
+            ))}
+          </div>
+        ) : error ? (
+          <ErrorState
+            title="Failed to load report"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+          />
+        ) : !data || data.length === 0 ? (
+          <EmptyState
+            illustration={<EmptyReportIllustration />}
+            title="No project data"
+            description="No project profitability data found for the selected period."
+            compact
+          />
+        ) : (
+          <ProfitabilityTable data={data} nameKey="projectName" />
+        )}
+      </div>
     </ReportShell>
   );
 }

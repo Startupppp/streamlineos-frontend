@@ -1,6 +1,7 @@
 "use client";
 
 import { RouteErrorBoundary } from "@/components/ui/route-error-boundary";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 export default function CrmDealsForecastError(props: {
   error: Error & { digest?: string };
@@ -10,7 +11,7 @@ export default function CrmDealsForecastError(props: {
     <RouteErrorBoundary
       {...props}
       title="Deal Forecast Error"
-      fallbackMessage="Failed to load Deal Forecast. Please try again."
+      fallbackMessage={getErrorMessage(props.error)}
     />
   );
 }

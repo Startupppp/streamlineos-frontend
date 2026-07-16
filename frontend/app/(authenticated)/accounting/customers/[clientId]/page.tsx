@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { LoadingState, ErrorState } from "@/components/shared";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useCustomerLedger } from "@/hooks/api/accounting";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { CustomerLedgerLine } from "@/types/accounting";
@@ -238,16 +239,11 @@ export default function CustomerLedgerDetailPage({
               `${row.entryId}-${row.entryNumber}-${row.debit}-${row.credit}`
             }
             emptyState={
-              <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/20 py-14 px-6 text-center">
-                <Receipt className="h-10 w-10 text-muted-foreground/40 mb-3" />
-                <h3 className="text-sm font-semibold text-foreground">
-                  No ledger entries
-                </h3>
-                <p className="mt-1 text-sm text-muted-foreground max-w-xs">
-                  No accounts-receivable journal lines for this customer in the
-                  selected range.
-                </p>
-              </div>
+              <EmptyState
+                compact
+                title="No ledger entries"
+                description="No accounts-receivable journal lines for this customer in the selected range."
+              />
             }
             minWidth="780px"
           />

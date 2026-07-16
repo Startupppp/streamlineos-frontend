@@ -119,38 +119,40 @@ export default function TrialBalancePage() {
         </div>
       }
     >
-      {query.error ? (
-        <ErrorState
-          title="Failed to load trial balance"
-          description={getErrorMessage(query.error)}
-          onRetry={handleRetry}
-        />
-      ) : (
-        <DataTable
-          className="flex-1 min-h-0"
-          data={rows}
-          columns={columns}
-          getRowKey={(row) => row.accountId}
-          isLoading={query.isLoading}
-          emptyState={
-            <EmptyState
-              illustration={<EmptyTimeIllustration />}
-              title="No posted entries for this date"
-              description="Post journal entries with a date on or before the selected date to populate this report."
-            />
-          }
-          footer={
-            tb ? (
-              <div className="flex gap-8 justify-end text-xs font-semibold tabular-nums font-mono">
-                <span className="mr-auto">Total</span>
-                <span>{tb.totalDebit}</span>
-                <span>{tb.totalCredit}</span>
-              </div>
-            ) : undefined
-          }
-          minWidth="640px"
-        />
-      )}
+      <div className="flex flex-1 min-h-0 flex-col">
+        {query.error ? (
+          <ErrorState
+            title="Failed to load trial balance"
+            description={getErrorMessage(query.error)}
+            onRetry={handleRetry}
+          />
+        ) : (
+          <DataTable
+            className="flex-1 min-h-0"
+            data={rows}
+            columns={columns}
+            getRowKey={(row) => row.accountId}
+            isLoading={query.isLoading}
+            emptyState={
+              <EmptyState
+                illustration={<EmptyTimeIllustration />}
+                title="No posted entries for this date"
+                description="Post journal entries with a date on or before the selected date to populate this report."
+              />
+            }
+            footer={
+              tb ? (
+                <div className="flex gap-8 justify-end text-xs font-semibold tabular-nums font-mono">
+                  <span className="mr-auto">Total</span>
+                  <span>{tb.totalDebit}</span>
+                  <span>{tb.totalCredit}</span>
+                </div>
+              ) : undefined
+            }
+            minWidth="640px"
+          />
+        )}
+      </div>
     </PageWrapper>
   );
 }

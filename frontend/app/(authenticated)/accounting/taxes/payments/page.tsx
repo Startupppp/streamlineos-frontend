@@ -76,7 +76,7 @@ export default function TaxPaymentsPage() {
   const canPay = useCan("accounting:taxes:pay");
   const canManage = useCan("accounting:taxes:manage");
 
-  const { data, isLoading, isError, refetch } = useTaxPayments({ pageSize: 100 });
+  const { data, isLoading, isError, error, refetch } = useTaxPayments({ pageSize: 100 });
   const createPayment = useCreateTaxPayment();
   const deletePayment = useDeleteTaxPayment();
   const createAdjustment = useCreateTaxAdjustment();
@@ -240,7 +240,7 @@ export default function TaxPaymentsPage() {
       {isLoading ? (
         <LoadingState variant="table" rows={12} />
       ) : isError ? (
-        <ErrorState title="Failed to load tax payments" onRetry={handleRetry} />
+        <ErrorState title="Failed to load tax payments" description={getErrorMessage(error)} onRetry={handleRetry} />
       ) : (
         <DataTable
           className="flex-1 min-h-0"

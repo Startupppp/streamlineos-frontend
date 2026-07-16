@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTransferIllustration } from "@/components/illustrations";
 import { Money } from "@/features/accounting/shared";
 import { useBankAccounts, useTransfers } from "@/hooks/api/accounting/banking";
@@ -29,6 +31,7 @@ export function TransfersClient() {
   const [page, setPage] = useState(1);
   const [dialogOpen, setDialogOpen] = useState(false);
   const canManage = useCan("accounting:banking:manage");
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
 
   const accountsQuery = useBankAccounts();
   const accounts = accountsQuery.data?.items ?? [];
@@ -105,42 +108,37 @@ export function TransfersClient() {
       backHref="/accounting/banking"
       actions={
         canManage ? (
-          <Button size="sm" onClick={handleDialogOpen}>
-            <Plus className="h-4 w-4 mr-1" />
+          <Button size="sm" className="gap-1.5 text-xs" onClick={handleDialogOpen} {...hoverHandlers}>
+            <PlusIcon ref={iconRef} size={14} />
             New Transfer
           </Button>
         ) : undefined
       }
     >
-      <DataTable
-        className="flex-1 min-h-0"
-        data={transfers}
-        columns={columns}
-        getRowKey={(row) => row.id}
-        isLoading={transfersQuery.isLoading}
-        pagination={{
-          mode: "server",
-          page,
-          pageSize: PAGE_SIZE,
-          total,
-          onPageChange: handlePageChange,
-        }}
-        emptyState={
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <EmptyTransferIllustration className="w-32 h-32 mb-3 opacity-80" />
-            <p className="text-sm font-medium text-foreground mb-1">No transfers yet</p>
-            <p className="text-xs text-muted-foreground mb-3">
-              Record a fund movement between your bank accounts.
-            </p>
-            {canManage && (
-              <Button size="sm" onClick={handleDialogOpen}>
-                <Plus className="h-4 w-4 mr-1" />
-                New Transfer
-              </Button>
-            )}
-          </div>
-        }
-      />
+      <div className="flex flex-1 min-h-0 flex-col">
+        <DataTable
+          className="flex-1 min-h-0"
+          data={transfers}
+          columns={columns}
+          getRowKey={(row) => row.id}
+          isLoading={transfersQuery.isLoading}
+          pagination={{
+            mode: "server",
+            page,
+            pageSize: PAGE_SIZE,
+            total,
+            onPageChange: handlePageChange,
+          }}
+          emptyState={
+            <EmptyState
+              illustration={<EmptyTransferIllustration className="w-32 h-32 opacity-80" />}
+              title="No transfers yet"
+              description="Record a fund movement between your bank accounts."
+              action={canManage ? { label: "New Transfer", onClick: handleDialogOpen } : undefined}
+            />
+          }
+        />
+      </div>
 
       {canManage && (
         <NewTransferDialog

@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Settings2, AlertTriangle } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
+import { SettingsIcon } from "@animateicons/react/lucide";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,58 +16,16 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Money } from "@/features/accounting/shared";
-import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { BankTxnStatusBadge } from "./bank-txn-status-badge";
 import { ReconciliationMatchPanel } from "./reconciliation-match-panel";
 import { ReconciliationRulesSheet } from "./reconciliation-rules-sheet";
 import { useBankAccounts, useReconciliationWorkspace } from "@/hooks/api/accounting/banking";
 import { useCan } from "@/hooks/api/access";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { ReconciliationTxn } from "@/hooks/api/accounting/banking";
 
 type TabValue = "unmatched" | "suggested";
-
-interface TxnRowProps {
-  txn: ReconciliationTxn;
-  isSelected: boolean;
-  onSelect: (txn: ReconciliationTxn) => void;
-}
-
-function TxnRow({ txn, isSelected, onSelect }: TxnRowProps) {
-  const amount = parseFloat(txn.amount);
-
-  function handleClick() {
-    onSelect(txn);
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={handleClick}
-      className={[
-        "w-full text-left px-3 py-2.5 border-b border-border/50 transition-colors",
-        isSelected ? "bg-primary/5 border-l-2 border-l-primary" : "hover:bg-muted/30",
-      ].join(" ")}
-    >
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="text-[11px] text-muted-foreground tabular-nums">{txn.txnDate}</p>
-          <p className="text-xs font-medium text-foreground truncate mt-0.5">
-            {txn.description.length > 38 ? `${txn.description.slice(0, 38)}…` : txn.description}
-          </p>
-        </div>
-        <div className="shrink-0 flex flex-col items-end gap-1">
-          <Money value={amount} compact className={amount >= 0 ? "text-emerald-600" : "text-red-600"} />
-          <BankTxnStatusBadge status={txn.status} />
-        </div>
-      </div>
-      {txn.suggestedMatches && txn.suggestedMatches.length > 0 && (
-        <p className="text-[10px] text-primary mt-1">
-          {txn.suggestedMatches.length} suggestion{txn.suggestedMatches.length > 1 ? "s" : ""}
-        </p>
-      )}
-    </button>
-  );
-}
 
 export function ReconciliationClient() {
   const searchParams = useSearchParams();
@@ -80,6 +39,7 @@ export function ReconciliationClient() {
   const [rulesOpen, setRulesOpen] = useState(false);
 
   const canReconcile = useCan("accounting:banking:reconcile");
+  const { iconRef: rulesIconRef, hoverHandlers: rulesHoverHandlers } = useAnimatedIcon();
   const accountsQuery = useBankAccounts();
   const accounts = accountsQuery.data?.items ?? [];
 
@@ -123,14 +83,6 @@ export function ReconciliationClient() {
     setRulesOpen(true);
   }
 
-  function handleTabUnmatched() {
-    setTab("unmatched");
-  }
-
-  function handleTabSuggested() {
-    setTab("suggested");
-  }
-
   return (
     <PageWrapper
       title="Reconciliation"
@@ -138,20 +90,20 @@ export function ReconciliationClient() {
       backHref="/accounting/banking"
       actions={
         canReconcile ? (
-          <Button variant="outline" size="sm" onClick={handleRulesOpen}>
-            <Settings2 className="h-4 w-4 mr-1" />
+          <Button variant="outline" size="sm" onClick={handleRulesOpen} {...rulesHoverHandlers}>
+            <SettingsIcon ref={rulesIconRef} size={14} className="mr-1" />
             Rules
           </Button>
         ) : undefined
       }
     >
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col space-y-4">
         <div className="flex items-center gap-3 flex-wrap">
           <Select
             value={selectedAccountId ? String(selectedAccountId) : ""}
             onValueChange={handleAccountChange}
           >
-            <SelectTrigger className={`w-[220px] text-sm ${FILTER_SELECT_TRIGGER}`}>
+            <SelectTrigger className="w-[220px] text-sm">
               <SelectValue placeholder="Select account" />
             </SelectTrigger>
             <SelectContent>
@@ -203,16 +155,18 @@ export function ReconciliationClient() {
             <Skeleton className="h-64 rounded-xl" />
           </div>
         ) : selectedAccountId === 0 ? (
-          <div className="flex items-center justify-center py-16 text-muted-foreground text-sm">
-            Select an account to begin reconciliation.
-          </div>
+          <EmptyState
+            title="Select an account"
+            description="Choose a bank account above to begin reconciliation."
+            compact
+          />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 min-h-[400px]">
             <div className="flex flex-col border border-border rounded-xl overflow-hidden">
               <div className="flex border-b border-border">
                 <button
                   type="button"
-                  onClick={handleTabUnmatched}
+                  onClick={() => setTab("unmatched")}
                   className={[
                     "flex-1 py-2 px-3 text-xs font-medium transition-colors",
                     tab === "unmatched"
@@ -224,7 +178,7 @@ export function ReconciliationClient() {
                 </button>
                 <button
                   type="button"
-                  onClick={handleTabSuggested}
+                  onClick={() => setTab("suggested")}
                   className={[
                     "flex-1 py-2 px-3 text-xs font-medium transition-colors",
                     tab === "suggested"
@@ -242,14 +196,50 @@ export function ReconciliationClient() {
                     {tab === "unmatched" ? "All transactions matched!" : "No suggested matches."}
                   </div>
                 ) : (
-                  displayedTxns.map((txn) => (
-                    <TxnRow
-                      key={txn.id}
-                      txn={txn}
-                      isSelected={txn.id === selectedTxnId}
-                      onSelect={handleTxnSelect}
-                    />
-                  ))
+                  displayedTxns.map((txn) => {
+                    const amount = parseFloat(txn.amount);
+                    const isSelected = txn.id === selectedTxnId;
+                    return (
+                      <button
+                        key={txn.id}
+                        type="button"
+                        onClick={() => handleTxnSelect(txn)}
+                        className={[
+                          "w-full text-left px-3 py-2.5 border-b border-border/50 transition-colors",
+                          isSelected
+                            ? "bg-primary/5 border-l-2 border-l-primary"
+                            : "hover:bg-muted/30",
+                        ].join(" ")}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="text-[11px] text-muted-foreground tabular-nums">
+                              {txn.txnDate}
+                            </p>
+                            <p className="text-xs font-medium text-foreground truncate mt-0.5">
+                              {txn.description.length > 38
+                                ? `${txn.description.slice(0, 38)}…`
+                                : txn.description}
+                            </p>
+                          </div>
+                          <div className="shrink-0 flex flex-col items-end gap-1">
+                            <Money
+                              value={amount}
+                              compact
+                              className={amount >= 0 ? "text-emerald-600" : "text-red-600"}
+                            />
+                            <BankTxnStatusBadge status={txn.status} />
+                          </div>
+                        </div>
+                        {txn.suggestedMatches && txn.suggestedMatches.length > 0 && (
+                          <p className="text-[10px] text-primary mt-1">
+                            {txn.suggestedMatches.length} suggestion
+                            {txn.suggestedMatches.length > 1 ? "s" : ""}
+                          </p>
+                        )}
+                      </button>
+                    );
+                  })
                 )}
               </ScrollArea>
             </div>

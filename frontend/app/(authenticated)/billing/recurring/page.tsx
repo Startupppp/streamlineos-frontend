@@ -167,7 +167,7 @@ export default function RecurringInvoicesPage() {
       actions={generateButton}
     >
       {query.isLoading ? (
-        <LoadingState variant="page" />
+        <LoadingState variant="table" rows={10} />
       ) : query.error ? (
         <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} />
       ) : recurring.length === 0 ? (
@@ -181,7 +181,7 @@ export default function RecurringInvoicesPage() {
           />
         </div>
       ) : (
-        <div className="flex flex-1 min-h-0 flex-col space-y-4">
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
           <StatCardGrid cols={3}>
             <StatCard
               label="Active recurring"

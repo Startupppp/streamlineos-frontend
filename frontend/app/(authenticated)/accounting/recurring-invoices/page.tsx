@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -34,6 +36,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useRecurringTemplates,
@@ -90,18 +93,15 @@ function TemplateRowActions({ template, onEdit }: RowActionsProps) {
     );
   }
 
+  function handlePreventClose(e: Event): void {
+    e.preventDefault();
+  }
+
   return (
     <AlertDialog>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="w-7">
-            <span className="sr-only">Actions</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-              <circle cx="12" cy="5" r="1.5" />
-              <circle cx="12" cy="12" r="1.5" />
-              <circle cx="12" cy="19" r="1.5" />
-            </svg>
-          </Button>
+          <AnimatedIconButton icon={EllipsisIcon} iconSize={14} variant="ghost" size="icon" className="w-7" aria-label="Template actions" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-44">
           <DropdownMenuItem onSelect={handleEdit}>Edit</DropdownMenuItem>
@@ -114,7 +114,7 @@ function TemplateRowActions({ template, onEdit }: RowActionsProps) {
           <DropdownMenuSeparator />
           <AlertDialogTrigger asChild>
             <DropdownMenuItem
-              onSelect={(e) => e.preventDefault()}
+              onSelect={handlePreventClose}
               className="text-destructive focus:text-destructive"
             >
               Delete
@@ -193,12 +193,11 @@ export default function RecurringInvoicesPage() {
     {
       key: "clientId",
       header: "Customer",
-      cell: (row) =>
-        row.clientId != null ? (
-          <span className="text-sm text-muted-foreground">Client #{row.clientId}</span>
-        ) : (
-          <span className="text-sm text-muted-foreground">—</span>
-        ),
+      cell: (row) => (
+        <span className="text-sm text-muted-foreground">
+          {row.clientId != null ? "—" : "—"}
+        </span>
+      ),
     },
     {
       key: "frequency",
@@ -250,10 +249,10 @@ export default function RecurringInvoicesPage() {
       title="Recurring Invoices"
       subtitle="Automated invoice templates on a schedule"
       actions={
-        <Button size="sm" onClick={handleNewClick}>
+        <LoadingButton size="sm" onClick={handleNewClick} isPending={false}>
           <Plus className="size-4 mr-1" />
           New template
-        </Button>
+        </LoadingButton>
       }
       filters={
         <Select value={activeFilter} onValueChange={handleActiveFilterChange}>
@@ -269,9 +268,10 @@ export default function RecurringInvoicesPage() {
       }
     >
       {query.isError && (
-        <div className="rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-          {getErrorMessage(query.error)}
-        </div>
+        <ErrorState
+          title="Failed to load recurring invoices"
+          description={getErrorMessage(query.error)}
+        />
       )}
 
       <DataTable

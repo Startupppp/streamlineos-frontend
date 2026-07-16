@@ -416,7 +416,7 @@ interface PageWrapperProps {
 | 2–4 mutually exclusive views of the **same data** (e.g., Active / Archived / All) | `Tabs` or `SegmentedControl` (inline chips) | Keeps all options visible, one click |
 | 5+ status options or data-specific values | `Select` (shadcn) | Saves horizontal space |
 | Multiple independent filter facets (status + assignee + date range) | Filter bar with one `Select` per facet | Each Select is a separate dimension |
-| Searching free text | `Input` with search icon, debounced ≥300ms, min 3 chars | Standard per existing repo pattern |
+| Searching free text | `SearchInput` (`components/ui/search-input.tsx` — icon + clear button), debounced ≥300ms | Canonical search field; never a raw `Input` with a hand-placed icon |
 | Date filtering | `DateRangePicker` or two `date` inputs | Never a free-text date field |
 | Bulk action trigger | Contextual toolbar appearing only when rows are selected | Never visible with 0 rows selected |
 
@@ -428,20 +428,38 @@ have a "all" sentinel value as its first option with a descriptive label:
 ```
 When "all" is selected, the query param is removed from the URL (not set to "all").
 
-### Filter bar layout spec
+### Filter bar layout spec (updated 2026-07-16 — h-9 canon + single-row toolbars)
 
-```
-[Search input — max-w-[240px] h-8] [Status Select — w-[140px] h-8] [Other Select — w-auto h-8] [Date range?] ... flex-1 ... [Export button]
+```tsx
+<div className={FILTER_TOOLBAR_ROW}>              // from components/ui/content-fill-panel.tsx
+  <SearchInput className="w-[240px]" … />
+  <Select …><SelectTrigger className={cn("w-[140px]", FILTER_SELECT_TRIGGER)} />…</Select>
+  …more facets…
+  <div className="ml-auto flex shrink-0 items-center gap-2">{/* export/secondary */}</div>
+</div>
 ```
 
-- All filter controls: height `h-8`, font size `text-xs`.
-- The filter bar sits inside `PageWrapper`'s `filters` prop — it receives `px-3 sm:px-4 py-2` from
-  the PageWrapper and must not add its own outer horizontal padding.
-- Export/secondary actions go at the far right of the filter bar, separated by `ml-auto` or
-  `justify-between`.
-- On mobile, the filter bar wraps (`flex-wrap`) to a second row.
+- All field controls (Input/SearchInput/SelectTrigger/DatePicker/combobox triggers) are the
+  default **h-9 / text-sm** from `FIELD_CONTROL_CLASS` (`components/ui/field-control.ts`), which
+  the root primitives already apply. **Never add local `h-8`, `h-10`, or `text-xs` overrides** on
+  field controls at page/sheet/dialog level — the root standard propagates. The only sanctioned
+  compact controls are established inline-cell/popover editors inside tables and cards.
+- Filter selects get `FILTER_SELECT_TRIGGER` (color chrome only: `border-input bg-card …`) — it
+  intentionally carries **no height class**.
+- `FILTER_TOOLBAR_ROW` is the only filter-row container: one horizontal row, `flex-nowrap`,
+  `overflow-x-auto scrollbar-hide`, children `shrink-0`. **Filter rows never wrap — on every
+  viewport (incl. mobile) they stay one horizontally scrollable line.** Never hide a scrollbar
+  with `overflow-hidden`.
+- No outer card/panel wrapper around a filter row (fields already carry `border-input bg-card`;
+  a wrapper creates nested cards).
+- When tabs and search/filters/actions share one line, use `PageTabsToolbar`
+  (`components/ui/page-tabs-toolbar.tsx`): tabs left, search/filters/actions right, built-in
+  mobile filter popover.
+- The filter bar sits inside `PageWrapper`'s `filters` prop and must not add its own outer
+  horizontal padding (`PAGE_CHROME_X` comes from the wrapper).
 - **Search is always the leftmost item.** Status filter is always second. More specific filters
-  (assignee, date, type) follow.
+  (assignee, date, type) follow. Export/secondary actions at the far right via `ml-auto`.
+- Loading skeletons for filter bars mirror this: one non-wrapping row of `h-9` skeleton blocks.
 
 ### Filter UX rules
 
@@ -876,8 +894,13 @@ Every empty state uses `<EmptyState>` (`components/ui/empty-state.tsx`). Rules:
 - Use `<SkeletonTable rows={N} columns={M} />` from `components/shared` for table pages.
 - Use `<Skeleton>` (shadcn) for card/metric placeholders — each `Skeleton` must match the shape
   of its real content (height, width, border-radius).
-- `Loader2` spinning icon is only for button loading states (`isPending`) and inline mutations,
-  never as a page-level loading indicator.
+- **Skeletons are a visual Xerox of the loaded page (2026-07-16):** same section structure, same
+  columns, same row density. Dense list/table pages render **~9–12 skeleton rows** (never 2–3
+  cards floating on a full page), the skeleton fills remaining height (`flex-1`), stat rows use
+  `StatCardGridSkeleton`, filter-bar skeletons are ONE non-wrapping row of **h-9** blocks
+  (mirroring `FILTER_TOOLBAR_ROW`), and header action placeholders are h-9 (button-sized).
+- `Loader2` spinning icon is only for button loading states (via `LoadingButton`) and inline
+  mutations, never as a page-level loading indicator.
 - Timing: if data resolves in < 200ms, suppress the skeleton (use `{ isPending && !data }` guard).
 
 ### Error states
@@ -908,34 +931,43 @@ Every phone/mobile/WhatsApp number field in the app uses `<PhoneInput>` from `@/
 
 ## 8. Icons
 
-### Primary library: `@animateicons/react`
+### Primary rule (updated 2026-07-16): animated icons on ALL interactive/hoverable surfaces
 
-Use `@animateicons/react` for contexts where animation adds value:
-- Primary sidebar navigation items (active state triggers animation once on selection)
-- Empty state illustrations on full-page empty states
-- Primary CTA buttons on onboarding and feature-intro screens
-- Success / completion states (confetti, checkmark spring)
+Icons on interactive/hoverable surfaces — table row action buttons, dropdown/popover/sheet/dialog
+trigger buttons, primary CTAs, clickable cards, nav items — MUST be the animated components from
+`@animateicons/react/lucide` (`XxxIcon` naming), hover-driven from the PARENT surface via the
+shared `useAnimatedIcon()` hook (`hooks/common/use-animated-icon.ts` → `{ iconRef, hoverHandlers }`).
 
-Available icon sets: 248 Lucide icons at `animateicons.in/icons/lucide` and 33 Huge icons at
-`animateicons.in/icons/huge`. **Check these lists before reaching for a lucide-react fallback.**
+**Canonical helpers — never hand-wire the hook when one of these fits:**
+
+1. `AnimatedIconButton` (`components/ui/animated-icon-button.tsx`) — THE way to put an animated
+   icon in any shadcn `Button` (icon-only or icon+label). One-element swap; wires the hook
+   internally; forwards all Button props (works under `DropdownMenuTrigger asChild`):
+   ```tsx
+   <AnimatedIconButton icon={EllipsisIcon} variant="ghost" size="icon" className="w-7" aria-label="Actions" />
+   <AnimatedIconButton icon={PlusIcon} iconClassName="mr-1.5" size="sm">New Item</AnimatedIconButton>
+   ```
+   `iconSize` defaults to 14 (≈ `h-3.5 w-3.5`); pass 16 where the static icon was `h-4 w-4`.
+2. Plain `<button>` elements and `.map()`/DataTable-cell contexts (hooks can't run in cell
+   callbacks): extract a small named `forwardRef` sub-component in the same file that calls
+   `useAnimatedIcon()` — mirror `ConversationOptionsButton` in
+   `components/assistant/ask-os-conversation-list.tsx`.
+
+**Name mapping is NOT 1:1 with lucide** — e.g. `MoreHorizontal` → `EllipsisIcon`,
+`Plus` → `PlusIcon`, `Trash2` → `Trash2Icon`. Before importing, verify the export exists in
+`node_modules/@animateicons/react` (248 Lucide + 33 Huge; catalogs at `animateicons.in`).
+**Known gap: `PencilIcon` does not exist — keep `Pencil` static.**
+
+### Static `lucide-react` — non-interactive contexts only
+
+- Icons inside `Badge`/status chips, empty states, informational text rows, section titles.
+- `Loader2` (spinners — but button spinners come from `LoadingButton`, never hand-rolled).
+- Decorative/semantic icons that carry no hover affordance (`ChevronRight` breadcrumbs, form
+  field adornments, the `SearchInput` magnifier — built into the shared component).
+- Any icon missing from the animateicons catalog.
 
 ```tsx
-import { AnimateIcon } from "@animateicons/react";
-// Use the exact icon name from animateicons.in
-```
-
-### Fallback: `lucide-react` (static)
-
-For all contexts where animation is inappropriate or the icon does not exist in `@animateicons/react`:
-- All table row action icons
-- Filter bar icons (search magnifier, etc.)
-- Dense list icons
-- Form field icons
-- All `MoreHorizontal`, `ChevronLeft`, `ChevronRight`, `X`, `Loader2`
-- Any icon not available in the animateicons catalog
-
-```tsx
-import { Search, MoreHorizontal, Loader2 } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 ```
 
 ### Banned icon libraries

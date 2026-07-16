@@ -2,14 +2,18 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
-import { Gift, Send, RefreshCw } from "lucide-react";
+import { Gift } from "lucide-react";
+import { SendIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useReferrals, useCreateReferral, type Referral } from "@/hooks/api/referrals";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -44,7 +48,8 @@ const STATUS_CONFIG: Record<
 
 export default function ReferralsPage() {
   const [emailInput, setEmailInput] = useState("");
-  const { data, isLoading, isError, refetch } = useReferrals();
+  const { data, isLoading, isError, error, refetch } = useReferrals();
+  const { iconRef: sendIconRef, hoverHandlers: sendHoverHandlers } = useAnimatedIcon();
   const createReferral = useCreateReferral();
 
   const referrals = data?.referrals ?? [];
@@ -135,7 +140,7 @@ export default function ReferralsPage() {
       title="Referral Program"
       subtitle="Invite others and earn rewards"
     >
-      <div className="flex flex-1 min-h-0 flex-col space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-2">
           <div className="flex items-center gap-2">
             <Gift className="h-4 w-4 text-primary" />
@@ -173,14 +178,17 @@ export default function ReferralsPage() {
               onKeyDown={handleKeyDown}
               className="flex-1"
             />
-            <Button
+            <LoadingButton
               size="sm"
               onClick={handleSendInvite}
-              disabled={!emailInput.trim() || createReferral.isPending}
+              isPending={createReferral.isPending}
+              disabled={!emailInput.trim()}
+              loadingText="Sending..."
+              {...sendHoverHandlers}
             >
-              <Send className="h-3.5 w-3.5 mr-1.5" />
-              {createReferral.isPending ? "Sending..." : "Send Invite"}
-            </Button>
+              <SendIcon ref={sendIconRef} size={14} className="mr-1.5" />
+              Send Invite
+            </LoadingButton>
           </div>
         </div>
 
@@ -201,13 +209,12 @@ export default function ReferralsPage() {
         </div>
 
         {isError ? (
-          <div className="flex flex-col items-center justify-center py-12 gap-3">
-            <p className="text-sm text-muted-foreground">Failed to load referrals</p>
-            <Button variant="outline" size="sm" onClick={handleRetry}>
-              <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-              Retry
-            </Button>
-          </div>
+          <ErrorState
+            title="Failed to load referrals"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+            className="flex-1"
+          />
         ) : (
           <DataTable
             data={referrals}

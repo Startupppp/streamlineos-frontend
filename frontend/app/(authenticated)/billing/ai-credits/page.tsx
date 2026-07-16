@@ -32,7 +32,6 @@ import {
   type AiCreditPack,
 } from "@/hooks/api/ai-credits";
 
-
 const TXN_LABELS: Record<
   AiCreditTransaction["type"],
   { label: string; sign: string; color: string }
@@ -237,7 +236,7 @@ export default function AiCreditsPage() {
         onLoad={handleRazorpayLoad}
       />
       <PageWrapper title="AI Credits" subtitle="Manage your AI usage credits">
-        <div className="space-y-4">
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
           {isError ? (
             <ErrorState
               title="Failed to load AI credits"
@@ -338,7 +337,7 @@ export default function AiCreditsPage() {
                   />
                 ) : txns.length === 0 && txnPage === 1 ? (
                   <EmptyState
-                    illustration={<Zap />}
+                    illustrationPreset="report"
                     title="No transactions yet"
                     description="Credits will appear here once used."
                     className="border-0 bg-transparent py-8"

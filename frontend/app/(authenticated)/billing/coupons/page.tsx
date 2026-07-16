@@ -5,9 +5,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format, isAfter, addDays } from "date-fns";
-import { Plus, Copy, RefreshCw, Tag, CheckCircle2, TrendingUp, Clock } from "lucide-react";
-import { EllipsisIcon } from "@animateicons/react/lucide";
+import { Copy, Tag, CheckCircle2, TrendingUp, Clock } from "lucide-react";
+import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -310,7 +311,8 @@ function CreateCouponSheet({ open, onOpenChange }: CreateCouponSheetProps) {
 export default function CouponsPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const canManage = useCan("settings:manage");
-  const { data, isLoading, isError, refetch } = useCoupons();
+  const { data, isLoading, isError, error, refetch } = useCoupons();
+  const { iconRef: createIconRef, hoverHandlers: createHoverHandlers } = useAnimatedIcon();
   const updateCoupon = useUpdateCoupon();
 
   const coupons = data?.coupons ?? [];
@@ -472,13 +474,13 @@ export default function CouponsPage() {
         title="Coupons & Promotions"
         subtitle="Create and manage discount codes"
         actions={
-          <Button size="sm" onClick={handleOpenSheet}>
-            <Plus className="h-3.5 w-3.5 mr-1.5" />
+          <Button size="sm" onClick={handleOpenSheet} {...createHoverHandlers}>
+            <PlusIcon ref={createIconRef} size={14} className="mr-1.5" />
             Create Coupon
           </Button>
         }
       >
-        <div className="flex flex-1 min-h-0 flex-col space-y-4">
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
           <StatCardGrid cols={4}>
             <StatCard label="Total Coupons" value={totalCoupons} icon={Tag} tone="default" />
             <StatCard label="Active" value={activeCoupons} icon={CheckCircle2} tone="emerald" />
@@ -493,13 +495,7 @@ export default function CouponsPage() {
           </StatCardGrid>
 
           {isError ? (
-            <div className="flex flex-1 flex-col items-center justify-center gap-3">
-              <p className="text-sm text-muted-foreground">Failed to load coupons</p>
-              <Button variant="outline" size="sm" onClick={handleRetry}>
-                <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-                Retry
-              </Button>
-            </div>
+            <ErrorState title="Failed to load coupons" description={getErrorMessage(error)} onRetry={handleRetry} className="flex-1" />
           ) : (
             <DataTable
               data={coupons}

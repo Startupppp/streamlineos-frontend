@@ -20,6 +20,42 @@ function formatDate(value: string): string {
   return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "2-digit" });
 }
 
+interface PeriodButtonProps {
+  period: AccountingPeriod;
+  isSelected: boolean;
+  onSelect: (id: number) => void;
+}
+
+function PeriodButton({ period, isSelected, onSelect }: PeriodButtonProps) {
+  function handleClick() {
+    onSelect(period.id);
+  }
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className={`w-full text-left rounded-lg border px-3 py-2.5 transition-colors ${
+        isSelected
+          ? "border-primary bg-primary/5"
+          : "border-border bg-card hover:bg-muted/30"
+      }`}
+    >
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium text-foreground">{period.name}</span>
+        <FinanceStatusBadge status={period.status} size="row" />
+      </div>
+      <p className="text-xs text-muted-foreground mt-0.5">
+        {formatDate(period.startDate)} — {formatDate(period.endDate)}
+      </p>
+      {period.closedBy && period.closedAt && (
+        <p className="text-xs text-muted-foreground mt-0.5">
+          Closed by {period.closedBy}
+        </p>
+      )}
+    </button>
+  );
+}
+
 export default function PeriodClosePage() {
   const [selectedPeriodId, setSelectedPeriodId] = useState<number | null>(null);
   const [generateOpen, setGenerateOpen] = useState(false);
@@ -86,29 +122,12 @@ export default function PeriodClosePage() {
             </div>
           ) : (
             periods.map((period: AccountingPeriod) => (
-              <button
+              <PeriodButton
                 key={period.id}
-                type="button"
-                onClick={() => handlePeriodSelect(period.id)}
-                className={`w-full text-left rounded-lg border px-3 py-2.5 transition-colors ${
-                  selectedPeriodId === period.id
-                    ? "border-primary bg-primary/5"
-                    : "border-border bg-card hover:bg-muted/30"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-foreground">{period.name}</span>
-                  <FinanceStatusBadge status={period.status} size="row" />
-                </div>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {formatDate(period.startDate)} — {formatDate(period.endDate)}
-                </p>
-                {period.closedBy && period.closedAt && (
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Closed by {period.closedBy}
-                  </p>
-                )}
-              </button>
+                period={period}
+                isSelected={selectedPeriodId === period.id}
+                onSelect={handlePeriodSelect}
+              />
             ))
           )}
         </div>

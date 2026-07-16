@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
@@ -50,6 +51,7 @@ interface DealEditFormProps {
   isPending: boolean;
   onSubmit: (data: EditFormValues) => void;
   onCancel: () => void;
+  hideActions?: boolean;
 }
 
 export function DealEditForm({ deal, isPending, onSubmit, onCancel }: DealEditFormProps) {

@@ -15,6 +15,8 @@ import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/st
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   Tabs,
   TabsList,
@@ -120,7 +122,7 @@ function createPeriodHandler(p: Period, setter: (period: Period) => void) {
 export default function RevenueAnalyticsPage() {
   const [period, setPeriod] = useState<Period>("6m");
   const [activeTab, setActiveTab] = useState<TabId>("executive");
-  const { data, isLoading } = useRevenueAnalytics(period);
+  const { data, isLoading, isError, error, refetch } = useRevenueAnalytics(period);
 
   const metrics = data?.metrics;
   const timeSeries = data?.timeSeries ?? [];
@@ -131,9 +133,22 @@ export default function RevenueAnalyticsPage() {
     }
   }
 
+  function handleRetry() {
+    void refetch();
+  }
+
   return (
     <PageWrapper title="Revenue Analytics" subtitle="Platform revenue metrics">
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
+        {isError && (
+          <ErrorState
+            title="Failed to load analytics"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+            className="flex-1"
+          />
+        )}
+        {!isError && <>
         <div className="flex gap-1.5">
           {(["3m", "6m", "12m"] as Period[]).map((p) => (
             <button
@@ -342,6 +357,7 @@ export default function RevenueAnalyticsPage() {
             />
           </TabsContent>
         </Tabs>
+        </>}
       </div>
     </PageWrapper>
   );

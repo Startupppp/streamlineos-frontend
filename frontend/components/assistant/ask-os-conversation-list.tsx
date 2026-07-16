@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { MessageCircle, MoreHorizontal, PenLine, Search } from "lucide-react";
+import { forwardRef, useState, type ComponentPropsWithoutRef } from "react";
+import { MessageCircle, PenLine, Search } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
@@ -21,6 +23,24 @@ export interface AskOsConversationListProps {
   onSearchChange: (v: string) => void;
   activeConversationId: number | null;
 }
+
+const ConversationOptionsButton = forwardRef<HTMLButtonElement, ComponentPropsWithoutRef<"button">>(
+  function ConversationOptionsButton(props, ref) {
+    const { iconRef, hoverHandlers } = useAnimatedIcon();
+    return (
+      <button
+        ref={ref}
+        type="button"
+        aria-label="Options"
+        className="rounded p-0.5 text-muted-foreground hover:bg-accent"
+        {...hoverHandlers}
+        {...props}
+      >
+        <EllipsisIcon ref={iconRef} size={14} />
+      </button>
+    );
+  },
+);
 
 const DATE_GROUPS = ["Today", "Yesterday", "Previous 7 Days", "Previous 30 Days", "Older"] as const;
 type DateGroup = (typeof DATE_GROUPS)[number];
@@ -139,9 +159,7 @@ export function AskOsConversationList({
                       <div className="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 transition-opacity group-hover:opacity-100">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <button type="button" aria-label="Options" className="rounded p-0.5 text-muted-foreground hover:bg-accent">
-                              <MoreHorizontal className="h-3.5 w-3.5" />
-                            </button>
+                            <ConversationOptionsButton />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem data-id={String(conv.id)} onClick={handleMenuRename}>Rename</DropdownMenuItem>

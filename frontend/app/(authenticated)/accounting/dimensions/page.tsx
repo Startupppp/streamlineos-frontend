@@ -12,7 +12,9 @@ export default function DimensionsPage() {
       title="Dimensions"
       subtitle="Cost centres, projects, and departments for GL entry tagging and reporting."
     >
-      <DimensionsTable canManage={canManage} />
+      <div className="flex flex-1 min-h-0 flex-col">
+        <DimensionsTable canManage={canManage} />
+      </div>
     </PageWrapper>
   );
 }

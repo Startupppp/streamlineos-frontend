@@ -153,50 +153,52 @@ export function TaxSummaryReport() {
         />
       }
     >
-      {error ? (
-        <ErrorState
-          title="Failed to load report"
-          description={getErrorMessage(error)}
-          onRetry={handleRetry}
-        />
-      ) : (
-        <div className="space-y-6">
-          {!isLoading && (data?.length ?? 0) > 0 && (
-            <div className="rounded-xl border border-border bg-card p-4">
-              <p className="text-sm font-semibold text-foreground mb-4">Output vs Input Tax by Month</p>
-              <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="month" tick={AXIS_TICK} />
-                  <YAxis tick={AXIS_TICK} width={56} />
-                  <Tooltip contentStyle={TOOLTIP_STYLE} />
-                  <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11 }} />
-                  <Bar dataKey="output" name="Output Tax" fill="#3b82f6" radius={[3, 3, 0, 0]} />
-                  <Bar dataKey="input" name="Input Tax (ITC)" fill="#10b981" radius={[3, 3, 0, 0]} />
-                  <Bar dataKey="netPayable" name="Net Payable" fill="#f59e0b" radius={[3, 3, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-
-          <DataTable
-            className="flex-1 min-h-0"
-            data={data ?? []}
-            columns={TAX_COLUMNS}
-            getRowKey={getTaxRowKey}
-            isLoading={isLoading}
-            minWidth="800px"
-            emptyState={
-              <EmptyState
-                illustration={<EmptyReportIllustration />}
-                title="No tax data"
-                description="No GST transactions found in the selected date range."
-                compact
-              />
-            }
+      <div className="flex flex-1 min-h-0 flex-col">
+        {error ? (
+          <ErrorState
+            title="Failed to load report"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
           />
-        </div>
-      )}
+        ) : (
+          <div className="space-y-6">
+            {!isLoading && (data?.length ?? 0) > 0 && (
+              <div className="rounded-xl border border-border bg-card p-4">
+                <p className="text-sm font-semibold text-foreground mb-4">Output vs Input Tax by Month</p>
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="month" tick={AXIS_TICK} />
+                    <YAxis tick={AXIS_TICK} width={56} />
+                    <Tooltip contentStyle={TOOLTIP_STYLE} />
+                    <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11 }} />
+                    <Bar dataKey="output" name="Output Tax" fill="#3b82f6" radius={[3, 3, 0, 0]} />
+                    <Bar dataKey="input" name="Input Tax (ITC)" fill="#10b981" radius={[3, 3, 0, 0]} />
+                    <Bar dataKey="netPayable" name="Net Payable" fill="#f59e0b" radius={[3, 3, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+
+            <DataTable
+              className="flex-1 min-h-0"
+              data={data ?? []}
+              columns={TAX_COLUMNS}
+              getRowKey={getTaxRowKey}
+              isLoading={isLoading}
+              minWidth="800px"
+              emptyState={
+                <EmptyState
+                  illustration={<EmptyReportIllustration />}
+                  title="No tax data"
+                  description="No GST transactions found in the selected date range."
+                  compact
+                />
+              }
+            />
+          </div>
+        )}
+      </div>
     </ReportShell>
   );
 }

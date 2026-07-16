@@ -4,7 +4,8 @@ import { useState, memo } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card } from "@/components/ui/card";
 import { DatePicker } from "@/components/ui/date-picker";
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -13,7 +14,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { useBalanceSheet } from "@/hooks/api/accounting";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -154,13 +154,40 @@ export default function BalanceSheetPage() {
         </div>
       }
     >
-      {query.isLoading && <LoadingState variant="table" />}
+      {query.isLoading && (
+        <div className="flex flex-1 min-h-0 flex-col space-y-4">
+          <StatCardGridSkeleton cols={3} count={3} />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="rounded-lg border border-border overflow-hidden">
+                <div className="px-4 py-3 border-b bg-muted/40">
+                  <Skeleton className="h-4 w-24" />
+                </div>
+                <div className="p-3 space-y-2">
+                  <div className="flex gap-4 px-1 py-2 border-b border-border">
+                    {[24, 40, 28].map((w, j) => (
+                      <Skeleton key={j} className="h-3" style={{ width: `${w}%` }} />
+                    ))}
+                  </div>
+                  {Array.from({ length: 8 }).map((_, r) => (
+                    <div key={r} className="flex gap-4 px-1 py-2">
+                      {[24, 40, 28].map((w, j) => (
+                        <Skeleton key={j} className="h-4" style={{ width: `${w}%` }} />
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       {query.error && (
         <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} />
       )}
 
       {report && (
-        <div className="space-y-4">
+        <div className="flex flex-1 min-h-0 flex-col space-y-4">
           <BalanceSheetSummaryStrip
             totalAssets={report.totalAssets}
             totalLiabilities={report.totalLiabilities}

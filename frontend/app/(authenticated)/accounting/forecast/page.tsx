@@ -48,7 +48,7 @@ const CHART_TOOLTIP_STYLE = {
   borderRadius: 8,
 };
 const AXIS_TICK = { fill: "hsl(var(--muted-foreground))", fontSize: 11 };
-const COMPARE_COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
+const COMPARE_COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#06b6d4"];
 
 function formatWeekStartCell(weekStart: string) {
   return <span className="text-sm text-foreground">{formatWeekStart(weekStart)}</span>;
@@ -280,7 +280,7 @@ export default function ForecastPage() {
       filters={filtersNode}
     >
       {compareMode ? (
-        <div className="space-y-4">
+        <div className="flex flex-1 min-h-0 flex-col space-y-4">
           <Card className="bg-card border border-border rounded-xl shadow-sm">
             <CardHeader className="pb-2 pt-4 px-4">
               <CardTitle className="text-sm font-semibold">
@@ -356,7 +356,7 @@ export default function ForecastPage() {
           )}
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="flex flex-1 min-h-0 flex-col space-y-4">
           {forecastQuery.error && (
             <ErrorState
               title="Failed to load forecast"
@@ -432,6 +432,7 @@ export default function ForecastPage() {
               </Card>
 
               <DataTable
+                className="flex-1 min-h-0"
                 data={forecastQuery.data?.weeks ?? []}
                 columns={forecastWeekColumns}
                 getRowKey={(row) => row.weekIndex}

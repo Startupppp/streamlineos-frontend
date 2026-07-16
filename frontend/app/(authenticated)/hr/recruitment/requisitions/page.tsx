@@ -38,8 +38,10 @@ import {
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   Plus, MapPin, Users, Calendar, DollarSign, CheckCircle2, XCircle, Send,
-  Briefcase, ChevronRight, MoreHorizontal,
+  Briefcase, ChevronRight,
 } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
@@ -519,13 +521,14 @@ function RequisitionCard({
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
+              <AnimatedIconButton
+                icon={EllipsisIcon}
+                iconSize={16}
                 variant="ghost"
                 size="icon"
                 className="w-7 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-              >
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
+                aria-label="Requisition actions"
+              />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               {req.status === "DRAFT" && (

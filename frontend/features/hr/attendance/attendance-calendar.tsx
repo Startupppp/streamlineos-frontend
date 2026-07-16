@@ -14,7 +14,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useHrMonthlyAttendance, useHrWfhRequests, useHrHolidaysForCalendar } from "@/hooks/api/hr";
-import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarDays } from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { WEEKDAY_LABELS, CalendarDay, statusConfig } from "./attendance-utils";
 import { cn } from "@/lib/utils";
 
@@ -134,27 +136,27 @@ export const AttendanceCalendar = memo(function AttendanceCalendar({
             Attendance Calendar
           </CardTitle>
           <div className="flex items-center gap-0.5">
-            <Button
+            <AnimatedIconButton
+              icon={ChevronLeftIcon}
+              iconSize={14}
               variant="ghost"
               size="icon"
               className="w-7 rounded-md"
               onClick={handlePrevMonth}
               aria-label="Previous month"
-            >
-              <ChevronLeft className="h-3.5 w-3.5" />
-            </Button>
+            />
             <span className="text-xs font-semibold text-foreground min-w-[112px] text-center tabular-nums select-none">
               {MONTH_NAMES[month]} {year}
             </span>
-            <Button
+            <AnimatedIconButton
+              icon={ChevronRightIcon}
+              iconSize={14}
               variant="ghost"
               size="icon"
               className="w-7 rounded-md"
               onClick={handleNextMonth}
               aria-label="Next month"
-            >
-              <ChevronRight className="h-3.5 w-3.5" />
-            </Button>
+            />
           </div>
         </div>
       </CardHeader>

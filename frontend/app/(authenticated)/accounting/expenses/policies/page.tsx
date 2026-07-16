@@ -145,7 +145,7 @@ export default function PoliciesPage() {
       subtitle="Define rules and limits for employee expense submissions."
       actions={
         canManage ? (
-          <LoadingButton size="sm" onClick={handleOpenCreate} isPending={false}>
+          <LoadingButton size="sm" onClick={handleOpenCreate}>
             <Plus className="size-4 mr-1" />
             New policy
           </LoadingButton>

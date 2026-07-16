@@ -1,7 +1,7 @@
 "use client";
 
 import { SearchInput } from "@/components/ui/search-input";
-import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   Select,
   SelectContent,
@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { X } from "lucide-react";
+import { XIcon } from "@animateicons/react/lucide";
 import { cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import type { StatusFilter, RoleFilter } from "./hr-types";
@@ -103,16 +103,17 @@ export function HrFilterBar({
       </Select>
 
       {hasActiveFilters && (
-        <Button
+        <AnimatedIconButton
+          icon={XIcon}
+          iconSize={14}
           variant="ghost"
           size="sm"
           className="px-2 gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors duration-200"
           onClick={onClearFilters}
           aria-label="Clear filters"
         >
-          <X className="h-3.5 w-3.5" />
           Clear
-        </Button>
+        </AnimatedIconButton>
       )}
     </>
   );

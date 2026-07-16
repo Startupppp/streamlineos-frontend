@@ -9,6 +9,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { LoadingState, ErrorState } from "@/components/shared";
+import { EmptyState } from "@/components/ui/empty-state";
 import { DS } from "@/lib/design-system";
 import { useVendorLedger } from "@/hooks/api/accounting";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -214,7 +215,7 @@ export default function VendorLedgerDetailPage({ params }: PageProps) {
             >
               From
             </label>
-            <DatePicker id="vendor-ledger-from" value={from ?? ""} onChange={handleFromChange} placeholder="Pick a date" className="w-full sm:w-[160px]" />
+            <DatePicker id="vendor-ledger-from" value={from} onChange={handleFromChange} placeholder="Pick a date" className="w-full sm:w-[160px]" />
           </div>
           <div className="flex flex-col gap-1">
             <label
@@ -223,7 +224,7 @@ export default function VendorLedgerDetailPage({ params }: PageProps) {
             >
               To
             </label>
-            <DatePicker id="vendor-ledger-to" value={to ?? ""} onChange={handleToChange} placeholder="Pick a date" className="w-full sm:w-[160px]" />
+            <DatePicker id="vendor-ledger-to" value={to} onChange={handleToChange} placeholder="Pick a date" className="w-full sm:w-[160px]" />
           </div>
         </div>
 
@@ -243,16 +244,11 @@ export default function VendorLedgerDetailPage({ params }: PageProps) {
               `${row.entryId}-${row.entryNumber}-${row.debit}-${row.credit}`
             }
             emptyState={
-              <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/20 py-14 px-6 text-center">
-                <Receipt className="h-10 w-10 text-muted-foreground/40 mb-3" />
-                <h3 className="text-sm font-semibold text-foreground">
-                  No ledger entries
-                </h3>
-                <p className="mt-1 text-sm text-muted-foreground max-w-xs">
-                  No accounts-payable journal lines for this vendor in the
-                  selected range.
-                </p>
-              </div>
+              <EmptyState
+                compact
+                title="No ledger entries"
+                description="No accounts-payable journal lines for this vendor in the selected range."
+              />
             }
             minWidth="780px"
           />

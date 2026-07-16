@@ -12,7 +12,6 @@ import {
   Globe,
   Server,
   Headphones,
-  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { LucideIcon } from "lucide-react";
@@ -20,6 +19,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useAddons } from "@/hooks/api/addons";
 
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -56,7 +58,7 @@ function AddonCardSkeleton() {
 }
 
 export default function AddonsPage() {
-  const { data, isLoading, isError, refetch } = useAddons();
+  const { data, isLoading, isError, error, refetch } = useAddons();
   const addons = data?.addons ?? [];
 
   function handleRetry() {
@@ -75,19 +77,19 @@ export default function AddonsPage() {
           ))}
         </div>
       ) : isError ? (
-        <div className="flex flex-col items-center justify-center flex-1 py-16 gap-3">
-          <p className="text-sm text-muted-foreground">Failed to load add-ons</p>
-          <Button variant="outline" size="sm" onClick={handleRetry}>
-            <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-            Retry
-          </Button>
-        </div>
+        <ErrorState
+          title="Failed to load add-ons"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+          className="flex-1"
+        />
       ) : addons.length === 0 ? (
-        <div className="flex flex-col items-center justify-center flex-1 py-16">
-          <Package className="h-10 w-10 text-muted-foreground/40 mb-3" />
-          <p className="text-sm font-medium text-foreground">No add-ons available</p>
-          <p className="text-xs text-muted-foreground mt-1">Check back soon for new capabilities</p>
-        </div>
+        <EmptyState
+          illustrationPreset="report"
+          title="No add-ons available"
+          description="Check back soon for new capabilities"
+          className="flex-1"
+        />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {addons.map((addon) => {

@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { X } from "lucide-react";
 import { SearchInput } from "@/components/ui/search-input";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
+import { XIcon } from "@animateicons/react/lucide";
 import {
   Select,
   SelectContent,
@@ -85,10 +86,9 @@ export function EmployeesFilters({
         <Link href="/hr/termination">View Terminated</Link>
       </Button>
       {hasFilters && (
-        <Button variant="ghost" size="sm" className="text-xs gap-1.5" onClick={onClear}>
-          <X className="h-3.5 w-3.5" />
+        <AnimatedIconButton icon={XIcon} iconSize={14} variant="ghost" size="sm" className="text-xs gap-1.5" onClick={onClear}>
           Clear
-        </Button>
+        </AnimatedIconButton>
       )}
     </div>
   );

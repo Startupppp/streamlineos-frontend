@@ -307,12 +307,13 @@ export function LeadInfoCard({
                 <Button type="button" variant="outline" onClick={onCancelEdit}>
                   Cancel
                 </Button>
-                <Button
+                <LoadingButton
                   type="submit"
-                                    disabled={isUpdatePending}
+                  isPending={isUpdatePending}
+                  loadingText="Saving..."
                 >
-                  {isUpdatePending ?"Saving..." :"Save Changes"}
-                </Button>
+                  Save Changes
+                </LoadingButton>
               </div>
             </form>
           </Form>

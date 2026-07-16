@@ -7,8 +7,10 @@ import * as z from "zod";
 import { format } from "date-fns";
 import { formatDateOnly } from "@/lib/date-utils";
 import Image from "next/image";
-import { Upload, Receipt, X } from "lucide-react";
+import { Upload, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { XIcon } from "@animateicons/react/lucide";
 import {
   Form,
   FormControl,
@@ -485,16 +487,16 @@ export function CreateExpenseDialog({
                     </p>
                   )}
                 </div>
-                <Button
+                <AnimatedIconButton
                   type="button"
                   variant="ghost"
                   size="icon"
                   onClick={removeFile}
                   className="shrink-0 h-7 w-7"
                   aria-label="Remove receipt"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </Button>
+                  icon={XIcon}
+                  iconSize={14}
+                />
               </div>
             )}
           </div>

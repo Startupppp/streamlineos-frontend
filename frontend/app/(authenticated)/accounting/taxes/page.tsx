@@ -20,6 +20,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useTaxDashboard } from "@/hooks/api/accounting/taxes";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatCurrencyFull } from "@/lib/format-utils";
@@ -254,32 +255,46 @@ export default function TaxPage() {
           description={getErrorMessage(error)}
           onRetry={handleRetry}
         />
+      ) : isLoading ? (
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+          <StatCardGrid cols={4}>
+            <Skeleton className="h-20 rounded-xl" />
+            <Skeleton className="h-20 rounded-xl" />
+            <Skeleton className="h-20 rounded-xl" />
+            <Skeleton className="h-20 rounded-xl" />
+          </StatCardGrid>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <Skeleton className="h-[248px] rounded-xl" />
+            <Skeleton className="h-[248px] rounded-xl" />
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Skeleton className="flex-1 h-16 rounded-xl" />
+            <Skeleton className="flex-1 h-16 rounded-xl" />
+          </div>
+          <Skeleton className="h-40 rounded-xl" />
+        </div>
       ) : (
-        <div className="space-y-4">
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
           <StatCardGrid cols={4}>
             <StatCard
               label="Net Liability"
               value={data ? formatCurrencyFull(parseFloat(data.summary.netLiability)) : "—"}
               tone="amber"
-              isLoading={isLoading}
             />
             <StatCard
               label="Unpaid"
               value={data ? formatCurrencyFull(parseFloat(data.summary.unpaidLiability)) : "—"}
               tone="red"
-              isLoading={isLoading}
             />
             <StatCard
               label="Output Tax"
               value={data ? formatCurrencyFull(parseFloat(data.summary.totalOutputTax)) : "—"}
               tone="blue"
-              isLoading={isLoading}
             />
             <StatCard
               label="Input Credit"
               value={data ? formatCurrencyFull(parseFloat(data.summary.totalInputTax)) : "—"}
               tone="emerald"
-              isLoading={isLoading}
             />
           </StatCardGrid>
 

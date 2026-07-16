@@ -3,20 +3,22 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Building2, Plus, AlertCircle, CreditCard, Wallet, Landmark } from "lucide-react";
+import { Building2, AlertCircle, CreditCard, Wallet, Landmark } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyTransferIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { EmptyTransferIllustration } from "@/components/illustrations";
 import { Money } from "@/features/accounting/shared";
 import { useCan } from "@/hooks/api/access";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useBankAccounts } from "@/hooks/api/accounting/banking";
 import type { BankAccount, BankAccountType } from "@/hooks/api/accounting/banking";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { AddBankAccountSheet } from "./add-bank-account-sheet";
 
 const TYPE_ICON: Record<BankAccountType, React.ElementType> = {
@@ -112,6 +114,7 @@ export function BankingHubClient() {
   const [addOpen, setAddOpen] = useState(false);
   const canManage = useCan("accounting:banking:manage");
   const { data, isLoading, isError, error } = useBankAccounts();
+  const { iconRef: addIconRef, hoverHandlers: addHoverHandlers } = useAnimatedIcon();
 
   const accounts = data?.items ?? [];
 
@@ -125,7 +128,9 @@ export function BankingHubClient() {
     setAddOpen(true);
   }
 
-  if (isError) return <ErrorState description={getErrorMessage(error)} />;
+  if (isError) {
+    return <ErrorState description={getErrorMessage(error)} />;
+  }
 
   return (
     <PageWrapper
@@ -133,8 +138,8 @@ export function BankingHubClient() {
       subtitle="Manage bank accounts and reconciliation"
       actions={
         canManage ? (
-          <Button size="sm" onClick={handleAddOpen}>
-            <Plus className="h-4 w-4 mr-1" />
+          <Button size="sm" onClick={handleAddOpen} {...addHoverHandlers}>
+            <PlusIcon ref={addIconRef} size={14} className="mr-1" />
             Add Account
           </Button>
         ) : undefined
@@ -154,7 +159,7 @@ export function BankingHubClient() {
                   }).format(totalBalance)
             }
             icon={Landmark}
-            tone="blue"
+            tone="default"
             isLoading={isLoading}
           />
           <StatCard
@@ -189,11 +194,14 @@ export function BankingHubClient() {
           </div>
         ) : accounts.length === 0 ? (
           <EmptyState
-            className="flex-1"
-            illustration={<EmptyTransferIllustration className="w-40 h-40 opacity-80" />}
+            illustration={<EmptyTransferIllustration className="w-full h-full opacity-80" />}
             title="No bank accounts yet"
             description="Add your first bank account to start importing statements and reconciling transactions."
-            action={canManage ? { label: "Add your first bank account", onClick: handleAddOpen } : undefined}
+            action={
+              canManage
+                ? { label: "Add your first bank account", onClick: handleAddOpen }
+                : undefined
+            }
           />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">

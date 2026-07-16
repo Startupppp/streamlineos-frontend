@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles, Loader2, Copy } from "lucide-react";
+import { Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { CopyIcon } from "@animateicons/react/lucide";
 import {
   Dialog,
   DialogContent,
@@ -100,10 +102,9 @@ ${result.ratings.map((r) => `- ${r.category}: ${r.score}/5 — ${r.comment}`).jo
                     <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Overall Rating</p>
                     <p className="text-2xl font-bold text-foreground">{result.overallRating}/5</p>
                   </div>
-                  <Button size="sm" variant="outline" onClick={copyAll}>
-                    <Copy className="h-3.5 w-3.5 mr-1.5" />
+                  <AnimatedIconButton size="sm" variant="outline" onClick={copyAll} icon={CopyIcon} iconSize={14} iconClassName="mr-1.5">
                     Copy All
-                  </Button>
+                  </AnimatedIconButton>
                 </div>
 
                 <div>

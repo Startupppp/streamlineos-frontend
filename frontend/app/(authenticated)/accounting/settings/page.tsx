@@ -121,13 +121,17 @@ export default function FinanceSettingsPage() {
     );
   }
 
+  function handleRetrySettings(): void {
+    void settingsQuery.refetch();
+  }
+
   if (settingsQuery.isLoading) return <LoadingState />;
   if (settingsQuery.error)
     return (
       <ErrorState
         title="Failed to load settings"
         description={getErrorMessage(settingsQuery.error)}
-        onRetry={() => void settingsQuery.refetch()}
+        onRetry={handleRetrySettings}
       />
     );
 

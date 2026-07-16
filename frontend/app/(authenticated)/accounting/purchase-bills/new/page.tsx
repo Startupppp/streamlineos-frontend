@@ -203,10 +203,10 @@ export default function NewPurchaseBillPage() {
     return <LoadingState variant="form" />;
   }
   if (clientsQuery.error) {
-    return <ErrorState description={clientsQuery.error.message} />;
+    return <ErrorState description={getErrorMessage(clientsQuery.error)} />;
   }
   if (accountsQuery.error) {
-    return <ErrorState description={accountsQuery.error.message} />;
+    return <ErrorState description={getErrorMessage(accountsQuery.error)} />;
   }
 
   const vendors = clientsQuery.data?.accounts ?? [];

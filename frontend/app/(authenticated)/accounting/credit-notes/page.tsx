@@ -8,7 +8,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -26,6 +26,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
 import { FinanceStatusBadge, Money } from "@/features/accounting/shared";
 import { CreditNoteFormSheet } from "@/features/accounting/sales/credit-note-form-sheet";
 import { ApplyCreditNoteDialog } from "@/features/accounting/sales/apply-credit-note-dialog";
@@ -244,10 +245,10 @@ export default function CreditNotesPage() {
       subtitle="Manage refunds and billing adjustments"
       actions={
         canCreate ? (
-          <Button size="sm" onClick={handleNewClick}>
+          <LoadingButton size="sm" onClick={handleNewClick} isPending={false}>
             <Plus className="size-4 mr-1" />
             New credit note
-          </Button>
+          </LoadingButton>
         ) : undefined
       }
       filters={
@@ -274,9 +275,10 @@ export default function CreditNotesPage() {
       }
     >
       {query.isError && (
-        <div className="rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive mb-4">
-          {getErrorMessage(query.error)}
-        </div>
+        <ErrorState
+          title="Failed to load credit notes"
+          description={getErrorMessage(query.error)}
+        />
       )}
 
       <DataTable

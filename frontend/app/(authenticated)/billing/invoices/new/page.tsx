@@ -6,8 +6,9 @@ import { useCallback, useMemo } from "react";
 import { useForm, useFieldArray, useWatch, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowLeft, Plus, Trash2, FileText, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -22,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useCreateInvoice } from "@/hooks/api/invoice";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { INDIAN_STATES } from "@/lib/accounting/indian-states";
 
 const GSTIN_REGEX = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
@@ -277,7 +279,7 @@ export default function NewInvoicePage() {
             toast.success("Invoice created");
             router.push(`/billing/invoices/${inv.id}`);
           },
-          onError: (apiError) => toast.error(apiError.message),
+          onError: (apiError) => toast.error(getErrorMessage(apiError)),
         },
       );
     },
@@ -637,14 +639,15 @@ export default function NewInvoicePage() {
               Cancel
             </Button>
           </Link>
-          <Button type="submit" size="sm" disabled={createInvoice.isPending}>
-            {createInvoice.isPending ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
-            ) : (
-              <FileText className="h-3.5 w-3.5 mr-1" />
-            )}
+          <LoadingButton
+            type="submit"
+            size="sm"
+            isPending={createInvoice.isPending}
+            loadingText="Creating…"
+          >
+            <FileText className="h-3.5 w-3.5 mr-1" />
             Create Invoice
-          </Button>
+          </LoadingButton>
         </div>
       </form>
     </PageWrapper>

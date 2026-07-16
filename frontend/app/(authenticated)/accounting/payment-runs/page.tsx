@@ -6,7 +6,7 @@ import { Plus } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -134,10 +134,10 @@ export default function PaymentRunsPage() {
       title="Payment Runs"
       subtitle="Batch vendor payment processing."
       actions={
-        <Button size="sm" onClick={handleNewClick}>
+        <LoadingButton size="sm" onClick={handleNewClick} isPending={false}>
           <Plus className="size-4 mr-1" />
           New run
-        </Button>
+        </LoadingButton>
       }
       filters={
         <Select value={statusFilter} onValueChange={handleStatusFilterChange}>

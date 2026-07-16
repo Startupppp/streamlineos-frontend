@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   Select,
@@ -59,8 +59,8 @@ function isVendorCreditStatus(value: string): value is VendorCreditSummary["stat
 
 interface CreditRowActionsProps {
   credit: VendorCreditSummary;
-  onViewDetail: () => void;
-  onApply: () => void;
+  onViewDetail: (credit: VendorCreditSummary) => void;
+  onApply: (credit: VendorCreditSummary) => void;
 }
 
 function CreditRowActions({ credit, onViewDetail, onApply }: CreditRowActionsProps) {
@@ -71,6 +71,14 @@ function CreditRowActions({ credit, onViewDetail, onApply }: CreditRowActionsPro
       onSuccess: () => toast.success("Vendor credit posted"),
       onError: (err) => toast.error(getErrorMessage(err)),
     });
+  }
+
+  function handleApply(): void {
+    onApply(credit);
+  }
+
+  function handleViewDetail(): void {
+    onViewDetail(credit);
   }
 
   return (
@@ -85,10 +93,10 @@ function CreditRowActions({ credit, onViewDetail, onApply }: CreditRowActionsPro
           </DropdownMenuItem>
         )}
         {credit.status === "POSTED" && (
-          <DropdownMenuItem onClick={onApply}>Apply to bill</DropdownMenuItem>
+          <DropdownMenuItem onClick={handleApply}>Apply to bill</DropdownMenuItem>
         )}
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={onViewDetail}>View detail</DropdownMenuItem>
+        <DropdownMenuItem onClick={handleViewDetail}>View detail</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -290,8 +298,8 @@ export default function VendorCreditsPage() {
       cell: (row) => (
         <CreditRowActions
           credit={row}
-          onViewDetail={() => handleOpenDetail(row)}
-          onApply={() => handleOpenApply(row)}
+          onViewDetail={handleOpenDetail}
+          onApply={handleOpenApply}
         />
       ),
     },
@@ -302,9 +310,9 @@ export default function VendorCreditsPage() {
       title="Vendor Credits"
       subtitle="Debit notes and credit memos from vendors."
       actions={
-        <Button size="sm" onClick={handleNewClick}>
+        <LoadingButton size="sm" onClick={handleNewClick} isPending={false}>
           New credit
-        </Button>
+        </LoadingButton>
       }
       filters={
         <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">

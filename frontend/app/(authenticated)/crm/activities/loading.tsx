@@ -8,9 +8,9 @@ export default function CrmActivitiesLoading() {
       subtitle="All CRM interactions and follow-ups across leads, deals, and contacts"
       filters={
         <div className="flex items-center gap-2">
-          <Skeleton className="h-8 w-32 rounded-md" />
-          <Skeleton className="h-8 w-32 rounded-md" />
-          <Skeleton className="h-8 w-32 rounded-md" />
+          <Skeleton className="h-9 w-32 rounded-md" />
+          <Skeleton className="h-9 w-32 rounded-md" />
+          <Skeleton className="h-9 w-32 rounded-md" />
         </div>
       }
     >

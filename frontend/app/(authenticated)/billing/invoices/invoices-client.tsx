@@ -10,11 +10,10 @@ import {
   useDeleteInvoice,
 } from "@/hooks/api/invoice";
 import { format } from "date-fns";
-import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import {
-  Plus,
   FileText,
   Send,
   Check,
@@ -24,6 +23,10 @@ import {
   AlertCircle,
   XCircle,
 } from "lucide-react";
+import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { Button } from "@/components/ui/button";
@@ -78,9 +81,14 @@ function InvoiceActionsCell({ inv, onUpdateStatus, onDelete }: InvoiceActionsCel
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="w-7" aria-label="More options">
-          <MoreHorizontal className="h-4 w-4" />
-        </Button>
+        <AnimatedIconButton
+          icon={EllipsisIcon}
+          iconSize={16}
+          variant="ghost"
+          size="icon"
+          className="w-7"
+          aria-label="More options"
+        />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem asChild>
@@ -117,6 +125,8 @@ export function InvoicesClient() {
   const pathname = usePathname();
   const [, startTransition] = useTransition();
   const [createOpen, setCreateOpen] = useState(false);
+  const { iconRef: plusRef, hoverHandlers: plusHoverHandlers } =
+    useAnimatedIcon();
 
   const statusFilter = searchParams.get("status") || "all";
 
@@ -154,7 +164,7 @@ export function InvoicesClient() {
         { id, status },
         {
           onSuccess: () => toast.success("Invoice status updated"),
-          onError: (err) => toast.error(err.message),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -165,7 +175,7 @@ export function InvoicesClient() {
     (id: number) => {
       deleteInvoice.mutate(id, {
         onSuccess: () => toast.success("Invoice deleted"),
-        onError: (err) => toast.error(err.message),
+        onError: (err) => toast.error(getErrorMessage(err)),
       });
     },
     [deleteInvoice],
@@ -260,13 +270,13 @@ export function InvoicesClient() {
       title="Invoices"
       subtitle="Manage and track all invoices"
       actions={
-        <Button size="sm" onClick={handleOpenCreate}>
-          <Plus className="h-4 w-4" /> New Invoice
+        <Button size="sm" onClick={handleOpenCreate} {...plusHoverHandlers}>
+          <PlusIcon ref={plusRef} size={16} /> New Invoice
         </Button>
       }
       filters={filtersBar}
     >
-      <div className="flex flex-1 min-h-0 flex-col space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         <StatCardGrid cols={4}>
           <StatCard
             label="Outstanding"

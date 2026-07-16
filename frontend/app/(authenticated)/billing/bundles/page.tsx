@@ -64,7 +64,7 @@ const SOLUTION_BUNDLES: SolutionBundle[] = [
     monthlyPrice: 44900,
     individualTotal: 49888,
     savings: 10,
-    color: "purple",
+    color: "blue",
   },
 ];
 

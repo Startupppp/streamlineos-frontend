@@ -11,7 +11,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Lock, Eye, EyeOff, Shield, AlertCircle } from "lucide-react";
+import { Shield, AlertCircle } from "lucide-react";
+import { EyeIcon, EyeOffIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { Lock } from "lucide-react";
 import type { HrSensitiveData } from "@/types/hr/core";
 import { useForm } from "react-hook-form";
 

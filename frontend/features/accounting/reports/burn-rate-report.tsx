@@ -7,7 +7,8 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyChartIllustration } from "@/components/illustrations";
-import { LoadingState, ErrorState } from "@/components/shared";
+import { ErrorState } from "@/components/shared";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ReportShell } from "./report-shell";
 import { useBurnRate, useCashRunway } from "@/hooks/api/accounting/reports";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -70,8 +71,29 @@ export function BurnRateReport() {
       title="Burn Rate & Cash Runway"
       subtitle="Average monthly cash outflow and projected months of runway."
     >
+      <div className="flex flex-1 min-h-0 flex-col">
       {isLoading ? (
-        <LoadingState variant="cards" rows={3} />
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="rounded-xl border border-border bg-card p-4 space-y-2">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-7 w-32" />
+                <Skeleton className="h-3 w-20" />
+              </div>
+            ))}
+          </div>
+          <Skeleton className="h-[220px] w-full rounded-xl" />
+          <div className="space-y-2">
+            <Skeleton className="h-9 w-full" />
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex gap-4">
+                <Skeleton className="h-8 w-1/3" />
+                <Skeleton className="h-8 w-1/3" />
+              </div>
+            ))}
+          </div>
+        </div>
       ) : error ? (
         <ErrorState
           title="Failed to load burn rate data"
@@ -168,6 +190,7 @@ export function BurnRateReport() {
           )}
         </div>
       )}
+      </div>
     </ReportShell>
   );
 }

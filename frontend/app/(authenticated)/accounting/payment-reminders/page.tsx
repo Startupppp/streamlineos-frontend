@@ -4,10 +4,12 @@ import { useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   DropdownMenu,
@@ -79,18 +81,15 @@ function PolicyRowActions({ policy, onEdit, canManage }: PolicyRowActionsProps) 
     onEdit(policy);
   }
 
+  function handlePreventClose(e: Event): void {
+    e.preventDefault();
+  }
+
   return (
     <AlertDialog>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="w-7">
-            <span className="sr-only">Actions</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-              <circle cx="12" cy="5" r="1.5" />
-              <circle cx="12" cy="12" r="1.5" />
-              <circle cx="12" cy="19" r="1.5" />
-            </svg>
-          </Button>
+          <AnimatedIconButton icon={EllipsisIcon} iconSize={14} variant="ghost" size="icon" className="w-7" aria-label="Policy actions" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-40">
           {canManage && <DropdownMenuItem onSelect={handleEdit}>Edit</DropdownMenuItem>}
@@ -98,7 +97,7 @@ function PolicyRowActions({ policy, onEdit, canManage }: PolicyRowActionsProps) 
           {canManage && (
             <AlertDialogTrigger asChild>
               <DropdownMenuItem
-                onSelect={(e) => e.preventDefault()}
+                onSelect={handlePreventClose}
                 className="text-destructive focus:text-destructive"
               >
                 Delete
@@ -254,7 +253,7 @@ function LogTab() {
           href={`/accounting/invoices/${row.invoiceId}`}
           className="text-sm text-primary hover:underline font-mono"
         >
-          #{row.invoiceId}
+          View invoice
         </Link>
       ),
     },
@@ -357,10 +356,10 @@ export default function PaymentRemindersPage() {
       subtitle="Automated overdue reminders"
       actions={
         activeTab === "policies" && canManage ? (
-          <Button size="sm" onClick={handleNewPolicy}>
+          <LoadingButton size="sm" onClick={handleNewPolicy} isPending={false}>
             <Plus className="size-4 mr-1" />
             New Policy
-          </Button>
+          </LoadingButton>
         ) : undefined
       }
     >

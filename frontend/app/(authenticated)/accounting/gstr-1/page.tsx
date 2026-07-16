@@ -134,8 +134,8 @@ function SectionTable({
 }: SectionTableProps) {
   const tintClass =
     tint === "b2b"
-      ? "bg-violet-500/10 text-violet-700 border-violet-500/20"
-      : "bg-amber-500/10 text-amber-700 border-amber-500/20";
+      ? "bg-blue-500/10 text-blue-700 border-blue-500/20 dark:text-blue-300 dark:border-blue-500/30 dark:bg-blue-500/10"
+      : "bg-amber-500/10 text-amber-700 border-amber-500/20 dark:text-amber-300 dark:border-amber-500/30 dark:bg-amber-500/10";
 
   return (
     <div className="rounded-lg border border-border overflow-hidden">

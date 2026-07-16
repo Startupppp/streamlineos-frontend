@@ -161,14 +161,15 @@ export default function PurchaseBillDetailPage({
             </LoadingButton>
           )}
           {canPost && (
-            <Button
+            <LoadingButton
               size="sm"
+              isPending={postMutation.isPending}
+              loadingText="Posting…"
               onClick={handleOpenPostDialog}
-              disabled={postMutation.isPending}
             >
               <Send className="mr-1 h-4 w-4" />
               Post bill
-            </Button>
+            </LoadingButton>
           )}
           {canRecordPayment && (
             <Button size="sm" variant="outline" onClick={handleOpenPaymentDialog}>
@@ -187,7 +188,7 @@ export default function PurchaseBillDetailPage({
     >
       <div className="space-y-4">
         {query.isLoading ? (
-          <LoadingState variant="page" />
+          <LoadingState variant="table" rows={12} />
         ) : query.error ? (
           <ErrorState
             title="Failed to load bill"

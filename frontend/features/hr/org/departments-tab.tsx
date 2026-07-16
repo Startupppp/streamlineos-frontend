@@ -9,7 +9,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Plus, Building2 } from "lucide-react";
+import { Building2 } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   Dialog,
   DialogContent,
@@ -82,10 +84,9 @@ export function DepartmentsTab({ canManage }: Props) {
           <SearchInput value={search} onValueChange={handleSearch} placeholder="Search departments..." />
         </div>
         {canManage && (
-          <Button size="sm" className="gap-1.5" onClick={handleCreate}>
-            <Plus className="h-3.5 w-3.5" />
+          <AnimatedIconButton size="sm" className="gap-1.5" onClick={handleCreate} icon={PlusIcon} iconSize={14} iconClassName="mr-1.5">
             Add Department
-          </Button>
+          </AnimatedIconButton>
         )}
       </div>
 

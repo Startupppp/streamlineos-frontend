@@ -5,6 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
@@ -39,7 +42,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DatePicker } from "@/components/ui/date-picker";
 import { FinanceStatusBadge, Money } from "@/features/accounting/shared";
-import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { RecordPaymentDialog } from "@/features/accounting/sales/record-payment-dialog";
 import { CollectionsTab } from "@/features/accounting/sales/collections-tab";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -123,20 +125,7 @@ function InvoiceRowActions({ invoice, onRecordPayment }: InvoiceRowActionsProps)
     <AlertDialog>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="w-7">
-            <span className="sr-only">Actions</span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-            >
-              <circle cx="12" cy="5" r="1.5" />
-              <circle cx="12" cy="12" r="1.5" />
-              <circle cx="12" cy="19" r="1.5" />
-            </svg>
-          </Button>
+          <AnimatedIconButton icon={EllipsisIcon} variant="ghost" size="icon" className="w-7" aria-label="Actions" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-44">
           <DropdownMenuItem onSelect={handleViewDetail}>View Detail</DropdownMenuItem>
@@ -362,9 +351,9 @@ export default function AccountingInvoicesPage() {
           </TabsTrigger>
         </TabsList>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className={FILTER_TOOLBAR_ROW}>
           <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
-            <SelectTrigger className="w-[160px] border-input bg-card text-xs">
+            <SelectTrigger className={`w-[160px] ${FILTER_SELECT_TRIGGER}`}>
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>

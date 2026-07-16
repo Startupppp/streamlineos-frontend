@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -21,6 +23,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,7 +35,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { LoadingButton } from "@/components/ui/loading-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -60,12 +62,16 @@ function formatDate(value: string | null | undefined): string {
 
 interface RowActionsProps {
   template: RecurringBillTemplate;
-  onEdit: () => void;
+  onEdit: (t: RecurringBillTemplate) => void;
 }
 
 function RecurringBillRowActions({ template, onEdit }: RowActionsProps) {
   const runNow = useRunRecurringBillNow(template.id);
   const deleteMutation = useDeleteRecurringBill(template.id);
+
+  function handleEdit(): void {
+    onEdit(template);
+  }
 
   function handleRunNow(): void {
     runNow.mutate(undefined, {
@@ -81,27 +87,18 @@ function RecurringBillRowActions({ template, onEdit }: RowActionsProps) {
     });
   }
 
+  function handlePreventClose(e: Event): void {
+    e.preventDefault();
+  }
+
   return (
     <AlertDialog>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="w-7">
-            <span className="sr-only">Actions</span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-            >
-              <circle cx="12" cy="5" r="1.5" />
-              <circle cx="12" cy="12" r="1.5" />
-              <circle cx="12" cy="19" r="1.5" />
-            </svg>
-          </Button>
+          <AnimatedIconButton icon={EllipsisIcon} iconSize={14} variant="ghost" size="icon" className="w-7" aria-label="Template actions" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuItem onSelect={onEdit}>Edit</DropdownMenuItem>
+          <DropdownMenuItem onSelect={handleEdit}>Edit</DropdownMenuItem>
           <DropdownMenuItem
             disabled={runNow.isPending}
             onSelect={handleRunNow}
@@ -112,7 +109,7 @@ function RecurringBillRowActions({ template, onEdit }: RowActionsProps) {
           <DropdownMenuSeparator />
           <AlertDialogTrigger asChild>
             <DropdownMenuItem
-              onSelect={(e) => e.preventDefault()}
+              onSelect={handlePreventClose}
               className="text-destructive focus:text-destructive"
             >
               Delete
@@ -184,12 +181,11 @@ export default function RecurringBillsPage() {
     {
       key: "vendor",
       header: "Vendor",
-      cell: (row) =>
-        row.vendorId != null ? (
-          <span className="text-sm text-muted-foreground">Vendor #{row.vendorId}</span>
-        ) : (
-          <span className="text-sm text-muted-foreground">—</span>
-        ),
+      cell: (row) => (
+        <span className="text-sm text-muted-foreground">
+          {row.vendorId != null ? String(row.vendorId) : "—"}
+        </span>
+      ),
     },
     {
       key: "frequency",
@@ -244,9 +240,7 @@ export default function RecurringBillsPage() {
     {
       key: "actions",
       header: "",
-      cell: (row) => (
-        <RecurringBillRowActions template={row} onEdit={() => handleEditRow(row)} />
-      ),
+      cell: (row) => <RecurringBillRowActions template={row} onEdit={handleEditRow} />,
       className: "w-10",
     },
   ];
@@ -256,10 +250,10 @@ export default function RecurringBillsPage() {
       title="Recurring Bills"
       subtitle="Automate vendor bill creation on a schedule."
       actions={
-        <Button size="sm" onClick={handleNewClick}>
+        <LoadingButton size="sm" onClick={handleNewClick} isPending={false}>
           <Plus className="size-4 mr-1" />
           New template
-        </Button>
+        </LoadingButton>
       }
       filters={
         <Select value={isActiveFilter} onValueChange={handleActiveFilterChange}>

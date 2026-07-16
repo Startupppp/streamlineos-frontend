@@ -226,39 +226,41 @@ export function VendorStatementReport() {
         </div>
       }
     >
-      {!vendorId ? (
-        <EmptyState
-          illustration={<EmptyReportIllustration />}
-          title="Select a vendor"
-          description="Choose a vendor above to view their statement."
-          compact
-        />
-      ) : statementQuery.error ? (
-        <ErrorState
-          title="Failed to load statement"
-          description={getErrorMessage(statementQuery.error)}
-          onRetry={handleRetry}
-        />
-      ) : (
-        <DataTable
-          className="flex-1 min-h-0"
-          data={rows}
-          columns={columns}
-          getRowKey={getRowKey}
-          rowClassName={rowClassName}
-          isLoading={statementQuery.isLoading}
-          minWidth="680px"
-          footer={closingBalanceFooter}
-          emptyState={
-            <EmptyState
-              illustration={<EmptyReportIllustration />}
-              title="No transactions in this period"
-              description="There are no AP transactions for this vendor in the selected date range."
-              compact
-            />
-          }
-        />
-      )}
+      <div className="flex flex-1 min-h-0 flex-col">
+        {!vendorId ? (
+          <EmptyState
+            illustration={<EmptyReportIllustration />}
+            title="Select a vendor"
+            description="Choose a vendor above to view their statement."
+            compact
+          />
+        ) : statementQuery.error ? (
+          <ErrorState
+            title="Failed to load statement"
+            description={getErrorMessage(statementQuery.error)}
+            onRetry={handleRetry}
+          />
+        ) : (
+          <DataTable
+            className="flex-1 min-h-0"
+            data={rows}
+            columns={columns}
+            getRowKey={getRowKey}
+            rowClassName={rowClassName}
+            isLoading={statementQuery.isLoading}
+            minWidth="680px"
+            footer={closingBalanceFooter}
+            emptyState={
+              <EmptyState
+                illustration={<EmptyReportIllustration />}
+                title="No transactions in this period"
+                description="There are no AP transactions for this vendor in the selected date range."
+                compact
+              />
+            }
+          />
+        )}
+      </div>
     </ReportShell>
   );
 }

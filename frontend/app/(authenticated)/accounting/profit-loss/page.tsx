@@ -137,7 +137,7 @@ export default function ProfitLossPage() {
             description="Pick a different date range or post entries to see this report populate."
           />
         ) : (
-          <div className="space-y-4">
+          <div className="flex flex-1 min-h-0 flex-col space-y-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <ReportCard
                 title="Income"

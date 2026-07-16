@@ -2,9 +2,11 @@
 
 import React from "react";
 import Link from "next/link";
-import { Mail, Phone, Building2, Clock, Star, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { Mail, Phone, Building2, Clock, Star, Pencil, Trash2 } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -183,13 +185,13 @@ export function CandidateCard({
         />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button
+            <AnimatedIconButton
+              icon={EllipsisIcon}
+              iconSize={14}
               variant="ghost"
               size="icon"
               className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <MoreVertical className="h-3.5 w-3.5" />
-            </Button>
+            />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40">
             <DropdownMenuItem onClick={handleEditClick}>

@@ -7,6 +7,7 @@ import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { useSeatInfo, useSubscription } from "@/hooks/api/subscription";
 import type { StatTone } from "@/components/ui/stat-card";
@@ -80,7 +81,8 @@ export default function SeatsPage() {
   const {
     data: seatInfo,
     isLoading: seatsLoading,
-    isError: seatsError,
+    isError: seatsIsError,
+    error: seatsErrorObj,
     refetch: refetchSeats,
   } = useSeatInfo();
 
@@ -99,7 +101,7 @@ export default function SeatsPage() {
     );
   }
 
-  if (seatsError) {
+  if (seatsIsError) {
     return (
       <PageWrapper
         title="Seats & Licenses"
@@ -107,7 +109,7 @@ export default function SeatsPage() {
       >
         <ErrorState
           title="Failed to load seat information"
-          description="There was a problem fetching your seat data."
+          description={getErrorMessage(seatsErrorObj)}
           onRetry={refetchSeats}
           className="flex-1"
         />

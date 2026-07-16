@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { format } from "date-fns";
-import { Copy, Download, DollarSign, FileText, Image, Link2 } from "lucide-react";
+import { Copy, Download, FileText, Image, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,6 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -117,7 +116,7 @@ function getCouponRowKey(row: CouponRow): string | number {
 }
 
 export default function AffiliatePage() {
-  const { data, isLoading, isError, error } = useAffiliate();
+  const { data, isLoading, isError, error, refetch } = useAffiliate();
   const register = useRegisterAffiliate();
   const createReferral = useCreateReferral();
   const requestPayout = useRequestAffiliatePayout();
@@ -159,14 +158,23 @@ export default function AffiliatePage() {
     toast.info("Coming soon");
   }
 
+  function handleRetry() {
+    void refetch();
+  }
+
   return (
     <PageWrapper
       title="Affiliate Program"
       subtitle="Earn commissions by referring customers"
     >
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         {isError ? (
-          <ErrorState description={getErrorMessage(error)} />
+          <ErrorState
+            title="Failed to load affiliate data"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+            className="flex-1"
+          />
         ) : isLoading ? (
           <div className="flex flex-1 flex-col gap-4">
             <Skeleton className="h-24 w-full rounded-lg" />
@@ -181,25 +189,28 @@ export default function AffiliatePage() {
           />
         ) : (
           <>
-            <StatCardGrid cols={3}>
-              <StatCard
-                label="Total Earned"
-                value={fmt(affiliate.totalEarned)}
-                icon={DollarSign}
-                tone="emerald"
-              />
-              <StatCard
-                label="Pending Payout"
-                value={fmt(affiliate.pendingPayout)}
-                icon={FileText}
-                tone="amber"
-              />
-              <StatCard
-                label="Signups"
-                value={affiliate.signupCount}
-                icon={Link2}
-              />
-            </StatCardGrid>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div className="rounded-lg border border-border bg-card px-4 py-3">
+                <p className="text-xs text-muted-foreground mb-1">
+                  Total Earned
+                </p>
+                <p className="text-xl font-bold">
+                  {fmt(affiliate.totalEarned)}
+                </p>
+              </div>
+              <div className="rounded-lg border border-border bg-card px-4 py-3">
+                <p className="text-xs text-muted-foreground mb-1">
+                  Pending Payout
+                </p>
+                <p className="text-xl font-bold">
+                  {fmt(affiliate.pendingPayout)}
+                </p>
+              </div>
+              <div className="rounded-lg border border-border bg-card px-4 py-3">
+                <p className="text-xs text-muted-foreground mb-1">Signups</p>
+                <p className="text-xl font-bold">{affiliate.signupCount}</p>
+              </div>
+            </div>
 
             <div className="rounded-lg border border-border bg-card p-4 space-y-3">
               <p className="text-sm font-semibold">Your Referral Link</p>
