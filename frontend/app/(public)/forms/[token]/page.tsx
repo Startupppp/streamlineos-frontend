@@ -81,30 +81,33 @@ async function submitPublicForm(
   return res.json() as Promise<SubmitResponse>;
 }
 
-function buildDynamicSchema(fields: FormField[]): z.ZodObject<Record<string, z.ZodTypeAny>> {
-  const shape: Record<string, z.ZodTypeAny> = {};
+function buildFieldSchema(field: FormField): z.ZodType<string> {
+  if (field.type === "email") {
+    return field.required
+      ? z.string().trim().min(1, `${field.label} is required`).email(`${field.label} must be a valid email`)
+      : z.string().trim().refine((v) => v === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), {
+          message: `${field.label} must be a valid email`,
+        });
+  }
+  if (field.type === "number") {
+    return field.required
+      ? z.string().trim().min(1, `${field.label} is required`).refine((v) => /^-?\d+(\.\d+)?$/.test(v), {
+          message: `${field.label} must be a number`,
+        })
+      : z.string().trim().refine((v) => v === "" || /^-?\d+(\.\d+)?$/.test(v), {
+          message: `${field.label} must be a number`,
+        });
+  }
+  if (field.required) {
+    return z.string().trim().min(1, `${field.label} is required`);
+  }
+  return z.string();
+}
+
+function buildDynamicSchema(fields: FormField[]): z.ZodObject<Record<string, z.ZodType<string>>> {
+  const shape: Record<string, z.ZodType<string>> = {};
   for (const field of fields) {
-    let fieldSchema: z.ZodTypeAny = z.string();
-    if (field.type === "email") {
-      fieldSchema = field.required
-        ? z.string().trim().min(1, `${field.label} is required`).email(`${field.label} must be a valid email`)
-        : z.string().trim().refine((v) => v === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), {
-            message: `${field.label} must be a valid email`,
-          });
-    } else if (field.type === "number") {
-      fieldSchema = field.required
-        ? z.string().trim().min(1, `${field.label} is required`).refine((v) => /^-?\d+(\.\d+)?$/.test(v), {
-            message: `${field.label} must be a number`,
-          })
-        : z.string().trim().refine((v) => v === "" || /^-?\d+(\.\d+)?$/.test(v), {
-            message: `${field.label} must be a number`,
-          });
-    } else if (field.required) {
-      fieldSchema = z.string().trim().min(1, `${field.label} is required`);
-    } else {
-      fieldSchema = z.string();
-    }
-    shape[field.key] = fieldSchema;
+    shape[field.key] = buildFieldSchema(field);
   }
   return z.object(shape);
 }

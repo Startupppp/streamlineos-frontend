@@ -198,9 +198,7 @@ function buildColumns(
             <Button variant="ghost" size="icon" className="w-7" onClick={handleEdit} aria-label="Edit territory">
               <Pencil className="h-3.5 w-3.5" />
             </Button>
-            <Button variant="ghost" size="icon" className="w-7 text-destructive" onClick={handleDelete} aria-label="Delete territory">
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
+            <DeleteTerritoryButton onClick={handleDelete} />
           </div>
         );
       },
@@ -326,10 +324,7 @@ export default function TerritoriesPage() {
         title="Territories"
         subtitle={isLoading ? undefined : `${count} territor${count !== 1 ? "ies" : "y"} defined`}
         actions={
-          <Button onClick={handleOpenNew}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Territory
-          </Button>
+          <AnimatedIconButton icon={PlusIcon} iconSize={16} onClick={handleOpenNew}>New Territory</AnimatedIconButton>
         }
       >
         {isLoading ? (

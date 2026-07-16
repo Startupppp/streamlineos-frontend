@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ChevronRight, Building2 } from "lucide-react";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import type { OrgHierarchyNode } from "@/types/crm";
 

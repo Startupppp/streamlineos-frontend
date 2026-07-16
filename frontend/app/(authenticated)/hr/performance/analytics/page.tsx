@@ -6,6 +6,14 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
+import { ExternalLink, BarChart2, CheckCircle, Star, Target } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
+import { useReviewCycles } from "@/hooks/api/hr";
+import { useHrPerformanceReviews } from "@/hooks/api/hr";
+import type { ReviewCycle } from "@/types/hr";
 
 const PerformanceAnalyticsCharts = dynamic(
   () => import("@/features/hr/analytics/performance-analytics-charts").then((m) => ({ default: m.PerformanceAnalyticsCharts })),
@@ -22,14 +30,6 @@ const PerformanceAnalyticsCharts = dynamic(
     ),
   },
 );
-import { ExternalLink, BarChart2, CheckCircle, Star, Target } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
-import { useReviewCycles } from "@/hooks/api/hr";
-import { useHrPerformanceReviews } from "@/hooks/api/hr";
-import type { ReviewCycle } from "@/types/hr";
 
 const CYCLE_STATUS_STYLES: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground border-border",

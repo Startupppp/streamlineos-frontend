@@ -55,6 +55,7 @@ import { resolveImageUrl, cn } from "@/lib/utils";
 import { format } from "date-fns";
 import type { Employee } from "@/types/hr";
 import { canDeleteEmployee } from "@/features/hr/employees/hr-types";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const EmployeeTimelineTab = dynamic(
   () => import("@/features/hr/employees/detail/timeline-tab").then(m => ({ default: m.EmployeeTimelineTab })),
@@ -172,7 +173,7 @@ function InfoField({
         <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
           {label}
         </p>
-        <p className="text-sm font-medium truncate">{value}</p>
+        <TruncatedText text={value} className="text-sm font-medium" />
       </div>
     </div>
   );
@@ -232,13 +233,15 @@ function DirectReportsSection({ employeeId }: { employeeId: string }) {
                 </AvatarFallback>
               </Avatar>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium truncate">
-                  {r.name ?? r.email}
-                </p>
+                <TruncatedText
+                  text={r.name ?? r.email ?? ""}
+                  className="text-sm font-medium"
+                />
                 {r.designation && (
-                  <p className="text-[11px] text-muted-foreground truncate">
-                    {r.designation}
-                  </p>
+                  <TruncatedText
+                    text={r.designation}
+                    className="text-[11px] text-muted-foreground"
+                  />
                 )}
               </div>
             </Link>

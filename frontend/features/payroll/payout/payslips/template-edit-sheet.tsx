@@ -12,6 +12,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -251,10 +252,9 @@ export function TemplateEditSheet({ open, onOpenChange, template }: TemplateEdit
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isPending || !form.name.trim()}>
-              {isPending && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
+            <LoadingButton type="submit" isPending={isPending} disabled={!form.name.trim()}>
               {isEdit ? "Save" : "Create"}
-            </Button>
+            </LoadingButton>
           </SheetFooter>
         </form>
       </SheetContent>

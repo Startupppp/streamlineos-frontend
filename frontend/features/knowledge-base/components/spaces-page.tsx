@@ -134,9 +134,7 @@ function SpaceCard({
         </Badge>
       </div>
       {space.description && (
-        <p className="text-sm text-muted-foreground line-clamp-1">
-          {space.description}
-        </p>
+        <TruncatedText text={space.description} className="text-sm text-muted-foreground" />
       )}
       <p className="text-xs text-muted-foreground">
         {pageCount} {pageCount === 1 ? "page" : "pages"}

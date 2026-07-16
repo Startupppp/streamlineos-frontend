@@ -1,7 +1,9 @@
 "use client";
 
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil } from "lucide-react";
+import { TrashIcon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Switch } from "@/components/ui/switch";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Money } from "@/features/accounting/shared";

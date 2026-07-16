@@ -41,13 +41,6 @@ function daysUntil(dateStr: string): number {
   return Math.ceil((new Date(dateStr).getTime() - Date.now()) / 86_400_000);
 }
 
-interface ChartDatum {
-  rate: string;
-  cgst: number;
-  sgst: number;
-  igst: number;
-}
-
 function toChartData(groups: TaxRateGroup[]): ChartDatum[] {
   return groups.map((g) => ({
     rate: `${g.rate}%`,

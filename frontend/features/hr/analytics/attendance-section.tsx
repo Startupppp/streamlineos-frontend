@@ -91,35 +91,7 @@ export function AttendanceSection({ year, month }: AttendanceSectionProps) {
 
         <AnalyticsChartCard title="Daily Attendance Trend">
           {dailyChartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart
-                data={dailyChartData}
-                margin={{ top: 8, right: 8, left: -16, bottom: 0 }}
-                barCategoryGap="28%"
-              >
-                <CartesianGrid {...chartGridProps} />
-                <XAxis
-                  dataKey="date"
-                  tick={chartAxisTick}
-                  interval={Math.max(0, Math.floor(dailyChartData.length / 8) - 1)}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  tick={chartAxisTick}
-                  allowDecimals={false}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip contentStyle={chartTooltipStyle} />
-                <Bar
-                  dataKey="count"
-                  fill={CHART_SEMANTIC.primary}
-                  radius={[4, 4, 0, 0]}
-                  maxBarSize={24}
-                />
-              </BarChart>
-            </ResponsiveContainer>
+            <AttendanceTrendChart data={dailyChartData} />
           ) : (
             <EmptyChart label="No daily attendance data" />
           )}

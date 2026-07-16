@@ -184,13 +184,9 @@ function CalendarView({
     <div className="space-y-4">
       <div className="bg-card border border-border rounded-lg shadow-sm p-4">
         <div className="flex items-center justify-between mb-4">
-          <Button variant="ghost" size="icon" onClick={onPrev}>
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
+          <AnimatedIconButton icon={ChevronLeftIcon} variant="ghost" size="icon" iconSize={16} onClick={onPrev} />
           <h2 className="text-lg font-semibold text-foreground">{format(viewDate, "MMMM yyyy")}</h2>
-          <Button variant="ghost" size="icon" onClick={onNext}>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+          <AnimatedIconButton icon={ChevronRightIcon} variant="ghost" size="icon" iconSize={16} onClick={onNext} />
         </div>
         <div className="grid grid-cols-7 gap-1">
           {WEEKDAYS.map((day) => (
@@ -237,9 +233,9 @@ function CalendarView({
             <CalendarDays className="w-8 text-muted-foreground/40 mb-2" />
             <p className="text-muted-foreground text-sm">No holidays in {format(viewDate, "MMMM")}</p>
             {canManage && (
-              <Button variant="ghost" size="sm" className="mt-2" onClick={onAdd}>
-                <Plus className="h-3.5 w-3.5 mr-1" /> Add one
-              </Button>
+              <AnimatedIconButton icon={PlusIcon} variant="ghost" size="sm" className="mt-2" iconSize={14} onClick={onAdd}>
+                {" Add one"}
+              </AnimatedIconButton>
             )}
           </div>
         ) : (
@@ -319,9 +315,9 @@ function ListView({
             {search ? "No holidays match your search" : "No holidays for this period"}
           </p>
           {canManage && !search && (
-            <Button size="sm" className="mt-3" onClick={onAdd}>
-              <Plus className="h-4 w-4 mr-2" /> Add Holiday
-            </Button>
+            <AnimatedIconButton icon={PlusIcon} iconSize={16} size="sm" className="mt-3" onClick={onAdd}>
+              {" Add Holiday"}
+            </AnimatedIconButton>
           )}
         </div>
       ) : (
@@ -411,9 +407,9 @@ function UpcomingView({
         <Clock className="w-8 text-muted-foreground/40 mb-2" />
         <p className="text-muted-foreground text-sm font-medium">No upcoming holidays</p>
         {canManage && (
-          <Button size="sm" className="mt-3" onClick={onAdd}>
-            <Plus className="h-4 w-4 mr-2" /> Add Holiday
-          </Button>
+          <AnimatedIconButton icon={PlusIcon} iconSize={16} size="sm" className="mt-3" onClick={onAdd}>
+            {" Add Holiday"}
+          </AnimatedIconButton>
         )}
       </div>
     );

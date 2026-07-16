@@ -22,6 +22,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Select,
   SelectContent,
@@ -226,10 +227,9 @@ export function BudgetFormDialog({ open, onOpenChange, budget }: BudgetFormDialo
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isPending}>
-                {isPending && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
+              <LoadingButton type="submit" isPending={isPending} loadingText={isEdit ? "Saving…" : "Creating…"}>
                 {isEdit ? "Save" : "Create budget"}
-              </Button>
+              </LoadingButton>
             </DialogFooter>
           </form>
         </Form>

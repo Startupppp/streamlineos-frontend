@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo, useState, useCallback } from "react";
-import { TrendingUp, Target, Handshake, Pencil, X, Check } from "lucide-react";
+import { TrendingUp, Target, Handshake, Pencil } from "lucide-react";
+import { XIcon, CheckIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { formatINRCompact } from "@/lib/format-utils";
 import { Button } from "@/components/ui/button";
@@ -92,12 +94,8 @@ function SnapshotOverrideRow({ snapshotId, period, totalWeighted, overrideAmount
             placeholder="Note"
             className="h-6 w-20 text-xs"
           />
-          <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleSave} disabled={overrideForecast.isPending}>
-            <Check className="h-3 w-3" />
-          </Button>
-          <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleCancel}>
-            <X className="h-3 w-3" />
-          </Button>
+          <AnimatedIconButton icon={CheckIcon} iconSize={12} size="icon" variant="ghost" className="h-6 w-6" onClick={handleSave} disabled={overrideForecast.isPending} />
+          <AnimatedIconButton icon={XIcon} iconSize={12} size="icon" variant="ghost" className="h-6 w-6" onClick={handleCancel} />
         </div>
       ) : (
         <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleStartEdit}>

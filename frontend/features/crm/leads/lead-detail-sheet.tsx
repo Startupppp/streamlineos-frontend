@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "@/lib/format-utils";
 import { useLeadDetail, useLogLeadActivity } from "@/hooks/api";
@@ -166,7 +167,7 @@ export function LeadDetailSheet({
                   {lead.company && (
                     <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-1.5">
                       <Building2 className="h-3.5 w-3.5 shrink-0" />
-                      <span className="truncate">{lead.company}</span>
+                      <TruncatedText text={lead.company} />
                       {lead.designation && (
                         <span className="text-muted-foreground/60">
                           · {lead.designation}

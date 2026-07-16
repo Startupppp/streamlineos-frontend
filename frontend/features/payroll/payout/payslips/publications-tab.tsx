@@ -86,10 +86,9 @@ function PublishDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={publishMutation.isPending}>
             Cancel
           </Button>
-          <Button onClick={handleConfirm} disabled={publishMutation.isPending}>
-            {publishMutation.isPending && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
+          <LoadingButton onClick={handleConfirm} isPending={publishMutation.isPending} loadingText="Publishing…">
             Publish
-          </Button>
+          </LoadingButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -11,11 +11,6 @@ import {
   CheckCircle2,
   ArrowRight,
 } from "lucide-react";
-
-const EnrollmentStatusChart = dynamic(
-  () => import("@/features/hr/learning/components/enrollment-status-chart").then((m) => ({ default: m.EnrollmentStatusChart })),
-  { ssr: false, loading: () => <Skeleton className="h-[280px] w-full rounded-lg" /> },
-);
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,6 +19,11 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { useCourses, useMyEnrollments } from "@/hooks/api/hr/courses";
 import { useTrainingPrograms } from "@/hooks/api/hr/training";
+
+const EnrollmentStatusChart = dynamic(
+  () => import("@/features/hr/learning/components/enrollment-status-chart").then((m) => ({ default: m.EnrollmentStatusChart })),
+  { ssr: false, loading: () => <Skeleton className="h-[280px] w-full rounded-lg" /> },
+);
 
 interface Course {
   id: number;

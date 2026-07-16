@@ -198,9 +198,7 @@ export const WaitCard = memo(function WaitCard({ waitHours, onChangeHours, onRem
           />
           <span className="text-xs text-muted-foreground">hours</span>
         </div>
-        <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={onRemove}>
-          <X className="h-3 w-3" />
-        </Button>
+        <AnimatedIconButton icon={XIcon} iconSize={12} variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={onRemove} />
       </div>
     </motion.div>
   );
