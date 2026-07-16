@@ -140,12 +140,15 @@ export function useAutomationRuns(ruleId: number) {
     queryFn: () => apiClient.get<AutomationRun[]>(`/settings/automations/${ruleId}/runs`),
     enabled: Number.isFinite(ruleId) && ruleId > 0,
     staleTime: 15_000,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
   });
 }
 
 export function useCreateAutomation() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["automations", "create"],
     mutationFn: (input: CreateAutomationInput) =>
       apiClient.post<AutomationRule>("/settings/automations", input),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.automations.all }),
@@ -155,6 +158,7 @@ export function useCreateAutomation() {
 export function useUpdateAutomation() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["automations", "update"],
     mutationFn: ({ id, ...input }: UpdateAutomationInput & { id: number }) =>
       apiClient.patch<AutomationRule>(`/settings/automations/${id}`, input),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.automations.all }),
@@ -164,6 +168,7 @@ export function useUpdateAutomation() {
 export function useToggleAutomation() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["automations", "toggle"],
     mutationFn: ({ id, isEnabled }: { id: number; isEnabled: boolean }) =>
       apiClient.patch<AutomationRule>(`/settings/automations/${id}`, { isEnabled }),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.automations.all }),

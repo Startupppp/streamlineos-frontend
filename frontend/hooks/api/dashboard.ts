@@ -49,6 +49,7 @@ export const useDashboardStats = (
     queryKey: queryKeys.dashboard.stats(orgId),
     queryFn: () => apiClient.get<DashboardStats>("/dashboard/stats"),
     staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: true,
     ...options,
     enabled: !!orgId,
   });
@@ -247,6 +248,7 @@ export const useLeavesToday = (
     queryFn: () => apiClient.get<LeaveToday[]>("/dashboard/leaves-today"),
     staleTime: 60_000,
     refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
     ...options,
     enabled: !!orgId,
   });
@@ -299,6 +301,7 @@ export const usePendingApprovals = (
     queryFn: () => apiClient.get<PendingApprovalsCount>("/dashboard/pending-approvals"),
     staleTime: 60_000,
     refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
     ...options,
     enabled: !!orgId,
   });
@@ -397,6 +400,7 @@ export const usePersonalDashboard = (
     queryKey: queryKeys.dashboard.personal(orgId),
     queryFn: () => apiClient.get<PersonalDashboard>("/dashboard/personal"),
     staleTime: 2 * 60_000,
+    refetchOnWindowFocus: true,
     ...options,
     enabled: !!orgId,
   });
@@ -411,6 +415,7 @@ export const useExecutiveDashboard = (
     queryKey: queryKeys.dashboard.executive(orgId),
     queryFn: () => apiClient.get<ExecutiveDashboard>("/dashboard/executive"),
     staleTime: 5 * 60_000,
+    refetchOnWindowFocus: true,
     ...options,
     enabled: !!orgId,
   });
