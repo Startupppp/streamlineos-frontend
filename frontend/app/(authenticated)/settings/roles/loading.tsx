@@ -1,24 +1,31 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 
 export default function RolesLoading() {
   return (
     <PageWrapper
       title="Roles & Permissions"
-      subtitle="Configure access controls for each role"
-      actions={<Skeleton className="h-9 w-28 rounded-md" />}
+      subtitle="Configure access controls for each role."
+      actions={
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-9 w-24 rounded-md" />
+          <Skeleton className="h-9 w-32 rounded-md" />
+          <Skeleton className="h-9 w-28 rounded-md" />
+        </div>
+      }
     >
-      <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
-        <Card className="h-fit">
-          <CardHeader className="pb-3">
-            <Skeleton className="h-4 w-24" />
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="divide-y divide-border/30">
-              {Array.from({ length: 12 }).map((_, i) => (
+      <div className="flex flex-col gap-4">
+        <StatCardGridSkeleton cols={4} count={4} />
+        <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
+          <div className="rounded-xl border border-border bg-card">
+            <div className="px-4 py-3 border-b border-border">
+              <Skeleton className="h-4 w-20" />
+            </div>
+            <div className="divide-y divide-border/40">
+              {Array.from({ length: 9 }).map((_, i) => (
                 <div key={i} className="px-4 py-3 flex items-center justify-between">
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <Skeleton className="h-4 w-28" />
                     <Skeleton className="h-3 w-20" />
                   </div>
@@ -26,15 +33,12 @@ export default function RolesLoading() {
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <Skeleton className="h-5 w-40 mb-1" />
-            <Skeleton className="h-3 w-48" />
-          </CardHeader>
-          <CardContent className="p-0">
+          </div>
+          <div className="rounded-xl border border-border bg-card">
+            <div className="px-4 py-4 border-b border-border space-y-1">
+              <Skeleton className="h-5 w-40" />
+              <Skeleton className="h-3 w-48" />
+            </div>
             <div className="divide-y divide-border/30">
               {Array.from({ length: 12 }).map((_, i) => (
                 <div key={i} className="px-4 py-3 flex items-center justify-between">
@@ -47,8 +51,8 @@ export default function RolesLoading() {
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </PageWrapper>
   );

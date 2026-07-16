@@ -1,13 +1,10 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Skeleton } from "@/components/ui/skeleton";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 
 export function FnfPageSkeleton() {
   return (
-    <PageWrapper title="Full & Final Settlement">
-      <div className="flex flex-col gap-3">
-        <Skeleton className="h-9 w-48" />
-        <Skeleton className="h-64 rounded-xl" />
-      </div>
+    <PageWrapper title="Full & Final Settlement" subtitle="Review and approve exit settlements.">
+      <DataTableSkeleton rows={12} columns={5} />
     </PageWrapper>
   );
 }

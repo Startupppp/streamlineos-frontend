@@ -6,7 +6,7 @@ export default function TerminationLoading() {
     <PageWrapper
       title="Termination Management"
       subtitle="Manage employee terminations"
-      actions={<Skeleton className="h-8 w-36 rounded-md" />}
+      actions={<Skeleton className="h-9 w-36 rounded-md" />}
     >
       <div className="space-y-2">
         {Array.from({ length: 12 }).map((_, i) => (

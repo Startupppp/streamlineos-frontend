@@ -1,20 +1,23 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 
 export default function PayrollInputsLoading() {
   return (
-    <PageWrapper title="Attendance Inputs" backHref="/payroll">
-      <div className="border border-border rounded-md overflow-hidden">
-        <div className="bg-muted/40 border-b" />
-        {Array.from({ length: 12 }).map((_, i) => (
-          <div key={i} className="border-b border-border px-3 flex items-center gap-3">
-            <Skeleton className="h-3 w-28" />
-            <Skeleton className="h-4 w-16 rounded" />
-            {Array.from({ length: 12 }).map((_, j) => (
-              <Skeleton key={j} className="h-3 w-10" />
-            ))}
-          </div>
-        ))}
+    <PageWrapper
+      title="Payroll Inputs"
+      subtitle="Capture and lock HR data for payroll processing."
+      actions={<Skeleton className="h-9 w-36 rounded-md" />}
+      filters={
+        <div className={FILTER_TOOLBAR_ROW}>
+          <Skeleton className="h-9 w-44 rounded-md" />
+        </div>
+      }
+    >
+      <div className="space-y-4">
+        <Skeleton className="h-16 w-full rounded-xl" />
+        <DataTableSkeleton rows={12} columns={6} />
       </div>
     </PageWrapper>
   );

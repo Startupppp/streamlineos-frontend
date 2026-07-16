@@ -7,9 +7,9 @@ export default function RoleEditorLoading() {
   return (
     <PageWrapper
       title="Loading…"
-      subtitle="Manage permissions for this role"
+      subtitle="Manage permissions for this role."
       noInternalScroll
-      actions={<Skeleton className="h-9 w-24 rounded-md" />}
+      actions={<Skeleton className="h-9 w-32 rounded-md" />}
     >
       <div className="flex flex-col gap-4 lg:h-full lg:min-h-0">
         <Card>
@@ -32,7 +32,6 @@ export default function RoleEditorLoading() {
             </div>
           </CardContent>
         </Card>
-
         <Card className="lg:flex-1 lg:min-h-0 flex flex-col">
           <div className="p-4 pb-3 flex items-start justify-between gap-3">
             <div className="space-y-1.5">

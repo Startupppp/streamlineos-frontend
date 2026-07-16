@@ -1,14 +1,15 @@
+import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 
 export function SettingsPageSkeleton() {
   return (
-    <PageWrapper title="Payroll Settings">
-      <div className="space-y-6">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <div key={i} className="rounded-lg border border-border p-4 animate-pulse space-y-3">
-            <div className="h-4 bg-muted rounded w-40" />
-            <div className="h-3 bg-muted rounded w-full" />
-            <div className="h-3 bg-muted rounded w-3/4" />
+    <PageWrapper title="Payroll Settings" subtitle="Loading settings…">
+      <div className="space-y-4">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="rounded-xl border border-border bg-card p-4 space-y-3">
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="h-3 w-full max-w-md" />
+            <Skeleton className="h-3 w-3/4" />
           </div>
         ))}
       </div>

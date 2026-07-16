@@ -11,16 +11,16 @@ export default function ProjectsLoading() {
     <PageWrapper
       title="All Projects"
       subtitle="Browse and manage every project in your workspace"
-      actions={<Skeleton className="h-4 w-28 rounded-md" />}
+      actions={<Skeleton className="h-9 w-28 rounded-md" />}
     >
       <PmPageShell>
         <div className={PM_TOOLBAR}>
           <div className="flex w-full min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
-            <Skeleton className="h-4 w-full max-w-[240px] rounded-md" />{" "}
-            <Skeleton className="h-8 w-[132px] rounded-md" />{" "}
+            <Skeleton className="h-9 w-full max-w-[240px] rounded-md" />
+            <Skeleton className="h-9 w-[132px] rounded-md" />
             <div className="ml-auto flex items-center gap-0.5">
-              <Skeleton className="h-7 w-7 rounded-md" />{" "}
-              <Skeleton className="h-7 w-7 rounded-md" />{" "}
+              <Skeleton className="h-9 w-9 rounded-md" />
+              <Skeleton className="h-9 w-9 rounded-md" />
             </div>
           </div>
         </div>

@@ -17,7 +17,13 @@ export default function TimelineLoading() {
       contentClassName="!p-0"
     >
       <PmPageShell className={cn(PAGE_CHROME_X, "h-full min-h-0 pb-4 pt-0")}>
-        <div className={cn(PM_TOOLBAR, "h-10 animate-pulse bg-muted/30")} />
+        <div className={cn(PM_TOOLBAR, "mb-2")}>
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-9 w-44 rounded-md" />
+            <Skeleton className="h-9 w-32 rounded-md" />
+            <Skeleton className="ml-auto h-9 w-9 rounded-md" />
+          </div>
+        </div>
         <PmPanel className="flex min-h-0 flex-1 flex-col p-3">
           <div className="mb-3 flex items-center gap-2 border-b border-border/50 pb-2">
             {Array.from({ length: 12 }).map((_, i) => (

@@ -8,7 +8,7 @@ export default function PagesLoading() {
       subtitle="Create and manage project documentation and notes"
       noInternalScroll
       contentClassName="p-0"
-      actions={<Skeleton className="h-8 w-28 rounded-md" />}
+      actions={<Skeleton className="h-9 w-28 rounded-md" />}
     >
       <div className="flex h-full overflow-hidden">
         <div className="w-64 border-r overflow-hidden p-3 space-y-1">

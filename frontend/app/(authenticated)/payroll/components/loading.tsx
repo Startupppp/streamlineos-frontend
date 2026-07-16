@@ -1,27 +1,23 @@
+import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { DataTableSkeleton } from "@/components/ui/data-table";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export function ComponentsPageSkeleton() {
   return (
-    <PageWrapper title="Component Catalog" subtitle="Loading…">
-      <div className="space-y-3">
-        <div className="flex gap-2">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="w-32 bg-muted animate-pulse rounded-md" />
-          ))}
+    <PageWrapper
+      title="Component Catalog"
+      subtitle="Manage salary components used in payroll runs."
+      actions={<Skeleton className="h-9 w-36 rounded-md" />}
+      filters={
+        <div className={FILTER_TOOLBAR_ROW}>
+          <Skeleton className="h-9 w-48 rounded-md" />
+          <Skeleton className="h-9 w-44 rounded-md" />
+          <Skeleton className="h-9 w-32 rounded-md" />
         </div>
-        <div className="rounded-lg border border-border overflow-hidden">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-4 px-4 py-3 border-b border-border last:border-0"
-            >
-              <div className="h-4 bg-muted animate-pulse rounded w-40" />
-              <div className="h-5 bg-muted animate-pulse rounded w-20" />
-              <div className="h-4 bg-muted animate-pulse rounded w-24 ml-auto" />
-            </div>
-          ))}
-        </div>
-      </div>
+      }
+    >
+      <DataTableSkeleton rows={12} columns={4} />
     </PageWrapper>
   );
 }

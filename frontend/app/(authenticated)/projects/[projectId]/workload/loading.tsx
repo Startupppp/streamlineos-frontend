@@ -1,5 +1,8 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { StatCardGridSkeleton } from "@/components/ui/stat-card";
+import { cn } from "@/lib/utils";
+import { PmPageShell, PmSection, PM_PANEL } from "@/features/projects/shared/pm-chrome";
 
 export default function WorkloadLoading() {
   return (
@@ -7,31 +10,31 @@ export default function WorkloadLoading() {
       title="Workload"
       subtitle="Team capacity and ticket distribution"
     >
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-16 rounded-lg" />
-          ))}
-        </div>
-        <div className="space-y-2">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3"
-            >
-              <Skeleton className="h-7 w-7 rounded-full shrink-0" />{" "}
-              <Skeleton className="h-4 w-32 shrink-0" />
-              <div className="flex-1 h-6 bg-muted rounded overflow-hidden">
-                <Skeleton
-                  className="h-8 h-full rounded"
-                  style={{ width: `${20 + ((i * 17) % 60)}%` }}
-                />{" "}
+      <PmPageShell>
+        <PmSection index={0}>
+          <StatCardGridSkeleton cols={4} className="mb-4" />
+        </PmSection>
+        <PmSection index={1}>
+          <div className={cn(PM_PANEL, "space-y-2 p-2")}>
+            {Array.from({ length: 12 }).map((_, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-3 border-b border-border/40 px-2 py-2.5 last:border-0"
+              >
+                <Skeleton className="h-7 w-7 shrink-0 rounded-full" />
+                <Skeleton className="h-4 w-32 shrink-0" />
+                <div className="flex-1 overflow-hidden rounded">
+                  <Skeleton
+                    className="h-5 rounded"
+                    style={{ width: `${20 + ((i * 17) % 60)}%` }}
+                  />
+                </div>
+                <Skeleton className="h-3.5 w-16 shrink-0" />
               </div>
-              <Skeleton className="h-3.5 w-16 shrink-0" />
-            </div>
-          ))}
-        </div>
-      </div>
+            ))}
+          </div>
+        </PmSection>
+      </PmPageShell>
     </PageWrapper>
   );
 }

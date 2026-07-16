@@ -1,18 +1,19 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PmPageShell } from "@/features/projects/shared/pm-chrome";
 
 export default function ProjectFeedbackLoading() {
   return (
-    <PageWrapper title="Feedback" subtitle="Collect and triage user feedback submitted via this project's widget.">
-      <div className="space-y-4">
-        <Skeleton className="h-24 w-full rounded-xl" />
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-24 rounded" />
-          {Array.from({ length: 12 }).map((_, i) => (
-            <Skeleton key={i} className="h-14 w-full rounded-lg" />
-          ))}
+    <PageWrapper
+      title="Feedback"
+      subtitle="Collect and triage user feedback submitted via this project's widget."
+    >
+      <PmPageShell>
+        <div className="space-y-4">
+          <Skeleton className="h-24 w-full rounded-xl" />
+          <Skeleton className="h-48 w-full rounded-xl" />
         </div>
-      </div>
+      </PmPageShell>
     </PageWrapper>
   );
 }

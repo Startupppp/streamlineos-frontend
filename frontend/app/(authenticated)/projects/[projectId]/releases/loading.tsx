@@ -7,7 +7,7 @@ export default function ReleasesLoading() {
     <PageWrapper
       title="Releases"
       subtitle="Track versions and shipped features"
-      actions={<Skeleton className="h-8 w-32 rounded-md" />}
+      actions={<Skeleton className="h-9 w-32 rounded-md" />}
     >
       <PmPageShell>
         <PmSection index={0}>

@@ -14,11 +14,11 @@ export default function PortfoliosLoading() {
       subtitle="Group related projects into portfolios"
       filters={
         <div className={PM_TOOLBAR}>
-          <Skeleton className="h-8 w-40 rounded-md" />
-          <Skeleton className="h-8 w-52 rounded-md" />
+          <Skeleton className="h-9 w-40 rounded-md" />
+          <Skeleton className="h-9 w-52 rounded-md" />
         </div>
       }
-      actions={<Skeleton className="h-8 w-32 rounded-md" />}
+      actions={<Skeleton className="h-9 w-32 rounded-md" />}
     >
       <PmPageShell>
         <div className={cn(PM_PANEL, "space-y-2 p-3")}>

@@ -1,21 +1,30 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatCardGridSkeleton } from "@/components/ui/stat-card";
+import { DataTableSkeleton } from "@/components/ui/data-table";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export default function TeamTimeLoading() {
   return (
-    <PageWrapper title="Team Time">
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-14 w-full rounded-lg" />
-          ))}
+    <PageWrapper
+      title="Team Time"
+      actions={
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-9 w-9 rounded-md" />
+          <Skeleton className="h-9 w-9 rounded-md" />
+          <Skeleton className="h-9 w-24 rounded-md" />
         </div>
-        <div className="space-y-1">
-          <Skeleton className="h-4 w-full rounded-t-md" />
-          {Array.from({ length: 12 }).map((_, i) => (
-            <Skeleton key={i} className="h-4 w-full" />
-          ))}
+      }
+      filters={
+        <div className={FILTER_TOOLBAR_ROW}>
+          <Skeleton className="h-9 w-44 rounded-md" />
+          <Skeleton className="h-9 w-40 rounded-md" />
         </div>
+      }
+    >
+      <div className="flex flex-col gap-4">
+        <StatCardGridSkeleton cols={4} count={4} />
+        <DataTableSkeleton rows={12} columns={9} />
       </div>
     </PageWrapper>
   );

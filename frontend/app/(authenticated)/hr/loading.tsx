@@ -1,32 +1,30 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export default function HrLoading() {
-  const filterBar = (
-    <div className="flex items-center gap-2 w-full">
-      <Skeleton className="h-8 w-64 rounded-md" />
-      <Skeleton className="h-8 w-32 rounded-md" />
-      <Skeleton className="h-8 w-28 rounded-md" />
-      <Skeleton className="h-8 w-28 rounded-md" />
-    </div>
-  );
-
   return (
     <PageWrapper
       title="Employees"
       subtitle="Manage your company directory and employee access"
       actions={
         <div className="flex items-center gap-2">
-          <Skeleton className="h-8 w-24 rounded-md" />
-          <Skeleton className="h-8 w-32 rounded-md" />
+          <Skeleton className="h-9 w-24 rounded-md" />
+          <Skeleton className="h-9 w-32 rounded-md" />
         </div>
       }
-      filters={filterBar}
+      filters={
+        <div className={FILTER_TOOLBAR_ROW}>
+          <Skeleton className="h-9 w-60 rounded-md" />
+          <Skeleton className="h-9 w-[130px] rounded-md" />
+          <Skeleton className="h-9 w-[130px] rounded-md" />
+        </div>
+      }
       noInternalScroll
       contentClassName="flex flex-col"
     >
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden flex-1 min-h-0">
         <CardContent className="p-0">
           <div className="flex items-center gap-4 px-6 py-3 border-b bg-muted/30">
             <Skeleton className="h-4 w-32" />

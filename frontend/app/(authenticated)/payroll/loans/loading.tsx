@@ -4,10 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export function LoansPageSkeleton() {
   return (
-    <PageWrapper title="Loans & Advances" subtitle="Loading…">
-      <div className="flex items-center gap-2 mb-3">
-        <Skeleton className="h-8 w-44 rounded-md" />
-      </div>
+    <PageWrapper title="Loans & Advances" subtitle="Manage employee salary advances and loan EMI recovery.">
       <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
         <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
           <div className="border-b border-border px-2 py-1.5">

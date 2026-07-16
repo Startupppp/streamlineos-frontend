@@ -1,6 +1,8 @@
-import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { DataTableSkeleton } from "@/components/ui/data-table";
+import { StatCardGridSkeleton } from "@/components/ui/stat-card";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export default function DealsLoading() {
   return (
@@ -8,48 +10,26 @@ export default function DealsLoading() {
       title="Deals Pipeline"
       subtitle="Track and manage your deals across stages"
       actions={
-        <>
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-9 w-24 rounded-md" />
+          <Skeleton className="h-9 w-24 rounded-md" />
+        </div>
+      }
+      filters={
+        <div className={FILTER_TOOLBAR_ROW}>
+          <Skeleton className="h-9 w-[200px] rounded-md" />
+          <Skeleton className="h-9 w-[140px] rounded-md" />
+          <Skeleton className="h-9 w-[140px] rounded-md" />
+          <Skeleton className="h-9 w-[74px] rounded-md" />
           <Skeleton className="h-8 w-20 rounded-md" />
-          <Skeleton className="h-8 w-24 rounded-md" />
-          <Skeleton className="h-8 w-28 rounded-md" />
-        </>
+        </div>
       }
     >
-      <div className="space-y-6">
-        <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <Card key={i}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <Skeleton className="h-5 w-5 rounded" />
-                  <Skeleton className="h-4 w-16" />
-                </div>
-                <Skeleton className="h-3 w-24 mt-2" />
-              </CardContent>
-            </Card>
-          ))}
+      <div className="flex flex-1 min-h-0 flex-col space-y-4">
+        <div className="shrink-0">
+          <StatCardGridSkeleton cols={4} count={4} />
         </div>
-
-        <div className="border border-border rounded-md">
-          <div className="border-b border-border bg-muted/40 px-3 py-2 flex items-center gap-3">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <Skeleton key={i} className="h-3 w-20" />
-            ))}
-          </div>
-          <div className="divide-y divide-border">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <div key={i} className="px-3 py-2.5 flex items-center gap-3">
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-5 w-20 rounded-full" />
-                <Skeleton className="h-4 w-16" />
-                <Skeleton className="h-4 w-28" />
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-7 w-7 rounded ml-auto" />
-              </div>
-            ))}
-          </div>
-        </div>
+        <DataTableSkeleton rows={12} columns={5} />
       </div>
     </PageWrapper>
   );

@@ -1,19 +1,25 @@
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export default function WorkflowSettingsLoading() {
   return (
-    <div className="p-6 space-y-4">
-      <Skeleton className="h-8 w-56" />
-      <Skeleton className="h-4 w-80" />
-      <div className="flex gap-2 mt-4">
-        <Skeleton className="h-8 w-48 rounded-md" />
-        <Skeleton className="h-8 w-36 rounded-md" />
-      </div>
-      <div className="space-y-2 mt-4">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <Skeleton key={i} className="h-16 rounded-lg" />
+    <PageWrapper
+      title="Workflow Settings"
+      subtitle="Configure approval chains and automation rules"
+      actions={<Skeleton className="h-9 w-[130px] rounded-md" />}
+      filters={
+        <div className={FILTER_TOOLBAR_ROW}>
+          <Skeleton className="h-9 w-48 rounded-md" />
+          <Skeleton className="h-9 w-36 rounded-md" />
+        </div>
+      }
+    >
+      <div className="space-y-2">
+        {Array.from({ length: 10 }).map((_, i) => (
+          <Skeleton key={i} className="h-16 w-full rounded-lg" />
         ))}
       </div>
-    </div>
+    </PageWrapper>
   );
 }

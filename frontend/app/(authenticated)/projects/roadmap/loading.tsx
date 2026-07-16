@@ -14,11 +14,11 @@ export default function RoadmapLoading() {
       subtitle="Plan publicly, collect feedback and ship a changelog"
       filters={
         <div className={PM_TOOLBAR}>
-          <Skeleton className="h-8 w-64 rounded-lg" />
-          <Skeleton className="h-8 w-56 rounded-md sm:ml-auto" />
+          <Skeleton className="h-9 w-64 rounded-lg" />
+          <Skeleton className="h-9 w-56 rounded-md sm:ml-auto" />
         </div>
       }
-      actions={<Skeleton className="h-8 w-24 rounded-md" />}
+      actions={<Skeleton className="h-9 w-24 rounded-md" />}
     >
       <PmPageShell>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">

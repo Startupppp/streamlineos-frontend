@@ -1,19 +1,23 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { DataTableSkeleton } from "@/components/ui/data-table";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export default function TimesheetApprovalsLoading() {
   return (
-    <div className="px-4 sm:px-6 pt-4 space-y-4">
-      <div className="space-y-2">
-        <Skeleton className="h-3 w-24" />
-        <Skeleton className="h-6 w-40" />
-      </div>
-      <Skeleton className="h-8 w-64" />
-      <div className="rounded-lg border border-border overflow-hidden">
-        <Skeleton className="h-9 w-full" />
-        {Array.from({ length: 12 }).map((_, i) => (
-          <Skeleton key={i} className="h-4 w-full mt-px" />
-        ))}
-      </div>
-    </div>
+    <PageWrapper
+      title="Approvals"
+      filters={
+        <div className={FILTER_TOOLBAR_ROW}>
+          <Skeleton className="h-9 w-28 rounded-md" />
+          <Skeleton className="h-9 w-28 rounded-md" />
+          <Skeleton className="h-9 w-28 rounded-md" />
+          <Skeleton className="h-9 w-44 rounded-md" />
+          <Skeleton className="h-9 w-64 rounded-md" />
+        </div>
+      }
+    >
+      <DataTableSkeleton rows={12} columns={5} />
+    </PageWrapper>
   );
 }

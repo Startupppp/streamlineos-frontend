@@ -7,10 +7,11 @@ export default function CandidateDetailLoading() {
     <PageWrapper
       title="Candidate Profile"
       subtitle="View candidate details and history"
+      backHref="/hr/recruitment/candidates"
       actions={
         <div className="flex items-center gap-2">
-          <Skeleton className="h-8 w-20 rounded-md" />
-          <Skeleton className="h-8 w-24 rounded-md" />
+          <Skeleton className="h-9 w-20 rounded-md" />
+          <Skeleton className="h-9 w-24 rounded-md" />
         </div>
       }
     >
@@ -34,15 +35,14 @@ export default function CandidateDetailLoading() {
             </div>
           </CardContent>
         </Card>
-
         <div className="grid gap-4 md:grid-cols-2">
-          {Array.from({ length: 12 }).map((_, i) => (
+          {Array.from({ length: 4 }).map((_, i) => (
             <Card key={i}>
               <CardHeader>
                 <Skeleton className="h-5 w-32" />
               </CardHeader>
               <CardContent className="space-y-3">
-                {Array.from({ length: 12 }).map((_, j) => (
+                {Array.from({ length: 5 }).map((_, j) => (
                   <Skeleton key={j} className="h-12 w-full" />
                 ))}
               </CardContent>

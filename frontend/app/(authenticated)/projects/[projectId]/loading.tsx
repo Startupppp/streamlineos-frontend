@@ -6,20 +6,15 @@ import { cn } from "@/lib/utils";
 
 export default function ProjectBoardLoading() {
   const filterBar = (
-    <div className="flex items-center gap-2 w-full">
-      <div className="flex items-center gap-1">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <Skeleton key={i} className="h-7 w-7 rounded-md" />
-        ))}
-      </div>
-      <div className="w-px h-5 bg-border/60 shrink-0 hidden sm:block" />
-      <Skeleton className="h-8 w-48 rounded-md" />
-      <Skeleton className="h-8 w-24 rounded-md" />
-      <Skeleton className="h-8 w-24 rounded-md" />
-      <div className="w-px h-5 bg-border/60 shrink-0 hidden sm:block" />
+    <div className="flex w-full flex-wrap items-center gap-2">
+      <Skeleton className="h-9 w-[200px] rounded-md" />
       <div className="ml-auto flex items-center gap-1.5">
-        <Skeleton className="h-5 w-8 rounded-full" />
-        <Skeleton className="h-4 w-12" />
+        <Skeleton className="h-9 w-9 rounded-md" />
+        <Skeleton className="h-9 w-9 rounded-md" />
+        <Skeleton className="h-9 w-9 rounded-md" />
+        <div className="mx-1 h-5 w-px bg-border/60 shrink-0" />
+        <Skeleton className="h-9 w-44 rounded-md" />
+        <Skeleton className="h-9 w-9 rounded-md" />
       </div>
     </div>
   );
@@ -29,7 +24,7 @@ export default function ProjectBoardLoading() {
       title="Board"
       noInternalScroll
       contentClassName="!p-0"
-      actions={<Skeleton className="h-8 w-28 rounded-md" />}
+      actions={<Skeleton className="h-9 w-28 rounded-md" />}
       filters={filterBar}
     >
       <div className={cn(PAGE_CHROME_X, "h-full w-full overflow-hidden pb-1")}>

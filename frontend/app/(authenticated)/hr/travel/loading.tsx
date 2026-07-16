@@ -10,10 +10,10 @@ export default function TravelLoading() {
       actions={<Skeleton className="h-9 w-36 rounded-md" />}
     >
       <div className="space-y-4">
-        <Skeleton className="h-10 w-full rounded-2xl" />
+        <Skeleton className="h-16 w-full rounded-xl" />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <Card key={i} className="rounded-2xl">
+          {Array.from({ length: 9 }).map((_, i) => (
+            <Card key={i} className="rounded-xl">
               <CardContent className="p-5">
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div className="flex items-center gap-2">

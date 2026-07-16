@@ -1,15 +1,21 @@
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DevicesLoading() {
   return (
-    <div className="p-6 space-y-4">
-      <Skeleton className="h-8 w-48" />
-      <Skeleton className="h-4 w-72" />
-      <div className="space-y-2 mt-6">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <Skeleton key={i} className="h-12 rounded-lg" />
-        ))}
+    <PageWrapper
+      title="Time Clock Devices"
+      subtitle="Manage biometric, RFID, and mobile time clock devices"
+      actions={<Skeleton className="h-9 w-32 rounded-md" />}
+    >
+      <div className="flex flex-col flex-1 min-h-0 gap-4">
+        <Skeleton className="h-9 w-64 rounded-md" />
+        <div className="space-y-2">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full rounded-lg" />
+          ))}
+        </div>
       </div>
-    </div>
+    </PageWrapper>
   );
 }

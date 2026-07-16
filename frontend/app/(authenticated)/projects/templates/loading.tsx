@@ -8,7 +8,7 @@ export default function TemplatesLoading() {
     <PageWrapper
       title="Templates"
       subtitle="Reusable project structures to bootstrap new work"
-      actions={<Skeleton className="h-4 w-32 rounded-md" />}
+      actions={<Skeleton className="h-9 w-32 rounded-md" />}
     >
       <PmPageShell>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -24,8 +24,8 @@ export default function TemplatesLoading() {
               <Skeleton className="h-3 w-full" />
               <Skeleton className="h-3 w-3/4" />
               <div className="flex gap-2 pt-1">
-                <Skeleton className="flex-1" />
-                <Skeleton className="h-8 w-8" />{" "}
+                <Skeleton className="h-9 flex-1 rounded-md" />
+                <Skeleton className="h-9 w-9 rounded-md" />
               </div>
             </div>
           ))}

@@ -18,19 +18,21 @@ export default function ProjectApprovalsLoading() {
         </div>
       }
     >
-      <div className={cn("space-y-2 p-2", PM_PANEL)}>
-        {Array.from({ length: 12 }).map((_, i) => (
-          <div
-            key={i}
-            className="flex h-10 items-center gap-3 border-b border-border/50 px-2 last:border-0"
-          >
-            <Skeleton className="h-4 w-16 rounded-full" />
-            <Skeleton className="h-3 max-w-[16rem] flex-1" />
-            <Skeleton className="h-3 w-20" />
-            <Skeleton className="h-3 w-10" />
-            <Skeleton className="h-4 w-16 rounded-full" />
-          </div>
-        ))}
+      <div className="relative flex min-h-0 flex-1 flex-col gap-4">
+        <div className={cn("space-y-2 p-2", PM_PANEL)}>
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex h-10 items-center gap-3 border-b border-border/50 px-2 last:border-0"
+            >
+              <Skeleton className="h-4 w-16 rounded-full" />
+              <Skeleton className="h-3 max-w-[16rem] flex-1" />
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-3 w-10" />
+              <Skeleton className="h-4 w-16 rounded-full" />
+            </div>
+          ))}
+        </div>
       </div>
     </PageWrapper>
   );
