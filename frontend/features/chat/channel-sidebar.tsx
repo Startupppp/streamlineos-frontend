@@ -13,12 +13,13 @@ import {
 import {
   Archive,
   ArrowLeft,
-  ChevronDown,
   Compass,
   MessageSquareText,
-  Search,
   Star,
 } from "lucide-react";
+import { SearchIcon, ChevronDownIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import React from "react";
 import { useRouter } from "next/navigation";
 import { EmptyMailIllustration } from "@/components/illustrations";
 import { useChatChannels, useArchivedChannels, useChatOnlineUsers, useSetPresenceStatus } from "@/hooks/api";
@@ -79,6 +80,18 @@ interface ChannelSidebarProps {
   onStartCall?: (channelId: number, type: "huddle") => void;
   onOpenSettings?: (channelId: number) => void;
 }
+
+const SidebarSearchButton = React.forwardRef<
+  HTMLButtonElement,
+  React.ButtonHTMLAttributes<HTMLButtonElement>
+>(function SidebarSearchButton({ className, ...props }, ref) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <button ref={ref} {...hoverHandlers} className={className} {...props}>
+      <SearchIcon ref={iconRef} size={14} />
+    </button>
+  );
+});
 
 export function ChannelSidebar({
   activeChannelId,

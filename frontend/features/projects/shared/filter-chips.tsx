@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
+import { XIcon } from "@animateicons/react/lucide";
 import { Label } from "@/components/ui/label";
 
 export interface FilterChipProps {
@@ -25,7 +25,7 @@ export function FilterChip({ label, color, onRemove }: FilterChipProps) {
         className="ml-0.5 rounded-full text-muted-foreground hover:text-foreground transition-colors"
         aria-label={`Remove ${label} filter`}
       >
-        <X className="h-2.5 w-2.5" />
+        <XIcon size={10} />
       </button>
     </span>
   );

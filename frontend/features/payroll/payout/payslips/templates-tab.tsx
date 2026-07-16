@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Eye, Pencil, Trash2, Plus, Star } from "lucide-react";
+import { Pencil, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EyeIcon, Trash2Icon, PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
@@ -67,24 +69,24 @@ function TemplateCard({
       </div>
       {canManage && (
         <div className="flex items-center gap-1.5 pt-1">
-          <Button variant="outline" size="sm" className="text-xs gap-1" onClick={onPreview}>
-            <Eye className="h-3 w-3" />
+          <AnimatedIconButton icon={EyeIcon} iconClassName="mr-1.5" variant="outline" size="sm" className="text-xs" onClick={onPreview}>
             Preview
-          </Button>
+          </AnimatedIconButton>
           <Button variant="outline" size="sm" className="text-xs gap-1" onClick={onEdit}>
             <Pencil className="h-3 w-3" />
             Edit
           </Button>
           {!template.isDefault && (
-            <Button
+            <AnimatedIconButton
+              icon={Trash2Icon}
+              iconClassName="mr-1.5"
               variant="outline"
               size="sm"
-              className="text-xs gap-1 text-destructive hover:text-destructive"
+              className="text-xs text-destructive hover:text-destructive"
               onClick={onDelete}
             >
-              <Trash2 className="h-3 w-3" />
               Delete
-            </Button>
+            </AnimatedIconButton>
           )}
         </div>
       )}
@@ -136,10 +138,9 @@ export function TemplatesTab({ canManage }: TemplatesTabProps) {
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-foreground">Payslip Templates</p>
         {canManage && (
-          <Button size="sm" className="gap-1.5" onClick={handleOpenCreate}>
-            <Plus className="h-3.5 w-3.5" />
+          <AnimatedIconButton icon={PlusIcon} iconClassName="mr-1.5" size="sm" onClick={handleOpenCreate}>
             Create Template
-          </Button>
+          </AnimatedIconButton>
         )}
       </div>
 

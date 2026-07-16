@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Link as LinkIcon, X, Plus } from "lucide-react";
+import { Link as LinkIcon } from "lucide-react";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { PlusIcon, XIcon } from "@animateicons/react/lucide";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -24,7 +26,23 @@ function isValidUrl(value: string): boolean {
   }
 }
 
+function RemoveLinkButton({ idx, linkLabel, linkUrl, onRemove }: { idx: number; linkLabel: string; linkUrl: string; onRemove: (idx: number) => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <button
+      type="button"
+      onClick={() => onRemove(idx)}
+      aria-label={`Remove link ${linkLabel || linkUrl}`}
+      className="text-muted-foreground hover:text-destructive transition-colors shrink-0"
+      {...hoverHandlers}
+    >
+      <XIcon ref={iconRef} size={14} />
+    </button>
+  );
+}
+
 export function TicketRelatedLinksEditor({ links, onChange }: TicketRelatedLinksEditorProps) {
+  const { iconRef: plusIconRef, hoverHandlers: plusHoverHandlers } = useAnimatedIcon();
   const [urlInput, setUrlInput] = useState("");
   const [labelInput, setLabelInput] = useState("");
   const [urlError, setUrlError] = useState<string | null>(null);
@@ -103,8 +121,9 @@ export function TicketRelatedLinksEditor({ links, onChange }: TicketRelatedLinks
           onClick={handleAdd}
           aria-label="Add link"
           className="flex items-center justify-center h-7 w-7 rounded-md border border-border bg-background text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors shrink-0"
+          {...plusHoverHandlers}
         >
-          <Plus className="h-3.5 w-3.5" />
+          <PlusIcon ref={plusIconRef} size={14} />
         </button>
       </div>
 
@@ -129,14 +148,7 @@ export function TicketRelatedLinksEditor({ links, onChange }: TicketRelatedLinks
                   {link.url}
                 </span>
               )}
-              <button
-                type="button"
-                onClick={() => handleRemove(idx)}
-                aria-label={`Remove link ${link.label || link.url}`}
-                className="text-muted-foreground hover:text-destructive transition-colors shrink-0"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
+              <RemoveLinkButton idx={idx} linkLabel={link.label} linkUrl={link.url} onRemove={handleRemove} />
             </li>
           ))}
         </ul>

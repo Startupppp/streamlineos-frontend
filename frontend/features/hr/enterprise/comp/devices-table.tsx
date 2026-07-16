@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
-import { Plus, Trash2, Edit2, AlertCircle, CheckCircle2, WifiOff } from "lucide-react";
+import { Edit2, AlertCircle, CheckCircle2, WifiOff } from "lucide-react";
+import { Trash2Icon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
@@ -102,7 +103,7 @@ export function DevicesTable({ canManage, onAdd, onEdit }: Props) {
                   isPending={deletingId === r.id}
                   onClick={(e) => { e.stopPropagation(); handleDelete(r); }}
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <Trash2Icon size={14} />
                 </LoadingButton>
               </div>
             ) : null,

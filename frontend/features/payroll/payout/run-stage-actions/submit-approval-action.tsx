@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SendIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   Dialog,
   DialogContent,
@@ -63,10 +64,9 @@ export function SubmitApprovalAction({ runId, status, onChanged }: Props) {
 
   return (
     <>
-      <Button size="sm" className="h-9" onClick={handleOpen}>
-        <Send className="mr-2 h-4 w-4" />
+      <AnimatedIconButton icon={SendIcon} iconSize={16} iconClassName="mr-1.5" size="sm" className="h-9" onClick={handleOpen}>
         Submit for approval
-      </Button>
+      </AnimatedIconButton>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>

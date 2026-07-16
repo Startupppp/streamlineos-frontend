@@ -433,14 +433,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
               style={{ borderLeft: `2px solid ${label.color ?? "#3b82f6"}` }}
             >
               {label.name}
-              <button
-                type="button"
-                onClick={makeLabelToggleHandler(label.id)}
-                aria-label={`Remove ${label.name}`}
-                className="hover:text-destructive transition-colors"
-              >
-                <X className="h-2.5 w-2.5" />
-              </button>
+              <RemoveLabelChipButton labelId={label.id} labelName={label.name} onRemove={makeLabelToggleHandler} />
             </Badge>
           ))}
         </div>

@@ -177,10 +177,9 @@ export function CyclesTab() {
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetTrigger asChild>
             <motion.div whileTap={{ scale: 0.97 }}>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
+              <AnimatedIconButton icon={PlusIcon} iconSize={16} iconClassName="mr-2">
                 Create Cycle
-              </Button>
+              </AnimatedIconButton>
             </motion.div>
           </SheetTrigger>
           <SheetContent className="flex w-[480px] flex-col gap-0 overflow-hidden p-0">
@@ -239,18 +238,16 @@ export function CyclesTab() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label>Questions</Label>
-                  <Button type="button" size="sm" variant="outline" onClick={addQuestion}>
-                    <Plus className="w-3.5 h-3.5 mr-1" /> Add
-                  </Button>
+                  <AnimatedIconButton type="button" icon={PlusIcon} iconSize={14} iconClassName="mr-1" size="sm" variant="outline" onClick={addQuestion}>
+                    Add
+                  </AnimatedIconButton>
                 </div>
                 {form.questions.map((q, idx) => (
                   <div key={q.id} className="bg-muted rounded-xl p-3 space-y-2 border border-border">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-medium text-muted-foreground">Q{idx + 1}</span>
                       {form.questions.length > 1 && (
-                        <button onClick={() => removeQuestion(q.id)} className="text-muted-foreground hover:text-red-500">
-                          <X className="w-3.5 h-3.5" />
-                        </button>
+                        <RemoveQuestionButton onClick={() => removeQuestion(q.id)} />
                       )}
                     </div>
                     <Input

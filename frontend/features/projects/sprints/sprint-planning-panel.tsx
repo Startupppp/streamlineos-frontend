@@ -419,7 +419,7 @@ export function SprintPlanningPanel({
                     size="sm"
                     icon={PlusIcon}
                     iconSize={14}
-                    iconClassName="mr-0"
+
                     onClick={handleBulkAdd}
                     disabled={isMutating}
                     className="text-xs gap-1"
@@ -569,7 +569,7 @@ export function SprintPlanningPanel({
                     size="sm"
                     icon={MinusIcon}
                     iconSize={14}
-                    iconClassName="mr-0"
+
                     onClick={handleBulkRemove}
                     disabled={isMutating}
                     className="text-xs gap-1"

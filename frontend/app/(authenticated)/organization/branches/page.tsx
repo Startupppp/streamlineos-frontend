@@ -4,7 +4,7 @@ import { useState, useCallback, type ChangeEvent } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, Pencil, Trash2, Archive, RotateCcw } from "lucide-react";
+import { Pencil, Archive, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import {
   useOrgBranches,
@@ -47,6 +47,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import type { OrgBranch } from "@/types/org-hierarchy";

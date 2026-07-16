@@ -423,7 +423,7 @@ export function TicketChecklists({ projectId, ticketId }: TicketChecklistsProps)
         disabled={createChecklist.isPending}
         className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
-        <Plus className="h-4 w-4" />
+        <PlusIcon size={16} />
         Add checklist
       </button>
     </div>

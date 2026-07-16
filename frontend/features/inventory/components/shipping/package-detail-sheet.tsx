@@ -1,8 +1,9 @@
 "use client";
 
 import { memo, useCallback, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { cn } from "@/lib/utils";
 import { AppSheet, ErrorState } from "@/components/shared";
 import { Button } from "@/components/ui/button";
@@ -165,15 +166,16 @@ const EditableLineRow = memo(function EditableLineRow({
           </SelectContent>
         </Select>
       </div>
-      <Button
+      <AnimatedIconButton
         type="button"
+        icon={Trash2Icon}
+        iconSize={14}
+        iconClassName="text-destructive"
         variant="ghost"
         size="icon"
         className="w-7 shrink-0"
         onClick={handleRemove}
-      >
-        <Trash2 className="h-3.5 w-3.5 text-destructive" />
-      </Button>
+      />
     </div>
   );
 });
@@ -320,16 +322,18 @@ export function PackageDetailSheet({ open, onOpenChange, packageId }: PackageDet
               <div className="flex items-center justify-between mb-2">
                 <p className="text-xs font-medium">Lines</p>
                 {isOpen && (
-                  <Button
+                  <AnimatedIconButton
                     type="button"
+                    icon={PlusIcon}
+                    iconSize={12}
+                    iconClassName="mr-1"
                     variant="ghost"
                     size="sm"
                     className="h-6 px-2 text-xs"
                     onClick={handleAddLine}
                   >
-                    <Plus className="h-3 w-3 mr-1" />
                     Add
-                  </Button>
+                  </AnimatedIconButton>
                 )}
               </div>
 

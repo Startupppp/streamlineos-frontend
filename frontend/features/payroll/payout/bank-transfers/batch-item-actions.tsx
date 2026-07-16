@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { Loader2, Eye, EyeOff } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { EyeIcon, EyeOffIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import {
   Dialog,
   DialogContent,

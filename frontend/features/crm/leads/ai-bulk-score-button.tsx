@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -55,24 +56,16 @@ export function AIBulkScoreButton({
 
   return (
     <>
-      <Button
+      <LoadingButton
         size="sm"
         variant="outline"
         onClick={handleOpenConfirm}
-        disabled={batchMutation.isPending}
+        isPending={batchMutation.isPending}
+        loadingText="Scoring..."
       >
-        {batchMutation.isPending ? (
-          <>
-            <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-            Scoring...
-          </>
-        ) : (
-          <>
-            <Sparkles className="h-3.5 w-3.5 mr-1.5 text-primary" />
-            AI Score {leadIds.length}
-          </>
-        )}
-      </Button>
+        <Sparkles className="h-3.5 w-3.5 mr-1.5 text-primary" />
+        AI Score {leadIds.length}
+      </LoadingButton>
 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent>

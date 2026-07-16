@@ -27,7 +27,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { AlertTriangle, Lock, Plus, X } from "lucide-react";
+import { AlertTriangle, Lock } from "lucide-react";
+import { PlusIcon, XIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import type {
   HrCustomFieldDefinition,
   CreateCustomFieldPayload,
@@ -53,6 +55,22 @@ interface CustomFieldUpsertSheetProps {
   field?: HrCustomFieldDefinition;
   onSave: (payload: CreateCustomFieldPayload | UpdateCustomFieldPayload) => Promise<void>;
   isPending: boolean;
+}
+
+function RemoveOptionButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      className="w-7 text-muted-foreground hover:text-destructive shrink-0"
+      onClick={onClick}
+      {...hoverHandlers}
+    >
+      <XIcon ref={iconRef} size={14} />
+    </Button>
+  );
 }
 
 function parseOptionalNumber(raw: string | undefined): number | undefined {
@@ -100,6 +118,7 @@ export function CustomFieldUpsertSheet({
 }: CustomFieldUpsertSheetProps) {
   const [confirmSensitiveOpen, setConfirmSensitiveOpen] = useState(false);
   const [pendingValues, setPendingValues] = useState<FieldFormValues | null>(null);
+  const { iconRef: addOptionIconRef, hoverHandlers: addOptionHoverHandlers } = useAnimatedIcon();
 
   const isEdit = !!field;
 
@@ -351,8 +370,9 @@ export function CustomFieldUpsertSheet({
                       size="sm"
                       className="h-6 text-xs px-2 gap-1"
                       onClick={handleAddOption}
+                      {...addOptionHoverHandlers}
                     >
-                      <Plus className="h-3 w-3" /> Add Option
+                      <PlusIcon ref={addOptionIconRef} size={12} /> Add Option
                     </Button>
                   </div>
                   {optionFields.length === 0 && (

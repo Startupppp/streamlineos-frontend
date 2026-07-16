@@ -16,7 +16,9 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { cn } from "@/lib/utils";
-import { FileText, StickyNote, Lock, Loader2, Plus } from "lucide-react";
+import { FileText, StickyNote, Lock, Loader2 } from "lucide-react";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { PlusIcon } from "@animateicons/react/lucide";
 import {
   useHrCase,
   useCaseNotes,

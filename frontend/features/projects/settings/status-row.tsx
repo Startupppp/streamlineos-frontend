@@ -341,8 +341,9 @@ export const StatusRow = memo(function StatusRow({
                 "dark:hover:text-red-400 dark:hover:bg-red-500/10 transition-all",
               )}
               aria-label={`Delete status ${state.name}`}
+              {...deleteHoverHandlers}
             >
-              <Trash2 className="h-3.5 w-3.5" />
+              <Trash2Icon ref={deleteIconRef} size={14} />
             </button>
           </AlertDialogTrigger>
           <AlertDialogContent>

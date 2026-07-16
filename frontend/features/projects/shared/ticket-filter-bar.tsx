@@ -11,8 +11,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { CircleCheckIcon } from "@animateicons/react/lucide";
-import { X } from "lucide-react";
+import { CircleCheckIcon, XIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { cn } from "@/lib/utils";
 import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
@@ -404,7 +403,7 @@ export function TicketFilterBar({
             onClick={clearAll}
             className="flex h-9 shrink-0 items-center gap-1 rounded-md border border-transparent px-2 text-sm text-muted-foreground transition-colors hover:border-border hover:bg-muted/50 hover:text-foreground"
           >
-            <X className="h-3.5 w-3.5 shrink-0" />
+            <XIcon size={14} className="shrink-0" />
             Clear all
           </button>
         )}

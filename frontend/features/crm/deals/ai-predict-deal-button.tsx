@@ -114,25 +114,17 @@ export function AIPredictDealButton({
 
   return (
     <div className="space-y-3">
-      <Button
+      <LoadingButton
         variant="outline"
         size="sm"
         onClick={handlePredict}
-        disabled={predictMutation.isPending}
+        isPending={predictMutation.isPending}
+        loadingText="Predicting..."
         className="w-full"
       >
-        {predictMutation.isPending ? (
-          <>
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            Predicting...
-          </>
-        ) : (
-          <>
-            <Sparkles className="h-4 w-4 mr-2 text-primary" />
-            AI Predict Win Probability
-          </>
-        )}
-      </Button>
+        <Sparkles className="h-4 w-4 mr-2 text-primary" />
+        AI Predict Win Probability
+      </LoadingButton>
       {result && (
         <PredictDetails
           result={result}
