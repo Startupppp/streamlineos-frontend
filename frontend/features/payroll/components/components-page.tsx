@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Button } from "@/components/ui/button";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { SearchInput } from "@/components/ui/search-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
@@ -157,10 +157,9 @@ export function ComponentsPageContent() {
         badge={data?.total ?? 0}
         filters={filters}
         actions={
-          <Button size="sm" onClick={handleAddNew} className="gap-1.5">
-            <Plus className="h-4 w-4" />
+          <AnimatedIconButton icon={PlusIcon} iconSize={16} iconClassName="mr-1.5" size="sm" onClick={handleAddNew}>
             Add Component
-          </Button>
+          </AnimatedIconButton>
         }
       >
         <DataTable

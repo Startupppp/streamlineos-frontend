@@ -7,7 +7,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Info, X } from "lucide-react";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { InfoIcon, XIcon } from "@animateicons/react/lucide";
 import { cn } from "@/lib/utils";
 import { FilterChip } from "@/features/projects/shared/filter-chips";
 import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
@@ -98,6 +99,9 @@ export const WorkloadFilterBar = memo(function WorkloadFilterBar({
     onFilterChange("assigneeId", "all");
   }, [onFilterChange]);
 
+  const { iconRef: clearIconRef, hoverHandlers: clearHoverHandlers } = useAnimatedIcon();
+  const { iconRef: infoIconRef, hoverHandlers: infoHoverHandlers } = useAnimatedIcon();
+
   return (
     <div className={cn("flex min-w-0 flex-col gap-1.5", className)}>
       <div className="flex min-w-0 flex-nowrap items-center justify-end gap-2">
@@ -116,8 +120,9 @@ export const WorkloadFilterBar = memo(function WorkloadFilterBar({
             type="button"
             onClick={onClearFilters}
             className="flex h-8 shrink-0 items-center gap-1 rounded-md border border-transparent px-2 text-xs text-muted-foreground transition-colors hover:border-border hover:bg-muted/50 hover:text-foreground"
+            {...clearHoverHandlers}
           >
-            <X className="h-3 w-3 shrink-0" />
+            <XIcon ref={clearIconRef} size={12} className="shrink-0" />
             Clear all
           </button>
         ) : null}
@@ -129,8 +134,9 @@ export const WorkloadFilterBar = memo(function WorkloadFilterBar({
                 type="button"
                 className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
                 aria-label="About workload metrics"
+                {...infoHoverHandlers}
               >
-                <Info className="h-3.5 w-3.5" />
+                <InfoIcon ref={infoIconRef} size={14} />
               </button>
             </TooltipTrigger>
             <TooltipContent side="bottom" className="max-w-[16rem] text-xs">

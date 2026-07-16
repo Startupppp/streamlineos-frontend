@@ -491,17 +491,18 @@ export function SprintPlanningPanel({
                   )}
 
                   {backlogFilters.hasActiveFilters && (
-                    <Button
+                    <AnimatedIconButton
                       type="button"
                       variant="ghost"
                       size="sm"
+                      icon={XIcon}
+                      iconSize={12}
                       className="text-xs gap-1 px-2"
                       onClick={backlogFilters.clearFilters}
                       aria-label="Clear all filters"
                     >
-                      <XIcon size={12} />
                       Clear
-                    </Button>
+                    </AnimatedIconButton>
                   )}
                 </div>
               </div>

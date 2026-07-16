@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useCallback, type ChangeEvent } from "react";
-import { ChevronRight, Building2, GitBranch, Briefcase, Users } from "lucide-react";
+import { Building2, GitBranch, Briefcase, Users } from "lucide-react";
+import { ChevronRightIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { SearchInput } from "@/components/ui/search-input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -55,6 +57,7 @@ function TreeItem({ name, code, type, status, childCount, depth, children }: Tre
   const Icon = NODE_ICONS[type];
   const colorClass = NODE_COLORS[type];
   const hasChildren = childCount > 0;
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
 
   const handleToggle = useCallback(() => {
     if (hasChildren) setExpanded((p) => !p);
@@ -66,10 +69,13 @@ function TreeItem({ name, code, type, status, childCount, depth, children }: Tre
         className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted/50 cursor-pointer group transition-colors"
         style={{ paddingLeft: `${(depth * 20) + 12}px` }}
         onClick={handleToggle}
+        {...hoverHandlers}
       >
         {hasChildren ? (
-          <ChevronRight
-            className={`h-4 w-4 text-muted-foreground shrink-0 transition-transform duration-150 ${expanded ? "rotate-90" : ""}`}
+          <ChevronRightIcon
+            ref={iconRef}
+            size={16}
+            className={`text-muted-foreground shrink-0 transition-transform duration-150 ${expanded ? "rotate-90" : ""}`}
           />
         ) : (
           <span className="w-4 shrink-0" />

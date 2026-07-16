@@ -2,12 +2,43 @@
 
 import { useState, useRef, useCallback } from "react";
 import { Input } from "@/components/ui/input";
-import { Plus } from "lucide-react";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { useCreateTicket } from "@/hooks/api";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useQueryClient } from "@tanstack/react-query";
+
+function HeaderAddButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex h-6 w-6 items-center justify-center rounded hover:bg-muted/70 transition-colors text-muted-foreground hover:text-foreground shrink-0"
+      aria-label="Add ticket to column"
+      {...hoverHandlers}
+    >
+      <PlusIcon ref={iconRef} size={14} />
+    </button>
+  );
+}
+
+function InlineAddButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex items-center gap-1.5 w-full p-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
+      {...hoverHandlers}
+    >
+      <PlusIcon ref={iconRef} size={14} />
+      Add ticket
+    </button>
+  );
+}
 
 interface QuickAddInputProps {
   columnId: string;
@@ -73,27 +104,9 @@ export function QuickAddInput({ columnId, projectId, headerMode = false }: Quick
 
   if (!isAdding) {
     if (headerMode) {
-      return (
-        <button
-          type="button"
-          onClick={handleAddClick}
-          className="flex h-6 w-6 items-center justify-center rounded hover:bg-muted/70 transition-colors text-muted-foreground hover:text-foreground shrink-0"
-          aria-label="Add ticket to column"
-        >
-          <Plus className="h-3.5 w-3.5" />
-        </button>
-      );
+      return <HeaderAddButton onClick={handleAddClick} />;
     }
-    return (
-      <button
-        type="button"
-        onClick={handleAddClick}
-        className="flex items-center gap-1.5 w-full p-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
-      >
-        <Plus className="h-3.5 w-3.5" />
-        Add ticket
-      </button>
-    );
+    return <InlineAddButton onClick={handleAddClick} />;
   }
 
   return (

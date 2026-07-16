@@ -3,11 +3,11 @@
 import { useState, useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { Plus } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { EmptyActivityIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { fadeUp, staggerContainer } from "@/lib/motion-variants";
 import {
@@ -183,10 +183,9 @@ export default function AdjustmentsPage() {
       title="Stock Adjustments"
       subtitle={subtitle}
       actions={
-        <Button size="sm" className="gap-1.5 text-xs" onClick={handleOpenSheet}>
-          <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+        <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1.5" size="sm" className="text-xs" onClick={handleOpenSheet}>
           New Adjustment
-        </Button>
+        </AnimatedIconButton>
       }
       filters={
         <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">

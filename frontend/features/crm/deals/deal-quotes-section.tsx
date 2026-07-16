@@ -53,7 +53,7 @@ const STATUS_CONFIG: Record<
   },
   SENT: {
     label: "Sent",
-    className: "bg-blue-500/10 text-blue-700 border-blue-500/20",
+    className: "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20",
     icon: Send,
   },
   ACCEPTED: {

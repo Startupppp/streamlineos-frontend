@@ -9,9 +9,9 @@ import {
   CalendarClock,
   CheckCircle2,
   Plus,
-  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -242,19 +242,16 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
           </div>
         </div>
 
-        <Button
+        <LoadingButton
           size="sm"
           className="w-full h-8 text-xs gap-1.5"
           onClick={handleScheduleFollowUp}
-          disabled={createTask.isPending}
+          isPending={createTask.isPending}
+          loadingText="Scheduling..."
         >
-          {createTask.isPending ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <CalendarClock className="h-3.5 w-3.5" />
-          )}
+          <CalendarClock className="h-3.5 w-3.5" />
           Schedule Follow-up
-        </Button>
+        </LoadingButton>
       </div>
 
       {pendingTasks.length > 0 && (

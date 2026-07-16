@@ -334,12 +334,12 @@ interface InviteUserPayload {
 export const useInviteUser = () => {
   const queryClient = useQueryClient();
   return useMutation<
-    { success: boolean; invitationId: string },
+    { success: boolean; invitationId: string; resent: boolean },
     Error,
     InviteUserPayload
   >({
     mutationFn: (data) =>
-      apiClient.post<{ success: boolean; invitationId: string }>("/users/invite", data),
+      apiClient.post<{ success: boolean; invitationId: string; resent: boolean }>("/users/invite", data),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
     },

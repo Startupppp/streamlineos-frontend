@@ -92,16 +92,17 @@ export function LeadAttachmentsSection({ leadId }: LeadAttachmentsSectionProps) 
           Attachments
         </h3>
         <motion.div whileTap={{ scale: 0.97 }}>
-          <Button
+          <LoadingButton
             variant="outline"
             size="sm"
             className="gap-1.5 text-xs"
             onClick={handleUploadClick}
-            disabled={uploadMutation.isPending}
+            isPending={uploadMutation.isPending}
+            loadingText="Uploading..."
           >
             <Upload className="h-3.5 w-3.5" />
             Attach File
-          </Button>
+          </LoadingButton>
         </motion.div>
         <input
           ref={fileInputRef}

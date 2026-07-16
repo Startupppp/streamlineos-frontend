@@ -132,16 +132,18 @@ export function LoadCreateSheet({ open, onOpenChange }: LoadCreateSheetProps) {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label className="text-xs">Members</Label>
-            <Button
+            <AnimatedIconButton
               type="button"
+              icon={PlusIcon}
+              iconSize={12}
+              iconClassName="mr-1"
               variant="ghost"
               size="sm"
               className="h-6 px-2 text-xs"
               onClick={handleAddMember}
             >
-              <Plus className="h-3 w-3 mr-1" />
               Add
-            </Button>
+            </AnimatedIconButton>
           </div>
 
           {fields.length === 0 && (
@@ -187,15 +189,16 @@ export function LoadCreateSheet({ open, onOpenChange }: LoadCreateSheetProps) {
                   </p>
                 )}
               </div>
-              <Button
+              <AnimatedIconButton
                 type="button"
+                icon={Trash2Icon}
+                iconSize={14}
+                iconClassName="text-destructive"
                 variant="ghost"
                 size="icon"
                 className="w-7 shrink-0"
                 onClick={() => handleRemoveMember(index)}
-              >
-                <Trash2 className="h-3.5 w-3.5 text-destructive" />
-              </Button>
+              />
             </div>
           ))}
         </div>

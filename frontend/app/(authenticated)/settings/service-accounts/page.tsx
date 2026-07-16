@@ -6,8 +6,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus, Trash2, RotateCcw, Bot, Copy, Check } from "lucide-react";
+import { RotateCcw, Bot, Check } from "lucide-react";
+import { PlusIcon, Trash2Icon, CopyIcon } from "@animateicons/react/lucide";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -80,16 +83,25 @@ function useRotateKey() {
 
 function CopyButton({ value }: { value: string }) {
   const [copied, setCopied] = useState(false);
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(value).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
   }, [value]);
+  if (copied) {
+    return (
+      <Button type="button" variant="outline" size="sm" className="gap-1">
+        <Check className="h-3.5 w-3.5 text-green-600" />
+        Copied
+      </Button>
+    );
+  }
   return (
-    <Button type="button" variant="outline" size="sm" onClick={handleCopy} className="gap-1">
-      {copied ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5" />}
-      {copied ? "Copied" : "Copy"}
+    <Button type="button" variant="outline" size="sm" onClick={handleCopy} className="gap-1" {...hoverHandlers}>
+      <CopyIcon ref={iconRef} size={14} />
+      Copy
     </Button>
   );
 }
@@ -148,10 +160,9 @@ export default function ServiceAccountsPage() {
       title="Service Accounts"
       subtitle="Non-human principals for integrations and automation"
       actions={
-        <Button size="sm" onClick={() => setShowCreate(true)} className="gap-1.5">
-          <Plus className="h-3.5 w-3.5" />
+        <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1" size="sm" onClick={() => setShowCreate(true)} className="gap-1.5">
           New service account
-        </Button>
+        </AnimatedIconButton>
       }
     >
       <div className="space-y-4">
@@ -180,10 +191,9 @@ export default function ServiceAccountsPage() {
                 <p className="font-medium text-sm">No service accounts yet</p>
                 <p className="text-xs text-muted-foreground mt-0.5">Create one to allow automated integrations to access the API.</p>
               </div>
-              <Button size="sm" onClick={() => setShowCreate(true)} className="mt-2 gap-1.5">
-                <Plus className="h-3.5 w-3.5" />
+              <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1" size="sm" onClick={() => setShowCreate(true)} className="mt-2 gap-1.5">
                 New service account
-              </Button>
+              </AnimatedIconButton>
             </CardContent>
           </Card>
         ) : (
@@ -219,15 +229,15 @@ export default function ServiceAccountsPage() {
                       <RotateCcw className="h-3 w-3" />
                       Rotate key
                     </Button>
-                    <Button
+                    <AnimatedIconButton
+                      icon={Trash2Icon}
+                      iconSize={12}
                       size="sm"
                       variant="outline"
                       className="gap-1 text-xs text-destructive hover:text-destructive border-destructive/30"
                       onClick={() => deleteMutation.mutate(sa.id)}
                       disabled={deleteMutation.isPending}
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
+                    />
                   </div>
                 </div>
               ))}

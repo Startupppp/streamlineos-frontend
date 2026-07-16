@@ -155,15 +155,15 @@ export function HandbookVersionCard({
               Unpublish
             </AnimatedIconButton>
           )}
-          <Button
+          <AnimatedIconButton
+            icon={Trash2Icon}
+            iconSize={14}
             size="sm"
             variant="ghost"
             className="w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 transition-colors duration-200"
             onClick={handleDelete}
             aria-label="Delete version"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
+          />
         </div>
       </div>
     </div>

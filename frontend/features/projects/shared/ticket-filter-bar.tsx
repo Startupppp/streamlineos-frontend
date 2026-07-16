@@ -86,6 +86,7 @@ export function TicketFilterBar({
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
   const { iconRef: hideDoneIconRef, hoverHandlers: hideDoneHoverHandlers } = useAnimatedIcon();
+  const { iconRef: clearAllIconRef, hoverHandlers: clearAllHoverHandlers } = useAnimatedIcon();
 
   const { data: cycles = [] } = useCycles(projectId ?? 0);
   const { data: labels = [] } = useProjectLabels(projectId);
@@ -402,8 +403,9 @@ export function TicketFilterBar({
             type="button"
             onClick={clearAll}
             className="flex h-9 shrink-0 items-center gap-1 rounded-md border border-transparent px-2 text-sm text-muted-foreground transition-colors hover:border-border hover:bg-muted/50 hover:text-foreground"
+            {...clearAllHoverHandlers}
           >
-            <XIcon size={14} className="shrink-0" />
+            <XIcon ref={clearAllIconRef} size={14} className="shrink-0" />
             Clear all
           </button>
         )}

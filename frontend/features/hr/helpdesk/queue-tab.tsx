@@ -30,7 +30,6 @@ import { TicketDetailSheet } from "./ticket-detail-sheet";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
-import React from "react";
 
 const STATUS_COLORS: Record<TicketStatus, string> = {
   TODO: "bg-muted text-muted-foreground dark:bg-slate-800/40 dark:text-slate-400",

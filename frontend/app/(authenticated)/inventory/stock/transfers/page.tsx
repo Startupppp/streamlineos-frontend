@@ -3,7 +3,8 @@
 import { useState, useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { Plus, X } from "lucide-react";
+import { PlusIcon, XIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { EmptyTransferIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { format } from "date-fns";
 import Link from "next/link";
@@ -264,17 +265,16 @@ export default function TransfersPage() {
             className="w-[180px]"
           />
           {hasActiveFilters && (
-            <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={handleClearFilters}>
-              <X className="h-3.5 w-3.5" aria-hidden="true" />
+            <AnimatedIconButton icon={XIcon} iconSize={14} iconClassName="mr-0.5" variant="ghost" size="sm" className="text-xs gap-1" onClick={handleClearFilters}>
               Clear filters
-            </Button>
+            </AnimatedIconButton>
           )}
         </div>
       }
       actions={
-        <Button size="sm" className="gap-1.5 text-xs" onClick={handleOpenSheet}>
-          <Plus className="h-3.5 w-3.5" aria-hidden="true" />New Transfer
-        </Button>
+        <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1.5" size="sm" className="text-xs" onClick={handleOpenSheet}>
+          New Transfer
+        </AnimatedIconButton>
       }
     >
       {isError ? (

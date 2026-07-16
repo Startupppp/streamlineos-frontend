@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
-import { ChevronDown, ChevronRight, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { ChevronDownIcon, ChevronRightIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -61,6 +63,7 @@ function MetadataPanel({ meta }: { meta: FeedbucketMetadata }) {
 
 function ConsoleLogsPanel({ logs }: { logs: FeedbucketConsoleEntry[] }) {
   const [open, setOpen] = useState(false);
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
 
   function handleToggle() {
     setOpen((prev) => !prev);
@@ -72,9 +75,10 @@ function ConsoleLogsPanel({ logs }: { logs: FeedbucketConsoleEntry[] }) {
         type="button"
         onClick={handleToggle}
         className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium hover:bg-muted/50 transition-colors"
+        {...hoverHandlers}
       >
         <span>Console Logs ({logs.length})</span>
-        {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+        {open ? <ChevronDownIcon ref={iconRef} size={16} /> : <ChevronRightIcon ref={iconRef} size={16} />}
       </button>
       {open && (
         <div className="border-t border-border bg-muted/30 p-3 max-h-64 overflow-y-auto">
@@ -99,6 +103,7 @@ function statusColor(entry: FeedbucketNetworkEntry): string {
 
 function NetworkLogsPanel({ logs }: { logs: FeedbucketNetworkEntry[] }) {
   const [open, setOpen] = useState(false);
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
 
   function handleToggle() {
     setOpen((prev) => !prev);
@@ -110,9 +115,10 @@ function NetworkLogsPanel({ logs }: { logs: FeedbucketNetworkEntry[] }) {
         type="button"
         onClick={handleToggle}
         className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium hover:bg-muted/50 transition-colors"
+        {...hoverHandlers}
       >
         <span>Network ({logs.length})</span>
-        {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+        {open ? <ChevronDownIcon ref={iconRef} size={16} /> : <ChevronRightIcon ref={iconRef} size={16} />}
       </button>
       {open && (
         <div className="border-t border-border bg-muted/30 p-3 max-h-72 overflow-y-auto">

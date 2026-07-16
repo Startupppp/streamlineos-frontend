@@ -4,10 +4,12 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import Link from "next/link";
-import { Variable, Trash2, Link2 } from "lucide-react";
+import { Variable, Link2 } from "lucide-react";
+import { Trash2Icon } from "@animateicons/react/lucide";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -89,15 +91,15 @@ function VariableCard({ variable, index, onDelete }: VariableCardProps) {
                 </p>
               )}
             </div>
-            <Button
+            <AnimatedIconButton
+              icon={Trash2Icon}
+              iconSize={14}
               size="icon"
               variant="ghost"
               className="w-8 text-destructive hover:text-destructive shrink-0"
               onClick={handleDelete}
               aria-label="Delete variable"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
+            />
           </div>
         </CardContent>
       </Card>

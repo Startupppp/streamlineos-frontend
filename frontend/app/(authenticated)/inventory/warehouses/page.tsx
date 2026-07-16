@@ -6,7 +6,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion, useReducedMotion } from "framer-motion";
-import { Plus, Filter, X } from "lucide-react";
+import { Filter } from "lucide-react";
+import { PlusIcon, XIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   EmptyWarehouseIllustration,
   EmptySearchIllustration,
@@ -328,15 +330,9 @@ export default function WarehousesPage() {
         </Button>
       </div>
       {hasActiveFilters && (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="gap-1 text-xs text-muted-foreground"
-          onClick={clearFilters}
-        >
-          <X className="h-3 w-3" aria-hidden="true" />
+        <AnimatedIconButton icon={XIcon} iconSize={12} iconClassName="mr-0.5" variant="ghost" size="sm" className="gap-1 text-xs text-muted-foreground" onClick={clearFilters}>
           Clear
-        </Button>
+        </AnimatedIconButton>
       )}
     </div>
   );
@@ -364,14 +360,9 @@ export default function WarehousesPage() {
       subtitle="Physical storage facilities and their locations"
       filters={filterBar}
       actions={
-        <Button
-          size="sm"
-          className="gap-1.5 text-xs"
-          onClick={handleOpenSheet}
-        >
-          <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+        <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1" size="sm" className="text-xs" onClick={handleOpenSheet}>
           New Warehouse
-        </Button>
+        </AnimatedIconButton>
       }
     >
       {showFilters && (

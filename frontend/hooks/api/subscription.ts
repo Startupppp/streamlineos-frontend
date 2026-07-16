@@ -85,6 +85,7 @@ export function useSubscription() {
 
 export function useCreateSubscriptionOrder() {
   return useMutation<CreateOrderResponse, Error, { plan: SubscriptionPlan; billingCycle?: BillingCycle; couponId?: number }>({
+    mutationKey: ["billing", "razorpay", "create-order"],
     mutationFn: (data) => apiClient.post<CreateOrderResponse>("/billing/razorpay", data),
   });
 }
@@ -92,6 +93,7 @@ export function useCreateSubscriptionOrder() {
 export function useVerifySubscription() {
   const queryClient = useQueryClient();
   return useMutation<VerifySubscriptionResponse, Error, VerifySubscriptionInput>({
+    mutationKey: ["billing", "razorpay", "verify"],
     mutationFn: (data) => apiClient.patch<VerifySubscriptionResponse>("/billing/razorpay", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: SUBSCRIPTION_QUERY_KEY });
@@ -202,6 +204,7 @@ export function useBillingProfile() {
 export function useUpdateBillingProfile() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["billing", "profile", "update"],
     mutationFn: (data: Partial<BillingProfile>) =>
       apiClient.patch<BillingProfile>("/billing/profile", data),
     onSuccess: () => {
@@ -209,7 +212,7 @@ export function useUpdateBillingProfile() {
       toast.success("Billing profile updated");
     },
     onError: (e: Error) =>
-      toast.error(e.message ?? "Failed to update profile"),
+      toast.error(e.message),
   });
 }
 

@@ -3,12 +3,12 @@
 import { useState, useCallback } from "react";
 import {
   Sparkles,
-  Loader2,
   TrendingUp,
   TrendingDown,
   AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Popover,
   PopoverContent,
@@ -68,11 +68,13 @@ export function AIScoreButton({
     return (
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button
+          <LoadingButton
             variant="ghost"
             size="sm"
             className="px-2 text-xs gap-1"
             onClick={handleCompactClick}
+            isPending={scoreMutation.isPending}
+            loadingText="..."
             disabled={scoreMutation.isPending || !featureEnabled}
             title={
               !featureEnabled
@@ -80,11 +82,7 @@ export function AIScoreButton({
                 : undefined
             }
           >
-            {scoreMutation.isPending ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
-            ) : (
-              <Sparkles className="h-3 w-3 text-primary" />
-            )}
+            <Sparkles className="h-3 w-3 text-primary" />
             {result ? (
               <span className={cn("font-bold", scoreColor(result.score))}>
                 {result.score}
@@ -94,7 +92,7 @@ export function AIScoreButton({
             ) : (
               "Score"
             )}
-          </Button>
+          </LoadingButton>
         </PopoverTrigger>
         {result && (
           <PopoverContent
@@ -111,10 +109,12 @@ export function AIScoreButton({
 
   return (
     <div className="space-y-3">
-      <Button
+      <LoadingButton
         variant="outline"
         size="sm"
         onClick={handleScore}
+        isPending={scoreMutation.isPending}
+        loadingText="Scoring with AI..."
         disabled={scoreMutation.isPending || !featureEnabled}
         title={
           !featureEnabled
@@ -123,18 +123,9 @@ export function AIScoreButton({
         }
         className="w-full"
       >
-        {scoreMutation.isPending ? (
-          <>
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            Scoring with AI...
-          </>
-        ) : (
-          <>
-            <Sparkles className="h-4 w-4 mr-2 text-primary" />
-            AI Score Lead
-          </>
-        )}
-      </Button>
+        <Sparkles className="h-4 w-4 mr-2 text-primary" />
+        AI Score Lead
+      </LoadingButton>
 
       {result && <AIScoreDetails result={result} />}
     </div>

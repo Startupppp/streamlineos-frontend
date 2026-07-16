@@ -4,7 +4,8 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Trash2 } from "lucide-react";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -146,24 +147,24 @@ export function CustomerReturnSheet({ open, onOpenChange }: CustomerReturnSheetP
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Return Lines</span>
-              <Button type="button" variant="outline" size="sm" onClick={handleAddLine} className="text-xs">
-                <Plus className="h-3 w-3 mr-1" /> Add Line
-              </Button>
+              <AnimatedIconButton type="button" icon={PlusIcon} iconSize={12} iconClassName="mr-1" variant="outline" size="sm" className="text-xs" onClick={handleAddLine}>
+                Add Line
+              </AnimatedIconButton>
             </div>
             {fields.map((field, index) => (
               <div key={field.id} className="rounded-md border border-border/60 p-3 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted-foreground">Line {index + 1}</span>
                   {fields.length > 1 && (
-                    <Button
+                    <AnimatedIconButton
                       type="button"
+                      icon={Trash2Icon}
+                      iconSize={12}
                       variant="ghost"
                       size="sm"
                       className="h-6 w-6 p-0 text-red-500"
                       onClick={() => handleRemoveLine(index)}
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
+                    />
                   )}
                 </div>
                 <div className="grid grid-cols-2 gap-2">

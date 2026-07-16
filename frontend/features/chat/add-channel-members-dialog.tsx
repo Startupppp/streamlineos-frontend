@@ -12,7 +12,9 @@ import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Check, Copy, Loader2, RefreshCw } from "lucide-react";
+import { Check, Loader2, RefreshCw } from "lucide-react";
+import { CopyIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -204,7 +206,9 @@ export function AddChannelMembersDialog({
                   className="text-[12px] bg-muted/30 border-border/30 flex-1 truncate"
                   onFocus={(e) => e.currentTarget.select()}
                 />
-                <Button
+                <AnimatedIconButton
+                  icon={CopyIcon}
+                  iconSize={14}
                   type="button"
                   variant="outline"
                   size="icon"
@@ -213,9 +217,7 @@ export function AddChannelMembersDialog({
                   disabled={!inviteUrl}
                   title="Copy link"
                   aria-label="Copy invite link"
-                >
-                  <Copy className="h-3.5 w-3.5" />
-                </Button>
+                />
                 <Button
                   type="button"
                   variant="outline"

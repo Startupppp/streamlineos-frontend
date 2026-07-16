@@ -63,6 +63,7 @@ const ROLES = [
 
 export function UserInviteDialog({ open, onOpenChange }: UserInviteDialogProps) {
   const [invited, setInvited] = useState(false);
+  const [wasResent, setWasResent] = useState(false);
   const [showOptional, setShowOptional] = useState(false);
   const { mutate: inviteUser, isPending } = useInviteUser();
   const { data: branchesData } = useOrgBranches();
@@ -85,6 +86,7 @@ export function UserInviteDialog({ open, onOpenChange }: UserInviteDialogProps) 
     if (!isOpen) {
       form.reset();
       setInvited(false);
+      setWasResent(false);
       setShowOptional(false);
     }
     onOpenChange(isOpen);
@@ -102,9 +104,10 @@ export function UserInviteDialog({ open, onOpenChange }: UserInviteDialogProps) 
         ...(values.welcomeMessage ? { welcomeMessage: values.welcomeMessage } : {}),
       },
       {
-        onSuccess: () => {
+        onSuccess: (result) => {
           setInvited(true);
-          toast.success("Invitation sent!");
+          setWasResent(result.resent);
+          toast.success(result.resent ? "Invitation re-sent!" : "Invitation sent!");
         },
         onError: (error) => {
           toast.error(getApiError(error));
@@ -129,7 +132,7 @@ export function UserInviteDialog({ open, onOpenChange }: UserInviteDialogProps) 
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-50 dark:bg-green-500/10">
               <CheckCircle2 className="h-6 w-6 text-green-600 dark:text-green-400" />
             </div>
-            <p className="font-medium text-sm">Invitation sent!</p>
+            <p className="font-medium text-sm">{wasResent ? "Invitation re-sent!" : "Invitation sent!"}</p>
             <p className="text-xs text-muted-foreground">
               The user will receive an email with instructions to join.
             </p>
@@ -139,6 +142,7 @@ export function UserInviteDialog({ open, onOpenChange }: UserInviteDialogProps) 
               onClick={() => {
                 form.reset();
                 setInvited(false);
+                setWasResent(false);
                 setShowOptional(false);
               }}
             >

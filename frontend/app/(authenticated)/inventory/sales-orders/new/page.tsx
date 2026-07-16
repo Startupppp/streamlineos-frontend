@@ -6,7 +6,8 @@ import { useForm, useFieldArray, useWatch, Controller, type Control } from "reac
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { parseISO } from "date-fns";
-import { Plus, Trash2 } from "lucide-react";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card } from "@/components/ui/card";
@@ -318,17 +319,17 @@ export default function NewSalesOrderPage() {
           handleRemoveAt(row._index);
         }
         return (
-          <Button
+          <AnimatedIconButton
             type="button"
+            icon={Trash2Icon}
+            iconSize={14}
             variant="ghost"
             size="icon"
             className="w-7"
             onClick={handleRemove}
             disabled={fields.length === 1}
             aria-label={`Remove line ${row._index + 1}`}
-          >
-            <Trash2 className="size-3.5" />
-          </Button>
+          />
         );
       },
     },
@@ -336,10 +337,9 @@ export default function NewSalesOrderPage() {
 
   const tableFooter = (
     <div className="flex items-center justify-between">
-      <Button type="button" variant="outline" size="sm" onClick={handleAddLine}>
-        <Plus className="size-4 mr-1" />
+      <AnimatedIconButton type="button" icon={PlusIcon} iconSize={14} iconClassName="mr-1" variant="outline" size="sm" onClick={handleAddLine}>
         Add line
-      </Button>
+      </AnimatedIconButton>
     </div>
   );
 

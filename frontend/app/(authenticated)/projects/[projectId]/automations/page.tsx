@@ -5,10 +5,11 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trash2, Zap, X, Plus } from "lucide-react";
-import { PlusIcon, ChevronRightIcon } from "@animateicons/react/lucide";
+import { Zap } from "lucide-react";
+import { PlusIcon, ChevronRightIcon, Trash2Icon, XIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -117,14 +118,16 @@ interface AutomationCardProps {
 }
 
 function RemoveButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label="Remove"
       className="h-6 w-6 flex items-center justify-center rounded text-muted-foreground hover:text-destructive transition-colors"
+      {...hoverHandlers}
     >
-      <X className="h-3.5 w-3.5" />
+      <XIcon ref={iconRef} size={14} />
     </button>
   );
 }
@@ -213,13 +216,13 @@ function AutomationCard({ automation, onToggle, onDelete, onEdit }: AutomationCa
           </Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button
+              <AnimatedIconButton
                 variant="ghost"
                 size="icon"
                 className="w-7 text-red-400 hover:text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-500/10"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
+                icon={Trash2Icon}
+                iconSize={14}
+              />
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
@@ -536,16 +539,17 @@ export default function AutomationsPage({ params }: PageProps) {
                     <label className="text-xs font-medium text-foreground">
                       Conditions (optional)
                     </label>
-                    <Button
+                    <AnimatedIconButton
                       type="button"
                       variant="ghost"
                       size="sm"
                       className="text-xs gap-1 text-foreground hover:text-foreground"
                       onClick={handleAppendCondition}
+                      icon={PlusIcon}
+                      iconSize={12}
                     >
-                      <Plus className="h-3 w-3" />
                       Add Condition
-                    </Button>
+                    </AnimatedIconButton>
                   </div>
                   {conditionFields.map((f, idx) => (
                     <div
@@ -604,16 +608,17 @@ export default function AutomationsPage({ params }: PageProps) {
                     <label className="text-xs font-medium text-foreground">
                       Actions <span className="text-red-500 dark:text-red-400">*</span>
                     </label>
-                    <Button
+                    <AnimatedIconButton
                       type="button"
                       variant="ghost"
                       size="sm"
                       className="text-xs gap-1 text-foreground hover:text-foreground"
                       onClick={handleAppendAction}
+                      icon={PlusIcon}
+                      iconSize={12}
                     >
-                      <Plus className="h-3 w-3" />
                       Add Action
-                    </Button>
+                    </AnimatedIconButton>
                   </div>
                   {actionFields.map((f, idx) => (
                     <div

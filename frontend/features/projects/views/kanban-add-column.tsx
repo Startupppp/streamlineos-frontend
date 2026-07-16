@@ -4,7 +4,8 @@ import { useState, useRef, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Plus } from "lucide-react";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateCustomState } from "@/hooks/api/projects/custom-states";
@@ -29,6 +30,7 @@ interface AddColumnProps {
 }
 
 export function AddColumn({ projectId, existingNames = [] }: AddColumnProps) {
+  const { iconRef: plusIconRef, hoverHandlers: plusHoverHandlers } = useAnimatedIcon();
   const canManage = useCan("projects:manage");
   const [value, setValue] = useState("");
   const [color, setColor] = useState<string>(DEFAULT_COLUMN_COLOR);
@@ -145,8 +147,9 @@ export function AddColumn({ projectId, existingNames = [] }: AddColumnProps) {
           type="button"
           onClick={handleAddClick}
           className="flex h-10 w-full items-center justify-center gap-1.5 rounded-lg border border-dashed text-xs text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+          {...plusHoverHandlers}
         >
-          <Plus className="h-3.5 w-3.5" />
+          <PlusIcon ref={plusIconRef} size={14} />
           Add column
         </button>
       )}

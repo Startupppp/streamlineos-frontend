@@ -274,15 +274,13 @@ export function ChannelSidebar({
               </div>
             </div>
             <div className="flex items-center gap-0.5">
-              <button
+              <SidebarSearchButton
                 type="button"
                 onClick={handleOpenChatSearch}
                 className="w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
                 aria-label="Search"
                 title="Search"
-              >
-                <Search className="h-3.5 w-3.5" />
-              </button>
+              />
               <button
                 type="button"
                 onClick={handleOpenBrowse}
@@ -314,7 +312,7 @@ export function ChannelSidebar({
           )}
         >
           <div className="flex flex-col items-center gap-0.5">
-            {renderCompactActionButton("Search", <Search className="h-3.5 w-3.5" />, handleOpenChatSearch)}
+            {renderCompactActionButton("Search", <SearchIcon size={14} />, handleOpenChatSearch)}
             {renderCompactActionButton("Browse Channels", <Compass className="h-3.5 w-3.5" />, handleOpenBrowse)}
           </div>
           <NewDMDialog open={newDMOpen} onOpenChange={setNewDMOpen} onCreated={onSelectChannel} />
@@ -547,7 +545,7 @@ export function ChannelSidebar({
                 <p className="text-[12px] font-medium truncate">{session?.user?.name ?? "You"}</p>
                 <p className="text-[10px] text-muted-foreground">{STATUS_OPTIONS.find(o => o.value === currentStatus)?.label ?? "Online"}</p>
               </div>
-              <ChevronDown className={cn("h-3 w-3 text-muted-foreground/50 shrink-0", isCollapsed && "md:hidden")} />
+              <ChevronDownIcon size={12} className={cn("text-muted-foreground/50 shrink-0", isCollapsed && "md:hidden")} />
             </button>
             {showStatusMenu && (
               <div className="absolute bottom-full left-0 right-0 mb-1 bg-background border border-border/60 rounded-xl shadow-lg overflow-hidden z-30">

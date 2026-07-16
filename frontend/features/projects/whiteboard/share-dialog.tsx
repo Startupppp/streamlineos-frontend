@@ -11,7 +11,9 @@ import { Switch } from "@/components/ui/switch";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { Lock, Globe, Users, Link2, Copy, RefreshCw, Eye, Pencil, X } from "lucide-react";
+import { Lock, Globe, Users, Link2, RefreshCw, Eye, Pencil } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { CopyIcon, XIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import {
   useUpdateWhiteboardSharing,
@@ -217,9 +219,16 @@ export function ShareDialog({ projectId, whiteboard, open, onOpenChange }: Share
                         <SelectItem value="editor"><Pencil className="h-3 w-3 inline mr-1" />Editor</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => handleRemoveMember(share.userId)} disabled={removeShare.isPending} aria-label="Remove">
-                      <X className="h-3.5 w-3.5" />
-                    </Button>
+                    <AnimatedIconButton
+                      size="icon"
+                      variant="ghost"
+                      className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
+                      onClick={() => handleRemoveMember(share.userId)}
+                      disabled={removeShare.isPending}
+                      aria-label="Remove"
+                      icon={XIcon}
+                      iconSize={14}
+                    />
                   </li>
                 ))}
               </ul>
@@ -233,7 +242,7 @@ export function ShareDialog({ projectId, whiteboard, open, onOpenChange }: Share
               </div>
               <div className="flex gap-1.5">
                 <Input readOnly value={publicUrl} className="text-xs font-mono" aria-label="Share URL" />
-                <Button size="sm" variant="outline" className="h-8 shrink-0" onClick={handleCopyLink} aria-label="Copy link"><Copy className="h-3.5 w-3.5" /></Button>
+                <AnimatedIconButton size="sm" variant="outline" className="h-8 shrink-0" onClick={handleCopyLink} aria-label="Copy link" icon={CopyIcon} iconSize={14} />
               </div>
               <div className="flex items-center justify-between gap-3">
                 <Label className="text-xs text-muted-foreground shrink-0">Anyone can</Label>

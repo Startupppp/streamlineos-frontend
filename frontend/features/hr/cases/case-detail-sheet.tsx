@@ -36,6 +36,22 @@ interface Props {
   onOpenChange: (v: boolean) => void;
 }
 
+function AddNoteButton({ isPending, disabled, onClick }: { isPending: boolean; disabled: boolean; onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <LoadingButton
+      size="sm"
+      isPending={isPending}
+      onClick={onClick}
+      disabled={disabled}
+      {...hoverHandlers}
+    >
+      <PlusIcon ref={iconRef} size={12} className="mr-1" />
+      Add Note
+    </LoadingButton>
+  );
+}
+
 function NoteThread({ caseId }: { caseId: number }) {
   const { data: notes, isLoading } = useCaseNotes(caseId);
   const addNote = useAddCaseNote(caseId);
@@ -87,15 +103,11 @@ function NoteThread({ caseId }: { caseId: number }) {
             <Switch checked={isConfidential} onCheckedChange={setIsConfidential} className="scale-75" />
             <span>Confidential</span>
           </div>
-          <LoadingButton
-            size="sm"
+          <AddNoteButton
             isPending={addNote.isPending}
             onClick={handleAdd}
             disabled={!text.trim()}
-          >
-            <Plus className="h-3 w-3 mr-1" />
-            Add Note
-          </LoadingButton>
+          />
         </div>
       </div>
     </div>

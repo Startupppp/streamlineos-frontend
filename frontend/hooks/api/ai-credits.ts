@@ -27,7 +27,7 @@ export interface AiCreditTransaction {
 export interface AiCreditsWallet {
   wallet: {
     id: number;
-    orgId: number;
+    orgId: string;
     balance: number;
     lifetimeGranted: number;
     lifetimeConsumed: number;
@@ -123,7 +123,7 @@ export function useVerifyAiCreditPurchase() {
   >({
     mutationKey: ["billing", "ai-credits", "verify"],
     mutationFn: (data) =>
-      apiClient.patch<PurchaseAiPackResult>("/billing/ai-credits/purchase", data),
+      apiClient.post<PurchaseAiPackResult>("/billing/ai-credits/purchase", data),
     onSuccess: (result) => {
       void qc.invalidateQueries({ queryKey: ["billing", "ai-credits"] });
       toast.success(`${result.creditsAdded.toLocaleString()} credits added to your account`);

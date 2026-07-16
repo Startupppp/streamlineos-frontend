@@ -5,8 +5,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trash2, Zap, Clock } from "lucide-react";
-import { PlusIcon, ChevronDownIcon, SendIcon } from "@animateicons/react/lucide";
+import { Zap, Clock } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { PlusIcon, ChevronDownIcon, SendIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -208,13 +209,14 @@ function WebhookCard({
         </button>
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <button
-              type="button"
+            <AnimatedIconButton
+              variant="ghost"
+              size="icon"
               aria-label="Delete webhook"
-              className="w-7 flex items-center justify-center rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </button>
+              className="w-7 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
+              icon={Trash2Icon}
+              iconSize={14}
+            />
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>

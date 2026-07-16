@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo } from "react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { format, parseISO, addHours, differenceInMinutes, endOfDay, startOfDay } from "date-fns";
 import {
   Drawer,
@@ -27,7 +27,9 @@ import type { TicketSearchResult } from "@/hooks/api/projects";
 import { TicketPickerDialog } from "./ticket-picker-dialog";
 import { Input } from "@/components/ui/input";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Ticket, X, Link as LinkIcon, MapPin } from "lucide-react";
+import { Ticket, Link as LinkIcon, MapPin } from "lucide-react";
+import { XIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { LoadingButton } from "@/components/ui/loading-button";
 
 type EventCategory = "general" | "meeting" | "deadline" | "reminder" | "leave" | "project" | "other";
@@ -153,6 +155,30 @@ interface EventCreateDialogProps {
   defaultSlot?: { start: Date; end: Date } | null;
   event?: CalendarListItem | null;
 }
+
+const DialogCloseButton = React.forwardRef<
+  HTMLButtonElement,
+  React.ButtonHTMLAttributes<HTMLButtonElement>
+>(function DialogCloseButton({ className, ...props }, ref) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <button ref={ref} {...hoverHandlers} className={className} {...props}>
+      <XIcon ref={iconRef} size={16} />
+    </button>
+  );
+});
+
+const RemoveTicketButton = React.forwardRef<
+  HTMLButtonElement,
+  React.ButtonHTMLAttributes<HTMLButtonElement>
+>(function RemoveTicketButton({ className, ...props }, ref) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <button ref={ref} {...hoverHandlers} className={className} {...props}>
+      <XIcon ref={iconRef} size={14} />
+    </button>
+  );
+});
 
 export function EventCreateDialog({
   open,
@@ -541,15 +567,13 @@ export function EventCreateDialog({
             <DrawerTitle className="text-base font-semibold text-foreground">
               {isEdit ? "Edit Event" : "New Event"}
             </DrawerTitle>
-            <button
+            <DialogCloseButton
               type="button"
               onClick={handleClose}
               className="p-1 text-muted-foreground hover:text-foreground rounded hover:bg-muted transition-colors"
               title="Close"
               aria-label="Close"
-            >
-              <X className="h-4 w-4" />
-            </button>
+            />
           </DrawerHeader>
 
           <ScrollArea className="flex-1 min-h-0">
@@ -619,14 +643,12 @@ export function EventCreateDialog({
                       {displayLinkedTitle && (
                         <span className="text-xs truncate flex-1">{displayLinkedTitle}</span>
                       )}
-                      <button
+                      <RemoveTicketButton
                         type="button"
                         onClick={handleRemoveLinkedTicket}
                         className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted transition-colors shrink-0"
                         aria-label="Remove linked ticket"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </button>
+                      />
                     </div>
                   ) : (
                     <button

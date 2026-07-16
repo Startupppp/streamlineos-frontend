@@ -408,15 +408,7 @@ export function CustomFieldUpsertSheet({
                           </p>
                         )}
                       </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="w-7 text-muted-foreground hover:text-destructive shrink-0"
-                        onClick={() => removeOption(idx)}
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </Button>
+                      <RemoveOptionButton onClick={() => removeOption(idx)} />
                     </div>
                   ))}
                 </div>

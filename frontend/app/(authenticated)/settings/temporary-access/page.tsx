@@ -28,9 +28,11 @@ import {
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient, getApiError } from "@/lib/api-client";
 import { toast } from "sonner";
-import { Plus, Timer, X, Loader2 } from "lucide-react";
+import { Timer, Loader2 } from "lucide-react";
+import { PlusIcon, XIcon } from "@animateicons/react/lucide";
 import { formatRelative } from "date-fns";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useRoles } from "@/hooks/api/roles";
 import { useOrgMembers } from "@/hooks/api/organization";
 
@@ -123,14 +125,16 @@ function TemporaryAccessContent() {
       title="Temporary Access"
       subtitle="Time-bound role assignments for contractors and cover"
       actions={
-        <Button
+        <AnimatedIconButton
+          icon={PlusIcon}
+          iconSize={14}
+          iconClassName="mr-1"
           size="sm"
           className="gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground"
           onClick={() => setDialogOpen(true)}
         >
-          <Plus className="h-3.5 w-3.5" />
           Grant access
-        </Button>
+        </AnimatedIconButton>
       }
     >
       <div className="space-y-4">
@@ -265,20 +269,27 @@ function AssignmentRow({
         )}
       </div>
       {!isExpired && onRevoke && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="w-7 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-          onClick={handleRevoke}
-          disabled={isRevoking}
-          aria-label="Revoke access"
-        >
-          {isRevoking ? (
+        isRevoking ? (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="w-7 shrink-0 text-muted-foreground"
+            disabled
+            aria-label="Revoking"
+          >
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <X className="h-3.5 w-3.5" />
-          )}
-        </Button>
+          </Button>
+        ) : (
+          <AnimatedIconButton
+            icon={XIcon}
+            iconSize={14}
+            variant="ghost"
+            size="icon"
+            className="w-7 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+            onClick={handleRevoke}
+            aria-label="Revoke access"
+          />
+        )
       )}
     </div>
   );

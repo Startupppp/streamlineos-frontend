@@ -16,6 +16,7 @@ import { useDeals, useCaptureForecastSnapshot, useForecastSnapshots } from "@/ho
 import { DealForecastSummary } from "@/features/crm/deals/deal-forecast-summary";
 import { DealForecastChart } from "@/features/crm/deals/deal-forecast-chart";
 import { DealCloseDateList } from "@/features/crm/deals/deal-close-date-list";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 function ForecastSkeleton() {
   return (
@@ -50,7 +51,7 @@ export default function DealForecastPage() {
       { period: currentPeriod },
       {
         onSuccess: () => toast.success("Forecast snapshot saved"),
-        onError: (err) => toast.error(err.message),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }, [captureForecast, currentPeriod]);

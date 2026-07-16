@@ -9,13 +9,14 @@ import {
   ChevronDown,
   ChevronRight,
   User,
-  X,
 } from "lucide-react";
+import { XIcon } from "@animateicons/react/lucide";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -190,14 +191,14 @@ function SimulateContent() {
               </Popover>
 
               {selectedEmployee && (
-                <Button
+                <AnimatedIconButton
+                  icon={XIcon}
+                  iconSize={16}
                   variant="ghost"
                   size="icon"
                   onClick={handleClearEmployee}
                   aria-label="Clear selection"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
+                />
               )}
             </div>
           </CardContent>

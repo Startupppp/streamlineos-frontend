@@ -14,11 +14,11 @@ import { cn } from "@/lib/utils";
 import type { Contact } from "@/types/crm";
 
 const STAGE_CONFIG: Record<string, { label: string; className: string }> = {
-  LEAD: { label: "Lead", className: "bg-blue-500/10 text-blue-600" },
-  CONTACTED: { label: "Contacted", className: "bg-cyan-500/10 text-cyan-600" },
-  PROPOSAL: { label: "Proposal", className: "bg-blue-500/10 text-blue-600" },
-  NEGOTIATION: { label: "Negotiation", className: "bg-amber-500/10 text-amber-600" },
-  WON: { label: "Won", className: "bg-emerald-500/10 text-emerald-600" },
+  LEAD: { label: "Lead", className: "bg-blue-500/10 text-blue-600 dark:text-blue-400" },
+  CONTACTED: { label: "Contacted", className: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400" },
+  PROPOSAL: { label: "Proposal", className: "bg-blue-500/10 text-blue-600 dark:text-blue-400" },
+  NEGOTIATION: { label: "Negotiation", className: "bg-amber-500/10 text-amber-600 dark:text-amber-400" },
+  WON: { label: "Won", className: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" },
   LOST: { label: "Lost", className: "bg-muted text-muted-foreground" },
 };
 

@@ -3,9 +3,10 @@
 import { memo, useState, useTransition, type ChangeEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Plus, Store } from "lucide-react";
-import { EllipsisIcon } from "@animateicons/react/lucide";
+import { Store } from "lucide-react";
+import { EllipsisIcon, PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
@@ -251,6 +252,18 @@ const columns: DataTableColumn<PurchaseOrderSummary>[] = [
   },
 ];
 
+function NewPoButton({ disabled }: { disabled: boolean }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button asChild size="sm" disabled={disabled}>
+      <Link href="/inventory/purchase-orders/new" {...hoverHandlers}>
+        <PlusIcon ref={iconRef} size={14} className="mr-1" aria-hidden="true" />
+        New PO
+      </Link>
+    </Button>
+  );
+}
+
 export default function PurchaseOrdersListPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -369,14 +382,7 @@ export default function PurchaseOrdersListPage() {
     <PageWrapper
       title="Purchase Orders"
       subtitle="Track and manage orders sent to your suppliers."
-      actions={
-        <Button asChild size="sm" disabled={hasNoVendors}>
-          <Link href="/inventory/purchase-orders/new">
-            <Plus className="h-3.5 w-3.5 mr-1" />
-            New PO
-          </Link>
-        </Button>
-      }
+      actions={<NewPoButton disabled={hasNoVendors} />}
       filters={filterBar}
     >
       {hasNoVendors && (

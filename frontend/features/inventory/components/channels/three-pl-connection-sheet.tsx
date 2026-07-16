@@ -5,7 +5,9 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, X, Info } from "lucide-react";
+import { Info } from "lucide-react";
+import { PlusIcon, XIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { AppSheet } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -235,16 +237,18 @@ export function ThreePlConnectionSheet({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Configuration</span>
-              <Button
+              <AnimatedIconButton
                 type="button"
+                icon={PlusIcon}
+                iconSize={12}
+                iconClassName="mr-0.5"
                 variant="outline"
                 size="sm"
                 className="text-xs gap-1.5"
                 onClick={handleAddConfig}
               >
-                <Plus className="h-3 w-3" />
                 Add config
-              </Button>
+              </AnimatedIconButton>
             </div>
 
             {fields.length > 0 && (
@@ -285,15 +289,15 @@ export function ThreePlConnectionSheet({
                           </FormItem>
                         )}
                       />
-                      <Button
+                      <AnimatedIconButton
                         type="button"
+                        icon={XIcon}
+                        iconSize={14}
                         variant="ghost"
                         size="icon"
                         className="w-8 shrink-0 text-muted-foreground hover:text-destructive"
                         onClick={handleRemove}
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </Button>
+                      />
                     </div>
                   );
                 })}

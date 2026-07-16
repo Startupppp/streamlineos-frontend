@@ -1,12 +1,14 @@
 "use client";
 
-import { ShieldCheck, Trash2 } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
+import { Trash2Icon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { useDevices, useTrustDevice, useRemoveDevice } from "@/hooks/api/auth";
 import { getApiError } from "@/lib/api-client";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -46,14 +48,14 @@ function DeviceActions({
       >
         Trust
       </Button>
-      <Button
+      <AnimatedIconButton
+        icon={Trash2Icon}
+        iconSize={16}
         variant="ghost"
         size="sm"
         onClick={handleRemoveClick}
         disabled={isRemovePending}
-      >
-        <Trash2 className="h-4 w-4" />
-      </Button>
+      />
     </div>
   );
 }

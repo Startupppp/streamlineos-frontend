@@ -14,8 +14,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Plus, Calendar, CheckCircle2, Clock, ArrowRight, ChevronDown, ChevronRight, AlertTriangle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Calendar, CheckCircle2, Clock, ArrowRight, AlertTriangle } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { PlusIcon, ChevronDownIcon, ChevronRightIcon } from "@animateicons/react/lucide";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -109,6 +111,7 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
 
   const handleToggleCompleted = useCallback(() => setShowCompleted((v) => !v), []);
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+  const { iconRef: completedChevronRef, hoverHandlers: completedChevronHoverHandlers } = useAnimatedIcon();
   const handleSetStartDate = useCallback(
     (v: string) => {
       form.setValue("startDate", v, { shouldValidate: form.formState.isSubmitted });
@@ -185,9 +188,9 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
       actions={
         <Sheet open={createOpen} onOpenChange={handleOpenChange}>
           <SheetTrigger asChild>
-            <Button size="sm">
-              <Plus className="h-4 w-4 mr-1" /> New Cycle
-            </Button>
+            <AnimatedIconButton size="sm" icon={PlusIcon} iconSize={16} iconClassName="mr-1">
+              New Cycle
+            </AnimatedIconButton>
           </SheetTrigger>
           <SheetContent side="right" className="sm:max-w-md p-0 flex flex-col gap-0">
             <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
@@ -335,11 +338,12 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
                 <button
                   onClick={handleToggleCompleted}
                   className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 hover:text-foreground transition-colors"
+                  {...completedChevronHoverHandlers}
                 >
                   {showCompleted ? (
-                    <ChevronDown className="h-3 w-3" />
+                    <ChevronDownIcon ref={completedChevronRef} size={12} />
                   ) : (
-                    <ChevronRight className="h-3 w-3" />
+                    <ChevronRightIcon ref={completedChevronRef} size={12} />
                   )}
                   Completed ({completedCycles.length})
                 </button>

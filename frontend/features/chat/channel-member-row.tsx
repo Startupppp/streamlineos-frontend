@@ -1,11 +1,30 @@
 "use client";
 
-import { Loader2, MicOff, UserMinus } from "lucide-react";
+import { Loader2, MicOff } from "lucide-react";
+import { UserMinusIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "./chat-helpers";
 import type { ChannelMember } from "@/types/chat";
+
+const RemoveMemberButton = React.forwardRef<
+  HTMLButtonElement,
+  React.ButtonHTMLAttributes<HTMLButtonElement> & { isRemoving: boolean }
+>(function RemoveMemberButton({ isRemoving, className, ...props }, ref) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <button ref={ref} {...hoverHandlers} className={className} {...props}>
+      {isRemoving ? (
+        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+      ) : (
+        <UserMinusIcon ref={iconRef} size={14} />
+      )}
+    </button>
+  );
+});
 
 export function ChannelMemberRow({
   member,
@@ -60,20 +79,15 @@ export function ChannelMemberRow({
         </Badge>
       )}
       {canRemove && (
-        <button
+        <RemoveMemberButton
           type="button"
+          isRemoving={isRemoving}
           onClick={() => onRemove(member.user?.id ?? "", member.user?.name, isYou)}
           disabled={isRemoving}
           className="shrink-0 p-1 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
           title={isYou ? "Leave channel" : "Remove member"}
           aria-label={isYou ? "Leave channel" : `Remove ${member.user?.name ?? "member"}`}
-        >
-          {isRemoving ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <UserMinus className="h-3.5 w-3.5" />
-          )}
-        </button>
+        />
       )}
     </div>
   );
