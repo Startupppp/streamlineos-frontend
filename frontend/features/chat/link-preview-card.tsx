@@ -4,6 +4,7 @@ import Image from "next/image";
 import { ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLinkPreview } from "@/hooks/api";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 function extractFirstUrl(content: string): string | null {
   const match = content.match(/https?:\/\/[^\s<>"']+/);
@@ -41,14 +42,10 @@ export function LinkPreviewCard({ content, isOwn }: { content: string; isOwn: bo
       )}
       <div className="flex-1 min-w-0 p-2.5">
         {data.siteName && (
-          <p className={cn("text-[10px] font-medium mb-0.5 truncate", isOwn ? "text-white/60" : "text-muted-foreground")}>
-            {data.siteName}
-          </p>
+          <TruncatedText text={data.siteName} className={cn("text-[10px] font-medium mb-0.5", isOwn ? "text-white/60" : "text-muted-foreground")} />
         )}
         {data.title && (
-          <p className={cn("text-[12px] font-semibold line-clamp-1", isOwn ? "text-white" : "text-foreground")}>
-            {data.title}
-          </p>
+          <TruncatedText text={data.title} className={cn("text-[12px] font-semibold", isOwn ? "text-white" : "text-foreground")} />
         )}
         {data.description && (
           <p className={cn("text-[11px] line-clamp-2 mt-0.5", isOwn ? "text-white/70" : "text-muted-foreground")}>

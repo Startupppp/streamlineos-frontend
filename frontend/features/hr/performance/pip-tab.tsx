@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -213,7 +214,7 @@ export function PIPTab() {
                       <AvatarFallback className="text-[9px] bg-primary/10 text-primary">{pip.user?.name?.[0] ?? "?"}</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">{pip.user?.name ?? "Employee"}</p>
+                      <TruncatedText text={pip.user?.name ?? "Employee"} className="text-sm font-medium" />
                       <p className="text-[10px] text-muted-foreground">{pip.startDate} → {pip.endDate}</p>
                       {pip.hrRep && (
                         <p className="text-[10px] text-muted-foreground">HR Rep: {pip.hrRep.name}</p>
@@ -256,7 +257,7 @@ export function PIPTab() {
                     </DropdownMenu>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{pip.reason}</p>
+                {pip.reason && <TruncatedText text={pip.reason} lines={2} className="text-xs text-muted-foreground mt-2" />}
                 {pip.objectives && pip.objectives.length > 0 && (
                   <p className="text-[10px] text-muted-foreground mt-1">{pip.objectives.length} objective{pip.objectives.length !== 1 ? "s" : ""}</p>
                 )}

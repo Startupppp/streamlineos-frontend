@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import type { TemplateRow } from "@/types/payroll/setup";
 import { COMPLEXITY_CONFIG } from "@/features/payroll/setup/lib/constants";
 
@@ -93,7 +94,7 @@ export function TemplateCard({ template, selected, onSelect, actions }: Template
       <div className="space-y-2.5">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-foreground truncate">{template.name}</p>
+            <TruncatedText text={template.name} className="text-sm font-semibold text-foreground" />
             {template.badge && (
               <span className="inline-block mt-0.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
                 {template.badge}

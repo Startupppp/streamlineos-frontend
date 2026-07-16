@@ -16,6 +16,7 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { fadeUp } from "@/lib/motion-variants";
 import type { CustomFieldDefinition } from "@/hooks/api/crm/custom-fields";
@@ -104,7 +105,7 @@ export function FieldRow({ field, onEdit, onDeleteRequest, onToggle }: FieldRowP
           <div className="flex items-center gap-3">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm font-medium truncate">{field.label}</span>
+                <TruncatedText text={field.label} className="text-sm font-medium" />
                 <span className="text-[10px] text-muted-foreground font-mono">{field.name}</span>
                 <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0.5", typeConfig.className)}>
                   {typeConfig.label}

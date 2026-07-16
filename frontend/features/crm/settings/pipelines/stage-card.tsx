@@ -22,6 +22,7 @@ import { getCrmTokenClasses } from "@/features/crm/shared/metadata/crm-color-tok
 import { useUpdateStage } from "@/hooks/api/crm";
 import type { CrmPipelineStage, CrmStageType } from "@/types/crm/metadata";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { STAGE_TYPES } from "./pipeline-constants";
 
@@ -92,7 +93,7 @@ export function StageCard({
             <GripVertical className="h-4 w-4" />
           </div>
           <span className={cn("size-2.5 rounded-full shrink-0", dotClass)} />
-          <span className="font-medium text-sm min-w-[80px] flex-1 truncate">{stage.label}</span>
+          <TruncatedText text={stage.label} className="font-medium text-sm min-w-[80px] flex-1" />
           <span className="font-mono text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground shrink-0">
             {stage.key}
           </span>

@@ -4,6 +4,7 @@ import { TrendingUp, IndianRupee } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyActivityIllustration } from "@/components/illustrations";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import type { Deal } from "@/types/crm";
@@ -55,7 +56,7 @@ export function CrmRecentActivity({ deals }: CrmRecentActivityProps) {
                     {isWon ? <TrendingUp className="h-3 w-3" /> : <IndianRupee className="h-3 w-3" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[11px] font-medium truncate">{deal.name}</p>
+                    <TruncatedText text={deal.name} className="text-[11px] font-medium" />
                     <p className="text-[10px] text-muted-foreground">
                       {STAGE_LABELS[deal.stage] ?? deal.stage}
                       {deal.assignedTo?.name && ` · ${deal.assignedTo.name}`}

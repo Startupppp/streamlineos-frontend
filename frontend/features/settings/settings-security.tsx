@@ -5,7 +5,8 @@ import { formatDistanceToNow } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, Loader2, ShieldCheck, Monitor, Smartphone } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { Eye, EyeOff, ShieldCheck, Monitor, Smartphone } from "lucide-react";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useChangePassword } from "@/hooks/api/hr";
@@ -147,15 +148,16 @@ function SessionsSection() {
         </div>
         {otherSessions.length > 0 && (
           <>
-            <Button
+            <LoadingButton
               variant="outline"
               size="sm"
               className="h-8 text-xs"
-              disabled={revokeAll.isPending}
+              isPending={revokeAll.isPending}
               onClick={handleOpenRevokeAll}
+              loadingText="Signing out…"
             >
-              {revokeAll.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Sign out all others"}
-            </Button>
+              Sign out all others
+            </LoadingButton>
             <ConfirmDialog
               open={revokeAllOpen}
               onOpenChange={setRevokeAllOpen}
@@ -307,18 +309,16 @@ export function SettingsSecurity() {
         </div>
 
         <div className="flex justify-end pt-1">
-          <Button
+          <LoadingButton
             size="sm"
             onClick={handleSubmit}
             disabled={!canSubmit}
             className="h-8 px-4 text-xs"
+            isPending={changePassword.isPending}
+            loadingText="Changing…"
           >
-            {changePassword.isPending ? (
-              <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Changing…</>
-            ) : (
-              "Update password"
-            )}
-          </Button>
+            Update password
+          </LoadingButton>
         </div>
       </div>
 

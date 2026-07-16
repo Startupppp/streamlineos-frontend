@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { usePickSalesOrder, useWarehouses, useLocations } from "@/hooks/api/inventory";
 
@@ -184,7 +185,7 @@ export function PickSheet({ open, onOpenChange, soId, lines }: PickSheetProps) {
                 key={field.id}
                 className="grid grid-cols-[1fr_96px] gap-2 items-center px-3 py-2"
               >
-                <span className="text-xs truncate">{lines[idx]?.productName ?? "—"}</span>
+                <TruncatedText text={lines[idx]?.productName ?? "—"} className="text-xs" />
                 <Input
                   type="number"
                   min="0"

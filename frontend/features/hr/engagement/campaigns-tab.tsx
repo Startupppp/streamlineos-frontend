@@ -8,6 +8,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -168,7 +169,7 @@ export function CampaignsTab() {
                     </span>
                   </div>
                   {c.description && (
-                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{c.description}</p>
+                    <TruncatedText text={c.description} lines={2} className="text-xs text-muted-foreground mt-1" />
                   )}
                   {(c.startsAt || c.endsAt) && (
                     <p className="text-[11px] text-muted-foreground mt-1">

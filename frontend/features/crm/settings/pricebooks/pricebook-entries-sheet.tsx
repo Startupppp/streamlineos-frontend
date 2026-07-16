@@ -29,6 +29,7 @@ import {
   useUpsertPricebookEntry,
   useDeletePricebookEntry,
 } from "@/hooks/api/crm/pricebooks";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { Pricebook } from "@/types/crm/pricebooks";
 
@@ -128,9 +129,10 @@ export function PricebookEntriesSheet({
                   className="flex items-center justify-between gap-3 px-4 py-2.5"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium truncate">
-                      {entry.productName ?? `Product #${entry.productId}`}
-                    </p>
+                    <TruncatedText
+                      text={entry.productName ?? `Product #${entry.productId}`}
+                      className="text-sm font-medium"
+                    />
                     <p className="text-xs text-muted-foreground">
                       Qty &ge; {entry.minQuantity} &nbsp;&middot;&nbsp;{" "}
                       {(entry.unitPriceCents / 100).toLocaleString()}{" "}

@@ -17,6 +17,7 @@ import {
   type Publication,
   type PublicationStatus,
 } from "@/hooks/api/inventory/channels";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 
@@ -76,12 +77,7 @@ const PUBLICATION_COLUMNS: DataTableColumn<Publication>[] = [
     header: "Error",
     cell: (row) =>
       row.errorMessage ? (
-        <span
-          className="text-xs text-muted-foreground truncate max-w-[200px] block"
-          title={row.errorMessage}
-        >
-          {row.errorMessage}
-        </span>
+        <TruncatedText text={row.errorMessage} className="text-xs text-muted-foreground max-w-[200px]" />
       ) : (
         <span className="text-xs text-muted-foreground">—</span>
       ),

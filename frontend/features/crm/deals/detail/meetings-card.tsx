@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Plus, Trash2, Video, ExternalLink } from "lucide-react";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyCalendarIllustration } from "@/components/illustrations";
 import { format } from "date-fns";
@@ -60,7 +61,7 @@ export function MeetingsCard({ meetings, onAddMeeting, onDeleteMeeting }: Meetin
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    <span className="font-medium text-sm truncate">{m.title}</span>
+                    <TruncatedText text={m.title} className="font-medium text-sm" />
                     <Badge variant="outline" className="text-[10px] shrink-0">{m.status}</Badge>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">

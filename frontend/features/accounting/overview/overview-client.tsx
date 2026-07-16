@@ -19,7 +19,13 @@ import {
   FiPiggyBankIcon,
 } from "@/features/accounting/shared";
 import { TrendingUp, TrendingDown, AlertCircle, Landmark } from "lucide-react";
-import { RevenueTrendChart } from "./revenue-trend-chart";
+import dynamic from "next/dynamic";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const RevenueTrendChart = dynamic(
+  () => import("./revenue-trend-chart").then((m) => ({ default: m.RevenueTrendChart })),
+  { ssr: false, loading: () => <Skeleton className="h-[280px]" /> }
+);
 import { BankAccountsList } from "./bank-accounts-list";
 import { ActionCard } from "./action-card";
 import { OverviewSkeleton } from "./overview-skeleton";

@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import type { Value as PhoneValue } from "react-phone-number-input";
+import { useCallback, useEffect } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
   Mail,
   MapPin,
@@ -34,10 +36,58 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { CrmOptionSelect } from "@/features/crm/shared/metadata";
 
+const schema = z
+  .object({
+    name: z.string().trim().min(1, "Full name is required"),
+    email: z
+      .string()
+      .trim()
+      .refine((v) => v === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), {
+        message: "Enter a valid email",
+      }),
+    phone: z.string(),
+    company: z.string(),
+    city: z.string(),
+    priority: z.string().min(1, "Priority is required"),
+    source: z.string().min(1, "Source is required"),
+    referredBy: z.string(),
+    potentialValue: z
+      .string()
+      .refine((v) => v === "" || /^\d+(\.\d+)?$/.test(v), {
+        message: "Must be a positive number",
+      }),
+    investmentInterest: z
+      .string()
+      .refine((v) => v === "" || /^\d+(\.\d+)?$/.test(v), {
+        message: "Must be a positive number",
+      }),
+    notes: z.string(),
+  })
+  .refine(
+    (d) => d.source !== "referral" || d.referredBy.trim().length > 0,
+    { message: "Referred By is required when source is Referral", path: ["referredBy"] },
+  );
+
+type FormValues = z.infer<typeof schema>;
+
+export interface CreateLeadFormValues {
+  name: string;
+  email?: string;
+  phone?: string;
+  company?: string;
+  city?: string;
+  priority: string;
+  source: string;
+  referredBy?: string;
+  potentialValue?: number;
+  investmentInterest?: number;
+  notes?: string;
+}
+
 interface CreateLeadSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (formData: FormData) => void;
+  onSubmit: (values: CreateLeadFormValues) => void;
   isPending: boolean;
 }
 
@@ -47,25 +97,59 @@ export function CreateLeadSheet({
   onSubmit,
   isPending,
 }: CreateLeadSheetProps) {
-  const [priority, setPriority] = useState<string>("WARM");
-  const [source, setSource] = useState<string>("referral");
-  const [phone, setPhone] = useState<PhoneValue | undefined>();
-  const [emailInput, setEmailInput] = useState("");
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      company: "",
+      city: "",
+      priority: "WARM",
+      source: "referral",
+      referredBy: "",
+      potentialValue: "",
+      investmentInterest: "",
+      notes: "",
+    },
+  });
 
-  const handleEmailChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setEmailInput(e.target.value),
-    [],
-  );
-  const handleCancel = useCallback(() => onOpenChange(false), [onOpenChange]);
+  const watchedEmail = form.watch("email");
+  const watchedPhone = form.watch("phone");
+  const watchedSource = form.watch("source");
 
-  const debouncedEmail = useDebouncedValue(emailInput, 500);
-  const debouncedPhone = useDebouncedValue(phone ?? "", 500);
+  const debouncedEmail = useDebouncedValue(watchedEmail, 500);
+  const debouncedPhone = useDebouncedValue(watchedPhone, 500);
 
   const { data: dupCheck } = useCheckLeadDuplicates(
     { email: debouncedEmail || undefined, phone: debouncedPhone || undefined },
     { enabled: open && (!!debouncedEmail || !!debouncedPhone) },
   );
   const hasDuplicates = (dupCheck?.duplicates?.length ?? 0) > 0;
+
+  useEffect(() => {
+    if (!open) {
+      form.reset();
+    }
+  }, [open, form]);
+
+  const handleCancel = useCallback(() => onOpenChange(false), [onOpenChange]);
+
+  function handleSubmit(values: FormValues) {
+    onSubmit({
+      name: values.name,
+      email: values.email || undefined,
+      phone: values.phone || undefined,
+      company: values.company || undefined,
+      city: values.city || undefined,
+      priority: values.priority,
+      source: values.source,
+      referredBy: values.referredBy || undefined,
+      potentialValue: values.potentialValue ? Number(values.potentialValue) : undefined,
+      investmentInterest: values.investmentInterest ? Number(values.investmentInterest) : undefined,
+      notes: values.notes || undefined,
+    });
+  }
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -95,12 +179,7 @@ export function CreateLeadSheet({
         <SheetBody className="px-0">
           <form
             id="create-lead-form"
-            action={(formData) => {
-              formData.set("priority", priority);
-              formData.set("source", source);
-              if (phone) formData.set("phone", phone);
-              onSubmit(formData);
-            }}
+            onSubmit={form.handleSubmit(handleSubmit)}
             className="px-6 py-4 space-y-4"
           >
             <div className="space-y-3">
@@ -118,11 +197,14 @@ export function CreateLeadSheet({
                   </Label>
                   <Input
                     id="name"
-                    name="name"
-                    required
                     placeholder="Enter full name"
-                    className=""
+                    {...form.register("name")}
                   />
+                  {form.formState.errors.name && (
+                    <p className="text-xs text-destructive mt-1">
+                      {form.formState.errors.name.message}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label
@@ -135,14 +217,17 @@ export function CreateLeadSheet({
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="email"
-                      name="email"
                       type="email"
                       placeholder="john@example.com"
                       className="pl-9"
-                      value={emailInput}
-                      onChange={handleEmailChange}
+                      {...form.register("email")}
                     />
                   </div>
+                  {form.formState.errors.email && (
+                    <p className="text-xs text-destructive mt-1">
+                      {form.formState.errors.email.message}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label
@@ -151,13 +236,18 @@ export function CreateLeadSheet({
                   >
                     Phone
                   </Label>
-                  <PhoneInput
-                    id="phone"
-                    defaultCountry="IN"
-                    placeholder="Enter phone number"
-                    value={phone}
-                    onChange={setPhone}
-                    className=""
+                  <Controller
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <PhoneInput
+                        id="phone"
+                        defaultCountry="IN"
+                        placeholder="Enter phone number"
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                    )}
                   />
                 </div>
                 <div>
@@ -171,9 +261,9 @@ export function CreateLeadSheet({
                     <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="company"
-                      name="company"
                       placeholder="Acme Corp"
                       className="pl-9"
+                      {...form.register("company")}
                     />
                   </div>
                 </div>
@@ -188,9 +278,9 @@ export function CreateLeadSheet({
                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="city"
-                      name="city"
                       placeholder="Mumbai"
                       className="pl-9"
+                      {...form.register("city")}
                     />
                   </div>
                 </div>
@@ -246,26 +336,38 @@ export function CreateLeadSheet({
                   <Label className="text-xs font-medium mb-1.5 block">
                     Priority
                   </Label>
-                  <CrmOptionSelect
-                    type="priority"
-                    value={priority}
-                    onChange={setPriority}
-                    className="w-full"
+                  <Controller
+                    control={form.control}
+                    name="priority"
+                    render={({ field }) => (
+                      <CrmOptionSelect
+                        type="priority"
+                        value={field.value}
+                        onChange={field.onChange}
+                        className="w-full"
+                      />
+                    )}
                   />
                 </div>
                 <div>
                   <Label className="text-xs font-medium mb-1.5 block">
                     Source
                   </Label>
-                  <CrmOptionSelect
-                    type="source"
-                    value={source}
-                    onChange={setSource}
-                    className="w-full"
+                  <Controller
+                    control={form.control}
+                    name="source"
+                    render={({ field }) => (
+                      <CrmOptionSelect
+                        type="source"
+                        value={field.value}
+                        onChange={field.onChange}
+                        className="w-full"
+                      />
+                    )}
                   />
                 </div>
 
-                {source === "referral" && (
+                {watchedSource === "referral" && (
                   <div className="col-span-2">
                     <Label
                       htmlFor="referredBy"
@@ -277,12 +379,16 @@ export function CreateLeadSheet({
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="referredBy"
-                        name="referredBy"
-                        required
                         placeholder="Name of person who referred this lead"
                         className="pl-9"
+                        {...form.register("referredBy")}
                       />
                     </div>
+                    {form.formState.errors.referredBy && (
+                      <p className="text-xs text-destructive mt-1">
+                        {form.formState.errors.referredBy.message}
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
@@ -305,14 +411,16 @@ export function CreateLeadSheet({
                     <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="potentialValue"
-                      name="potentialValue"
-                      type="number"
-                      min="0"
-                      step="1"
                       placeholder="5,00,000"
                       className="pl-9"
+                      {...form.register("potentialValue")}
                     />
                   </div>
+                  {form.formState.errors.potentialValue && (
+                    <p className="text-xs text-destructive mt-1">
+                      {form.formState.errors.potentialValue.message}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label
@@ -325,14 +433,16 @@ export function CreateLeadSheet({
                     <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="investmentInterest"
-                      name="investmentInterest"
-                      type="number"
-                      min="0"
-                      step="1"
                       placeholder="10,00,000"
                       className="pl-9"
+                      {...form.register("investmentInterest")}
                     />
                   </div>
+                  {form.formState.errors.investmentInterest && (
+                    <p className="text-xs text-destructive mt-1">
+                      {form.formState.errors.investmentInterest.message}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -344,10 +454,10 @@ export function CreateLeadSheet({
               </div>
               <Textarea
                 id="notes"
-                name="notes"
                 placeholder="Any additional context about this lead..."
                 rows={3}
                 className="resize-none"
+                {...form.register("notes")}
               />
             </div>
           </form>

@@ -9,8 +9,8 @@ import {
   SheetFooter,
   SheetBody,
 } from "@/components/ui/sheet";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
 
 interface HrSheetProps {
   open: boolean;

@@ -18,6 +18,7 @@ import { formatMoney } from "@/features/payroll/shared";
 import { FnfStatusBadge } from "./fnf-status-badge";
 import { FnfDetailSheet } from "./fnf-detail-sheet";
 import type { FnfSettlement, FnfStatus } from "@/types/payroll";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const STATUS_OPTIONS: { value: FnfStatus; label: string }[] = [
   { value: "PENDING", label: "Pending" },

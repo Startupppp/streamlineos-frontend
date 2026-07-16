@@ -1,6 +1,9 @@
 "use client";
 
-import { useState, useCallback, useMemo, type ChangeEvent } from "react";
+import { useState, useCallback, useMemo } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
   useHrGoals,
   useCreateGoal,
@@ -18,6 +21,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import {
   Popover,
   PopoverContent,
@@ -57,6 +68,43 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { Employee } from "@/types/hr";
 
+const goalSchema = z
+  .object({
+    userId: z.string(),
+    title: z
+      .string()
+      .trim()
+      .min(2, "Title must be at least 2 characters")
+      .max(100, "Title must be at most 100 characters")
+      .regex(/[a-zA-Z0-9]/, "Must contain at least one letter or number")
+      .refine((v) => !/\s{2,}/.test(v), "Cannot have consecutive spaces"),
+    description: z
+      .string()
+      .max(1000, "Description must be at most 1000 characters")
+      .optional(),
+    targetValue: z
+      .string()
+      .refine((v) => {
+        if (!v) return true;
+        const n = Number(v);
+        return !isNaN(n) && n > 0 && n <= 9_999_999_999;
+      }, "Target value must be a positive number (max 10 digits)")
+      .optional(),
+    startDate: z.string().min(1, "Start date is required"),
+    endDate: z.string().min(1, "End date is required"),
+  })
+  .superRefine((data, ctx) => {
+    if (data.startDate && data.endDate && data.endDate < data.startDate) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "End date must be after start date",
+        path: ["endDate"],
+      });
+    }
+  });
+
+type GoalFormValues = z.infer<typeof goalSchema>;
+
 export function GoalsTab() {
   const { data: goals, isLoading } = useHrGoals();
   const { data: employeesRaw } = useHrEmployees();
@@ -66,13 +114,19 @@ export function GoalsTab() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editGoal, setEditGoal] = useState<HrGoal | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [userId, setUserId] = useState("");
   const [userPickerOpen, setUserPickerOpen] = useState(false);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [targetValue, setTargetValue] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+
+  const goalForm = useForm<GoalFormValues>({
+    resolver: zodResolver(goalSchema),
+    defaultValues: {
+      userId: "",
+      title: "",
+      description: "",
+      targetValue: "",
+      startDate: "",
+      endDate: "",
+    },
+  });
 
   const employees = useMemo(
     () =>
@@ -85,152 +139,98 @@ export function GoalsTab() {
   );
 
   const resetForm = useCallback(() => {
-    setUserId("");
-    setTitle("");
-    setDescription("");
-    setTargetValue("");
-    setStartDate("");
-    setEndDate("");
+    goalForm.reset({
+      userId: "",
+      title: "",
+      description: "",
+      targetValue: "",
+      startDate: "",
+      endDate: "",
+    });
     setEditGoal(null);
-  }, []);
+  }, [goalForm]);
 
-  const handleOpenEdit = useCallback((goal: HrGoal) => {
-    setEditGoal(goal);
-    setTitle(goal.title);
-    setDescription(goal.description ?? "");
-    setTargetValue(goal.targetValue != null ? String(goal.targetValue) : "");
-    setStartDate(
-      typeof goal.startDate === "string" ? goal.startDate.slice(0, 10) : "",
-    );
-    setEndDate(
-      typeof goal.endDate === "string" ? goal.endDate.slice(0, 10) : "",
-    );
-    setSheetOpen(true);
-  }, []);
+  const handleOpenEdit = useCallback(
+    (goal: HrGoal) => {
+      setEditGoal(goal);
+      goalForm.reset({
+        userId: "",
+        title: goal.title,
+        description: goal.description ?? "",
+        targetValue: goal.targetValue != null ? String(goal.targetValue) : "",
+        startDate:
+          typeof goal.startDate === "string" ? goal.startDate.slice(0, 10) : "",
+        endDate:
+          typeof goal.endDate === "string" ? goal.endDate.slice(0, 10) : "",
+      });
+      setSheetOpen(true);
+    },
+    [goalForm],
+  );
 
-  const handleSave = useCallback(() => {
-    const trimmedTitle = title.trim();
-    const trimmedDesc = description.trim();
-    if (!editGoal && !userId) {
-      toast.error("Please select an employee");
-      return;
-    }
-    if (!trimmedTitle) {
-      toast.error("Goal title is required");
-      return;
-    }
-    if (trimmedTitle.length < 2) {
-      toast.error("Goal title must be at least 2 characters");
-      return;
-    }
-    if (trimmedTitle.length > 100) {
-      toast.error("Goal title must be at most 100 characters");
-      return;
-    }
-    if (!/[a-zA-Z0-9]/.test(trimmedTitle)) {
-      toast.error("Goal title must contain at least one letter or number");
-      return;
-    }
-    if (/\s{2,}/.test(trimmedTitle)) {
-      toast.error("Goal title cannot have consecutive spaces");
-      return;
-    }
-    if (trimmedDesc && trimmedDesc.length > 1000) {
-      toast.error("Description must be at most 1000 characters");
-      return;
-    }
-    if (targetValue !== "") {
-      const tv = Number(targetValue);
-      if (isNaN(tv) || tv <= 0) {
-        toast.error("Target value must be a positive number");
+  const handleSave = useCallback(
+    (data: GoalFormValues) => {
+      if (!editGoal && !data.userId) {
+        goalForm.setError("userId", { message: "Please select an employee" });
         return;
       }
-      if (tv > 9_999_999_999) {
-        toast.error("Target value is too large (max 10 digits)");
-        return;
-      }
-    }
-    if (!startDate) {
-      toast.error("Start date is required");
-      return;
-    }
-    if (!endDate) {
-      toast.error("End date is required");
-      return;
-    }
-    if (!editGoal) {
-      const today = new Date().toISOString().slice(0, 10);
-      if (startDate < today) {
-        toast.error("Start date cannot be in the past");
-        return;
-      }
-    }
-    if (endDate < startDate) {
-      toast.error("End date must be after start date");
-      return;
-    }
 
-    if (editGoal) {
-      updateGoal.mutate(
+      if (!editGoal) {
+        const today = new Date().toISOString().slice(0, 10);
+        if (data.startDate < today) {
+          toast.error("Start date cannot be in the past");
+          return;
+        }
+      }
+
+      const trimmedTitle = data.title.trim();
+      const trimmedDesc = data.description?.trim();
+
+      if (editGoal) {
+        updateGoal.mutate(
+          {
+            goalId: editGoal.id,
+            title: trimmedTitle,
+            description: trimmedDesc || undefined,
+            targetValue:
+              data.targetValue ? Number(data.targetValue) : undefined,
+            startDate: data.startDate,
+            endDate: data.endDate,
+          },
+          {
+            onSuccess: () => {
+              toast.success("Goal updated");
+              setSheetOpen(false);
+              resetForm();
+            },
+            onError: (e) => toast.error(getErrorMessage(e)),
+          },
+        );
+        return;
+      }
+
+      createGoal.mutate(
         {
-          goalId: editGoal.id,
+          userId: data.userId,
           title: trimmedTitle,
           description: trimmedDesc || undefined,
-          targetValue: targetValue !== "" ? Number(targetValue) : undefined,
-          startDate,
-          endDate,
+          targetValue:
+            data.targetValue ? Number(data.targetValue) : undefined,
+          currentValue: 0,
+          startDate: data.startDate,
+          endDate: data.endDate,
         },
         {
           onSuccess: () => {
-            toast.success("Goal updated");
+            toast.success("Goal created");
             setSheetOpen(false);
             resetForm();
           },
           onError: (e) => toast.error(getErrorMessage(e)),
         },
       );
-      return;
-    }
-
-    createGoal.mutate(
-      {
-        userId,
-        title: trimmedTitle,
-        description: trimmedDesc || undefined,
-        targetValue: targetValue !== "" ? Number(targetValue) : undefined,
-        currentValue: 0,
-        startDate,
-        endDate,
-      },
-      {
-        onSuccess: () => {
-          toast.success("Goal created");
-          setSheetOpen(false);
-          resetForm();
-        },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      },
-    );
-  }, [
-    userId,
-    title,
-    description,
-    targetValue,
-    startDate,
-    endDate,
-    editGoal,
-    createGoal,
-    updateGoal,
-    resetForm,
-  ]);
-
-  const handleTargetValueChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      const v = e.target.value;
-      if (v === "" || (/^\d{1,10}(\.\d{0,4})?$/.test(v) && Number(v) > 0))
-        setTargetValue(v);
     },
-    [],
+    [editGoal, createGoal, updateGoal, resetForm, goalForm],
   );
 
   const handleProgressUpdate = useCallback(
@@ -266,18 +266,12 @@ export function GoalsTab() {
     resetForm();
     setSheetOpen(true);
   }, [resetForm]);
+
   const handleDeleteDialogChange = useCallback((open: boolean) => {
     if (!open) setDeleteId(null);
   }, []);
 
-  const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value), []);
-  const handleDescriptionChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) =>
-      setDescription(e.target.value),
-    [],
-  );
-  const handleStartDateChange = useCallback((value: string) => setStartDate(value), []);
-  const handleEndDateChange = useCallback((value: string) => setEndDate(value), []);
+  const watchedUserId = goalForm.watch("userId");
 
   if (isLoading) {
     return <LoadingState variant="cards" rows={9} />;
@@ -367,7 +361,8 @@ export function GoalsTab() {
                         >
                           Mark Complete
                         </DropdownMenuItem>
-                        <DropdownMenuItem variant="destructive"
+                        <DropdownMenuItem
+                          variant="destructive"
                           onClick={() => setDeleteId(goal.id)}
                         >
                           <Trash2 className="h-3.5 w-3.5 mr-1.5" />
@@ -423,99 +418,153 @@ export function GoalsTab() {
           setSheetOpen(open);
         }}
         title={editGoal ? "Edit Goal" : "Create Goal"}
-        onSubmit={handleSave}
+        onSubmit={goalForm.handleSubmit(handleSave)}
         submitLabel={editGoal ? "Save Changes" : "Create"}
         isPending={createGoal.isPending || updateGoal.isPending}
       >
-        {!editGoal && (
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">Employee</label>
-            <Popover open={userPickerOpen} onOpenChange={setUserPickerOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={userPickerOpen}
-                  className="w-full justify-between font-normal"
+        <Form {...goalForm}>
+          {!editGoal && (
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Employee</label>
+              <Popover open={userPickerOpen} onOpenChange={setUserPickerOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={userPickerOpen}
+                    className="w-full justify-between font-normal"
+                  >
+                    <span className="truncate">
+                      {employees.find((e) => e.id === watchedUserId)?.name ??
+                        employees.find((e) => e.id === watchedUserId)?.email ??
+                        "Select employee"}
+                    </span>
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                  className="w-[var(--radix-popover-trigger-width)] p-0"
+                  align="start"
                 >
-                  <span className="truncate">
-                    {employees.find((e) => e.id === userId)?.name ??
-                      employees.find((e) => e.id === userId)?.email ??
-                      "Select employee"}
-                  </span>
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent
-                className="w-[var(--radix-popover-trigger-width)] p-0"
-                align="start"
-              >
-                <Command>
-                  <CommandInput placeholder="Search employees..." />
-                  <CommandList className="max-h-48 overflow-y-auto">
-                    <CommandEmpty>No employee found.</CommandEmpty>
-                    <CommandGroup>
-                      {employees.map((e) => (
-                        <CommandItem
-                          key={e.id}
-                          value={`${e.name ?? ""} ${e.email}`}
-                          onSelect={() => {
-                            setUserId(e.id);
-                            setUserPickerOpen(false);
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              userId === e.id ? "opacity-100" : "opacity-0",
-                            )}
-                          />
-                          {e.name ?? e.email}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-          </div>
-        )}
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Title</label>
-          <Input
-            placeholder="e.g., Complete Q2 OKRs"
-            value={title}
-            onChange={handleTitleChange}
+                  <Command>
+                    <CommandInput placeholder="Search employees..." />
+                    <CommandList className="max-h-48 overflow-y-auto">
+                      <CommandEmpty>No employee found.</CommandEmpty>
+                      <CommandGroup>
+                        {employees.map((e) => (
+                          <CommandItem
+                            key={e.id}
+                            value={`${e.name ?? ""} ${e.email}`}
+                            onSelect={() => {
+                              goalForm.setValue("userId", e.id);
+                              setUserPickerOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                watchedUserId === e.id
+                                  ? "opacity-100"
+                                  : "opacity-0",
+                              )}
+                            />
+                            {e.name ?? e.email}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              {goalForm.formState.errors.userId?.message && (
+                <p className="text-xs text-destructive">
+                  {goalForm.formState.errors.userId.message}
+                </p>
+              )}
+            </div>
+          )}
+          <FormField
+            control={goalForm.control}
+            name="title"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Title</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g., Complete Q2 OKRs" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Description</label>
-          <Textarea
-            placeholder="Goal details..."
-            value={description}
-            onChange={handleDescriptionChange}
-            rows={3}
+          <FormField
+            control={goalForm.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Description</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Goal details..."
+                    rows={3}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Target Value</label>
-          <Input
-            inputMode="numeric"
-            placeholder="100"
-            value={targetValue}
-            onChange={handleTargetValueChange}
+          <FormField
+            control={goalForm.control}
+            name="targetValue"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Target Value</FormLabel>
+                <FormControl>
+                  <Input inputMode="numeric" placeholder="100" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">Start Date</label>
-            <DatePicker value={startDate ?? ""} onChange={handleStartDateChange} placeholder="Pick a date" className="text-sm" />
+          <div className="grid grid-cols-2 gap-3">
+            <FormField
+              control={goalForm.control}
+              name="startDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Start Date</FormLabel>
+                  <FormControl>
+                    <DatePicker
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Pick a date"
+                      className="text-sm"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={goalForm.control}
+              name="endDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>End Date</FormLabel>
+                  <FormControl>
+                    <DatePicker
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Pick a date"
+                      className="text-sm"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">End Date</label>
-            <DatePicker value={endDate ?? ""} onChange={handleEndDateChange} placeholder="Pick a date" className="text-sm" />
-          </div>
-        </div>
+        </Form>
       </HrSheet>
 
       <ConfirmDialog

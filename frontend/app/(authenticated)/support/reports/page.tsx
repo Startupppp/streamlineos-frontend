@@ -17,7 +17,12 @@ import { ErrorState } from "@/components/shared/error-state";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ReportFiltersBar } from "@/features/support/reports/report-filters";
-import { OverviewCharts } from "@/features/support/reports/overview-charts";
+import dynamic from "next/dynamic";
+
+const OverviewCharts = dynamic(
+  () => import("@/features/support/reports/overview-charts").then((m) => ({ default: m.OverviewCharts })),
+  { ssr: false, loading: () => <Skeleton className="h-[224px]" /> }
+);
 import { ExportCsvButton } from "@/features/support/reports/export-csv-button";
 import { useSupportOverviewReport } from "@/hooks/api/support/reports";
 import type { SupportReportFilters } from "@/hooks/api/support/reports";

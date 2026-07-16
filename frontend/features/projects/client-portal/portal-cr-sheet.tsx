@@ -18,7 +18,17 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { TiptapEditor } from "@/components/editor/tiptap-editor";
+import dynamic from "next/dynamic";
+
+const TiptapEditor = dynamic(
+  () => import("@/components/editor/tiptap-editor").then((m) => ({ default: m.TiptapEditor })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="rounded-md border border-input bg-background animate-pulse min-h-[120px]" />
+    ),
+  },
+);
 import { toast } from "sonner";
 import { useSubmitPortalChangeRequest } from "@/hooks/api/projects/client-portal";
 

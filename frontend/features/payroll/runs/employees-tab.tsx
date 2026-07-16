@@ -7,6 +7,7 @@ import { useRunEmployees } from "@/hooks/api/payroll/run-employees";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
 import { BreakdownSheet } from "./breakdown-sheet";
 import type { RunEmployee } from "@/types/payroll/runs";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const WORKER_TYPE_COLORS: Record<string, string> = {
   EMPLOYEE: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
@@ -27,8 +28,8 @@ const COLUMNS: DataTableColumn<RunEmployee>[] = [
     header: "Employee",
     cell: (row) => (
       <div className="flex flex-col gap-0.5 min-w-0">
-        <span className="text-[11px] font-medium truncate">{row.userName}</span>
-        <span className="text-[10px] text-muted-foreground truncate">{row.userEmail}</span>
+        <TruncatedText text={row.userName} className="text-[11px] font-medium" />
+        <TruncatedText text={row.userEmail} className="text-[10px] text-muted-foreground" />
       </div>
     ),
   },

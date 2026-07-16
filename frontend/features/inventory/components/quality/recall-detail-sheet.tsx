@@ -13,6 +13,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { useRecall, useUpdateRecall } from "@/hooks/api/inventory/quality";
 import {
   RECALL_STATUS_BADGE,
@@ -235,7 +236,7 @@ export function RecallDetailSheet({ open, onOpenChange, recallId }: Props) {
                 {recall.affectedCustomers.map((c) => (
                   <div key={c.shipmentId} className="flex items-start gap-3 rounded-md border border-border/60 px-3 py-2">
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-medium truncate">{c.clientName ?? "Unknown"}</p>
+                      <TruncatedText text={c.clientName ?? "Unknown"} className="text-xs font-medium" />
                       <p className="text-[10px] text-muted-foreground">
                         Shipment #{c.shipmentId}
                         {c.salesOrderId ? ` · SO #${c.salesOrderId}` : ""}

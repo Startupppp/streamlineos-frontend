@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api-client";
 import { useTrainingAttendance, useMarkAttendance, type TrainingAttendance } from "@/hooks/api/hr/training";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface Props {
   programId: number;
@@ -98,7 +99,7 @@ export function AttendancePanel({ programId, canManage }: Props) {
               <StarRating rating={attendee.feedbackRating} />
             )}
             {attendee.feedbackText && (
-              <p className="text-[11px] text-muted-foreground line-clamp-1">{attendee.feedbackText}</p>
+              <TruncatedText text={attendee.feedbackText} className="text-[11px] text-muted-foreground" />
             )}
           </div>
           {canManage && attendee.status === "ENROLLED" && (

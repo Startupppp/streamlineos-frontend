@@ -15,6 +15,7 @@ import type { Channel } from "./chat-types";
 import { ChannelAvatar } from "./channel-avatar";
 import { ChannelItemMenu } from "./channel-item-menu";
 import { useMarkChannelUnread } from "@/hooks/api";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 export function ChannelItem({
   channel,
@@ -135,16 +136,15 @@ export function ChannelItem({
 
         <div className="flex-1 min-w-0 pr-8">
           <div className="flex items-center justify-between gap-2">
-            <p
+            <TruncatedText
+              text={displayName}
               className={cn(
-                "text-[13px] truncate leading-tight min-w-0",
+                "text-[13px] leading-tight",
                 hasUnread || isActive
                   ? "font-bold text-foreground"
                   : "font-medium text-muted-foreground",
               )}
-            >
-              {displayName}
-            </p>
+            />
 
             {lastMessageTime && (
               <span

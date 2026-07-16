@@ -25,6 +25,7 @@ import {
 import type { ProjectStatusRecord, Ticket } from "@/types/projects";
 import { PM_ROW } from "@/features/projects/shared/pm-chrome";
 import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { getTicketDetailHref } from "@/features/projects/shared/format-ticket-key";
 
 interface EpicStoryRowProps {
@@ -99,16 +100,13 @@ export const EpicStoryRow = memo(function EpicStoryRow({
                 )}
               />
             ) : (
-              <span
+              <TruncatedText
+                text={story.title}
                 className={cn(
-                  TEXT_ONE_LINE,
                   "max-w-[min(100%,18rem)] text-xs font-semibold sm:max-w-xs",
                   isDone && "text-muted-foreground line-through",
                 )}
-                title={story.title}
-              >
-                {story.title}
-              </span>
+              />
             )}
 
             {canUpdate ? (

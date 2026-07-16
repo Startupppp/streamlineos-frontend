@@ -1,30 +1,80 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ErrorState } from "@/components/shared/error-state";
+import { Skeleton } from "@/components/ui/skeleton";
 import { staggerContainer } from "@/lib/motion-variants";
-import { PipelineFunnelChart } from "@/features/crm/analytics/pipeline-funnel-chart";
-import { SourceBreakdownChart } from "@/features/crm/analytics/source-breakdown-chart";
 import { RepPerformanceTable } from "@/features/crm/analytics/rep-performance-table";
-import { LeadVolumeChart } from "@/features/crm/analytics/lead-volume-chart";
-import { ConversionChart } from "@/features/crm/analytics/conversion-chart";
-import { DealValueChart } from "@/features/crm/analytics/deal-value-chart";
 import { PeriodSelector, periodToDateRange } from "@/features/crm/analytics/period-selector";
 import type { Period } from "@/features/crm/analytics/period-selector";
 import { useAnalyticsData } from "@/features/crm/analytics/use-analytics-data";
 import { AnalyticsLoadingSkeleton } from "@/features/crm/analytics/analytics-loading-skeleton";
 import { AnalyticsKpiCards } from "@/features/crm/analytics/analytics-kpi-cards";
-import { SlaComplianceChart } from "@/features/crm/analytics/sla-compliance-chart";
-import { ScoreDistributionChart } from "@/features/crm/analytics/score-distribution-chart";
-import { AssignmentDistributionChart } from "@/features/crm/analytics/assignment-distribution-chart";
-import { ConversionBySourceChart } from "@/features/crm/analytics/conversion-by-source-chart";
-import { MonthlyRevenueChart } from "@/features/crm/analytics/monthly-revenue-chart";
-import { RevenueVsGoalChart } from "@/features/crm/analytics/revenue-vs-goal-chart";
-import { WinRateTrendChart } from "@/features/crm/analytics/win-rate-trend-chart";
 import { TaskAnalyticsCard } from "@/features/crm/analytics/task-analytics-card";
 import { useCrmOptions } from "@/hooks/api/crm/metadata";
+
+const PipelineFunnelChart = dynamic(
+  () => import("@/features/crm/analytics/pipeline-funnel-chart").then((m) => ({ default: m.PipelineFunnelChart })),
+  { ssr: false, loading: () => <Skeleton className="h-[280px] w-full rounded-xl" /> }
+);
+
+const SourceBreakdownChart = dynamic(
+  () => import("@/features/crm/analytics/source-breakdown-chart").then((m) => ({ default: m.SourceBreakdownChart })),
+  { ssr: false, loading: () => <Skeleton className="h-[280px] w-full rounded-xl" /> }
+);
+
+const LeadVolumeChart = dynamic(
+  () => import("@/features/crm/analytics/lead-volume-chart").then((m) => ({ default: m.LeadVolumeChart })),
+  { ssr: false, loading: () => <Skeleton className="h-[280px] w-full rounded-xl" /> }
+);
+
+const ConversionChart = dynamic(
+  () => import("@/features/crm/analytics/conversion-chart").then((m) => ({ default: m.ConversionChart })),
+  { ssr: false, loading: () => <Skeleton className="h-[280px] w-full rounded-xl" /> }
+);
+
+const DealValueChart = dynamic(
+  () => import("@/features/crm/analytics/deal-value-chart").then((m) => ({ default: m.DealValueChart })),
+  { ssr: false, loading: () => <Skeleton className="h-[280px] w-full rounded-xl" /> }
+);
+
+const SlaComplianceChart = dynamic(
+  () => import("@/features/crm/analytics/sla-compliance-chart").then((m) => ({ default: m.SlaComplianceChart })),
+  { ssr: false, loading: () => <Skeleton className="h-[280px] w-full rounded-xl" /> }
+);
+
+const ScoreDistributionChart = dynamic(
+  () => import("@/features/crm/analytics/score-distribution-chart").then((m) => ({ default: m.ScoreDistributionChart })),
+  { ssr: false, loading: () => <Skeleton className="h-[280px] w-full rounded-xl" /> }
+);
+
+const AssignmentDistributionChart = dynamic(
+  () => import("@/features/crm/analytics/assignment-distribution-chart").then((m) => ({ default: m.AssignmentDistributionChart })),
+  { ssr: false, loading: () => <Skeleton className="h-[280px] w-full rounded-xl" /> }
+);
+
+const ConversionBySourceChart = dynamic(
+  () => import("@/features/crm/analytics/conversion-by-source-chart").then((m) => ({ default: m.ConversionBySourceChart })),
+  { ssr: false, loading: () => <Skeleton className="h-[280px] w-full rounded-xl" /> }
+);
+
+const MonthlyRevenueChart = dynamic(
+  () => import("@/features/crm/analytics/monthly-revenue-chart").then((m) => ({ default: m.MonthlyRevenueChart })),
+  { ssr: false, loading: () => <Skeleton className="h-[280px] w-full rounded-xl" /> }
+);
+
+const RevenueVsGoalChart = dynamic(
+  () => import("@/features/crm/analytics/revenue-vs-goal-chart").then((m) => ({ default: m.RevenueVsGoalChart })),
+  { ssr: false, loading: () => <Skeleton className="h-[280px] w-full rounded-xl" /> }
+);
+
+const WinRateTrendChart = dynamic(
+  () => import("@/features/crm/analytics/win-rate-trend-chart").then((m) => ({ default: m.WinRateTrendChart })),
+  { ssr: false, loading: () => <Skeleton className="h-[280px] w-full rounded-xl" /> }
+);
 
 export default function CrmAnalyticsPage() {
   const [period, setPeriod] = useState<Period>("month");

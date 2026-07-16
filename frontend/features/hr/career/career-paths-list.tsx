@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { useCareerPaths } from "@/hooks/api/hr/career";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface Props {
   canManage: boolean;
@@ -74,7 +75,7 @@ export function CareerPathsList({ canManage: _canManage }: Props) {
             </div>
 
             {path.description && (
-              <p className="text-xs text-muted-foreground line-clamp-2">{path.description}</p>
+              <TruncatedText text={path.description} lines={2} className="text-xs text-muted-foreground" />
             )}
 
             <div className="flex items-center justify-between mt-auto">

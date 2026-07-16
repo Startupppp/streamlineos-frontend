@@ -15,8 +15,8 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useImportTickets, type ImportTicketRow } from "@/hooks/api/projects/import-export";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
-import { cn } from "@/lib/utils";
+import { TABLE_TITLE_CELL } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const CSV_COLUMNS = ["title", "type", "status", "priority", "points", "assigneeEmail", "dueDate"] as const;
 const TICKET_TYPES = ["TASK", "BUG", "STORY", "EPIC"] as const;
@@ -33,9 +33,7 @@ const previewColumns: DataTableColumn<PreviewRow>[] = [
     header: "Title",
     className: TABLE_TITLE_CELL,
     cell: (row) => (
-      <span className={TEXT_ONE_LINE} title={row.title}>
-        {row.title}
-      </span>
+      <TruncatedText text={row.title} />
     ),
   },
   {
@@ -53,9 +51,7 @@ const previewColumns: DataTableColumn<PreviewRow>[] = [
     header: "Assignee Email",
     className: "min-w-0 max-w-[8rem] overflow-hidden whitespace-normal",
     cell: (row) => (
-      <span className={TEXT_ONE_LINE} title={row.assigneeEmail ?? undefined}>
-        {row.assigneeEmail ?? "—"}
-      </span>
+      <TruncatedText text={row.assigneeEmail ?? "—"} />
     ),
   },
 ];

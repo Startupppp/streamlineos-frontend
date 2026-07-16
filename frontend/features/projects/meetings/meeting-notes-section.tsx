@@ -3,7 +3,17 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { useUpdateMeeting } from "@/hooks/api/projects";
-import { TiptapEditor } from "@/components/editor/tiptap-editor";
+import dynamic from "next/dynamic";
+
+const TiptapEditor = dynamic(
+  () => import("@/components/editor/tiptap-editor").then((m) => ({ default: m.TiptapEditor })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="rounded-md border border-input bg-background animate-pulse min-h-[100px]" />
+    ),
+  },
+);
 import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";

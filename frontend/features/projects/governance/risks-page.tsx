@@ -36,7 +36,8 @@ import {
   PM_FILL_PANEL,
   PM_TOOLBAR,
 } from "@/features/projects/shared/pm-chrome";
-import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TABLE_TITLE_CELL } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 
 const LEVEL_LABEL: Record<"low" | "medium" | "high", string> = { low: "Low", medium: "Medium", high: "High" };
@@ -201,12 +202,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
       key: "title", header: "Title", sortable: true, sortValue: (r) => r.title,
       className: TABLE_TITLE_CELL,
       cell: (row) => (
-        <span
-          className={cn("font-medium text-foreground", TEXT_ONE_LINE)}
-          title={row.title}
-        >
-          {row.title}
-        </span>
+        <TruncatedText text={row.title} className="font-medium text-foreground" />
       ),
     },
     {

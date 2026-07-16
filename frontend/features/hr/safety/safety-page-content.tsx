@@ -24,7 +24,13 @@ import type { DataTableColumn } from "@/components/ui/data-table";
 import { IncidentStatusBadge, IncidentSeverityBadge, IncidentTypeLabel } from "./incident-badges";
 import { ReportIncidentSheet } from "./report-incident-sheet";
 import { WellnessWidget } from "./wellness-widget";
-import { WellnessTrendChart } from "./wellness-trend-chart";
+import dynamic from "next/dynamic";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const WellnessTrendChart = dynamic(
+  () => import("./wellness-trend-chart").then((m) => ({ default: m.WellnessTrendChart })),
+  { ssr: false, loading: () => <Skeleton className="h-[200px]" /> }
+);
 import { BurnoutFlagsList } from "./burnout-flags-list";
 import { formatDistanceToNow } from "date-fns";
 

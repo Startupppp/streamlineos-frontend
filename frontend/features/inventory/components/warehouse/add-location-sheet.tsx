@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useCallback, useMemo, type ChangeEvent } from "react";
-import { Button } from "@/components/ui/button";
+import { useCallback, useMemo } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
   Select,
@@ -13,6 +14,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
   Sheet,
   SheetContent,
   SheetHeader,
@@ -21,9 +30,11 @@ import {
   SheetFooter,
   SheetBody,
 } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
 import { useCreateLocation } from "@/hooks/api/inventory/warehouses";
-import type { LocationType, WarehouseLocation } from "@/hooks/api/inventory/warehouses";
+import type { WarehouseLocation } from "@/hooks/api/inventory/warehouses";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   LOCATION_TYPE_ORDER,
@@ -31,33 +42,33 @@ import {
   isLocationType,
 } from "@/features/inventory/components/warehouse/location-type-constants";
 
-interface AddLocationFormState {
-  name: string;
-  code: string;
-  locationType: LocationType;
-  parentLocationId: string;
-  isPickable: boolean;
-  isReceivable: boolean;
-  isSellable: boolean;
-  capacity: string;
-}
+const locationSchema = z.object({
+  name: z.string().trim().min(1, "Location name is required").max(100),
+  code: z.string().trim().min(1, "Location code is required").max(20),
+  locationType: z.string().min(1, "Location type is required"),
+  parentLocationId: z.string().optional(),
+  isPickable: z.boolean(),
+  isReceivable: z.boolean(),
+  isSellable: z.boolean(),
+  capacity: z.string().optional(),
+});
 
-function blankForm(): AddLocationFormState {
-  return {
-    name: "",
-    code: "",
-    locationType: "ZONE",
-    parentLocationId: "",
-    isPickable: false,
-    isReceivable: false,
-    isSellable: false,
-    capacity: "",
-  };
-}
+type LocationFormValues = z.infer<typeof locationSchema>;
+
+const defaultValues: LocationFormValues = {
+  name: "",
+  code: "",
+  locationType: "ZONE",
+  parentLocationId: "",
+  isPickable: false,
+  isReceivable: false,
+  isSellable: false,
+  capacity: "",
+};
 
 function getLocationTypeDefaults(
-  type: LocationType,
-): Pick<AddLocationFormState, "isPickable" | "isReceivable" | "isSellable"> {
+  type: string,
+): Pick<LocationFormValues, "isPickable" | "isReceivable" | "isSellable"> {
   switch (type) {
     case "RECEIVING":
     case "RETURNS":
@@ -91,14 +102,11 @@ export function AddLocationSheet({
   locations,
 }: AddLocationSheetProps) {
   const createLocation = useCreateLocation();
-  const [form, setForm] = useState<AddLocationFormState>(blankForm());
 
-  const setField = useCallback(
-    <K extends keyof AddLocationFormState>(key: K, value: AddLocationFormState[K]) => {
-      setForm((prev) => ({ ...prev, [key]: value }));
-    },
-    [],
-  );
+  const form = useForm<LocationFormValues>({
+    resolver: zodResolver(locationSchema),
+    defaultValues,
+  });
 
   const parentOptions = useMemo(
     () =>
@@ -113,95 +121,58 @@ export function AddLocationSheet({
 
   const handleClose = useCallback(() => {
     onOpenChange(false);
-    setForm(blankForm());
-  }, [onOpenChange]);
+    form.reset();
+  }, [onOpenChange, form]);
 
   const handleSheetOpenChange = useCallback(
     (nextOpen: boolean) => {
-      if (!nextOpen) {
-        setForm(blankForm());
-      }
+      if (!nextOpen) form.reset();
       onOpenChange(nextOpen);
     },
-    [onOpenChange],
+    [onOpenChange, form],
   );
 
   const handleLocationTypeChange = useCallback(
     (v: string) => {
-      if (!isLocationType(v)) return;
-      setForm((prev) => ({ ...prev, locationType: v, ...getLocationTypeDefaults(v) }));
+      form.setValue("locationType", v);
+      const defaults = getLocationTypeDefaults(v);
+      form.setValue("isPickable", defaults.isPickable);
+      form.setValue("isReceivable", defaults.isReceivable);
+      form.setValue("isSellable", defaults.isSellable);
     },
-    [],
+    [form],
   );
 
-  const handleNameChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => setField("name", e.target.value),
-    [setField],
-  );
-
-  const handleCodeChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => setField("code", e.target.value),
-    [setField],
-  );
-
-  const handleParentLocationChange = useCallback(
-    (v: string) => setField("parentLocationId", v === "none" ? "" : v),
-    [setField],
-  );
-
-  const handleIsPickableChange = useCallback(
-    (v: boolean) => setField("isPickable", v),
-    [setField],
-  );
-
-  const handleIsReceivableChange = useCallback(
-    (v: boolean) => setField("isReceivable", v),
-    [setField],
-  );
-
-  const handleIsSellableChange = useCallback(
-    (v: boolean) => setField("isSellable", v),
-    [setField],
-  );
-
-  const handleCapacityChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => setField("capacity", e.target.value),
-    [setField],
-  );
-
-  const handleSubmit = useCallback(() => {
-    const name = form.name.trim();
-    const code = form.code.trim().toUpperCase();
-    if (!name) {
-      toast.error("Location name is required");
-      return;
-    }
-    if (!code) {
-      toast.error("Location code is required");
-      return;
-    }
-    const capacityNum = form.capacity.trim() ? Number(form.capacity.trim()) : undefined;
-    createLocation.mutate(
-      {
-        warehouseId,
-        name,
-        code,
-        locationType: form.locationType,
-        parentLocationId: form.parentLocationId ? Number(form.parentLocationId) : undefined,
-        isPickable: form.isPickable,
-        isReceivable: form.isReceivable,
-        isSellable: form.isSellable,
-        capacity: capacityNum,
-      },
-      {
-        onSuccess: () => {
-          toast.success("Location added");
-          handleClose();
+  const onSubmit = useCallback(
+    (data: LocationFormValues) => {
+      if (!isLocationType(data.locationType)) {
+        toast.error("Invalid location type");
+        return;
+      }
+      const capacityNum = data.capacity?.trim() ? Number(data.capacity.trim()) : undefined;
+      createLocation.mutate(
+        {
+          warehouseId,
+          name: data.name,
+          code: data.code.toUpperCase(),
+          locationType: data.locationType,
+          parentLocationId: data.parentLocationId ? Number(data.parentLocationId) : undefined,
+          isPickable: data.isPickable,
+          isReceivable: data.isReceivable,
+          isSellable: data.isSellable,
+          capacity: capacityNum,
         },
-        onError: (err: unknown) => toast.error(getErrorMessage(err)),
-      },
-    );
-  }, [form, warehouseId, createLocation, handleClose]);
+        {
+          onSuccess: () => {
+            toast.success("Location added");
+            handleClose();
+          },
+          onError: (err: unknown) => toast.error(getErrorMessage(err)),
+        },
+      );
+    },
+    [warehouseId, createLocation, handleClose],
+  );
 
   return (
     <Sheet open={open} onOpenChange={handleSheetOpenChange}>
@@ -212,94 +183,147 @@ export function AddLocationSheet({
             Add a zone, aisle, rack, or bin to {warehouseName}.
           </SheetDescription>
         </SheetHeader>
-        <SheetBody className="space-y-4 px-6 py-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="loc-type">
-              Location Type <span className="text-destructive">*</span>
-            </Label>
-            <Select value={form.locationType} onValueChange={handleLocationTypeChange}>
-              <SelectTrigger id="loc-type">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {LOCATION_TYPE_ORDER.map((lt) => (
-                  <SelectItem key={lt} value={lt}>
-                    {LOCATION_TYPE_LABELS[lt]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            <div className="flex flex-col items-start gap-1 rounded-md border p-2">
-              <Label className="text-[11px] font-medium cursor-pointer">Pickable</Label>
-              <Switch checked={form.isPickable} onCheckedChange={handleIsPickableChange} />
-            </div>
-            <div className="flex flex-col items-start gap-1 rounded-md border p-2">
-              <Label className="text-[11px] font-medium cursor-pointer">Receivable</Label>
-              <Switch checked={form.isReceivable} onCheckedChange={handleIsReceivableChange} />
-            </div>
-            <div className="flex flex-col items-start gap-1 rounded-md border p-2">
-              <Label className="text-[11px] font-medium cursor-pointer">Sellable</Label>
-              <Switch checked={form.isSellable} onCheckedChange={handleIsSellableChange} />
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="loc-name">
-              Name <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="loc-name"
-              placeholder="Zone A"
-              value={form.name}
-              onChange={handleNameChange}
+        <Form {...form}>
+          <SheetBody className="space-y-4 px-6 py-4">
+            <FormField
+              control={form.control}
+              name="locationType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Location Type <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <Select value={field.value} onValueChange={handleLocationTypeChange}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {LOCATION_TYPE_ORDER.map((lt) => (
+                        <SelectItem key={lt} value={lt}>
+                          {LOCATION_TYPE_LABELS[lt]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="loc-code">
-              Code <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="loc-code"
-              placeholder="ZA"
-              value={form.code}
-              onChange={handleCodeChange}
-              className="font-mono"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="loc-capacity">Capacity (optional)</Label>
-            <Input
-              id="loc-capacity"
-              type="number"
-              min="0"
-              placeholder="Max units"
-              value={form.capacity}
-              onChange={handleCapacityChange}
-            />
-          </div>
-          {parentOptions.length > 0 && (
-            <div className="space-y-1.5">
-              <Label htmlFor="loc-parent">Parent Location</Label>
-              <Select
-                value={form.parentLocationId || "none"}
-                onValueChange={handleParentLocationChange}
-              >
-                <SelectTrigger id="loc-parent">
-                  <SelectValue placeholder="None" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  {parentOptions.map((loc) => (
-                    <SelectItem key={loc.id} value={String(loc.id)}>
-                      {loc.name} ({loc.code})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-3 gap-2">
+              <FormField
+                control={form.control}
+                name="isPickable"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col items-start gap-1 rounded-md border p-2">
+                    <FormLabel className="text-[11px] font-medium cursor-pointer">Pickable</FormLabel>
+                    <FormControl>
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="isReceivable"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col items-start gap-1 rounded-md border p-2">
+                    <FormLabel className="text-[11px] font-medium cursor-pointer">Receivable</FormLabel>
+                    <FormControl>
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="isSellable"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col items-start gap-1 rounded-md border p-2">
+                    <FormLabel className="text-[11px] font-medium cursor-pointer">Sellable</FormLabel>
+                    <FormControl>
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
             </div>
-          )}
-        </SheetBody>
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Name <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input placeholder="Zone A" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="code"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Code <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input placeholder="ZA" className="font-mono" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="capacity"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Capacity (optional)</FormLabel>
+                  <FormControl>
+                    <Input type="number" min="0" placeholder="Max units" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {parentOptions.length > 0 && (
+              <FormField
+                control={form.control}
+                name="parentLocationId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Parent Location</FormLabel>
+                    <Select
+                      value={field.value || "none"}
+                      onValueChange={(v) => field.onChange(v === "none" ? "" : v)}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="None" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        {parentOptions.map((loc) => (
+                          <SelectItem key={loc.id} value={String(loc.id)}>
+                            {loc.name} ({loc.code})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+          </SheetBody>
+        </Form>
         <SheetFooter className="shrink-0 border-t border-border bg-muted/30 px-6 py-4">
           <div className="grid w-full grid-cols-2 gap-2">
             <Button
@@ -309,9 +333,12 @@ export function AddLocationSheet({
             >
               Cancel
             </Button>
-            <Button onClick={handleSubmit} disabled={createLocation.isPending}>
-              {createLocation.isPending ? "Adding…" : "Add Location"}
-            </Button>
+            <LoadingButton
+              onClick={form.handleSubmit(onSubmit)}
+              isPending={createLocation.isPending}
+            >
+              Add Location
+            </LoadingButton>
           </div>
         </SheetFooter>
       </SheetContent>

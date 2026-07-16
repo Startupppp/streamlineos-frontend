@@ -1,8 +1,13 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { GlobalAskOs } from "./global-ask-os";
+import dynamic from "next/dynamic";
 import { AskOsContext, useAskOsState } from "./ask-os-context";
+
+const GlobalAskOs = dynamic(
+  () => import("./global-ask-os").then((m) => ({ default: m.GlobalAskOs })),
+  { ssr: false },
+);
 
 interface AskOsProviderProps {
   children: ReactNode;

@@ -1,8 +1,18 @@
 "use client";
 
-import { useState, useMemo, type ChangeEvent } from "react";
+import { useForm, useFieldArray } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
 import {
   Sheet,
   SheetContent,
@@ -13,20 +23,26 @@ import {
   SheetBody,
 } from "@/components/ui/sheet";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { LoadingButton } from "@/components/ui/loading-button";
 import type { TransferDetail } from "@/hooks/api/inventory/stock";
 
-type Line = TransferDetail["lines"][number];
-type LineInput = { transferLineId: number; quantityReceived: number; notes: string };
-type LineData = { id: number; line: Line; input: LineInput };
+const receiveSchema = z.object({
+  lines: z.array(
+    z.object({
+      transferLineId: z.number(),
+      quantityReceived: z.string().refine(
+        (v) => {
+          const n = Number(v);
+          return !isNaN(n) && n >= 0;
+        },
+        { message: "Must be 0 or more" },
+      ),
+      notes: z.string().optional(),
+    }),
+  ),
+});
 
-function buildInitialInputs(lines: TransferDetail["lines"]): LineInput[] {
-  return lines.map((l) => ({
-    transferLineId: l.id,
-    quantityReceived: l.quantity,
-    notes: "",
-  }));
-}
+type ReceiveFormValues = z.infer<typeof receiveSchema>;
 
 function ReceiveTransferForm({
   transfer,
@@ -39,108 +55,54 @@ function ReceiveTransferForm({
   isPending: boolean;
   onClose: () => void;
 }) {
-  const [lineInputs, setLineInputs] = useState<LineInput[]>(() =>
-    buildInitialInputs(transfer.lines),
-  );
+  const form = useForm<ReceiveFormValues>({
+    resolver: zodResolver(receiveSchema),
+    defaultValues: {
+      lines: transfer.lines.map((l) => ({
+        transferLineId: l.id,
+        quantityReceived: String(l.quantity),
+        notes: "",
+      })),
+    },
+  });
+
+  const { fields } = useFieldArray({ control: form.control, name: "lines" });
 
   function handleReceiveAll() {
-    setLineInputs(buildInitialInputs(transfer.lines));
-  }
-
-  function handleQtyChange(id: number, v: string) {
-    const line = transfer.lines.find((l) => l.id === id);
-    const qty = Math.max(0, Math.min(Number(v) || 0, line?.quantity ?? 0));
-    setLineInputs((prev) =>
-      prev.map((li) =>
-        li.transferLineId === id ? { ...li, quantityReceived: qty } : li,
-      ),
-    );
-  }
-
-  function handleNotesChange(id: number, v: string) {
-    setLineInputs((prev) =>
-      prev.map((li) => (li.transferLineId === id ? { ...li, notes: v } : li)),
-    );
-  }
-
-  function handleSubmit() {
-    onSubmit(
-      lineInputs.map(({ transferLineId, quantityReceived }) => ({
-        transferLineId,
-        quantityReceived,
+    form.setValue(
+      "lines",
+      transfer.lines.map((l) => ({
+        transferLineId: l.id,
+        quantityReceived: String(l.quantity),
+        notes: "",
       })),
     );
   }
 
-  const lineData = useMemo<LineData[]>(
-    () =>
-      lineInputs.flatMap((li) => {
-        const line = transfer.lines.find((l) => l.id === li.transferLineId);
-        if (!line) return [];
-        return [{ id: li.transferLineId, line, input: li }];
-      }),
-    [lineInputs, transfer.lines],
-  );
+  function handleFormSubmit(data: ReceiveFormValues) {
+    const invalidIdx = data.lines.findIndex((l, i) => {
+      const expected = transfer.lines[i]?.quantity ?? 0;
+      return Number(l.quantityReceived) > expected;
+    });
 
-  const columns = useMemo<DataTableColumn<LineData>[]>(() => [
-    {
-      key: "product",
-      header: "Product / SKU",
-      cell: (ld) => (
-        <>
-          <TruncatedText text={ld.line.productName} className="font-medium leading-tight" />
-          <p className="text-[10px] text-muted-foreground font-mono">{ld.line.sku}</p>
-        </>
-      ),
-    },
-    {
-      key: "requested",
-      header: "Requested",
-      headerClassName: "text-right",
-      className: "text-right font-mono tabular-nums",
-      cell: (ld) => ld.line.quantity.toLocaleString(),
-    },
-    {
-      key: "received",
-      header: "Received",
-      cell: (ld) => {
-        function handleChange(e: ChangeEvent<HTMLInputElement>) {
-          handleQtyChange(ld.id, e.target.value);
-        }
-        return (
-          <Input
-            type="number"
-            min={0}
-            max={ld.line.quantity}
-            value={ld.input.quantityReceived}
-            onChange={handleChange}
-            className="w-20 text-xs"
-          />
-        );
-      },
-    },
-    {
-      key: "notes",
-      header: "Notes",
-      cell: (ld) => {
-        function handleChange(e: ChangeEvent<HTMLInputElement>) {
-          handleNotesChange(ld.id, e.target.value);
-        }
-        return (
-          <Input
-            type="text"
-            placeholder="Optional"
-            value={ld.input.notes}
-            onChange={handleChange}
-            className="text-xs"
-          />
-        );
-      },
-    },
-  ], [lineInputs]);
+    if (invalidIdx !== -1) {
+      form.setError(`lines.${invalidIdx}.quantityReceived`, {
+        message: "Cannot exceed expected quantity",
+      });
+      toast.error("Received quantity cannot exceed expected");
+      return;
+    }
+
+    onSubmit(
+      data.lines.map((l) => ({
+        transferLineId: l.transferLineId,
+        quantityReceived: Number(l.quantityReceived),
+      })),
+    );
+  }
 
   return (
-    <>
+    <Form {...form}>
       <SheetBody className="space-y-4 px-6 py-4">
         <div className="flex items-center justify-between">
           <span className="text-[13px] font-medium">Line Items</span>
@@ -148,23 +110,101 @@ function ReceiveTransferForm({
             Receive All
           </Button>
         </div>
-        <DataTable
-          data={lineData}
-          columns={columns}
-          getRowKey={(ld) => ld.id}
-        />
+        <div className="rounded-md border border-border overflow-hidden">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-border bg-muted/40">
+                <th className="px-3 py-2 text-left font-medium text-muted-foreground">
+                  Product / SKU
+                </th>
+                <th className="px-3 py-2 text-right font-medium text-muted-foreground">
+                  Requested
+                </th>
+                <th className="px-3 py-2 text-left font-medium text-muted-foreground">
+                  Received
+                </th>
+                <th className="px-3 py-2 text-left font-medium text-muted-foreground">
+                  Notes
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {fields.map((field, idx) => {
+                const line = transfer.lines[idx];
+                if (!line) return null;
+                return (
+                  <tr key={field.id} className="border-b border-border last:border-0">
+                    <td className="px-3 py-2 max-w-[160px]">
+                      <TruncatedText
+                        text={line.productName}
+                        className="font-medium leading-tight"
+                      />
+                      <p className="text-[10px] text-muted-foreground font-mono">{line.sku}</p>
+                    </td>
+                    <td className="px-3 py-2 text-right font-mono tabular-nums">
+                      {line.quantity.toLocaleString()}
+                    </td>
+                    <td className="px-3 py-2">
+                      <FormField
+                        control={form.control}
+                        name={`lines.${idx}.quantityReceived`}
+                        render={({ field: f }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Input
+                                {...f}
+                                type="number"
+                                min={0}
+                                max={line.quantity}
+                                className="w-20 text-xs"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </td>
+                    <td className="px-3 py-2">
+                      <FormField
+                        control={form.control}
+                        name={`lines.${idx}.notes`}
+                        render={({ field: f }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Input
+                                {...f}
+                                type="text"
+                                placeholder="Optional"
+                                className="text-xs"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </SheetBody>
       <SheetFooter className="shrink-0 border-t border-border bg-muted/30 px-6 py-4">
         <div className="grid w-full grid-cols-2 gap-2">
           <Button variant="outline" onClick={onClose} disabled={isPending}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={isPending}>
-            {isPending ? "Receiving…" : "Confirm Receipt"}
-          </Button>
+          <LoadingButton
+            onClick={form.handleSubmit(handleFormSubmit)}
+            isPending={isPending}
+            loadingText="Receiving…"
+          >
+            Confirm Receipt
+          </LoadingButton>
         </div>
       </SheetFooter>
-    </>
+    </Form>
   );
 }
 

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import type { AnimatedNavIconComponent } from "@/components/layout/sidebar/sidebar-animated-nav";
 import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface ActionCardProps {
   title: string;
@@ -46,7 +47,7 @@ export function ActionCard({
       <div className="min-w-0 flex-1">
         <p className="text-xs font-medium text-muted-foreground">{title}</p>
         <p className="text-lg font-semibold tabular-nums text-foreground leading-tight">{value}</p>
-        <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{description}</p>
+        <TruncatedText text={description} className="text-[10px] text-muted-foreground mt-0.5" />
       </div>
     </Link>
   );

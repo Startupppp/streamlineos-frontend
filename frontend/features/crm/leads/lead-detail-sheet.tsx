@@ -31,6 +31,7 @@ import { CrmOptionBadge, getCrmTokenClasses } from "@/features/crm/shared/metada
 import { toast } from "sonner";
 import type { LeadStatus } from "./leads-types";
 import { ActivityForm } from "./activity-form";
+import type { ActivityFormValues } from "./activity-form";
 import { AIScoreButton } from "./ai-score-button";
 import { AIEmailDialog } from "./ai-email-dialog";
 import { AINextActionButton } from "./ai-next-action-button";
@@ -107,28 +108,23 @@ export function LeadDetailSheet({
   }, [leadId, onClose, router]);
 
   const handleLogActivity = useCallback(
-    async (formData: FormData) => {
+    async (values: ActivityFormValues) => {
       if (!leadId) return;
       try {
-        const activityType = formData.get("activityType");
         const validTypes = activityTypeOptions.map((o) => o.key);
-        if (typeof activityType !== "string" || !validTypes.includes(activityType)) {
+        if (!validTypes.includes(values.activityType)) {
           toast.error("Invalid activity type");
           return;
         }
         await logActivity.mutateAsync({
           leadId,
-          type: activityType,
+          type: values.activityType,
           date: new Date().toISOString(),
-          duration: formData.get("duration")
-            ? Number(formData.get("duration"))
-            : undefined,
-          subject: (formData.get("subject") as string) || undefined,
-          notes: (formData.get("activityNotes") as string) || undefined,
-          outcome: (formData.get("outcome") as string) || undefined,
-          location: (formData.get("location") as string) || undefined,
-          messageSummary:
-            (formData.get("messageSummary") as string) || undefined,
+          duration: values.duration,
+          subject: values.subject,
+          notes: values.activityNotes,
+          outcome: values.outcome,
+          location: values.location,
         });
         toast.success("Activity logged");
       } catch {

@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { TokenCreatedDialog } from "./token-created-dialog";
 import { CreateOrgTokenSheet } from "./create-org-token-sheet";
@@ -89,9 +90,7 @@ export function OrgTokensTab({ showCreate, onShowCreateChange }: OrgTokensTabPro
         <div className="flex flex-col">
           <span className="font-medium">{t.name}</span>
           {t.description && (
-            <span className="text-[10px] text-muted-foreground truncate max-w-[180px]">
-              {t.description}
-            </span>
+            <TruncatedText text={t.description} className="text-[10px] text-muted-foreground max-w-[180px]" />
           )}
         </div>
       ),

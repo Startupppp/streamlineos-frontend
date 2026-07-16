@@ -10,6 +10,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardAction } from "@/componen
 import { Skeleton } from "@/components/ui/skeleton";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState } from "@/components/shared";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { useInventoryInsights, useGenerateInsights, useUpdateInsight } from "@/hooks/api/inventory/ai";
 import type { AiInsight } from "@/hooks/api/inventory/reports";
 
@@ -64,7 +65,7 @@ const InsightRow = memo(function InsightRow({
       </Badge>
       <div className="flex-1 min-w-0">
         <p className="text-[11px] font-semibold text-foreground">{insight.title}</p>
-        <p className="text-[11px] text-muted-foreground truncate">{insight.body}</p>
+        <TruncatedText text={insight.body} className="text-[11px] text-muted-foreground" lines={2} />
       </div>
       <div className="flex items-center gap-1 shrink-0">
         <AnimatedIconButton

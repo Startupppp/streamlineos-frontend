@@ -1,12 +1,15 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { toast } from "sonner";
 import { Info } from "lucide-react";
 import { UserPlusIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 
-import { Label } from "@/components/ui/label";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 
@@ -14,6 +17,12 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useInitiateOnboarding } from "@/hooks/api/hr/onboarding";
 import { useHrEmployees } from "@/hooks/api/hr";
 import type { Employee, PaginatedEmployees } from "@/types/hr";
+
+const schema = z.object({
+  userId: z.string().min(1, "Please select an employee"),
+});
+
+type FormValues = z.infer<typeof schema>;
 
 function StartOnboardingLabel() {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -31,7 +40,7 @@ interface OnboardingInitiateSheetProps {
 }
 
 export function OnboardingInitiateSheet({ open, onOpenChange }: OnboardingInitiateSheetProps) {
-  const [userId, setUserId] = useState("");
+  const form = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: { userId: "" } });
   const initiate = useInitiateOnboarding();
   const { data: employeesRaw } = useHrEmployees({ limit: 500 });
 

@@ -18,6 +18,7 @@ import { formatMoney } from "@/features/payroll/shared/payroll-format";
 import { useEmployeeProfiles } from "@/hooks/api/payroll/employees";
 import { useCan } from "@/hooks/api/access";
 import type { EmployeeSalaryProfile, SalaryProfileStatus } from "@/types/payroll/runs";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { useState } from "react";
 
 const STATUS_CONFIG: Record<SalaryProfileStatus, { className: string; label: string }> = {
@@ -83,8 +84,8 @@ export function EmployeesListPage() {
       header: "Employee",
       cell: (row) => (
         <div className="flex flex-col gap-0.5 min-w-0">
-          <span className="text-[11px] font-medium truncate">{row.userName}</span>
-          <span className="text-[10px] text-muted-foreground truncate">{row.userEmail}</span>
+          <TruncatedText text={row.userName} className="text-[11px] font-medium" />
+          <TruncatedText text={row.userEmail} className="text-[10px] text-muted-foreground" />
         </div>
       ),
     },

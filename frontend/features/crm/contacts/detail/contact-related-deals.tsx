@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useDealDetail } from "@/hooks/api/crm/deals";
 import { formatCurrency } from "@/lib/format-utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import type { Contact } from "@/types/crm";
 
@@ -52,9 +53,9 @@ function DealRow({ dealId }: { dealId: number }) {
           </div>
           <Link
             href={`/crm/deals/${deal.id}`}
-            className="text-xs font-medium text-primary hover:underline truncate max-w-[180px]"
+            className="text-xs font-medium text-primary hover:underline max-w-[180px]"
           >
-            {deal.name}
+            <TruncatedText text={deal.name} />
           </Link>
         </div>
       </td>

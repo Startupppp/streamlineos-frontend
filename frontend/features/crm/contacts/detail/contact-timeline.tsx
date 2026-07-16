@@ -12,6 +12,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyActivityIllustration } from "@/components/illustrations";
 import { TaskTypeIcon } from "@/features/crm/tasks/task-type-icon";
 import { useTasks } from "@/hooks/api/tasks";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 
 const STATUS_CONFIG = {
@@ -101,9 +102,7 @@ export function ContactTimeline({ contactId, onLogActivity }: ContactTimelinePro
                     </span>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <p className="text-xs font-medium text-foreground truncate">
-                          {task.title}
-                        </p>
+                        <TruncatedText text={task.title} className="text-xs font-medium text-foreground" />
                         {task.notes && (
                           <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">
                             {task.notes}
