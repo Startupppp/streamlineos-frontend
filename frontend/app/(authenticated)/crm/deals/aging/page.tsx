@@ -18,6 +18,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared/error-state";
 import { useDealAging } from "@/hooks/api/crm";
 import { formatINR } from "@/lib/format-utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyDealsIllustration } from "@/components/illustrations";
 
 type AgingDealRow = NonNullable<ReturnType<typeof useDealAging>["data"]>["deals"][number];
@@ -67,9 +68,9 @@ const COLUMNS: DataTableColumn<AgingDealRow>[] = [
     cell: (r) => (
       <Link
         href={`/crm/deals/${r.id}`}
-        className="text-primary hover:text-primary/80 hover:underline transition-colors truncate block max-w-[200px]"
+        className="text-primary hover:text-primary/80 hover:underline transition-colors block max-w-[200px]"
       >
-        {r.name}
+        <TruncatedText text={r.name} />
       </Link>
     ),
   },

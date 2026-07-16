@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const ACTION_LABELS: Record<string, string> = {
   CALL_MADE: "Call Made",
@@ -92,15 +93,13 @@ function ActivityEntry({ entry }: { entry: RecruiterActivityEntry }) {
       </span>
       <div className="flex-1 min-w-0">
         {(entry.candidateFirstName || entry.candidateLastName) && (
-          <p className="font-medium truncate">
-            {[entry.candidateFirstName, entry.candidateLastName].filter(Boolean).join(" ")}
-          </p>
+          <TruncatedText text={[entry.candidateFirstName, entry.candidateLastName].filter(Boolean).join(" ")} className="font-medium" />
         )}
         {entry.jobTitle && (
-          <p className="text-muted-foreground text-xs truncate">{entry.jobTitle}</p>
+          <TruncatedText text={entry.jobTitle} className="text-muted-foreground text-xs" />
         )}
         {entry.notes && (
-          <p className="text-muted-foreground text-xs truncate">{entry.notes}</p>
+          <TruncatedText text={entry.notes} className="text-muted-foreground text-xs" />
         )}
       </div>
       <span className="text-xs text-muted-foreground shrink-0">
@@ -126,8 +125,8 @@ function RecruiterCard({
             <AvatarFallback className="text-xs">{initials(recruiter.name, recruiter.email)}</AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1">
-            <CardTitle className="text-sm truncate">{recruiter.name ?? recruiter.email}</CardTitle>
-            <p className="text-xs text-muted-foreground truncate">{recruiter.email}</p>
+            <CardTitle className="text-sm"><TruncatedText text={recruiter.name ?? recruiter.email} /></CardTitle>
+            <TruncatedText text={recruiter.email} className="text-xs text-muted-foreground" />
           </div>
           <Badge variant="secondary" className="text-[10px] shrink-0">{recruiter.role}</Badge>
         </div>

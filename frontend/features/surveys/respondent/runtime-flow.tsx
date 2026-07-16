@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { getApiError } from "@/lib/api-client";
 import type { PublicSurveySection, PublicSurveyLogicRule } from "@/hooks/api/surveys/public-runtime";
 import type { AnswerValue } from "./answer-value";
@@ -164,9 +165,7 @@ export function RuntimeFlow({
     <div className="space-y-6">
       <div className="space-y-3 border-b border-border/60 pb-5">
         <div className="flex items-center justify-between gap-3">
-          <p className="truncate text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            {surveyTitle}
-          </p>
+          <TruncatedText text={surveyTitle} className="text-xs font-medium uppercase tracking-wide text-muted-foreground" />
           <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
             {currentIndex + 1} / {orderedQuestions.length}
           </span>

@@ -39,6 +39,7 @@ import { format } from "date-fns";
 import { Pencil, History } from "lucide-react";
 import { PlayIcon, TrashIcon, PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const HR_TRIGGER_EVENTS = [
   "employee.created", "employee.onboarded", "employee.probation_due", "employee.confirmed",
@@ -77,12 +78,12 @@ function RuleCard({
         <div className="flex items-start gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-              <p className="font-medium text-sm truncate">{rule.name}</p>
+              <TruncatedText text={rule.name} className="font-medium text-sm" />
               <Badge variant="secondary" className="text-[10px]">{rule.triggerEvent}</Badge>
               {!rule.isEnabled && <Badge variant="outline" className="text-[10px]">Disabled</Badge>}
             </div>
             {rule.description && (
-              <p className="text-xs text-muted-foreground mt-0.5 truncate">{rule.description}</p>
+              <TruncatedText text={rule.description} className="text-xs text-muted-foreground mt-0.5" />
             )}
             <div className="flex items-center gap-4 mt-2 text-[11px] text-muted-foreground">
               <span>{rule.conditions.length} condition{rule.conditions.length !== 1 ? "s" : ""}</span>

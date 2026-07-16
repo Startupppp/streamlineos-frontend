@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { KanbanBoard } from "@/features/projects/views/kanban-board";
 import { PmPanel } from "@/features/projects/shared/pm-chrome";
-import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
-import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { ProjectChip } from "./project-chip";
 import { toKanbanTicket, type ProjectGroup } from "./all-work-ticket-utils";
 import { getTicketDetailHref } from "@/features/projects/shared/format-ticket-key";
@@ -38,12 +37,7 @@ function BoardProjectSection({ group }: BoardProjectSectionProps) {
           projectKey={group.projectKey}
           projectName={group.projectName}
         />
-        <span
-          className={cn(TEXT_ONE_LINE, "text-[13px] font-semibold text-foreground")}
-          title={group.projectName}
-        >
-          {group.projectName}
-        </span>
+        <TruncatedText text={group.projectName} className="text-[13px] font-semibold text-foreground" />
         <Badge
           variant="secondary"
           className="h-5 shrink-0 rounded-md bg-primary/10 px-1.5 text-[10px] font-medium tabular-nums text-primary"

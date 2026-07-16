@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight, Loader2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Progress } from "@/components/ui/progress";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCompleteSignSession, useSignPublicDocumentPreview } from "@/hooks/api/sign/public";
 import type { SignPublicSession } from "@/types/sign";
@@ -64,7 +65,7 @@ export function SigningWorkspace({
     <div className="min-h-screen flex flex-col bg-muted/30">
       <div className="sticky top-0 z-10 bg-background border-b border-border p-3 space-y-2">
         <div className="flex items-center justify-between text-sm">
-          <p className="font-medium truncate">{session.envelope?.title}</p>
+          <TruncatedText text={session.envelope?.title ?? ""} className="font-medium" />
           <p className="text-xs text-muted-foreground shrink-0">
             {completedRequiredCount}/{requiredFields.length} required fields
           </p>

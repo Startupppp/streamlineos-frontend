@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { DownloadIcon } from "@animateicons/react/lucide";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -117,8 +118,8 @@ export function DeclarationsTab() {
       header: "Employee",
       cell: (row) => (
         <div className="flex flex-col gap-0.5 min-w-0">
-          <span className="text-[11px] font-medium truncate">{row.userName}</span>
-          <span className="text-[10px] text-muted-foreground truncate">{row.userEmail}</span>
+          <TruncatedText text={row.userName} className="text-[11px] font-medium" />
+          <TruncatedText text={row.userEmail} className="text-[10px] text-muted-foreground" />
         </div>
       ),
     },

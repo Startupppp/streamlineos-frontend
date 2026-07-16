@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useKbPagesTree } from "@/hooks/api/kb";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { pageHref } from "@/features/knowledge-base/lib/knowledge-routes";
 import { KbUsersIcon } from "@/features/knowledge-base/lib/kb-icons";
 import type { KbPageTreeNode } from "@/hooks/api/kb/pages";

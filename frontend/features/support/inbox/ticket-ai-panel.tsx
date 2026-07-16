@@ -13,6 +13,7 @@ import {
   GitBranch,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { ThumbsUpIcon, ThumbsDownIcon } from "@animateicons/react/lucide";
 import { ThumbsUp, ThumbsDown } from "lucide-react";
@@ -32,6 +33,7 @@ import {
   type AiSuggestion,
 } from "@/hooks/api/support/ai";
 import { useSupportMacros, type SupportMacro } from "@/hooks/api/support/macros";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 interface TicketAiPanelProps {
   ticketId: number;
@@ -163,7 +165,7 @@ function SuggestionBody({ suggestion, macros }: SuggestionBodyProps) {
         <ul className="space-y-1">
           {suggestion.payload.articles.map((article) => (
             <li key={article.articleId} className="flex items-center justify-between gap-2 text-[12px]">
-              <span className="truncate">{article.title}</span>
+              <TruncatedText text={article.title} />
               <span className="text-[10px] text-muted-foreground shrink-0">
                 {Math.round(article.similarity * 100)}%
               </span>
@@ -242,7 +244,7 @@ export function TicketAiPanel({ ticketId, onInsertReply }: TicketAiPanelProps) {
       onSuccess: (result) => {
         if (!result) toast.info("No reply suggestion available");
       },
-      onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to suggest a reply"),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [suggestReply]);
 
@@ -251,7 +253,7 @@ export function TicketAiPanel({ ticketId, onInsertReply }: TicketAiPanelProps) {
       onSuccess: (result) => {
         if (!result) toast.info("No macro suggestion available");
       },
-      onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to suggest a macro"),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [suggestMacro]);
 
@@ -260,7 +262,7 @@ export function TicketAiPanel({ ticketId, onInsertReply }: TicketAiPanelProps) {
       onSuccess: (result) => {
         if (!result) toast.info("No handoff summary available");
       },
-      onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to generate handoff summary"),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [handoffSummary]);
 
@@ -269,7 +271,7 @@ export function TicketAiPanel({ ticketId, onInsertReply }: TicketAiPanelProps) {
       onSuccess: (result) => {
         if (!result) toast.info("No related tickets found");
       },
-      onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to find root cause"),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [rootCauseCluster]);
 
@@ -310,7 +312,7 @@ export function TicketAiPanel({ ticketId, onInsertReply }: TicketAiPanelProps) {
                 assertNever(suggestion);
             }
           },
-          onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to accept suggestion"),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -323,7 +325,7 @@ export function TicketAiPanel({ ticketId, onInsertReply }: TicketAiPanelProps) {
         { suggestionId, status: "rejected", feedback: "not_helpful" },
         {
           onSuccess: () => toast.success("Suggestion dismissed"),
-          onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to dismiss suggestion"),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },

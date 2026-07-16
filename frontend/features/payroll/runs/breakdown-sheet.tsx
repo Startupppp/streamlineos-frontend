@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { ChevronDown, ChevronRight } from "lucide-react";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   Sheet,
   SheetBody,

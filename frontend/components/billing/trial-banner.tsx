@@ -5,6 +5,7 @@ import Link from "next/link";
 import { X, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSubscription } from "@/hooks/api/subscription";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 function getDaysRemaining(trialEndsAt: string): number {
   return Math.max(

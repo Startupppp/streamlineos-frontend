@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Plus, GripVertical, Eye, CheckCircle2, XCircle } from "lucide-react";
 import { UserPenIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
@@ -77,7 +78,7 @@ function RuleRow({ rule, dragHandleProps, onToggle, onEdit, onDeleteRequest }: R
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm font-medium truncate">{rule.name}</span>
+              <TruncatedText text={rule.name} className="text-sm font-medium" />
               <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-primary/10 text-foreground border-primary/30">
                 {ASSIGNMENT_TYPE_LABELS[rule.assignmentType] ?? rule.assignmentType}
               </Badge>

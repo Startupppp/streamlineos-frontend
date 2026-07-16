@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/ui/empty-state";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -199,7 +200,7 @@ export function ExceptionsTab({ runId, isLocked }: ExceptionsTabProps) {
                     <span className="font-mono text-[10px] text-muted-foreground shrink-0">
                       {ex.code}
                     </span>
-                    <span className="flex-1 text-foreground min-w-0 truncate">{ex.message}</span>
+                    <TruncatedText text={ex.message ?? ""} className="flex-1 text-foreground min-w-0" />
                     <span
                       className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border shrink-0 ${stCfg.className}`}
                     >

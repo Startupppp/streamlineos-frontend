@@ -37,6 +37,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {

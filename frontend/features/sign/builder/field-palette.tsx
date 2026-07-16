@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { FIELD_TYPE_META } from "./field-types";
 import { useBuilder } from "./builder-context";
 
@@ -26,7 +27,7 @@ export function FieldPalette({ hasRecipient }: { hasRecipient: boolean }) {
               )}
             >
               <Icon className="size-4" />
-              <span className="truncate">{meta.label}</span>
+              <TruncatedText text={meta.label} />
             </button>
           );
         })}

@@ -51,7 +51,7 @@ function buildTemplateColumns(
         <div>
           <p className="font-medium text-[13px] text-foreground">{t.name}</p>
           {t.description && (
-            <p className="text-[11px] text-muted-foreground truncate max-w-xs mt-0.5">{t.description}</p>
+            <TruncatedText text={t.description} className="text-[11px] text-muted-foreground max-w-xs mt-0.5" />
           )}
         </div>
       ),

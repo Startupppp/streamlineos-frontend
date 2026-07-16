@@ -421,7 +421,7 @@ function RichDocumentRow({ doc, onDelete, isDeletePending }: RichDocumentRowProp
           <FileText className="h-3.5 w-3.5 text-muted-foreground" />
         </div>
         <div className="min-w-0">
-          <p className="text-sm font-medium text-foreground truncate">{doc.title}</p>
+          <TruncatedText text={doc.title} className="text-sm font-medium text-foreground" />
           <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
             {doc.templateType && (
               <span className="inline-flex items-center text-[10px] font-semibold px-1.5 py-0 rounded-full border bg-muted text-muted-foreground border-border">

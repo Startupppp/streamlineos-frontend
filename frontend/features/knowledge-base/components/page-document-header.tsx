@@ -22,6 +22,7 @@ import {
   KbUnlockIcon,
 } from "@/features/knowledge-base/lib/kb-icons";
 import { Badge } from "@/components/ui/badge";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import PageMetadataSheet from "./page-metadata-sheet";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";

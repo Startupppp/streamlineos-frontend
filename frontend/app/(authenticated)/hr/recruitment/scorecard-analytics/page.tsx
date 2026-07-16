@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import dynamic from "next/dynamic";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const ScorecardCharts = dynamic(
   () => import("@/features/hr/recruitment/components/scorecard-charts").then((m) => ({ default: m.ScorecardCharts })),
@@ -155,7 +156,7 @@ export default function ScorecardAnalyticsPage() {
                       <AvatarFallback className="text-xs">{initials(s.name, s.email)}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{s.name ?? s.email}</p>
+                      <TruncatedText text={s.name ?? s.email} className="text-sm font-medium" />
                       <p className="text-xs text-muted-foreground">{s.totalScorecards} scorecards</p>
                     </div>
                     <div className="text-right shrink-0 space-y-0.5">

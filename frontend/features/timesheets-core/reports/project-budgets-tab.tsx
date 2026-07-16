@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { ErrorState } from "@/components/shared/error-state";
 import {
   AlertDialog,
@@ -59,9 +60,7 @@ function BudgetCard({ budget, canManage, onEdit, onDelete }: BudgetCardProps) {
       <CardContent className="p-4 space-y-3">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <p className="text-sm font-medium text-foreground truncate">
-              {budget.projectName ?? "Unassigned"}
-            </p>
+            <TruncatedText text={budget.projectName ?? "Unassigned"} className="text-sm font-medium text-foreground" />
             <p className="text-[11px] text-muted-foreground">
               {budget.budgetType === "HOURS" ? "Hours budget" : "Amount budget"}
             </p>

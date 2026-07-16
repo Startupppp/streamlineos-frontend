@@ -17,6 +17,7 @@ import {
   PM_FILL_PANEL,
 } from "@/features/projects/shared/pm-chrome";
 import { TEXT_BODY, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -384,9 +385,7 @@ export function ProjectFeedbucketPage({ projectId }: ProjectFeedbucketPageProps)
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0 space-y-0.5">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className={cn("text-sm font-medium", TEXT_ONE_LINE)}>
-                        {projectWidget.name}
-                      </p>
+                      <TruncatedText text={projectWidget.name} className="text-sm font-medium" />
                       {projectWidget.aiAssistEnabled ? (
                         <Badge variant="secondary" className="shrink-0 text-xs">
                           AI assist

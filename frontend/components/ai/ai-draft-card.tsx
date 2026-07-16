@@ -7,6 +7,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { AiGeneratedLabel } from "./ai-generated-label";
 import { AiConfidenceBadge } from "./ai-confidence-badge";
 import { AiCitationChips, type Citation } from "./ai-citation-chips";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface AiDraftCardProps {
   children: React.ReactNode;
@@ -48,9 +49,7 @@ export function AiDraftCard({
       <div className="flex flex-wrap items-center gap-2 border-b border-border px-3 py-2">
         <AiGeneratedLabel timestamp={timestamp} />
         {title && (
-          <span className="flex-1 truncate text-[12px] font-medium text-foreground">
-            {title}
-          </span>
+          <TruncatedText text={title} className="flex-1 text-[12px] font-medium text-foreground" />
         )}
         {confidence !== undefined && (
           <AiConfidenceBadge confidence={confidence} />

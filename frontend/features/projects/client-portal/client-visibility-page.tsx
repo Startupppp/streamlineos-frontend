@@ -57,9 +57,7 @@ function TicketRow({
       <span className="w-16 shrink-0 font-mono text-[10px] text-muted-foreground">
         #{ticket.ticketNumber}
       </span>
-      <span className={cn(TEXT_ONE_LINE, "flex-1 text-[11px]")} title={ticket.title}>
-        {ticket.title}
-      </span>
+      <TruncatedText text={ticket.title} className="flex-1 text-[11px]" />
       <Badge variant="outline" className="w-16 shrink-0 justify-center text-[10px] capitalize">
         {ticket.type}
       </Badge>
@@ -91,9 +89,7 @@ function MilestoneRow({
 
   return (
     <div className={PM_ROW}>
-      <span className={cn(TEXT_ONE_LINE, "flex-1 text-[11px]")} title={milestone.name}>
-        {milestone.name}
-      </span>
+      <TruncatedText text={milestone.name} className="flex-1 text-[11px]" />
       <Switch
         checked={milestone.clientVisible}
         onCheckedChange={handleChange}

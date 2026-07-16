@@ -6,6 +6,7 @@ import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Switch } from "@/components/ui/switch";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useDeleteWatermarkPolicy, useSignWatermarkPolicies, useUpdateWatermarkPolicy } from "@/hooks/api/sign/settings";
 import { WatermarkPolicyDialog } from "./watermark-policy-dialog";
@@ -48,10 +49,11 @@ export function WatermarkPoliciesPanel() {
           policies.map((policy) => (
             <div key={policy.id} className="flex items-center justify-between gap-3 rounded-lg border border-border p-3">
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium truncate">{policy.text ?? "Untitled watermark"}</p>
-                <p className="text-xs text-muted-foreground truncate">
-                  Applies to: {policy.appliesStates.join(", ") || "none"} {policy.showOnFinalPdf ? "· on final PDF" : "· preview only"}
-                </p>
+                <TruncatedText text={policy.text ?? "Untitled watermark"} className="text-sm font-medium" />
+                <TruncatedText
+                  text={`Applies to: ${policy.appliesStates.join(", ") || "none"} ${policy.showOnFinalPdf ? "· on final PDF" : "· preview only"}`}
+                  className="text-xs text-muted-foreground"
+                />
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <Switch checked={policy.enabled} onCheckedChange={(v) => handleToggle(policy.id, v)} />

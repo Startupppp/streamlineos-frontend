@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "./chat-helpers";
 import type { ChannelMember } from "@/types/chat";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const RemoveMemberButton = React.forwardRef<
   HTMLButtonElement,
@@ -71,7 +72,7 @@ export function ChannelMemberRow({
           {member.user?.name}
           {isYou && <span className="text-muted-foreground font-normal"> (you)</span>}
         </p>
-        <p className="text-[11px] text-muted-foreground truncate">{member.user?.email}</p>
+        <TruncatedText text={member.user?.email ?? ""} className="text-[11px] text-muted-foreground" />
       </div>
       {member.role === "ADMIN" && (
         <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 border-primary/30 text-primary">

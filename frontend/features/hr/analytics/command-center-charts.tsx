@@ -112,7 +112,7 @@ export function MoodTrendChart({ data }: MoodTrendChartProps) {
 }
 
 interface PerformanceDistChartProps {
-  data: Array<{ rating: string; count: number }>;
+  data: Array<{ rating: number | string; count: number }>;
 }
 
 export function PerformanceDistChart({ data }: PerformanceDistChartProps) {

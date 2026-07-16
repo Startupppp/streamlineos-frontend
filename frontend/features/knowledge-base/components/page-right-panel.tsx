@@ -8,6 +8,7 @@ import {
 } from "@/features/knowledge-base/lib/kb-icons";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { useKbPageBacklinks } from "@/hooks/api/kb";
 import { useKbPageRecordLinks } from "@/hooks/api/kb/record-links";
 import type { KbPageDetail } from "@/hooks/api/kb/pages";

@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { SearchInput } from "@/components/ui/search-input";
 import { Badge } from "@/components/ui/badge";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Dialog,
@@ -302,7 +303,7 @@ export function TicketReplyComposer({ ticketId }: TicketReplyComposerProps) {
                     onClick={() => handleSelectMacro(macro)}
                     className="flex w-full items-center gap-2 rounded p-1.5 text-left text-xs hover:bg-muted transition-colors"
                   >
-                    <span className="truncate flex-1">{macro.title}</span>
+                    <TruncatedText text={macro.title} className="flex-1" />
                     {macro.category && (
                       <Badge variant="secondary" className="text-[9px] shrink-0">
                         {macro.category}

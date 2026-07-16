@@ -1,5 +1,6 @@
 import { memo } from "react";
 import { Button } from "@/components/ui/button";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { formatMoney } from "@/features/payroll/shared";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import type { LoanAdminItem } from "@/hooks/api/payroll/loans-admin";
@@ -119,8 +120,8 @@ export function buildLoanColumns({
       header: "Employee",
       cell: (row) => (
         <div className="flex flex-col gap-0.5 min-w-0">
-          <span className="text-[11px] font-medium truncate">{row.user.name ?? "—"}</span>
-          <span className="text-[10px] text-muted-foreground truncate">{row.user.email}</span>
+          <TruncatedText text={row.user.name ?? "—"} className="text-[11px] font-medium" />
+          <TruncatedText text={row.user.email} className="text-[10px] text-muted-foreground" />
         </div>
       ),
     },

@@ -52,6 +52,10 @@ function BillingMetric({ label, value, icon, tone = "default" }: BillingMetricPr
   return <StatCard label={label} value={value} icon={icon} tone={tone} />;
 }
 
+function fmt(paise: number) {
+  return `₹${(paise / 100).toLocaleString("en-IN")}`;
+}
+
 function createPeriodHandler(p: Period, setter: (period: Period) => void) {
   return function handlePeriodSelect() {
     setter(p);

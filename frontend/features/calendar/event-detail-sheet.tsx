@@ -45,6 +45,7 @@ import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { resolveImageUrl } from "@/lib/utils";
 import Link from "next/link";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const EVENT_COLORS: Record<string, string> = {
   blue: "#3b82f6",

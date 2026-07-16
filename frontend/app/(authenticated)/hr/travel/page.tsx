@@ -19,6 +19,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useMyTravelRequests, useCreateTravelRequest, type TravelRequest } from "@/hooks/api/hr";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { format } from "date-fns";

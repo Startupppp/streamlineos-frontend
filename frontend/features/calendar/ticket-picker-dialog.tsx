@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { useTicketSearch } from "@/hooks/api/projects";
 import type { TicketSearchResult } from "@/hooks/api/projects";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface TicketPickerDialogProps {
   open: boolean;
@@ -34,9 +35,7 @@ const TicketRow = memo(function TicketRow({ ticket, onSelect }: TicketRowProps) 
       <span className="font-mono text-[11px] text-muted-foreground shrink-0 w-16 truncate">
         {ticket.projectKey}-{ticket.ticketNumber}
       </span>
-      <span className="text-[13px] flex-1 min-w-0 truncate text-foreground">
-        {ticket.title}
-      </span>
+      <TruncatedText text={ticket.title} className="text-[13px] flex-1 min-w-0 text-foreground" />
     </button>
   );
 });

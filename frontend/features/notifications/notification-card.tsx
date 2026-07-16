@@ -17,6 +17,7 @@ import {
   type NotificationPriority,
 } from "./notification-types";
 import { formatRelativeTime } from "./format-relative-time";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 export interface NotificationCardProps {
   id: number;
@@ -184,14 +185,13 @@ export function NotificationCard({
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 min-w-0">
-          <span
+          <TruncatedText
+            text={title}
             className={cn(
-              "text-sm leading-snug truncate",
+              "text-sm leading-snug",
               isUnread && !isArchived ? "font-semibold text-foreground" : "font-medium text-muted-foreground",
             )}
-          >
-            {title}
-          </span>
+          />
           {pinned && <Pin className="h-3 w-3 text-amber-500 shrink-0" />}
           <Badge
             variant="outline"
@@ -207,9 +207,11 @@ export function NotificationCard({
         </div>
 
         {message && (
-          <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
-            {message}
-          </p>
+          <TruncatedText
+            text={message}
+            lines={1}
+            className="text-xs text-muted-foreground mt-0.5"
+          />
         )}
 
         {isApproval && (onApprove || onReject) && (

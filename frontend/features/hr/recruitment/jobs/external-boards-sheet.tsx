@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Loader2, Plus, ExternalLink, Trash2 } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -107,10 +108,10 @@ export function ExternalBoardsSheet({ jobId, onClose }: ExternalBoardsSheetProps
             onChange={(e) => setUrl(e.target.value)}
             className="text-sm"
           />
-          <Button size="sm" className="w-full h-8 gap-1.5" onClick={handleAdd} disabled={createPosting.isPending}>
+          <LoadingButton size="sm" className="w-full h-8 gap-1.5" onClick={handleAdd} isPending={createPosting.isPending} loadingText="Adding…">
             <Plus className="h-3.5 w-3.5" />
-            {createPosting.isPending ? "Adding…" : "Track posting"}
-          </Button>
+            Track posting
+          </LoadingButton>
         </div>
 
         <SheetBody className="px-6 py-4 space-y-3">

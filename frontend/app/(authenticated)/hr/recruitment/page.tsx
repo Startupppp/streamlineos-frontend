@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { healthDotColors } from "@/lib/theme-constants";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const CREATE_ACTIONS = [
   { label: "New requisition", href: "/hr/recruitment/requisitions" },
@@ -223,9 +224,7 @@ export default function RecruitmentCommandCenterPage() {
                         {c.lastName?.[0]}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">
-                          {c.firstName} {c.lastName}
-                        </p>
+                        <TruncatedText text={`${c.firstName ?? ""} ${c.lastName ?? ""}`.trim()} className="text-sm font-medium text-foreground" />
                         <p className="text-[11px] text-muted-foreground mt-0.5">{c.source ?? "Unknown source"}</p>
                       </div>
                       <ChevronRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -248,9 +247,7 @@ export default function RecruitmentCommandCenterPage() {
                         {interview.candidate?.lastName?.[0]}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">
-                          {interview.candidate?.firstName} {interview.candidate?.lastName}
-                        </p>
+                        <TruncatedText text={`${interview.candidate?.firstName ?? ""} ${interview.candidate?.lastName ?? ""}`.trim()} className="text-sm font-medium text-foreground" />
                         <p className="text-[11px] text-muted-foreground mt-0.5">{interview.type}</p>
                       </div>
                     </div>
@@ -275,7 +272,7 @@ export default function RecruitmentCommandCenterPage() {
                         <Briefcase className="h-4 w-4 text-amber-600" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">{job.title}</p>
+                        <TruncatedText text={job.title} className="text-sm font-medium text-foreground" />
                         <p className="text-[11px] text-muted-foreground mt-0.5">{job.location ?? "Remote"}</p>
                       </div>
                       <ChevronRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />

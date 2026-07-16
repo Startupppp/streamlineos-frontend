@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import type { CommandCenterData, PayrollExceptionSeverity, VarianceSummary } from "@/types/payroll/runs";
 
 const SEVERITY_COLORS: Record<PayrollExceptionSeverity, string> = {
@@ -118,7 +119,7 @@ export function CommandCenterPanels({ data, runId }: CommandCenterPanelsProps) {
                   >
                     {ex.severity}
                   </span>
-                  <span className="text-[11px] text-foreground truncate flex-1">{ex.message}</span>
+                  <TruncatedText text={ex.message ?? ""} className="text-[11px] text-foreground flex-1" />
                 </Link>
               );
             })}
@@ -219,7 +220,7 @@ export function CommandCenterPanels({ data, runId }: CommandCenterPanelsProps) {
                   >
                     {event.date}
                   </span>
-                  <span className="text-foreground truncate flex-1">{event.label}</span>
+                  <TruncatedText text={event.label} className="text-foreground flex-1" />
                 </div>
               );
             })}

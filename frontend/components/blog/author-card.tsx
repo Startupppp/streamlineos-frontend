@@ -2,6 +2,7 @@ import Image from "next/image";
 import { resolveImageUrl } from "@/lib/utils";
 import { formatBlogDate } from "@/lib/blog-utils";
 import type { BlogAuthor } from "@/types/blog";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface AuthorCardProps {
   author: Pick<BlogAuthor, "name" | "avatar" | "role"> | null;
@@ -40,9 +41,7 @@ export function AuthorCard({
         </span>
       )}
       <div className="flex min-w-0 flex-col leading-tight">
-        <span className="truncate font-medium text-foreground">
-          {author?.name ?? "Unknown"}
-        </span>
+        <TruncatedText text={author?.name ?? "Unknown"} className="font-medium text-foreground" />
         {(date || readingTime) && (
           <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
             {date && <time dateTime={new Date(date).toISOString()}>{formatBlogDate(date)}</time>}

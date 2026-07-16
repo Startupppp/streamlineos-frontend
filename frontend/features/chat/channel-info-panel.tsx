@@ -44,6 +44,7 @@ import { getInitials } from "./chat-helpers";
 import { AddChannelMembersDialog } from "./add-channel-members-dialog";
 import { ChannelAvatar } from "./channel-avatar";
 import { ChannelMemberRow } from "./channel-member-row";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const CloseButton = React.forwardRef<
   HTMLButtonElement,
@@ -480,9 +481,7 @@ export function ChannelInfoPanel({
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[11px] font-semibold truncate">
-                        {pin.message.sender?.name}
-                      </p>
+                      <TruncatedText text={pin.message.sender?.name ?? ""} className="text-[11px] font-semibold" />
                       <p className="text-[12px] text-muted-foreground line-clamp-2 break-words">
                         {pin.message.content ??
                           (pin.message.attachments.length > 0

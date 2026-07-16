@@ -9,7 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, MessageCircle, Send } from "lucide-react";
+import { MessageCircle, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useChatSession, useSendChatMessage, useStartChatSession } from "@/hooks/api/support/chat-widget";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -173,18 +173,15 @@ export default function LiveChatWidgetPage() {
                   maxLength={4000}
                   className="resize-none min-h-[38px]"
                 />
-                <Button
+                <LoadingButton
                   type="button"
                   size="icon"
-                  disabled={!draft.trim() || sendMessage.isPending}
+                  disabled={!draft.trim()}
+                  isPending={sendMessage.isPending}
                   onClick={handleSend}
                 >
-                  {sendMessage.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Send className="h-4 w-4" />
-                  )}
-                </Button>
+                  <Send className="h-4 w-4" />
+                </LoadingButton>
               </div>
             </div>
           )}

@@ -20,6 +20,7 @@ import {
 import { listItem, listItemReduced, pmSnappy } from "@/features/projects/shared/pm-motion";
 import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 function ProjectCardSkeleton() {
   return (
@@ -98,15 +99,10 @@ export function PortalListPage() {
                         {project.key.substring(0, 2)}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p
-                          className={cn(
-                            TEXT_ONE_LINE,
-                            "text-sm font-semibold text-foreground transition-colors group-hover:text-primary",
-                          )}
-                          title={project.name}
-                        >
-                          {project.name}
-                        </p>
+                        <TruncatedText
+                          text={project.name}
+                          className="text-sm font-semibold text-foreground transition-colors group-hover:text-primary"
+                        />
                         <p className="font-mono text-[10px] text-muted-foreground">{project.key}</p>
                       </div>
                       <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />

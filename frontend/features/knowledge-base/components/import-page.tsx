@@ -4,6 +4,7 @@ import { useState, useRef, useCallback } from "react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { PageWrapper, PageSection } from "@/components/ui/page-wrapper";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

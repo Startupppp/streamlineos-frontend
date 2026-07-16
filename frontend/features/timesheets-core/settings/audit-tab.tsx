@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EmptyState } from "@/components/ui/empty-state";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { ErrorState } from "@/components/shared/error-state";
 import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { AuditDetailSheet } from "./audit-detail-sheet";
@@ -80,9 +81,7 @@ const COLUMNS: DataTableColumn<AuditEvent>[] = [
     key: "reason",
     header: "Reason",
     cell: (row) => (
-      <span className="text-xs text-muted-foreground truncate max-w-[180px] block">
-        {row.reason ?? "—"}
-      </span>
+      <TruncatedText text={row.reason ?? "—"} className="text-xs text-muted-foreground max-w-[180px]" />
     ),
   },
 ];

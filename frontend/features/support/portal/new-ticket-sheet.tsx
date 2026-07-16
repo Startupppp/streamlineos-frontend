@@ -26,6 +26,7 @@ import { Loader2, Paperclip, X, FileText, Image as ImageIcon } from "lucide-reac
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreatePortalTicket } from "@/hooks/api/support/portal";
 import { usePortalActiveCustomFields } from "@/hooks/api/support/custom-fields";
 import { PORTAL_CATEGORY_OPTIONS } from "./portal-ticket-constants";
@@ -129,7 +130,7 @@ export function NewTicketSheet({ open, onOpenChange }: NewTicketSheetProps) {
       }
       setPendingFiles((prev) => [...prev, ...uploaded]);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "File upload failed");
+      toast.error(getErrorMessage(err));
     } finally {
       setUploading(false);
       e.target.value = "";
@@ -170,7 +171,7 @@ export function NewTicketSheet({ open, onOpenChange }: NewTicketSheetProps) {
           toast.success("Ticket created");
           handleOpenChange(false);
         },
-        onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to create ticket"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   });

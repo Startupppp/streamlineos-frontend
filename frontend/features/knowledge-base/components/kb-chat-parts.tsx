@@ -5,6 +5,7 @@ import { MessageCircleIcon, BookOpenTextIcon } from "@animateicons/react/lucide"
 import { MarkdownContent } from "@/components/markdown/markdown-content";
 import { AnimatedLogo } from "@/features/landing/components/animated-logo";
 import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import type { KbAskCitation } from "@/types/kb";
 
 export interface ChatMessage {

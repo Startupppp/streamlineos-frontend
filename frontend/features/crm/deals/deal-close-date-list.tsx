@@ -84,7 +84,7 @@ function DealRow({ deal, delay, onNavigate, shouldReduceMotion }: DealRowProps) 
           {deal.assignedTo?.name && (
             <>
               <span className="text-[11px] text-muted-foreground">·</span>
-              <span className="text-[11px] text-muted-foreground truncate">{deal.assignedTo.name}</span>
+              <TruncatedText text={deal.assignedTo.name ?? "—"} className="text-[11px] text-muted-foreground" />
             </>
           )}
         </div>

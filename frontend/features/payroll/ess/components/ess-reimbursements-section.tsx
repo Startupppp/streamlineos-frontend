@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
 import { Receipt, Paperclip, Upload } from "lucide-react";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { PlusIcon, XIcon } from "@animateicons/react/lucide";
@@ -289,8 +290,8 @@ export function EssReimbursementsSection() {
                     <Receipt className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{r.category}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5 truncate">{r.description || formatDate(r.createdAt)}</p>
+                    <TruncatedText text={r.category} className="text-sm font-medium text-foreground" />
+                    <TruncatedText text={r.description || formatDate(r.createdAt)} className="text-xs text-muted-foreground mt-0.5" />
                   </div>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">

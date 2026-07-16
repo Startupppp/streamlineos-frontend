@@ -16,6 +16,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { resolveImageUrl } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 export function SettingsProfile() {
   const { data: session, update: updateSession } = useSession();

@@ -268,9 +268,7 @@ export default function LearningAnalyticsPage() {
                             transition={{ duration: 0.18, ease: "easeOut", delay: 0.4 + idx * 0.06 }}
                             className="flex items-center justify-between gap-3 min-w-0"
                           >
-                            <span className="text-[13px] text-foreground truncate min-w-0">
-                              {tc.title}
-                            </span>
+                            <TruncatedText text={tc.title} className="text-[13px] text-foreground min-w-0" />
                             <span className="shrink-0 inline-flex items-center justify-center h-5 min-w-[1.5rem] px-1.5 rounded-md bg-muted text-foreground text-[11px] font-semibold tabular-nums">
                               {tc.count}
                             </span>

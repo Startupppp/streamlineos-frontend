@@ -4,6 +4,7 @@ import { useCallback, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -117,10 +118,8 @@ export function TicketDetailHeader({ ticket, onBack }: TicketDetailHeaderProps) 
             <Star className={cn("h-3.5 w-3.5", isFollowing && "fill-amber-400 text-amber-400")} />
           </Button>
           <div className="min-w-0">
-            <h3 className="text-sm font-bold truncate">{toTitleCase(ticket.title)}</h3>
-            <p className="text-[11px] text-muted-foreground truncate">
-              #{ticket.id} {ticket.client?.name ? `- ${ticket.client.name}` : ""}
-            </p>
+            <TruncatedText text={toTitleCase(ticket.title)} className="text-sm font-bold" />
+            <TruncatedText text={`#${ticket.id}${ticket.client?.name ? ` - ${ticket.client.name}` : ""}`} className="text-[11px] text-muted-foreground" />
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap sm:shrink-0">

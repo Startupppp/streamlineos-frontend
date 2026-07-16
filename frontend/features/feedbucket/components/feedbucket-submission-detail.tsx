@@ -23,6 +23,7 @@ import type {
   FeedbucketMetadata,
   FeedbucketNetworkEntry,
 } from "@/types/feedbucket";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const STATUS_LABELS: Record<FeedbucketSubmissionStatus, string> = {
   open: "Open",
@@ -142,10 +143,8 @@ function NetworkLogsPanel({ logs }: { logs: FeedbucketNetworkEntry[] }) {
                   <td className={`py-0.5 pr-2 font-semibold ${statusColor(entry)}`}>
                     {entry.status === 0 ? "FAIL" : entry.status}
                   </td>
-                  <td className="py-0.5 pr-2 max-w-0 truncate">
-                    <span className="block truncate text-foreground" title={entry.url}>
-                      {entry.url}
-                    </span>
+                  <td className="py-0.5 pr-2 max-w-0">
+                    <TruncatedText text={entry.url} className="text-foreground" />
                   </td>
                   <td className="py-0.5 text-right text-muted-foreground">
                     {entry.durationMs}ms

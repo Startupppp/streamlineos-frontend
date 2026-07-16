@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useKbPagesTree, useKbPagesFavorites, useCreateKbPage } from "@/hooks/api/kb";
 import { useCan } from "@/hooks/api/access";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import PageTree from "./page-tree";
 import QuickFindDialog from "./quick-find-dialog";
 import WikiSidebarNav, { WikiSidebarFooter } from "./wiki-sidebar-nav";

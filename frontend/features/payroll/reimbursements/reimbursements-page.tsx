@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -197,10 +198,8 @@ export function ReimbursementsPageContent() {
       header: "Employee",
       cell: (row) => (
         <div className="flex flex-col gap-0.5 min-w-0">
-          <span className="text-[11px] font-medium truncate">{row.user?.name ?? "—"}</span>
-          <span className="text-[10px] text-muted-foreground truncate">
-            {row.user?.email ?? row.userId}
-          </span>
+          <TruncatedText text={row.user?.name ?? "—"} className="text-[11px] font-medium" />
+          <TruncatedText text={row.user?.email ?? row.userId} className="text-[10px] text-muted-foreground" />
         </div>
       ),
     },

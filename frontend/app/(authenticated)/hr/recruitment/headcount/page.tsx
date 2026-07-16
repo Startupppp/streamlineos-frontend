@@ -31,6 +31,7 @@ import {
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 type HeadcountStatus = "DRAFT" | "SUBMITTED" | "APPROVED" | "REJECTED" | "JOB_CREATED";
 
@@ -279,7 +280,7 @@ function RequestCard({
           )}
         </div>
         {req.justification && (
-          <p className="text-xs text-muted-foreground line-clamp-2 border-t pt-2">{req.justification}</p>
+          <TruncatedText text={req.justification} lines={2} className="text-xs text-muted-foreground border-t pt-2" />
         )}
         <div className="flex flex-wrap gap-2 pt-1">
           {req.status === "DRAFT" && (

@@ -25,6 +25,7 @@ import { EmptyActivityIllustration } from "@/components/illustrations";
 import { Pencil, History, Building2 } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import {

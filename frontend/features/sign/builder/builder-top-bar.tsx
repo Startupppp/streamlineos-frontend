@@ -19,6 +19,7 @@ import {
   useVoidSignEnvelope,
 } from "@/hooks/api/sign/envelopes";
 import { useSaveEnvelopeAsTemplate } from "@/hooks/api/sign/templates";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { EnvelopeStatusBadge } from "../components/envelope-status-badge";
 import type { SignEnvelope } from "@/types/sign";
 
@@ -108,9 +109,9 @@ export function BuilderTopBar({ envelope, onShowAudit }: { envelope: SignEnvelop
           <ArrowLeft className="size-4" />
         </Button>
         <div className="min-w-0">
-          <p className="font-semibold text-sm truncate">{envelope.title}</p>
+          <TruncatedText text={envelope.title} className="font-semibold text-sm" />
           {validationErrors && validationErrors.length > 0 && (
-            <p className="text-xs text-destructive truncate">{validationErrors[0]}</p>
+            <TruncatedText text={validationErrors[0] ?? ""} className="text-xs text-destructive" />
           )}
         </div>
         <EnvelopeStatusBadge status={envelope.status} />

@@ -90,13 +90,12 @@ function TemplateCard({ template, onCopy, onEdit, onDelete }: TemplateCardProps)
           </div>
         </div>
         <div>
-          <h3 className="font-semibold text-sm leading-tight truncate" title={template.name}>
-            {template.name}
-          </h3>
-          <p className="text-xs text-muted-foreground mt-0.5 truncate" title={template.subject}>
-            <span className="text-muted-foreground">Sub:</span> {template.subject}
-          </p>
-          <p className="line-clamp-2 text-xs text-muted-foreground mt-1">{template.body}</p>
+          <TruncatedText text={template.name} className="font-semibold text-sm leading-tight" />
+          <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
+            <span className="text-muted-foreground shrink-0">Sub:</span>
+            <TruncatedText text={template.subject} className="text-xs text-muted-foreground" />
+          </div>
+          <TruncatedText text={template.body} lines={2} className="text-xs text-muted-foreground mt-1" />
         </div>
         <div>
           <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-primary/10 text-foreground border-primary/20">

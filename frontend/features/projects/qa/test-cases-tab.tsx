@@ -42,6 +42,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { TestCaseSheet } from "./test-case-sheet";
 
 const PRIORITY_STYLES: Record<TestCasePriority, string> = {
@@ -173,9 +174,7 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
       header: "Title",
       className: TABLE_TITLE_CELL,
       cell: (row) => (
-        <span className={cn("text-[11px] font-medium", TEXT_ONE_LINE)} title={row.title}>
-          {row.title}
-        </span>
+        <TruncatedText text={row.title} className="text-[11px] font-medium" />
       ),
     },
     {

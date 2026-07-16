@@ -29,6 +29,7 @@ import { useHrEmployees, useHrAssets } from "@/hooks/api/hr";
 import { cn } from "@/lib/utils";
 import { EmptyDevicesIllustration } from "@/components/illustrations";
 import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import type { Employee, PaginatedEmployees, Asset } from "@/types/hr";
 
 interface AssetReturn {
@@ -105,9 +106,7 @@ function buildAssetReturnColumns(
             <Laptop className="h-3.5 w-3.5 text-muted-foreground" />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-foreground truncate">
-              {ar.assetName}
-            </p>
+            <TruncatedText text={ar.assetName} className="text-sm font-semibold text-foreground" />
             {ar.assetType && (
               <p className="text-[10px] text-muted-foreground">
                 {ar.assetType}

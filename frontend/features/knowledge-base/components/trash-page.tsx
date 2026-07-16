@@ -17,6 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   useKbPagesTrash,
   useRestoreKbPage,

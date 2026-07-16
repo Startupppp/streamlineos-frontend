@@ -24,6 +24,7 @@ import {
 import { UserCombobox } from "@/components/ui/user-combobox";
 import { useHrGoals, useCreateHrGoal, type HrGoal } from "@/hooks/api/hr";
 import { useUpdateGoal } from "@/hooks/api/hr";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 
 const STATUS_COLORS: Record<string, string> = {
@@ -96,7 +97,7 @@ function GoalCard({
       <div className="flex items-start gap-4">
         <CircularProgress value={goal.progress} />
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-foreground truncate">{goal.title}</h3>
+          <TruncatedText text={goal.title} className="font-semibold text-foreground" />
           {goal.description && (
             <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">{goal.description}</p>
           )}

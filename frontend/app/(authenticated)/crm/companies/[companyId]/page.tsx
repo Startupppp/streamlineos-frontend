@@ -46,6 +46,7 @@ import { Customer360Timeline } from "@/features/crm/shared/customer-360-timeline
 import { CrmOptionBadge } from "@/features/crm/shared/metadata";
 import { formatCurrency } from "@/lib/format-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import type { RelatedLead } from "@/types/crm";
 
@@ -138,9 +139,11 @@ export default function CompanyDetailPage({
             {(lead.name ?? "?")[0]?.toUpperCase()}
           </div>
           <div className="min-w-0">
-            <p className="font-medium truncate">{lead.name ?? "—"}</p>
+            {lead.name
+              ? <TruncatedText text={lead.name} className="font-medium" />
+              : <span className="font-medium">—</span>}
             {lead.email && (
-              <p className="text-[10px] text-muted-foreground truncate">{lead.email}</p>
+              <TruncatedText text={lead.email} className="text-[10px] text-muted-foreground" />
             )}
           </div>
         </div>

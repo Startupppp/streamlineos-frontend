@@ -20,6 +20,7 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
 import { apiClient, getApiError } from "@/lib/api-client";
 import { format, parseISO } from "date-fns";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 type OrgHoliday = {
   id: string;

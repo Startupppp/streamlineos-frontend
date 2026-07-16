@@ -110,8 +110,8 @@ function PersonCard({ emp, size = "md" }: { emp: OrgChartNode; size?: "sm" | "md
         </AvatarFallback>
       </Avatar>
       <div className="min-w-0 flex-1">
-        <p className={cn("font-semibold truncate", isSm ? "text-xs" : "text-sm")}>{emp.name ?? "Unknown"}</p>
-        <p className="text-[10px] text-muted-foreground truncate">{emp.designation ?? emp.role}</p>
+        <TruncatedText text={emp.name ?? "Unknown"} className={cn("font-semibold", isSm ? "text-xs" : "text-sm")} />
+        <TruncatedText text={emp.designation ?? emp.role} className="text-[10px] text-muted-foreground" />
       </div>
       <span className={cn("h-2 w-2 rounded-full shrink-0", ROLE_DOT[emp.role] ?? "bg-muted-foreground/40")} />
     </div>

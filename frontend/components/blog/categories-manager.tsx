@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Trash2, Pencil, X } from "lucide-react";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -92,9 +93,9 @@ export function CategoriesManager() {
                   style={{ backgroundColor: c.color ?? "#999" }}
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium">{c.name}</p>
+                  <TruncatedText text={c.name} className="font-medium" />
                   {c.description && (
-                    <p className="truncate text-sm text-muted-foreground">{c.description}</p>
+                    <TruncatedText text={c.description} className="text-sm text-muted-foreground" />
                   )}
                 </div>
                 <span className="text-sm text-muted-foreground">{c.count} posts</span>

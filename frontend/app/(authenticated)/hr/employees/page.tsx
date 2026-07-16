@@ -20,6 +20,7 @@ import {
 import { EmployeesGridSkeleton } from "@/features/hr/employees/employees-loading-skeleton";
 import { resolveImageUrl, cn } from "@/lib/utils";
 import type { Employee } from "@/types/hr";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 type ViewMode = "grid" | "list";
 
@@ -42,8 +43,8 @@ function buildEmployeeListColumns(getDept: (emp: Employee) => string | null): Da
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-foreground truncate">{displayName}</p>
-              {emp.email && <p className="text-[11px] text-muted-foreground truncate">{emp.email}</p>}
+              <TruncatedText text={displayName} className="text-sm font-semibold text-foreground" />
+              {emp.email && <TruncatedText text={emp.email} className="text-[11px] text-muted-foreground" />}
             </div>
           </div>
         );

@@ -236,7 +236,7 @@ function ASSET_COLUMNS(
                 {initials}
               </AvatarFallback>
             </Avatar>
-            <span className="text-sm text-foreground truncate max-w-[120px]">{displayName}</span>
+            <TruncatedText text={displayName} className="text-sm text-foreground max-w-[120px]" />
           </div>
         );
       },

@@ -18,6 +18,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   useChatOrgUsers,
   useAddChannelMember,
@@ -176,10 +177,8 @@ export function AddChannelMembersDialog({
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0 text-left">
-                      <p className="text-[13px] font-medium truncate">{user.name}</p>
-                      <p className="text-[11px] text-muted-foreground truncate">
-                        {user.email}
-                      </p>
+                      <TruncatedText text={user.name ?? ""} className="text-[13px] font-medium" />
+                      <TruncatedText text={user.email ?? ""} className="text-[11px] text-muted-foreground" />
                     </div>
                   </button>
                 );

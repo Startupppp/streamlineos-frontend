@@ -6,6 +6,7 @@ import { CalendarDays, History } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { CalendarListItem } from "@/hooks/api/calendar";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const EVENT_COLORS: Record<string, string> = {
   blue: "#3b82f6",
@@ -109,18 +110,14 @@ export function CalendarEventsPanel({
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-semibold text-foreground truncate">
-                              {event.title}
-                            </p>
+                            <TruncatedText text={event.title} className="text-sm font-semibold text-foreground" />
                             <p className="text-xs text-muted-foreground mt-0.5">
                               {event.allDay
                                 ? "All day"
                                 : `${format(start, "h:mm a")} – ${format(end, "h:mm a")}`}
                             </p>
                             {event.location && (
-                              <p className="text-[11px] text-muted-foreground mt-1 truncate">
-                                {event.location}
-                              </p>
+                              <TruncatedText text={event.location} className="text-[11px] text-muted-foreground mt-1" />
                             )}
                           </div>
                           <span className="text-[10px] uppercase tracking-wide text-muted-foreground shrink-0">

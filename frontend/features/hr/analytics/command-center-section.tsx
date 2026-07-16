@@ -3,6 +3,10 @@
 import { useState, useCallback, useMemo, type ComponentType } from "react";
 import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   Users,
   TrendingDown,
@@ -28,6 +32,7 @@ import {
   SectionSkeleton,
   EmptyChart,
 } from "@/features/hr/analytics/shared";
+import { DrilldownSheet } from "./drilldown-sheet";
 
 const JoinsExitsChart = dynamic(
   () => import("./command-center-charts").then((m) => ({ default: m.JoinsExitsChart })),

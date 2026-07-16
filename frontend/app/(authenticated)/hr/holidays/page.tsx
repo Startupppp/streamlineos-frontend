@@ -120,7 +120,7 @@ function HolidayItem({
         <p className="text-lg font-bold text-foreground leading-none">{format(parseISO(holiday.date), "d")}</p>
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-foreground truncate">{holiday.name}</p>
+        <TruncatedText text={holiday.name} className="font-medium text-foreground" />
         <p className="text-xs text-muted-foreground">{format(parseISO(holiday.date), "EEEE, MMMM d")}</p>
       </div>
       {holiday.recurring && (

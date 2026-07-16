@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   Select,
   SelectContent,
@@ -152,9 +153,7 @@ export function ReconciliationMatchPanel({ txn, bankAccountId, onClose }: Props)
           <p className="text-xs text-muted-foreground mb-0.5">
             {txn.txnDate}
           </p>
-          <p className="text-sm font-semibold text-foreground line-clamp-2">
-            {txn.description}
-          </p>
+          <TruncatedText text={txn.description ?? ""} lines={2} className="text-sm font-semibold text-foreground" />
           <div className="flex items-center gap-2 mt-1">
             <Money value={amount} className={amount >= 0 ? "text-emerald-600" : "text-red-600"} />
             <BankTxnStatusBadge status={txn.status} size="chip" />

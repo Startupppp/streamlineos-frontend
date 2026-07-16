@@ -19,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { format, isAfter } from "date-fns";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const TYPE_LABELS: Record<string, string> = {
   FULL_TIME: "Full Time",
@@ -125,7 +126,7 @@ function JobCardItem({ job, onApply }: JobCardItemProps) {
         <div className="space-y-2 text-xs text-muted-foreground">
           {job.experience && <p>{job.experience} experience required</p>}
           {job.description && (
-            <p className="line-clamp-3">{job.description.replace(/<[^>]+>/g, "")}</p>
+            <TruncatedText text={job.description.replace(/<[^>]+>/g, "")} lines={3} />
           )}
           <div className="flex items-center justify-between">
             <span>{job.openings} opening{job.openings !== 1 ? "s" : ""}</span>

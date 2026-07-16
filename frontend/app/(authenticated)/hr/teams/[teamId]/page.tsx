@@ -33,6 +33,7 @@ import { EmptyTeamIllustration } from "@/components/illustrations";
 import { HrSheet } from "@/features/hr/hr-sheet";
 
 import { useOrgTeams, useUpdateOrgTeam, useDeleteOrgTeam } from "@/hooks/api/org-hierarchy";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { useHrEmployees } from "@/hooks/api/hr/employees";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { resolveImageUrl } from "@/lib/utils";

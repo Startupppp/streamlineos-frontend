@@ -184,9 +184,7 @@ function buildTemplateColumns(
         return (
           <div className="flex min-w-0 items-center gap-2 overflow-hidden">
             <TypeIcon className="h-4 w-4 text-muted-foreground shrink-0" />
-            <span className={cn(TEXT_ONE_LINE, "font-medium text-sm")} title={template.title}>
-              {template.title}
-            </span>
+            <TruncatedText text={template.title} className="font-medium text-sm" />
             {template.isDefault && (
               <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-700 shrink-0">
                 Default

@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   Popover,
   PopoverContent,
@@ -143,7 +144,7 @@ function VipClientOption({ clientId, name, onSelect }: VipClientOptionProps) {
   const handleSelect = useCallback(() => onSelect(clientId), [clientId, onSelect]);
   return (
     <CommandItem value={name} onSelect={handleSelect}>
-      <span className={cn("truncate")}>{name}</span>
+      <TruncatedText text={name} />
     </CommandItem>
   );
 }

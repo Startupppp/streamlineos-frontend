@@ -10,6 +10,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 export interface Citation {
   id: string | number;
@@ -50,7 +51,7 @@ function CitationChipInner({ index, citation }: ChipInnerProps) {
             )}
           >
             <span className="shrink-0 font-semibold text-primary/70">[{index + 1}]</span>
-            <span className="truncate">{citation.title}</span>
+            <TruncatedText text={citation.title ?? ""} />
           </span>
         </TooltipTrigger>
         {(citation.snippet || freshness) && (

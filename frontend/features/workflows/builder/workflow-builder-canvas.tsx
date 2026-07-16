@@ -39,6 +39,7 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
@@ -214,11 +215,11 @@ function WorkflowNodeComponent({
     >
       <div className={cn("flex items-center gap-2 px-3 py-2 rounded-t-[10px]", palette.bg)}>
         <span className={palette.color}>{palette.icon}</span>
-        <span className="text-xs font-semibold text-foreground truncate">{data.label}</span>
+        <TruncatedText text={data.label} className="text-xs font-semibold text-foreground" />
       </div>
       {data.description && (
         <div className="px-3 py-1.5 border-t border-border/60">
-          <p className="text-[11px] text-muted-foreground leading-snug truncate">{data.description}</p>
+          <TruncatedText text={data.description ?? ""} className="text-[11px] text-muted-foreground leading-snug" />
         </div>
       )}
     </div>
@@ -310,7 +311,7 @@ function PaletteItem({ item }: { item: (typeof NODE_PALETTE)[0] }) {
       <span className={cn("shrink-0", item.color)}>{item.icon}</span>
       <div className="min-w-0">
         <p className="text-xs font-semibold text-foreground leading-tight">{item.label}</p>
-        <p className="text-[10px] text-muted-foreground leading-tight truncate">{item.description}</p>
+        <TruncatedText text={item.description} className="text-[10px] text-muted-foreground leading-tight" />
       </div>
     </div>
   );
