@@ -29,6 +29,7 @@ import {
   type HrWorkflowStatus,
 } from "@/types/hr/workflows";
 import { getErrorMessage } from "@/lib/api-client";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   DropdownMenu,
   DropdownMenuContent,

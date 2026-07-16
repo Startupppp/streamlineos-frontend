@@ -26,8 +26,8 @@ import {
   PM_PANEL,
   PM_ROW,
 } from "@/features/projects/shared/pm-chrome";
-import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 type VisibilityTab = "tickets" | "milestones";

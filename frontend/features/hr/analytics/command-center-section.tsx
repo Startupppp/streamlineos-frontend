@@ -49,11 +49,6 @@ const PayrollCostChart = dynamic(
   () => import("./command-center-charts").then((m) => ({ default: m.PayrollCostChart })),
   { ssr: false, loading: () => <Skeleton className="h-[200px] w-full" /> },
 );
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { DrilldownSheet } from "./drilldown-sheet";
 
 interface DrillableStatCardProps {
   label: string;

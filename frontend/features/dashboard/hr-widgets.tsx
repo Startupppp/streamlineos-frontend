@@ -16,6 +16,7 @@ import {
   UserCheck,
   UserX,
 } from "lucide-react";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   useLeavesToday,
   useUpcomingHolidays,

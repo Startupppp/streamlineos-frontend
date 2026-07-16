@@ -250,9 +250,7 @@ export function ReviewsTab() {
                           <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground transition-colors duration-200" onClick={() => handleOpenEdit(review)}>
                             <Pencil className="h-3 w-3" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive transition-colors duration-200" onClick={() => setDeleteId(review.id)}>
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
+                          <AnimatedIconButton icon={TrashIcon} variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive transition-colors duration-200" iconSize={12} onClick={() => setDeleteId(review.id)} />
                         </>
                       )}
                     </div>

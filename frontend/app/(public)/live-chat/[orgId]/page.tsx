@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -115,15 +116,16 @@ export default function LiveChatWidgetPage() {
                   maxLength={4000}
                 />
               </div>
-              <Button
+              <LoadingButton
                 type="button"
                 className="w-full"
-                disabled={!name.trim() || !firstMessage.trim() || startSession.isPending}
+                disabled={!name.trim() || !firstMessage.trim()}
+                isPending={startSession.isPending}
+                loadingText="Starting…"
                 onClick={handleStart}
               >
-                {startSession.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                 Start chat
-              </Button>
+              </LoadingButton>
             </div>
           ) : (
             <div className="flex flex-col h-[480px]">
