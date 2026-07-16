@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { MapPin, Pencil, Eye } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { TrashIcon, PlusIcon } from "@animateicons/react/lucide";
+import { Trash2Icon, PlusIcon } from "@animateicons/react/lucide";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -134,7 +134,7 @@ function DeleteTerritoryButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
     <Button variant="ghost" size="icon" className="w-7 text-destructive" onClick={onClick} {...hoverHandlers}>
-      <TrashIcon ref={iconRef} size={14} />
+      <Trash2Icon ref={iconRef} size={14} />
     </Button>
   );
 }

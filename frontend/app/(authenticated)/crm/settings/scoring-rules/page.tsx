@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Pencil, Zap } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { TrashIcon, PlusIcon } from "@animateicons/react/lucide";
+import { Trash2Icon, PlusIcon } from "@animateicons/react/lucide";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -155,7 +155,7 @@ function ScoringRuleRow({ rule, isEditing, editForm, onEditSubmit, onEdit, onDel
               <Button variant="ghost" size="icon" className="w-7" onClick={handleEdit} aria-label="Edit">
                 <Pencil className="h-3.5 w-3.5" />
               </Button>
-              <AnimatedIconButton icon={TrashIcon} iconSize={14} variant="ghost" size="icon" className="w-7 text-destructive" onClick={handleDeleteRequest} aria-label="Delete" />
+              <AnimatedIconButton icon={Trash2Icon} iconSize={14} variant="ghost" size="icon" className="w-7 text-destructive" onClick={handleDeleteRequest} aria-label="Delete" />
             </div>
           </TableCell>
         </>

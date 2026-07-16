@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import type { ReactNode } from "react";
 import { Pencil, FlaskConical } from "lucide-react";
-import { PlusIcon, TrashIcon } from "@animateicons/react/lucide";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
@@ -162,7 +162,7 @@ function DeleteRuleButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
     <Button variant="ghost" size="icon" className="w-7 text-destructive" onClick={onClick} aria-label="Delete rule" {...hoverHandlers}>
-      <TrashIcon ref={iconRef} size={14} />
+      <Trash2Icon ref={iconRef} size={14} />
     </Button>
   );
 }

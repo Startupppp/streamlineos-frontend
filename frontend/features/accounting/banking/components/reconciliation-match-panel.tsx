@@ -31,6 +31,7 @@ import { AppDialog } from "@/components/shared/app-dialog";
 import { Money } from "@/features/accounting/shared";
 import { BankTxnStatusBadge } from "./bank-txn-status-badge";
 import { useConfirmMatch, useUnmatch, useIgnoreTransaction } from "@/hooks/api/accounting/banking";
+import { ReconciliationExplainPanel } from "@/features/accounting/ai";
 import type { ReconciliationTxn, MatchType } from "@/hooks/api/accounting/banking";
 import { useAccounts } from "@/hooks/api/accounting";
 
@@ -212,6 +213,17 @@ export function ReconciliationMatchPanel({ txn, bankAccountId, onClose }: Props)
           })}
         </div>
       )}
+
+      {isReconciled && (() => {
+        const confirmedMatchId =
+          suggestions.find((s) => s.isConfirmed)?.id ?? null;
+        if (!confirmedMatchId) return null;
+        return (
+          <div className="mb-4">
+            <ReconciliationExplainPanel matchId={confirmedMatchId} />
+          </div>
+        );
+      })()}
 
       <div className="mt-auto space-y-2">
         <p className="text-xs font-medium text-muted-foreground">Manual actions</p>

@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Lock, Pencil } from "lucide-react";
-import { TrashIcon } from "@animateicons/react/lucide";
+import { Trash2Icon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -32,7 +32,7 @@ function DeleteFieldButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
     <Button variant="ghost" size="icon" className="w-7 text-destructive" onClick={onClick} {...hoverHandlers}>
-      <TrashIcon ref={iconRef} size={14} />
+      <Trash2Icon ref={iconRef} size={14} />
     </Button>
   );
 }

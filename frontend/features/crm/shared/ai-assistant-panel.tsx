@@ -13,8 +13,9 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
-import { useCrmEmailDraft, useSummarizeNotes, useCrmObjectionHelp } from "@/hooks/api/crm";
+import { useCrmEmailDraft, useSummarizeNotes, useCrmObjectionHelp, useNextBestActionsAcrossPipeline } from "@/hooks/api/crm";
 import { useOrgFeatureFlags } from "@/hooks/api/ai";
+import { MeetingFollowUpComposer } from "./meeting-follow-up-composer";
 
 type AiEntityType = "lead" | "deal" | "contact";
 type EmailTone = "formal" | "friendly" | "urgent";
@@ -370,6 +371,96 @@ function ObjectionHelpTab({ aiEnabled }: { aiEnabled: boolean }) {
   );
 }
 
+const URGENCY_VARIANT: Record<string, "destructive" | "default" | "secondary" | "outline"> = {
+  critical: "destructive",
+  high: "default",
+  medium: "outline",
+  low: "secondary",
+};
+
+function MeetingFollowUpTab({
+  entityType,
+  entityId,
+  entityName,
+  emailEnabled,
+}: {
+  entityType: AiEntityType;
+  entityId: number;
+  entityName?: string;
+  emailEnabled: boolean;
+}) {
+  if (!emailEnabled) return <AiDisabledBanner href="/crm/settings/ai" />;
+  const attendeeType = entityType === "deal" ? "lead" : entityType === "lead" ? "lead" : "client";
+  return (
+    <MeetingFollowUpComposer
+      attendeeType={attendeeType}
+      attendeeId={entityId}
+      attendeeName={entityName}
+    />
+  );
+}
+
+interface NbaEvidenceItem { kind: string; label: string; value: string }
+interface NbaAction { leadId: number; leadName: string; action: string; urgency: string; reasoning: string; evidence?: NbaEvidenceItem[]; rationale?: string }
+
+function NextActionsTab({ chatEnabled }: { chatEnabled: boolean }) {
+  const [result, setResult] = useState<{ actions: NbaAction[] } | null>(null);
+  const { mutate: getActions, isPending } = useNextBestActionsAcrossPipeline();
+
+  const handleGetActions = useCallback(() => {
+    getActions(3, {
+      onSuccess: (data) => setResult(data),
+      onError: (err) => toast.error(getErrorMessage(err)),
+    });
+  }, [getActions]);
+
+  if (!chatEnabled) return <AiDisabledBanner href="/crm/settings/ai" />;
+
+  return (
+    <div className="space-y-3">
+      <LoadingButton
+        size="sm"
+        isPending={isPending}
+        loadingText="Fetching..."
+        onClick={handleGetActions}
+        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5"
+      >
+        <Sparkles className="h-3.5 w-3.5" />
+        Get Next Best Actions
+      </LoadingButton>
+      {result && (
+        <div className="space-y-2">
+          {result.actions.map((action, i) => (
+            <div key={i} className="rounded-lg border border-border bg-muted/30 p-2.5 space-y-1.5">
+              <div className="flex items-center gap-1.5">
+                <Badge
+                  variant={URGENCY_VARIANT[action.urgency] ?? "secondary"}
+                  className="text-[9px] h-4 px-1 capitalize"
+                >
+                  {action.urgency}
+                </Badge>
+                <span className="text-[10px] text-muted-foreground">{action.leadName}</span>
+              </div>
+              <p className="text-xs font-medium text-foreground">{action.action}</p>
+              <p className="text-[11px] text-muted-foreground leading-snug">{action.reasoning}</p>
+              {action.evidence && action.evidence.length > 0 && (
+                <ul className="space-y-0.5 pt-0.5">
+                  {action.evidence.map((ev, j) => (
+                    <li key={j} className="text-[10px] text-muted-foreground flex gap-1">
+                      <span className="font-medium">{ev.label}:</span>
+                      <span>{ev.value}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function AiAssistantPanel({ entityType, entityId, entityName, onOpenEmailCompose }: AiAssistantPanelProps) {
   const [expanded, setExpanded] = useState(false);
   const { data: flags } = useOrgFeatureFlags();
@@ -411,10 +502,14 @@ export function AiAssistantPanel({ entityType, entityId, entityName, onOpenEmail
           >
             <div className="px-4 pb-4">
               <Tabs defaultValue="email">
-                <TabsList className="w-full text-xs mb-3">
-                  <TabsTrigger value="email" className="flex-1 text-xs">Email Draft</TabsTrigger>
-                  <TabsTrigger value="notes" className="flex-1 text-xs">Notes Summary</TabsTrigger>
-                  <TabsTrigger value="objection" className="flex-1 text-xs">Objection Help</TabsTrigger>
+                <TabsList className="w-full mb-3">
+                  <TabsTrigger value="email" className="flex-1 text-[10px]">Email Draft</TabsTrigger>
+                  <TabsTrigger value="notes" className="flex-1 text-[10px]">Notes</TabsTrigger>
+                  <TabsTrigger value="objection" className="flex-1 text-[10px]">Objection</TabsTrigger>
+                  <TabsTrigger value="followup" className="flex-1 text-[10px]">Follow-up</TabsTrigger>
+                  {entityType === "lead" && (
+                    <TabsTrigger value="actions" className="flex-1 text-[10px]">Next Actions</TabsTrigger>
+                  )}
                 </TabsList>
                 <TabsContent value="email">
                   {emailEnabled ? (
@@ -433,6 +528,19 @@ export function AiAssistantPanel({ entityType, entityId, entityName, onOpenEmail
                 <TabsContent value="objection">
                   <ObjectionHelpTab aiEnabled={chatEnabled} />
                 </TabsContent>
+                <TabsContent value="followup">
+                  <MeetingFollowUpTab
+                    entityType={entityType}
+                    entityId={entityId}
+                    entityName={entityName}
+                    emailEnabled={emailEnabled}
+                  />
+                </TabsContent>
+                {entityType === "lead" && (
+                  <TabsContent value="actions">
+                    <NextActionsTab chatEnabled={chatEnabled} />
+                  </TabsContent>
+                )}
               </Tabs>
             </div>
           </motion.div>

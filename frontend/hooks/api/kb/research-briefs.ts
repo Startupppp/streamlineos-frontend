@@ -17,11 +17,11 @@ interface BriefListResponse {
 export function useKbResearchBriefs(limit = 20) {
   return useInfiniteQuery({
     queryKey: queryKeys.kb.researchBriefs(),
-    queryFn: ({ pageParam }: { pageParam?: number }) =>
-      apiClient.get<BriefListResponse>("/kb/research-briefs", {
-        limit,
-        ...(pageParam ? { cursor: pageParam } : {}),
-      }),
+    queryFn: ({ pageParam }) => {
+      const params: Record<string, unknown> = { limit };
+      if (pageParam) params.cursor = pageParam;
+      return apiClient.get<BriefListResponse>("/kb/research-briefs", params);
+    },
     initialPageParam: undefined as number | undefined,
     getNextPageParam: (last) => last.nextCursor ?? undefined,
     staleTime: 30_000,

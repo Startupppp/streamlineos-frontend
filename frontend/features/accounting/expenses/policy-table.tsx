@@ -1,7 +1,7 @@
 "use client";
 
 import { Pencil } from "lucide-react";
-import { TrashIcon } from "@animateicons/react/lucide";
+import { Trash2Icon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Switch } from "@/components/ui/switch";
@@ -21,7 +21,7 @@ function DeletePolicyButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
     <Button variant="ghost" size="icon" className="w-7 text-destructive hover:text-destructive" onClick={onClick} {...hoverHandlers}>
-      <TrashIcon ref={iconRef} size={14} />
+      <Trash2Icon ref={iconRef} size={14} />
     </Button>
   );
 }

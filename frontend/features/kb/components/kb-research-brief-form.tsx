@@ -28,7 +28,7 @@ import { useKbSpaces } from "@/hooks/api/kb/spaces";
 
 const schema = z.object({
   topic: z.string().min(3, "Topic must be at least 3 characters").max(300),
-  spaceId: z.coerce.number().optional(),
+  spaceId: z.number().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;

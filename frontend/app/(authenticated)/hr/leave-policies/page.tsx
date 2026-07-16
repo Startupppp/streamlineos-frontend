@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Settings2, Pencil, Clock, Calendar } from "lucide-react";
-import { TrashIcon, PlusIcon } from "@animateicons/react/lucide";
+import { Trash2Icon, PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -86,7 +86,7 @@ function PolicyCard({
               <Pencil className="h-3.5 w-3.5" />
             </Button>
             <AnimatedIconButton
-              icon={TrashIcon}
+              icon={Trash2Icon}
               variant="ghost"
               size="icon"
               className="w-7 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"

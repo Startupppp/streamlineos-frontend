@@ -37,7 +37,7 @@ import type { HrAutomationRule } from "@/types/hr/automations";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Pencil, History } from "lucide-react";
-import { PlayIcon, TrashIcon, PlusIcon } from "@animateicons/react/lucide";
+import { PlayIcon, Trash2Icon, PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
@@ -110,7 +110,7 @@ function RuleCard({
                     <Pencil className="h-3.5 w-3.5" />
                   </Button>
                   <AnimatedIconButton
-                    icon={TrashIcon}
+                    icon={Trash2Icon}
                     size="icon"
                     variant="ghost"
                     className="w-7 text-destructive hover:text-destructive"

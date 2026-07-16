@@ -16,7 +16,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { UserCombobox } from "@/components/ui/user-combobox";
 import {
   Select,
   SelectContent,
@@ -35,12 +34,10 @@ import {
   type AutomationCondition,
   type AutomationConditionOp,
   type AutomationAction,
-  type AutomationActionType,
   type AutomationTestResult,
 } from "@/hooks/api/automations";
 import {
   type AiAutomationAction,
-  type AiAutomationActionType,
   type ExtendedAutomationAction,
   type ExtendedAutomationActionType,
 } from "@/hooks/api/automation-ai-nodes";

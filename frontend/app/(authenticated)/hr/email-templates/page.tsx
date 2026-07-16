@@ -24,7 +24,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { toast } from "sonner";
 import { Pencil, AlertCircle, Sparkles } from "lucide-react";
-import { CopyIcon, TrashIcon, PlusIcon } from "@animateicons/react/lucide";
+import { CopyIcon, Trash2Icon, PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { EmptyMailIllustration } from "@/components/illustrations";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -86,7 +86,7 @@ function TemplateCard({ template, onCopy, onEdit, onDelete }: TemplateCardProps)
             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleEdit}>
               <Pencil className="h-3 w-3" />
             </Button>
-            <AnimatedIconButton icon={TrashIcon} variant="ghost" size="icon" className="h-6 w-6 text-destructive" iconSize={12} onClick={handleDelete} />
+            <AnimatedIconButton icon={Trash2Icon} variant="ghost" size="icon" className="h-6 w-6 text-destructive" iconSize={12} onClick={handleDelete} />
           </div>
         </div>
         <div>
