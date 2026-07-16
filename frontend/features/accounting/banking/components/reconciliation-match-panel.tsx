@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, type KeyboardEvent } from "react";
-import { X, DollarSign, FileText, ArrowLeftRight } from "lucide-react";
+import { DollarSign, FileText, ArrowLeftRight } from "lucide-react";
+import { XIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Label } from "@/components/ui/label";
@@ -158,9 +160,7 @@ export function ReconciliationMatchPanel({ txn, bankAccountId, onClose }: Props)
             <BankTxnStatusBadge status={txn.status} size="chip" />
           </div>
         </div>
-        <Button variant="ghost" size="icon" className="w-7 shrink-0" onClick={onClose}>
-          <X className="h-4 w-4" />
-        </Button>
+        <AnimatedIconButton icon={XIcon} iconSize={16} variant="ghost" size="icon" className="w-7 shrink-0" onClick={onClose} />
       </div>
 
       {suggestions.length > 0 && (

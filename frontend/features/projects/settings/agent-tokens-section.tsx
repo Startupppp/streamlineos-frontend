@@ -59,7 +59,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { PM_PANEL, PM_ROW } from "@/features/projects/shared/pm-chrome";
-import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const EXPIRY_OPTIONS = [
   { value: "30", label: "30 days" },
@@ -130,9 +130,7 @@ function TokenRow({
     <div className={cn(PM_ROW, "gap-3 py-3")}>
       <div className="min-w-0 flex-1 space-y-0.5">
         <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <span className={cn(TEXT_ONE_LINE, "text-sm font-medium")} title={token.name}>
-            {token.name}
-          </span>
+          <TruncatedText text={token.name} className="text-sm font-medium" />
           <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-muted-foreground">
             {token.tokenPrefix}…
           </code>

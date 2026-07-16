@@ -34,6 +34,7 @@ import {
 } from "@/hooks/api/hr/recruitment";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { HiringFlow, HiringFlowRound } from "@/types/hr/recruitment";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const ROUND_TYPES = [
   { value: "HR_SCREENING", label: "HR Screening" },
@@ -123,7 +124,7 @@ function RoundItem({ round, flowId, onEdit }: RoundItemProps) {
         <circle cx="9" cy="5" r="1" /><circle cx="9" cy="12" r="1" /><circle cx="9" cy="19" r="1" />
         <circle cx="15" cy="5" r="1" /><circle cx="15" cy="12" r="1" /><circle cx="15" cy="19" r="1" />
       </svg>
-      <span className="flex-1 text-sm font-medium truncate">{round.name}</span>
+      <TruncatedText text={round.name} className="flex-1 text-sm font-medium" />
       <div className="flex items-center gap-1.5 shrink-0">
         <RoundTypeBadge type={round.roundType} />
         <ModeBadge mode={round.mode} />

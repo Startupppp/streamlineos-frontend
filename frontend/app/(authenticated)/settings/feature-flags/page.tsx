@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { AlertCircle, Archive, Flag, Loader2 } from "lucide-react";
+import { AlertCircle, Archive, Flag } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import {
@@ -19,6 +19,7 @@ import { getApiError } from "@/lib/api-client";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -396,10 +397,9 @@ function FeatureFlagsContent() {
               <Button type="button" variant="outline" onClick={handleCloseCreate}>
                 Cancel
               </Button>
-              <Button type="submit" form="create-flag-form" disabled={createFlag.isPending}>
-                {createFlag.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+              <LoadingButton type="submit" form="create-flag-form" isPending={createFlag.isPending}>
                 Create Flag
-              </Button>
+              </LoadingButton>
             </div>
           </SheetFooter>
         </SheetContent>

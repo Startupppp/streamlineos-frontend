@@ -14,6 +14,7 @@ import { EmptyPublicDocsIllustration } from "@/components/illustrations";
 import { usePublicDocuments, type PublicDoc } from "@/hooks/api/dashboard";
 import { format } from "date-fns";
 import { viewFile, downloadFile } from "@/hooks/common/use-file-url";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const DOC_TYPE_LABELS: Record<string, string> = {
   CONTRACT: "Contract",
@@ -50,9 +51,7 @@ function DocumentItem({ doc }: DocumentItemProps) {
         <FileText className="h-4 w-4 text-primary" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-foreground truncate">
-          {doc.name}
-        </p>
+        <TruncatedText text={doc.name} className="text-sm font-medium text-foreground" />
         <div className="flex items-center gap-2 mt-0.5">
           <Badge variant="outline" className="text-[10px] px-1.5 py-0">
             {DOC_TYPE_LABELS[doc.type] ?? doc.type}

@@ -19,6 +19,7 @@ import {
 import { format, isPast, formatDistanceToNowStrict } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import type { CrmInboxItem } from "@/types/crm";
 import { SnoozePopover } from "./snooze-popover";
@@ -141,9 +142,9 @@ export function InboxSectionCard({
                 <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                 <Link
                   href={entityHref(item)}
-                  className="text-xs font-medium text-foreground truncate flex-1 hover:text-primary transition-colors"
+                  className="text-xs font-medium text-foreground flex-1 hover:text-primary transition-colors"
                 >
-                  {item.title}
+                  <TruncatedText text={item.title} />
                 </Link>
                 <DueChip dueAt={item.dueAt} />
                 {item.entityType === "task" ? (

@@ -15,6 +15,7 @@ import {
   KbClockIcon,
   KbFileTextIcon,
 } from "@/features/knowledge-base/lib/kb-icons";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -38,9 +39,7 @@ function RecentRow({ page }: { page: KbPage }) {
           <KbFileTextIcon className="h-4 w-4 text-muted-foreground" />
         )}
       </span>
-      <span className="flex-1 text-sm truncate font-medium">
-        {page.title || "Untitled"}
-      </span>
+      <TruncatedText text={page.title || "Untitled"} className="flex-1 text-sm font-medium" />
       <span className="text-xs text-muted-foreground shrink-0 flex items-center gap-1">
         <KbClockIcon className="h-3 w-3" />
         {timeAgo(page.updatedAt)}

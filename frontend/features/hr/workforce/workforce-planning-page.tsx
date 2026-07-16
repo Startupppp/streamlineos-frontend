@@ -28,12 +28,12 @@ import {
 import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 
 const AttritionForecastCard = dynamic(
   () => import("./attrition-forecast-card").then((m) => ({ default: m.AttritionForecastCard })),
   { ssr: false, loading: () => <Skeleton className="h-[280px] w-full rounded-xl" /> },
 );
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 
 type BudgetVsActualRow = { departmentName: string; budgeted: number; actual: number; variance: number };
 

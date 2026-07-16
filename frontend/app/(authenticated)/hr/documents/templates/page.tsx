@@ -42,6 +42,7 @@ import {
   type DocumentTemplate,
 } from "@/hooks/api/hr/document-templates";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   VariableChips,
   PreviewDialog,

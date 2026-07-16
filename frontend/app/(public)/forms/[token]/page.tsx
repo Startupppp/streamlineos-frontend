@@ -81,7 +81,9 @@ async function submitPublicForm(
   return res.json() as Promise<SubmitResponse>;
 }
 
-function buildFieldSchema(field: FormField): z.ZodType<string> {
+type StringSchema = z.ZodType<string, z.ZodTypeDef, string>;
+
+function buildFieldSchema(field: FormField): StringSchema {
   if (field.type === "email") {
     return field.required
       ? z.string().trim().min(1, `${field.label} is required`).email(`${field.label} must be a valid email`)
@@ -104,8 +106,8 @@ function buildFieldSchema(field: FormField): z.ZodType<string> {
   return z.string();
 }
 
-function buildDynamicSchema(fields: FormField[]): z.ZodObject<Record<string, z.ZodType<string>>> {
-  const shape: Record<string, z.ZodType<string>> = {};
+function buildDynamicSchema(fields: FormField[]): z.ZodObject<Record<string, StringSchema>> {
+  const shape: Record<string, StringSchema> = {};
   for (const field of fields) {
     shape[field.key] = buildFieldSchema(field);
   }

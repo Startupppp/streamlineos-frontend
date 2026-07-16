@@ -88,10 +88,9 @@ export function PublishPayslipsAction({ runId, status, onChanged }: Props) {
             <Button variant="outline" onClick={handleCancel} disabled={isPending}>
               Cancel
             </Button>
-            <Button onClick={handleConfirm} disabled={isPending}>
-              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isPending ? "Publishing…" : "Publish"}
-            </Button>
+            <LoadingButton onClick={handleConfirm} isPending={isPending} loadingText="Publishing…">
+              Publish
+            </LoadingButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

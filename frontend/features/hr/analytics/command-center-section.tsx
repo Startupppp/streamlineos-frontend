@@ -1,20 +1,8 @@
 "use client";
 
 import { useState, useCallback, useMemo, type ComponentType } from "react";
-import {
-  AreaChart,
-  Area,
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
+import dynamic from "next/dynamic";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Users,
   TrendingDown,
@@ -39,11 +27,28 @@ import {
   AnalyticsChartCard,
   SectionSkeleton,
   EmptyChart,
-  chartTooltipStyle,
-  chartGridProps,
-  chartAxisTick,
-  CHART_SEMANTIC,
 } from "@/features/hr/analytics/shared";
+
+const JoinsExitsChart = dynamic(
+  () => import("./command-center-charts").then((m) => ({ default: m.JoinsExitsChart })),
+  { ssr: false, loading: () => <Skeleton className="h-[200px] w-full" /> },
+);
+const LeaveStackChart = dynamic(
+  () => import("./command-center-charts").then((m) => ({ default: m.LeaveStackChart })),
+  { ssr: false, loading: () => <Skeleton className="h-[200px] w-full" /> },
+);
+const MoodTrendChart = dynamic(
+  () => import("./command-center-charts").then((m) => ({ default: m.MoodTrendChart })),
+  { ssr: false, loading: () => <Skeleton className="h-[200px] w-full" /> },
+);
+const PerformanceDistChart = dynamic(
+  () => import("./command-center-charts").then((m) => ({ default: m.PerformanceDistChart })),
+  { ssr: false, loading: () => <Skeleton className="h-[200px] w-full" /> },
+);
+const PayrollCostChart = dynamic(
+  () => import("./command-center-charts").then((m) => ({ default: m.PayrollCostChart })),
+  { ssr: false, loading: () => <Skeleton className="h-[200px] w-full" /> },
+);
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -247,39 +252,7 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
             <EmptyChart label="No attrition data" />
           ) : (
             <>
-              <ResponsiveContainer width="100%" height={200}>
-                <AreaChart data={attrition.joinsVsExits}>
-                  <defs>
-                    <linearGradient id="joinGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={CHART_SEMANTIC.primary} stopOpacity={0.15} />
-                      <stop offset="95%" stopColor={CHART_SEMANTIC.primary} stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="exitGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={CHART_SEMANTIC.danger} stopOpacity={0.15} />
-                      <stop offset="95%" stopColor={CHART_SEMANTIC.danger} stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid {...chartGridProps} />
-                  <XAxis dataKey="month" tick={chartAxisTick} />
-                  <YAxis tick={chartAxisTick} width={28} />
-                  <Tooltip contentStyle={chartTooltipStyle} />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Area
-                    type="monotone"
-                    dataKey="joins"
-                    stroke={CHART_SEMANTIC.primary}
-                    fill="url(#joinGrad)"
-                    strokeWidth={2}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="exits"
-                    stroke={CHART_SEMANTIC.danger}
-                    fill="url(#exitGrad)"
-                    strokeWidth={2}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+              <JoinsExitsChart data={attrition.joinsVsExits} />
               <div className="mt-2 flex justify-end">
                 <Button variant="ghost" size="sm" onClick={handleAttritionDrilldown}>
                   View Details
@@ -296,23 +269,11 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
             <EmptyChart label="No leave data" />
           ) : (
             <>
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={leaveStackData}>
-                  <CartesianGrid {...chartGridProps} />
-                  <XAxis dataKey="month" tick={chartAxisTick} />
-                  <YAxis tick={chartAxisTick} width={28} />
-                  <Tooltip contentStyle={chartTooltipStyle} />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
-                  {leaveTypeKeys.map((key, idx) => (
-                    <Bar
-                      key={key}
-                      dataKey={key}
-                      stackId="a"
-                      fill={leaveTypeColors[idx % leaveTypeColors.length]}
-                    />
-                  ))}
-                </BarChart>
-              </ResponsiveContainer>
+              <LeaveStackChart
+                data={leaveStackData}
+                leaveTypeKeys={leaveTypeKeys}
+                leaveTypeColors={leaveTypeColors}
+              />
               <div className="mt-2 flex justify-end">
                 <Button variant="ghost" size="sm" onClick={handleLeaveDrilldown}>
                   View Details

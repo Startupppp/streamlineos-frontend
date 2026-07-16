@@ -5,6 +5,7 @@ import { ChevronRight } from "lucide-react";
 import { ZapIcon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import type { CrmAiAction } from "@/types/crm";
 
 interface AiActionsSectionProps {
@@ -38,9 +39,9 @@ export function AiActionsSection({ actions }: AiActionsSectionProps) {
             <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
             <Link
               href={action.href}
-              className="text-xs font-medium text-foreground truncate flex-1 hover:text-primary transition-colors"
+              className="text-xs font-medium text-foreground flex-1 hover:text-primary transition-colors"
             >
-              {action.title}
+              <TruncatedText text={action.title} />
             </Link>
             <span className="text-[11px] text-muted-foreground shrink-0 max-w-[140px] truncate">
               {action.reason}

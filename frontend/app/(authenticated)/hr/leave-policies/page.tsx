@@ -6,7 +6,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Settings2, Trash2, Pencil, Clock, Calendar } from "lucide-react";
+import { Settings2, Pencil, Clock, Calendar } from "lucide-react";
+import { TrashIcon, PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetBody } from "@/components/ui/sheet";
@@ -83,14 +85,14 @@ function PolicyCard({
             <Button variant="ghost" size="icon" className="w-7" onClick={handleEditClick}>
               <Pencil className="h-3.5 w-3.5" />
             </Button>
-            <Button
+            <AnimatedIconButton
+              icon={TrashIcon}
               variant="ghost"
               size="icon"
               className="w-7 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
+              iconSize={14}
               onClick={handleDeleteClick}
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
+            />
           </div>
         )}
       </div>
@@ -147,9 +149,9 @@ function EmptyState({ onCreateClick }: { onCreateClick: () => void }) {
       <p className="text-muted-foreground text-sm mt-1 max-w-xs">
         Define accrual rules and carry-forward policies for each leave type.
       </p>
-      <Button className="mt-6" onClick={onCreateClick}>
-        <Plus className="h-4 w-4 mr-2" /> Create Policy
-      </Button>
+      <AnimatedIconButton icon={PlusIcon} className="mt-6" iconSize={16} onClick={onCreateClick}>
+        {" Create Policy"}
+      </AnimatedIconButton>
     </motion.div>
   );
 }
@@ -260,9 +262,9 @@ export default function LeavePoliciesPage() {
       subtitle="Define accrual and carry-forward rules per leave type"
       actions={
         canManage ? (
-          <Button size="sm" onClick={handleCreateClick}>
-            <Plus className="h-4 w-4 mr-2" /> New Policy
-          </Button>
+          <AnimatedIconButton icon={PlusIcon} size="sm" iconSize={16} onClick={handleCreateClick}>
+            {" New Policy"}
+          </AnimatedIconButton>
         ) : undefined
       }
     >

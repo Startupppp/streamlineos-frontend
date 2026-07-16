@@ -53,6 +53,7 @@ import { DocumentTable, type FolderItem } from "@/features/hr/documents/document
 import { NewFolderDialog } from "@/features/hr/documents/new-folder-dialog";
 import { EditDocumentSheet } from "@/features/hr/documents/edit-document-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { useCan } from "@/hooks/api/access";
 
 const DOCUMENT_CATEGORIES = [

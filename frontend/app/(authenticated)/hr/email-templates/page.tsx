@@ -27,6 +27,7 @@ import { Pencil, AlertCircle, Sparkles } from "lucide-react";
 import { CopyIcon, TrashIcon, PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { EmptyMailIllustration } from "@/components/illustrations";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 
 interface EmailTemplate {

@@ -34,6 +34,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { CrmOptionSelect } from "@/features/crm/shared/metadata";
 
 const schema = z

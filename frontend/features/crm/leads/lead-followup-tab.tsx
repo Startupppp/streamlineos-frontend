@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import {
   useTasks,
@@ -334,9 +335,7 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
                 className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-muted/10 border border-border/20"
               >
                 <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-                <span className="text-[11px] text-muted-foreground/70 line-through truncate flex-1">
-                  {task.title}
-                </span>
+                <TruncatedText text={task.title} className="text-[11px] text-muted-foreground/70 line-through flex-1" />
                 <span className="text-[10px] text-muted-foreground/50 shrink-0">
                   {task.completedAt
                     ? new Date(task.completedAt).toLocaleDateString("en-IN", {

@@ -36,7 +36,9 @@ import { AutomationTestDialog } from "@/features/hr/automations/automation-test-
 import type { HrAutomationRule } from "@/types/hr/automations";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Plus, Pencil, Trash2, History, Play } from "lucide-react";
+import { Pencil, History } from "lucide-react";
+import { PlayIcon, TrashIcon, PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 
 const HR_TRIGGER_EVENTS = [
   "employee.created", "employee.onboarded", "employee.probation_due", "employee.confirmed",
@@ -100,23 +102,21 @@ function RuleCard({
               <Button size="icon" variant="ghost" className="w-7" onClick={onViewRuns} title="View runs">
                 <History className="h-3.5 w-3.5" />
               </Button>
-              <Button size="icon" variant="ghost" className="w-7" onClick={onTest} title="Dry-run test">
-                <Play className="h-3.5 w-3.5" />
-              </Button>
+              <AnimatedIconButton icon={PlayIcon} size="icon" variant="ghost" className="w-7" iconSize={14} onClick={onTest} title="Dry-run test" />
               {canManage && (
                 <>
                   <Button size="icon" variant="ghost" className="w-7" onClick={onEdit} title="Edit">
                     <Pencil className="h-3.5 w-3.5" />
                   </Button>
-                  <Button
+                  <AnimatedIconButton
+                    icon={TrashIcon}
                     size="icon"
                     variant="ghost"
                     className="w-7 text-destructive hover:text-destructive"
+                    iconSize={14}
                     onClick={onDelete}
                     title="Delete"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
+                  />
                 </>
               )}
             </div>
@@ -217,9 +217,9 @@ export default function HrAutomationsPage() {
       subtitle="Configure rules that fire automatically on HR events"
       actions={
         canManage ? (
-          <Button size="sm" onClick={handleOpenCreate}>
-            <Plus className="h-4 w-4 mr-1.5" /> New Rule
-          </Button>
+          <AnimatedIconButton icon={PlusIcon} size="sm" iconSize={16} onClick={handleOpenCreate}>
+            {" New Rule"}
+          </AnimatedIconButton>
         ) : undefined
       }
     >

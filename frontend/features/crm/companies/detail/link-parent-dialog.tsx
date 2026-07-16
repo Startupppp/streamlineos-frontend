@@ -19,6 +19,7 @@ import {
 } from "@/hooks/api/crm";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 
 interface OrgSelectButtonProps {
@@ -43,7 +44,7 @@ function OrgSelectButton({ org, selected, onSelect }: OrgSelectButtonProps) {
       <span className="h-5 w-5 rounded bg-muted flex items-center justify-center text-[10px] font-semibold shrink-0">
         {org.name[0]?.toUpperCase()}
       </span>
-      <span className="truncate">{org.name}</span>
+      <TruncatedText text={org.name} />
       {org.industry && (
         <span className="text-xs text-muted-foreground ml-auto shrink-0">
           {org.industry}

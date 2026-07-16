@@ -80,15 +80,15 @@ export function MessageTranslateControl({ ticketId, messageId }: MessageTranslat
                 ))}
               </SelectContent>
             </Select>
-            <Button
+            <LoadingButton
               variant="outline"
               size="sm"
               className="h-8 text-xs shrink-0"
-              disabled={translate.isPending}
+              isPending={translate.isPending}
               onClick={handleTranslate}
             >
-              {translate.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Go"}
-            </Button>
+              Go
+            </LoadingButton>
           </div>
         </PopoverContent>
       </Popover>
