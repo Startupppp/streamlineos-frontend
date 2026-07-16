@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useCallback } from "react";
+import { useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -10,8 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { UploadIcon } from "@animateicons/react/lucide";
-import { Bookmark, X, Download, Ellipsis } from "lucide-react";
+import { UploadIcon, BookmarkIcon, XIcon, DownloadIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { cn } from "@/lib/utils";
 import { PM_CONTROL } from "@/features/projects/shared/pm-chrome";
@@ -94,7 +93,10 @@ export function ProjectBoardToolbar({
   onHideCompletedChange,
   doneCount,
 }: ProjectBoardToolbarProps) {
-  const saveViewRef = useRef<HTMLButtonElement>(null);
+  const downloadIcon = useAnimatedIcon();
+  const bookmarkIcon = useAnimatedIcon();
+  const clearViewIcon = useAnimatedIcon();
+  const moreIcon = useAnimatedIcon();
 
   const handleSaveViewClick = useCallback(() => {
     onOpenSaveView();
@@ -123,8 +125,9 @@ export function ProjectBoardToolbar({
                 size="icon"
                 className={cn("shrink-0", PM_CONTROL)}
                 aria-label="Export tickets"
+                {...downloadIcon.hoverHandlers}
               >
-                <Download className="h-3.5 w-3.5" />
+                <DownloadIcon ref={downloadIcon.iconRef} size={14} />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-48">
@@ -143,14 +146,14 @@ export function ProjectBoardToolbar({
             Icon={UploadIcon}
           />
           <Button
-            ref={saveViewRef}
             variant="outline"
             size="icon"
             onClick={handleSaveViewClick}
             className={cn("shrink-0", PM_CONTROL)}
             aria-label="Save view"
+            {...bookmarkIcon.hoverHandlers}
           >
-            <Bookmark className="h-3.5 w-3.5" />
+            <BookmarkIcon ref={bookmarkIcon.iconRef} size={14} />
           </Button>
         </div>
 
@@ -165,8 +168,9 @@ export function ProjectBoardToolbar({
               onClick={onClearView}
               aria-label="Clear view"
               className="ml-0.5 rounded-sm transition-colors hover:bg-muted"
+              {...clearViewIcon.hoverHandlers}
             >
-              <X className="h-3 w-3" />
+              <XIcon ref={clearViewIcon.iconRef} size={12} />
             </button>
           </Badge>
         ) : null}
@@ -192,8 +196,9 @@ export function ProjectBoardToolbar({
             size="icon"
             className={cn("shrink-0 sm:hidden", PM_CONTROL)}
             aria-label="More board actions"
+            {...moreIcon.hoverHandlers}
           >
-            <Ellipsis className="h-3.5 w-3.5" />
+            <EllipsisIcon ref={moreIcon.iconRef} size={14} />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">

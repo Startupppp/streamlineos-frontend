@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Trash2 } from "lucide-react";
+import { Trash2Icon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -16,6 +17,7 @@ interface TicketDetailActionsProps {
 
 export function TicketDetailActions({ onDelete, isDeleting }: TicketDetailActionsProps) {
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
 
   function handleDeleteConfirm() {
     onDelete();
@@ -34,8 +36,9 @@ export function TicketDetailActions({ onDelete, isDeleting }: TicketDetailAction
           variant="outline"
           className="text-destructive hover:text-destructive"
           aria-label="Delete ticket"
+          {...hoverHandlers}
         >
-          <Trash2 />
+          <Trash2Icon ref={iconRef} size={16} />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-64 p-3" align="end">

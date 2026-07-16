@@ -118,7 +118,7 @@ export default function BillingPage() {
                 {PLAN_LABELS[sub.plan] ?? sub.plan} Plan
               </p>
               {sub.status === "TRIAL" && trialDaysRemaining !== null && (
-                <p className="text-xs text-amber-600 mt-0.5">
+                <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
                   Trial ends in{" "}
                   {trialDaysRemaining === 0
                     ? "today"

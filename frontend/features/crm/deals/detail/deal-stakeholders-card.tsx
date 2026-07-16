@@ -1,16 +1,31 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { Star, Trash2, Plus, Users } from "lucide-react";
+import { useState, useCallback, useMemo } from "react";
+import { Star, Users } from "lucide-react";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useStakeholders, useCreateStakeholder, useDeleteStakeholder } from "@/hooks/api/crm/deals";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import {
+  useStakeholders,
+  useCreateStakeholder,
+  useDeleteStakeholder,
+} from "@/hooks/api/crm/deals";
+import { useContacts } from "@/hooks/api/crm/contacts";
 
 const SELECT_NONE = "__none__";
 
@@ -24,17 +39,30 @@ interface StakeholderRowProps {
   onDelete: (id: string) => void;
 }
 
-function StakeholderRow({ id, name, title, roleKey, influence, isPrimary, onDelete }: StakeholderRowProps) {
+function StakeholderRow({
+  id,
+  name,
+  title,
+  roleKey,
+  influence,
+  isPrimary,
+  onDelete,
+}: StakeholderRowProps) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
   const handleDeleteClick = useCallback(() => onDelete(id), [id, onDelete]);
 
   return (
     <div className="flex items-start justify-between gap-2">
       <div className="min-w-0">
         <div className="flex items-center gap-1.5">
-          {isPrimary && <Star className="h-3 w-3 fill-amber-400 text-amber-400 shrink-0" />}
+          {isPrimary && (
+            <Star className="h-3 w-3 fill-amber-400 text-amber-400 shrink-0" />
+          )}
           <p className="text-sm font-medium truncate">{name}</p>
         </div>
-        {title && <p className="text-xs text-muted-foreground truncate">{title}</p>}
+        {title && (
+          <p className="text-xs text-muted-foreground truncate">{title}</p>
+        )}
         <div className="flex gap-1 mt-1 flex-wrap">
           {roleKey && (
             <Badge variant="secondary" className="text-xs px-1.5 py-0">
@@ -52,8 +80,9 @@ function StakeholderRow({ id, name, title, roleKey, influence, isPrimary, onDele
         onClick={handleDeleteClick}
         className="text-muted-foreground hover:text-destructive transition-colors shrink-0 mt-0.5"
         aria-label="Remove stakeholder"
+        {...hoverHandlers}
       >
-        <Trash2 className="h-3.5 w-3.5" />
+        <Trash2Icon ref={iconRef} size={14} />
       </button>
     </div>
   );
@@ -69,15 +98,34 @@ export function DealStakeholdersCard({ dealId }: DealStakeholdersCardProps) {
   const deleteStakeholder = useDeleteStakeholder(dealId);
   const [adding, setAdding] = useState(false);
   const [contactId, setContactId] = useState("");
+  const [contactSearch, setContactSearch] = useState("");
   const [roleKey, setRoleKey] = useState(SELECT_NONE);
   const [influence, setInfluence] = useState(SELECT_NONE);
   const [isPrimary, setIsPrimary] = useState(false);
+  const { iconRef: addIconRef, hoverHandlers: addHoverHandlers } =
+    useAnimatedIcon();
+
+  const debouncedContactSearch = useDebouncedValue(contactSearch, 300);
+  const { data: contactsData } = useContacts({
+    search: debouncedContactSearch || undefined,
+    limit: 20,
+  });
+  const contactOptions = useMemo(
+    () =>
+      (contactsData?.items ?? []).map((c) => ({
+        value: String(c.id),
+        label: c.name,
+        sublabel: c.email ?? c.company ?? undefined,
+      })),
+    [contactsData],
+  );
 
   const handleStartAdding = useCallback(() => setAdding(true), []);
 
   const handleCancel = useCallback(() => {
     setAdding(false);
     setContactId("");
+    setContactSearch("");
     setRoleKey(SELECT_NONE);
     setInfluence(SELECT_NONE);
     setIsPrimary(false);
@@ -86,7 +134,7 @@ export function DealStakeholdersCard({ dealId }: DealStakeholdersCardProps) {
   const handleAdd = useCallback(() => {
     const id = Number(contactId);
     if (!id) {
-      toast.error("Enter a valid contact ID");
+      toast.error("Select a contact");
       return;
     }
     createStakeholder.mutate(
@@ -104,7 +152,14 @@ export function DealStakeholdersCard({ dealId }: DealStakeholdersCardProps) {
         onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
-  }, [contactId, roleKey, influence, isPrimary, createStakeholder, handleCancel]);
+  }, [
+    contactId,
+    roleKey,
+    influence,
+    isPrimary,
+    createStakeholder,
+    handleCancel,
+  ]);
 
   const handleDelete = useCallback(
     (id: string) => {
@@ -116,7 +171,7 @@ export function DealStakeholdersCard({ dealId }: DealStakeholdersCardProps) {
     [deleteStakeholder],
   );
 
-  const handleContactIdChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setContactId(e.target.value), []);
+  const handleContactChange = useCallback((v: string) => setContactId(v), []);
   const handleRoleKeyChange = useCallback((v: string) => setRoleKey(v), []);
   const handleInfluenceChange = useCallback((v: string) => setInfluence(v), []);
 
@@ -127,20 +182,31 @@ export function DealStakeholdersCard({ dealId }: DealStakeholdersCardProps) {
           <Users className="h-4 w-4" />
           Stakeholders
         </CardTitle>
-        <Button variant="ghost" size="icon" className="w-7" onClick={handleStartAdding}>
-          <Plus className="h-3.5 w-3.5" />
+        <Button
+          variant="ghost"
+          size="icon"
+          className="w-7"
+          onClick={handleStartAdding}
+          aria-label="Add stakeholder"
+          {...addHoverHandlers}
+        >
+          <PlusIcon ref={addIconRef} size={14} />
         </Button>
       </CardHeader>
       <CardContent className="space-y-3">
         {adding && (
           <div className="space-y-2 rounded-md border p-3 text-sm">
             <div>
-              <Label className="text-xs text-muted-foreground">Contact ID</Label>
-              <Input
+              <Label className="text-xs text-muted-foreground">Contact</Label>
+              <Combobox
+                options={contactOptions}
                 value={contactId}
-                onChange={handleContactIdChange}
-                placeholder="Contact ID..."
+                onChange={handleContactChange}
+                placeholder="Select contact…"
+                searchPlaceholder="Search contacts…"
+                emptyText="No contacts found."
                 className="mt-1"
+                onSearchChange={setContactSearch}
               />
             </div>
             <div>
@@ -174,17 +240,23 @@ export function DealStakeholdersCard({ dealId }: DealStakeholdersCardProps) {
               </Select>
             </div>
             <div className="flex gap-2">
-              <Button size="sm" className="" onClick={handleAdd} disabled={createStakeholder.isPending}>
+              <LoadingButton
+                size="sm"
+                onClick={handleAdd}
+                isPending={createStakeholder.isPending}
+              >
                 Add
-              </Button>
-              <Button size="sm" variant="ghost" className="" onClick={handleCancel}>
+              </LoadingButton>
+              <Button size="sm" variant="ghost" onClick={handleCancel}>
                 Cancel
               </Button>
             </div>
           </div>
         )}
         {stakeholders.length === 0 && !adding ? (
-          <p className="text-xs text-muted-foreground">No stakeholders added.</p>
+          <p className="text-xs text-muted-foreground">
+            No stakeholders added.
+          </p>
         ) : (
           stakeholders.map((s) => (
             <StakeholderRow

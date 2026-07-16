@@ -11,13 +11,12 @@ import {
   Check,
   Ban,
   Plus,
-  Loader2,
   Pencil,
   Trash2,
-  AlertCircle,
-  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
@@ -340,33 +339,15 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
   if (error || !invoice) {
     return (
       <PageWrapper title="Invoice">
-        <div className="flex flex-col items-center justify-center flex-1 h-full min-h-[400px] gap-4 text-center">
-          <div className="rounded-full bg-destructive/10 p-4">
-            <AlertCircle className="w-8 text-destructive" />
-          </div>
-          <div>
-            <p className="font-semibold text-foreground">
-              {error ? "Failed to load invoice" : "Invoice not found"}
-            </p>
-            <p className="text-sm text-muted-foreground mt-1">
-              {error
-                ? getErrorMessage(error)
-                : "The invoice you are looking for does not exist."}
-            </p>
-          </div>
-          <div className="flex gap-2">
-            {error && (
-              <Button variant="outline" size="sm" onClick={handleRetry}>
-                <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Retry
-              </Button>
-            )}
-            <Link href="/billing/invoices">
-              <Button variant="outline" size="sm">
-                <ArrowLeft className="h-3.5 w-3.5 mr-1.5" /> Back to Invoices
-              </Button>
-            </Link>
-          </div>
-        </div>
+        <ErrorState
+          title={error ? "Failed to load invoice" : "Invoice not found"}
+          description={
+            error
+              ? getErrorMessage(error)
+              : "The invoice you are looking for does not exist."
+          }
+          onRetry={error ? handleRetry : undefined}
+        />
       </PageWrapper>
     );
   }
@@ -397,14 +378,14 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
             </Button>
           )}
           {invoice.status === "DRAFT" && (
-            <Button
+            <LoadingButton
               size="sm"
               variant="outline"
               onClick={handleMarkIssued}
-              disabled={updateInvoice.isPending}
+              isPending={updateInvoice.isPending}
             >
               <Send className="h-3.5 w-3.5 mr-1.5" /> Mark Issued
-            </Button>
+            </LoadingButton>
           )}
           {(invoice.status === "ISSUED" || invoice.status === "FAILED") && (
             <Button size="sm" variant="outline" onClick={handleOpenPayment}>
@@ -412,24 +393,24 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
             </Button>
           )}
           {invoice.status === "ISSUED" && (
-            <Button
+            <LoadingButton
               size="sm"
               variant="outline"
               onClick={handleMarkPaid}
-              disabled={updateInvoice.isPending}
+              isPending={updateInvoice.isPending}
             >
               <Check className="h-3.5 w-3.5 mr-1.5" /> Mark Paid
-            </Button>
+            </LoadingButton>
           )}
           {invoice.status !== "VOIDED" && invoice.status !== "PAID" && (
-            <Button
+            <LoadingButton
               size="sm"
               variant="outline"
               onClick={handleVoid}
-              disabled={updateInvoice.isPending}
+              isPending={updateInvoice.isPending}
             >
               <Ban className="h-3.5 w-3.5 mr-1.5" /> Void
-            </Button>
+            </LoadingButton>
           )}
           {invoice.status === "PAID" && outstanding <= 0 && (
             <div className="flex items-center gap-1.5 text-sm text-emerald-600 dark:text-emerald-400 font-medium">
@@ -442,19 +423,15 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
 
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button
+              <LoadingButton
                 size="sm"
                 variant="outline"
                 className="text-destructive hover:text-destructive border-destructive/30 hover:bg-destructive/5"
-                disabled={deleteInvoice.isPending}
+                isPending={deleteInvoice.isPending}
               >
-                {deleteInvoice.isPending ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
-                ) : (
-                  <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-                )}
+                <Trash2 className="h-3.5 w-3.5 mr-1.5" />
                 Delete
-              </Button>
+              </LoadingButton>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>

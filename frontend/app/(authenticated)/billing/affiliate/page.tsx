@@ -18,6 +18,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useAffiliate,
   useCreateReferral,
@@ -113,7 +117,7 @@ function getCouponRowKey(row: CouponRow): string | number {
 }
 
 export default function AffiliatePage() {
-  const { data, isLoading } = useAffiliate();
+  const { data, isLoading, isError, error } = useAffiliate();
   const register = useRegisterAffiliate();
   const createReferral = useCreateReferral();
   const requestPayout = useRequestAffiliatePayout();
@@ -161,42 +165,41 @@ export default function AffiliatePage() {
       subtitle="Earn commissions by referring customers"
     >
       <div className="space-y-4">
-        {isLoading ? (
-          <div className="space-y-3">
+        {isError ? (
+          <ErrorState description={getErrorMessage(error)} />
+        ) : isLoading ? (
+          <div className="flex flex-1 flex-col gap-4">
             <Skeleton className="h-24 w-full rounded-lg" />
             <Skeleton className="h-48 w-full rounded-lg" />
           </div>
         ) : !affiliate ? (
           <EmptyState
-            illustration={<DollarSign />}
+            illustrationPreset="report"
             title="Join the Affiliate Program"
             description="Earn 10% commission on every subscription from customers you refer."
             action={{ label: "Become an Affiliate", onClick: handleRegister }}
           />
         ) : (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              <div className="rounded-lg border border-border bg-card px-4 py-3">
-                <p className="text-xs text-muted-foreground mb-1">
-                  Total Earned
-                </p>
-                <p className="text-xl font-bold">
-                  {fmt(affiliate.totalEarned)}
-                </p>
-              </div>
-              <div className="rounded-lg border border-border bg-card px-4 py-3">
-                <p className="text-xs text-muted-foreground mb-1">
-                  Pending Payout
-                </p>
-                <p className="text-xl font-bold">
-                  {fmt(affiliate.pendingPayout)}
-                </p>
-              </div>
-              <div className="rounded-lg border border-border bg-card px-4 py-3">
-                <p className="text-xs text-muted-foreground mb-1">Signups</p>
-                <p className="text-xl font-bold">{affiliate.signupCount}</p>
-              </div>
-            </div>
+            <StatCardGrid cols={3}>
+              <StatCard
+                label="Total Earned"
+                value={fmt(affiliate.totalEarned)}
+                icon={DollarSign}
+                tone="emerald"
+              />
+              <StatCard
+                label="Pending Payout"
+                value={fmt(affiliate.pendingPayout)}
+                icon={FileText}
+                tone="amber"
+              />
+              <StatCard
+                label="Signups"
+                value={affiliate.signupCount}
+                icon={Link2}
+              />
+            </StatCardGrid>
 
             <div className="rounded-lg border border-border bg-card p-4 space-y-3">
               <p className="text-sm font-semibold">Your Referral Link</p>
@@ -229,13 +232,15 @@ export default function AffiliatePage() {
                   onChange={handleEmailChange}
                   className="flex-1"
                 />
-                <Button
+                <LoadingButton
                   size="sm"
                   onClick={handleSendReferral}
-                  disabled={!email || createReferral.isPending}
+                  isPending={createReferral.isPending}
+                  disabled={!email}
+                  loadingText="Sending…"
                 >
                   Send
-                </Button>
+                </LoadingButton>
               </div>
             </div>
 
@@ -264,13 +269,15 @@ export default function AffiliatePage() {
                     {fmt(affiliate.pendingPayout)}
                   </span>
                 </p>
-                <Button
+                <LoadingButton
                   size="sm"
                   onClick={handleRequestPayout}
-                  disabled={affiliate.pendingPayout === 0 || requestPayout.isPending}
+                  isPending={requestPayout.isPending}
+                  disabled={affiliate.pendingPayout === 0}
+                  loadingText="Requesting…"
                 >
                   Request Payout
-                </Button>
+                </LoadingButton>
                 <p className="text-xs text-muted-foreground">
                   Payouts are processed within 5-7 business days via bank transfer.
                 </p>

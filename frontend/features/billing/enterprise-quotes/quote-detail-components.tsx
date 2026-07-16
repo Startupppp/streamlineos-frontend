@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { Send, ThumbsUp, XCircle, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -149,7 +150,7 @@ export function ApprovePanel({ quoteId }: { quoteId: number }) {
   }
 
   return (
-    <div className="rounded-md border border-green-200 bg-green-50/50 dark:bg-green-950/20 dark:border-green-900 p-3 space-y-2">
+    <div className="rounded-md border border-green-200 bg-green-50/50 dark:bg-green-500/10 dark:border-green-500/30 p-3 space-y-2">
       <Label className="text-xs font-medium">Approval Notes (optional)</Label>
       <Textarea
         rows={2}
@@ -158,10 +159,10 @@ export function ApprovePanel({ quoteId }: { quoteId: number }) {
         placeholder="Add approval notes…"
         className="text-sm"
       />
-      <Button size="sm" className="w-full" onClick={handleApprove} disabled={approve.isPending}>
+      <LoadingButton size="sm" className="w-full" onClick={handleApprove} isPending={approve.isPending} loadingText="Approving…">
         <ThumbsUp className="h-3.5 w-3.5 mr-1.5" />
-        {approve.isPending ? "Approving…" : "Approve"}
-      </Button>
+        Approve
+      </LoadingButton>
     </div>
   );
 }
@@ -198,16 +199,18 @@ export function RejectPanel({ quoteId }: { quoteId: number }) {
         placeholder="Why is this quote being rejected?"
         className="text-sm"
       />
-      <Button
+      <LoadingButton
         size="sm"
         variant="destructive"
         className="w-full"
         onClick={handleReject}
-        disabled={reject.isPending || !reason.trim()}
+        disabled={!reason.trim()}
+        isPending={reject.isPending}
+        loadingText="Rejecting…"
       >
         <XCircle className="h-3.5 w-3.5 mr-1.5" />
-        {reject.isPending ? "Rejecting…" : "Reject"}
-      </Button>
+        Reject
+      </LoadingButton>
     </div>
   );
 }
@@ -247,10 +250,10 @@ export function ActionSidebar({
 
   if (status === "DRAFT") {
     return (
-      <Button className="w-full" size="sm" onClick={handleSubmit} disabled={submit.isPending}>
+      <LoadingButton className="w-full" size="sm" onClick={handleSubmit} isPending={submit.isPending} loadingText="Submitting…">
         <Send className="h-3.5 w-3.5 mr-1.5" />
-        {submit.isPending ? "Submitting…" : "Submit for Approval"}
-      </Button>
+        Submit for Approval
+      </LoadingButton>
     );
   }
 
@@ -265,19 +268,19 @@ export function ActionSidebar({
 
   if (status === "APPROVED") {
     return (
-      <Button className="w-full" size="sm" onClick={handleSend} disabled={send.isPending}>
+      <LoadingButton className="w-full" size="sm" onClick={handleSend} isPending={send.isPending} loadingText="Sending…">
         <Send className="h-3.5 w-3.5 mr-1.5" />
-        {send.isPending ? "Sending…" : "Send to Customer"}
-      </Button>
+        Send to Customer
+      </LoadingButton>
     );
   }
 
   if (status === "SENT") {
     return (
-      <Button className="w-full" size="sm" onClick={handleAccept} disabled={accept.isPending}>
+      <LoadingButton className="w-full" size="sm" onClick={handleAccept} isPending={accept.isPending} loadingText="Accepting…">
         <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
-        {accept.isPending ? "Marking…" : "Mark as Accepted"}
-      </Button>
+        Mark as Accepted
+      </LoadingButton>
     );
   }
 

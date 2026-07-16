@@ -3,23 +3,18 @@
 import { useCallback, useMemo, type ReactNode } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
-import {
-  Repeat,
-  IndianRupee,
-  CalendarClock,
-  Loader2,
-  RefreshCw,
-} from "lucide-react";
+import { Repeat, IndianRupee, CalendarClock, RefreshCw } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTimeIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useRecurringInvoices,
   useRunRecurringInvoices,
@@ -149,23 +144,20 @@ export default function RecurringInvoicesPage() {
           );
         }
       },
-      onError: (error) => toast.error(error.message),
+      onError: (error) => toast.error(getErrorMessage(error)),
     });
   }, [runMutation]);
 
   const generateButton = (
-    <Button
+    <LoadingButton
       size="sm"
       onClick={handleGenerate}
+      isPending={runMutation.isPending}
       disabled={runMutation.isPending || query.isLoading}
     >
-      {runMutation.isPending ? (
-        <Loader2 className="h-4 w-4 animate-spin" />
-      ) : (
-        <RefreshCw className="h-4 w-4" />
-      )}
+      <RefreshCw className="h-4 w-4" />
       Generate due now
-    </Button>
+    </LoadingButton>
   );
 
   return (
@@ -177,7 +169,7 @@ export default function RecurringInvoicesPage() {
       {query.isLoading ? (
         <LoadingState variant="page" />
       ) : query.error ? (
-        <ErrorState description={query.error.message} onRetry={handleRetry} />
+        <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} />
       ) : recurring.length === 0 ? (
         <div className="flex flex-1">
           <EmptyState
@@ -190,52 +182,28 @@ export default function RecurringInvoicesPage() {
         </div>
       ) : (
         <div className="flex flex-1 min-h-0 flex-col space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Active recurring
-                </CardTitle>
-                <Repeat className="h-4 w-4 text-primary" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{recurring.length}</div>
-                <p className="text-xs text-muted-foreground">
-                  Invoices on a schedule
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Due now</CardTitle>
-                <CalendarClock className="h-4 w-4 text-amber-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-amber-600">
-                  {dueCount}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Ready to generate
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Monthly value
-                </CardTitle>
-                <IndianRupee className="h-4 w-4 text-emerald-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {formatCurrencyFull(monthlyTotal)}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Estimated recurring revenue
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+          <StatCardGrid cols={3}>
+            <StatCard
+              label="Active recurring"
+              value={recurring.length}
+              icon={Repeat}
+              hint="Invoices on a schedule"
+            />
+            <StatCard
+              label="Due now"
+              value={dueCount}
+              icon={CalendarClock}
+              tone="amber"
+              hint="Ready to generate"
+            />
+            <StatCard
+              label="Monthly value"
+              value={formatCurrencyFull(monthlyTotal)}
+              icon={IndianRupee}
+              tone="emerald"
+              hint="Estimated recurring revenue"
+            />
+          </StatCardGrid>
 
           <div className="flex flex-1 min-h-0 flex-col rounded-lg border border-border overflow-hidden">
             <DataTable

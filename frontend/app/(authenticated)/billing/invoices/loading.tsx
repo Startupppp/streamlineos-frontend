@@ -1,7 +1,6 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 
 export default function InvoicesLoading() {
   return (
@@ -11,23 +10,15 @@ export default function InvoicesLoading() {
       actions={<Skeleton className="h-9 w-32 rounded-md" />}
       filters={<Skeleton className="h-9 w-40 rounded-md" />}
     >
-      <div className="space-y-4">
-        <div className="grid gap-4 md:grid-cols-4">
-          {Array.from({ length: 9 }).map((_, i) => (
-            <Card key={i}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-4 w-4 rounded" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-4 w-24 mb-1" />{" "}
-                <Skeleton className="h-3 w-16" />
-              </CardContent>
-            </Card>
-          ))}
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
+        <StatCardGridSkeleton cols={4} />
+        <div className="flex-1 min-h-0 rounded-xl border border-border bg-card">
+          <div className="space-y-3 p-4">
+            {Array.from({ length: 9 }).map((_, i) => (
+              <Skeleton key={i} className="h-9 w-full" />
+            ))}
+          </div>
         </div>
-
-        <DataTableSkeleton rows={12} columns={7} />
       </div>
     </PageWrapper>
   );

@@ -2,20 +2,23 @@
 
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { Plus, Loader2, Check, Trash2 } from "lucide-react";
+import { Plus, Check, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogBody,
 } from "@/components/ui/dialog";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useUpdateInvoice } from "@/hooks/api/invoice";
 
 function fmt(amount: string | number) {
@@ -207,7 +210,7 @@ export function InvoiceLineItems({
           toast.success("Invoice updated");
           onEditOpenChange(false);
         },
-        onError: () => toast.error("Failed to update invoice"),
+        onError: (err: unknown) => toast.error(getErrorMessage(err)),
       },
     );
   }
@@ -251,7 +254,7 @@ export function InvoiceLineItems({
           </div>
           {totalPaid > 0 && (
             <>
-              <div className="flex justify-between text-emerald-600">
+              <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
                 <span>Paid</span>
                 <span>{fmt(totalPaid)}</span>
               </div>
@@ -376,23 +379,19 @@ export function InvoiceLineItems({
               />
             </div>
           </DialogBody>
-          <div className="flex shrink-0 justify-end gap-2 border-t border-border bg-muted/30 px-6 py-4">
+          <DialogFooter>
             <Button variant="outline" size="sm" onClick={handleCancelEdit}>
               Cancel
             </Button>
-            <Button
+            <LoadingButton
               size="sm"
-              disabled={updateInvoice.isPending}
+              isPending={updateInvoice.isPending}
               onClick={handleSaveEdit}
             >
-              {updateInvoice.isPending ? (
-                <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Check className="mr-1 h-3.5 w-3.5" />
-              )}
+              <Check className="mr-1 h-3.5 w-3.5" />
               Save Changes
-            </Button>
-          </div>
+            </LoadingButton>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>

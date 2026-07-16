@@ -8,6 +8,7 @@ import { format, isAfter, addDays } from "date-fns";
 import { Plus, Copy, MoreHorizontal, RefreshCw, Tag, CheckCircle2, TrendingUp, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -44,6 +45,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useCan } from "@/hooks/api/access";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import {
   useCoupons,
@@ -287,14 +290,15 @@ function CreateCouponSheet({ open, onOpenChange }: CreateCouponSheetProps) {
         </Form>
         </SheetBody>
         <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
-          <Button
+          <LoadingButton
             type="submit"
             form="create-coupon-form"
-            disabled={createCoupon.isPending}
+            isPending={createCoupon.isPending}
+            loadingText="Creating…"
             className="w-full"
           >
-            {createCoupon.isPending ? "Creating..." : "Create Coupon"}
-          </Button>
+            Create Coupon
+          </LoadingButton>
         </SheetFooter>
       </SheetContent>
     </Sheet>

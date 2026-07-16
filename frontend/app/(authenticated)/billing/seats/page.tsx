@@ -12,9 +12,9 @@ import { useSeatInfo, useSubscription } from "@/hooks/api/subscription";
 import type { StatTone } from "@/components/ui/stat-card";
 
 function utilizationColor(percent: number): string {
-  if (percent >= 90) return "text-red-600";
-  if (percent >= 70) return "text-amber-600";
-  return "text-green-600";
+  if (percent >= 90) return "text-red-600 dark:text-red-400";
+  if (percent >= 70) return "text-amber-600 dark:text-amber-400";
+  return "text-green-600 dark:text-green-400";
 }
 
 function progressBarColor(percent: number): string {

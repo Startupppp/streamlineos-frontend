@@ -12,7 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useHrHolidaysForYear, useAddLegacyHoliday, useDeleteLegacyHoliday, useUpdateLegacyHoliday } from "@/hooks/api/hr";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
-import { Loader2, Plus, Trash2, Pencil, Check, X, PartyPopper } from "lucide-react";
+import { Loader2, Pencil, PartyPopper } from "lucide-react";
+import { PlusIcon, Trash2Icon, CheckIcon, XIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 
 interface EditState {
   id: number;

@@ -4,7 +4,8 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Trash2 } from "lucide-react";
+import { Trash2Icon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import {
   Dialog,
   DialogContent,
@@ -60,6 +61,8 @@ interface AllocationRowProps {
 }
 
 function AllocationRow({ index, register, onRemove }: AllocationRowProps) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+
   function handleRemove(): void {
     onRemove(index);
   }
@@ -80,10 +83,36 @@ function AllocationRow({ index, register, onRemove }: AllocationRowProps) {
         size="icon"
         className="w-7 shrink-0"
         onClick={handleRemove}
+        {...hoverHandlers}
       >
-        <Trash2 className="h-3.5 w-3.5" />
+        <Trash2Icon ref={iconRef} className="h-3.5 w-3.5" />
       </Button>
     </div>
+  );
+}
+
+import { PlusIcon } from "@animateicons/react/lucide";
+import { Plus } from "lucide-react";
+
+interface AddAllocationButtonProps {
+  onClick: () => void;
+}
+
+function AddAllocationButton({ onClick }: AddAllocationButtonProps) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      className="text-xs gap-1"
+      onClick={onClick}
+      {...hoverHandlers}
+    >
+      <PlusIcon ref={iconRef} className="h-3 w-3" />
+      Add allocation
+    </Button>
   );
 }
 

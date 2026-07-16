@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -47,26 +47,36 @@ export function ReceiptEditSheet({ expense, open, onOpenChange }: ReceiptEditShe
     },
   });
 
-  const merchantValue = form.watch("merchant");
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    const merchant = merchantValue?.trim() ?? "";
-    if (!merchant || merchant === lastSuggestedMerchantRef.current || suggestInFlightRef.current) return;
-    suggestInFlightRef.current = true;
-    lastSuggestedMerchantRef.current = merchant;
-    suggestMutation.mutate(
-      { merchant },
-      {
-        onSuccess: (result) => {
-          setSuggestion(result);
-          suggestInFlightRef.current = false;
-        },
-        onError: () => {
-          suggestInFlightRef.current = false;
-        },
-      },
-    );
-  }, [merchantValue, suggestMutation]);
+  const handleMerchantChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      form.setValue("merchant", value);
+      if (debounceTimerRef.current !== null) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      debounceTimerRef.current = setTimeout(() => {
+        const merchant = value.trim();
+        if (!merchant || merchant === lastSuggestedMerchantRef.current || suggestInFlightRef.current) return;
+        suggestInFlightRef.current = true;
+        lastSuggestedMerchantRef.current = merchant;
+        suggestMutation.mutate(
+          { merchant },
+          {
+            onSuccess: (result) => {
+              setSuggestion(result);
+              suggestInFlightRef.current = false;
+            },
+            onError: () => {
+              suggestInFlightRef.current = false;
+            },
+          },
+        );
+      }, 400);
+    },
+    [form, suggestMutation],
+  );
 
   const handleApplySuggestion = useCallback(() => {
     if (!suggestion) return;
@@ -119,18 +129,25 @@ export function ReceiptEditSheet({ expense, open, onOpenChange }: ReceiptEditShe
       <form className="space-y-4" onSubmit={form.handleSubmit(handleSubmit)} noValidate>
         <div className="space-y-1.5">
           <Label className="text-xs">Merchant</Label>
-          <Input {...form.register("merchant")} className="text-sm" placeholder="Merchant name" />
+          <Input
+            {...form.register("merchant")}
+            onChange={handleMerchantChange}
+            className="text-sm"
+            placeholder="Merchant name"
+          />
           {form.formState.errors.merchant && (
             <p className="text-xs text-destructive">{form.formState.errors.merchant.message}</p>
           )}
           {suggestion && suggestion.basis === "history" && (
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={handleApplySuggestion}
-              className="mt-1 inline-flex items-center gap-1 rounded-full bg-primary/10 border border-primary/30 px-2.5 py-0.5 text-xs text-foreground hover:bg-primary/15 transition-colors"
+              className="mt-1 h-auto rounded-full bg-primary/10 border border-primary/30 px-2.5 py-0.5 text-xs text-foreground hover:bg-primary/15"
             >
               Suggested: {suggestion.categoryName} ({suggestion.confidence}%)
-            </button>
+            </Button>
           )}
         </div>
         <div className="space-y-1.5">

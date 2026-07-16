@@ -38,9 +38,16 @@ import {
   PmSection,
   PM_FILL_PANEL,
 } from "@/features/projects/shared/pm-chrome";
-import { TABLE_TITLE_CELL, TEXT_ONE_LINE, TEXT_FLEX_CHILD } from "@/features/projects/shared/text-overflow";
+import {
+  TABLE_TITLE_CELL,
+  TEXT_ONE_LINE,
+  TEXT_FLEX_CHILD,
+} from "@/features/projects/shared/text-overflow";
 
-const STATUS_CONFIG: Record<Release["status"], { label: string; className: string }> = {
+const STATUS_CONFIG: Record<
+  Release["status"],
+  { label: string; className: string }
+> = {
   draft: {
     label: "Draft",
     className:
@@ -69,7 +76,12 @@ interface ReleasesPageProps {
 function NewReleaseButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
-    <Button size="sm" className="gap-1 text-[11px]" onClick={onClick} {...hoverHandlers}>
+    <Button
+      size="sm"
+      className="gap-1 text-[11px]"
+      onClick={onClick}
+      {...hoverHandlers}
+    >
       <PlusIcon ref={iconRef} size={14} />
       New Release
     </Button>
@@ -100,7 +112,12 @@ function DeleteReleaseButton({ onClick }: { onClick: () => void }) {
 }
 
 export function ReleasesPage({ projectId }: ReleasesPageProps) {
-  const { data: releases, isLoading, isError, refetch } = useReleases(projectId);
+  const {
+    data: releases,
+    isLoading,
+    isError,
+    refetch,
+  } = useReleases(projectId);
   const deleteRelease = useDeleteRelease(projectId);
   const canManage = useCan("projects:releases:manage");
 
@@ -133,7 +150,10 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
     setEditTarget(null);
   }, []);
 
-  const handleDeleteTarget = useCallback((r: Release) => setDeleteTarget(r), []);
+  const handleDeleteTarget = useCallback(
+    (r: Release) => setDeleteTarget(r),
+    [],
+  );
 
   const handleAlertOpenChange = useCallback((open: boolean) => {
     if (!open) setDeleteTarget(null);
@@ -164,10 +184,22 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
         className: TABLE_TITLE_CELL,
         cell: (r) => (
           <div className={cn(TEXT_FLEX_CHILD, "space-y-0.5 overflow-hidden")}>
-            <p className={cn(TEXT_ONE_LINE, "text-xs font-medium text-foreground")} title={r.name}>
+            <p
+              className={cn(
+                TEXT_ONE_LINE,
+                "text-xs font-medium text-foreground",
+              )}
+              title={r.name}
+            >
               {r.name}
             </p>
-            <p className={cn(TEXT_ONE_LINE, "font-mono text-[10px] text-muted-foreground")} title={r.version}>
+            <p
+              className={cn(
+                TEXT_ONE_LINE,
+                "font-mono text-[10px] text-muted-foreground",
+              )}
+              title={r.version}
+            >
               {r.version}
             </p>
           </div>
@@ -181,7 +213,10 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
         cell: (r) => {
           const cfg = STATUS_CONFIG[r.status];
           return (
-            <Badge variant="outline" className={cn("h-5 py-0 text-[10px]", cfg.className)}>
+            <Badge
+              variant="outline"
+              className={cn("h-5 py-0 text-[10px]", cfg.className)}
+            >
               {cfg.label}
             </Badge>
           );
@@ -207,7 +242,9 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
         sortable: true,
         sortValue: (r) => r.ticketCount,
         cell: (r) => (
-          <span className="text-xs tabular-nums text-muted-foreground">{r.ticketCount}</span>
+          <span className="text-xs tabular-nums text-muted-foreground">
+            {r.ticketCount}
+          </span>
         ),
       },
       {
@@ -240,12 +277,20 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
     <PageWrapper
       title="Releases"
       subtitle="Track versions and shipped features"
-      actions={canManage ? <NewReleaseButton onClick={handleOpenCreate} /> : undefined}
+      actions={
+        canManage ? <NewReleaseButton onClick={handleOpenCreate} /> : undefined
+      }
     >
       <PmPageShell>
         <PmSection index={0}>
           <StatCardGrid cols={4}>
-            <StatCard label="Total" value={stats.total} icon={Tag} tone="default" index={0} />
+            <StatCard
+              label="Total"
+              value={stats.total}
+              icon={Tag}
+              tone="default"
+              index={0}
+            />
             <StatCard
               label="Released"
               value={stats.released}
@@ -253,7 +298,13 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
               tone="emerald"
               index={1}
             />
-            <StatCard label="Draft" value={stats.draft} icon={Clock} tone="amber" index={2} />
+            <StatCard
+              label="Draft"
+              value={stats.draft}
+              icon={Clock}
+              tone="amber"
+              index={2}
+            />
             <StatCard
               label="Archived"
               value={stats.archived}
@@ -308,12 +359,14 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
             <AlertDialogHeader>
               <AlertDialogTitle>Delete release?</AlertDialogTitle>
               <AlertDialogDescription>
-                &ldquo;{deleteTarget?.name} {deleteTarget?.version}&rdquo; will be permanently
-                deleted.
+                &ldquo;{deleteTarget?.name} {deleteTarget?.version}&rdquo; will
+                be permanently deleted.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel disabled={deleteRelease.isPending}>Cancel</AlertDialogCancel>
+              <AlertDialogCancel disabled={deleteRelease.isPending}>
+                Cancel
+              </AlertDialogCancel>
               <AlertDialogAction
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 onClick={handleConfirmDelete}

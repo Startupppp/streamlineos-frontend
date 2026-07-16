@@ -30,6 +30,7 @@ import {
   SheetClose,
   SheetBody,
 } from "@/components/ui/sheet";
+import { LoadingButton } from "@/components/ui/loading-button";
 import type { Product } from "@/types/crm/products";
 
 export const productSchema = z.object({
@@ -244,9 +245,9 @@ export function ProductFormSheet({
                     Cancel
                   </Button>
                 </SheetClose>
-                <Button type="submit" disabled={isPending}>
-                  {isPending ? "Saving..." : "Save"}
-                </Button>
+                <LoadingButton type="submit" isPending={isPending} loadingText="Saving...">
+                  Save
+                </LoadingButton>
               </div>
             </SheetFooter>
           </form>

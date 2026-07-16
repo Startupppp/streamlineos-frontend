@@ -7,7 +7,7 @@ export default function CrmAnalyticsLoading() {
     <PageWrapper
       title="CRM Analytics"
       subtitle="Pipeline insights and performance metrics"
-      filters={<Skeleton className="h-8 w-56 rounded-md" />}
+      filters={<Skeleton className="h-9 w-56 rounded-md" />}
     >
       <div className="space-y-4">
         <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">

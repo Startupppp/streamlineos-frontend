@@ -10,6 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyTransferIllustration } from "@/components/illustrations";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Money } from "@/features/accounting/shared";
 import { useCan } from "@/hooks/api/access";
 import { useBankAccounts } from "@/hooks/api/accounting/banking";
@@ -108,7 +111,7 @@ function SkeletonCard() {
 export function BankingHubClient() {
   const [addOpen, setAddOpen] = useState(false);
   const canManage = useCan("accounting:banking:manage");
-  const { data, isLoading } = useBankAccounts();
+  const { data, isLoading, isError, error } = useBankAccounts();
 
   const accounts = data?.items ?? [];
 
@@ -121,6 +124,8 @@ export function BankingHubClient() {
   function handleAddOpen() {
     setAddOpen(true);
   }
+
+  if (isError) return <ErrorState description={getErrorMessage(error)} />;
 
   return (
     <PageWrapper
@@ -183,21 +188,13 @@ export function BankingHubClient() {
             ))}
           </div>
         ) : accounts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center flex-1 h-full py-16 text-center">
-            <EmptyTransferIllustration className="w-40 h-40 mb-4 opacity-80" />
-            <h3 className="text-sm font-semibold text-foreground mb-1">
-              No bank accounts yet
-            </h3>
-            <p className="text-sm text-muted-foreground mb-4 max-w-xs">
-              Add your first bank account to start importing statements and reconciling transactions.
-            </p>
-            {canManage && (
-              <Button size="sm" onClick={handleAddOpen}>
-                <Plus className="h-4 w-4 mr-1" />
-                Add your first bank account
-              </Button>
-            )}
-          </div>
+          <EmptyState
+            className="flex-1"
+            illustration={<EmptyTransferIllustration className="w-40 h-40 opacity-80" />}
+            title="No bank accounts yet"
+            description="Add your first bank account to start importing statements and reconciling transactions."
+            action={canManage ? { label: "Add your first bank account", onClick: handleAddOpen } : undefined}
+          />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {accounts.map((account, idx) => (

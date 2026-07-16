@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback } from "react";
-import { Phone, Mail, StickyNote, ListTodo, Wand2, Loader2 } from "lucide-react";
+import { Phone, Mail, StickyNote, ListTodo, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { cn } from "@/lib/utils";
 import type { QuickAction } from "./lead-types";
 
@@ -64,25 +65,17 @@ export function DraftPanel({ leadName, isPending, onGenerate, onCancel }: DraftP
         <Button type="button" variant="outline" size="sm" onClick={onCancel}>
           Cancel
         </Button>
-        <Button
+        <LoadingButton
           type="button"
           size="sm"
           className="bg-primary hover:bg-primary/90 text-primary-foreground"
           onClick={onGenerate}
-          disabled={isPending || !leadName}
+          isPending={isPending || !leadName}
+          loadingText="Generating..."
         >
-          {isPending ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
-              Generating...
-            </>
-          ) : (
-            <>
-              <Wand2 className="h-4 w-4 mr-1.5" />
-              Generate
-            </>
-          )}
-        </Button>
+          <Wand2 className="h-4 w-4 mr-1.5" />
+          Generate
+        </LoadingButton>
       </div>
     </div>
   );

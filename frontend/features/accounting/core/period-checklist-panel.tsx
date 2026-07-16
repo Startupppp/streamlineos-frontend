@@ -243,8 +243,14 @@ export function PeriodChecklistPanel({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={closeMutation.isPending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleCloseConfirm} disabled={closeMutation.isPending}>
-              {closeMutation.isPending ? "Closing…" : canClose ? "Close period" : "Close anyway"}
+            <AlertDialogAction asChild>
+              <LoadingButton
+                isPending={closeMutation.isPending}
+                loadingText="Closing…"
+                onClick={handleCloseConfirm}
+              >
+                {canClose ? "Close period" : "Close anyway"}
+              </LoadingButton>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -260,8 +266,14 @@ export function PeriodChecklistPanel({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={lockMutation.isPending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleLockConfirm} disabled={lockMutation.isPending}>
-              {lockMutation.isPending ? "Locking…" : "Lock period"}
+            <AlertDialogAction asChild>
+              <LoadingButton
+                isPending={lockMutation.isPending}
+                loadingText="Locking…"
+                onClick={handleLockConfirm}
+              >
+                Lock period
+              </LoadingButton>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -277,8 +289,14 @@ export function PeriodChecklistPanel({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={reopenMutation.isPending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleReopenConfirm} disabled={reopenMutation.isPending}>
-              {reopenMutation.isPending ? "Reopening…" : "Reopen period"}
+            <AlertDialogAction asChild>
+              <LoadingButton
+                isPending={reopenMutation.isPending}
+                loadingText="Reopening…"
+                onClick={handleReopenConfirm}
+              >
+                Reopen period
+              </LoadingButton>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

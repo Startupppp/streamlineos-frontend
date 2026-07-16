@@ -4,25 +4,25 @@ import Link from "next/link";
 import { differenceInDays, format, subDays } from "date-fns";
 import {
   CheckCircle2,
-  Clock,
-  AlertTriangle,
   ShieldCheck,
   FileDown,
   Lock,
-  RefreshCw,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useSubscription } from "@/hooks/api/subscription";
 
 const TRIAL_TOTAL_DAYS = 14;
 
 function TrialPageSkeleton() {
   return (
-    <div className="space-y-4">
+    <div className="flex flex-1 min-h-0 flex-col gap-4">
       <Skeleton className="h-48 w-full rounded-lg" />
       <Skeleton className="h-36 w-full rounded-lg" />
       <div className="grid gap-3 sm:grid-cols-3">
@@ -52,7 +52,7 @@ function TrialExpiryItems() {
 }
 
 export default function TrialsPage() {
-  const { data, isLoading, isError, refetch } = useSubscription();
+  const { data, isLoading, isError, error, refetch } = useSubscription();
 
   function handleRetry() {
     void refetch();
