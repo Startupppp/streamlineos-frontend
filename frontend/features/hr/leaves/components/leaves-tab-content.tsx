@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import {
   format,
   startOfWeek,
@@ -10,7 +11,6 @@ import {
   differenceInCalendarDays,
 } from "date-fns";
 import { toast } from "sonner";
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,6 @@ import {
   Filter,
   Download,
   CalendarDays,
-  TrendingUp,
   History,
   MoreVertical,
   Eye,
@@ -47,6 +46,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { useCancelLeave, useApproveLeaveDedicated, useRejectLeaveDedicated, useRevertLeave } from "@/hooks/api/hr";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const LeaveBalanceDonut = dynamic(
+  () => import("./leave-balance-donut").then((m) => ({ default: m.LeaveBalanceDonut })),
+  { ssr: false, loading: () => <Skeleton className="h-[190px] w-full rounded-2xl" /> },
+);
 
 import type {
   LeaveBalance,
@@ -56,126 +61,6 @@ import type {
 import { BalanceCard, balanceCardConfig, DEFAULT_CARD_CONFIG, priorityConfig } from "./leaves-shared";
 import { useCan } from "@/hooks/api/access";
 import { useLeavePolicy } from "@/hooks/api/hr";
-
-const DONUT_COLORS = ["#06b6d4", "#3b82f6", "#ef4444", "#10b981", "#8b5cf6"];
-
-function LeaveBalanceDonut({ balances, allowedNames }: { balances: LeaveBalance[]; allowedNames: Set<string> }) {
-  const data = useMemo(
-    () =>
-      balances
-        .filter(
-          (b) =>
-            b.typeName &&
-            (allowedNames.size === 0 || allowedNames.has(b.typeName)) &&
-            (b.daysPerYear ?? 0) > 0,
-        )
-        .map((b) => ({
-          name: b.typeName!,
-          remaining: Math.max(0, parseFloat(b.balance || "0")),
-          used: Math.max(
-            0,
-            (b.daysPerYear ?? 0) - parseFloat(b.balance || "0"),
-          ),
-          total: b.daysPerYear ?? 0,
-        })),
-    [balances, allowedNames],
-  );
-
-  if (data.length === 0) return null;
-
-  const chartData = data.flatMap((d, i) => [
-    {
-      name: `${d.name} (used)`,
-      value: d.used,
-      color: DONUT_COLORS[i % DONUT_COLORS.length],
-      opacity: 0.3,
-    },
-    {
-      name: `${d.name} (remaining)`,
-      value: d.remaining,
-      color: DONUT_COLORS[i % DONUT_COLORS.length],
-      opacity: 1,
-    },
-  ]);
-
-  return (
-    <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-          <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
-            <TrendingUp
-              className="h-3.5 w-3.5 text-primary"
-              aria-hidden="true"
-            />
-          </div>
-          Balance Overview
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <div className="flex items-center gap-4">
-          <div className="h-[120px] w-[120px] shrink-0">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={chartData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={30}
-                  outerRadius={52}
-                  paddingAngle={1}
-                  dataKey="value"
-                >
-                  {chartData.map((entry, i) => (
-                    <Cell
-                      key={i}
-                      fill={entry.color}
-                      fillOpacity={entry.opacity}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{ fontSize: 11 }}
-                  formatter={(value, name) => [`${value} days`, String(name)]}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="space-y-2.5 flex-1 min-w-0">
-            {data.map((item, i) => (
-              <div key={item.name} className="space-y-1">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <span
-                      className="h-2 w-2 rounded-full shrink-0"
-                      style={{
-                        backgroundColor: DONUT_COLORS[i % DONUT_COLORS.length],
-                      }}
-                    />
-                    <span className="text-[11px] font-medium text-muted-foreground truncate">
-                      {item.name}
-                    </span>
-                  </div>
-                  <span className="text-[11px] font-semibold text-foreground shrink-0 tabular-nums">
-                    {item.remaining}/{item.total}
-                  </span>
-                </div>
-                <div className="h-1 rounded-full bg-muted overflow-hidden ml-3.5">
-                  <div
-                    className="h-full rounded-full transition-all duration-500"
-                    style={{
-                      width: `${item.total > 0 ? (item.remaining / item.total) * 100 : 0}%`,
-                      backgroundColor: DONUT_COLORS[i % DONUT_COLORS.length],
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 function LeaveCalendarWidget({
   approvedLeaves,

@@ -14,7 +14,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { EditSprintDialog } from "@/features/projects/sprints/edit-sprint-dialog";
 import { PM_PANEL } from "@/features/projects/shared/pm-chrome";
-import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 export interface SprintData {
   id: number;
@@ -134,13 +134,9 @@ export const SprintCard = memo(function SprintCard({ sprint, projectId, onStart,
             <div className="flex min-w-0 flex-1">
               <Link
                 href={`/projects/${projectId}?sprint=${sprint.id}`}
-                className={cn(
-                  TEXT_ONE_LINE,
-                  "flex-1 text-[13px] font-semibold leading-tight text-foreground transition-colors hover:text-primary",
-                )}
-                title={sprint.name}
+                className="flex-1 min-w-0 text-[13px] font-semibold leading-tight text-foreground transition-colors hover:text-primary"
               >
-                {sprint.name}
+                <TruncatedText text={sprint.name} />
               </Link>
             </div>
             <Badge
@@ -158,9 +154,7 @@ export const SprintCard = memo(function SprintCard({ sprint, projectId, onStart,
           {sprint.goal ? (
             <p className="mt-0.5 flex min-w-0 items-center gap-1 text-[10px] text-muted-foreground">
               <Target className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />
-              <span className={TEXT_ONE_LINE} title={sprint.goal}>
-                {sprint.goal}
-              </span>
+              <TruncatedText text={sprint.goal} />
             </p>
           ) : null}
 

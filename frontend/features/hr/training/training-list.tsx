@@ -228,17 +228,18 @@ export function TrainingList({ canManage, onSelectProgram, selectedProgramId }: 
               </div>
 
               {program.status !== "COMPLETED" && program.status !== "CANCELLED" && (
-                <Button
+                <LoadingButton
                   size="sm"
                   className="w-full text-xs bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleEnroll(program.id);
                   }}
-                  disabled={enroll.isPending}
+                  isPending={enroll.isPending}
+                  loadingText="Enrolling…"
                 >
-                  {enroll.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : "Enroll"}
-                </Button>
+                  Enroll
+                </LoadingButton>
               )}
             </motion.div>
           ))}

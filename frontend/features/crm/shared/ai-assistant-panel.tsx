@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { useCrmEmailDraft, useSummarizeNotes, useCrmObjectionHelp } from "@/hooks/api/crm";
@@ -391,7 +392,7 @@ export function AiAssistantPanel({ entityType, entityId, entityName, onOpenEmail
           <Sparkles className="h-4 w-4 text-primary" />
           <span className="text-sm font-semibold text-foreground">AI Sales Assistant</span>
           {entityName && (
-            <span className="text-xs text-muted-foreground truncate max-w-[120px]">{entityName}</span>
+            <TruncatedText text={entityName} className="text-xs text-muted-foreground max-w-[120px]" />
           )}
         </div>
         <motion.div animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }}>

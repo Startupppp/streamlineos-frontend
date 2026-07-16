@@ -8,7 +8,7 @@ import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { useUpsertStandup } from "@/hooks/api/projects";
 import {
-  Form, FormField, FormItem, FormLabel, FormControl,
+  Form, FormField, FormItem, FormLabel, FormControl, FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -21,9 +21,9 @@ import { TEXT_ONE_LINE, TEXT_BODY } from "@/features/projects/shared/text-overfl
 import type { StandupEntry, MeetingAttendee, ProjectMemberRecord } from "@/types/projects";
 
 const standupSchema = z.object({
-  yesterday: z.string(),
-  today: z.string(),
-  blockers: z.string(),
+  yesterday: z.string().trim().min(1, "Required"),
+  today: z.string().trim().min(1, "Required"),
+  blockers: z.string().trim().min(1, "Required"),
 });
 
 type StandupFormValues = z.infer<typeof standupSchema>;
@@ -99,6 +99,7 @@ export function StandupPanel({
                 <FormControl>
                   <Textarea {...field} rows={2} placeholder="What did you do yesterday?" className="resize-none text-sm" />
                 </FormControl>
+                <FormMessage className="text-xs" />
               </FormItem>
             )} />
             <FormField control={form.control} name="today" render={({ field }) => (
@@ -107,6 +108,7 @@ export function StandupPanel({
                 <FormControl>
                   <Textarea {...field} rows={2} placeholder="What will you do today?" className="resize-none text-sm" />
                 </FormControl>
+                <FormMessage className="text-xs" />
               </FormItem>
             )} />
             <FormField control={form.control} name="blockers" render={({ field }) => (
@@ -115,6 +117,7 @@ export function StandupPanel({
                 <FormControl>
                   <Textarea {...field} rows={2} placeholder="Any blockers or impediments?" className="resize-none text-sm" />
                 </FormControl>
+                <FormMessage className="text-xs" />
               </FormItem>
             )} />
             <LoadingButton type="submit" size="sm" className="text-xs" isPending={upsertStandup.isPending} loadingText="Saving…">

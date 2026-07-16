@@ -4,7 +4,9 @@ import { useState, useCallback, useMemo } from "react";
 import { useForm, type UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, Trash2, Pencil, Zap } from "lucide-react";
+import { Pencil, Zap } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { TrashIcon, PlusIcon } from "@animateicons/react/lucide";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -153,9 +155,7 @@ function ScoringRuleRow({ rule, isEditing, editForm, onEditSubmit, onEdit, onDel
               <Button variant="ghost" size="icon" className="w-7" onClick={handleEdit} aria-label="Edit">
                 <Pencil className="h-3.5 w-3.5" />
               </Button>
-              <Button variant="ghost" size="icon" className="w-7 text-destructive" onClick={handleDeleteRequest} aria-label="Delete">
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
+              <AnimatedIconButton icon={TrashIcon} iconSize={14} variant="ghost" size="icon" className="w-7 text-destructive" onClick={handleDeleteRequest} aria-label="Delete" />
             </div>
           </TableCell>
         </>
@@ -279,10 +279,7 @@ export default function ScoringRulesPage() {
         actions={
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
             <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                New Rule
-              </Button>
+              <AnimatedIconButton icon={PlusIcon} iconSize={16}>New Rule</AnimatedIconButton>
             </DialogTrigger>
             <DialogContent className="sm:max-w-lg">
               <DialogHeader>

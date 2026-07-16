@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,21 +26,27 @@ const TOPICS: { value: ContactTopic; label: string }[] = [
   { value: "other", label: "Something else" },
 ];
 
-type FormState = {
-  name: string;
-  email: string;
-  company: string;
-  phone: string;
-  topic: ContactTopic;
-  message: string;
-};
+const schema = z.object({
+  name: z.string().trim().min(1, "Name is required"),
+  email: z
+    .string()
+    .trim()
+    .min(1, "Work email is required")
+    .email("Enter a valid email address"),
+  company: z.string(),
+  phone: z.string(),
+  topic: z.enum(["sales", "support", "partnership", "press", "other"]),
+  message: z.string().trim().min(1, "Message is required"),
+});
+
+type FormValues = z.infer<typeof schema>;
 
 type ContactResult =
   | { ok: true }
-  | { ok: false; error: string; fieldErrors?: Partial<Record<keyof FormState, string>> };
+  | { ok: false; error: string; fieldErrors?: Partial<Record<keyof FormValues, string>> };
 
 async function submitContactForm(
-  data: FormState & { cfTurnstileToken?: string },
+  data: FormValues & { cfTurnstileToken?: string },
 ): Promise<ContactResult> {
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/public/contact`, {
@@ -46,7 +55,7 @@ async function submitContactForm(
       body: JSON.stringify(data),
     });
     if (res.ok) return { ok: true };
-    let body: { error?: string; fieldErrors?: Partial<Record<keyof FormState, string>> } = {};
+    let body: { error?: string; fieldErrors?: Partial<Record<keyof FormValues, string>> } = {};
     try {
       body = (await res.json()) as typeof body;
     } catch {}
@@ -60,19 +69,9 @@ async function submitContactForm(
   }
 }
 
-const initialState: FormState = {
-  name: "",
-  email: "",
-  company: "",
-  phone: "",
-  topic: "sales",
-  message: "",
-};
-
 export function ContactForm() {
-  const [values, setValues] = useState<FormState>(initialState);
-  const [fieldErrors, setFieldErrors] = useState<
-    Partial<Record<keyof FormState, string>>
+  const [serverFieldErrors, setServerFieldErrors] = useState<
+    Partial<Record<keyof FormValues, string>>
   >({});
   const [serverError, setServerError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
@@ -80,22 +79,29 @@ export function ContactForm() {
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const turnstileRequired = isTurnstileEnabled();
 
-  const handleChange = <K extends keyof FormState>(
-    key: K,
-    value: FormState[K],
-  ) => {
-    setValues((prev) => ({ ...prev, [key]: value }));
-    setFieldErrors((prev) => ({ ...prev, [key]: undefined }));
-    setServerError(null);
-  };
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      name: "",
+      email: "",
+      company: "",
+      phone: "",
+      topic: "sales",
+      message: "",
+    },
+  });
 
-  function handlePhoneChange(value: string) {
-    handleChange("phone", value);
+  const watchedTopic = form.watch("topic");
+  const watchedName = form.watch("name");
+  const watchedEmail = form.watch("email");
+
+  function handleTopicSelect(value: ContactTopic) {
+    form.setValue("topic", value, { shouldValidate: true });
   }
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  function handleSubmit(values: FormValues) {
     setServerError(null);
+    setServerFieldErrors({});
 
     if (turnstileRequired && !turnstileToken) {
       setServerError("Please complete the bot verification challenge.");
@@ -111,10 +117,17 @@ export function ContactForm() {
         setSubmitted(true);
       } else {
         setServerError(result.error);
-        if (result.fieldErrors) setFieldErrors(result.fieldErrors);
+        if (result.fieldErrors) setServerFieldErrors(result.fieldErrors);
       }
     });
-  };
+  }
+
+  function handleReset() {
+    form.reset();
+    setServerFieldErrors({});
+    setServerError(null);
+    setSubmitted(false);
+  }
 
   return (
     <div className="relative rounded-2xl border border-slate-200/80 bg-white/85 backdrop-blur-sm p-3 lg:p-6 shadow-[0_18px_44px_-18px_rgba(30,64,175,0.18)]">
@@ -137,17 +150,14 @@ export function ContactForm() {
             <p className="text-slate-600 text-[15px] leading-relaxed max-w-md mx-auto">
               Thanks,{" "}
               <span className="font-semibold text-slate-900">
-                {values.name}
+                {watchedName}
               </span>
               . A human on our team will get back to you within one business day
-              at <span className="font-mono text-blue-600">{values.email}</span>
+              at <span className="font-mono text-blue-600">{watchedEmail}</span>
               .
             </p>
             <button
-              onClick={() => {
-                setValues(initialState);
-                setSubmitted(false);
-              }}
+              onClick={handleReset}
               className="mt-7 text-[12px] font-medium text-slate-500 hover:text-slate-900 transition-colors"
             >
               ← Send another message
@@ -156,7 +166,7 @@ export function ContactForm() {
         ) : (
           <motion.form
             key="form"
-            onSubmit={handleSubmit}
+            onSubmit={form.handleSubmit(handleSubmit)}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -171,12 +181,12 @@ export function ContactForm() {
               </Label>
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
                 {TOPICS.map((t) => {
-                  const selected = values.topic === t.value;
+                  const selected = watchedTopic === t.value;
                   return (
                     <button
                       key={t.value}
                       type="button"
-                      onClick={() => handleChange("topic", t.value)}
+                      onClick={() => handleTopicSelect(t.value)}
                       className={cn(
                         "text-[12px] font-medium rounded-lg border px-2.5 py-2 transition-all",
                         selected
@@ -192,57 +202,61 @@ export function ContactForm() {
             </div>
 
             <div className="grid sm:grid-cols-2 gap-4">
-              <Field label="Name" error={fieldErrors.name} required>
+              <Field
+                label="Name"
+                error={form.formState.errors.name?.message ?? serverFieldErrors.name}
+                required
+              >
                 <Input
-                  value={values.name}
-                  onChange={(e) => handleChange("name", e.target.value)}
                   placeholder="Aditya Sharma"
-                  className=""
-                  required
+                  {...form.register("name")}
                 />
               </Field>
-              <Field label="Work email" error={fieldErrors.email} required>
+              <Field
+                label="Work email"
+                error={form.formState.errors.email?.message ?? serverFieldErrors.email}
+                required
+              >
                 <Input
                   type="email"
-                  value={values.email}
-                  onChange={(e) => handleChange("email", e.target.value)}
                   placeholder="you@company.com"
-                  className=""
-                  required
+                  {...form.register("email")}
                 />
               </Field>
             </div>
 
             <div className="grid sm:grid-cols-2 gap-4">
-              <Field label="Company" error={fieldErrors.company}>
+              <Field label="Company" error={serverFieldErrors.company}>
                 <Input
-                  value={values.company}
-                  onChange={(e) => handleChange("company", e.target.value)}
                   placeholder="Acme Inc."
-                  className=""
+                  {...form.register("company")}
                 />
               </Field>
-              <Field label="Phone" hint="optional" error={fieldErrors.phone}>
-                <PhoneInput
-                  value={values.phone}
-                  onChange={handlePhoneChange}
-                  defaultCountry="IN"
+              <Field label="Phone" hint="optional" error={serverFieldErrors.phone}>
+                <Controller
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <PhoneInput
+                      value={field.value}
+                      onChange={field.onChange}
+                      defaultCountry="IN"
+                    />
+                  )}
                 />
               </Field>
             </div>
 
             <Field
               label="Tell us what you need"
-              error={fieldErrors.message}
+              error={form.formState.errors.message?.message ?? serverFieldErrors.message}
               required
             >
               <textarea
-                value={values.message}
-                onChange={(e) => handleChange("message", e.target.value)}
                 rows={5}
                 placeholder="Team size, what you're trying to solve, when you'd like to start…"
                 className="w-full rounded-md border border-slate-200 bg-white px-3 py-2.5 text-sm placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200 focus-visible:border-blue-400 resize-y min-h-[120px]"
-                required
+                {...form.register("message")}
               />
             </Field>
 

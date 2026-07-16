@@ -56,6 +56,7 @@ import {
 } from "@/features/knowledge-base/lib/kb-icons";
 import type { KbSpace, KbAudience } from "@/types/kb";
 import Link from "next/link";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const spaceSchema = z.object({
   name: z.string().min(1, "Name is required"),

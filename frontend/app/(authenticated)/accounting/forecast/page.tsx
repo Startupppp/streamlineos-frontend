@@ -29,26 +29,24 @@ import {
   useSeedDefaultScenarios,
 } from "@/hooks/api/accounting/planning";
 import { getErrorMessage } from "@/lib/get-error-message";
-import {
-  AreaChart,
-  Area,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  ReferenceLine,
-} from "recharts";
+import { Skeleton } from "@/components/ui/skeleton";
+import dynamic from "next/dynamic";
 
-const CHART_TOOLTIP_STYLE = {
-  background: "hsl(var(--card))",
-  border: "1px solid hsl(var(--border))",
-  borderRadius: 8,
-};
-const AXIS_TICK = { fill: "hsl(var(--muted-foreground))", fontSize: 11 };
-const COMPARE_COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#06b6d4"];
+const CompareChart = dynamic(
+  () =>
+    import("@/features/accounting/planning/forecast-charts").then((m) => ({
+      default: m.CompareChart,
+    })),
+  { ssr: false, loading: () => <Skeleton className="h-[280px] w-full rounded-xl" /> },
+);
+
+const ForecastAreaChart = dynamic(
+  () =>
+    import("@/features/accounting/planning/forecast-charts").then((m) => ({
+      default: m.ForecastAreaChart,
+    })),
+  { ssr: false, loading: () => <Skeleton className="h-[260px] w-full rounded-xl" /> },
+);
 
 function formatWeekStartCell(weekStart: string) {
   return <span className="text-sm text-foreground">{formatWeekStart(weekStart)}</span>;
@@ -308,43 +306,18 @@ export default function ForecastPage() {
           </Card>
 
           {compareIds.size >= 2 && (
-            <Card className="bg-card border border-border rounded-xl shadow-sm">
-              <CardHeader className="pb-2 pt-4 px-4">
-                <CardTitle className="text-sm font-semibold">
-                  Closing Cash by Scenario
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-2 pb-4">
-                {compareQuery.isLoading && <LoadingState rows={12} />}
-                {compareQuery.error && (
-                  <ErrorState
-                    title="Failed to load comparison"
-                    description={getErrorMessage(compareQuery.error)}
-                  />
-                )}
-                {!compareQuery.isLoading && !compareQuery.error && compareData.length > 0 && (
-                  <ResponsiveContainer width="100%" height={280}>
-                    <LineChart data={compareData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="weekStart" tick={AXIS_TICK} />
-                      <YAxis tick={AXIS_TICK} width={70} />
-                      <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
-                      {compareQuery.data?.scenarios.map((s, idx) => (
-                        <Line
-                          key={s.id}
-                          type="monotone"
-                          dataKey={String(s.id)}
-                          name={s.name}
-                          stroke={COMPARE_COLORS[idx % COMPARE_COLORS.length]}
-                          strokeWidth={2}
-                          dot={false}
-                        />
-                      ))}
-                    </LineChart>
-                  </ResponsiveContainer>
-                )}
-              </CardContent>
-            </Card>
+            <>
+              {compareQuery.isLoading && <Skeleton className="h-[280px] w-full rounded-xl" />}
+              {compareQuery.error && (
+                <ErrorState
+                  title="Failed to load comparison"
+                  description={getErrorMessage(compareQuery.error)}
+                />
+              )}
+              {!compareQuery.isLoading && !compareQuery.error && compareData.length > 0 && (
+                <CompareChart compareData={compareData} scenarios={compareQuery.data?.scenarios ?? []} />
+              )}
+            </>
           )}
 
           {compareIds.size < 2 && (

@@ -16,32 +16,23 @@ import {
   useHrBudgetVsActual,
   useHrSkillsGap,
   useHrSuccessionRisk,
-  useHrAttritionForecast,
   useHrWorkforcePlans,
   useCreateHeadcountPlan,
   useUpdateHeadcountPlan,
   type HeadcountPlan,
 } from "@/hooks/api/hr/workforce";
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
-import {
-  AnalyticsChartCard,
   SectionSkeleton,
   EmptyChart,
-  chartTooltipStyle,
-  chartGridProps,
-  chartAxisTick,
-  CHART_SEMANTIC,
 } from "@/features/hr/analytics/shared";
+import dynamic from "next/dynamic";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+
+const AttritionForecastCard = dynamic(
+  () => import("./attrition-forecast-card").then((m) => ({ default: m.AttritionForecastCard })),
+  { ssr: false, loading: () => <Skeleton className="h-[280px] w-full rounded-xl" /> },
+);
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 
 type BudgetVsActualRow = { departmentName: string; budgeted: number; actual: number; variance: number };
@@ -357,57 +348,6 @@ function SuccessionTab() {
         </div>
       ))}
     </div>
-  );
-}
-
-function AttritionForecastCard() {
-  const { data, isLoading } = useHrAttritionForecast();
-
-  const combined = [
-    ...(data?.historical.map((h) => ({ month: h.month, historical: h.rate, projected: null })) ?? []),
-    ...(data?.forecast.map((f) => ({ month: f.month, historical: null, projected: f.projectedRate })) ?? []),
-  ];
-
-  return (
-    <AnalyticsChartCard title="Attrition Forecast (Trend-Based Estimate — Not a Prediction)">
-      {isLoading ? (
-        <SectionSkeleton rows={8} />
-      ) : !combined.length ? (
-        <EmptyChart label="No forecast data" />
-      ) : (
-        <>
-          <ResponsiveContainer width="100%" height={180}>
-            <LineChart data={combined}>
-              <CartesianGrid {...chartGridProps} />
-              <XAxis dataKey="month" tick={chartAxisTick} />
-              <YAxis tick={chartAxisTick} width={32} tickFormatter={(v: number) => `${v}%`} />
-              <Tooltip contentStyle={chartTooltipStyle} formatter={(value) => [`${Number(value)}%`]} />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
-              <Line
-                type="monotone"
-                dataKey="historical"
-                stroke={CHART_SEMANTIC.primary}
-                strokeWidth={2}
-                dot={false}
-                name="Historical"
-              />
-              <Line
-                type="monotone"
-                dataKey="projected"
-                stroke={CHART_SEMANTIC.warning}
-                strokeWidth={2}
-                strokeDasharray="5 3"
-                dot={false}
-                name="Projected"
-              />
-            </LineChart>
-          </ResponsiveContainer>
-          {data?.disclaimer ? (
-            <p className="mt-2 text-xs text-muted-foreground">{data.disclaimer}</p>
-          ) : null}
-        </>
-      )}
-    </AnalyticsChartCard>
   );
 }
 

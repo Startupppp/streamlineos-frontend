@@ -10,7 +10,8 @@ import { cn } from "@/lib/utils";
 import { format, isPast, isToday, differenceInDays } from "date-fns";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PM_PANEL } from "@/features/projects/shared/pm-chrome";
-import { TEXT_ONE_LINE, TEXT_TWO_LINES } from "@/features/projects/shared/text-overflow";
+import { TEXT_TWO_LINES } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const STATUS_CONFIG = {
   PENDING: {
@@ -98,12 +99,7 @@ export const MilestoneCard = memo(function MilestoneCard({
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-start justify-between gap-2">
             <div className="min-w-0 space-y-0.5">
-              <p
-                className={cn(TEXT_ONE_LINE, "text-[13px] font-semibold text-foreground")}
-                title={milestone.name}
-              >
-                {milestone.name}
-              </p>
+              <TruncatedText text={milestone.name} className="text-[13px] font-semibold text-foreground" />
               {milestone.description ? (
                 <p
                   className={cn(TEXT_TWO_LINES, "text-[11px] text-muted-foreground")}

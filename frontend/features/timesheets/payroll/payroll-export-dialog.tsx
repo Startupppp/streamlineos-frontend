@@ -178,6 +178,7 @@ export function PayrollExportDialog({
               placeholder="e.g. June 2026 payroll"
               {...form.register("note")}
             />
+            {form.formState.errors.note && <p className="text-xs text-destructive">{form.formState.errors.note.message}</p>}
           </div>
 
           <div className="space-y-1.5">
@@ -203,15 +204,16 @@ export function PayrollExportDialog({
             >
               Cancel
             </Button>
-            <Button
+            <LoadingButton
               type="submit"
               size="sm"
               className="h-8 text-xs"
+              isPending={createExport.isPending}
               disabled={createExport.isPending || targetRows.length === 0}
+              loadingText="Exporting…"
             >
-              {createExport.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
               Export {targetRows.length} people
-            </Button>
+            </LoadingButton>
           </DialogFooter>
         </form>
       </DialogContent>

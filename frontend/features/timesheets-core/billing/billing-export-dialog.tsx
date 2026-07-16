@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Dialog,
   DialogContent,
@@ -156,15 +156,16 @@ export function BillingExportDialog({
             >
               Cancel
             </Button>
-            <Button
+            <LoadingButton
               type="submit"
               size="sm"
               className="h-8 text-xs"
+              isPending={billingExport.isPending}
               disabled={billingExport.isPending || groups.length === 0}
+              loadingText="Exporting…"
             >
-              {billingExport.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
               Export {groups.length} project{groups.length !== 1 ? "s" : ""}
-            </Button>
+            </LoadingButton>
           </DialogFooter>
         </form>
       </DialogContent>

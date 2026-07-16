@@ -15,6 +15,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useDuplicateSignTemplate, useSignTemplates, useUpdateSignTemplate } from "@/hooks/api/sign/templates";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import type { SignTemplate, SignTemplateStatus } from "@/types/sign";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { CreateEnvelopeFromTemplateDialog } from "./create-envelope-from-template-dialog";
 
 const STATUS_VARIANT: Record<SignTemplateStatus, "default" | "secondary" | "outline"> = {
@@ -64,10 +65,10 @@ function TemplateRow({ template }: { template: SignTemplate }) {
     <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-4">
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <p className="font-medium text-sm truncate">{template.name}</p>
+          <TruncatedText text={template.name} className="font-medium text-sm" />
           <Badge variant={STATUS_VARIANT[template.status]}>{template.status}</Badge>
         </div>
-        {template.description && <p className="text-xs text-muted-foreground truncate mt-0.5">{template.description}</p>}
+        {template.description && <TruncatedText text={template.description} className="text-xs text-muted-foreground mt-0.5" />}
         <p className="text-xs text-muted-foreground mt-0.5">v{template.version}{template.category ? ` · ${template.category}` : ""}</p>
       </div>
       <div className="flex items-center gap-2 shrink-0">

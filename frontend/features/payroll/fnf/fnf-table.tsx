@@ -36,8 +36,8 @@ const columns: DataTableColumn<FnfSettlement>[] = [
     header: "Employee",
     cell: (row) => (
       <div className="flex flex-col gap-0.5 min-w-0">
-        <span className="text-[11px] font-medium truncate">{row.userName}</span>
-        <span className="text-[10px] text-muted-foreground truncate">{row.userEmail}</span>
+        <TruncatedText text={row.userName} className="text-[11px] font-medium" />
+        <TruncatedText text={row.userEmail} className="text-[10px] text-muted-foreground" />
       </div>
     ),
   },

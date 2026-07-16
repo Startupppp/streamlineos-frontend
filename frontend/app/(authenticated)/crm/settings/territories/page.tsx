@@ -2,7 +2,10 @@
 
 import { useState, useCallback } from "react";
 import type { ReactNode } from "react";
-import { MapPin, Plus, Trash2, Pencil, Eye } from "lucide-react";
+import { MapPin, Pencil, Eye } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { TrashIcon, PlusIcon } from "@animateicons/react/lucide";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

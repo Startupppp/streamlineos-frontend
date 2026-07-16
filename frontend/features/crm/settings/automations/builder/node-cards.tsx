@@ -1,9 +1,11 @@
 "use client";
 
 import { memo, useCallback } from "react";
-import { X, GripVertical } from "lucide-react";
+import { GripVertical } from "lucide-react";
+import { XIcon } from "@animateicons/react/lucide";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -100,9 +102,7 @@ export const ConditionRowCard = memo(function ConditionRowCard({ condition, inde
           onChange={handleValueChange}
         />
       </div>
-      <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive" onClick={handleRemove}>
-        <X className="h-3 w-3" />
-      </Button>
+      <AnimatedIconButton icon={XIcon} iconSize={12} variant="ghost" size="icon" className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive" onClick={handleRemove} />
     </motion.div>
   );
 });

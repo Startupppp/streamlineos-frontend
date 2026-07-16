@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { type HrImportEntity } from "@/hooks/api/hr/import-export";
 import { ImportWizardSheet } from "./import-wizard-sheet";
 import { JobHistoryTable } from "./job-history-table";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface ImportEntityConfig {
   id: HrImportEntity;
@@ -89,7 +90,7 @@ function ImportCard({ config, onImport }: ImportCardProps) {
           >
             <config.Icon className="h-4 w-4" />
           </span>
-          <h3 className="text-sm font-semibold truncate">{config.label}</h3>
+          <TruncatedText text={config.label} className="text-sm font-semibold" />
         </div>
         <Badge
           variant="secondary"
@@ -98,9 +99,7 @@ function ImportCard({ config, onImport }: ImportCardProps) {
           Import
         </Badge>
       </div>
-      <p className="text-[12px] text-muted-foreground leading-snug line-clamp-2">
-        {config.description}
-      </p>
+      <TruncatedText text={config.description} lines={2} className="text-[12px] text-muted-foreground leading-snug" />
       <div className="mt-auto">
         <button
           type="button"

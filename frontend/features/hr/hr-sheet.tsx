@@ -69,14 +69,14 @@ export function HrSheet({
 
         {showSubmit && (
           <SheetFooter className="shrink-0 flex-col gap-2 border-t border-border bg-muted/30 px-5 py-4">
-            <Button
+            <LoadingButton
               className="h-9 w-full gap-1.5 transition-colors duration-200"
               onClick={handleSubmit}
-              disabled={isPending || !onSubmit || submitDisabled}
+              disabled={!onSubmit || submitDisabled}
+              isPending={isPending}
             >
-              {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
               {submitLabel}
-            </Button>
+            </LoadingButton>
             <Button
               variant="outline"
               className="h-9 w-full transition-colors duration-200"

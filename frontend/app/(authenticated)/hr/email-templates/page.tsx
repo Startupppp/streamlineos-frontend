@@ -23,7 +23,9 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { toast } from "sonner";
-import { Plus, Trash2, Copy, Pencil, AlertCircle, Sparkles } from "lucide-react";
+import { Pencil, AlertCircle, Sparkles } from "lucide-react";
+import { CopyIcon, TrashIcon, PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { EmptyMailIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 
@@ -79,15 +81,11 @@ function TemplateCard({ template, onCopy, onEdit, onDelete }: TemplateCardProps)
             {categoryKey}
           </span>
           <div className="flex gap-1">
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleCopy}>
-              <Copy className="h-3 w-3" />
-            </Button>
+            <AnimatedIconButton icon={CopyIcon} variant="ghost" size="icon" className="h-6 w-6" iconSize={12} onClick={handleCopy} />
             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleEdit}>
               <Pencil className="h-3 w-3" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={handleDelete}>
-              <Trash2 className="h-3 w-3" />
-            </Button>
+            <AnimatedIconButton icon={TrashIcon} variant="ghost" size="icon" className="h-6 w-6 text-destructive" iconSize={12} onClick={handleDelete} />
           </div>
         </div>
         <div>
@@ -293,10 +291,9 @@ function EmailTemplatesContent() {
       title="Email Templates"
       subtitle="Manage reusable email templates for HR communications"
       actions={
-        <Button size="sm" className="gap-1.5" onClick={handleOpenSheet}>
-          <Plus className="h-3.5 w-3.5" />
+        <AnimatedIconButton icon={PlusIcon} size="sm" className="gap-1.5" iconSize={14} onClick={handleOpenSheet}>
           New Template
-        </Button>
+        </AnimatedIconButton>
       }
     >
       {!templates?.length ? (

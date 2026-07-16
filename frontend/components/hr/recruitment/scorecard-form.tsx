@@ -26,7 +26,7 @@ import {
 
 const schema = z.object({
   recommendation: z.enum(["HIRE", "NO_HIRE", "MAYBE"], {
-    required_error: "Please select a recommendation",
+    error: "Please select a recommendation",
   }),
   notes: z.string().max(1000).optional(),
 });

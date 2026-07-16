@@ -152,7 +152,7 @@ export function GeneralSettingsForm() {
   const { data: settings, isLoading, isError, refetch } = useTimesheetSettings();
   const update = useUpdateTimesheetSettings();
 
-  const { control, handleSubmit, reset, register, formState: { isDirty } } = useForm<FormValues>({
+  const { control, handleSubmit, reset, register, formState: { isDirty, errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       workWeekStart: "1",
@@ -254,6 +254,7 @@ export function GeneralSettingsForm() {
               disabled={!canManage}
               {...register("maxHoursPerDay")}
             />
+            {errors.maxHoursPerDay && <p className="text-xs text-destructive">{errors.maxHoursPerDay.message}</p>}
           </div>
           <div className="flex items-center justify-between py-0.5">
             <Label className="text-xs font-medium">Allow overlapping entries</Label>
@@ -452,17 +453,16 @@ export function GeneralSettingsForm() {
 
       {canManage && (
         <div className="flex justify-end pb-2">
-          <Button
+          <LoadingButton
             type="submit"
             size="sm"
             className="h-8 text-xs"
+            isPending={update.isPending}
             disabled={!isDirty || update.isPending}
+            loadingText="Saving…"
           >
-            {update.isPending && (
-              <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
-            )}
             Save changes
-          </Button>
+          </LoadingButton>
         </div>
       )}
     </form>

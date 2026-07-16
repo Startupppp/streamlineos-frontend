@@ -11,27 +11,18 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DatePicker } from "@/components/ui/date-picker";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
+import dynamic from "next/dynamic";
+import type { ChartDatum } from "@/features/accounting/taxes/tax-rate-chart";
 import { useTaxDashboard } from "@/hooks/api/accounting/taxes";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatCurrencyFull } from "@/lib/format-utils";
 import type { TaxPayment, TaxRateGroup, TaxType } from "@/types/accounting/taxes";
 
-const CHART_TOOLTIP_STYLE = {
-  background: "hsl(var(--card))",
-  border: "1px solid hsl(var(--border))",
-  borderRadius: 8,
-};
-const AXIS_TICK = { fill: "hsl(var(--muted-foreground))", fontSize: 11 };
+const TaxRateChart = dynamic(
+  () => import("@/features/accounting/taxes/tax-rate-chart").then((m) => ({ default: m.TaxRateChart })),
+  { ssr: false, loading: () => <Skeleton className="h-[248px] w-full rounded-xl" /> },
+);
 
 function pad2(n: number): string {
   return n < 10 ? `0${n}` : String(n);

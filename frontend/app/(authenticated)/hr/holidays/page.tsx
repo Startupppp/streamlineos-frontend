@@ -24,11 +24,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import {
-  ChevronLeft,
-  ChevronRight,
-  Plus,
   CalendarDays,
-  Trash2,
   Pencil,
   RotateCcw,
   List,
@@ -36,6 +32,8 @@ import {
   Globe,
   Clock,
 } from "lucide-react";
+import { TrashIcon, PlusIcon, ChevronLeftIcon, ChevronRightIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetBody } from "@/components/ui/sheet";

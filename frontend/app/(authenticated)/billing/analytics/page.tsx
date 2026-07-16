@@ -25,17 +25,13 @@ import {
 } from "@/components/ui/tabs";
 import {
   useRevenueAnalytics,
-  type TimeSeriesPoint,
 } from "@/hooks/api/revenue-analytics";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import dynamic from "next/dynamic";
+
+const MrrChart = dynamic(
+  () => import("@/features/billing/mrr-chart").then((m) => ({ default: m.MrrChart })),
+  { ssr: false, loading: () => <Skeleton className="h-[200px] w-full rounded-lg" /> },
+);
 
 type Period = "3m" | "6m" | "12m";
 

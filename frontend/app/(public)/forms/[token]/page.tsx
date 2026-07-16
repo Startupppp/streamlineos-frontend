@@ -1,8 +1,10 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -77,6 +79,34 @@ async function submitPublicForm(
     throw new Error(message);
   }
   return res.json() as Promise<SubmitResponse>;
+}
+
+function buildDynamicSchema(fields: FormField[]): z.ZodObject<Record<string, z.ZodTypeAny>> {
+  const shape: Record<string, z.ZodTypeAny> = {};
+  for (const field of fields) {
+    let fieldSchema: z.ZodTypeAny = z.string();
+    if (field.type === "email") {
+      fieldSchema = field.required
+        ? z.string().trim().min(1, `${field.label} is required`).email(`${field.label} must be a valid email`)
+        : z.string().trim().refine((v) => v === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), {
+            message: `${field.label} must be a valid email`,
+          });
+    } else if (field.type === "number") {
+      fieldSchema = field.required
+        ? z.string().trim().min(1, `${field.label} is required`).refine((v) => /^-?\d+(\.\d+)?$/.test(v), {
+            message: `${field.label} must be a number`,
+          })
+        : z.string().trim().refine((v) => v === "" || /^-?\d+(\.\d+)?$/.test(v), {
+            message: `${field.label} must be a number`,
+          });
+    } else if (field.required) {
+      fieldSchema = z.string().trim().min(1, `${field.label} is required`);
+    } else {
+      fieldSchema = z.string();
+    }
+    shape[field.key] = fieldSchema;
+  }
+  return z.object(shape);
 }
 
 function FieldInput({
@@ -165,7 +195,8 @@ function FieldInput({
       </Label>
       <Input
         id={`field-${field.key}`}
-        type={field.type === "email" ? "email" : field.type === "number" ? "number" : "text"}
+        type={field.type === "email" ? "email" : field.type === "number" ? "text" : "text"}
+        inputMode={field.type === "number" ? "decimal" : undefined}
         value={value}
         onChange={handleInputChange}
         aria-required={field.required}
@@ -191,16 +222,29 @@ export default function PublicFormPage() {
     staleTime: 60_000,
   });
 
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<Record<string, string>>({
-    defaultValues: {},
+  const fields = formQuery.data?.fields ?? [];
+
+  const schema = useMemo(() => buildDynamicSchema(fields), [fields]);
+
+  const defaultValues = useMemo<Record<string, string>>(() => {
+    const vals: Record<string, string> = {};
+    for (const f of fields) {
+      vals[f.key] = "";
+    }
+    return vals;
+  }, [fields]);
+
+  const { control, handleSubmit, formState: { errors } } = useForm<Record<string, string>>({
+    resolver: zodResolver(schema),
+    defaultValues,
   });
 
   const mutation = useMutation({
     mutationFn: (values: Record<string, string>) => {
-      const form = formQuery.data;
-      if (!form) throw new Error("Form not loaded");
+      const formDef = formQuery.data;
+      if (!formDef) throw new Error("Form not loaded");
       const payload: Record<string, string> = {};
-      for (const field of form.fields) {
+      for (const field of formDef.fields) {
         const val = values[field.key];
         if (val !== undefined) payload[field.key] = val;
       }
@@ -210,18 +254,9 @@ export default function PublicFormPage() {
 
   const onSubmit = useCallback(
     (values: Record<string, string>) => {
-      const form = formQuery.data;
-      if (!form) return;
-      const fieldErrors: Record<string, string> = {};
-      for (const field of form.fields) {
-        if (field.required && !values[field.key]?.trim()) {
-          fieldErrors[field.key] = `${field.label} is required`;
-        }
-      }
-      if (Object.keys(fieldErrors).length > 0) return;
       mutation.mutate(values);
     },
-    [formQuery.data, mutation],
+    [mutation],
   );
 
   const form = formQuery.data;
@@ -282,15 +317,22 @@ export default function PublicFormPage() {
               )}
 
               {form.fields.map((field) => {
-                const fieldValue = watch(field.key) ?? "";
                 const error = errors[field.key];
+                const errorMessage = typeof error?.message === "string" ? error.message : undefined;
                 return (
-                  <FieldInput
+                  <Controller
                     key={field.key}
-                    field={field}
-                    value={fieldValue}
-                    onChange={(v) => setValue(field.key, v)}
-                    errorMessage={typeof error?.message === "string" ? error.message : undefined}
+                    control={control}
+                    name={field.key}
+                    defaultValue=""
+                    render={({ field: controllerField }) => (
+                      <FieldInput
+                        field={field}
+                        value={controllerField.value ?? ""}
+                        onChange={controllerField.onChange}
+                        errorMessage={errorMessage}
+                      />
+                    )}
                   />
                 );
               })}
