@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatINRCompact } from "@/lib/format-utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import type { Deal, DealStage } from "@/types/crm";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 
 const STAGE_PROBABILITY: Record<string, number> = {

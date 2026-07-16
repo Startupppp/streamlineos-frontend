@@ -179,7 +179,7 @@ function FlowCard({ flow, onEdit, onAddRound, onEditRound, onDelete }: FlowCardP
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
-            <CardTitle className="text-sm font-semibold truncate">{flow.name}</CardTitle>
+            <CardTitle className="text-sm font-semibold"><TruncatedText text={flow.name} /></CardTitle>
             {flow.isDefault && (
               <Badge variant="secondary" className="text-[10px] shrink-0">Default</Badge>
             )}

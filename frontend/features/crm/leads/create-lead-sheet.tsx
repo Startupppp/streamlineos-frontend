@@ -303,7 +303,7 @@ export function CreateLeadSheet({
                       key={dup.id}
                       className="flex items-center justify-between text-[11px]"
                     >
-                      <span className="font-medium truncate">{dup.name}</span>
+                      <TruncatedText text={dup.name} className="font-medium" />
                       <div className="flex items-center gap-2 shrink-0">
                         {dup.email && (
                           <span className="text-muted-foreground">

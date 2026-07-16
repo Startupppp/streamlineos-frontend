@@ -24,6 +24,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { Plus, GraduationCap, Clock, Target, BookOpen, AlertCircle } from "lucide-react";
 import { useCan } from "@/hooks/api/access";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 
 interface LearningPath {

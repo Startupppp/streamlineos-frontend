@@ -40,6 +40,7 @@ import {
   useTimesheetEntries,
 } from "@/hooks/api/timesheets-core";
 import { BILLING_TYPE_LABEL } from "@/features/timesheets-core";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 function formatDuration(totalSec: number): string {
   const h = Math.floor(totalSec / 3600);
@@ -172,7 +173,7 @@ export function TimerPanel({ weekStart, weekEnd }: TimerPanelProps) {
                   {timer.project?.name ?? "No project"}
                   {timer.ticket && <span className="ml-1.5 text-muted-foreground/70">· #{timer.ticket.id}</span>}
                 </p>
-                <p className="text-sm text-foreground truncate">{timer.description ?? "No description"}</p>
+                <TruncatedText text={timer.description ?? "No description"} className="text-sm text-foreground" />
                 <div className="flex items-center gap-2 mt-1">
                   <Badge variant="outline" className="text-[10px] h-4 px-1">
                     {timer.billable ? BILLING_TYPE_LABEL.BILLABLE : BILLING_TYPE_LABEL.NON_BILLABLE}

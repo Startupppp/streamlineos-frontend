@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/select";
 import { Plus, Trash2, UserPlus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 function CreatePoolSheet() {
   const [open, setOpen] = useState(false);

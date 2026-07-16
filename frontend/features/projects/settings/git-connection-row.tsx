@@ -12,6 +12,7 @@ import type { GitConnection, GitProvider } from "@/hooks/api/git-integration";
 import { cn } from "@/lib/utils";
 import { PM_PANEL } from "@/features/projects/shared/pm-chrome";
 import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 export function ProviderIcon({
   provider,
@@ -91,12 +92,8 @@ export const ConnectionRow = memo(function ConnectionRow({
             />
           </div>
           <div className="min-w-0">
-            <p className={cn(TEXT_ONE_LINE, "text-sm font-semibold")} title={displayName}>
-              {displayName}
-            </p>
-            <p className={cn(TEXT_ONE_LINE, "mt-0.5 text-xs text-muted-foreground")} title={connection.repoUrl}>
-              {connection.repoUrl}
-            </p>
+            <TruncatedText text={displayName} className="text-sm font-semibold" />
+            <TruncatedText text={connection.repoUrl} className="mt-0.5 text-xs text-muted-foreground" />
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-3">

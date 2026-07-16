@@ -13,6 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { Users, Network, Building2, Download } from "lucide-react";
 import type { OrgChartNode } from "@/types/hr";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { toast } from "sonner";
 
 interface TreeNode {

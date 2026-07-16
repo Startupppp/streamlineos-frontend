@@ -28,7 +28,9 @@ import { AIGenerateReviewButton } from "@/features/hr/performance/ai-generate-re
 import { toast } from "sonner";
 import { resolveImageUrl, cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Plus, Star, CheckCircle2, Trash2, ChevronsUpDown, Check, Pencil } from "lucide-react";
+import { Star, CheckCircle2, ChevronsUpDown, Check, Pencil } from "lucide-react";
+import { PlusIcon, TrashIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Employee, PerformanceReview, ReviewCycle } from "@/types/hr";
 import { EmptyLeaderboardIllustration } from "@/components/illustrations";
@@ -192,9 +194,9 @@ export function ReviewsTab() {
             <TabsTrigger value="COMPLETED" className="text-[11px] px-3">Completed</TabsTrigger>
           </TabsList>
         </Tabs>
-        <Button size="sm" className="gap-1.5" onClick={handleOpenSheet}>
-          <Plus className="h-3.5 w-3.5" />New Review
-        </Button>
+        <AnimatedIconButton icon={PlusIcon} size="sm" className="gap-1.5" iconSize={14} onClick={handleOpenSheet}>
+          New Review
+        </AnimatedIconButton>
       </div>
 
       {filteredReviews.length === 0 ? (

@@ -290,22 +290,7 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
             <EmptyChart label="No engagement data" />
           ) : (
             <>
-              <ResponsiveContainer width="100%" height={200}>
-                <LineChart data={engagement.moodByMonth}>
-                  <CartesianGrid {...chartGridProps} />
-                  <XAxis dataKey="month" tick={chartAxisTick} />
-                  <YAxis domain={[0, 5]} tick={chartAxisTick} width={28} />
-                  <Tooltip contentStyle={chartTooltipStyle} />
-                  <Line
-                    type="monotone"
-                    dataKey="avgMood"
-                    stroke={CHART_SEMANTIC.accent}
-                    strokeWidth={2}
-                    dot={false}
-                    name="Avg Mood"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              <MoodTrendChart data={engagement.moodByMonth} />
               <div className="mt-2 flex justify-end">
                 <Button variant="ghost" size="sm" onClick={handleEngagementDrilldown}>
                   View Details
@@ -322,15 +307,7 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
             <EmptyChart label="No performance data" />
           ) : (
             <>
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={perfDist.distribution}>
-                  <CartesianGrid {...chartGridProps} />
-                  <XAxis dataKey="rating" tick={chartAxisTick} label={{ value: "Rating", position: "insideBottom", offset: -2, style: { fontSize: 10 } }} />
-                  <YAxis tick={chartAxisTick} width={28} />
-                  <Tooltip contentStyle={chartTooltipStyle} />
-                  <Bar dataKey="count" fill={CHART_SEMANTIC.primary} radius={[3, 3, 0, 0]} name="Employees" />
-                </BarChart>
-              </ResponsiveContainer>
+              <PerformanceDistChart data={perfDist.distribution} />
               <div className="mt-2 flex justify-end">
                 <Button variant="ghost" size="sm" onClick={handleAttritionDrilldown}>
                   View Attrition Details
@@ -376,25 +353,7 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
               <EmptyChart label="No payroll data" />
             ) : (
               <>
-                <ResponsiveContainer width="100%" height={200}>
-                  <LineChart data={payrollCost.monthly}>
-                    <CartesianGrid {...chartGridProps} />
-                    <XAxis dataKey="month" tick={chartAxisTick} />
-                    <YAxis tick={chartAxisTick} width={40} tickFormatter={(v: number) => formatCurrency(v)} />
-                    <Tooltip
-                      contentStyle={chartTooltipStyle}
-                      formatter={(value) => [formatCurrency(Number(value)), "Gross Total"]}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="grossTotal"
-                      stroke="#1d4ed8"
-                      strokeWidth={2}
-                      dot={false}
-                      name="Gross Total"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                <PayrollCostChart data={payrollCost.monthly} formatCurrency={formatCurrency} />
                 <div className="mt-2 flex justify-end">
                   <Button variant="ghost" size="sm" onClick={handleLeaveDrilldown}>
                     View Leave Details
