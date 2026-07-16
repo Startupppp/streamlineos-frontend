@@ -1,7 +1,7 @@
 "use client";
 
-import { Check, Loader2, Zap } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Check, Zap } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { cn } from "@/lib/utils";
 import type { SubscriptionPlan, BillingCycle } from "@/hooks/api/subscription";
 
@@ -99,24 +99,17 @@ export function PlanCard({
           </li>
         ))}
       </ul>
-      <Button
+      <LoadingButton
         size="sm"
         variant={isCurrentPlan ? "secondary" : "default"}
         disabled={isCurrentPlan || !isConfigured || (isBusy && upgradingPlan !== plan)}
+        isPending={isUpgrading}
+        loadingText="Processing…"
         onClick={handleUpgrade}
         className="w-full"
       >
-        {isUpgrading ? (
-          <>
-            <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-            Processing…
-          </>
-        ) : isCurrentPlan ? (
-          "Current Plan"
-        ) : (
-          "Upgrade"
-        )}
-      </Button>
+        {isCurrentPlan ? "Current Plan" : "Upgrade"}
+      </LoadingButton>
     </div>
   );
 }

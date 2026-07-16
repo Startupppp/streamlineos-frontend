@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { CreditCard, Receipt, Building2 } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlanTab } from "@/features/billing/components/plan-tab";
 import { PaymentsTab } from "@/features/billing/components/payments-tab";
@@ -21,7 +22,7 @@ function resolveTab(raw: string | null): BillingTab {
 const TAB_TRIGGER_CLASS =
   "text-xs gap-1.5 px-3 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground text-muted-foreground hover:text-foreground transition-colors duration-200";
 
-export default function BillingPage() {
+function BillingPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const activeTab = resolveTab(searchParams.get("tab"));
@@ -77,5 +78,23 @@ export default function BillingPage() {
         </TabsContent>
       </Tabs>
     </PageWrapper>
+  );
+}
+
+export default function BillingPage() {
+  return (
+    <Suspense
+      fallback={
+        <PageWrapper title="Billing & Plan" subtitle="Manage your subscription, payments, and billing details">
+          <div className="space-y-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-10 w-full rounded-lg" />
+            ))}
+          </div>
+        </PageWrapper>
+      }
+    >
+      <BillingPageContent />
+    </Suspense>
   );
 }

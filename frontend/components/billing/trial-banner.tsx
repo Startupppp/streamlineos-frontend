@@ -68,7 +68,7 @@ export function TrialBanner() {
           size="sm"
           className="h-6 px-3 text-[11px] bg-amber-600 hover:bg-amber-700 text-white border-0"
         >
-          <Link href="/settings/subscription">Upgrade now</Link>
+          <Link href="/billing?tab=plan">Upgrade now</Link>
         </Button>
         <button
           type="button"

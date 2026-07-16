@@ -18,7 +18,7 @@ export default function SubscriptionExpiredPage() {
         </p>
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Button asChild>
-            <Link href="/settings/subscription">Renew Subscription</Link>
+            <Link href="/billing?tab=plan">Renew Subscription</Link>
           </Button>
           <Button variant="outline" asChild>
             <Link href="/signin">Sign in with another account</Link>

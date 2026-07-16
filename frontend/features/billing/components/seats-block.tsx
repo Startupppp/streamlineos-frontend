@@ -130,17 +130,11 @@ export function SeatsBlock() {
             <dd className="font-medium text-foreground">{capitalize(planName)}</dd>
           </div>
         </dl>
-        <div className="shrink-0">
-          {isEnterprise ? (
-            <Button variant="outline" size="sm" className="text-xs h-7" asChild>
-              <Link href="mailto:sales@streamlineos.com">Contact Sales</Link>
-            </Button>
-          ) : (
-            <Button size="sm" className="text-xs h-7" asChild>
-              <Link href="/billing/checkout">Add Seats</Link>
-            </Button>
-          )}
-        </div>
+        {isEnterprise && (
+          <Button variant="outline" size="sm" className="text-xs h-7" asChild>
+            <Link href="mailto:sales@streamlineos.com">Contact Sales</Link>
+          </Button>
+        )}
       </div>
 
       <div className="flex items-start gap-2 rounded-lg bg-muted/40 px-3 py-2">
