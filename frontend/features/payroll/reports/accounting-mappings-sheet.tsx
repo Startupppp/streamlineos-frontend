@@ -281,13 +281,11 @@ export function AccountingMappingsSheet({ open: externalOpen, onOpenChange: exte
                   className="flex items-start gap-2 rounded-md border border-border bg-card px-3 py-2"
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="text-[12px] font-medium truncate">{m.ledgerName}</p>
+                    <TruncatedText text={m.ledgerName} className="text-[12px] font-medium" />
                     <p className="text-[11px] text-muted-foreground">
                       {m.category ?? (m.componentId != null ? `Component #${m.componentId}` : "—")}
                     </p>
-                    {m.notes && (
-                      <p className="text-[10px] text-muted-foreground truncate">{m.notes}</p>
-                    )}
+                    {m.notes && <TruncatedText text={m.notes} className="text-[10px] text-muted-foreground" />}
                   </div>
                   {canManage && (
                     <div className="flex gap-1 shrink-0">

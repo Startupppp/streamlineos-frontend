@@ -249,9 +249,7 @@ export function KbConversationList({
                         onClick={handleSelectItem}
                         className="min-w-0 flex-1 text-left"
                       >
-                        <p className="truncate text-xs font-medium leading-tight text-foreground">
-                          {conv.title ?? "New conversation"}
-                        </p>
+                        <TruncatedText text={conv.title ?? "New conversation"} className="text-xs font-medium leading-tight text-foreground" />
                         <p className="text-[10px] text-muted-foreground">{relativeTime(conv.updatedAt)}</p>
                       </button>
                     )}

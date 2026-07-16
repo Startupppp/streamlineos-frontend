@@ -33,6 +33,7 @@ import {
   EmptyChart,
 } from "@/features/hr/analytics/shared";
 import { DrilldownSheet } from "./drilldown-sheet";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const JoinsExitsChart = dynamic(
   () => import("./command-center-charts").then((m) => ({ default: m.JoinsExitsChart })),
@@ -329,7 +330,7 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
               <div className="space-y-2">
                 {complianceGaps.openCases.map((item) => (
                   <div key={item.category} className="flex items-center justify-between gap-2 text-sm">
-                    <span className="truncate text-muted-foreground">{item.category}</span>
+                    <TruncatedText text={item.category} className="text-muted-foreground" />
                     <Badge variant="secondary" className="shrink-0 tabular-nums">
                       {item.count}
                     </Badge>

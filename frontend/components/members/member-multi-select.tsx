@@ -6,6 +6,7 @@ import { SearchInput } from "@/components/ui/search-input";
 import { Check, X, Loader2 } from "lucide-react";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "@/lib/format-utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 export interface SelectableMember {
   id: string;
@@ -36,7 +37,7 @@ function MemberChip({ member, onRemove }: ChipProps) {
         <AvatarImage src={resolveImageUrl(member.image)} />
         <AvatarFallback className="text-[9px]">{getInitials(name)}</AvatarFallback>
       </Avatar>
-      <span className="max-w-[10rem] truncate">{name}</span>
+      <TruncatedText text={name} className="max-w-[10rem]" />
       <button
         type="button"
         onClick={handleRemove}

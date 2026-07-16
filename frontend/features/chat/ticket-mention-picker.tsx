@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { useTicketSearch } from "@/hooks/api/projects";
 import type { TicketSearchResult } from "@/hooks/api/projects";
 import { getStatusDotClass } from "@/features/projects/shared/status-badge";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface TicketMentionPickerProps {
   query: string;
@@ -94,9 +95,7 @@ export function TicketMentionPicker({
                 <span className="font-mono text-[11px] text-muted-foreground shrink-0 w-16 truncate">
                   {ticket.projectKey}-{ticket.ticketNumber}
                 </span>
-                <span className="flex-1 min-w-0 text-[13px] truncate text-foreground">
-                  {ticket.title}
-                </span>
+                <TruncatedText text={ticket.title} className="flex-1 min-w-0 text-[13px] text-foreground" />
                 <span
                   className={cn("h-2 w-2 rounded-full shrink-0", getStatusDotClass(ticket.status))}
                 />

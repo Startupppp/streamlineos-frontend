@@ -83,11 +83,9 @@ export default function QuickFindDialog({ open, onOpenChange }: QuickFindDialogP
                   {result.icon ?? <KbFileTextIcon className="h-4 w-4" />}
                 </span>
                 <div className="flex flex-col min-w-0">
-                  <span className="font-medium truncate">{result.title || "Untitled"}</span>
+                  <TruncatedText text={result.title || "Untitled"} className="font-medium" />
                   {result.snippet && (
-                    <span className="text-xs text-muted-foreground truncate">
-                      {result.snippet}
-                    </span>
+                    <TruncatedText text={result.snippet} className="text-xs text-muted-foreground" />
                   )}
                 </div>
               </CommandItem>

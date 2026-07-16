@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   Popover,
   PopoverContent,
@@ -149,7 +150,7 @@ function ProjectNavLink({
           !collapsed && "mr-2",
         )}
       />
-      {!collapsed ? <span className="truncate tracking-tight">{item.label}</span> : null}
+      {!collapsed ? <TruncatedText text={item.label} className="tracking-tight" /> : null}
     </Link>
   );
 
@@ -219,7 +220,7 @@ function ProjectSwitcher({
           aria-expanded={open}
           aria-haspopup="listbox"
         >
-          <span className="truncate">{currentProjectName ?? "Project"}</span>
+          <TruncatedText text={currentProjectName ?? "Project"} />
           <ChevronsUpDown className="ml-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
         </button>
       </PopoverTrigger>
@@ -256,7 +257,7 @@ function ProjectSwitcher({
                     <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-primary/10 text-[9px] font-bold text-primary">
                       {p.key.substring(0, 2).toUpperCase()}
                     </div>
-                    <span className="min-w-0 flex-1 truncate text-xs">{p.name}</span>
+                    <TruncatedText text={p.name} className="min-w-0 flex-1 text-xs" />
                     {isCurrent ? <Check className="h-3 w-3 shrink-0 text-primary" /> : null}
                   </button>
                 );
@@ -484,9 +485,7 @@ function MobileProjectNav({
                   {getProjectInitials(projectKey, projectName)}
                 </div>
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-foreground">
-                    {projectName ?? "Project"}
-                  </p>
+                  <TruncatedText text={projectName ?? "Project"} className="text-sm font-semibold text-foreground" />
                   {projectKey ? (
                     <p className="font-mono text-[10px] text-muted-foreground">{projectKey}</p>
                   ) : null}

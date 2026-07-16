@@ -23,6 +23,7 @@ import { Plus, FileSpreadsheet, IndianRupee, CheckCircle2 } from "lucide-react";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import type { Employee } from "@/types/hr";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface FnfSettlement {
   id: number;
@@ -112,9 +113,7 @@ function FnfCard({ item, onMarkPaid, isPending }: FnfCardProps) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               {item.user?.name && (
-                <p className="text-sm font-semibold text-foreground truncate">
-                  {item.user.name}
-                </p>
+                <TruncatedText text={item.user.name} className="text-sm font-semibold text-foreground" />
               )}
               <span
                 className={cn(
@@ -149,7 +148,7 @@ function FnfCard({ item, onMarkPaid, isPending }: FnfCardProps) {
             </div>
 
             {item.notes && (
-              <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{item.notes}</p>
+              <TruncatedText text={item.notes} className="text-xs text-muted-foreground mt-1" />
             )}
           </div>
 

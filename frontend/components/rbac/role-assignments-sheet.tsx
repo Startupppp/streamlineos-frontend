@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { keepPreviousData } from "@tanstack/react-query";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { Loader2, AlertTriangle, Building2, UserCircle } from "lucide-react";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   Sheet,
   SheetContent,
@@ -460,13 +461,9 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
                         </AvatarFallback>
                       </Avatar>
                       <div className="min-w-0 flex-1">
-                        <p className="text-[13px] font-medium truncate">
-                          {user.name ?? user.email ?? "Unknown"}
-                        </p>
+                        <TruncatedText text={user.name ?? user.email ?? "Unknown"} className="text-[13px] font-medium" />
                         {user.email && (
-                          <p className="text-[11px] text-muted-foreground truncate">
-                            {user.email}
-                          </p>
+                          <TruncatedText text={user.email} className="text-[11px] text-muted-foreground" />
                         )}
                       </div>
                       <div className="flex flex-wrap items-center justify-end gap-1 shrink-0">

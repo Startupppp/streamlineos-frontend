@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/select";
 import { INVITE_ROLES } from "../lib/constants";
 import type { Invitee, WizardData } from "../lib/types";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { StepGeneration } from "./step-generation";
 
 type StepInviteLaunchProps = {
@@ -84,7 +85,7 @@ export function StepInviteLaunch({ data, onChangeInvitees, onBack }: StepInviteL
               transition={{ delay: i * 0.03 }}
               className="flex items-center justify-between gap-2 rounded-lg border border-border bg-card px-2.5 py-1.5"
             >
-              <span className="text-[13px] truncate">{invitee.email}</span>
+              <TruncatedText text={invitee.email} className="text-[13px]" />
               <div className="flex items-center gap-2 shrink-0">
                 <span className="text-[11px] text-muted-foreground">{invitee.role}</span>
                 <button

@@ -351,7 +351,7 @@ function SessionRow({ session: s, onRevoke, revokePending }: SessionRowProps) {
       <span className="text-muted-foreground flex-shrink-0">{getDeviceIcon(s)}</span>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <p className="text-[13px] font-medium truncate">{getSessionLabel(s)}</p>
+          <TruncatedText text={getSessionLabel(s)} className="text-[13px] font-medium" />
           {s.isCurrent && (
             <Badge variant="outline" className="text-[10px] h-4 px-1.5 border-emerald-300 text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
               Current

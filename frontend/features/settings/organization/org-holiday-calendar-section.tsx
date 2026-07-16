@@ -172,7 +172,7 @@ export function OrgHolidayCalendarSection({ canEdit }: OrgHolidayCalendarSection
             {holidays.map((h) => (
               <div key={h.id} className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted/50 group">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{h.name}</p>
+                  <TruncatedText text={h.name} className="text-sm font-medium" />
                   <p className="text-xs text-muted-foreground">
                     {format(parseISO(h.date), "dd MMM yyyy")}
                     {h.recurring && " · Recurring annually"}

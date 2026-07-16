@@ -371,7 +371,7 @@ export default function OrgChartPage() {
                           </AvatarFallback>
                         </Avatar>
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs font-medium truncate">{emp.name}</p>
+                          <TruncatedText text={emp.name ?? ""} className="text-xs font-medium" />
                         </div>
                         <span className="text-[10px] text-muted-foreground shrink-0">{emp.designation ?? emp.role}</span>
                       </div>

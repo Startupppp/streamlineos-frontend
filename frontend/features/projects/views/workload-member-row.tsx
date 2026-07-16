@@ -18,7 +18,7 @@ import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/
 import { stopEvent, InlineAssignee } from "./card-inline-fields";
 import { TicketQuickActions } from "./ticket-quick-actions";
 import { getTicketDetailHref } from "@/features/projects/shared/format-ticket-key";
-import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface WorkloadMember {
   id: string;
@@ -191,12 +191,7 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
                 <span className="text-xs text-muted-foreground font-mono w-12 shrink-0">
                   #{ticket.ticketNumber}
                 </span>
-                <span
-                  className={cn(TEXT_ONE_LINE, "flex-1 text-xs text-foreground")}
-                  title={ticket.title}
-                >
-                  {ticket.title}
-                </span>
+                <TruncatedText text={ticket.title} className="flex-1 text-xs text-foreground" />
                 {ticket.points != null && (
                   <span className="text-[10px] text-muted-foreground shrink-0 tabular-nums">
                     {ticket.points}pt

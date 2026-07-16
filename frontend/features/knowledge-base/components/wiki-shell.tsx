@@ -117,10 +117,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
                     className="flex items-center gap-2 px-2 py-1 text-sm rounded-md hover:bg-muted transition-colors"
                   >
                     <KbStarIcon className="h-3 w-3 text-amber-500 fill-amber-500 shrink-0" />
-                    <span className="truncate">
-                      {page.icon ? `${page.icon} ` : ""}
-                      {page.title || "Untitled"}
-                    </span>
+                    <TruncatedText text={`${page.icon ? `${page.icon} ` : ""}${page.title || "Untitled"}`} />
                   </a>
                 ))}
                 <Separator className="my-2" />

@@ -55,7 +55,7 @@ function MetadataPanel({ meta }: { meta: FeedbucketMetadata }) {
       {rows.filter((r) => r.value).map((r) => (
         <div key={r.label} className="flex justify-between gap-4 text-sm">
           <span className="text-muted-foreground">{r.label}</span>
-          <span className="text-foreground text-right truncate max-w-[220px]">{r.value}</span>
+          <TruncatedText text={r.value ?? ""} className="text-foreground text-right max-w-[220px]" />
         </div>
       ))}
     </div>

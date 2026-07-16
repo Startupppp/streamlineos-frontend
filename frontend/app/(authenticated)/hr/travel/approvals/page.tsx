@@ -19,6 +19,7 @@ import {
   useRejectTravelRequest,
   type TravelRequest,
 } from "@/hooks/api/hr";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { format } from "date-fns";
 import { useOrgMembers } from "@/hooks/api/organization";
@@ -184,7 +185,7 @@ const TravelApprovalCard = memo(function TravelApprovalCard({
                 <p className="text-sm font-semibold text-foreground">{request.purpose}</p>
                 <div className="flex items-center gap-1 mt-0.5">
                   <MapPin className="h-3 w-3 text-muted-foreground shrink-0" />
-                  <p className="text-xs text-muted-foreground truncate">{request.destination}</p>
+                  <TruncatedText text={request.destination} className="text-xs text-muted-foreground" />
                 </div>
                 <div className="flex flex-wrap gap-3 mt-2">
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">

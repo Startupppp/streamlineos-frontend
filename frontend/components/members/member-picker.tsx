@@ -23,6 +23,7 @@ import {
   getUserInitials,
   type NamedUser,
 } from "@/features/projects/shared/resolve-user-name";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface MemberOption extends NamedUser {
   id: string;
@@ -149,9 +150,7 @@ export function MemberPicker(props: MemberPickerProps) {
             {selectedMembers.map((m) => (
               <Badge key={m.id} variant="secondary" className="gap-1.5 pl-0.5 pr-1.5 py-0.5">
                 <MemberAvatar member={m} className="h-4 w-4" />
-                <span className="text-[11px] truncate max-w-[120px]">
-                  {getUserDisplayName(m)}
-                </span>
+                <TruncatedText text={getUserDisplayName(m)} className="text-[11px] max-w-[120px]" />
                 <button
                   type="button"
                   className="text-muted-foreground/70 hover:text-destructive transition-colors leading-none"
@@ -193,7 +192,7 @@ export function MemberPicker(props: MemberPickerProps) {
                   {filtered.map((m) => (
                     <CommandItem key={m.id} value={m.id} onSelect={() => handleToggle(m.id)}>
                       <MemberAvatar member={m} className="mr-2" />
-                      <span className="truncate text-xs">{getUserDisplayName(m)}</span>
+                      <TruncatedText text={getUserDisplayName(m)} className="text-xs" />
                       {values.includes(m.id) && <Check className="ml-auto h-3 w-3" />}
                     </CommandItem>
                   ))}
@@ -233,7 +232,7 @@ export function MemberPicker(props: MemberPickerProps) {
           {selected ? (
             <>
               <MemberAvatar member={selected} />
-              <span className="truncate">{getUserDisplayName(selected)}</span>
+              <TruncatedText text={getUserDisplayName(selected)} />
             </>
           ) : (
             <>

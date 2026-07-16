@@ -364,7 +364,7 @@ function YearOverview({
                     <span className="text-xs font-medium text-foreground tabular-nums w-5 shrink-0">
                       {format(parseISO(h.date), "d")}
                     </span>
-                    <span className="text-xs text-muted-foreground truncate">{h.name}</span>
+                    <TruncatedText text={h.name} className="text-xs text-muted-foreground" />
                     {h.recurring && <RotateCcw className="h-2.5 w-2.5 text-muted-foreground/60 shrink-0" />}
                   </div>
                 ))}

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   Send,
   CheckCircle2,
@@ -110,9 +111,9 @@ export function QuoteDetailContent({ quote, subtotal }: QuoteDetailContentProps)
                   <p className="text-[10px] text-muted-foreground">Deal</p>
                   <Link
                     href={`/crm/deals/${quote.deal.id}`}
-                    className="text-xs font-medium text-primary hover:underline truncate block"
+                    className="text-xs font-medium text-primary hover:underline block"
                   >
-                    {quote.deal.name}
+                    <TruncatedText text={quote.deal.name} />
                   </Link>
                 </div>
               </div>
@@ -124,9 +125,9 @@ export function QuoteDetailContent({ quote, subtotal }: QuoteDetailContentProps)
                   <p className="text-[10px] text-muted-foreground">Client</p>
                   <Link
                     href={`/crm/clients/${quote.client.id}`}
-                    className="text-xs font-medium text-primary hover:underline truncate block"
+                    className="text-xs font-medium text-primary hover:underline block"
                   >
-                    {quote.client.clientName}
+                    <TruncatedText text={quote.client.clientName} />
                   </Link>
                 </div>
               </div>

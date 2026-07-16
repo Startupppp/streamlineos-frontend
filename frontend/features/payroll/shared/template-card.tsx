@@ -106,7 +106,7 @@ export function TemplateCard({ template, selected, onSelect, actions }: Template
           </span>
         </div>
 
-        <p className="text-xs text-muted-foreground line-clamp-2">{template.bestFor}</p>
+        <TruncatedText text={template.bestFor ?? ""} lines={2} className="text-xs text-muted-foreground" />
 
         <div className="flex flex-wrap gap-1">
           {shownComponents.map((c) => (

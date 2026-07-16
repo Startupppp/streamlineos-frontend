@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { useProbationList, type ProbationReview } from "@/hooks/api/hr/probation";
 import { ProbationConfirmSheet } from "@/features/hr/onboarding/components/probation-confirm-sheet";
 import { ProbationExtendSheet } from "@/features/hr/onboarding/components/probation-extend-sheet";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 type StatusConfig = {
   label: string;
@@ -95,9 +96,7 @@ function ProbationRow({ review, onExtend, onConfirm }: ProbationRowProps) {
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-0.5">
-            <p className="text-sm font-semibold truncate">
-              {review.firstName} {review.lastName}
-            </p>
+            <TruncatedText text={`${review.firstName} ${review.lastName}`} className="text-sm font-semibold" />
             <Badge
               variant="outline"
               className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-full", config.className)}

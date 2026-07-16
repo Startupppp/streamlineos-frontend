@@ -345,7 +345,7 @@ export function CalendarManager({ month }: CalendarManagerProps) {
             >
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[11px] font-medium truncate">{event.title}</span>
+                  <TruncatedText text={event.title} className="text-[11px] font-medium" />
                   <span
                     className={cn(
                       "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border",

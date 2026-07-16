@@ -55,7 +55,7 @@ const NoResultsRow = memo(function NoResultsRow({ row, rank }: { row: KbNoResult
       <span className="text-xs text-muted-foreground w-5 shrink-0 tabular-nums">
         {rank}
       </span>
-      <span className="flex-1 text-sm truncate">{row.query ?? "(empty)"}</span>
+      <TruncatedText text={row.query ?? "(empty)"} className="flex-1 text-sm" />
       <span className="text-xs font-medium tabular-nums text-muted-foreground">
         {row.count}
       </span>
@@ -117,7 +117,7 @@ const GapTableRow = memo(function GapTableRow({
   }
   return (
     <div className="flex items-center gap-3 px-3 py-2 hover:bg-muted/40 transition-colors">
-      <span className="flex-1 text-sm truncate">{row.query ?? "(empty)"}</span>
+      <TruncatedText text={row.query ?? "(empty)"} className="flex-1 text-sm" />
       <span className="text-xs tabular-nums text-muted-foreground shrink-0">
         {row.count}
       </span>

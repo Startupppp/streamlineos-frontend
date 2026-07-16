@@ -63,7 +63,7 @@ import {
   PM_FILL_PANEL,
   PM_PANEL,
 } from "@/features/projects/shared/pm-chrome";
-import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { LoadingButton } from "@/components/ui/loading-button";
 
 const WEBHOOK_EVENTS = [
@@ -168,7 +168,7 @@ function WebhookCard({
           <Zap className="h-4 w-4 text-muted-foreground" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className={cn("text-sm font-medium text-foreground", TEXT_ONE_LINE)}>{webhook.url}</p>
+          <TruncatedText text={webhook.url} className="text-sm font-medium text-foreground" />
           <div className="flex flex-wrap gap-1 mt-1">
             {webhook.events.slice(0, 3).map((e) => (
               <Badge

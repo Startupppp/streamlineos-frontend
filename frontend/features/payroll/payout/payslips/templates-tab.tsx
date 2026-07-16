@@ -52,7 +52,7 @@ function TemplateCard({
           </span>
         )}
       </div>
-      <p className="font-semibold text-sm text-foreground truncate">{template.name}</p>
+      <TruncatedText text={template.name} className="font-semibold text-sm text-foreground" />
       <div className="flex items-center gap-2">
         <div
           className="h-4 w-4 rounded-full border border-border"

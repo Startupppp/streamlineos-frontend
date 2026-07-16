@@ -104,7 +104,7 @@ export function PayrollExportsHistory({ fallbackMapping }: PayrollExportsHistory
         key: "createdByName",
         header: "By",
         cell: (row) => (
-          <span className="text-[11px] truncate block">{row.createdByName ?? "—"}</span>
+          <TruncatedText text={row.createdByName ?? "—"} className="text-[11px]" />
         ),
       },
       {

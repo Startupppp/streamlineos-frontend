@@ -292,11 +292,9 @@ export default function TeamDetailPage({ params }: { params: Promise<{ teamId: s
                         </span>
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold group-hover:text-primary transition-colors truncate">
-                          {leadName ?? leadEmployee.email}
-                        </p>
+                        <TruncatedText text={leadName ?? leadEmployee.email} className="text-sm font-semibold group-hover:text-primary transition-colors" />
                         {leadEmployee.designation && (
-                          <p className="text-xs text-muted-foreground truncate">{leadEmployee.designation}</p>
+                          <TruncatedText text={leadEmployee.designation} className="text-xs text-muted-foreground" />
                         )}
                         <Badge variant="outline" className="text-[10px] mt-0.5">{leadEmployee.role}</Badge>
                       </div>

@@ -19,7 +19,6 @@ import {
 import { ChevronsUpDown, Star } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
-import { cn } from "@/lib/utils";
 import {
   useVipClients,
   useAddVipClient,

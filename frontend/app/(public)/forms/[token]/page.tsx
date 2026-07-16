@@ -81,7 +81,7 @@ async function submitPublicForm(
   return res.json() as Promise<SubmitResponse>;
 }
 
-type StringSchema = z.ZodType<string, z.ZodTypeDef, string>;
+type StringSchema = z.ZodString;
 
 function buildFieldSchema(field: FormField): StringSchema {
   if (field.type === "email") {

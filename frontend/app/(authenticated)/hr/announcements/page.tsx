@@ -129,9 +129,7 @@ function AnnouncementCard({
               {announcement.isPinned && (
                 <Pin className="h-3.5 w-3.5 text-amber-500 shrink-0" />
               )}
-              <h3 className="text-sm font-semibold text-foreground leading-tight truncate">
-                {announcement.title}
-              </h3>
+              <TruncatedText text={announcement.title} className="text-sm font-semibold text-foreground leading-tight" />
             </div>
 
             <div className="flex items-center gap-1.5 shrink-0">

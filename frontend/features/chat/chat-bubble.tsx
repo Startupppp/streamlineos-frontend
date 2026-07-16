@@ -17,6 +17,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   getInitials,
   formatMessageTime,
@@ -183,9 +184,9 @@ function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId:
         <button
           type="button"
           onClick={handlePillClick}
-          className="text-[12px] text-foreground/80 hover:underline truncate max-w-[160px]"
+          className="text-[12px] text-foreground/80 hover:underline max-w-[160px] min-w-0"
         >
-          {entity.title}
+          <TruncatedText text={entity.title} />
         </button>
       )}
       {canUpdate ? (
@@ -422,9 +423,7 @@ export function ChatBubble({
                 : "bg-muted/50 border-border/40",
             )}
           >
-            <p className={cn("font-bold truncate", isOwn ? "text-primary-foreground" : "text-foreground")}>
-              {replySenderName}
-            </p>
+            <TruncatedText text={replySenderName ?? ""} className={cn("font-bold", isOwn ? "text-primary-foreground" : "text-foreground")} />
             <p className={cn("truncate", isOwn ? "text-primary-foreground/70" : "text-muted-foreground")}>
               {message.replyTo.content
                 ? renderFormattedContent(message.replyTo.content, isOwn)

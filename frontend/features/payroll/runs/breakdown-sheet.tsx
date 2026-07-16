@@ -318,9 +318,7 @@ export function BreakdownSheet({
                   </Button>
                 ))}
               {data?.holdReason && (
-                <span className="text-[10px] text-amber-600 truncate">
-                  On hold: {data.holdReason}
-                </span>
+                <TruncatedText text={`On hold: ${data.holdReason}`} className="text-[10px] text-amber-600" />
               )}
             </div>
           )}

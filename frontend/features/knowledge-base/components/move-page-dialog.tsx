@@ -123,7 +123,7 @@ export default function MovePageDialog({
                       <span className="shrink-0 text-base leading-none">
                         {node.icon ?? <KbFileTextIcon className="h-3.5 w-3.5" />}
                       </span>
-                      <span className="truncate">{node.title || "Untitled"}</span>
+                      <TruncatedText text={node.title || "Untitled"} />
                     </button>
                   );
                 })

@@ -109,9 +109,7 @@ export default function PageSharePopover({ page }: PageSharePopoverProps) {
             <div className="h-px bg-border mx-4" />
             <div className="px-4 py-3">
               <div className="flex items-center gap-2 rounded-md border border-border bg-muted px-2 py-1.5">
-                <span className="flex-1 min-w-0 text-xs text-muted-foreground truncate">
-                  {publicUrl}
-                </span>
+                <TruncatedText text={publicUrl} className="flex-1 min-w-0 text-xs text-muted-foreground" />
                 <Button
                   type="button"
                   variant="ghost"

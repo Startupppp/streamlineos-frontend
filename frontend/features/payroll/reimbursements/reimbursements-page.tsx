@@ -199,7 +199,7 @@ export function ReimbursementsPageContent() {
       cell: (row) => (
         <div className="flex flex-col gap-0.5 min-w-0">
           <TruncatedText text={row.user?.name ?? "—"} className="text-[11px] font-medium" />
-          <TruncatedText text={row.user?.email ?? row.userId} className="text-[10px] text-muted-foreground" />
+          <TruncatedText text={row.user?.email ?? "Unknown user"} className="text-[10px] text-muted-foreground" />
         </div>
       ),
     },

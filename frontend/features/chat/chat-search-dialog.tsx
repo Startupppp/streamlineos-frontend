@@ -8,6 +8,7 @@ import { Hash, Loader2, MessageSquare, Search, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSearchMessages, useSearchChannels, useSearchUsers } from "@/hooks/api";
 import { formatMessageTime } from "./chat-helpers";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface ChatSearchDialogProps {
   open: boolean;
@@ -112,7 +113,7 @@ export function ChatSearchDialog({ open, onOpenChange, onSelectChannel }: ChatSe
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[13px] font-semibold text-foreground">{ch.name}</p>
-                    {ch.description && <p className="text-[11px] text-muted-foreground truncate">{ch.description}</p>}
+                    {ch.description && <TruncatedText text={ch.description} className="text-[11px] text-muted-foreground" />}
                   </div>
                   <span className={cn("text-[11px] font-medium px-2 py-0.5 rounded-full", ch.isMember ? "bg-green-500/10 text-green-600 dark:text-green-400" : "bg-muted text-muted-foreground")}>
                     {ch.isMember ? "Joined" : "Join"}
@@ -133,7 +134,7 @@ export function ChatSearchDialog({ open, onOpenChange, onSelectChannel }: ChatSe
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <p className="text-[13px] font-semibold text-foreground">{u.name}</p>
-                    <p className="text-[11px] text-muted-foreground truncate">{u.email}</p>
+                    <TruncatedText text={u.email ?? ""} className="text-[11px] text-muted-foreground" />
                   </div>
                   <User className="h-3.5 w-3.5 text-muted-foreground" />
                 </div>

@@ -164,9 +164,7 @@ function SourceRow({
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-foreground">
-          {source.title}
-        </p>
+        <TruncatedText text={source.title ?? ""} className="text-sm font-medium text-foreground" />
         <p className="text-xs text-muted-foreground">
           {source.chunkCount > 0 ? `${source.chunkCount} chunks` : "—"}
         </p>

@@ -432,7 +432,7 @@ export function BonusesTab() {
       header: "Employee",
       cell: (row) => (
         <div className="min-w-0">
-          <TruncatedText text={row.userName ?? String(row.userId)} className="text-[11px] font-medium text-foreground max-w-[140px]" />
+          <TruncatedText text={row.userName ?? "Unknown user"} className="text-[11px] font-medium text-foreground max-w-[140px]" />
           {row.userEmail && (
             <TruncatedText text={row.userEmail} className="text-[10px] text-muted-foreground max-w-[140px]" />
           )}

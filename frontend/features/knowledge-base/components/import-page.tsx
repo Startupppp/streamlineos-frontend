@@ -64,7 +64,7 @@ function ImportJobRow({ job }: { job: KbImportJob }) {
   return (
     <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border bg-card text-sm">
       <KbFileTextIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-      <span className="flex-1 truncate">{sourceLabel} import</span>
+      <TruncatedText text={`${sourceLabel} import`} className="flex-1" />
       <span className="text-xs text-muted-foreground">
         {job.succeededItems}/{job.totalItems} pages
       </span>
@@ -332,9 +332,7 @@ export default function ImportPage() {
                         key={idx}
                         className="grid grid-cols-[1fr_auto_auto_auto] gap-x-3 items-center px-3 py-2 text-sm"
                       >
-                        <span className="truncate font-medium">
-                          {item.title || "Untitled"}
-                        </span>
+                        <TruncatedText text={item.title || "Untitled"} className="font-medium" />
                         <span className="text-xs text-muted-foreground">
                           {sizeLabel(item.sizeBytes)}
                         </span>

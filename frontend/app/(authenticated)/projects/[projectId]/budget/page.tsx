@@ -25,6 +25,7 @@ import {
 } from "@/features/projects/shared/pm-chrome";
 import { cn } from "@/lib/utils";
 import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 type MemberBreakdownRow = { userId: string; hours: number; cost: number };

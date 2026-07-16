@@ -368,8 +368,8 @@ function ArticleMigrationSection() {
               </p>
               <ul className="space-y-0.5">
                 {preview.sample.slice(0, 10).map((a) => (
-                  <li key={a.id} className="text-sm text-foreground truncate">
-                    {a.title}
+                  <li key={a.id} className="text-sm text-foreground">
+                    <TruncatedText text={a.title ?? ""} />
                   </li>
                 ))}
               </ul>

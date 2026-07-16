@@ -271,9 +271,7 @@ export default function PageDocumentHeader({
           ))}
           <span className="flex items-center gap-1 shrink-0">
             <KbChevronRightIcon className="h-3 w-3" />
-            <span className="text-foreground font-medium truncate max-w-[200px]">
-              {page.title || "Untitled"}
-            </span>
+            <TruncatedText text={page.title || "Untitled"} className="text-foreground font-medium max-w-[200px]" />
           </span>
         </nav>
 
@@ -396,7 +394,7 @@ export default function PageDocumentHeader({
                       onClick={handleBacklinkClick}
                     >
                       <span className="shrink-0">{bl.icon ?? "📄"}</span>
-                      <span className="truncate">{bl.title || "Untitled"}</span>
+                      <TruncatedText text={bl.title || "Untitled"} />
                     </button>
                   ))}
                 </div>

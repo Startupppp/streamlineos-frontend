@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { PM_ROW } from "@/features/projects/shared/pm-chrome";
 import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 export interface ViewItem {
   id: number;
@@ -77,7 +78,7 @@ export const ViewCard = memo(function ViewCard({
           {meta?.icon}
         </div>
         <div className="min-w-0">
-          <p className={cn("text-sm font-medium", TEXT_ONE_LINE)}>{view.name}</p>
+          <TruncatedText text={view.name} className="text-sm font-medium" />
           <p className={cn("text-xs text-muted-foreground", TEXT_ONE_LINE)}>
             {meta?.label ?? view.layoutType}
             {filterCount > 0 ? ` · ${filterCount} filter${filterCount > 1 ? "s" : ""}` : ""}

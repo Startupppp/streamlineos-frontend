@@ -67,7 +67,7 @@ function ApprovalsTable({
         cell: (row) => (
           <div>
             <p className="text-[11px] font-medium">
-              {row.user?.name ?? row.user?.email ?? row.userId}
+              {row.user?.name ?? row.user?.email ?? "Unknown user"}
             </p>
             {row.user?.name && (
               <p className="text-[10px] text-muted-foreground">{row.user.email}</p>

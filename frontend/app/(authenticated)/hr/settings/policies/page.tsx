@@ -35,6 +35,7 @@ import { PolicyUpsertSheet } from "@/features/hr/policies/policy-upsert-sheet";
 import { PolicyPreviewDialog } from "@/features/hr/policies/policy-preview-dialog";
 import { PolicyVersionHistory } from "@/features/hr/policies/policy-version-history";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const STATUS_BADGE: Record<string, string> = {
   draft: "bg-muted text-muted-foreground border-border",
@@ -100,9 +101,9 @@ export default function HrPoliciesPage() {
       header: "Name",
       cell: (row: HrPolicy) => (
         <div className="min-w-0">
-          <p className="text-sm font-medium truncate">{row.name}</p>
+          <TruncatedText text={row.name} className="text-sm font-medium" />
           {row.description && (
-            <p className="text-xs text-muted-foreground truncate">{row.description}</p>
+            <TruncatedText text={row.description} className="text-xs text-muted-foreground" />
           )}
         </div>
       ),

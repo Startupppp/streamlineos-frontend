@@ -7,6 +7,7 @@ import { AnimatedLogo } from "@/features/landing/components/animated-logo";
 import { BRAND_NAME } from "@/lib/branding";
 import { STEP_TITLES, ESTIMATED_MINUTES_REMAINING } from "../lib/constants";
 import type { StepId } from "../lib/constants";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 type StepRailProps = {
   sequence: StepId[];
@@ -48,7 +49,7 @@ export function StepRail({ sequence, currentIndex, saveState }: StepRailProps) {
                 >
                   {done ? <Check className="h-3 w-3" /> : i + 1}
                 </span>
-                <span className="truncate">{STEP_TITLES[stepId]}</span>
+                <TruncatedText text={STEP_TITLES[stepId] ?? ""} />
               </div>
             </li>
           );

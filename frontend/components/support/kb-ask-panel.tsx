@@ -3,6 +3,7 @@
 import { useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from "react";
 import Link from "next/link";
 import { Sparkles, Send, Loader2, FileText, Paperclip } from "lucide-react";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -129,10 +130,7 @@ export function KbAskPanel(props: KbAskPanelProps) {
                       ) : (
                         <FileText className="h-3 w-3 shrink-0" />
                       )}
-                      <span className="truncate">
-                        {source.title}
-                        {source.attachmentName ? ` · ${source.attachmentName}` : ""}
-                      </span>
+                      <TruncatedText text={`${source.title}${source.attachmentName ? ` · ${source.attachmentName}` : ""}`} />
                     </Link>
                   ))}
                 </div>

@@ -15,6 +15,7 @@ import {
 import { LinkPreviewCard } from "./link-preview-card";
 import { getStatusBadgeClass } from "@/features/projects/shared/status-badge";
 import { formatTicketKey } from "@/features/projects/shared/format-ticket-key";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 type InternalLink =
   | { kind: "comment"; projectId: number; ticketId: number; commentId: string; href: string }
@@ -161,14 +162,13 @@ function CommentPreviewCard({
         >
           {formatTicketKey(data.ticket.projectKey, data.ticket.ticketNumber)}
         </span>
-        <span
+        <TruncatedText
+          text={data.ticket.title}
           className={cn(
-            "text-[11px] truncate max-w-[180px]",
+            "text-[11px] max-w-[180px]",
             isOwn ? "text-white/70" : "text-foreground",
           )}
-        >
-          {data.ticket.title}
-        </span>
+        />
       </div>
       <div className="flex items-start gap-1.5">
         <MessageSquare
@@ -262,14 +262,13 @@ function TicketPreviewCard({
           >
             {ticketKey}
           </p>
-          <p
+          <TruncatedText
+            text={data.title}
             className={cn(
-              "text-[12px] font-medium mt-0.5 truncate",
+              "text-[12px] font-medium mt-0.5",
               isOwn ? "text-white/90" : "text-foreground",
             )}
-          >
-            {data.title}
-          </p>
+          />
           <span
             className={cn(
               "mt-1 inline-flex items-center rounded px-1.5 py-px text-[10px] font-medium",

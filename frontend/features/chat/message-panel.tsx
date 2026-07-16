@@ -56,6 +56,7 @@ import { SavedMessagesPanel } from "./saved-messages-panel";
 import { SharedFilesPanel } from "./shared-files-panel";
 import { ForwardMessageDialog } from "./forward-message-dialog";
 import { ChannelSidebarCollapseButton } from "./channel-sidebar-collapse-button";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const PaperclipButton = React.forwardRef<
   HTMLButtonElement,
@@ -892,9 +893,7 @@ export function MessagePanel({
             </div>
 
             <div className="min-w-0">
-              <h3 className="text-[15px] font-bold truncate leading-tight">
-                {displayName}
-              </h3>
+              <TruncatedText text={displayName} className="text-[15px] font-bold leading-tight" />
               <p className="text-[11px] text-muted-foreground leading-tight">
                 {channel?.type === "DIRECT" ? (
                   isOtherOnline ? (

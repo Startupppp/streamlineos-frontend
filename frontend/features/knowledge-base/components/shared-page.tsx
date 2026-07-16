@@ -39,9 +39,7 @@ function SharedRow({ node }: { node: KbPageTreeNode }) {
       <span className="text-base shrink-0 w-5 text-center">
         {node.icon ?? "📄"}
       </span>
-      <span className="flex-1 text-sm truncate font-medium">
-        {node.title || "Untitled"}
-      </span>
+      <TruncatedText text={node.title || "Untitled"} className="flex-1 text-sm font-medium" />
       {node.status && (
         <Badge
           variant="outline"

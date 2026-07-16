@@ -242,9 +242,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                               >
                                 {event.linkedTicket.key}
                               </Badge>
-                              <span className="text-sm truncate flex-1 text-foreground">
-                                {event.linkedTicket.title}
-                              </span>
+                              <TruncatedText text={event.linkedTicket.title} className="text-sm flex-1 text-foreground" />
                               <Badge
                                 variant="secondary"
                                 className="text-[10px] h-4 px-1.5 shrink-0 capitalize"
@@ -362,9 +360,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                                     .toUpperCase()}
                                 </AvatarFallback>
                               </Avatar>
-                              <span className="flex-1 truncate text-xs">
-                                {a.user?.name ?? a.user?.email ?? "Unknown"}
-                              </span>
+                              <TruncatedText text={a.user?.name ?? a.user?.email ?? "Unknown"} className="flex-1 text-xs" />
                               <Badge
                                 variant="outline"
                                 className={`text-[10px] h-4 px-1.5 capitalize ${

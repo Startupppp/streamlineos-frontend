@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type { HrFormField, SubmitHrFormPayload } from "../lib/types";
 
 interface FormRendererProps {
@@ -66,7 +67,7 @@ export function FormRenderer({ fields, onSubmit, isPending, readOnly = false, in
       await onSubmit({ data });
       toast.success("Form submitted successfully");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to submit");
+      toast.error(getErrorMessage(err));
     }
   }
 
