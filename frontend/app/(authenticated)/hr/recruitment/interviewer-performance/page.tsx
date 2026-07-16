@@ -13,6 +13,7 @@ import {
 import { ChevronLeft, Clock, TrendingUp, UserCheck, AlertCircle } from "lucide-react";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { cn } from "@/lib/utils";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { EmptyLeaderboardIllustration } from "@/components/illustrations";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 
@@ -184,7 +185,7 @@ export default function InterviewerPerformancePage() {
             </Link>
           </Button>
           <Select value={String(days)} onValueChange={handlePeriodChange}>
-            <SelectTrigger className="w-40 text-xs">
+            <SelectTrigger className={cn("w-40", FILTER_SELECT_TRIGGER)}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="w-[var(--radix-select-trigger-width)]">

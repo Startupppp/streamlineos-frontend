@@ -8,14 +8,14 @@ export default function MeetingsLoading() {
     <PageWrapper
       title="Meetings"
       subtitle="Schedule meetings, standups, and retros for your project"
-      actions={<Skeleton className="h-4 w-32 rounded-md" />}
+      actions={<Skeleton className="h-9 w-32 rounded-md" />}
       filters={
         <div className={cn(PM_TOOLBAR, "w-full")}>
-          <div className="flex flex-wrap items-center gap-2">
-            <Skeleton className="h-4 w-36 rounded-md" />{" "}
-            <Skeleton className="h-4 w-36 rounded-md" />{" "}
-            <Skeleton className="h-4 w-32 rounded-md" />{" "}
-            <Skeleton className="h-4 w-40 rounded-md" />{" "}
+          <div className="flex flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+            <Skeleton className="h-9 w-36 rounded-md" />
+            <Skeleton className="h-9 w-36 rounded-md" />
+            <Skeleton className="h-9 w-32 rounded-md" />
+            <Skeleton className="h-9 w-40 rounded-md" />
           </div>
         </div>
       }

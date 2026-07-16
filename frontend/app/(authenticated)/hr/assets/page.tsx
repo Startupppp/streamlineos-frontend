@@ -826,7 +826,6 @@ export default function HrAssetsPage() {
     <PageWrapper
       title="Assets & Devices"
       subtitle="Register company assets and manage employee assignments"
-      badge={`${items.length} assets`}
       actions={
         <div className="flex items-center gap-2">
           <Button

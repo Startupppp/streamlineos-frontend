@@ -163,7 +163,7 @@ function StepsTab({ sequenceId }: { sequenceId: string }) {
         <div className="rounded-lg border border-dashed border-border p-3 space-y-3">
           <div className="flex gap-2">
             <Select value={stepForm.stepType} onValueChange={handleStepTypeChange}>
-              <SelectTrigger className="flex-1 h-8 text-xs">
+              <SelectTrigger className="flex-1">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -179,7 +179,7 @@ function StepsTab({ sequenceId }: { sequenceId: string }) {
               placeholder="Wait hours"
               value={stepForm.waitHours}
               onChange={handleWaitHoursChange}
-              className="w-28 h-8 text-xs"
+              className="w-28"
             />
           </div>
           <div className="flex gap-2">

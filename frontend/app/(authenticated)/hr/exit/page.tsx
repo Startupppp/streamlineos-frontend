@@ -362,7 +362,6 @@ export default function ExitManagementPage() {
     <PageWrapper
       title="Exit Management"
       subtitle="Resignations, exit interviews, and offboarding"
-      badge={`${resignations?.length ?? 0} records`}
       actions={
         !isCEO && !hasActiveResignation ? (
           <Button size="sm" onClick={handleOpenSheet} className="gap-1.5">

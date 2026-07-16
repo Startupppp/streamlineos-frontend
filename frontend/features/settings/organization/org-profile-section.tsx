@@ -116,7 +116,7 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
   const renderField = (label: string, value: string | null | undefined, placeholder: string) => (
     <div className="space-y-1">
       <Label className="text-sm font-medium text-foreground">{label}</Label>
-      <p className="h-8 flex items-center text-sm px-0">{value || <span className="text-muted-foreground text-xs">{placeholder}</span>}</p>
+      <p className="h-9 flex items-center text-sm px-0">{value || <span className="text-muted-foreground text-xs">{placeholder}</span>}</p>
     </div>
   );
 
@@ -152,21 +152,21 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <Label className="text-sm font-medium">Organization name *</Label>
-                <Input {...form.register("name")} className="h-8" />
+                <Input {...form.register("name")} />
                 {form.formState.errors.name && <p className="text-[11px] text-destructive">{form.formState.errors.name.message}</p>}
               </div>
               <div className="space-y-1">
                 <Label className="text-sm font-medium">Slug *</Label>
-                <Input {...form.register("slug")} className="h-8" />
+                <Input {...form.register("slug")} />
                 {form.formState.errors.slug && <p className="text-[11px] text-destructive">{form.formState.errors.slug.message}</p>}
               </div>
               <div className="space-y-1">
                 <Label className="text-sm font-medium">Legal name</Label>
-                <Input {...form.register("legalName")} placeholder="Acme Inc. Pvt. Ltd." className="h-8" />
+                <Input {...form.register("legalName")} placeholder="Acme Inc. Pvt. Ltd." />
               </div>
               <div className="space-y-1">
                 <Label className="text-sm font-medium">Organization code</Label>
-                <Input {...form.register("orgCode")} placeholder="ACM-001" className="h-8 font-mono" />
+                <Input {...form.register("orgCode")} placeholder="ACM-001" className="font-mono" />
               </div>
               <div className="space-y-1">
                 <Label className="text-sm font-medium">Industry</Label>
@@ -174,7 +174,7 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
                   onValueChange={(v) => form.setValue("industry", v)}
                   value={form.watch("industry") ?? ""}
                 >
-                  <SelectTrigger className="h-8"><SelectValue placeholder="Select industry" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Select industry" /></SelectTrigger>
                   <SelectContent>
                     {INDUSTRIES.map((i) => <SelectItem key={i} value={i}>{i}</SelectItem>)}
                   </SelectContent>
@@ -182,20 +182,20 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
               </div>
               <div className="space-y-1">
                 <Label className="text-sm font-medium">Website</Label>
-                <Input {...form.register("website")} placeholder="https://acme.com" className="h-8" />
+                <Input {...form.register("website")} placeholder="https://acme.com" />
                 {form.formState.errors.website && <p className="text-[11px] text-destructive">{form.formState.errors.website.message}</p>}
               </div>
               <div className="space-y-1">
                 <Label className="text-sm font-medium">Registration number</Label>
-                <Input {...form.register("registrationNumber")} placeholder="CIN / Company reg. no." className="h-8" />
+                <Input {...form.register("registrationNumber")} placeholder="CIN / Company reg. no." />
               </div>
               <div className="space-y-1">
                 <Label className="text-sm font-medium">Tax / GST number</Label>
-                <Input {...form.register("taxNumber")} placeholder="GSTIN / PAN / VAT" className="h-8 font-mono" />
+                <Input {...form.register("taxNumber")} placeholder="GSTIN / PAN / VAT" className="font-mono" />
               </div>
               <div className="space-y-1">
                 <Label className="text-sm font-medium">Support email</Label>
-                <Input type="email" {...form.register("supportEmail")} placeholder="support@acme.com" className="h-8" />
+                <Input type="email" {...form.register("supportEmail")} placeholder="support@acme.com" />
                 {form.formState.errors.supportEmail && <p className="text-[11px] text-destructive">{form.formState.errors.supportEmail.message}</p>}
               </div>
               <div className="space-y-1">

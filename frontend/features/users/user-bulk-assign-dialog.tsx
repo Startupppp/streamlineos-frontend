@@ -82,7 +82,7 @@ export function UserBulkAssignDialog({
           <div className="space-y-1.5">
             <p className="text-xs font-medium">Role</p>
             <Select value={assignRole} onValueChange={setAssignRole}>
-              <SelectTrigger className="h-8 text-xs">
+              <SelectTrigger>
                 <SelectValue placeholder="Keep unchanged" />
               </SelectTrigger>
               <SelectContent>
@@ -97,7 +97,7 @@ export function UserBulkAssignDialog({
           <div className="space-y-1.5">
             <p className="text-xs font-medium">Branch</p>
             <Select value={assignBranchId} onValueChange={setAssignBranchId}>
-              <SelectTrigger className="h-8 text-xs">
+              <SelectTrigger>
                 <SelectValue placeholder="Keep unchanged" />
               </SelectTrigger>
               <SelectContent>
@@ -113,7 +113,7 @@ export function UserBulkAssignDialog({
           <div className="space-y-1.5">
             <p className="text-xs font-medium">Department</p>
             <Select value={assignDeptId} onValueChange={setAssignDeptId}>
-              <SelectTrigger className="h-8 text-xs">
+              <SelectTrigger>
                 <SelectValue placeholder="Keep unchanged" />
               </SelectTrigger>
               <SelectContent>

@@ -165,7 +165,7 @@ export function AdminExpenseFilters({
           onValueChange={handleUserChange}
         >
           <SelectTrigger
-            className="w-[180px] text-sm"
+            className={cn("w-[180px]", FILTER_SELECT_TRIGGER)}
             aria-label="Filter by employee"
           >
             <SelectValue placeholder="All Employees" />
@@ -208,7 +208,7 @@ export function MemberExpenseFilters({
   }
 
   return (
-    <div className="flex min-w-0 flex-nowrap items-center justify-between gap-3 overflow-x-auto scrollbar-hide [&>*]:shrink-0 rounded-lg bg-muted/40 px-3 py-2.5">
+    <div className={cn(FILTER_TOOLBAR_ROW, "justify-between")}>
       <div
         className="flex items-center gap-0.5 bg-muted p-1 rounded-xl"
         role="tablist"
@@ -228,7 +228,7 @@ export function MemberExpenseFilters({
       <div className="flex items-center gap-2">
         <Select value={datePreset} onValueChange={handleDatePresetChange}>
           <SelectTrigger
-            className="w-[150px] text-sm gap-1.5"
+            className={cn("w-[150px] gap-1.5", FILTER_SELECT_TRIGGER)}
             aria-label="Filter expenses by date range"
           >
             <Filter className="h-3 w-3 shrink-0" />

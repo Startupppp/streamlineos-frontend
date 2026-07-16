@@ -7,7 +7,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
+import { CONTENT_FILL_PANEL, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -363,7 +363,7 @@ function ClaimsDashboardTab({ canManage }: { canManage: boolean }) {
     <div className="space-y-4">
       <div className="flex items-center gap-3">
         <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
-          <SelectTrigger className="w-40 text-xs">
+          <SelectTrigger className={cn("w-40", FILTER_SELECT_TRIGGER)}>
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>

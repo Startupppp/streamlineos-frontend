@@ -256,7 +256,7 @@ export default function OrgChartPage() {
   return (
     <PageWrapper
       title="Organization"
-      subtitle={`${employees.length} members across ${deptGroups.length} departments`}
+      subtitle="Visualize your organization's reporting structure"
       actions={
         <Button variant="outline" size="sm" className="gap-1.5" onClick={handleExport} disabled={!employees.length}>
           <Download className="h-3.5 w-3.5" />

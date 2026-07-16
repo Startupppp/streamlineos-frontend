@@ -370,7 +370,6 @@ export default function HeadcountPage() {
     <PageWrapper
       title="Headcount Planning"
       subtitle="Submit and track headcount requests for new hires"
-      badge={`${requests.length} requests`}
       actions={
         <Button size="sm" onClick={handleNewRequest}>
           <svg className="mr-1.5 h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

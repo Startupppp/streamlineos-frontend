@@ -86,7 +86,7 @@ export function CollectorsCard({ surveyId }: { surveyId: number }) {
                 </div>
               </div>
               <div className="mt-2 flex items-center gap-2">
-                <Input readOnly value={publicLinkFor(collector.token)} className="h-8 flex-1 text-xs" />
+                <Input readOnly value={publicLinkFor(collector.token)} className="flex-1" />
                 <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => handleCopyLink(collector.token)}>
                   <Copy className="h-3.5 w-3.5" />
                 </Button>
@@ -100,7 +100,7 @@ export function CollectorsCard({ surveyId }: { surveyId: number }) {
 
         <div className="flex items-center gap-2">
           <Select value={newType} onValueChange={(v) => setNewType(v as CollectorType)}>
-            <SelectTrigger className="h-8 flex-1"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="flex-1"><SelectValue /></SelectTrigger>
             <SelectContent>
               {(Object.keys(COLLECTOR_TYPE_LABELS) as CollectorType[]).map((type) => (
                 <SelectItem key={type} value={type}>{COLLECTOR_TYPE_LABELS[type]}</SelectItem>

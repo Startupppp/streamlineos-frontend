@@ -21,6 +21,8 @@ import { useEntityVersions } from "@/hooks/api/hr/settings-hub";
 import type { VersionEntity } from "@/hooks/api/hr/settings-hub";
 import { useActivatePolicy } from "@/hooks/api/hr/policies";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { cn } from "@/lib/utils";
+import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 const STATUS_COLORS: Record<string, string> = {
   draft: "bg-muted text-muted-foreground border-border",
@@ -82,9 +84,9 @@ export default function VersionHistoryPage() {
       subtitle="Browse version lineage and rollback policies, templates, and workflows"
     >
       <div className="px-4 sm:px-6 py-4 space-y-4">
-        <div className="flex flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+        <div className={FILTER_TOOLBAR_ROW}>
           <Select value={entity} onValueChange={(v) => { setEntity(v as VersionEntity); setQueriedId(null); }}>
-            <SelectTrigger className="text-xs w-36">
+            <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

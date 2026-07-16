@@ -41,7 +41,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   Sales: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
   Finance: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
   Operations: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
-  HR: "bg-violet-100 text-violet-700 dark:bg-violet-500/10 dark:text-violet-300",
+  HR: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
   Customer: "bg-pink-100 text-pink-700 dark:bg-pink-500/10 dark:text-pink-300",
 };
 
@@ -267,7 +267,7 @@ export function CompetencyFrameworksTab() {
                     <div>
                       <h3 className="font-semibold text-foreground">{framework.name}</h3>
                       <div className="flex gap-2 mt-1">
-                        <Badge className="text-xs bg-violet-100 text-violet-700 dark:bg-violet-500/10 dark:text-violet-300">
+                        <Badge className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
                           {framework.ratingScale}-point scale
                         </Badge>
                         <Badge className="text-xs bg-muted text-muted-foreground dark:bg-slate-800/40 dark:text-slate-400">
@@ -310,7 +310,7 @@ export function CompetencyFrameworksTab() {
                       }}
                     >
                       <DialogTrigger asChild>
-                        <Button size="sm" variant="outline" className="text-violet-600 border-violet-200 hover:bg-violet-50 dark:text-violet-400 dark:border-violet-500/30 dark:hover:bg-violet-500/10">
+                        <Button size="sm" variant="outline" className="text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-500/30 dark:hover:bg-blue-500/10">
                           <Plus className="w-3.5 h-3.5 mr-1.5" />
                           Add Competency
                         </Button>

@@ -211,7 +211,6 @@ export default function JobPostingsPage() {
       <PageWrapper
         title="Job Postings"
         subtitle="Manage open positions"
-        badge={`${jobs?.length ?? 0} jobs`}
         actions={
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" asChild>
@@ -227,7 +226,7 @@ export default function JobPostingsPage() {
         filters={
           <div className="flex items-center gap-2">
             <Select value={statusFilter ?? "ALL"} onValueChange={(v) => setFilter("status", v)}>
-              <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[130px] text-sm")}>
+              <SelectTrigger className={cn("w-[130px]", FILTER_SELECT_TRIGGER)}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -237,7 +236,7 @@ export default function JobPostingsPage() {
               </SelectContent>
             </Select>
             <Select value={visibilityFilter ?? "ALL"} onValueChange={(v) => setFilter("visibility", v)}>
-              <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[140px] text-sm")}>
+              <SelectTrigger className={cn("w-[140px]", FILTER_SELECT_TRIGGER)}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="w-[var(--radix-select-trigger-width)]">

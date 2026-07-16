@@ -137,7 +137,6 @@ export default function InterviewsPage() {
     <PageWrapper
       title="Interviews"
       subtitle="Schedule and track interviews"
-      badge={`${interviews?.length ?? 0} interviews`}
       actions={
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="sm" asChild>

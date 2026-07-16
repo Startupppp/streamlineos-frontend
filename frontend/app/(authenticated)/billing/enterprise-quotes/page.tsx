@@ -9,6 +9,8 @@ import { z } from "zod";
 import { format } from "date-fns";
 import { Plus, AlertCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -531,7 +533,7 @@ export default function EnterpriseQuotesPage() {
       }
       filters={
         <Select value={statusFilter} onValueChange={handleStatusChange}>
-          <SelectTrigger className="w-44 h-8 text-sm">
+          <SelectTrigger className={cn("w-44", FILTER_SELECT_TRIGGER)}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

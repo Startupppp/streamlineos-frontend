@@ -4,6 +4,7 @@ import { useState, type ReactNode } from "react";
 import { Plus, Calculator, LayoutTemplate, ChevronRight, MoreHorizontal, Pencil, Power, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -369,14 +370,14 @@ export default function ChartOfAccountsPage() {
         ) : undefined
       }
       filters={
-        <div className="flex items-center gap-2">
+        <div className={FILTER_TOOLBAR_ROW}>
           <ListToolbar
             search={search}
             onSearchChange={handleSearchChange}
             searchPlaceholder="Search by code or name..."
           />
           <Select value={typeFilter} onValueChange={handleTypeChange}>
-            <SelectTrigger className="w-[160px] h-8 text-xs">
+            <SelectTrigger className={cn("w-[160px]", FILTER_SELECT_TRIGGER)}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

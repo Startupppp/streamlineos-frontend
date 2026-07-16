@@ -537,7 +537,6 @@ export default function HiringFlowsPage() {
       <PageWrapper
         title="Hiring Flows"
         subtitle="Define reusable multi-round interview workflows"
-        badge={flows?.length}
         actions={
           <Button size="sm" onClick={handleOpenCreateFlow}>
             <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

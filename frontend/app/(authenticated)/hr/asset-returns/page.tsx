@@ -482,7 +482,6 @@ export default function AssetReturnsPage() {
     <PageWrapper
       title="Asset Returns"
       subtitle="Track and manage company asset returns from employees"
-      badge={`${items?.length ?? 0} items`}
       actions={
         isAdmin ? (
           <Button size="sm" className="gap-1.5" onClick={handleOpenSheet}>

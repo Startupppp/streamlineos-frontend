@@ -13,6 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Inbox } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import {
   useHelpdeskTickets,
   useHelpdeskRoutingRules,
@@ -77,7 +78,7 @@ export function QueueTab() {
     <div className="space-y-6">
       <div className="flex items-center gap-2 flex-wrap">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-36 text-xs">
+          <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -89,7 +90,7 @@ export function QueueTab() {
           </SelectContent>
         </Select>
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-44 text-xs">
+          <SelectTrigger className={cn("w-44", FILTER_SELECT_TRIGGER)}>
             <SelectValue placeholder="Category" />
           </SelectTrigger>
           <SelectContent>

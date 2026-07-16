@@ -217,7 +217,6 @@ export default function TalentPoolsPage() {
       <PageWrapper
         title="Talent Pools"
         subtitle="Passive candidate CRM — group and track talent outside active pipelines"
-        badge={pools ? `${pools.length}` : undefined}
         actions={<CreatePoolSheet />}
       >
         {isLoading ? (

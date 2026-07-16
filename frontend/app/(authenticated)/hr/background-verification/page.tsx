@@ -358,7 +358,6 @@ function BGVContent() {
     <PageWrapper
       title="Background Verification"
       subtitle="Initiate, track employee background checks, and view candidate compliance"
-      badge={`${items?.length ?? 0} checks`}
       actions={
         <Button size="sm" className="gap-1.5" onClick={handleOpenSheet}>
           <Plus className="h-3.5 w-3.5" />

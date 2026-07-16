@@ -117,7 +117,7 @@ export function AutomationsTab({ survey }: { survey: SurveyForm }) {
           <div className="space-y-1.5">
             <Label>When</Label>
             <Select value={eventType} onValueChange={(v) => setEventType(v as AutomationEventType)}>
-              <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+              <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {(Object.keys(EVENT_LABELS) as AutomationEventType[]).map((key) => (
                   <SelectItem key={key} value={key}>{EVENT_LABELS[key]}</SelectItem>
@@ -129,7 +129,7 @@ export function AutomationsTab({ survey }: { survey: SurveyForm }) {
           <div className="space-y-1.5">
             <Label>Then</Label>
             <Select value={actionType} onValueChange={(v) => setActionType(v as AutomationActionType)}>
-              <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+              <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {(Object.keys(ACTION_LABELS) as AutomationActionType[]).map((key) => (
                   <SelectItem key={key} value={key}>{ACTION_LABELS[key]}</SelectItem>
@@ -146,7 +146,6 @@ export function AutomationsTab({ survey }: { survey: SurveyForm }) {
                 value={scoreThreshold}
                 onChange={(e) => setScoreThreshold(e.target.value)}
                 placeholder="e.g. 50"
-                className="h-8"
               />
             </div>
           )}

@@ -81,7 +81,6 @@ export default function VendorsPage() {
     <PageWrapper
       title="Vendors"
       subtitle="Manage recruitment agencies and staffing partners"
-      badge={`${vendors.length} vendors`}
       actions={
         isHr ? (
           <Button size="sm" onClick={handleAdd} className="gap-1.5">

@@ -302,7 +302,7 @@ function SubtaskSuggestionsDialog({
             Suggested Subtasks
           </DialogTitle>
           <p className="text-[12px] text-muted-foreground mt-0.5">
-            Select the subtasks to create. Deselect any you don't need.
+            Select the subtasks to create. Deselect any you don&apos;t need.
           </p>
         </DialogHeader>
 

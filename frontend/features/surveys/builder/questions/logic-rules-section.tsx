@@ -124,7 +124,7 @@ export function LogicRulesSection({ surveyId, question, sections, rules }: Logic
         <div className="space-y-2 rounded-md border border-border p-3">
           <div className="flex gap-2">
             <Select value={op} onValueChange={(v) => setOp(v as LogicConditionOp)}>
-              <SelectTrigger className="h-8 flex-1"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="flex-1"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {(Object.keys(CONDITION_LABELS) as LogicConditionOp[]).map((key) => (
                   <SelectItem key={key} value={key}>{CONDITION_LABELS[key]}</SelectItem>
@@ -135,11 +135,11 @@ export function LogicRulesSection({ surveyId, question, sections, rules }: Logic
               value={conditionValue}
               onChange={(e) => setConditionValue(e.target.value)}
               placeholder="Value"
-              className="h-8 flex-1"
+              className="flex-1"
             />
           </div>
           <Select value={actionType} onValueChange={(v) => setActionType(v as LogicActionType)}>
-            <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+            <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               {(Object.keys(ACTION_LABELS) as LogicActionType[]).map((key) => (
                 <SelectItem key={key} value={key}>{ACTION_LABELS[key]}</SelectItem>
@@ -148,7 +148,7 @@ export function LogicRulesSection({ surveyId, question, sections, rules }: Logic
           </Select>
           {QUESTION_TARGET_ACTIONS.has(actionType) && (
             <Select value={targetQuestionId} onValueChange={setTargetQuestionId}>
-              <SelectTrigger className="h-8"><SelectValue placeholder="Target question" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="Target question" /></SelectTrigger>
               <SelectContent>
                 {allQuestions.filter((q) => q.id !== question.id).map((q) => (
                   <SelectItem key={q.id} value={String(q.id)}>{q.title || questionTitle(q.id)}</SelectItem>
@@ -158,7 +158,7 @@ export function LogicRulesSection({ surveyId, question, sections, rules }: Logic
           )}
           {actionType === "skip_to_section" && (
             <Select value={targetSectionId} onValueChange={setTargetSectionId}>
-              <SelectTrigger className="h-8"><SelectValue placeholder="Target section" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="Target section" /></SelectTrigger>
               <SelectContent>
                 {sections.map((s) => (
                   <SelectItem key={s.id} value={String(s.id)}>{s.title}</SelectItem>

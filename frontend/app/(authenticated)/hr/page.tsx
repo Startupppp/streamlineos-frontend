@@ -244,7 +244,6 @@ export default function HRDashboardPage() {
     <PageWrapper
       title="Employees"
       subtitle="Manage your company directory and employee access"
-      badge={String(filteredEmployees.length)}
       actions={
         <div className="flex items-center gap-2">
           <Button

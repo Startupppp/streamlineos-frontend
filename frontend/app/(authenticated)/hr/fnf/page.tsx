@@ -318,7 +318,6 @@ function FnfContent() {
     <PageWrapper
       title="Full & Final Settlement"
       subtitle="Manage full and final settlements for separated employees"
-      badge={`${items?.length ?? 0} settlements`}
       actions={
         <Button size="sm" onClick={handleOpenSheet} className="gap-1.5">
           <Plus className="h-3.5 w-3.5" />

@@ -730,7 +730,6 @@ export default function RequisitionsPage() {
       <PageWrapper
         title="Job Requisitions"
         subtitle="Manage headcount requests and approvals"
-        badge={requisitions ? `${requisitions.length}` : undefined}
         actions={
           <Button size="sm" onClick={handleOpenSheet}>
             <Plus className="mr-1.5 h-4 w-4" /> New Requisition

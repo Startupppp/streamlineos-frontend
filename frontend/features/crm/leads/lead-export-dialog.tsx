@@ -176,7 +176,7 @@ export function LeadExportDialog() {
             <div className="space-y-1.5">
               <Label className="text-xs">Status</Label>
               <Select value={filters.status} onValueChange={handleStatusChange}>
-                <SelectTrigger className="w-full h-8 text-xs">
+                <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -194,7 +194,7 @@ export function LeadExportDialog() {
             <div className="space-y-1.5">
               <Label className="text-xs">Source</Label>
               <Select value={filters.source} onValueChange={handleSourceChange}>
-                <SelectTrigger className="w-full h-8 text-xs">
+                <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -215,7 +215,7 @@ export function LeadExportDialog() {
                 value={filters.priority}
                 onValueChange={handlePriorityChange}
               >
-                <SelectTrigger className="w-full h-8 text-xs">
+                <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

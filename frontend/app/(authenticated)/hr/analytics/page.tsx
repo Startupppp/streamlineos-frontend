@@ -152,7 +152,7 @@ function DateRangeSelector({
 
   return (
     <Select value={value} onValueChange={handleChange}>
-      <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-36 text-xs")}>
+      <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
         <SelectValue />
       </SelectTrigger>
       <SelectContent className="w-[var(--radix-select-trigger-width)]">

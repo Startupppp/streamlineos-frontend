@@ -402,7 +402,7 @@ export default function GoalsPage() {
 
         <div className="flex min-w-0 flex-nowrap items-center gap-3 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-44 text-xs")}>
+            <SelectTrigger className={cn("w-44", FILTER_SELECT_TRIGGER)}>
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
             <SelectContent>

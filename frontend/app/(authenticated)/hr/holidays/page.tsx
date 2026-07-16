@@ -48,6 +48,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/api-client";
 import {
@@ -564,7 +566,7 @@ export default function HolidaysPage() {
         <div className="flex gap-2 items-center flex-nowrap">
           {showYearFilter && (
             <Select value={String(yearFilter)} onValueChange={handleYearFilterChange}>
-              <SelectTrigger className="text-xs w-28">
+              <SelectTrigger className={cn("w-28", FILTER_SELECT_TRIGGER)}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

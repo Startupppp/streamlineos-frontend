@@ -69,7 +69,6 @@ export default function OffersPage() {
     <PageWrapper
       title="Offers"
       subtitle="Track every offer across all candidates — status, terms, and approvals."
-      badge={offers ? `${offers.length}` : undefined}
     >
       {!offers?.length ? (
         <RecruitmentEmptyState

@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -51,7 +53,7 @@ export default function HrCustomFieldsPage() {
         subtitle="Define additional fields for HR entities"
         filters={
           <Select value={entityType} onValueChange={setEntityType}>
-            <SelectTrigger className="text-sm w-40"><SelectValue /></SelectTrigger>
+            <SelectTrigger className={cn("w-40", FILTER_SELECT_TRIGGER)}><SelectValue /></SelectTrigger>
             <SelectContent>
               {ENTITY_TYPES.map((t) => (
                 <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>

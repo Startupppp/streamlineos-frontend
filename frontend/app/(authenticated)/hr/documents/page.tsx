@@ -312,7 +312,6 @@ export default function DocumentsPage() {
     <PageWrapper
       title="Document Library"
       subtitle="Centralized repository for all company-wide HR documents, contracts, and policy files."
-      badge={documents.length}
       actions={pageActions}
       filters={
         <DocumentFilters

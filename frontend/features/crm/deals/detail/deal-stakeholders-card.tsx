@@ -140,13 +140,13 @@ export function DealStakeholdersCard({ dealId }: DealStakeholdersCardProps) {
                 value={contactId}
                 onChange={handleContactIdChange}
                 placeholder="Contact ID..."
-                className="mt-1 h-8 text-sm"
+                className="mt-1"
               />
             </div>
             <div>
               <Label className="text-xs text-muted-foreground">Role</Label>
               <Select value={roleKey} onValueChange={handleRoleKeyChange}>
-                <SelectTrigger className="mt-1 h-8 text-sm">
+                <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Select role..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -162,7 +162,7 @@ export function DealStakeholdersCard({ dealId }: DealStakeholdersCardProps) {
             <div>
               <Label className="text-xs text-muted-foreground">Influence</Label>
               <Select value={influence} onValueChange={handleInfluenceChange}>
-                <SelectTrigger className="mt-1 h-8 text-sm">
+                <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Select influence..." />
                 </SelectTrigger>
                 <SelectContent>

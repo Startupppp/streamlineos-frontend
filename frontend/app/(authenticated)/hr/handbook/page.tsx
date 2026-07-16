@@ -1,6 +1,7 @@
 "use client";
 
 import { getErrorMessage } from "@/lib/get-error-message";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { useState, useCallback, useRef, useMemo } from "react";
 import {
   useHandbookVersions,
@@ -372,7 +373,6 @@ function HandbookContent() {
     <PageWrapper
       title="Employee Handbook"
       subtitle="Manage and publish handbook versions"
-      badge={`${versions?.length ?? 0} versions`}
       actions={
         <Button size="sm" className="gap-1.5" onClick={handleNewVersionClick}>
           <Plus className="h-3.5 w-3.5" />
@@ -381,7 +381,7 @@ function HandbookContent() {
       }
     >
       <div className="space-y-4">
-        <div className="bg-muted/40 rounded-lg px-3 py-2 flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+        <div className={FILTER_TOOLBAR_ROW}>
           <div className="min-w-0 w-48">
           <SearchInput placeholder="Search versions..." value={searchQuery} onValueChange={handleSearchChange} />
         </div>

@@ -278,7 +278,6 @@ export default function ReimbursementsPage() {
     <PageWrapper
       title="Reimbursements"
       subtitle="Submit and track expense reimbursements"
-      badge={`${items?.length ?? 0} requests`}
       actions={
         <Button size="sm" className="gap-1.5" onClick={handleOpenNewRequest}>
           <Plus className="h-3.5 w-3.5" />

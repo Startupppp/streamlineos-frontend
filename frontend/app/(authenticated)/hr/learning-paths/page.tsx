@@ -166,7 +166,6 @@ export default function LearningPathsPage() {
     <PageWrapper
       title="Learning Paths"
       subtitle="Structured learning programs and career development"
-      badge={`${paths?.length ?? 0} paths`}
       actions={
         isAdmin ? (
           <Button size="sm" className="gap-1.5" onClick={handleOpenSheet}>

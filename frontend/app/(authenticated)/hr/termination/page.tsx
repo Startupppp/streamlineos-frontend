@@ -338,7 +338,6 @@ export default function TerminationPage() {
     <PageWrapper
       title="Termination Management"
       subtitle="Manage employee terminations"
-      badge={`${(terminations ?? []).length} records`}
       actions={
         isHR || isCEO ? (
           <Button size="sm" onClick={handleCreateOpen} className="gap-1.5">

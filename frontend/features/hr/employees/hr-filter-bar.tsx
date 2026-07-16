@@ -10,6 +10,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { X } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import type { StatusFilter, RoleFilter } from "./hr-types";
 
 interface HrFilterBarProps {
@@ -59,7 +61,7 @@ export function HrFilterBar({
         </div>
 
       <Select value={deptFilter} onValueChange={onDeptChange}>
-        <SelectTrigger className="w-[130px] text-xs">
+        <SelectTrigger className={cn("w-[130px]", FILTER_SELECT_TRIGGER)}>
           <SelectValue placeholder="Department" />
         </SelectTrigger>
         <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -73,7 +75,7 @@ export function HrFilterBar({
       </Select>
 
       <Select value={statusFilter} onValueChange={handleStatusChange}>
-        <SelectTrigger className="w-[120px] text-xs">
+        <SelectTrigger className={cn("w-[120px]", FILTER_SELECT_TRIGGER)}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -84,7 +86,7 @@ export function HrFilterBar({
       </Select>
 
       <Select value={roleFilter} onValueChange={handleRoleChange}>
-        <SelectTrigger className="w-[120px] text-xs">
+        <SelectTrigger className={cn("w-[120px]", FILTER_SELECT_TRIGGER)}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent className="w-[var(--radix-select-trigger-width)]">

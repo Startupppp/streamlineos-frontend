@@ -33,7 +33,7 @@ interface AiToolsSharedProps {
   requiredPlan: Plan | null;
 }
 
-interface AiToolsRailProps extends AiToolsSharedProps {}
+type AiToolsRailProps = AiToolsSharedProps;
 
 interface ToolSection {
   id: string;

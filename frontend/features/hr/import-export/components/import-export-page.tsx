@@ -26,7 +26,7 @@ const IMPORT_ENTITIES: ImportEntityConfig[] = [
     label: "Employees",
     description: "Import employee records with departments and roles",
     columns: ["email", "firstName", "lastName", "joiningDate", "departmentName", "designation", "employeeNumber"],
-    accent: "bg-violet-500/10 text-violet-600 dark:text-violet-400",
+    accent: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
     Icon: Users,
   },
   {

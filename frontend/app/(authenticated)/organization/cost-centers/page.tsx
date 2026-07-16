@@ -378,9 +378,7 @@ export default function OrgCostCentersPage() {
               <SheetClose asChild>
                 <Button variant="outline" size="sm" className="w-full">Cancel</Button>
               </SheetClose>
-              <Button size="sm" type="submit" form="cc-form" disabled={create.isPending} className="w-full">
-                {create.isPending ? "Saving…" : "Save"}
-              </Button>
+              <LoadingButton size="sm" type="submit" form="cc-form" isPending={create.isPending} loadingText="Saving…" className="w-full">Save</LoadingButton>
             </div>
           </div>
         </SheetContent>
@@ -409,9 +407,7 @@ export default function OrgCostCentersPage() {
               <SheetClose asChild>
                 <Button variant="outline" size="sm" className="w-full">Cancel</Button>
               </SheetClose>
-              <Button size="sm" type="submit" form="cc-form" disabled={update.isPending} className="w-full">
-                {update.isPending ? "Saving…" : "Save"}
-              </Button>
+              <LoadingButton size="sm" type="submit" form="cc-form" isPending={update.isPending} loadingText="Saving…" className="w-full">Save</LoadingButton>
             </div>
           </div>
         </SheetContent>

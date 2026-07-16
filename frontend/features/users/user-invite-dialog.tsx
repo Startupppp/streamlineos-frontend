@@ -218,7 +218,7 @@ export function UserInviteDialog({ open, onOpenChange }: UserInviteDialogProps) 
                         <FormItem>
                           <FormLabel className="text-xs">Employee ID</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="EMP-001" className="h-8 text-xs" />
+                            <Input {...field} placeholder="EMP-001" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -232,7 +232,7 @@ export function UserInviteDialog({ open, onOpenChange }: UserInviteDialogProps) 
                         <FormItem>
                           <FormLabel className="text-xs">Start Date</FormLabel>
                           <FormControl>
-                            <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-xs" />
+                            <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -249,7 +249,7 @@ export function UserInviteDialog({ open, onOpenChange }: UserInviteDialogProps) 
                           <FormLabel className="text-xs">Branch</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
-                              <SelectTrigger className="h-8 text-xs">
+                              <SelectTrigger>
                                 <SelectValue placeholder="Select..." />
                               </SelectTrigger>
                             </FormControl>
@@ -274,7 +274,7 @@ export function UserInviteDialog({ open, onOpenChange }: UserInviteDialogProps) 
                           <FormLabel className="text-xs">Department</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
-                              <SelectTrigger className="h-8 text-xs">
+                              <SelectTrigger>
                                 <SelectValue placeholder="Select..." />
                               </SelectTrigger>
                             </FormControl>

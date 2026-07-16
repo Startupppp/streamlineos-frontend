@@ -16,7 +16,8 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
+import { CONTENT_FILL_PANEL, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -105,7 +106,7 @@ export function TrainingList({ canManage, onSelectProgram, selectedProgramId }: 
     <div className="space-y-4">
       <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
         <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="w-36 text-xs">
+          <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
             <SelectValue placeholder="Type" />
           </SelectTrigger>
           <SelectContent>
@@ -116,7 +117,7 @@ export function TrainingList({ canManage, onSelectProgram, selectedProgramId }: 
           </SelectContent>
         </Select>
         <Select value={formatFilter} onValueChange={setFormatFilter}>
-          <SelectTrigger className="w-36 text-xs">
+          <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
             <SelectValue placeholder="Format" />
           </SelectTrigger>
           <SelectContent>
@@ -128,7 +129,7 @@ export function TrainingList({ canManage, onSelectProgram, selectedProgramId }: 
           </SelectContent>
         </Select>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-36 text-xs">
+          <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>

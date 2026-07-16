@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Plus, Play, Archive, Copy, Trash2, Settings2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
@@ -113,7 +115,7 @@ export default function WorkflowSettingsPage() {
       filters={
         <div className="flex items-center gap-2 flex-wrap">
           <Select value={filterObjectType} onValueChange={(v) => setFilterObjectType(v as HrWorkflowObjectType | "all")}>
-            <SelectTrigger className="text-xs w-48">
+            <SelectTrigger className={cn("w-48", FILTER_SELECT_TRIGGER)}>
               <SelectValue placeholder="All types" />
             </SelectTrigger>
             <SelectContent>
@@ -124,7 +126,7 @@ export default function WorkflowSettingsPage() {
             </SelectContent>
           </Select>
           <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v as HrWorkflowStatus | "all")}>
-            <SelectTrigger className="text-xs w-36">
+            <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>

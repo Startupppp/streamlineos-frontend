@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { Plus, Eye, Pencil } from "lucide-react";
 import { StateIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
@@ -16,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -225,7 +227,7 @@ export default function HrPoliciesPage() {
               setPage(1);
             }}
           >
-            <SelectTrigger className="text-xs w-40">
+            <SelectTrigger className={cn("w-40", FILTER_SELECT_TRIGGER)}>
               <SelectValue placeholder="All Types" />
             </SelectTrigger>
             <SelectContent>
@@ -244,7 +246,7 @@ export default function HrPoliciesPage() {
               setPage(1);
             }}
           >
-            <SelectTrigger className="text-xs w-32">
+            <SelectTrigger className={cn("w-32", FILTER_SELECT_TRIGGER)}>
               <SelectValue placeholder="All Status" />
             </SelectTrigger>
             <SelectContent>

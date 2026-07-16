@@ -227,7 +227,7 @@ export function UserEditForm({ user, onSuccess, onCancel }: UserEditFormProps) {
               <FormItem>
                 <FormLabel className="text-xs">Full Name</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Contact name" className="h-8 text-xs" />
+                  <Input {...field} placeholder="Contact name" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -241,7 +241,7 @@ export function UserEditForm({ user, onSuccess, onCancel }: UserEditFormProps) {
                 <FormLabel className="text-xs">Relationship</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger className="h-8 text-xs">
+                    <SelectTrigger>
                       <SelectValue placeholder="Select..." />
                     </SelectTrigger>
                   </FormControl>
@@ -278,7 +278,7 @@ export function UserEditForm({ user, onSuccess, onCancel }: UserEditFormProps) {
               <FormItem>
                 <FormLabel className="text-xs">Email (optional)</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="email@example.com" type="email" className="h-8 text-xs" />
+                  <Input {...field} placeholder="email@example.com" type="email" />
                 </FormControl>
                 <FormMessage />
               </FormItem>

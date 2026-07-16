@@ -1,6 +1,7 @@
 "use client";
 
 import { getErrorMessage } from "@/lib/get-error-message";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { useState, useCallback, useMemo } from "react";
 import { useCertifications, useCreateCertification, type Certification } from "@/hooks/api/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -177,7 +178,6 @@ export default function CertificationsPage() {
     <PageWrapper
       title="Certifications"
       subtitle="Track professional certifications and renewals"
-      badge={`${certs?.length ?? 0} certifications`}
       actions={
         <Button size="sm" className="gap-1.5" onClick={handleOpenSheet}>
           <Plus className="h-3.5 w-3.5" />
@@ -195,7 +195,7 @@ export default function CertificationsPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          <div className="bg-muted/40 rounded-lg px-3 py-2 flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+          <div className={FILTER_TOOLBAR_ROW}>
             <div className="min-w-0 w-48">
           <SearchInput placeholder="Search certifications..." value={searchQuery} onValueChange={handleSearchChange} />
         </div>

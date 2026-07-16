@@ -117,7 +117,7 @@ export function CourseCatalog({ canManage }: Props) {
     <div className="flex min-h-0 flex-1 flex-col gap-4">
       <div className="flex min-w-0 flex-nowrap items-center gap-3 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
         <Select value={categoryFilter} onValueChange={handleCategoryChange}>
-          <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-40 text-xs")}>
+          <SelectTrigger className={cn("w-40", FILTER_SELECT_TRIGGER)}>
             <SelectValue placeholder="Category" />
           </SelectTrigger>
           <SelectContent>
@@ -129,7 +129,7 @@ export function CourseCatalog({ canManage }: Props) {
         </Select>
 
         <Select value={typeFilter} onValueChange={handleTypeChange}>
-          <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-36 text-xs")}>
+          <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
             <SelectValue placeholder="Type" />
           </SelectTrigger>
           <SelectContent>
@@ -141,7 +141,7 @@ export function CourseCatalog({ canManage }: Props) {
         </Select>
 
         <Select value={formatFilter} onValueChange={handleFormatChange}>
-          <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-40 text-xs")}>
+          <SelectTrigger className={cn("w-40", FILTER_SELECT_TRIGGER)}>
             <SelectValue placeholder="Format" />
           </SelectTrigger>
           <SelectContent>

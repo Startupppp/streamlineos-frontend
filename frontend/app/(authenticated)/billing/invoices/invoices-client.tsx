@@ -11,6 +11,8 @@ import {
 } from "@/hooks/api/invoice";
 import { format } from "date-fns";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
+import { cn } from "@/lib/utils";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import {
   Plus,
   FileText,
@@ -240,7 +242,7 @@ export function InvoicesClient() {
 
   const filtersBar = (
     <Select value={statusFilter} onValueChange={setStatusFilter}>
-      <SelectTrigger className="w-[160px] h-8 text-sm">
+      <SelectTrigger className={cn("w-[160px]", FILTER_SELECT_TRIGGER)}>
         <SelectValue placeholder="Filter status" />
       </SelectTrigger>
       <SelectContent>

@@ -1,13 +1,15 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { ErrorState } from "@/components/shared/error-state";
 
+import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SearchInput } from "@/components/ui/search-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 
 import { ReviewTable, type EmployeeDocSummary } from "@/features/hr/document-review/review-table";
 import { ReviewSheet } from "@/features/hr/document-review/review-sheet";
@@ -86,14 +88,13 @@ export default function DocumentReviewPage() {
     <PageWrapper
       title="Document Review"
       subtitle="Review employee onboarding documents"
-      badge={`${list.length} employees`}
       filters={
         <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
           <div className="min-w-0 w-[200px]">
           <SearchInput placeholder="Search employees..." value={searchQuery} onValueChange={handleSearchChange} />
         </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[140px] text-xs">
+            <SelectTrigger className={cn("w-[140px]", FILTER_SELECT_TRIGGER)}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="w-[var(--radix-select-trigger-width)]">

@@ -37,7 +37,7 @@ const CYCLE_STATUS_STYLES: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground",
   ACTIVE: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-300",
   CLOSED: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
-  ARCHIVED: "bg-violet-100 text-violet-700 dark:bg-violet-500/10 dark:text-violet-300",
+  ARCHIVED: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
 };
 
 interface QuestionBuilder {

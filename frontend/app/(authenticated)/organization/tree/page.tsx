@@ -216,11 +216,7 @@ export default function OrgTreePage() {
       title="Organization Tree"
       subtitle="Full hierarchy from business units down to teams"
       filters={
-        <div className="flex items-center gap-2">
-          <div className="min-w-0 max-w-[240px]">
-          <SearchInput placeholder="Search nodes…" value={search} onValueChange={handleSearchChange} />
-        </div>
-        </div>
+        <SearchInput placeholder="Search nodes…" value={search} onValueChange={handleSearchChange} />
       }
     >
       <div className="space-y-3">

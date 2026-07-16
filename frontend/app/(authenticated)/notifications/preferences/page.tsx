@@ -5,6 +5,7 @@ import { Bell, Mail, Smartphone, MessageSquare, Slack, Volume2, Moon, BellOff, X
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -206,20 +207,18 @@ export default function NotificationPreferencesPage() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">Start time</Label>
-                  <input
+                  <Input
                     type="time"
                     defaultValue={prefs?.quietHoursStart ?? ""}
                     onBlur={(e) => handleQuietHours("quietHoursStart", e.target.value)}
-                    className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                   />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">End time</Label>
-                  <input
+                  <Input
                     type="time"
                     defaultValue={prefs?.quietHoursEnd ?? ""}
                     onBlur={(e) => handleQuietHours("quietHoursEnd", e.target.value)}
-                    className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                   />
                 </div>
                 <div className="space-y-1">
@@ -251,7 +250,7 @@ export default function NotificationPreferencesPage() {
                 </p>
               </div>
               <Select value={prefs?.digestMode ?? "disabled"} onValueChange={handleDigestMode}>
-                <SelectTrigger className="w-48 shrink-0 text-sm h-8">
+                <SelectTrigger className="w-48 shrink-0">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

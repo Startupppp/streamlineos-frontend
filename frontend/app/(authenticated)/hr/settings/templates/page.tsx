@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { toast } from "sonner";
 import { Plus, Database } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
@@ -14,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -206,7 +208,7 @@ export default function HrTemplatesPage() {
                />
             </div>
             <Select value={kind} onValueChange={(v) => { setKind(v as HrTemplateKind | "all"); setPage(1); }}>
-              <SelectTrigger className="w-44 text-xs">
+              <SelectTrigger className={cn("w-44", FILTER_SELECT_TRIGGER)}>
                 <SelectValue placeholder="All Kinds" />
               </SelectTrigger>
               <SelectContent>
@@ -217,7 +219,7 @@ export default function HrTemplatesPage() {
               </SelectContent>
             </Select>
             <Select value={status} onValueChange={(v) => { setStatus(v as HrTemplateStatus | "all"); setPage(1); }}>
-              <SelectTrigger className="w-36 text-xs">
+              <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
                 <SelectValue placeholder="All Statuses" />
               </SelectTrigger>
               <SelectContent>

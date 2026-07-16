@@ -188,7 +188,6 @@ export default function RecruitersPage() {
     <PageWrapper
       title="Recruiters"
       subtitle="HR team members with active job assignments and activity tracking"
-      badge={`${recruiters.length} members`}
     >
       {recruiters.length === 0 ? (
         <RecruitmentEmptyState

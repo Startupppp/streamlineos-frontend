@@ -129,7 +129,7 @@ export function UserMembershipSection({ userId }: UserMembershipSectionProps) {
           <div className="flex items-center gap-2 text-xs">
             <GitBranch className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
             <Select value={draft.branchId} onValueChange={handleBranchChange}>
-              <SelectTrigger className="h-8 text-xs flex-1">
+              <SelectTrigger className="flex-1">
                 <SelectValue placeholder="Select branch" />
               </SelectTrigger>
               <SelectContent>
@@ -143,7 +143,7 @@ export function UserMembershipSection({ userId }: UserMembershipSectionProps) {
           <div className="flex items-center gap-2 text-xs">
             <Building2 className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
             <Select value={draft.departmentId} onValueChange={handleDepartmentChange}>
-              <SelectTrigger className="h-8 text-xs flex-1">
+              <SelectTrigger className="flex-1">
                 <SelectValue placeholder="Select department" />
               </SelectTrigger>
               <SelectContent>
@@ -157,7 +157,7 @@ export function UserMembershipSection({ userId }: UserMembershipSectionProps) {
           <div className="flex items-center gap-2 text-xs">
             <Network className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
             <Select value={draft.managerUserId} onValueChange={handleManagerChange}>
-              <SelectTrigger className="h-8 text-xs flex-1">
+              <SelectTrigger className="flex-1">
                 <SelectValue placeholder="Select manager" />
               </SelectTrigger>
               <SelectContent>

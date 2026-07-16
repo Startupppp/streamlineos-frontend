@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Textarea } from "@/components/ui/textarea";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import type { OrgBusinessUnit } from "@/types/org-hierarchy";
@@ -341,9 +342,7 @@ export default function BusinessUnitsPage() {
       }
       filters={
         <>
-          <div className="min-w-0 max-w-[240px]">
           <SearchInput placeholder="Search business units…" value={search} onValueChange={handleSearchInputChange} />
-        </div>
           {archived.length > 0 && (
             <Button variant="outline" size="sm" className="text-xs" onClick={handleToggleArchived}>
               <Archive className="h-4 w-4 mr-1.5" />
@@ -377,9 +376,7 @@ export default function BusinessUnitsPage() {
               <SheetClose asChild>
                 <Button variant="outline" size="sm" className="w-full">Cancel</Button>
               </SheetClose>
-              <Button size="sm" type="submit" form="bu-form" disabled={create.isPending} className="w-full">
-                {create.isPending ? "Saving…" : "Save"}
-              </Button>
+              <LoadingButton size="sm" type="submit" form="bu-form" isPending={create.isPending} loadingText="Saving…" className="w-full">Save</LoadingButton>
             </div>
           </div>
         </SheetContent>
@@ -408,9 +405,7 @@ export default function BusinessUnitsPage() {
               <SheetClose asChild>
                 <Button variant="outline" size="sm" className="w-full">Cancel</Button>
               </SheetClose>
-              <Button size="sm" type="submit" form="bu-form" disabled={update.isPending} className="w-full">
-                {update.isPending ? "Saving…" : "Save"}
-              </Button>
+              <LoadingButton size="sm" type="submit" form="bu-form" isPending={update.isPending} loadingText="Saving…" className="w-full">Save</LoadingButton>
             </div>
           </div>
         </SheetContent>
