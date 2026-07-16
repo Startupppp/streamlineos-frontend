@@ -149,7 +149,6 @@ export function PlanTab() {
   function handleCouponInputChange(e: React.ChangeEvent<HTMLInputElement>) {
     setCouponInput(e.target.value.toUpperCase());
     setAppliedCoupon(null);
-    if (selectedPlanForCoupon) setSelectedPlanForCoupon(selectedPlanForCoupon);
   }
 
   const handleUpgrade = useCallback(
@@ -336,6 +335,7 @@ export function PlanTab() {
         appliedCoupon={appliedCoupon}
         couponResult={couponResult}
         isValidatingCoupon={isValidatingCoupon}
+        helperText={!selectedPlanForCoupon ? "Select a plan to apply this code." : undefined}
         onInputChange={handleCouponInputChange}
         onApply={handleApplyCoupon}
         onRemove={handleRemoveCoupon}

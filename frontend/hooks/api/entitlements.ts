@@ -28,7 +28,7 @@ export interface EntitlementLimit {
 export interface Entitlements {
   tier: EntitlementTier;
   plan: EntitlementPlan;
-  seatLimit: number;
+  seatLimit: number | null;
   lockedModules: string[];
   features: {
     chatGroupHuddles: boolean;

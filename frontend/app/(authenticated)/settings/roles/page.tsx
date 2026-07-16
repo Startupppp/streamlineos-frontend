@@ -178,7 +178,7 @@ function RolesContent() {
                   <p className="text-xs text-muted-foreground mt-0.5">Create a role to manage permissions</p>
                 </div>
                 <Button size="sm" onClick={handleOpenCreate} className="gap-1.5">
-                  <Plus className="h-3.5 w-3.5" /> New role
+                  <PlusIcon size={14} /> New role
                 </Button>
               </div>
             ) : (

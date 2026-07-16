@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { ThumbsUpIcon, ThumbsDownIcon } from "@animateicons/react/lucide";
+import { ThumbsUp, ThumbsDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";

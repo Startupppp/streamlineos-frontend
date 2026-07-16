@@ -19,6 +19,7 @@ import {
   Hash,
   Lock,
   Loader2,
+  Users,
 } from "lucide-react";
 import { ChevronRightIcon, UsersIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";

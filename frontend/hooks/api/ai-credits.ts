@@ -70,6 +70,7 @@ export function useAiCreditTransactions(page: number, limit: number) {
 export function useConfigureAutoTopUp() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["billing", "ai-credits", "auto-topup"],
     mutationFn: (data: {
       enabled: boolean;
       packId?: number;
@@ -107,6 +108,7 @@ export function usePurchaseAiCredits() {
     onSuccess: (result) => {
       if ("balance" in result) {
         void qc.invalidateQueries({ queryKey: ["billing", "ai-credits"] });
+        void qc.invalidateQueries({ queryKey: ["billing", "ai-credits", "transactions"] });
         toast.success(`${result.creditsAdded.toLocaleString()} credits added to your account`);
       }
     },
@@ -126,6 +128,7 @@ export function useVerifyAiCreditPurchase() {
       apiClient.post<PurchaseAiPackResult>("/billing/ai-credits/purchase", data),
     onSuccess: (result) => {
       void qc.invalidateQueries({ queryKey: ["billing", "ai-credits"] });
+      void qc.invalidateQueries({ queryKey: ["billing", "ai-credits", "transactions"] });
       toast.success(`${result.creditsAdded.toLocaleString()} credits added to your account`);
     },
     onError: (e) => toast.error(getErrorMessage(e)),

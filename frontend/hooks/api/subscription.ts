@@ -69,7 +69,7 @@ interface VerifySubscriptionResponse {
   status: "ACTIVE";
 }
 
-const SUBSCRIPTION_QUERY_KEY = ["subscription"] as const;
+const SUBSCRIPTION_QUERY_KEY = ["billing", "subscription"] as const;
 const BILLING_SUMMARY_QUERY_KEY = ["billing", "summary"] as const;
 
 export function useSubscription() {
@@ -98,6 +98,8 @@ export function useVerifySubscription() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: SUBSCRIPTION_QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: BILLING_SUMMARY_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: ["billing", "entitlements"] });
+      queryClient.invalidateQueries({ queryKey: ["billing", "seats"] });
     },
   });
 }
@@ -173,7 +175,7 @@ export function useValidateCoupon(code: string, plan: SubscriptionPlan | null) {
 
 export interface BillingProfile {
   id: number;
-  orgId: number;
+  orgId: string;
   gstin: string | null;
   pan: string | null;
   billingName: string | null;

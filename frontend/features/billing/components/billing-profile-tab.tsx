@@ -38,7 +38,7 @@ const billingProfileSchema = z.object({
   addressLine2: z.string().max(200).nullable(),
   city: z.string().max(100).nullable(),
   state: z.string().max(100).nullable(),
-  pincode: z.string().max(20).nullable(),
+  pincode: z.string().max(10).nullable(),
   country: z.string().max(100),
   isTaxExempt: z.boolean(),
 });

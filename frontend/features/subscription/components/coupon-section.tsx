@@ -57,6 +57,7 @@ interface CouponSectionProps {
   appliedCoupon: CouponValidationResult | null;
   couponResult: CouponValidationResult | undefined;
   isValidatingCoupon: boolean;
+  helperText?: string;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onApply: () => void;
   onRemove: () => void;
@@ -67,6 +68,7 @@ export function CouponSection({
   appliedCoupon,
   couponResult,
   isValidatingCoupon,
+  helperText,
   onInputChange,
   onApply,
   onRemove,
@@ -108,7 +110,11 @@ export function CouponSection({
               </Button>
             </div>
           )}
-          {couponInput.trim().length >= 3 &&
+          {helperText && couponInput.trim().length >= 3 && !appliedCoupon && (
+            <p className="text-xs text-muted-foreground">{helperText}</p>
+          )}
+          {!helperText &&
+            couponInput.trim().length >= 3 &&
             !appliedCoupon &&
             couponResult &&
             !isValidatingCoupon &&

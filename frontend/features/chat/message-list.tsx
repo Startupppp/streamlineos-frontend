@@ -4,8 +4,7 @@ import { Fragment, useCallback, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, Send } from "lucide-react";
-import { ArrowDownIcon } from "@animateicons/react/lucide";
+import { Loader2, Send, ArrowDown } from "lucide-react";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import React from "react";
 import { cn } from "@/lib/utils";
@@ -156,10 +155,9 @@ const ScrollToBottomButton = React.forwardRef<
   HTMLButtonElement,
   React.ButtonHTMLAttributes<HTMLButtonElement>
 >(function ScrollToBottomButton({ className, children, ...props }, ref) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
-    <button ref={ref} {...hoverHandlers} className={className} {...props}>
-      <ArrowDownIcon ref={iconRef} size={14} />
+    <button ref={ref} className={className} {...props}>
+      <ArrowDown className="h-3.5 w-3.5" />
       {children}
     </button>
   );

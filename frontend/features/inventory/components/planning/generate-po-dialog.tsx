@@ -2,7 +2,8 @@
 
 import { toast } from "sonner";
 import Link from "next/link";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCartIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   Dialog,
   DialogContent,
@@ -117,15 +118,17 @@ export function GeneratePODialog({ suggestions, open, onClose }: GeneratePODialo
                   {group.totalQty} units total
                 </p>
               </div>
-              <Button
+              <AnimatedIconButton
+                icon={ShoppingCartIcon}
+                iconSize={14}
+                iconClassName="mr-1.5"
                 size="sm"
                 variant="outline"
                 onClick={() => handleGenerate(group)}
                 disabled={generatePO.isPending}
               >
-                <ShoppingCart className="h-3.5 w-3.5 mr-1.5" />
                 Generate PO
-              </Button>
+              </AnimatedIconButton>
             </div>
           ))}
           {groups.length === 0 && (
