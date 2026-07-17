@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -145,11 +145,7 @@ const GapTableRow = memo(function GapTableRow({
 function AnalyticsSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-[56px] rounded-lg" />
-        ))}
-      </div>
+      <StatCardGridSkeleton cols={5} count={5} />
       {Array.from({ length: 3 }).map((_, s) => (
         <div key={s} className="space-y-2">
           <Skeleton className="h-4 w-36" />

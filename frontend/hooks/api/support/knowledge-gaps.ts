@@ -29,6 +29,7 @@ export function useKnowledgeGaps(cursor?: number) {
 export function useDetectGaps() {
   const queryClient = useQueryClient();
   return useMutation<DetectGapsResponse, Error>({
+    mutationKey: ["support", "knowledge-gaps", "detect"],
     mutationFn: () =>
       apiClient.post<DetectGapsResponse>("/support/knowledge-gaps/detect"),
     onSuccess: () => {
@@ -40,6 +41,7 @@ export function useDetectGaps() {
 export function useDraftGap() {
   const queryClient = useQueryClient();
   return useMutation<DraftGapResponse, Error, { gapId: number }>({
+    mutationKey: ["support", "knowledge-gaps", "draft"],
     mutationFn: ({ gapId }) =>
       apiClient.post<DraftGapResponse>(
         `/support/knowledge-gaps/${gapId}/draft`,
@@ -53,6 +55,7 @@ export function useDraftGap() {
 export function useDismissGap() {
   const queryClient = useQueryClient();
   return useMutation<KnowledgeGap, Error, { gapId: number }>({
+    mutationKey: ["support", "knowledge-gaps", "dismiss"],
     mutationFn: ({ gapId }) =>
       apiClient.patch<KnowledgeGap>(`/support/knowledge-gaps/${gapId}`, {
         action: "dismiss",

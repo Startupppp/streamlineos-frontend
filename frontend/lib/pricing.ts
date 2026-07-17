@@ -48,7 +48,7 @@ export const PRICING_TIERS: PricingTier[] = [
       "Community support",
     ],
     cta: "Start free",
-    ctaHref: "/signup",
+    ctaHref: "/signin",
     highlight: false,
   },
   {
@@ -72,7 +72,7 @@ export const PRICING_TIERS: PricingTier[] = [
       "Email support (24hr response)",
     ],
     cta: "Start 14-day trial",
-    ctaHref: "/signup?plan=startup",
+    ctaHref: "/signin",
     highlight: true,
     badge: "Most popular",
   },
@@ -97,7 +97,7 @@ export const PRICING_TIERS: PricingTier[] = [
       "Priority support (4hr response)",
     ],
     cta: "Start 14-day trial",
-    ctaHref: "/signup?plan=growth",
+    ctaHref: "/signin",
     highlight: false,
   },
   {

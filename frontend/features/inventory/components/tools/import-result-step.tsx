@@ -1,9 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { CheckCircle, XCircle, Loader2, Hash, BarChart2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useImportJob } from "@/hooks/api/inventory/admin";
 import type { JobStatus } from "@/features/inventory/lib";
@@ -79,22 +80,11 @@ export function ImportResultStep({ jobId, onReset }: ImportResultStepProps) {
         </Badge>
       </div>
 
-      <div className="grid grid-cols-3 gap-3 text-sm">
-        <div className="rounded-lg border border-border bg-card px-3 py-2">
-          <p className="text-xs text-muted-foreground">Total rows</p>
-          <p className="font-semibold">{job.totalRows}</p>
-        </div>
-        <div className="rounded-lg border border-border bg-card px-3 py-2">
-          <p className="text-xs text-muted-foreground">Processed</p>
-          <p className="font-semibold">{job.processedRows}</p>
-        </div>
-        <div className="rounded-lg border border-border bg-card px-3 py-2">
-          <p className="text-xs text-muted-foreground">Errors</p>
-          <p className={`font-semibold ${job.errorCount > 0 ? "text-red-600" : ""}`}>
-            {job.errorCount}
-          </p>
-        </div>
-      </div>
+      <StatCardGrid cols={3}>
+        <StatCard label="Total rows" value={job.totalRows} icon={Hash} tone="default" />
+        <StatCard label="Processed" value={job.processedRows} icon={BarChart2} tone="emerald" />
+        <StatCard label="Errors" value={job.errorCount} icon={AlertCircle} tone={job.errorCount > 0 ? "red" : "default"} />
+      </StatCardGrid>
 
       {errorData.length > 0 && (
         <DataTable

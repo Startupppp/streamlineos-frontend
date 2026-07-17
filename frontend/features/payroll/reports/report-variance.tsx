@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { usePayrollVariance } from "@/hooks/api/payroll/reports";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
@@ -103,10 +103,7 @@ export function ReportVariance({ month }: ReportVarianceProps) {
   if (isLoading) {
     return (
       <div className="flex flex-col gap-4">
-        <div className="grid grid-cols-2 gap-3">
-          <Skeleton className="h-16 rounded-lg" />
-          <Skeleton className="h-16 rounded-lg" />
-        </div>
+        <StatCardGridSkeleton cols={2} count={2} />
         <Skeleton className="h-48 rounded-xl" />
       </div>
     );

@@ -121,26 +121,23 @@ export function WorkingCapitalReport() {
               <p className="text-xs text-muted-foreground">
                 A current ratio of 2 or above is considered healthy. Below 1 indicates the company may have difficulty meeting short-term obligations.
               </p>
-              <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
-                <div className="rounded-lg bg-emerald-50 border border-emerald-200/60 px-4 py-3 dark:bg-emerald-500/10 dark:border-emerald-500/30">
-                  <p className="text-xs text-emerald-700 font-medium dark:text-emerald-300">Current Assets</p>
-                  <p className="text-xl font-bold tabular-nums text-emerald-700 dark:text-emerald-300 mt-1">
-                    {formatCurrencyFull(Number(data.currentAssets))}
-                  </p>
-                </div>
-                <div className="rounded-lg bg-red-50 border border-red-200/60 px-4 py-3 dark:bg-red-500/10 dark:border-red-500/30">
-                  <p className="text-xs text-red-700 font-medium dark:text-red-300">Current Liabilities</p>
-                  <p className="text-xl font-bold tabular-nums text-red-700 dark:text-red-300 mt-1">
-                    {formatCurrencyFull(Number(data.currentLiabilities))}
-                  </p>
-                </div>
-                <div className={`rounded-lg border px-4 py-3 ${isPositive ? "bg-blue-50 border-blue-200/60 dark:bg-blue-500/10 dark:border-blue-500/30" : "bg-amber-50 border-amber-200/60 dark:bg-amber-500/10 dark:border-amber-500/30"}`}>
-                  <p className={`text-xs font-medium ${isPositive ? "text-blue-700 dark:text-blue-300" : "text-amber-700 dark:text-amber-300"}`}>Net Working Capital</p>
-                  <p className={`text-xl font-bold tabular-nums mt-1 ${isPositive ? "text-blue-700 dark:text-blue-300" : "text-amber-700 dark:text-amber-300"}`}>
-                    {formatCurrencyFull(Number(data.workingCapital))}
-                  </p>
-                </div>
-              </div>
+              <StatCardGrid cols={3} className="mt-4">
+                <StatCard
+                  label="Current Assets"
+                  value={formatCurrencyFull(Number(data.currentAssets))}
+                  tone="emerald"
+                />
+                <StatCard
+                  label="Current Liabilities"
+                  value={formatCurrencyFull(Number(data.currentLiabilities))}
+                  tone="red"
+                />
+                <StatCard
+                  label="Net Working Capital"
+                  value={formatCurrencyFull(Number(data.workingCapital))}
+                  tone={isPositive ? "accent" : "amber"}
+                />
+              </StatCardGrid>
             </div>
           </div>
         )}

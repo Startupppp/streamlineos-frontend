@@ -5,7 +5,7 @@ import { Sparkles, AlertTriangle } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { AiDraftCard, AiCitationChips, AiConfidenceBadge } from "@/components/ai";
+import { AiDraftCard, AiConfidenceBadge } from "@/components/ai";
 import type { Citation } from "@/components/ai";
 import { useAIPolicyQa } from "@/hooks/api/ai";
 import { getErrorMessage } from "@/lib/get-error-message";

@@ -173,10 +173,4 @@ export function useProcessWfhRequest() {
   });
 }
 
-export function useChangePassword() {
-  return useMutation({
-    mutationFn: (data: ChangePasswordInput) =>
-      apiClient.patch<{ success: boolean }>("/me/change-password", data),
-  });
-}
 

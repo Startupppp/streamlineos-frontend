@@ -3,7 +3,7 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingState } from "@/components/shared/loading-state";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { KbResearchBriefForm } from "@/features/kb/components/kb-research-brief-form";
 import { KbResearchBriefCard } from "@/features/kb/components/kb-research-brief-card";
@@ -54,14 +54,15 @@ export default function KbResearchBriefsPage() {
             ))}
             {hasNextPage && (
               <div className="flex justify-center pt-2">
-                <Button
+                <LoadingButton
                   variant="outline"
                   size="sm"
                   onClick={handleLoadMore}
-                  disabled={isFetchingNextPage}
+                  isPending={isFetchingNextPage}
+                  loadingText="Loading…"
                 >
-                  {isFetchingNextPage ? "Loading…" : "Load more"}
-                </Button>
+                  Load more
+                </LoadingButton>
               </div>
             )}
           </div>

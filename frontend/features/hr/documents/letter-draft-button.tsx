@@ -64,6 +64,11 @@ export function LetterDraftButton({ userId, userName }: LetterDraftButtonProps) 
     toast.success("Letter copied to clipboard");
   }
 
+  function handleLetterTypeChange(v: string) {
+    const matched = LETTER_TYPES.find((t) => t.value === v);
+    if (matched) setLetterType(matched.value);
+  }
+
   function handleOpenChange(val: boolean) {
     setOpen(val);
     if (!val) {
@@ -106,7 +111,7 @@ export function LetterDraftButton({ userId, userName }: LetterDraftButtonProps) 
           <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
             <div className="space-y-1.5">
               <Label className="text-xs font-medium">Letter Type</Label>
-              <Select value={letterType} onValueChange={(v) => setLetterType(v as LetterType)}>
+              <Select value={letterType} onValueChange={handleLetterTypeChange}>
                 <SelectTrigger className="h-9 text-sm">
                   <SelectValue placeholder="Select letter type…" />
                 </SelectTrigger>

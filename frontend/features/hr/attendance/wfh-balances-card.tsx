@@ -4,9 +4,10 @@ import { useMemo, memo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { useHrWfhRequests, useLeavePolicy } from "@/hooks/api/hr";
 import { RequestWfhDialog } from "@/components/hr/request-wfh-dialog";
-import { Home } from "lucide-react";
+import { Home, CalendarCheck, Clock, CheckCircle2 } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { HouseIcon } from "@animateicons/react/lucide";
 
@@ -81,32 +82,11 @@ export const WfhBalancesCard = memo(function WfhBalancesCard() {
           />
         </div>
 
-        <div className="grid grid-cols-3 gap-2">
-          <div className="rounded-xl bg-emerald-100 dark:bg-emerald-950/40 p-3 text-center">
-            <p className="text-3xl font-bold tabular-nums text-emerald-700 dark:text-emerald-400 leading-none mb-1">
-              {stats.remaining}
-            </p>
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Left
-            </p>
-          </div>
-          <div className="rounded-xl bg-blue-100 dark:bg-blue-500/10 p-3 text-center">
-            <p className="text-3xl font-bold tabular-nums text-blue-700 dark:text-blue-400 leading-none mb-1">
-              {stats.approved}
-            </p>
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Used
-            </p>
-          </div>
-          <div className="rounded-xl bg-amber-100 dark:bg-amber-950/40 p-3 text-center">
-            <p className="text-3xl font-bold tabular-nums text-amber-700 dark:text-amber-400 leading-none mb-1">
-              {stats.pending}
-            </p>
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Pending
-            </p>
-          </div>
-        </div>
+        <StatCardGrid cols={3}>
+          <StatCard label="Left" value={stats.remaining} icon={CalendarCheck} tone="emerald" />
+          <StatCard label="Used" value={stats.approved} icon={CheckCircle2} tone="accent" />
+          <StatCard label="Pending" value={stats.pending} icon={Clock} tone="amber" />
+        </StatCardGrid>
 
         <RequestWfhDialog
           trigger={

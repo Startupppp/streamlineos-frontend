@@ -6,7 +6,9 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Button } from "@/components/ui/button";
 import { UserCombobox } from "@/components/ui/user-combobox";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { useFeedbackResults } from "@/hooks/api/hr";
+import { BarChart3, CheckCircle2, Star, TrendingUp } from "lucide-react";
 
 export function ResultsTab() {
   const [subjectId, setSubjectId] = useState("");
@@ -70,26 +72,12 @@ export function ResultsTab() {
           className="bg-card rounded-2xl border border-border shadow-sm p-6 space-y-5"
         >
           <h3 className="font-semibold text-foreground">Results for {results.subjectId}</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-muted rounded-xl p-4 text-center">
-              <p className="text-2xl font-bold text-foreground">{results.totalRequests}</p>
-              <p className="text-xs text-muted-foreground mt-1">Total Requests</p>
-            </div>
-            <div className="bg-muted rounded-xl p-4 text-center">
-              <p className="text-2xl font-bold text-green-600">{results.completedRequests}</p>
-              <p className="text-xs text-muted-foreground mt-1">Completed</p>
-            </div>
-            <div className="bg-muted rounded-xl p-4 text-center">
-              <p className="text-2xl font-bold text-primary">
-                {results.avgRating !== undefined ? results.avgRating.toFixed(1) : "—"}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">Avg Rating</p>
-            </div>
-            <div className="bg-muted rounded-xl p-4 text-center">
-              <p className="text-2xl font-bold text-primary">{completionPct}%</p>
-              <p className="text-xs text-muted-foreground mt-1">Completion</p>
-            </div>
-          </div>
+          <StatCardGrid cols={4}>
+            <StatCard label="Total Requests" value={results.totalRequests} icon={BarChart3} tone="default" />
+            <StatCard label="Completed" value={results.completedRequests} icon={CheckCircle2} tone="emerald" />
+            <StatCard label="Avg Rating" value={results.avgRating !== undefined ? results.avgRating.toFixed(1) : "—"} icon={Star} tone="accent" />
+            <StatCard label="Completion" value={`${completionPct}%`} icon={TrendingUp} tone="accent" />
+          </StatCardGrid>
           <div className="space-y-1.5">
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>Completion rate</span>

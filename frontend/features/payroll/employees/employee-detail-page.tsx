@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -197,11 +197,7 @@ export function EmployeeDetailPage({ employeeUserId }: EmployeeDetailPageProps) 
     return (
       <PageWrapper title="Salary Profile" backHref="/payroll/employees">
         <div className="space-y-4">
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-16 rounded-lg" />
-            ))}
-          </div>
+          <StatCardGridSkeleton cols={3} count={3} />
           <Skeleton className="h-48 rounded-xl" />
           <Skeleton className="h-32 rounded-xl" />
         </div>

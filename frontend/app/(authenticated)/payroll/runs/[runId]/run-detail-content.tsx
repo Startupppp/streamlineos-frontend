@@ -3,7 +3,7 @@
 import { useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Tabs,
@@ -57,11 +57,7 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
       <PageWrapper title="Payroll Run" backHref="/payroll/runs">
         <div className="space-y-4">
           <Skeleton className="h-24 rounded-xl" />
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-16 rounded-lg" />
-            ))}
-          </div>
+          <StatCardGridSkeleton cols={4} count={4} />
           <Skeleton className="h-64 rounded-xl" />
         </div>
       </PageWrapper>

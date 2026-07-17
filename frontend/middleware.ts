@@ -97,7 +97,6 @@ const PROTECTED_ROUTES = [
 
 const AUTH_ROUTES = [
   "/signin",
-  "/signup",
   "/verify-email",
 ];
 

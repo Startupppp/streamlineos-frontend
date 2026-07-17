@@ -8,6 +8,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptyLeaderboardIllustration } from "@/components/illustrations";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -16,6 +17,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import dynamic from "next/dynamic";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { BarChart3, Star, Users } from "lucide-react";
 
 const ScorecardCharts = dynamic(
   () => import("@/features/hr/recruitment/components/scorecard-charts").then((m) => ({ default: m.ScorecardCharts })),
@@ -80,11 +82,7 @@ export default function ScorecardAnalyticsPage() {
   if (isLoading) {
     return (
       <PageWrapper title="Scorecard Analytics" subtitle="Interviewer performance and scoring patterns">
-        <div className="grid gap-4 sm:grid-cols-3 mb-4">
-          <Skeleton className="h-24 rounded-xl" />
-          <Skeleton className="h-24 rounded-xl" />
-          <Skeleton className="h-24 rounded-xl" />
-        </div>
+        <StatCardGridSkeleton cols={3} count={3} className="mb-4" />
         <div className="grid gap-4 lg:grid-cols-2">
           <Skeleton className="h-72 rounded-xl" />
           <Skeleton className="h-72 rounded-xl" />
@@ -113,26 +111,11 @@ export default function ScorecardAnalyticsPage() {
         </Select>
       }
     >
-      <div className="grid gap-3 sm:grid-cols-3 mb-4">
-        <Card>
-          <CardContent className="pt-5 pb-4">
-            <p className="text-xs text-muted-foreground">Total Scorecards</p>
-            <p className="text-2xl font-bold mt-1">{data?.totalScorecards ?? 0}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-5 pb-4">
-            <p className="text-xs text-muted-foreground">Org Avg Rating</p>
-            <p className="text-2xl font-bold mt-1">{data?.orgAvgRating ?? 0} <span className="text-sm font-normal text-muted-foreground">/ 10</span></p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-5 pb-4">
-            <p className="text-xs text-muted-foreground">Active Interviewers</p>
-            <p className="text-2xl font-bold mt-1">{stats.length}</p>
-          </CardContent>
-        </Card>
-      </div>
+      <StatCardGrid cols={3} className="mb-4">
+        <StatCard label="Total Scorecards" value={data?.totalScorecards ?? 0} icon={BarChart3} tone="blue" />
+        <StatCard label="Org Avg Rating" value={`${data?.orgAvgRating ?? 0} / 10`} icon={Star} tone="amber" />
+        <StatCard label="Active Interviewers" value={stats.length} icon={Users} tone="default" />
+      </StatCardGrid>
 
       {stats.length === 0 ? (
         <RecruitmentEmptyState
