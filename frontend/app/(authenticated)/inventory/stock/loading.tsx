@@ -10,7 +10,7 @@ export default function StockLoading() {
       subtitle="Live stock levels across all warehouses."
       actions={
         <div className="flex items-center gap-2">
-          <Skeleton className="h-9 w-[200px]" />
+          <Skeleton className="h-8 w-[200px]" />
           <Skeleton className="h-9 w-[130px]" />
         </div>
       }
@@ -22,7 +22,7 @@ export default function StockLoading() {
         </div>
       }
     >
-      <DataTableSkeleton rows={12} className="flex-1 min-h-0" />
+      <DataTableSkeleton rows={12} columns={12} className="flex-1 min-h-0" />
     </PageWrapper>
   );
 }

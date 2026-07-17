@@ -6,6 +6,7 @@ import { AlertTriangle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { usePayrollRegister } from "@/hooks/api/payroll/reports";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
@@ -23,17 +24,17 @@ function buildColumns(report: PayrollRegisterReport): DataTableColumn<EmployeeRe
     {
       key: "name",
       header: "Name",
-      cell: (row) => <span className="text-[11px] font-medium">{row.name}</span>,
+      cell: (row) => <TruncatedText text={row.name ?? ""} className="text-[11px] font-medium" />,
     },
     {
       key: "department",
       header: "Department",
-      cell: (row) => <span className="text-[11px] text-muted-foreground">{row.department}</span>,
+      cell: (row) => <TruncatedText text={row.department ?? ""} className="text-[11px] text-muted-foreground" />,
     },
     {
       key: "workerType",
       header: "Type",
-      cell: (row) => <span className="text-[11px] text-muted-foreground">{row.workerType}</span>,
+      cell: (row) => <TruncatedText text={row.workerType ?? ""} className="text-[11px] text-muted-foreground" />,
     },
     {
       key: "paidDays",

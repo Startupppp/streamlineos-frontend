@@ -7,7 +7,7 @@ export default function MilestonesLoading() {
     <PageWrapper
       title="Milestones"
       subtitle="Key checkpoints and target dates for this project"
-      actions={<Skeleton className="h-9 w-36 rounded-md" />}
+      actions={<Skeleton className="h-8 w-36 rounded-md" />}
     >
       <PmPageShell>
         <PmSection index={0}>
@@ -19,7 +19,7 @@ export default function MilestonesLoading() {
         </PmSection>
         <PmSection index={1}>
           <div className="space-y-2.5">
-            {Array.from({ length: 9 }).map((_, i) => (
+            {Array.from({ length: 3 }).map((_, i) => (
               <Skeleton key={i} className="h-20 rounded-xl" />
             ))}
           </div>

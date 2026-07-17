@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { usePayrollPolicyCurrent } from "@/hooks/api/payroll/policies";
 import type { ToggleKey } from "@/types/payroll/setup";
 
@@ -87,7 +88,7 @@ export function StatutoryOverviewTab() {
                 className={`flex items-center justify-between px-4 py-3 gap-4 ${idx !== 0 ? "border-t border-border" : ""}`}
               >
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-medium leading-snug">{item.label ?? item.key}</p>
+                  <TruncatedText text={item.label ?? item.key} className="text-[13px] font-medium leading-snug" />
                 </div>
                 <EnabledBadge enabled={item.enabled} />
               </div>

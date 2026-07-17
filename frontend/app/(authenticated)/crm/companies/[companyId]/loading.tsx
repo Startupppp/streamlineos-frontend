@@ -3,7 +3,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 
 export default function CompanyDetailLoading() {
   return (
-    <PageWrapper title="Company" subtitle="Loading...">
+    <PageWrapper title="Company" subtitle="Loading..." backHref="/crm/companies">
       <div className="space-y-4">
         <div className="flex items-center gap-3">
           <Skeleton className="h-10 w-10 rounded-lg" />

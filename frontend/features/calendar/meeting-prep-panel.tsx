@@ -102,7 +102,7 @@ export function MeetingPrepPanel({ eventId, eventTitle, onClose: _onClose }: Mee
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <CalendarDays className="h-3.5 w-3.5 text-muted-foreground shrink-0" aria-hidden />
-            <span className="text-xs text-muted-foreground truncate">{eventTitle}</span>
+            <span className="text-xs text-muted-foreground truncate min-w-0">{eventTitle}</span>
           </div>
 
           <div className="space-y-2">

@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { usePayrollBankPayout } from "@/hooks/api/payroll/reports";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import type { BankPayoutBatch, BankPayoutItem } from "@/types/payroll/reports";
 
@@ -26,7 +27,7 @@ const ITEM_COLUMNS: DataTableColumn<BankPayoutItem>[] = [
   {
     key: "userName",
     header: "Employee",
-    cell: (row) => <span className="text-[11px] font-medium">{row.userName}</span>,
+    cell: (row) => <TruncatedText text={row.userName ?? ""} className="text-[11px] font-medium" />,
   },
   {
     key: "accountMasked",

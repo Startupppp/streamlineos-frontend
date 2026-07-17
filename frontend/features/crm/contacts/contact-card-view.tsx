@@ -97,11 +97,11 @@ export function ContactCardView({
               </div>
               <div className="mt-3 space-y-1.5">
                 {contact.email && (
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground min-w-0">
                     <Mail className="h-3 w-3 shrink-0" />
                     <a
                       href={`mailto:${contact.email}`}
-                      className="truncate hover:text-foreground transition-colors"
+                      className="break-all hover:text-foreground transition-colors min-w-0"
                     >
                       {contact.email}
                     </a>

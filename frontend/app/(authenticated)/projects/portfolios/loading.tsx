@@ -1,9 +1,8 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import {
   PmPageShell,
-  PM_PANEL,
   PM_TOOLBAR,
 } from "@/features/projects/shared/pm-chrome";
 
@@ -21,17 +20,7 @@ export default function PortfoliosLoading() {
       actions={<Skeleton className="h-9 w-32 rounded-md" />}
     >
       <PmPageShell>
-        <div className={cn(PM_PANEL, "space-y-2 p-3")}>
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-4 border-b border-border/40 py-2.5 last:border-0">
-              <Skeleton className="h-4 w-48" />
-              <Skeleton className="h-5 w-16 rounded-full" />
-              <Skeleton className="h-5 w-14 rounded-full" />
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="ml-auto h-4 w-8" />
-            </div>
-          ))}
-        </div>
+        <DataTableSkeleton rows={12} columns={7} />
       </PmPageShell>
     </PageWrapper>
   );

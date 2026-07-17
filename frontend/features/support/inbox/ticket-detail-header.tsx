@@ -20,6 +20,15 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useUpdateSupportTicket } from "@/hooks/api/support";
 import { useSupportQueues } from "@/hooks/api/support/queues";
 import { useSupportWatchers, useFollowTicket, useUnfollowTicket } from "@/hooks/api/support/watchers";
+import {
+  useSuggestReply,
+  useImproveReply,
+  useTranslateDraft,
+  useGenerateHandoffSummary,
+  useAnalyzeTicket,
+} from "@/hooks/api/support/ai";
+import { useCan } from "@/hooks/api/access";
+import { AiActionsMenu, type AiAction } from "@/components/ai";
 import { TicketRiskBadge } from "@/features/support/inbox/ticket-risk-badge";
 import { TicketPresence } from "@/features/support/inbox/ticket-presence";
 import { TicketSnoozeControl } from "@/features/support/inbox/ticket-snooze-control";
@@ -39,9 +48,11 @@ function toTitleCase(str: string) {
 interface TicketDetailHeaderProps {
   ticket: SupportTicket;
   onBack: () => void;
+  onInsertReply?: (body: string) => void;
+  replyDraftContent?: string;
 }
 
-export function TicketDetailHeader({ ticket, onBack }: TicketDetailHeaderProps) {
+export function TicketDetailHeader({ ticket, onBack, onInsertReply, replyDraftContent }: TicketDetailHeaderProps) {
   const { data: session } = useSession();
   const updateTicket = useUpdateSupportTicket();
   const { data: queues } = useSupportQueues();
@@ -95,6 +106,72 @@ export function TicketDetailHeader({ ticket, onBack }: TicketDetailHeaderProps) 
     }
   }, [isFollowing, ticket.id, followMutation, unfollowMutation, handleUpdateError]);
 
+  const canViewTicket = useCan("support:tickets:view");
+
+  const suggestReply = useSuggestReply(ticket.id);
+  const improveReply = useImproveReply(ticket.id);
+  const translateDraft = useTranslateDraft(ticket.id);
+  const handoffSummary = useGenerateHandoffSummary(ticket.id);
+  const analyzeTicket = useAnalyzeTicket(ticket.id);
+
+  const aiActions = useMemo<AiAction[]>(() => [
+    {
+      key: "suggest-reply",
+      label: "Suggest reply",
+      description: "Generate a reply based on the ticket context",
+      run: async () => {
+        const result = await suggestReply.mutateAsync();
+        if (result?.type === "reply") return { text: result.payload.body };
+        return { text: "" };
+      },
+      onApply: onInsertReply,
+      applyLabel: "Insert reply",
+    },
+    {
+      key: "improve-reply",
+      label: "Improve reply",
+      description: "Rewrite and polish the current draft",
+      run: async () => {
+        const result = await improveReply.mutateAsync({ content: replyDraftContent ?? "" });
+        return { text: result.improved };
+      },
+      onApply: onInsertReply,
+      applyLabel: "Apply improved reply",
+    },
+    {
+      key: "translate-draft",
+      label: "Translate draft",
+      description: "Translate the current draft to English",
+      run: async () => {
+        const result = await translateDraft.mutateAsync({ language: "English", content: replyDraftContent });
+        return { text: result.translatedText };
+      },
+      onApply: onInsertReply,
+      applyLabel: "Use translation",
+    },
+    {
+      key: "handoff-summary",
+      label: "Handoff brief",
+      description: "Summarize this ticket for a handoff",
+      run: async () => {
+        const result = await handoffSummary.mutateAsync();
+        if (result?.type === "handoff_summary") return { text: result.payload.summary };
+        return { text: "" };
+      },
+    },
+    {
+      key: "summarize-thread",
+      label: "Summarize thread",
+      description: "Condense the full conversation into key points",
+      run: async () => {
+        const results = await analyzeTicket.mutateAsync();
+        const found = results.find((s) => s.type === "summary");
+        if (found?.type === "summary") return { text: found.payload.text };
+        return { text: "" };
+      },
+    },
+  ], [suggestReply, improveReply, translateDraft, handoffSummary, analyzeTicket, onInsertReply, replyDraftContent]);
+
   const isBreached =
     ticket.slaDeadline &&
     new Date(ticket.slaDeadline) < new Date() &&
@@ -133,6 +210,7 @@ export function TicketDetailHeader({ ticket, onBack }: TicketDetailHeaderProps) 
               SLA Breached
             </Badge>
           )}
+          {canViewTicket && <AiActionsMenu actions={aiActions} menuLabel="AI assist" align="end" />}
           <Select value={ticket.queueId ? String(ticket.queueId) : "none"} onValueChange={handleQueueValueChange}>
             <SelectTrigger className="h-8 text-xs w-[130px]">
               <SelectValue placeholder="Queue" />

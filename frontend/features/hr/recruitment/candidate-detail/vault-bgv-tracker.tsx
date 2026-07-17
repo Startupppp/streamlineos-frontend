@@ -23,6 +23,7 @@ import {
 } from "@/hooks/api/hr/recruitment";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import type { BgvStatus as CandidateBgvStatus } from "@/types/hr";
 
 const BGV_STATUSES: Array<{ value: BgvStatus; label: string; color: string }> = [
@@ -113,14 +114,22 @@ export function BgvTracker({
             </span>
           )}
           {bgvAgency && !editing && (
-            <span>
-              Agency: <strong className="text-foreground">{bgvAgency}</strong>
+            <span className="flex items-center gap-1 min-w-0">
+              Agency:{" "}
+              <TruncatedText
+                text={bgvAgency}
+                className="font-semibold text-foreground"
+              />
             </span>
           )}
         </div>
 
         {bgvNotes && !editing && (
-          <p className="text-xs text-muted-foreground italic">{bgvNotes}</p>
+          <TruncatedText
+            text={bgvNotes}
+            lines={3}
+            className="text-xs text-muted-foreground italic"
+          />
         )}
 
         {editing && (

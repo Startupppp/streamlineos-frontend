@@ -12,7 +12,7 @@ export default function SupportLoading() {
       <div className="space-y-6">
         <StatCardGridSkeleton cols={4} count={4} />
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-12">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-12">
           <Card className="lg:col-span-5">
             <CardHeader><Skeleton className="h-5 w-48" /></CardHeader>
             <CardContent className="flex items-center justify-center py-4">
@@ -25,7 +25,7 @@ export default function SupportLoading() {
           </Card>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <Card>
             <CardHeader><Skeleton className="h-5 w-32" /></CardHeader>
             <CardContent className="space-y-3">

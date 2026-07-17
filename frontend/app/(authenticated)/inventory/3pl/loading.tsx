@@ -9,7 +9,7 @@ export default function ThreePlLoading() {
       subtitle="Manage third-party logistics provider connections"
       actions={<Skeleton className="h-9 w-36" />}
     >
-      <DataTableSkeleton rows={6} className="flex-1 min-h-0" />
+      <DataTableSkeleton rows={10} columns={7} className="flex-1 min-h-0" />
     </PageWrapper>
   );
 }

@@ -1,5 +1,6 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 
 export default function InterviewsLoading() {
   return (
@@ -16,26 +17,19 @@ export default function InterviewsLoading() {
         </div>
       }
     >
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col space-y-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-16 rounded-lg" />
-          ))}
-        </div>
-        <div className="space-y-3">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <div key={i} className="rounded-xl border border-border bg-card p-4 space-y-2 shadow-sm">
-              <div className="flex items-start justify-between gap-3">
-                <Skeleton className="h-5 w-48" />
-                <Skeleton className="h-5 w-16 rounded-full" />
-              </div>
-              <div className="flex gap-3">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-4 w-32" />
-              </div>
+            <div key={i} className="bg-muted/40 rounded-lg p-3 text-center space-y-1.5">
+              <Skeleton className="h-5 w-8 mx-auto" />
+              <Skeleton className="h-3 w-12 mx-auto" />
             </div>
           ))}
         </div>
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-8 w-32 rounded-lg" />
+        </div>
+        <DataTableSkeleton rows={12} columns={6} className="flex-1 min-h-0" />
       </div>
     </PageWrapper>
   );

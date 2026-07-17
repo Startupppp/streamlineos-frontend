@@ -1,7 +1,7 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PM_TOOLBAR, PmPageShell, PmPanel } from "@/features/projects/shared/pm-chrome";
+import { PM_TOOLBAR, PmPageShell, PmSection } from "@/features/projects/shared/pm-chrome";
 import { cn } from "@/lib/utils";
 
 export default function ProjectFormsLoading() {
@@ -20,9 +20,9 @@ export default function ProjectFormsLoading() {
       actions={<Skeleton className="h-9 w-24 rounded-md" />}
     >
       <PmPageShell>
-        <PmPanel className="min-w-0">
+        <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
           <DataTableSkeleton rows={12} columns={6} />
-        </PmPanel>
+        </PmSection>
       </PmPageShell>
     </PageWrapper>
   );

@@ -63,6 +63,7 @@ import {
   viewSwapReduced,
 } from "@/features/projects/shared/pm-motion";
 import { PM_PANEL, PM_TOOLBAR } from "@/features/projects/shared/pm-chrome";
+import { ProjectAiMenu } from "@/features/projects/ai/project-ai-menu";
 import { cn } from "@/lib/utils";
 
 interface PageProps {
@@ -576,12 +577,15 @@ export default function ProjectBoardPage({ params }: PageProps) {
       contentClassName="!p-0 flex flex-col"
       className="relative"
       actions={
-        <CreateTicketDialog
-          projectId={projectId}
-          defaultCycleId={createDefaultCycleId}
-          externalOpen={createParamOpen}
-          onExternalOpenChange={handleCreateOpenChange}
-        />
+        <div className="flex items-center gap-2">
+          <ProjectAiMenu projectId={projectId} />
+          <CreateTicketDialog
+            projectId={projectId}
+            defaultCycleId={createDefaultCycleId}
+            externalOpen={createParamOpen}
+            onExternalOpenChange={handleCreateOpenChange}
+          />
+        </div>
       }
       filters={
         <div className={cn(PM_TOOLBAR)}>

@@ -497,3 +497,16 @@
 [2026-07-17T02:56:21.070Z] [INFO] Worker map completed in 2ms
 [2026-07-17T02:56:21.073Z] [INFO] Starting worker: optimize (1/2 concurrent)
 [2026-07-17T02:56:21.073Z] [INFO] Worker optimize completed in 1ms
+[2026-07-17T03:01:20.939Z] [INFO] Starting worker: testgaps (1/2 concurrent)
+[2026-07-17T03:01:20.940Z] [INFO] Worker testgaps completed in 3ms
+[2026-07-17T03:03:35.899Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-17T03:03:35.900Z] [INFO] Worker audit completed in 3ms
+[2026-07-17T03:06:26.735Z] [INFO] Daemon self-shutdown: max age 43200s reached
+[2026-07-17T03:06:26.765Z] [INFO] Stopped worker: map
+[2026-07-17T03:06:26.766Z] [INFO] Stopped worker: audit
+[2026-07-17T03:06:26.766Z] [INFO] Stopped worker: optimize
+[2026-07-17T03:06:26.767Z] [INFO] Stopped worker: consolidate
+[2026-07-17T03:06:26.767Z] [INFO] Stopped worker: testgaps
+[2026-07-17T03:06:26.768Z] [INFO] Stopped worker: backup
+[2026-07-17T03:06:26.774Z] [INFO] Stopped worker: harness
+[2026-07-17T03:06:26.781Z] [INFO] Daemon stopped

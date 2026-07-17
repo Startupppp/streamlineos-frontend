@@ -97,7 +97,7 @@ function DeliveryRow({ delivery }: { delivery: WebhookDelivery }) {
     <div className="py-2 px-3 border-b last:border-0">
       <div className="flex items-center gap-3 text-sm">
         <div className={cn("h-2 w-2 rounded-full shrink-0", statusColor)} />
-        <span className="flex-1 font-mono text-xs text-muted-foreground truncate">
+        <span className="min-w-0 flex-1 font-mono text-xs text-muted-foreground truncate" title={delivery.event}>
           {delivery.event}
         </span>
         <Badge variant="outline" className="text-[10px] shrink-0 font-mono">
@@ -113,7 +113,7 @@ function DeliveryRow({ delivery }: { delivery: WebhookDelivery }) {
         </span>
       </div>
       {delivery.lastError && delivery.status === "failed" && (
-        <p className="mt-0.5 ml-5 text-[10px] text-red-500 truncate">{delivery.lastError}</p>
+        <p className="mt-0.5 ml-5 text-[10px] text-red-500 truncate" title={delivery.lastError}>{delivery.lastError}</p>
       )}
     </div>
   );

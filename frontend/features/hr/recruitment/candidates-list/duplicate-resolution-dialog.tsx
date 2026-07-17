@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useLinkDuplicateCandidate, type DuplicateCandidateGroup } from "@/hooks/api/hr/recruitment";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { formatDistanceToNow } from "date-fns";
 
 interface DuplicateResolutionDialogProps {
@@ -60,19 +61,28 @@ export function DuplicateResolutionDialog({ group, onClose }: DuplicateResolutio
                   isKept ? "border-brand-core bg-primary/5" : "border-border hover:bg-muted/40"
                 }`}
               >
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <span className="text-sm font-semibold text-foreground">
-                    {c.firstName} {c.lastName}
-                  </span>
-                  {isKept && <Badge className="text-[10px]">Keep this one</Badge>}
+                <div className="flex items-center justify-between gap-2 mb-2 min-w-0">
+                  <TruncatedText
+                    text={`${c.firstName} ${c.lastName}`}
+                    className="text-sm font-semibold text-foreground min-w-0 flex-1"
+                  />
+                  {isKept && <Badge className="text-[10px] shrink-0">Keep this one</Badge>}
                   {c.duplicateOfId && (
-                    <Badge variant="outline" className="text-[10px]">
+                    <Badge variant="outline" className="text-[10px] shrink-0">
                       Already linked
                     </Badge>
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground">{c.email}</p>
-                {c.phone && <p className="text-xs text-muted-foreground">{c.phone}</p>}
+                <TruncatedText
+                  text={c.email ?? ""}
+                  className="text-xs text-muted-foreground break-all"
+                />
+                {c.phone && (
+                  <TruncatedText
+                    text={c.phone}
+                    className="text-xs text-muted-foreground"
+                  />
+                )}
                 <p className="text-xs text-muted-foreground mt-1">Status: {c.status}</p>
                 <p className="text-[11px] text-muted-foreground/70 mt-1">
                   Added {formatDistanceToNow(new Date(c.createdAt), { addSuffix: true })}

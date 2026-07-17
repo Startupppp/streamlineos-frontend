@@ -1,35 +1,27 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 
 export default function HrSafetyLoading() {
   return (
     <PageWrapper
       title="Health, Safety & Wellness"
       subtitle="Track workplace incidents and monitor employee wellbeing"
+      actions={<Skeleton className="h-9 w-36 rounded-md" />}
       filters={
-        <div className={FILTER_TOOLBAR_ROW}>
-          <Skeleton className="h-9 w-44 rounded-md" />
-          <Skeleton className="h-9 w-40 rounded-md" />
-          <Skeleton className="h-9 w-36 rounded-md" />
+        <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto [&>*]:shrink-0">
+          <Skeleton className="h-8 w-44 rounded-md" />
+          <Skeleton className="h-8 w-40 rounded-md" />
+          <Skeleton className="h-8 w-36 rounded-md" />
         </div>
       }
     >
-      <div className="rounded-xl border border-border bg-card overflow-hidden flex-1">
-        <div className="flex items-center gap-4 px-6 py-3 border-b bg-muted/30">
-          <Skeleton className="h-4 w-32" />
-          <Skeleton className="h-4 w-24 ml-auto" />
-          <Skeleton className="h-4 w-20" />
-          <Skeleton className="h-4 w-20" />
+      <div className="flex min-h-0 flex-1 flex-col pb-6">
+        <div className="flex items-center gap-1 border-b mb-4">
+          <Skeleton className="h-8 w-20 rounded-none" />
+          <Skeleton className="h-8 w-20 rounded-none" />
         </div>
-        {Array.from({ length: 10 }).map((_, i) => (
-          <div key={i} className="flex items-center gap-4 px-6 py-4 border-b last:border-b-0">
-            <Skeleton className="h-4 w-36" />
-            <Skeleton className="h-4 w-24 ml-auto" />
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-5 w-16 rounded-full" />
-          </div>
-        ))}
+        <DataTableSkeleton rows={12} columns={6} />
       </div>
     </PageWrapper>
   );

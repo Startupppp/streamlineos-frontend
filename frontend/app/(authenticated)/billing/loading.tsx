@@ -8,7 +8,7 @@ export default function BillingLoading() {
       subtitle="Manage your subscription, payments, and billing details"
     >
       <div className="flex flex-col flex-1 min-h-0 gap-4">
-        <div className="flex border-b border-border gap-6 shrink-0">
+        <div className="flex border-b border-border gap-0 shrink-0 mb-5">
           <Skeleton className="h-9 w-28" />
           <Skeleton className="h-9 w-40" />
           <Skeleton className="h-9 w-24" />

@@ -15,7 +15,7 @@ export default function ShipmentsLoading() {
         </div>
       }
     >
-      <DataTableSkeleton rows={10} className="flex-1 min-h-0" />
+      <DataTableSkeleton rows={10} columns={6} className="flex-1 min-h-0" />
     </PageWrapper>
   );
 }

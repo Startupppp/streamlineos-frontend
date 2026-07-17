@@ -1,5 +1,7 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent } from "@/components/ui/card";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export function ReimbursementsPageSkeleton() {
@@ -15,30 +17,13 @@ export function ReimbursementsPageSkeleton() {
         </div>
       }
     >
-      <div className="space-y-3">
-        <Skeleton className="h-16 w-full rounded-xl" />
-        <div className="rounded-xl border border-border bg-card">
-          <div className="border-b border-border px-4 py-2.5 flex gap-4">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-3 w-20" />
-            ))}
-          </div>
-          <div className="divide-y divide-border">
-            {Array.from({ length: 9 }).map((_, i) => (
-              <div key={i} className="flex gap-4 px-4 py-3 items-center">
-                <div className="flex flex-col gap-1 flex-1">
-                  <Skeleton className="h-3 w-28" />
-                  <Skeleton className="h-2.5 w-36" />
-                </div>
-                <Skeleton className="h-5 w-20 rounded-full" />
-                <Skeleton className="h-3 w-16" />
-                <Skeleton className="h-3 w-12" />
-                <Skeleton className="h-5 w-16 rounded-full" />
-                <Skeleton className="h-3 w-20" />
-              </div>
-            ))}
-          </div>
-        </div>
+      <div className="flex flex-1 min-h-0 flex-col gap-3">
+        <Skeleton className="h-9 w-full rounded-lg shrink-0" />
+        <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
+          <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
+            <DataTableSkeleton rows={12} columns={7} />
+          </CardContent>
+        </Card>
       </div>
     </PageWrapper>
   );

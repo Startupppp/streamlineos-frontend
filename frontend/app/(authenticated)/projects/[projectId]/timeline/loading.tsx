@@ -12,27 +12,17 @@ export default function TimelineLoading() {
   return (
     <PageWrapper
       title="Timeline"
-      subtitle="Visual schedule of work items, dependencies, and milestones"
       noInternalScroll
       contentClassName="!p-0"
     >
-      <PmPageShell className={cn(PAGE_CHROME_X, "h-full min-h-0 pb-4 pt-0")}>
+      <PmPageShell className={cn(PAGE_CHROME_X, "min-h-0 pt-0")}>
         <div className={cn(PM_TOOLBAR, "mb-2")}>
-          <div className="flex items-center gap-2">
-            <Skeleton className="h-9 w-44 rounded-md" />
-            <Skeleton className="h-9 w-32 rounded-md" />
-            <Skeleton className="ml-auto h-9 w-9 rounded-md" />
-          </div>
+          <div className="h-10 w-full animate-pulse rounded-md bg-muted/40" />
         </div>
         <PmPanel className="flex min-h-0 flex-1 flex-col p-3">
-          <div className="mb-3 flex items-center gap-2 border-b border-border/50 pb-2">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <Skeleton key={i} className="h-3.5 w-12 shrink-0" />
-            ))}
-          </div>
-          {Array.from({ length: 12 }).map((_, i) => (
+          {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="flex items-center gap-3 py-1.5">
-              <Skeleton className="h-4 w-28 shrink-0 rounded-md sm:w-40" />{" "}
+              <Skeleton className="h-4 w-28 shrink-0 rounded-md sm:w-40" />
               <Skeleton
                 className="h-7 rounded-md"
                 style={{

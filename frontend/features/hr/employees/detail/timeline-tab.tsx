@@ -3,6 +3,7 @@
 import { useEmployeeEmployment, useEmployeeTimeline } from "@/hooks/api/hr/employees";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
@@ -81,19 +82,19 @@ export function EmployeeTimelineTab({ userId }: Props) {
             </div>
             <Card className="flex-1 rounded-xl border border-border bg-card shadow-sm">
               <CardContent className="p-3">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="text-sm font-medium text-foreground leading-snug">{entry.action}</p>
+                <div className="flex items-start justify-between gap-2 min-w-0">
+                  <TruncatedText text={entry.action} className="text-sm font-medium text-foreground leading-snug min-w-0 flex-1" />
                   <span className="shrink-0 text-[11px] text-muted-foreground whitespace-nowrap">
                     {format(new Date(entry.createdAt), "MMM d, yyyy")}
                   </span>
                 </div>
                 {entry.data && Object.keys(entry.data).length > 0 && (
-                  <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
+                  <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 min-w-0">
                     {Object.entries(entry.data)
                       .filter(([, v]) => v != null && v !== "")
                       .slice(0, 4)
                       .map(([k, v]) => (
-                        <span key={k} className="text-[11px] text-muted-foreground">
+                        <span key={k} className="text-[11px] text-muted-foreground break-words max-w-[18rem]">
                           <span className="font-medium capitalize">{k.replace(/([A-Z])/g, " $1").trim()}: </span>
                           {String(v)}
                         </span>

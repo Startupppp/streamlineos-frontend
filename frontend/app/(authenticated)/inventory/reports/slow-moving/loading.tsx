@@ -11,11 +11,11 @@ export default function SlowMovingReportLoading() {
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
           <Skeleton className="h-9 w-[180px]" />
+          <Skeleton className="h-9 w-32" />
         </div>
       }
-      actions={<Skeleton className="h-9 w-32" />}
     >
-      <DataTableSkeleton rows={10} className="flex-1 min-h-0" />
+      <DataTableSkeleton rows={10} columns={6} className="flex-1 min-h-0" />
     </PageWrapper>
   );
 }

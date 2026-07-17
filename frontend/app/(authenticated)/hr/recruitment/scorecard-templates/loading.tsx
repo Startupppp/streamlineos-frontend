@@ -5,7 +5,7 @@ export default function ScorecardTemplatesLoading() {
   return (
     <PageWrapper
       title="Scorecard Templates"
-      subtitle="Configure interview scorecards and evaluation criteria"
+      subtitle="Define evaluation criteria for each interview round"
       actions={<Skeleton className="h-9 w-[120px] rounded-md" />}
     >
       <div className="grid gap-4 sm:grid-cols-2">

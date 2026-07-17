@@ -16,13 +16,12 @@ export default function PortalLoading() {
               <div className="flex items-center gap-2">
                 <Skeleton className="h-9 w-9 rounded-lg" />
                 <div className="min-w-0 flex-1 space-y-1.5">
-                  <Skeleton className="h-4 w-28" />
-                  <Skeleton className="h-3 w-12" />
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-3 w-16" />
                 </div>
               </div>
               <div className="flex gap-2">
-                <Skeleton className="h-5 w-16 rounded-full" />
-                <Skeleton className="h-5 w-24 rounded-full" />
+                <Skeleton className="h-5 w-20 rounded-full" />
               </div>
             </div>
           ))}

@@ -23,6 +23,10 @@ import { CoverImageUpload } from "./cover-image-upload";
 import { useCreatePost, useUpdatePost } from "@/hooks/api/blog";
 import type { PostPayload } from "@/types/blog";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { AiActionsMenu } from "@/components/ai";
+import type { AiAction } from "@/components/ai";
+import { useCan } from "@/hooks/api/access";
+import { blogAiImproveWriting, blogAiSuggestTitle, blogAiSummarize } from "@/hooks/api/blog-ai";
 
 const formSchema = z.object({
   title: z.string().min(1, "Title is required").max(256),
@@ -102,8 +106,50 @@ export function BlogPostForm({
     },
   });
 
+  const canUseAi = useCan("blog:ai:use");
   const coverImage = watch("coverImage");
+  const currentContent = watch("content");
+  const currentTitle = watch("title");
+  const currentExcerpt = watch("excerpt");
   const saving = createPost.isPending || updatePost.isPending;
+
+  const aiActions: AiAction[] = postId
+    ? [
+        {
+          key: "improve-writing",
+          label: "Improve writing",
+          description: "Rewrite for clarity and engagement",
+          run: async () => {
+            const res = await blogAiImproveWriting(postId, currentContent);
+            return { text: res.content };
+          },
+          onApply: (text) => setValue("content", text, { shouldValidate: true }),
+          applyLabel: "Apply to content",
+        },
+        {
+          key: "suggest-title",
+          label: "Suggest title",
+          description: "Generate a compelling title",
+          run: async () => {
+            const res = await blogAiSuggestTitle(postId, currentContent, currentExcerpt);
+            return { text: res.title };
+          },
+          onApply: (text) => setValue("title", text, { shouldValidate: true }),
+          applyLabel: "Use this title",
+        },
+        {
+          key: "summarize",
+          label: "Generate excerpt",
+          description: "Summarize content into an excerpt",
+          run: async () => {
+            const res = await blogAiSummarize(postId, currentContent);
+            return { text: res.excerpt };
+          },
+          onApply: (text) => setValue("excerpt", text, { shouldValidate: true }),
+          applyLabel: "Use as excerpt",
+        },
+      ]
+    : [];
 
   async function onSubmit(values: FormValues) {
     const payload: PostPayload = {
@@ -198,6 +244,15 @@ export function BlogPostForm({
           />
 
           <div className="flex flex-col gap-2 pt-1">
+            {canUseAi && aiActions.length > 0 && (
+              <AiActionsMenu
+                actions={aiActions}
+                triggerLabel="AI assist"
+                menuLabel="Blog AI"
+                align="end"
+                className="w-full justify-start"
+              />
+            )}
             <Button type="submit" disabled={saving}>
               {saving ? "Saving…" : mode === "create" ? "Create post" : "Save changes"}
             </Button>

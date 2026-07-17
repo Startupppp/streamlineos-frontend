@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useIntegrationConnections,
@@ -92,7 +93,10 @@ function AppCard({
         </div>
         <p className="text-xs text-muted-foreground">{config.description}</p>
         {connection?.accountEmail && (
-          <p className="text-[11px] text-muted-foreground font-mono">{connection.accountEmail}</p>
+          <TruncatedText
+            text={connection.accountEmail}
+            className="text-[11px] text-muted-foreground font-mono min-w-0 break-all"
+          />
         )}
       </div>
       <div className="shrink-0">

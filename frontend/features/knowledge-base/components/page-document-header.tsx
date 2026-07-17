@@ -259,11 +259,12 @@ export default function PageDocumentHeader({
             Wiki
           </Link>
           {ancestors.map((a) => (
-            <span key={a.id} className="flex items-center gap-1 shrink-0">
-              <KbChevronRightIcon className="h-3 w-3" />
+            <span key={a.id} className="flex items-center gap-1 min-w-0">
+              <KbChevronRightIcon className="h-3 w-3 shrink-0" />
               <Link
                 href={pageHref(a.id)}
-                className="hover:text-foreground transition-colors truncate max-w-[120px]"
+                className="hover:text-foreground transition-colors truncate max-w-[120px] min-w-0"
+                title={a.title || "Untitled"}
               >
                 {a.title || "Untitled"}
               </Link>

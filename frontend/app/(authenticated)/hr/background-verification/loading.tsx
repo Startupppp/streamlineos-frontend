@@ -1,4 +1,5 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function BackgroundVerificationLoading() {
@@ -10,11 +11,7 @@ export default function BackgroundVerificationLoading() {
     >
       <div className="flex flex-col flex-1 min-h-0 gap-4">
         <Skeleton className="h-9 w-64 rounded-md" />
-        <div className="space-y-2">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <Skeleton key={i} className="h-12 w-full rounded-lg" />
-          ))}
-        </div>
+        <DataTableSkeleton rows={12} columns={7} className="flex-1 min-h-0" />
       </div>
     </PageWrapper>
   );

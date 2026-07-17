@@ -71,7 +71,7 @@ export function ContactTableView({
         c.email ? (
           <a
             href={`mailto:${c.email}`}
-            className="text-primary hover:underline truncate block max-w-[140px]"
+            className="text-primary hover:underline block max-w-[140px] break-all text-xs"
           >
             {c.email}
           </a>

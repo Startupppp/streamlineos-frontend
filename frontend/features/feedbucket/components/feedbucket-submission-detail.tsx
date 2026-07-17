@@ -292,9 +292,9 @@ export function FeedbucketSubmissionDetail({ submissionId }: FeedbucketSubmissio
       {submission.reporterName || submission.reporterEmail ? (
         <div className="rounded-xl border border-border bg-card p-4 space-y-2">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Reporter</p>
-          {submission.reporterName && <p className="text-sm text-foreground">{submission.reporterName}</p>}
+          {submission.reporterName && <TruncatedText text={submission.reporterName} className="text-sm text-foreground" />}
           {submission.reporterEmail && (
-            <p className="text-sm text-muted-foreground">{submission.reporterEmail}</p>
+            <p className="text-sm text-muted-foreground break-all">{submission.reporterEmail}</p>
           )}
         </div>
       ) : null}

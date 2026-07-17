@@ -9,6 +9,7 @@ import { PayrollStatusBadge, formatMoney } from "@/features/payroll/shared";
 import type { SalaryComponent } from "@/types/payroll/setup";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { ComponentTypeBadge } from "./component-type-badge";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const ValueCell = memo(function ValueCell({ row }: { row: SalaryComponent }) {
   if (row.amount) {
@@ -32,9 +33,9 @@ export function buildComponentColumns(
       key: "name",
       header: "Name / Code",
       cell: (row) => (
-        <div>
-          <p className="text-sm font-medium">{row.name}</p>
-          <p className="text-xs text-muted-foreground font-mono">{row.code}</p>
+        <div className="min-w-0">
+          <TruncatedText text={row.name} className="min-w-0 text-sm font-medium" />
+          <TruncatedText text={row.code} className="min-w-0 text-xs text-muted-foreground font-mono" />
         </div>
       ),
     },

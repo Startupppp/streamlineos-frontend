@@ -180,8 +180,8 @@ export const InlineAssignee = memo(function InlineAssignee({
                       <AvatarImage src={resolveImageUrl(m.image)} />
                       <AvatarFallback className="text-[7px]">{getUserInitials(m)}</AvatarFallback>
                     </Avatar>
-                    <span className="truncate text-xs">{getUserDisplayName(m)}</span>
-                    {m.id === currentAssigneeId && <Check className="ml-auto h-3 w-3" />}
+                    <span className="min-w-0 flex-1 truncate text-xs">{getUserDisplayName(m)}</span>
+                    {m.id === currentAssigneeId && <Check className="ml-auto h-3 w-3 shrink-0" />}
                   </CommandItem>
                 ))}
               </CommandGroup>

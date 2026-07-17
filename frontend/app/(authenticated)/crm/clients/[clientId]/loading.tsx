@@ -6,13 +6,14 @@ export default function ClientDetailLoading() {
     <PageWrapper title="Client" subtitle="Loading...">
       <div className="space-y-4">
         <div className="flex items-center gap-3">
+          <Skeleton className="h-10 w-10 rounded-full shrink-0" />
           <div className="space-y-1.5">
             <Skeleton className="h-5 w-48" />
             <Skeleton className="h-4 w-28" />
           </div>
         </div>
         <div className="flex gap-2">
-          {[1, 2, 3, 4].map((i) => (
+          {Array.from({ length: 10 }).map((_, i) => (
             <Skeleton key={i} className="h-9 w-24 rounded-md" />
           ))}
         </div>

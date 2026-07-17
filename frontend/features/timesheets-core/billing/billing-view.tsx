@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { useCan } from "@/hooks/api/access";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { useBillingUninvoiced } from "@/hooks/api/timesheets-core/billing";
 import { BillingExportDialog } from "./billing-export-dialog";
 import { InvoiceDraftDialog } from "./invoice-draft-dialog";
@@ -48,7 +49,7 @@ const BILLING_COLUMNS: DataTableColumn<BillingGroup>[] = [
   {
     key: "project",
     header: "Project",
-    cell: (row) => <span className="font-medium text-[11px]">{row.projectName}</span>,
+    cell: (row) => <TruncatedText text={row.projectName} className="font-medium text-[11px]" />,
     className: "min-w-[160px]",
   },
   {

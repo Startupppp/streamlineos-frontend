@@ -21,7 +21,7 @@ export default function BacklogLoading() {
     >
       <PmPageShell>
         <PmPanel className="min-w-0">
-          <DataTableSkeleton rows={12} columns={6} />
+          <DataTableSkeleton rows={12} columns={7} />
         </PmPanel>
       </PmPageShell>
     </PageWrapper>

@@ -1,5 +1,5 @@
+import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTableSkeleton } from "@/components/ui/data-table";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 
 export default function OperationsLoading() {
@@ -9,7 +9,11 @@ export default function OperationsLoading() {
       subtitle="Operational cockpit for daily inventory workflow"
     >
       <StatCardGridSkeleton cols={4} count={4} />
-      <DataTableSkeleton rows={8} className="flex-1 min-h-0" />
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Skeleton key={i} className="h-16 rounded-lg" />
+        ))}
+      </div>
     </PageWrapper>
   );
 }

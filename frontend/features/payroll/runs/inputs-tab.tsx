@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { AlertTriangle } from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetBody } from "@/components/ui/sheet";
 import {
@@ -88,7 +89,7 @@ const COLUMNS: DataTableColumn<RunInput>[] = [
     key: "employee",
     header: "Employee",
     cell: (row) => (
-      <span className="text-[11px] font-medium">{row.userName ?? row.userId.slice(0, 8)}</span>
+      <TruncatedText text={row.userName ?? row.userId.slice(0, 8)} className="text-[11px] font-medium" />
     ),
   },
   {

@@ -1,4 +1,3 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
@@ -22,40 +21,16 @@ export default function CrmReportsLoading() {
         </div>
       }
     >
-      <div className="space-y-6">
-        <StatCardGridSkeleton cols={5} count={5} />
-
-        <Card className="shadow-sm">
-          <CardHeader>
-            <Skeleton className="h-5 w-44" />
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <Skeleton className="h-4 w-28" />
-                    <Skeleton className="h-4 w-16" />
-                  </div>
-                  <Skeleton className="h-3 w-full rounded-full" />
-                </div>
-              ))}
+      <div className="space-y-4">
+        <StatCardGridSkeleton cols={4} />
+        <div className="grid gap-3 md:grid-cols-2">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={i} className="bg-card rounded-lg border border-border shadow-sm p-4 space-y-3">
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-40 w-full" />
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm">
-          <CardHeader>
-            <Skeleton className="h-5 w-40" />
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col items-center gap-2 py-4">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Skeleton key={i} className="h-12 rounded-lg" style={{ width: `${100 - i * 16}%` }} />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+          ))}
+        </div>
       </div>
     </PageWrapper>
   );

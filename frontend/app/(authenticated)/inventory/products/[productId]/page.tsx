@@ -21,6 +21,7 @@ import { LoadingState, ErrorState } from "@/components/shared";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { useProduct, useStockLevels, type StockLevelRow } from "@/hooks/api/inventory";
 import { ProductEditForm } from "@/features/inventory/components/product-edit-form";
+import { ProductAiActions } from "@/features/inventory/components/product-ai-actions";
 import {
   AddVariantSheet,
   EditVariantSheet,
@@ -284,6 +285,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
               Edit
             </Button>
           )}
+          <ProductAiActions product={product} />
           {<BackLink />}
         </div>
       }

@@ -1,7 +1,7 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTableSkeleton } from "@/components/ui/data-table";
-import { PM_TOOLBAR, PmPageShell, PmPanel } from "@/features/projects/shared/pm-chrome";
+import { PM_TOOLBAR, PmPageShell, PmSection } from "@/features/projects/shared/pm-chrome";
 import { cn } from "@/lib/utils";
 
 export default function ChangeRequestsLoading() {
@@ -13,15 +13,15 @@ export default function ChangeRequestsLoading() {
         <div className={cn(PM_TOOLBAR)}>
           <div className="flex items-center gap-2">
             <Skeleton className="h-9 w-44 rounded-md" />
-            <Skeleton className="h-9 w-36 rounded-md" />
+            <Skeleton className="h-9 w-40 rounded-md" />
           </div>
         </div>
       }
     >
       <PmPageShell>
-        <PmPanel solid className="min-w-0">
+        <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
           <DataTableSkeleton rows={12} columns={7} />
-        </PmPanel>
+        </PmSection>
       </PmPageShell>
     </PageWrapper>
   );

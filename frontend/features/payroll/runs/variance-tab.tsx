@@ -5,6 +5,7 @@ import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useRunVariance } from "@/hooks/api/payroll/run-employees";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { TrendingUp } from "lucide-react";
 
 interface VarianceTabProps {
@@ -84,7 +85,7 @@ export function VarianceTab({ runId }: VarianceTabProps) {
                 idx > 0 && "border-t border-border",
               )}
             >
-              <span className="text-foreground font-medium">{emp.userName}</span>
+              <TruncatedText text={emp.userName} className="text-foreground font-medium min-w-0 flex-1" />
               <span className="font-mono tabular-nums text-foreground">
                 {formatMoney(emp.net)}
               </span>

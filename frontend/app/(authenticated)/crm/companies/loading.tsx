@@ -15,7 +15,7 @@ export default function CompaniesLoading() {
         </div>
       }
     >
-      <DataTableSkeleton rows={12} columns={6} className="flex-1" />
+      <DataTableSkeleton rows={12} columns={7} className="flex-1" />
     </PageWrapper>
   );
 }

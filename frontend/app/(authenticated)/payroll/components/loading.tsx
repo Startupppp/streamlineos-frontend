@@ -17,7 +17,7 @@ export function ComponentsPageSkeleton() {
         </div>
       }
     >
-      <DataTableSkeleton rows={12} columns={4} />
+      <DataTableSkeleton rows={12} columns={5} />
     </PageWrapper>
   );
 }

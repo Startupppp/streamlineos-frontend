@@ -249,13 +249,13 @@ export function LeadDetailSheet({
                 </p>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                   {lead.email && (
-                    <div className="flex items-center gap-2.5 text-sm">
+                    <div className="flex items-center gap-2.5 text-sm min-w-0">
                       <div className="w-7 rounded-md bg-muted/50 flex items-center justify-center shrink-0">
                         <Mail className="h-3.5 w-3.5 text-muted-foreground" />
                       </div>
                       <a
                         href={`mailto:${lead.email}`}
-                        className="text-primary hover:underline truncate text-sm"
+                        className="text-primary hover:underline break-all text-sm min-w-0"
                       >
                         {lead.email}
                       </a>
@@ -342,11 +342,11 @@ export function LeadDetailSheet({
                         {getInitials(lead.assignedTo.name ?? "")}
                       </AvatarFallback>
                     </Avatar>
-                    <div>
-                      <p className="text-sm font-medium">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium truncate">
                         {lead.assignedTo.name}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-muted-foreground break-all">
                         {lead.assignedTo.email}
                       </p>
                     </div>

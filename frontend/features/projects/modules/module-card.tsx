@@ -206,9 +206,9 @@ export const ModuleCard = memo(function ModuleCard({
               </div>
 
               {(mod.startDate || mod.endDate) ? (
-                <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                <p className="flex min-w-0 items-center gap-1.5 text-[11px] text-muted-foreground">
                   <Calendar className="h-3 w-3 shrink-0 opacity-70" aria-hidden="true" />
-                  <span className="truncate">
+                  <span className="min-w-0 truncate">
                     {formatModuleDate(mod.startDate)} — {formatModuleDate(mod.endDate)}
                   </span>
                 </p>

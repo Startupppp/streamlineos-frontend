@@ -1,7 +1,7 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
-import { PmPageShell, PmSection } from "@/features/projects/shared/pm-chrome";
+import { PmPageShell, PmPanel, PmSection } from "@/features/projects/shared/pm-chrome";
 
 export default function MyWorkLoading() {
   return (
@@ -11,11 +11,19 @@ export default function MyWorkLoading() {
           <StatCardGridSkeleton cols={4} className="mb-4" />
         </PmSection>
         <PmSection index={1}>
-          <div className="space-y-2">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <Skeleton key={i} className="h-12 w-full rounded-md" />
-            ))}
+          <div className="flex gap-1">
+            <Skeleton className="h-7 w-20 rounded-md" />
+            <Skeleton className="h-7 w-20 rounded-md" />
+            <Skeleton className="h-7 w-24 rounded-md" />
+            <Skeleton className="h-7 w-20 rounded-md" />
           </div>
+          <PmPanel className="p-2">
+            <div className="space-y-1.5">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <Skeleton key={i} className="h-10 w-full rounded-md" />
+              ))}
+            </div>
+          </PmPanel>
         </PmSection>
       </PmPageShell>
     </PageWrapper>

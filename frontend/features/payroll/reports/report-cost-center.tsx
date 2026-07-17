@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { usePayrollCostCenter } from "@/hooks/api/payroll/reports";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import type { CostCenterRow } from "@/types/payroll/reports";
 
 interface ReportCostCenterProps {
@@ -19,7 +20,7 @@ const COLUMNS: DataTableColumn<CostCenterRow>[] = [
   {
     key: "costCenter",
     header: "Cost Center",
-    cell: (row) => <span className="text-[11px] font-medium">{row.costCenter}</span>,
+    cell: (row) => <TruncatedText text={row.costCenter ?? ""} className="text-[11px] font-medium" />,
   },
   {
     key: "employeeCount",

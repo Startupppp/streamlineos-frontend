@@ -1,6 +1,7 @@
-import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { DataTableSkeleton } from "@/components/ui/data-table";
+import { Skeleton } from "@/components/ui/skeleton";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export default function HrAssetsLoading() {
@@ -22,8 +23,9 @@ export default function HrAssetsLoading() {
         </div>
       }
     >
-      <div className="space-y-4">
-        <DataTableSkeleton rows={10} columns={6} />
+      <div className="flex flex-1 min-h-0 flex-col space-y-4">
+        <StatCardGridSkeleton cols={4} count={4} />
+        <DataTableSkeleton rows={10} columns={7} className="flex-1 min-h-0" />
       </div>
     </PageWrapper>
   );

@@ -260,7 +260,7 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
                   <Link key={cycle.id} href={`/projects/${projectId}/cycles/${cycle.id}`}>
                     <div className="bg-card border border-border rounded-lg p-4 hover:border-primary/50 transition-colors cursor-pointer">
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="min-w-0 font-semibold text-sm line-clamp-1 break-all">{cycle.name}</span>
+                        <span className="min-w-0 font-semibold text-sm truncate" title={cycle.name}>{cycle.name}</span>
                         <Badge className="shrink-0 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
                           Active
                         </Badge>
@@ -310,7 +310,7 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
                   <Link key={cycle.id} href={`/projects/${projectId}/cycles/${cycle.id}`}>
                     <div className="bg-card border border-border rounded-lg p-4 hover:border-primary/50 transition-colors cursor-pointer flex items-center justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="font-semibold text-sm line-clamp-1 break-all">{cycle.name}</p>
+                        <p className="font-semibold text-sm truncate" title={cycle.name}>{cycle.name}</p>
                         <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
                           <Clock className="h-3 w-3 shrink-0" />
                           {new Date(cycle.startDate).toLocaleDateString()} — {new Date(cycle.endDate).toLocaleDateString()}
@@ -356,7 +356,7 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
                           "opacity-70 hover:opacity-100"
                         )}>
                           <div className="min-w-0">
-                            <p className="font-semibold text-sm line-clamp-1 break-all">{cycle.name}</p>
+                            <p className="font-semibold text-sm truncate" title={cycle.name}>{cycle.name}</p>
                             <p className="text-xs text-muted-foreground mt-0.5">
                               {cycle.completedItems}/{cycle.totalItems} items completed
                             </p>

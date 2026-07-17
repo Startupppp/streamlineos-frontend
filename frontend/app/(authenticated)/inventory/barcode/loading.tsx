@@ -9,8 +9,8 @@ export default function BarcodeLoading() {
     >
       <div className="space-y-4">
         <div className="flex gap-2">
-          <Skeleton className="h-10 flex-1" />
-          <Skeleton className="h-10 w-24" />
+          <Skeleton className="h-9 flex-1" />
+          <Skeleton className="h-9 w-24" />
         </div>
         <Skeleton className="h-20 w-full rounded-xl" />
       </div>

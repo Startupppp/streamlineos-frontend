@@ -315,9 +315,9 @@ export const KanbanCard = memo(function KanbanCard({
                   </div>
 
                   {lead.company && (
-                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                      <Building2 className="h-3 w-3" />
-                      {lead.company}
+                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5 min-w-0">
+                      <Building2 className="h-3 w-3 shrink-0" />
+                      <span className="truncate">{lead.company}</span>
                     </p>
                   )}
 

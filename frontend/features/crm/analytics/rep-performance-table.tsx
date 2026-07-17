@@ -1,6 +1,7 @@
 "use client";
 
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { AnalyticsChartCard } from "./analytics-chart-card";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 
@@ -24,9 +25,9 @@ const columns: DataTableColumn<RankedRepEntry>[] = [
     key: "rep",
     header: "Rep",
     cell: (row) => (
-      <span className="text-[11px] font-medium">
-        <span className="mr-1.5 text-muted-foreground">{row.rank}.</span>
-        {row.name}
+      <span className="text-[11px] font-medium flex items-center min-w-0">
+        <span className="mr-1.5 text-muted-foreground shrink-0">{row.rank}.</span>
+        <TruncatedText text={row.name} className="max-w-[120px]" />
       </span>
     ),
   },

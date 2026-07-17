@@ -17,7 +17,7 @@ export default function TimesheetApprovalsLoading() {
         </div>
       }
     >
-      <DataTableSkeleton rows={12} columns={5} />
+      <DataTableSkeleton rows={12} columns={6} />
     </PageWrapper>
   );
 }

@@ -161,12 +161,12 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
       <Sheet open={!!event} onOpenChange={(v) => !v && onClose()}>
         <SheetContent className="flex flex-col p-0 w-[360px] sm:max-w-[360px]">
           <SheetHeader className="px-5 py-4 border-b shrink-0">
-            <SheetTitle className="text-sm font-semibold flex items-center gap-2">
+            <SheetTitle className="text-sm font-semibold flex items-center gap-2 min-w-0">
               <span
                 className="h-3 w-3 rounded-full shrink-0"
                 style={{ backgroundColor: colorHex }}
               />
-              {event?.title ?? ""}
+              <TruncatedText text={event?.title ?? ""} className="min-w-0 flex-1" />
             </SheetTitle>
           </SheetHeader>
           <ScrollArea className="flex-1 min-h-0">

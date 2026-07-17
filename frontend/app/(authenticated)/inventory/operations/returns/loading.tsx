@@ -1,19 +1,14 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTableSkeleton } from "@/components/ui/data-table";
-import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export default function ReturnsLoading() {
   return (
-    <PageWrapper
-      title="Returns"
-      filters={
-        <div className={FILTER_TOOLBAR_ROW}>
-          <Skeleton className="h-9 flex-1" />
-        </div>
-      }
-    >
-      <DataTableSkeleton rows={10} className="flex-1 min-h-0" />
+    <PageWrapper title="Returns">
+      <div className="space-y-4">
+        <Skeleton className="h-9 w-[240px]" />
+        <DataTableSkeleton rows={8} columns={5} />
+      </div>
     </PageWrapper>
   );
 }

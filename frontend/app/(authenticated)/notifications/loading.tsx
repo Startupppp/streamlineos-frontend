@@ -1,5 +1,6 @@
-import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Skeleton } from "@/components/ui/skeleton";
+import { NotificationListSkeleton } from "@/features/notifications/notification-list-skeleton";
 
 export default function NotificationsLoading() {
   return (
@@ -16,21 +17,7 @@ export default function NotificationsLoading() {
         </div>
       }
     >
-      <div className="space-y-1.5">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <div key={i} className="flex items-start gap-3 px-3 py-2.5 rounded-lg border border-border bg-card">
-            <Skeleton className="h-8 w-8 rounded-lg shrink-0" />
-            <div className="flex-1 space-y-1.5 min-w-0">
-              <div className="flex items-center gap-2">
-                <Skeleton className="h-3.5 w-36" />
-                <Skeleton className="h-3.5 w-14 rounded-full" />
-              </div>
-              <Skeleton className="h-3 w-full max-w-xs" />
-              <Skeleton className="h-2.5 w-10" />
-            </div>
-          </div>
-        ))}
-      </div>
+      <NotificationListSkeleton count={12} />
     </PageWrapper>
   );
 }

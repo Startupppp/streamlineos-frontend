@@ -288,7 +288,7 @@ export default function CompanyDetailPage({
                     icon={Link2}
                     label="Website"
                     value={
-                      <a href={org.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 hover:underline truncate block max-w-[180px]">
+                      <a href={org.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 hover:underline break-all">
                         {org.website}
                       </a>
                     }

@@ -30,7 +30,7 @@ export default function IncidentsLoading() {
         </PmSection>
 
         <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
-          <DataTableSkeleton rows={12} columns={7} className="flex-1" />
+          <DataTableSkeleton rows={12} columns={8} className="flex-1" />
         </PmSection>
       </PmPageShell>
     </PageWrapper>

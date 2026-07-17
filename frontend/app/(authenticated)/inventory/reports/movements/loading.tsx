@@ -14,11 +14,11 @@ export default function MovementsReportLoading() {
           <Skeleton className="h-9 w-[160px]" />
           <Skeleton className="h-9 w-[160px]" />
           <Skeleton className="h-9 w-[160px]" />
+          <Skeleton className="h-9 w-32" />
         </div>
       }
-      actions={<Skeleton className="h-9 w-32" />}
     >
-      <DataTableSkeleton rows={10} className="flex-1 min-h-0" />
+      <DataTableSkeleton rows={10} columns={10} className="flex-1 min-h-0" />
     </PageWrapper>
   );
 }

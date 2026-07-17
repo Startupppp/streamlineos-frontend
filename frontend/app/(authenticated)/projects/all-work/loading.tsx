@@ -27,9 +27,8 @@ export default function AllWorkLoading() {
           <div className="flex min-h-0 flex-col gap-2">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-1.5">
-                <Skeleton className="h-9 w-24 rounded-md" />
-                <Skeleton className="h-9 w-24 rounded-md" />
-                <Skeleton className="h-9 w-24 rounded-md" />
+                <Skeleton className="h-9 w-[110px] rounded-md" />
+                <Skeleton className="h-9 w-9 rounded-md" />
                 <Skeleton className="h-9 w-9 rounded-md" />
               </div>
               <div className="flex items-center gap-2">
@@ -42,7 +41,7 @@ export default function AllWorkLoading() {
           <PmPanel solid className="mb-2 mt-2 flex-1 overflow-auto">
             <div className="space-y-2 py-2">
               {Array.from({ length: 12 }).map((_, i) => (
-                <Skeleton key={i} className="h-11 w-full rounded-md" />
+                <Skeleton key={i} className="h-9 w-full rounded-md" />
               ))}
             </div>
           </PmPanel>

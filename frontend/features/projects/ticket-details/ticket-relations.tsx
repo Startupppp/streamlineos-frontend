@@ -20,6 +20,7 @@ import {
   Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
 } from "@/components/ui/command";
 import { toast } from "sonner";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Link2, ArrowRight, ArrowLeft, Copy, Minus } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -210,11 +211,11 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
                   if (!t) return null;
                   return (
                     <div key={r.id} className="flex items-center justify-between gap-2 py-0.5 pl-4 group">
-                      <div className="flex items-center gap-1.5 min-w-0">
+                      <div className="flex items-center gap-1.5 min-w-0 flex-1">
                         <span className="font-mono text-[10px] text-muted-foreground shrink-0">
                           #{t.ticketNumber}
                         </span>
-                        <span className="text-xs truncate">{t.title}</span>
+                        <TruncatedText text={t.title} className="min-w-0 flex-1 text-xs" />
                         {t.status && (
                           <Badge variant="outline" className="text-[9px] h-4 px-1 shrink-0">
                             {t.status}

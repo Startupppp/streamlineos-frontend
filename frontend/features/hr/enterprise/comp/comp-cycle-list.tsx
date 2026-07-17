@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { useCompCycles, type CompCycle } from "@/hooks/api/hr/enterprise-comp";
 
 interface Props {
@@ -61,9 +62,9 @@ export function CompCycleList({ onSelect }: Props) {
           onClick={() => onSelect(cycle)}
         >
           <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <p className="font-semibold text-sm">{cycle.name}</p>
-              <Badge variant={STATUS_VARIANT[cycle.status]} className="capitalize text-[11px]">{cycle.status}</Badge>
+            <div className="flex items-center gap-2 min-w-0">
+              <TruncatedText text={cycle.name} className="font-semibold text-sm min-w-0 flex-1" />
+              <Badge variant={STATUS_VARIANT[cycle.status]} className="capitalize text-[11px] shrink-0">{cycle.status}</Badge>
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">FY {cycle.fiscalYear} · Budget {formatCents(cycle.budgetPoolCents)}</p>
           </div>

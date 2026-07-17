@@ -9,11 +9,12 @@ export default function IssuesLoading() {
       title="Issues"
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
-          <Skeleton className="h-9 flex-1" />
+          <Skeleton className="h-9 w-36" />
+          <Skeleton className="h-9 w-36" />
         </div>
       }
     >
-      <DataTableSkeleton rows={10} className="flex-1 min-h-0" />
+      <DataTableSkeleton rows={10} columns={7} className="flex-1 min-h-0" />
     </PageWrapper>
   );
 }

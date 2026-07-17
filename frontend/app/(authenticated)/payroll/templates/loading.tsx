@@ -6,7 +6,6 @@ export function TemplatesPageSkeleton() {
   return (
     <PageWrapper
       title="Template Library"
-      subtitle="Browse payroll templates."
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
           <Skeleton className="h-9 w-48 rounded-md" />
@@ -16,7 +15,7 @@ export function TemplatesPageSkeleton() {
       }
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {Array.from({ length: 9 }).map((_, i) => (
+        {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="rounded-xl border border-border bg-card p-4 space-y-3">
             <div className="flex items-start justify-between">
               <Skeleton className="h-4 w-32" />

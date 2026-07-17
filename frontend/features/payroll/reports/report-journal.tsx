@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { usePayrollJournal } from "@/hooks/api/payroll/reports";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { AccountingMappingsSheet } from "./accounting-mappings-sheet";
 import type { JournalLine } from "@/types/payroll/reports";
 
@@ -21,12 +22,12 @@ const COLUMNS: DataTableColumn<JournalLine>[] = [
   {
     key: "account",
     header: "Account",
-    cell: (row) => <span className="text-[11px] font-medium">{row.account}</span>,
+    cell: (row) => <TruncatedText text={row.account ?? ""} className="text-[11px] font-medium" />,
   },
   {
     key: "description",
     header: "Description",
-    cell: (row) => <span className="text-[11px] text-muted-foreground">{row.description}</span>,
+    cell: (row) => <TruncatedText text={row.description ?? ""} className="text-[11px] text-muted-foreground" />,
   },
   {
     key: "debit",
@@ -52,7 +53,7 @@ const COLUMNS: DataTableColumn<JournalLine>[] = [
     key: "costCenter",
     header: "Cost Center",
     cell: (row) => (
-      <span className="text-[11px] text-muted-foreground">{row.costCenter ?? "—"}</span>
+      <TruncatedText text={row.costCenter ?? "—"} className="text-[11px] text-muted-foreground" />
     ),
   },
 ];

@@ -76,9 +76,9 @@ export function KnowledgeGapCard({
             {topSearchQueries.map((sq) => (
               <li
                 key={sq.query}
-                className="flex items-center justify-between text-xs text-muted-foreground"
+                className="flex items-center justify-between gap-1 text-xs text-muted-foreground min-w-0"
               >
-                <span className="truncate">&ldquo;{sq.query}&rdquo;</span>
+                <span className="truncate min-w-0">&ldquo;{sq.query}&rdquo;</span>
                 <span className="ml-2 shrink-0 text-muted-foreground/60">
                   ×{sq.count}
                 </span>

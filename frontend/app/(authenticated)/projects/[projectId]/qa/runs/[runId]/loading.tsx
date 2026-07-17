@@ -5,14 +5,14 @@ import { cn } from "@/lib/utils";
 
 export default function RunExecutionLoading() {
   return (
-    <PageWrapper title="Test Run" subtitle="Test run execution">
+    <PageWrapper title="Test Run">
       <PmPageShell>
         <PmSection index={0}>
           <Skeleton className={cn("h-10 w-full rounded-xl", PM_PANEL)} />
         </PmSection>
         <PmSection index={1}>
           <div className="space-y-2">
-            {Array.from({ length: 12 }).map((_, i) => (
+            {Array.from({ length: 10 }).map((_, i) => (
               <Skeleton key={i} className={cn("h-20 rounded-xl", PM_PANEL)} />
             ))}
           </div>

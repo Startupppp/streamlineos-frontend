@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyActivityIllustration } from "@/components/illustrations";
 import type { LucideIcon } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import type { DealActivity } from "@/types/crm";
 
@@ -43,11 +44,12 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
                 <Icon className="h-3.5 w-3.5 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium">
-                  {isStageChange
+                <TruncatedText
+                  text={isStageChange
                     ? `${activity.previousValue} → ${activity.newValue}`
                     : activity.subject || activity.type}
-                </p>
+                  className="text-sm font-medium"
+                />
                 {activity.notes && (
                   <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{activity.notes}</p>
                 )}

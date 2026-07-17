@@ -10,8 +10,8 @@ export default function SignReportsLoading() {
     >
       <div className="flex flex-col gap-4">
         <StatCardGridSkeleton cols={4} count={4} />
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
+        <div className="grid gap-6 lg:grid-cols-2">
+          {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-28 rounded-xl" />
           ))}
         </div>

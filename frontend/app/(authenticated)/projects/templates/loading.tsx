@@ -22,10 +22,11 @@ export default function TemplatesLoading() {
                 <Skeleton className="h-5 w-16 rounded-full" />
               </div>
               <Skeleton className="h-3 w-full" />
+              <Skeleton className="h-3 w-full" />
               <Skeleton className="h-3 w-3/4" />
               <div className="flex gap-2 pt-1">
-                <Skeleton className="h-9 flex-1 rounded-md" />
-                <Skeleton className="h-9 w-9 rounded-md" />
+                <Skeleton className="flex-1 rounded-md" />
+                <Skeleton className="h-8 w-8 rounded-md" />
               </div>
             </div>
           ))}

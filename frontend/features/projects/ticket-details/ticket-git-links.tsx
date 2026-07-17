@@ -76,12 +76,13 @@ export function TicketGitLinks({ projectId, ticketId }: TicketGitLinksProps) {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-[11px] text-foreground hover:text-accent truncate block leading-snug group"
+                    title={link.title ?? link.externalId ?? undefined}
                   >
                     <span className="truncate">{link.title ?? link.externalId}</span>
                     <ExternalLink className="h-2.5 w-2.5 inline ml-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                   </a>
                 ) : (
-                  <span className="text-[11px] text-foreground truncate block leading-snug">
+                  <span className="text-[11px] text-foreground truncate block leading-snug" title={link.title ?? link.externalId ?? undefined}>
                     {link.title ?? link.externalId}
                   </span>
                 )}

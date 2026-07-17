@@ -15,7 +15,12 @@ export default function PipelineLoading() {
           <Skeleton className="h-9 w-[120px] rounded-md" />
         </div>
       }
-      filters={<Skeleton className="h-9 w-[110px] rounded-lg" />}
+      filters={
+        <div className="flex items-center gap-0.5 rounded-lg border border-border p-0.5">
+          <Skeleton className="h-7 w-20 rounded-md" />
+          <Skeleton className="h-7 w-16 rounded-md" />
+        </div>
+      }
     >
       <div className="flex gap-4 overflow-x-auto h-full">
         {Array.from({ length: 5 }).map((_, i) => (

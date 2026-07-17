@@ -98,7 +98,7 @@ export function StatCardGrid({ children, cols: _cols = 4, className }: StatCardG
   return (
     <div
       className={cn(
-        "flex flex-nowrap gap-2 overflow-x-auto scrollbar-hide snap-x snap-mandatory -mx-px pb-0.5",
+        "flex flex-nowrap gap-2 overflow-x-auto scrollbar-hide snap-x snap-mandatory -mx-1 px-1 py-1",
         "[&>*]:min-w-[148px] [&>*]:max-w-[220px] [&>*]:flex-1 [&>*]:shrink-0 [&>*]:snap-start [&>*]:basis-[148px]",
         className,
       )}

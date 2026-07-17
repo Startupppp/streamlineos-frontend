@@ -19,7 +19,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -27,6 +26,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { useProjects } from "@/hooks/api/projects/projects";
 import { useSetDueDateFromChat } from "@/hooks/api/chat";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { TicketCombobox } from "./ticket-combobox";
 
 const schema = z.object({
   projectIdStr: z.string(),
@@ -89,6 +89,14 @@ export function SetDueDateDialog({
 
   const handleCancel = useCallback(() => onOpenChange(false), [onOpenChange]);
 
+  const handleProjectChange = useCallback(
+    (value: string) => {
+      form.setValue("projectIdStr", value);
+      form.setValue("ticketIdStr", "");
+    },
+    [form],
+  );
+
   async function handleSubmit(values: FormValues) {
     const resolvedTicketId =
       ticketId !== undefined
@@ -138,7 +146,7 @@ export function SetDueDateDialog({
                 render={({ field }) => (
                   <Select
                     value={field.value}
-                    onValueChange={field.onChange}
+                    onValueChange={handleProjectChange}
                     disabled={loadingProjects}
                   >
                     <SelectTrigger>
@@ -160,14 +168,17 @@ export function SetDueDateDialog({
           )}
           {ticketId === undefined && (
             <div className="space-y-1.5">
-              <Label htmlFor="sdd-ticket">Ticket ID</Label>
-              <Input
-                id="sdd-ticket"
-                type="text"
-                inputMode="numeric"
-                min={1}
-                placeholder="e.g. 42"
-                {...form.register("ticketIdStr")}
+              <Label>Ticket</Label>
+              <Controller
+                control={form.control}
+                name="ticketIdStr"
+                render={({ field }) => (
+                  <TicketCombobox
+                    projectId={effectiveProjectId}
+                    value={field.value ? Number(field.value) : null}
+                    onChange={(id) => field.onChange(String(id))}
+                  />
+                )}
               />
               {form.formState.errors.ticketIdStr && (
                 <p className="text-xs text-destructive">

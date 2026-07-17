@@ -8,18 +8,14 @@ export default function AttendanceLoading() {
       subtitle="Track your work hours and manage check-ins"
       noInternalScroll
     >
-      <div className="grid gap-4 lg:grid-cols-12">
-        <div className="lg:col-span-4 space-y-4">
-          <Skeleton className="h-[200px] rounded-xl" />
-          <Skeleton className="h-[180px] rounded-xl" />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
+        <div className="lg:col-span-4 space-y-3">
+          <Skeleton className="h-64 rounded-xl" />
+          <Skeleton className="h-40 rounded-xl" />
         </div>
-        <div className="lg:col-span-8 space-y-4">
-          <Skeleton className="h-[280px] rounded-xl" />
-          <div className="space-y-2">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-14 rounded-lg" />
-            ))}
-          </div>
+        <div className="lg:col-span-8 space-y-3">
+          <Skeleton className="h-72 rounded-xl" />
+          <Skeleton className="h-56 rounded-xl" />
         </div>
       </div>
     </PageWrapper>

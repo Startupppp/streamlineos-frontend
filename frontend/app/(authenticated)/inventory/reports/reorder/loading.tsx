@@ -11,12 +11,12 @@ export default function ReorderReportLoading() {
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
           <Skeleton className="h-9 flex-1 max-w-md" />
+          <Skeleton className="h-9 w-32" />
         </div>
       }
-      actions={<Skeleton className="h-9 w-32" />}
     >
       <StatCardGridSkeleton cols={3} count={3} />
-      <DataTableSkeleton rows={10} className="flex-1 min-h-0" />
+      <DataTableSkeleton rows={10} columns={9} className="flex-1 min-h-0" />
     </PageWrapper>
   );
 }

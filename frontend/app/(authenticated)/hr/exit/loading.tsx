@@ -10,7 +10,7 @@ export default function ExitLoading() {
     >
       <div className="space-y-2">
         {Array.from({ length: 10 }).map((_, i) => (
-          <Skeleton key={i} className="h-24 w-full rounded-xl" />
+          <Skeleton key={i} className="h-[70px] w-full rounded-2xl" />
         ))}
       </div>
     </PageWrapper>

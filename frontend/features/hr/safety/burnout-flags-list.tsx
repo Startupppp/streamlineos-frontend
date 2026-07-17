@@ -3,6 +3,7 @@
 import { useBurnoutFlags } from "@/hooks/api/hr/safety";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { Loader2, AlertTriangle } from "lucide-react";
 
 export function BurnoutFlagsList() {
@@ -29,10 +30,10 @@ export function BurnoutFlagsList() {
           {data.map((flag) => (
             <div
               key={flag.userId}
-              className="flex items-center justify-between rounded-lg border bg-orange-50 border-orange-200 dark:bg-orange-500/10 dark:border-orange-500/30 px-3 py-2"
+              className="flex items-center justify-between gap-2 rounded-lg border bg-orange-50 border-orange-200 dark:bg-orange-500/10 dark:border-orange-500/30 px-3 py-2 min-w-0"
             >
-              <div>
-                <p className="text-xs font-mono text-foreground">{flag.userId}</p>
+              <div className="min-w-0 flex-1">
+                <TruncatedText text={flag.userId} className="text-xs font-mono text-foreground" />
                 <p className="text-xs text-muted-foreground">
                   {flag.checkCount} check-in{flag.checkCount !== 1 ? "s" : ""}
                 </p>

@@ -1,6 +1,7 @@
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import type { QuoteLineItem } from "@/types/crm/quotes";
 import { formatCurrency } from "../lib/quote-utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface QuoteLineItemsTableProps {
   lineItems: QuoteLineItem[];
@@ -12,7 +13,7 @@ function buildColumns(currency: string): DataTableColumn<QuoteLineItem>[] {
     {
       key: "description",
       header: "Description",
-      cell: (row) => <span className="text-[11px]">{row.description}</span>,
+      cell: (row) => <TruncatedText text={row.description} lines={2} className="text-[11px] max-w-[200px]" />,
     },
     {
       key: "quantity",

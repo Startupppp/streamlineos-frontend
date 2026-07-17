@@ -15,9 +15,13 @@ import { RecordPaymentDialog } from "@/features/accounting/sales/record-payment-
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useInvoice } from "@/hooks/api/invoice";
 import { useCreditNotes } from "@/hooks/api/accounting/ar";
+import { useCan } from "@/hooks/api/access";
+import { AiActionsMenu, type AiAction } from "@/components/ai";
+import { apiClient } from "@/lib/api-client";
 import type { FinanceStatus } from "@/features/accounting/shared";
 import type { Invoice, Payment } from "@/types/invoice";
 import type { CreditNote } from "@/types/accounting/ar";
+import type { ExtractDocumentResult } from "@/hooks/api/accounting/accounting-ai";
 
 const STATUS_MAP: Record<string, FinanceStatus> = {
   DRAFT: "DRAFT",
@@ -232,6 +236,41 @@ function CollectionPanel({ invoice }: CollectionPanelProps) {
         </p>
       </div>
     </div>
+  );
+}
+
+interface InvoiceAiActionsProps {
+  invoice: Invoice;
+}
+
+function InvoiceAiActions({ invoice }: InvoiceAiActionsProps) {
+  const canAi = useCan("accounting:ai:use");
+
+  const actions = useMemo<AiAction[]>(
+    () => [
+      {
+        key: "extract-document",
+        label: "Extract document",
+        description: "Upload an invoice image/PDF for AI-assisted draft",
+        run: async () => {
+          return {
+            text: `Document extraction requires uploading a file.\n\nTo extract invoice fields from a PDF or image:\n1. Navigate to Purchases → Bills and open the bill for this invoice\n2. Use the "Extract document" action to upload the file\n\nAI extracts: vendor, date, document number, amounts, and line items as a human-reviewed draft. AI never posts or approves entries automatically.\n\nInvoice reference: ${invoice.invoiceNumber} · ${invoice.client?.name ?? "—"}`,
+          };
+        },
+      },
+    ],
+    [invoice.invoiceNumber, invoice.client?.name],
+  );
+
+  if (!canAi) return null;
+
+  return (
+    <AiActionsMenu
+      actions={actions}
+      triggerLabel="AI"
+      menuLabel="Invoice AI"
+      align="end"
+    />
   );
 }
 

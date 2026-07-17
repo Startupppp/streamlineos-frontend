@@ -144,7 +144,7 @@ export function TicketRelatedLinksEditor({ links, onChange }: TicketRelatedLinks
                 {link.label || link.url}
               </a>
               {link.label && (
-                <span className="text-[10px] text-muted-foreground truncate max-w-[80px]">
+                <span className="max-w-[80px] min-w-0 truncate text-[10px] text-muted-foreground" title={link.url}>
                   {link.url}
                 </span>
               )}

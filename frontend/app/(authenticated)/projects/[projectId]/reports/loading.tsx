@@ -13,29 +13,29 @@ export default function ReportsLoading() {
           <div className="grid gap-3 lg:grid-cols-2">
             <PmPanel className="p-4">
               <Skeleton className="mb-3 h-4 w-24" />
-              <Skeleton className="h-56 w-full rounded-md" />
+              <Skeleton className="h-72 w-full rounded-md" />
             </PmPanel>
             <PmPanel className="p-4">
               <Skeleton className="mb-3 h-4 w-24" />
-              <Skeleton className="h-56 w-full rounded-md" />
+              <Skeleton className="h-72 w-full rounded-md" />
             </PmPanel>
           </div>
         </PmSection>
         <PmSection index={1}>
           <PmPanel className="p-4">
             <Skeleton className="mb-3 h-4 w-28" />
-            <Skeleton className="h-48 w-full rounded-md" />
+            <Skeleton className="h-72 w-full rounded-md" />
           </PmPanel>
         </PmSection>
         <PmSection index={2}>
           <div className="grid gap-3 lg:grid-cols-2">
             <PmPanel className="p-4">
               <Skeleton className="mb-3 h-4 w-24" />
-              <Skeleton className="h-48 w-full rounded-md" />
+              <Skeleton className="h-52 w-full rounded-md" />
             </PmPanel>
             <PmPanel className="p-4">
               <Skeleton className="mb-3 h-4 w-24" />
-              <Skeleton className="h-48 w-full rounded-md" />
+              <Skeleton className="h-52 w-full rounded-md" />
             </PmPanel>
           </div>
         </PmSection>

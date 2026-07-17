@@ -233,9 +233,7 @@ function ProjectSubmissionsInbox({ widgetId, projectId }: ProjectSubmissionsInbo
       key: "message",
       header: "Message",
       cell: (row) => (
-        <span className="text-sm text-foreground line-clamp-2 max-w-xs">
-          {row.message}
-        </span>
+        <TruncatedText text={row.message} lines={2} className="max-w-xs text-sm text-foreground" />
       ),
     },
     {

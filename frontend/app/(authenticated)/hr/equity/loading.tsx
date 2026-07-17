@@ -1,5 +1,6 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 
 export default function EquityLoading() {
   return (
@@ -8,21 +9,10 @@ export default function EquityLoading() {
       subtitle="Manage equity grants, vesting schedules, and exercises"
       actions={<Skeleton className="h-9 w-28 rounded-md" />}
     >
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
-        <div className="flex items-center gap-4 px-6 py-3 border-b bg-muted/30">
-          <Skeleton className="h-4 w-32" />
-          <Skeleton className="h-4 w-24 ml-auto" />
-          <Skeleton className="h-4 w-20" />
-          <Skeleton className="h-4 w-20" />
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <div className="lg:col-span-5">
+          <DataTableSkeleton rows={10} columns={8} />
         </div>
-        {Array.from({ length: 10 }).map((_, i) => (
-          <div key={i} className="flex items-center gap-4 px-6 py-4 border-b last:border-b-0">
-            <Skeleton className="h-4 w-36" />
-            <Skeleton className="h-4 w-24 ml-auto" />
-            <Skeleton className="h-4 w-20" />
-            <Skeleton className="h-5 w-16 rounded-full" />
-          </div>
-        ))}
       </div>
     </PageWrapper>
   );

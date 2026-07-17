@@ -128,7 +128,7 @@ export function ContactInfoCard({ contact, onEdit, onSendEmail, onLogCall, entit
               value={
                 <a
                   href={`mailto:${contact.email}`}
-                  className="text-primary hover:underline truncate block max-w-[160px]"
+                  className="text-primary hover:underline break-all"
                 >
                   {contact.email}
                 </a>
@@ -190,7 +190,7 @@ export function ContactInfoCard({ contact, onEdit, onSendEmail, onLogCall, entit
                   href={contact.websiteUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-primary hover:underline truncate block max-w-[160px]"
+                  className="text-primary hover:underline break-all"
                 >
                   {contact.websiteUrl}
                 </a>

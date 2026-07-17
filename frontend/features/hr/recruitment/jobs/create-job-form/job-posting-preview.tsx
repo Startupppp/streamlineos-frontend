@@ -2,6 +2,7 @@
 
 import { useWatch, type Control } from "react-hook-form";
 import { Badge } from "@/components/ui/badge";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { MapPin, Briefcase, Wallet, GraduationCap, Clock } from "lucide-react";
 import type { CreateJobFormValues } from "./schema";
 import type { Department } from "@/types/hr";
@@ -54,12 +55,15 @@ export function JobPostingPreview({ control, departments }: JobPostingPreviewPro
       </div>
       <div className="p-6 space-y-5">
         <div>
-          <h2 className="text-lg font-semibold text-foreground leading-snug">
-            {values.title || "Untitled role"}
-          </h2>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {department?.name ?? "Department not set"}
-          </p>
+          <TruncatedText
+            text={values.title || "Untitled role"}
+            lines={2}
+            className="text-lg font-semibold text-foreground leading-snug"
+          />
+          <TruncatedText
+            text={department?.name ?? "Department not set"}
+            className="text-sm text-muted-foreground mt-0.5"
+          />
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -70,9 +74,9 @@ export function JobPostingPreview({ control, departments }: JobPostingPreviewPro
 
         <div className="space-y-2 text-sm text-muted-foreground">
           {location && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 min-w-0">
               <MapPin className="h-3.5 w-3.5 shrink-0" />
-              <span>{location}</span>
+              <TruncatedText text={location} className="min-w-0 flex-1" />
             </div>
           )}
           {compensation && (

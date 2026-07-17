@@ -552,7 +552,7 @@ export function ChatBubble({
                           </span>
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="text-[12px] font-semibold truncate max-w-[180px]">{att.fileName}</p>
+                          <TruncatedText text={att.fileName} className="text-[12px] font-semibold" />
                           <p className={cn("text-[10px] mt-0.5", isOwn ? "text-primary-foreground/60" : "text-muted-foreground")}>
                             {formatFileSize(att.fileSize)} · {getFileExt(att.fileName)}
                           </p>

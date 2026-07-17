@@ -1,3 +1,5 @@
+"use client";
+
 import { EmptyChartIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared";

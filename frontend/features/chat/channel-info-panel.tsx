@@ -441,7 +441,7 @@ export function ChannelInfoPanel({
                   )}
                 </button>
               )}
-              <h4 className="text-[17px] font-bold">{displayName}</h4>
+              <TruncatedText text={displayName} className="text-[17px] font-bold max-w-[200px]" />
               {channel?.type === "DIRECT" ? (
                 <p className="text-[12px] text-muted-foreground mt-0.5">
                   {otherMember

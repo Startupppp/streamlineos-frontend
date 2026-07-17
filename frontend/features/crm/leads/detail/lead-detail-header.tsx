@@ -183,20 +183,20 @@ export function LeadDetailHeader({
               </span>
             </div>
             {(lead.company || lead.designation) && (
-              <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-0.5 flex-wrap">
+              <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-0.5 flex-wrap min-w-0">
                 {lead.company && (
-                  <span className="flex items-center gap-1">
+                  <span className="flex items-center gap-1 min-w-0">
                     <Building2 className="h-3.5 w-3.5 shrink-0" />
-                    {lead.company}
+                    <span className="truncate">{lead.company}</span>
                   </span>
                 )}
                 {lead.company && lead.designation && (
-                  <span className="text-muted-foreground/40">·</span>
+                  <span className="text-muted-foreground/40 shrink-0">·</span>
                 )}
                 {lead.designation && (
-                  <span className="flex items-center gap-1">
+                  <span className="flex items-center gap-1 min-w-0">
                     <MapPin className="h-3.5 w-3.5 shrink-0" />
-                    {lead.designation}
+                    <span className="truncate">{lead.designation}</span>
                   </span>
                 )}
               </p>

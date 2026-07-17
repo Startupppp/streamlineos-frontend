@@ -14,6 +14,7 @@ import {
   useHrBookingLinks, useRevokeBookingLink, type HrBookingLink,
 } from "@/hooks/api/hr/recruitment";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const STATUS_BADGE: Record<HrBookingLink["status"], { label: string; className: string }> = {
   pending: { label: "Pending", className: "bg-yellow-500/10 text-yellow-700 border-yellow-500/20 dark:text-yellow-300 dark:border-yellow-500/30" },
@@ -87,12 +88,20 @@ export function BookingLinksView({ baseUrl }: { baseUrl: string }) {
       key: "candidate",
       header: "Candidate",
       cell: (link) => (
-        <div className="font-medium">
-          {link.candidate
-            ? `${link.candidate.firstName} ${link.candidate.lastName}`
-            : `Candidate #${link.candidateId}`}
+        <div className="min-w-0">
+          <TruncatedText
+            text={
+              link.candidate
+                ? `${link.candidate.firstName} ${link.candidate.lastName}`
+                : `Candidate #${link.candidateId}`
+            }
+            className="font-medium"
+          />
           {link.candidate?.email && (
-            <p className="text-xs text-muted-foreground">{link.candidate.email}</p>
+            <TruncatedText
+              text={link.candidate.email}
+              className="text-xs text-muted-foreground break-all"
+            />
           )}
         </div>
       ),
@@ -101,7 +110,10 @@ export function BookingLinksView({ baseUrl }: { baseUrl: string }) {
       key: "job",
       header: "Job",
       cell: (link) => (
-        <span className="text-sm text-muted-foreground">{link.jobPosting?.title ?? "—"}</span>
+        <TruncatedText
+          text={link.jobPosting?.title ?? "—"}
+          className="text-sm text-muted-foreground"
+        />
       ),
     },
     {
@@ -139,7 +151,10 @@ export function BookingLinksView({ baseUrl }: { baseUrl: string }) {
       key: "createdBy",
       header: "Created By",
       cell: (link) => (
-        <span className="text-xs text-muted-foreground">{link.creator?.name ?? "—"}</span>
+        <TruncatedText
+          text={link.creator?.name ?? "—"}
+          className="text-xs text-muted-foreground"
+        />
       ),
     },
     {

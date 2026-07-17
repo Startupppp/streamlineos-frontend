@@ -19,8 +19,8 @@ export default function ProjectRisksLoading() {
         <PmSection index={1}>
           <div className={cn(PM_TOOLBAR, "mb-3")}>
             <div className="flex items-center gap-2">
-              <Skeleton className="h-9 w-36 rounded-md" />
-              <Skeleton className="h-9 w-36 rounded-md" />
+              <Skeleton className="h-9 w-40 rounded-md" />
+              <Skeleton className="h-9 w-52 rounded-md" />
             </div>
           </div>
           <DataTableSkeleton rows={12} columns={8} />

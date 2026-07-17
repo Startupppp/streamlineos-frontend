@@ -10,10 +10,14 @@ export default function OrgHubLoading() {
       noInternalScroll
       contentClassName="flex flex-col gap-4"
     >
-      <StatCardGridSkeleton cols={4} count={4} />
-      <Skeleton className="h-9 w-[340px] rounded-md" />
+      <StatCardGridSkeleton cols={4} count={4} className="mb-4" />
+      <div className="flex items-center gap-1 rounded-lg border p-1 w-fit shrink-0">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Skeleton key={i} className="h-7 w-24 rounded-md" />
+        ))}
+      </div>
       <div className="space-y-2">
-        {Array.from({ length: 12 }).map((_, i) => (
+        {Array.from({ length: 5 }).map((_, i) => (
           <Skeleton key={i} className="h-10 w-full rounded-lg" />
         ))}
       </div>
