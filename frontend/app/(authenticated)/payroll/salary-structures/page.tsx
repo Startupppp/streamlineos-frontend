@@ -6,7 +6,7 @@ import { SalaryStructuresSkeleton } from "./loading";
 export const metadata = { title: "Salary Structure Templates — Payroll" };
 
 export default async function PayrollSalaryStructuresPage() {
-  await requirePermission("payroll:salaries:view");
+  await requirePermission("hr:salary:view");
   return (
     <Suspense fallback={<SalaryStructuresSkeleton />}>
       <SalaryStructuresPageContent />
