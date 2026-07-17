@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Loader2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,6 @@ export const dynamic = "force-dynamic";
 
 export default function MagicLinkPage() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const token = searchParams.get("token");
   const [status, setStatus] = useState<"loading" | "error">("loading");
   const [errorMessage, setErrorMessage] = useState("");
@@ -28,7 +27,7 @@ export default function MagicLinkPage() {
       });
 
       if (result?.ok) {
-        router.replace("/post-signin");
+        window.location.replace("/post-signin");
       } else {
         setErrorMessage("This link is invalid, expired, or has already been used. Please request a new one.");
         setStatus("error");
@@ -36,7 +35,7 @@ export default function MagicLinkPage() {
     }
 
     verify();
-  }, [token, router]);
+  }, [token]);
 
   if (status === "error") {
     return (

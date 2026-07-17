@@ -6,7 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useMutation } from "@tanstack/react-query";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,7 +28,6 @@ interface PasswordlessSigninFormProps {
 }
 
 export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFormProps) {
-  const router = useRouter();
   const [stage, setStage] = useState<"email" | "code">("email");
   const [submittedEmail, setSubmittedEmail] = useState("");
   const [otpValue, setOtpValue] = useState("");
@@ -88,7 +86,7 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
         redirect: false,
       });
       if (result?.ok) {
-        router.push(getCallbackUrl());
+        window.location.assign(getCallbackUrl());
       } else {
         toast.error("Sign-in failed. Please try again.");
       }
