@@ -49,7 +49,7 @@ function ActionRow({
   return (
     <li className="flex items-start gap-2 group">
       <CheckCircle2 className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
-      <span className="text-xs text-foreground flex-1">{action}</span>
+      <span className="text-xs text-foreground flex-1 line-clamp-2">{action}</span>
       <div className="hidden group-hover:flex items-center gap-0.5 shrink-0">
         <Button
           size="sm"

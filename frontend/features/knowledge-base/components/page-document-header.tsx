@@ -68,6 +68,7 @@ import {
 import { useCan } from "@/hooks/api/access";
 import type { KbPageDetail } from "@/hooks/api/kb/pages";
 import PageCommentsSheet from "./page-comments-sheet";
+import { KbPageAiActions } from "./kb-page-ai-actions";
 import PageHistorySheet from "./page-history-sheet";
 import MovePageDialog from "./move-page-dialog";
 import PageSharePopover from "./page-share-popover";
@@ -79,6 +80,7 @@ interface PageDocumentHeaderProps {
   pageId: number;
   saveState: "idle" | "pending" | "saving" | "saved";
   onNavigate: (pageId: number) => void;
+  onApplyImprovement?: (text: string) => void;
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -110,6 +112,7 @@ export default function PageDocumentHeader({
   pageId,
   saveState,
   onNavigate,
+  onApplyImprovement,
 }: PageDocumentHeaderProps) {
   const router = useRouter();
   const canCreate = useCan("kb:pages:create");
@@ -314,6 +317,11 @@ export default function PageDocumentHeader({
               )}
             </div>
           )}
+
+            <KbPageAiActions
+              pageId={pageId}
+              onApplyImprovement={onApplyImprovement}
+            />
 
             <HeaderToolbarTooltip label="Page info">
               <Button

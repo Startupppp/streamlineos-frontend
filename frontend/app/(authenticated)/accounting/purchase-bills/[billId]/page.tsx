@@ -28,6 +28,7 @@ import {
 import { useCan } from "@/hooks/api/access";
 import { RecordVendorPaymentDialog } from "@/features/accounting/record-vendor-payment-dialog";
 import { BillDetailView } from "@/features/accounting/purchases/bill-detail-view";
+import { BillAiSection } from "@/features/accounting/purchases/bill-ai-section";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 interface PurchaseBillDetailPageProps {
@@ -201,17 +202,20 @@ export default function PurchaseBillDetailPage({
             description={`No purchase bill found for ID ${billId}.`}
           />
         ) : (
-          <BillDetailView
-            bill={bill}
-            outstanding={outstanding}
-            isPendingApproval={isPendingApproval}
-            canApprove={canApprove}
-            canManage={canManage}
-            isApprovePending={approveMutation.isPending}
-            isCancelPending={cancelMutation.isPending}
-            onApprove={handleApprove}
-            onOpenCancelDialog={handleOpenCancelDialog}
-          />
+          <>
+            <BillDetailView
+              bill={bill}
+              outstanding={outstanding}
+              isPendingApproval={isPendingApproval}
+              canApprove={canApprove}
+              canManage={canManage}
+              isApprovePending={approveMutation.isPending}
+              isCancelPending={cancelMutation.isPending}
+              onApprove={handleApprove}
+              onOpenCancelDialog={handleOpenCancelDialog}
+            />
+            <BillAiSection bill={bill} />
+          </>
         )}
       </div>
 

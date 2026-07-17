@@ -90,10 +90,10 @@ const TXN_COLUMNS: DataTableColumn<BankTransaction>[] = [
   {
     key: "counterparty",
     header: "Counterparty",
-    cell: (row) => (
-      <span className="text-[11px] text-muted-foreground">
-        {row.counterparty ?? "—"}
-      </span>
+    cell: (row) => row.counterparty ? (
+      <TruncatedText text={row.counterparty} className="text-[11px] text-muted-foreground" />
+    ) : (
+      <span className="text-[11px] text-muted-foreground">—</span>
     ),
     className: "w-[150px]",
   },

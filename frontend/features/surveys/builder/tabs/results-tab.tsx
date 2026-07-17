@@ -10,10 +10,26 @@ import { OverviewStats } from "@/features/surveys/results/overview-stats";
 import { QuestionAnalyticsCard } from "@/features/surveys/results/question-analytics-card";
 import { ResponseTable } from "@/features/surveys/results/response-table";
 import { AssessmentResultsCard } from "@/features/surveys/results/assessment-results-card";
+import { AiActionsMenu } from "@/components/ai";
+import type { AiAction } from "@/components/ai";
+import { useCan } from "@/hooks/api/access";
+import { surveyAiSummarizeResponses } from "@/hooks/api/surveys/survey-ai";
 
 export function ResultsTab({ survey }: { survey: SurveyForm }) {
   const { data: overview, isLoading: overviewLoading, isError, refetch } = useAnalyticsOverview(survey.id);
   const { data: questionAnalytics, isLoading: questionsLoading } = useQuestionAnalytics(survey.id);
+  const canUseAi = useCan("surveys:ai:use");
+  const aiActions: AiAction[] = [
+    {
+      key: "summarize-responses",
+      label: "Summarize responses",
+      description: "AI narrative of key themes and insights",
+      run: async () => {
+        const res = await surveyAiSummarizeResponses(survey.id);
+        return { text: res.summary };
+      },
+    },
+  ];
 
   if (overviewLoading) {
     return (
@@ -46,6 +62,12 @@ export function ResultsTab({ survey }: { survey: SurveyForm }) {
   return (
     <div className="space-y-6">
       <OverviewStats overview={overview} />
+
+      {canUseAi && (
+        <div className="flex justify-end">
+          <AiActionsMenu actions={aiActions} triggerLabel="Summarize" menuLabel="Survey AI" align="end" />
+        </div>
+      )}
 
       {survey.mode === "assessment" && (
         <div className="space-y-3">

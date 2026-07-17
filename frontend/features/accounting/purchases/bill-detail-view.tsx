@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import type { PurchaseBill, PurchaseBillStatus } from "@/types/accounting";
 
 const STATUS_CLASS: Record<PurchaseBillStatus, string> = {
@@ -62,7 +63,7 @@ const ITEM_COLUMNS: DataTableColumn<BillItem>[] = [
   {
     key: "description",
     header: "Description",
-    cell: (row) => <span className="text-sm text-foreground">{row.description}</span>,
+    cell: (row) => <TruncatedText text={row.description} lines={2} className="text-sm text-foreground" />,
   },
   {
     key: "hsnSacCode",
@@ -220,7 +221,7 @@ export function BillDetailView({
             </div>
             <div>
               <p className="text-[11px] font-medium text-muted-foreground mb-1">Vendor</p>
-              <p className="text-sm text-foreground">{bill.vendorName ?? "—"}</p>
+              <TruncatedText text={bill.vendorName ?? "—"} className="text-sm text-foreground" />
             </div>
             <div>
               <p className="text-[11px] font-medium text-muted-foreground mb-1">Vendor bill #</p>

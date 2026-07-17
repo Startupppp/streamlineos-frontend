@@ -13,15 +13,14 @@ import { ErrorState } from "@/components/shared";
 import { FinanceStatusBadge, Money } from "@/features/accounting/shared";
 import { RecordPaymentDialog } from "@/features/accounting/sales/record-payment-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { useInvoice } from "@/hooks/api/invoice";
 import { useCreditNotes } from "@/hooks/api/accounting/ar";
 import { useCan } from "@/hooks/api/access";
 import { AiActionsMenu, type AiAction } from "@/components/ai";
-import { apiClient } from "@/lib/api-client";
 import type { FinanceStatus } from "@/features/accounting/shared";
 import type { Invoice, Payment } from "@/types/invoice";
 import type { CreditNote } from "@/types/accounting/ar";
-import type { ExtractDocumentResult } from "@/hooks/api/accounting/accounting-ai";
 
 const STATUS_MAP: Record<string, FinanceStatus> = {
   DRAFT: "DRAFT",
@@ -406,6 +405,7 @@ export function InvoiceDetailContent({ invoiceId }: InvoiceDetailContentProps) {
       badge={<FinanceStatusBadge status={toFinanceStatus(invoice.status)} />}
       actions={
         <div className="flex items-center gap-2">
+          <InvoiceAiActions invoice={invoice} />
           <Button variant="outline" size="sm" onClick={handleBack}>
             <ArrowLeft className="size-3.5 mr-1" />
             Back

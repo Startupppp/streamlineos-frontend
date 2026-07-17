@@ -109,7 +109,7 @@ function CategoryRow({
       )}
     >
       <span className="shrink-0 text-muted-foreground [&_svg]:h-4 [&_svg]:w-4">{icon}</span>
-      <span className="flex-1 truncate font-medium tracking-tight">{label}</span>
+      <span className="min-w-0 flex-1 truncate font-medium tracking-tight">{label}</span>
       {activeCount > 0 ? (
         <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground">
           {activeCount}
@@ -148,7 +148,7 @@ function OptionRow({ active, label, leading, color, onClick }: OptionRowProps) {
           style={{ backgroundColor: color }}
         />
       ) : null}
-      <span className="truncate">{label}</span>
+      <span className="min-w-0 flex-1 truncate">{label}</span>
     </button>
   );
 }

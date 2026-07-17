@@ -30,8 +30,8 @@ function EditJobContent({ jobId }: { jobId: number }) {
             requirements: job.requirements ?? undefined,
             location: job.location ?? undefined,
             type: job.type ?? undefined,
-            salaryMin: job.salaryMin ?? undefined,
-            salaryMax: job.salaryMax ?? undefined,
+            salaryMin: job.salaryMin != null ? Number(job.salaryMin) : undefined,
+            salaryMax: job.salaryMax != null ? Number(job.salaryMax) : undefined,
           });
           return { text: result.description };
         },

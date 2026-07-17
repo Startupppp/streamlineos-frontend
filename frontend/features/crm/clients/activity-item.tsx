@@ -11,7 +11,7 @@ export function ActivityItem({ activity }: { activity: ClientActivity }) {
         <Clock className="h-3 w-3 text-muted-foreground" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-medium text-foreground">{activity.title}</p>
+        <p className="text-[11px] font-medium text-foreground truncate">{activity.title}</p>
         {activity.description && (
           <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">
             {activity.description}

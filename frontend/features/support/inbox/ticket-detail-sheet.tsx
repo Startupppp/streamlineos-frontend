@@ -40,7 +40,7 @@ export function TicketDetailSheet({ ticketId, onBack }: TicketDetailSheetProps) 
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      <TicketDetailHeader ticket={ticket} onBack={onBack} />
+      <TicketDetailHeader ticket={ticket} onBack={onBack} onInsertReply={handleInsertReply} />
       <TicketDetailTimeline ticket={ticket} />
       <TicketDetailRelations ticketId={ticket.id} />
       <TicketExternalLinksSection ticketId={ticket.id} />

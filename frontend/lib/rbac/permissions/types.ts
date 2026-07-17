@@ -509,4 +509,6 @@ export type PermissionKey =
   | "support:portal:tickets:create"
   | "support:portal:tickets:reply"
   | "crm:ai:use"
-  | "accounting:ai:use";
+  | "accounting:ai:use"
+  | "blog:ai:use"
+  | "surveys:ai:use";

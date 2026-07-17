@@ -58,7 +58,7 @@ export const WipRow = memo(function WipRow({ status, projectId, canManage }: Wip
             style={{ backgroundColor: status.color }}
           />
         )}
-        <span className="text-sm font-medium truncate">{status.name}</span>
+        <span className="min-w-0 truncate text-sm font-medium">{status.name}</span>
       </div>
       <div className="flex items-center gap-2 shrink-0">
         {canManage ? (

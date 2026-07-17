@@ -138,6 +138,14 @@ export default function PageDocument({ pageId }: PageDocumentProps) {
     scheduleAutosave({ content: value, contentText: plainText });
   }
 
+  function handleApplyImprovement(text: string) {
+    void navigator.clipboard.writeText(text).then(() => {
+      toast.success("Improved draft copied to clipboard — paste it into the editor");
+    }).catch(() => {
+      toast.info("Copy this draft and paste it into the editor", { description: text.slice(0, 100) });
+    });
+  }
+
   function handleCoverChange(coverImage: string | null) {
     updatePage.mutate(
       { pageId, coverImage },

@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -55,9 +56,7 @@ const leadColumns: DataTableColumn<CampaignLeadItem & { _idx: number }>[] = [
     key: "name",
     header: "Name",
     cell: (row) => (
-      <span className="text-[11px] font-medium">
-        {getString(row.name ?? row.clientName)}
-      </span>
+      <TruncatedText text={getString(row.name ?? row.clientName)} className="text-[11px] font-medium max-w-[140px]" />
     ),
   },
   {

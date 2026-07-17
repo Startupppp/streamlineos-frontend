@@ -95,7 +95,7 @@ export default function CandidateDetailPage() {
   const { data: scorecardTemplates } = useScorecardTemplates();
   const generateCompositeScore = useGenerateCandidateCompositeScore();
 
-  const canManage = useCan("hr:recruitment:manage");
+  const canManage = useCan("hr:employees:manage");
   const scoreCandidateMutation = useAIScoreCandidate();
   const interviewKitMutation = useAIInterviewKit();
   const interviewNotesSummaryMutation = useAIInterviewNotesSummary();
@@ -277,12 +277,12 @@ export default function CandidateDetailPage() {
               Back
             </Link>
           </Button>
-          {canManage && aiActions.length > 0 && (
-            <AiActionsMenu actions={aiActions} triggerLabel="AI" menuLabel="HR AI assist" align="end" />
-          )}
           <Button size="sm" onClick={handleInterviewOpen}>
             Schedule Interview
           </Button>
+          {canManage && aiActions.length > 0 && (
+            <AiActionsMenu actions={aiActions} menuLabel="Recruitment AI assist" />
+          )}
         </div>
       }
     >

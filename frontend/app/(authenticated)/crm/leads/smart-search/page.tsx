@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyLeadsIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared/error-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
