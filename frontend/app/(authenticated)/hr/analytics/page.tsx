@@ -259,31 +259,31 @@ function AnalyticsContent() {
               </h2>
             </div>
 
-            <div className="p-4 flex min-h-0 flex-1 flex-col">
-              <TabsContent value="command-center" className="mt-0">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4">
+              <TabsContent value="command-center" className="mt-0 flex-none">
                 <CommandCenterSection />
               </TabsContent>
 
-              <TabsContent value="workforce" className="mt-0">
+              <TabsContent value="workforce" className="mt-0 flex-none">
                 <WorkforceSection data={data} isLoading={isAnalyticsLoading} />
               </TabsContent>
 
-              <TabsContent value="recruitment" className="mt-0">
+              <TabsContent value="recruitment" className="mt-0 flex-none">
                 <RecruitmentSection isLoading={isRecruitmentLoading} />
               </TabsContent>
 
-              <TabsContent value="attendance" className="mt-0">
+              <TabsContent value="attendance" className="mt-0 flex-none">
                 <AttendanceSection
                   year={analyticsYear}
                   month={analyticsMonth}
                 />
               </TabsContent>
 
-              <TabsContent value="leaves" className="mt-0">
+              <TabsContent value="leaves" className="mt-0 flex-none">
                 <LeaveSection year={analyticsYear} />
               </TabsContent>
 
-              <TabsContent value="attrition" className="mt-0">
+              <TabsContent value="attrition" className="mt-0 flex-none">
                 <AttritionSection isLoading={isAttritionLoading} />
               </TabsContent>
             </div>

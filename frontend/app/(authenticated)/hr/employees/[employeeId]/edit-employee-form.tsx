@@ -6,7 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useUpdateProfile } from "@/hooks/api/hr";
@@ -184,7 +183,6 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
         {
           loading: "Updating employee...",
           success: () => {
-            router.push("/hr/employees");
             router.refresh();
             return "Employee updated successfully!";
           },
@@ -201,22 +199,20 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
     <FormProvider {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="flex flex-col flex-1 min-h-0"
+        className="flex flex-col"
       >
-        <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden flex flex-col flex-1 min-h-0">
-          <ScrollArea hideScrollbar className="flex-1 min-h-0">
-            <div className="p-5">
-              <PersonalInfoSection />
-            </div>
-            <Separator />
-            <div className="p-5">
-              <ProfessionalInfoSection assignableRoles={assignableRoles} />
-            </div>
-            <Separator />
-            <div className="p-5">
-              <BankDetailsSection />
-            </div>
-          </ScrollArea>
+        <div className="overflow-hidden rounded-2xl border border-border/70 bg-card/90 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] backdrop-blur-sm">
+          <div className="p-5">
+            <PersonalInfoSection />
+          </div>
+          <Separator />
+          <div className="p-5">
+            <ProfessionalInfoSection assignableRoles={assignableRoles} />
+          </div>
+          <Separator />
+          <div className="p-5">
+            <BankDetailsSection />
+          </div>
           <div className="shrink-0 flex justify-end gap-2 px-5 py-3.5 bg-muted/30 border-t border-border">
             <Button
               variant="outline"

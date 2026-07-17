@@ -1,15 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { Mail, Building2, ArrowUpRight } from "lucide-react";
+import { Mail, Building2, ArrowUpRight, Briefcase } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { resolveImageUrl, cn } from "@/lib/utils";
 import { HrStatusBadge } from "@/features/hr/shared/hr-ui";
+import { ROLE_LABELS } from "@/features/hr/employees/hr-types";
 import type { Employee } from "@/types/hr";
 
 interface EmployeeCardProps {
   employee: Employee;
   department: string | null;
+}
+
+function formatRoleLabel(role: string | null | undefined): string | null {
+  if (!role?.trim()) return null;
+  return ROLE_LABELS[role] ?? role.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 export function EmployeeCard({ employee: emp, department }: EmployeeCardProps) {
@@ -18,6 +24,7 @@ export function EmployeeCard({ employee: emp, department }: EmployeeCardProps) {
       ? `${emp.firstName} ${emp.lastName}`
       : (emp.name ?? "—");
   const initial = (emp.firstName?.[0] ?? emp.name?.[0] ?? "?").toUpperCase();
+  const roleLabel = formatRoleLabel(emp.role);
 
   return (
     <Link
@@ -76,11 +83,21 @@ export function EmployeeCard({ employee: emp, department }: EmployeeCardProps) {
             )}
           </div>
 
-          {department && (
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-blue-50 text-blue-700 border-blue-200/70 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-800/50 max-w-full">
-              <Building2 className="h-3 w-3 shrink-0" />
-              <span className="truncate">{department}</span>
-            </span>
+          {(roleLabel || department) && (
+            <div className="flex flex-wrap items-center justify-center gap-1.5 max-w-full">
+              {roleLabel && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border max-w-full">
+                  <Briefcase className="h-3 w-3 shrink-0" />
+                  <span className="truncate">{roleLabel}</span>
+                </span>
+              )}
+              {department && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-blue-50 text-blue-700 border-blue-200/70 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-800/50 max-w-full">
+                  <Building2 className="h-3 w-3 shrink-0" />
+                  <span className="truncate">{department}</span>
+                </span>
+              )}
+            </div>
           )}
 
           {emp.email && (

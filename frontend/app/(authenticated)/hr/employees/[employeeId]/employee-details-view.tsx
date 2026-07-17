@@ -7,7 +7,6 @@ import { EditEmployeeForm, type EmployeeData } from "./edit-employee-form";
 import { EmployeeAttendanceHistory } from "@/components/hr/employee-attendance-history";
 import { SelfEditProfileForm } from "@/components/hr/self-edit-profile-form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   useHrEmployeeStats,
   useHrEmployeeProjects,
@@ -414,7 +413,6 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
             )}
           </div>
         }
-        noInternalScroll
         contentClassName="flex flex-col gap-3"
       >
         <Card
@@ -574,7 +572,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
 
         <Tabs
           defaultValue={defaultTab}
-          className="flex flex-col flex-1 min-h-0"
+          className="flex flex-col gap-3"
         >
           <div className="overflow-x-auto shrink-0">
           <TabsList className="rounded-lg border p-1 w-max min-w-full">
@@ -627,10 +625,9 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
 
           <TabsContent
             value="overview"
-            className="flex-1 min-h-0 mt-3 flex flex-col overflow-hidden"
+            className="mt-0 flex-none"
           >
-            <ScrollArea hideScrollbar className="min-h-0 flex-1">
-              <div className="overscroll-contain space-y-3 pb-4">
+            <div className="space-y-3 pb-4">
               {skillsList.length > 0 && (
                 <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
                   <CardContent className="p-4">
@@ -700,58 +697,49 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                   </CardContent>
                 </Card>
               </div>
-              </div>
-            </ScrollArea>
+            </div>
           </TabsContent>
 
           <TabsContent
             value="attendance"
-            className="flex-1 min-h-0 mt-3 flex flex-col overflow-hidden"
+            className="mt-0 flex-none"
           >
-            <ScrollArea hideScrollbar className="min-h-0 flex-1">
-              <div className="overscroll-contain pb-6">
-                <EmployeeAttendanceHistory userId={employee.id} />
-              </div>
-            </ScrollArea>
+            <div className="pb-6">
+              <EmployeeAttendanceHistory userId={employee.id} />
+            </div>
           </TabsContent>
 
-          <TabsContent value="timeline" className="flex-1 min-h-0 mt-3 flex flex-col overflow-hidden">
-            <ScrollArea hideScrollbar className="min-h-0 flex-1">
-              <div className="overscroll-contain pb-4">
-                <EmployeeTimelineTab userId={employee.id} />
-              </div>
-            </ScrollArea>
+          <TabsContent value="timeline" className="mt-0 flex-none">
+            <div className="pb-4">
+              <EmployeeTimelineTab userId={employee.id} />
+            </div>
           </TabsContent>
 
           {showSensitiveTab && (
-            <TabsContent value="sensitive" className="flex-1 min-h-0 mt-3 flex flex-col overflow-hidden">
-              <ScrollArea hideScrollbar className="min-h-0 flex-1">
-                <div className="overscroll-contain pb-4">
-                  <EmployeeSensitiveTab userId={employee.id} />
-                </div>
-              </ScrollArea>
+            <TabsContent value="sensitive" className="mt-0 flex-none">
+              <div className="pb-4">
+                <EmployeeSensitiveTab userId={employee.id} />
+              </div>
             </TabsContent>
           )}
 
           {isSelf && (
             <TabsContent
               value="my-profile"
-              className="flex-1 min-h-0 mt-3 flex flex-col overflow-hidden"
+              className="mt-0 flex-none"
             >
-              <ScrollArea hideScrollbar className="min-h-0 flex-1">
-                <div className="overscroll-contain pb-4">
-                  <SelfEditProfileForm
-                    employee={employeeAsEmployee}
-                    onSaved={() => router.refresh()}
-                  />
-                </div>
-              </ScrollArea>
+              <div className="pb-4">
+                <SelfEditProfileForm
+                  employee={employeeAsEmployee}
+                  onSaved={() => router.refresh()}
+                />
+              </div>
             </TabsContent>
           )}
 
           <TabsContent
             value="profile"
-            className="flex-1 min-h-0 flex flex-col mt-3"
+            className="mt-0 flex-none pb-4"
           >
             <EditEmployeeForm employee={employee} />
           </TabsContent>
