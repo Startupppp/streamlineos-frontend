@@ -14,7 +14,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
-import { useHrEmployees, useTerminateEmployee } from "@/hooks/api/hr";
+import { useHrDepartments, useHrEmployees, useTerminateEmployee } from "@/hooks/api/hr";
 
 import {
   type Employee,
@@ -69,24 +69,35 @@ export default function HRDashboardPage() {
   const statusFilter = (searchParams.get("status") as StatusFilter) || "Active";
   const roleFilter = (searchParams.get("role") as RoleFilter) || "All";
   const page = Number(searchParams.get("page")) || 1;
-  const pageSize = (Number(searchParams.get("size")) ||
-    PAGE_SIZE) as PageSizeOption;
+  const pageSize = (Number(searchParams.get("size")) || PAGE_SIZE) as PageSizeOption;
 
-  const { data: rawEmployees, isLoading } = useHrEmployees();
+  const serverSearch = searchParams.get("q") || undefined;
+
+  const { data: departmentsData } = useHrDepartments();
+  const departmentNames = useMemo(
+    () => (departmentsData ?? []).map((d) => d.name).sort(),
+    [departmentsData],
+  );
+
+  const { data: paginatedResult, isLoading } = useHrEmployees({
+    page,
+    limit: pageSize,
+    search: serverSearch,
+    dept: deptFilter !== "All" ? deptFilter : undefined,
+    status: statusFilter !== "All" ? statusFilter : undefined,
+    role: roleFilter !== "All" ? roleFilter : undefined,
+  });
+
   const terminateMutation = useTerminateEmployee();
 
-  const employees = useMemo(
-    () =>
-      (Array.isArray(rawEmployees)
-        ? rawEmployees
-        : []) as unknown as Employee[],
-    [rawEmployees],
+  const employees = useMemo<Employee[]>(
+    () => (Array.isArray(paginatedResult?.data) ? (paginatedResult.data as Employee[]) : []),
+    [paginatedResult],
   );
+  const totalCount = paginatedResult?.pagination?.total ?? 0;
+  const totalPages = paginatedResult?.pagination?.totalPages ?? 1;
 
-  const setSearchTerm = useCallback(
-    (q: string) => setSearchTermLocal(q),
-    [],
-  );
+  const setSearchTerm = useCallback((q: string) => setSearchTermLocal(q), []);
   const setDeptFilter = useCallback(
     (d: string) => updateParams({ dept: d === "All" ? null : d, page: null }),
     [updateParams],
@@ -105,66 +116,6 @@ export default function HRDashboardPage() {
     (p: number) => updateParams({ page: p === 1 ? null : String(p) }),
     [updateParams],
   );
-
-  const departments = useMemo(() => {
-    const deptSet = new Map<string, string>();
-    employees.forEach((e) => {
-      if (e.department) deptSet.set(e.department.name, e.department.name);
-    });
-    return Array.from(deptSet.values()).sort();
-  }, [employees]);
-
-  const filteredEmployees = useMemo(() => {
-    let result = employees;
-
-    if (debouncedSearchTerm) {
-      const term = debouncedSearchTerm.trim().toLowerCase();
-      if (term) {
-        result = result.filter((e) => {
-          const name = `${e.firstName ?? ""} ${e.lastName ?? ""}`
-            .trim()
-            .toLowerCase();
-          const email = e.email.toLowerCase();
-          const first = e.firstName?.toLowerCase() ?? "";
-          const last = e.lastName?.toLowerCase() ?? "";
-          const designation = e.designation?.toLowerCase() ?? "";
-          const roleRaw = e.role.toLowerCase();
-          const roleLabel = ROLE_LABELS[e.role]?.toLowerCase() ?? "";
-          return (
-            name.includes(term) ||
-            email.includes(term) ||
-            first.includes(term) ||
-            last.includes(term) ||
-            designation.includes(term) ||
-            roleRaw.includes(term) ||
-            roleLabel.includes(term)
-          );
-        });
-      }
-    }
-
-    if (deptFilter !== "All")
-      result = result.filter((e) => e.department?.name === deptFilter);
-
-    if (statusFilter === "Active")
-      result = result.filter((e) => e.isActive !== false);
-    else if (statusFilter === "Inactive")
-      result = result.filter((e) => e.isActive === false);
-
-    if (roleFilter !== "All")
-      result = result.filter((e) => e.role === roleFilter);
-
-    return result;
-  }, [employees, debouncedSearchTerm, deptFilter, statusFilter, roleFilter]);
-
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredEmployees.length / pageSize),
-  );
-  const paginatedEmployees = useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return filteredEmployees.slice(start, start + pageSize);
-  }, [filteredEmployees, page, pageSize]);
 
   const handlePageSizeChange = useCallback(
     (size: number) =>
@@ -189,7 +140,7 @@ export default function HRDashboardPage() {
 
   const handleExport = useCallback(async () => {
     const { downloadXlsx } = await import("@/lib/export/xlsx-utils");
-    const rows = filteredEmployees.map((e) => ({
+    const rows = employees.map((e) => ({
       name: `${e.firstName ?? ""} ${e.lastName ?? ""}`.trim() || e.email,
       email: e.email,
       role: e.designation ?? ROLE_LABELS[e.role] ?? e.role,
@@ -213,7 +164,7 @@ export default function HRDashboardPage() {
       ],
     );
     toast.success("Employees exported");
-  }, [filteredEmployees]);
+  }, [employees]);
 
   const handleClearFilters = useCallback(() => {
     setSearchTermLocal("");
@@ -231,15 +182,16 @@ export default function HRDashboardPage() {
     setDeleteDialogOpen(true);
   }, []);
 
-  if (isLoading) return <EmployeesLoadingSkeleton />;
+  if (isLoading && !paginatedResult) return <EmployeesLoadingSkeleton />;
 
-  const showFrom = filteredEmployees.length > 0 ? (page - 1) * pageSize + 1 : 0;
-  const showTo = Math.min(page * pageSize, filteredEmployees.length);
+  const showFrom = totalCount > 0 ? (page - 1) * pageSize + 1 : 0;
+  const showTo = Math.min(page * pageSize, totalCount);
   const hasActiveFilters =
     !!searchTerm ||
     deptFilter !== "All" ||
     statusFilter !== "Active" ||
     roleFilter !== "All";
+
   return (
     <PageWrapper
       title="Employees"
@@ -269,7 +221,7 @@ export default function HRDashboardPage() {
           onSearchChange={setSearchTerm}
           deptFilter={deptFilter}
           onDeptChange={setDeptFilter}
-          departments={departments}
+          departments={departmentNames}
           statusFilter={statusFilter}
           onStatusChange={setStatusFilter}
           roleFilter={roleFilter}
@@ -280,10 +232,10 @@ export default function HRDashboardPage() {
     >
       <HrDashboardOverview />
 
-      {paginatedEmployees.length > 0 ? (
+      {employees.length > 0 ? (
         <HrEmployeeTable
-          employees={paginatedEmployees}
-          totalCount={filteredEmployees.length}
+          employees={employees}
+          totalCount={totalCount}
           page={page}
           pageSize={pageSize}
           totalPages={totalPages}

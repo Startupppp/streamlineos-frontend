@@ -38,16 +38,22 @@ export function useCreateDepartment() {
   });
 }
 
-export function useHrEmployees(params?: {
+export interface EmployeesParams {
   page?: number;
   limit?: number;
   search?: string;
-}) {
+  dept?: string;
+  status?: "All" | "Active" | "Inactive";
+  role?: string;
+}
+
+export function useHrEmployees(params?: EmployeesParams) {
   return useQuery({
-    queryKey: queryKeys.hr.employees(params),
+    queryKey: queryKeys.hr.employees(params as Record<string, unknown>),
     queryFn: () =>
-      apiClient.get<Employee[] | PaginatedEmployees>("/hr/employees", params as Record<string, unknown>),
-    staleTime: 2 * 60_000,
+      apiClient.get<PaginatedEmployees>("/hr/employees", params as Record<string, unknown>),
+    staleTime: 30_000,
+    placeholderData: (prev) => prev,
   });
 }
 
