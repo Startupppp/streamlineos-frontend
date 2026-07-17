@@ -207,7 +207,7 @@ function buildValuationColumns(
       key: "warehouse",
       header: "Warehouse",
       className: "text-muted-foreground",
-      cell: (row) => row.warehouseName ?? "—",
+      cell: (row) => <TruncatedText text={row.warehouseName ?? "—"} className="text-sm text-muted-foreground" />,
     },
     {
       key: "actions",

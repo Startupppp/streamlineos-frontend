@@ -362,90 +362,93 @@ function ProductsPageInner() {
     total === 0 &&
     !hasFilters;
 
-  const columns: DataTableColumn<InventoryProduct>[] = [
-    {
-      key: "name",
-      header: "Name",
-      cell: (p) => (
-        <div className="flex items-center gap-2">
-          <div className="h-5 w-5 rounded bg-muted flex items-center justify-center shrink-0">
-            <Package
-              className="h-3 w-3 text-muted-foreground/60"
-              aria-hidden="true"
-            />
+  const columns = useMemo<DataTableColumn<InventoryProduct>[]>(
+    () => [
+      {
+        key: "name",
+        header: "Name",
+        cell: (p) => (
+          <div className="flex items-center gap-2">
+            <div className="h-5 w-5 rounded bg-muted flex items-center justify-center shrink-0">
+              <Package
+                className="h-3 w-3 text-muted-foreground/60"
+                aria-hidden="true"
+              />
+            </div>
+            <Link
+              href={`/inventory/products/${p.id}`}
+              className="text-primary hover:underline transition-colors font-medium truncate"
+            >
+              {p.name}
+            </Link>
           </div>
-          <Link
-            href={`/inventory/products/${p.id}`}
-            className="text-primary hover:underline transition-colors font-medium truncate"
-          >
-            {p.name}
-          </Link>
-        </div>
-      ),
-      sortable: true,
-      sortValue: (p) => p.name,
-    },
-    {
-      key: "sku",
-      header: "SKU",
-      headerClassName: "w-[130px]",
-      className: "font-mono tabular-nums text-muted-foreground",
-      cell: (p) => p.sku,
-    },
-    {
-      key: "category",
-      header: "Category",
-      headerClassName: "w-[140px]",
-      className: "text-muted-foreground",
-      cell: (p) => p.category?.name ?? "—",
-    },
-    {
-      key: "tracking",
-      header: "Tracking",
-      headerClassName: "w-[90px]",
-      cell: (p) => <TrackingBadge method={p.trackingMethod} />,
-    },
-    {
-      key: "uom",
-      header: "UOM",
-      headerClassName: "w-[80px]",
-      className: "text-muted-foreground",
-      cell: (p) => p.uom?.abbreviation ?? "—",
-    },
-    {
-      key: "costPrice",
-      header: "Cost Price",
-      headerClassName: "w-[120px] text-right",
-      className: "text-right font-mono tabular-nums text-muted-foreground",
-      cell: (p) => formatPrice(p.costPrice),
-    },
-    {
-      key: "price",
-      header: "Price",
-      headerClassName: "w-[120px] text-right",
-      className: "text-right font-mono tabular-nums font-medium",
-      cell: (p) => formatPrice(p.sellingPrice),
-    },
-    {
-      key: "stock",
-      header: "Stock",
-      headerClassName: "w-[90px] text-right",
-      className: "text-right",
-      cell: (p) => <StockBadge qty={p.totalStock ?? 0} />,
-    },
-    {
-      key: "status",
-      header: "Status",
-      headerClassName: "w-[80px]",
-      cell: (p) => <StatusBadge status={p.status} />,
-    },
-    {
-      key: "actions",
-      header: "",
-      headerClassName: "w-8",
-      cell: (p) => <ProductRowActions product={p} />,
-    },
-  ];
+        ),
+        sortable: true,
+        sortValue: (p) => p.name,
+      },
+      {
+        key: "sku",
+        header: "SKU",
+        headerClassName: "w-[130px]",
+        className: "font-mono tabular-nums text-muted-foreground",
+        cell: (p) => p.sku,
+      },
+      {
+        key: "category",
+        header: "Category",
+        headerClassName: "w-[140px]",
+        className: "text-muted-foreground",
+        cell: (p) => p.category?.name ?? "—",
+      },
+      {
+        key: "tracking",
+        header: "Tracking",
+        headerClassName: "w-[90px]",
+        cell: (p) => <TrackingBadge method={p.trackingMethod} />,
+      },
+      {
+        key: "uom",
+        header: "UOM",
+        headerClassName: "w-[80px]",
+        className: "text-muted-foreground",
+        cell: (p) => p.uom?.abbreviation ?? "—",
+      },
+      {
+        key: "costPrice",
+        header: "Cost Price",
+        headerClassName: "w-[120px] text-right",
+        className: "text-right font-mono tabular-nums text-muted-foreground",
+        cell: (p) => formatPrice(p.costPrice),
+      },
+      {
+        key: "price",
+        header: "Price",
+        headerClassName: "w-[120px] text-right",
+        className: "text-right font-mono tabular-nums font-medium",
+        cell: (p) => formatPrice(p.sellingPrice),
+      },
+      {
+        key: "stock",
+        header: "Stock",
+        headerClassName: "w-[90px] text-right",
+        className: "text-right",
+        cell: (p) => <StockBadge qty={p.totalStock ?? 0} />,
+      },
+      {
+        key: "status",
+        header: "Status",
+        headerClassName: "w-[80px]",
+        cell: (p) => <StatusBadge status={p.status} />,
+      },
+      {
+        key: "actions",
+        header: "",
+        headerClassName: "w-8",
+        cell: (p) => <ProductRowActions product={p} />,
+      },
+    ],
+    [],
+  );
 
   const filtersRow = isFirstLoad ? undefined : (
     <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">

@@ -59,7 +59,7 @@ const columns: DataTableColumn<LotMovement>[] = [
     header: "By",
     className: "hidden md:table-cell text-muted-foreground",
     headerClassName: "hidden md:table-cell",
-    cell: (row) => row.performedBy ?? "—",
+    cell: (row) => <TruncatedText text={row.performedBy ?? "—"} className="text-muted-foreground" />,
   },
 ];
 

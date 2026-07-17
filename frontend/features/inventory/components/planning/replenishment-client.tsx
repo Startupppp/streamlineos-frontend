@@ -69,7 +69,7 @@ function buildColumns(
     {
       key: "warehouseName",
       header: "Warehouse",
-      cell: (row) => <span className="text-[11px] text-muted-foreground">{row.warehouseName}</span>,
+      cell: (row) => <TruncatedText text={row.warehouseName ?? ""} className="text-[11px] text-muted-foreground" />,
     },
     {
       key: "currentStock",
@@ -92,7 +92,7 @@ function buildColumns(
     {
       key: "vendorName",
       header: "Vendor",
-      cell: (row) => <span className="text-[11px] text-muted-foreground">{row.vendorName ?? "—"}</span>,
+      cell: (row) => <TruncatedText text={row.vendorName ?? "—"} className="text-[11px] text-muted-foreground" />,
     },
     {
       key: "expectedDate",

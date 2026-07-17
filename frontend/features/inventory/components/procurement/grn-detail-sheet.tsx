@@ -23,6 +23,7 @@ import {
 import { LoadingState, ErrorState } from "@/components/shared";
 import { useGoodsReceipt, useReverseGrn } from "@/hooks/api/inventory/operations";
 import { GRN_QUALITY_BADGE, GRN_QUALITY_LABEL } from "@/features/inventory/lib";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 export interface GrnDetailSheetProps {
   grnId: number;
@@ -70,9 +71,7 @@ const grnLineColumns: DataTableColumn<GrnLine>[] = [
           {GRN_QUALITY_LABEL[line.qualityStatus]}
         </Badge>
         {line.rejectionReason && (
-          <div className="text-[10px] text-muted-foreground mt-0.5">
-            {line.rejectionReason}
-          </div>
+          <TruncatedText text={line.rejectionReason} lines={2} className="text-[10px] text-muted-foreground mt-0.5" />
         )}
       </>
     ),

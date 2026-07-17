@@ -23,6 +23,7 @@ import {
   CYCLE_COUNT_STATUS_LABEL,
   type CycleCountStatus,
 } from "@/features/inventory/lib/inventory-status";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import type { CycleCountLine } from "@/hooks/api/inventory/counts";
 
 export interface CountDetailSharedProps {
@@ -161,7 +162,7 @@ export function CountDetailShared({
         key: "product",
         header: "Product",
         cell: (row) => (
-          <span className="text-sm font-medium text-foreground">{row.productName}</span>
+          <TruncatedText text={row.productName} className="text-sm font-medium text-foreground" />
         ),
       },
       {
@@ -176,7 +177,7 @@ export function CountDetailShared({
         header: "Location",
         headerClassName: "w-[130px]",
         className: "text-muted-foreground",
-        cell: (row) => row.locationName ?? "—",
+        cell: (row) => <TruncatedText text={row.locationName ?? "—"} className="text-sm text-muted-foreground" />,
       },
       {
         key: "systemQty",

@@ -219,7 +219,7 @@ export default function WinLossAnalysisPage() {
                           <div className="flex items-center justify-between mb-1">
                             <Badge
                               variant="outline"
-                              className={cn("text-[10px] h-5 px-2 py-0.5", colorClass)}
+                              className={cn("text-[10px] h-5 px-2 py-0.5 max-w-[140px] truncate", colorClass)}
                             >
                               {r.reason}
                             </Badge>

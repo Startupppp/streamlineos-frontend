@@ -40,6 +40,7 @@ import {
 } from "@/features/inventory/lib";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 
 type AdjustmentLine = {
@@ -57,19 +58,19 @@ const lineColumns: DataTableColumn<AdjustmentLine>[] = [
     key: "variant",
     header: "Variant",
     cell: (line) => (
-      <>
-        {line.variantName ?? `Variant #${line.productVariantId}`}
+      <div>
+        <TruncatedText text={line.variantName ?? `Variant #${line.productVariantId}`} className="text-sm font-medium" />
         {line.variantSku && (
-          <span className="text-muted-foreground font-mono ml-1">({line.variantSku})</span>
+          <span className="text-muted-foreground font-mono text-xs break-all">({line.variantSku})</span>
         )}
-      </>
+      </div>
     ),
   },
   {
     key: "location",
     header: "Location",
     className: "text-muted-foreground",
-    cell: (line) => line.locationName ?? `Location #${line.locationId}`,
+    cell: (line) => <TruncatedText text={line.locationName ?? `Location #${line.locationId}`} className="text-sm text-muted-foreground" />,
   },
   {
     key: "qtyChange",

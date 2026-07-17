@@ -193,7 +193,7 @@ export function useHrTeamAttendanceStatus() {
   return useQuery({
     queryKey: [...queryKeys.hr.all, "team-attendance-status"] as const,
     queryFn: () => apiClient.get<TeamAttendanceEntry[]>("/hr/attendance/team-status"),
-    staleTime: 30_000,
+    staleTime: 65_000,
     refetchInterval: 60_000,
   });
 }

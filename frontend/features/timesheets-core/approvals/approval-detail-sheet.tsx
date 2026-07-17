@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { format, parseISO } from "date-fns";
 import { CheckCircle, XCircle } from "lucide-react";
 import {
@@ -19,8 +19,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { AiActionsMenu, type AiAction } from "@/components/ai";
 import { usePeriod } from "@/hooks/api/timesheets-core/periods";
 import { useApprovePeriod, useRejectPeriod } from "@/hooks/api/timesheets-core/approvals";
+import { fetchTimesheetPeriodSummary } from "@/hooks/api/timesheets-core/ai";
 import {
   PERIOD_STATUS_BADGE,
   PERIOD_STATUS_LABEL,
@@ -110,18 +112,44 @@ export function ApprovalDetailSheet({
   const isActionable = period?.status === "SUBMITTED";
   const isPending = approveMutation.isPending || rejectMutation.isPending;
 
+  const aiActions = useMemo<AiAction[]>(() => {
+    if (!period) return [];
+    const periodId = period.id;
+    return [
+      {
+        key: "summarize-period",
+        label: "Summarize this timesheet",
+        description: "Narrate hours by project, billable ratio, and notable patterns",
+        run: async () => {
+          const res = await fetchTimesheetPeriodSummary(periodId);
+          return { text: res.narration };
+        },
+      },
+    ];
+  }, [period]);
+
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent className="p-0 flex flex-col gap-0 overflow-hidden sm:max-w-lg">
         <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
-          <SheetTitle className="text-sm font-semibold">
-            {period?.user?.name ?? period?.user?.email ?? "Timesheet"}
-          </SheetTitle>
-          <SheetDescription className="text-xs">
-            {period
-              ? `${format(parseISO(period.periodStart), "MMM d")} – ${format(parseISO(period.periodEnd), "MMM d, yyyy")}`
-              : ""}
-          </SheetDescription>
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <SheetTitle className="text-sm font-semibold">
+                {period?.user?.name ?? period?.user?.email ?? "Timesheet"}
+              </SheetTitle>
+              <SheetDescription className="text-xs">
+                {period
+                  ? `${format(parseISO(period.periodStart), "MMM d")} – ${format(parseISO(period.periodEnd), "MMM d, yyyy")}`
+                  : ""}
+              </SheetDescription>
+            </div>
+            <AiActionsMenu
+              actions={aiActions}
+              disabled={!period}
+              menuLabel="Timesheet AI"
+              align="end"
+            />
+          </div>
         </SheetHeader>
 
         <SheetBody className="px-6 py-4">

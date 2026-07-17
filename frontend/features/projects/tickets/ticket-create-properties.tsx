@@ -286,8 +286,8 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
                       <AvatarImage src={resolveImageUrl(m.image)} />
                       <AvatarFallback className="text-[7px]">{getUserInitials(m)}</AvatarFallback>
                     </Avatar>
-                    <span className="truncate text-xs">{getUserDisplayName(m)}</span>
-                    {m.id === value.assigneeId && <Check className="ml-auto h-3 w-3" />}
+                    <span className="min-w-0 flex-1 truncate text-xs">{getUserDisplayName(m)}</span>
+                    {m.id === value.assigneeId && <Check className="ml-auto h-3 w-3 shrink-0" />}
                   </CommandItem>
                 ))}
               </CommandGroup>
@@ -337,7 +337,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
           <PillButton label="Set labels">
             <Tag className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
             {labelsPillText ? (
-              <span className="truncate max-w-[120px]">{labelsPillText}</span>
+              <span className="inline-block max-w-[120px] truncate" title={labelsPillText}>{labelsPillText}</span>
             ) : (
               <span className="text-muted-foreground">Labels</span>
             )}
@@ -362,8 +362,8 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
                         className="mr-2 h-2.5 w-2.5 rounded-full shrink-0"
                         style={{ backgroundColor: label.color ?? "#3b82f6" }}
                       />
-                      <span className="text-xs truncate">{label.name}</span>
-                      {value.labelIds.includes(label.id) && <Check className="ml-auto h-3 w-3" />}
+                      <span className="min-w-0 flex-1 truncate text-xs">{label.name}</span>
+                      {value.labelIds.includes(label.id) && <Check className="ml-auto h-3 w-3 shrink-0" />}
                     </CommandItem>
                   ))}
                 </CommandGroup>
@@ -378,7 +378,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
           <PillButton label="Set cycle">
             <span className="h-3 w-3 shrink-0 rounded-full border-2 border-current opacity-70" />
             {selectedCycle ? (
-              <span className="truncate max-w-[120px]">{selectedCycle.name}</span>
+              <span className="inline-block max-w-[120px] truncate" title={selectedCycle.name}>{selectedCycle.name}</span>
             ) : (
               <span className="text-muted-foreground">Cycle</span>
             )}
@@ -413,7 +413,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
                   c.status === "active" ? "bg-green-500" : c.status === "completed" ? "bg-muted-foreground" : "bg-blue-400",
                 )}
               />
-              <span className="truncate flex-1">{c.name}</span>
+              <span className="min-w-0 flex-1 truncate">{c.name}</span>
               {c.status === "active" && (
                 <Badge variant="outline" className="h-4 px-1 text-[9px] text-green-600 border-green-500/40">Active</Badge>
               )}

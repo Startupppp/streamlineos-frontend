@@ -94,15 +94,15 @@ const COLUMNS: DataTableColumn<NLSearchLead>[] = [
     key: "name",
     header: "Name",
     cell: (lead) => (
-      <div>
+      <div className="min-w-0">
         <Link
           href={`/crm/leads/${lead.id}`}
-          className="font-medium text-primary hover:underline transition-colors"
+          className="font-medium text-primary hover:underline transition-colors block truncate max-w-[160px]"
         >
           {lead.name}
         </Link>
         {lead.email && (
-          <p className="text-[10px] text-muted-foreground mt-0.5">{lead.email}</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5 break-all">{lead.email}</p>
         )}
       </div>
     ),
@@ -113,7 +113,7 @@ const COLUMNS: DataTableColumn<NLSearchLead>[] = [
     key: "company",
     header: "Company",
     cell: (lead) => (
-      <span className="text-muted-foreground">{lead.company ?? "—"}</span>
+      <span className="text-muted-foreground block truncate max-w-[120px]">{lead.company ?? "—"}</span>
     ),
   },
   {

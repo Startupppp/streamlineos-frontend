@@ -49,7 +49,7 @@ const PUBLICATION_COLUMNS: DataTableColumn<Publication>[] = [
   {
     key: "variant",
     header: "Variant",
-    cell: (row) => <span className="text-sm font-medium">{row.variantName}</span>,
+    cell: (row) => <TruncatedText text={row.variantName} className="text-sm font-medium" />,
     sortable: true,
     sortValue: (row) => row.variantName,
   },

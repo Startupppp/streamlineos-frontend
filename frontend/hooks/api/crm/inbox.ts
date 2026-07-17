@@ -9,7 +9,7 @@ export function useInbox() {
   return useQuery({
     queryKey: queryKeys.crmInbox.data(),
     queryFn: () => apiClient.get<CrmInboxResponse>("/crm/inbox"),
-    staleTime: 30_000,
+    staleTime: 65_000,
     refetchInterval: 60_000,
   });
 }
@@ -18,7 +18,7 @@ export function useInboxCounts() {
   return useQuery({
     queryKey: queryKeys.crmInbox.counts(),
     queryFn: () => apiClient.get<CrmInboxCounts>("/crm/inbox/counts"),
-    staleTime: 30_000,
+    staleTime: 65_000,
     refetchInterval: 60_000,
   });
 }

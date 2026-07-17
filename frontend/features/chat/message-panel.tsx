@@ -57,6 +57,9 @@ import { SharedFilesPanel } from "./shared-files-panel";
 import { ForwardMessageDialog } from "./forward-message-dialog";
 import { ChannelSidebarCollapseButton } from "./channel-sidebar-collapse-button";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { AiActionsMenu, type AiAction } from "@/components/ai";
+import { useChatSummarize } from "@/hooks/api/chat-summarize";
+import { useCan } from "@/hooks/api/access";
 
 const PaperclipButton = React.forwardRef<
   HTMLButtonElement,
@@ -139,6 +142,18 @@ export function MessagePanel({
   const { data: activeHuddle } = useActiveHuddle(channelId);
   const startHuddle = useStartHuddle();
   const joinHuddle = useJoinHuddle();
+  const summarize = useChatSummarize();
+  const canUseAi = useCan("ai:chat:use");
+
+  const summarizeAction: AiAction = useMemo(
+    () => ({
+      key: "summarize",
+      label: "Summarize conversation",
+      description: "Get a plain-language recap of key points, decisions, and action items",
+      run: () => summarize(channelId),
+    }),
+    [summarize, channelId],
+  );
 
   const isInHuddle =
     activeHuddle?.participants.some((p) => p.userId === currentUserId) ?? false;
@@ -958,6 +973,13 @@ export function MessagePanel({
                   <span>Huddle</span>
                 )}
               </AnimatedIconButton>
+            )}
+            {canUseAi && (
+              <AiActionsMenu
+                actions={[summarizeAction]}
+                align="end"
+                disabled={!channelId}
+              />
             )}
             <PaperclipButton
               onClick={() => {

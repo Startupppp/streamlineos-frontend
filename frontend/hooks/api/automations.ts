@@ -139,7 +139,7 @@ export function useAutomationRuns(ruleId: number) {
     queryKey: queryKeys.automations.runs(ruleId),
     queryFn: () => apiClient.get<AutomationRun[]>(`/settings/automations/${ruleId}/runs`),
     enabled: Number.isFinite(ruleId) && ruleId > 0,
-    staleTime: 15_000,
+    staleTime: 35_000,
     refetchInterval: 30_000,
     refetchIntervalInBackground: false,
   });

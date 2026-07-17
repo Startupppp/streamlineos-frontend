@@ -11,6 +11,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyPayroll } from "@/components/illustrations";
 import { useEssPayslips } from "@/hooks/api/payroll/ess";
+import { useExplainPayslip } from "@/hooks/api/payroll/use-explain-payslip";
+import { AiActionsMenu } from "@/components/ai";
+import type { AiAction } from "@/components/ai";
 import { apiClient } from "@/lib/api-client";
 import { formatMoney, formatMonth } from "@/features/payroll/shared/payroll-format";
 import { numberToWords } from "@/lib/format-utils";
@@ -84,6 +87,28 @@ const DownloadButton = memo(function DownloadButton({ payslip }: DownloadButtonP
       {loading ? "Downloading…" : "Download"}
     </AnimatedIconButton>
   );
+});
+
+interface ExplainMenuProps {
+  payslip: EssPayslip;
+}
+
+const ExplainMenu = memo(function ExplainMenu({ payslip }: ExplainMenuProps) {
+  const { mutateAsync } = useExplainPayslip(payslip.publicationId);
+
+  const actions: AiAction[] = [
+    {
+      key: "explain-payslip",
+      label: "Explain this payslip",
+      description: "Plain-language breakdown of your earnings & deductions",
+      run: async () => {
+        const result = await mutateAsync();
+        return { text: result.explanation };
+      },
+    },
+  ];
+
+  return <AiActionsMenu actions={actions} triggerLabel="AI" menuLabel="Payslip AI" align="end" />;
 });
 
 export function EssPayslipsSection() {
@@ -176,6 +201,7 @@ export function EssPayslipsSection() {
                       </span>
                     )}
                   </div>
+                  <ExplainMenu payslip={payslip} />
                   <DownloadButton payslip={payslip} />
                 </div>
               </motion.div>

@@ -8,3 +8,4 @@ export * from "./settings";
 export * from "./rates";
 export * from "./budgets";
 export * from "./audit";
+export * from "./ai";

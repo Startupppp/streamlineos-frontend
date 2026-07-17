@@ -138,7 +138,7 @@ function ViewRow({
       }}
       className="group flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-xs hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:bg-accent transition-colors"
     >
-      <span className="flex-1 truncate font-medium">{view.name}</span>
+      <span className="min-w-0 flex-1 truncate font-medium">{view.name}</span>
 
       <span
         className="shrink-0 text-muted-foreground group-hover:text-accent-foreground"

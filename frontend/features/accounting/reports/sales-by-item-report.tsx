@@ -11,6 +11,7 @@ import { DateRangeFilter } from "./date-range-filter";
 import { useSalesByItem } from "@/hooks/api/accounting/reports";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { downloadCsv } from "@/features/accounting/shared";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { formatCurrencyFull } from "@/lib/format-utils";
 
 function currentMonthRange(): { from: string; to: string } {
@@ -26,7 +27,7 @@ const SALES_BY_ITEM_COLUMNS: DataTableColumn<SalesByItemRow>[] = [
   {
     key: "description",
     header: "Description",
-    cell: (row) => row.description,
+    cell: (row) => <TruncatedText text={row.description} lines={2} className="text-sm" />,
   },
   {
     key: "totalQuantity",

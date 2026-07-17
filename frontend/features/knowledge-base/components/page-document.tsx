@@ -194,6 +194,7 @@ export default function PageDocument({ pageId }: PageDocumentProps) {
             pageId={pageId}
             saveState={saveState}
             onNavigate={handleNavigateToPage}
+            onApplyImprovement={handleApplyImprovement}
           />
 
           <div className="flex flex-row items-center mt-4 mb-4 gap-2 overflow-hidden">

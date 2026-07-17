@@ -68,7 +68,7 @@ export function useEmergencyEventStatus(eventId: string) {
     queryKey: emergencyKeys.status(eventId),
     queryFn: () => apiClient.get<{ aggregate: Record<string, number>; total: number }>(`${BASE}/events/${eventId}/status`),
     enabled: !!eventId,
-    staleTime: 10_000,
+    staleTime: 35_000,
     refetchInterval: 30_000,
   });
 }

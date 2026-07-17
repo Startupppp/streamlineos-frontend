@@ -29,6 +29,7 @@ import { toast } from "sonner";
 import { KbFeedbackPanel } from "./kb-feedback-panel";
 import { KbAttachmentsPanel } from "./kb-attachments-panel";
 import { KbCommentsPanel } from "./kb-comments-panel";
+import { KbArticleAiActions } from "./kb-article-ai-actions";
 
 const CATEGORY_NONE = "none";
 
@@ -200,6 +201,11 @@ export function KbArticleEditor({
     setPendingDraft(null);
   }
 
+  function handleApplyImprovement(text: string) {
+    setContent(text);
+    toast.success("Improvement applied — review and save when ready");
+  }
+
   function handleSave() {
     if (!title.trim()) {
       toast.error("Title is required");
@@ -235,10 +241,13 @@ export function KbArticleEditor({
       subtitle="Edit article content, metadata, and publishing settings."
       backHref="/support/kb"
       actions={
-        <Button size="sm" onClick={handleSave} disabled={update.isPending}>
-          <Save className="h-3.5 w-3.5 mr-1" />
-          {update.isPending ? "Saving…" : "Save"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <KbArticleAiActions articleId={article.id} onApplyImprovement={handleApplyImprovement} />
+          <Button size="sm" onClick={handleSave} disabled={update.isPending}>
+            <Save className="h-3.5 w-3.5 mr-1" />
+            {update.isPending ? "Saving…" : "Save"}
+          </Button>
+        </div>
       }
     >
       {pendingDraft && (

@@ -118,7 +118,7 @@ const EXPIRY_COLUMNS: DataTableColumn<ExpiryItem>[] = [
     header: "Warehouse",
     headerClassName: "hidden md:table-cell",
     className: "text-muted-foreground hidden md:table-cell",
-    cell: (row) => <>{row.warehouseName ?? "—"}</>,
+    cell: (row) => <TruncatedText text={row.warehouseName ?? "—"} className="text-muted-foreground" />,
   },
   {
     key: "actions",

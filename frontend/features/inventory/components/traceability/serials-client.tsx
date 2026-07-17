@@ -94,14 +94,14 @@ const SERIALS_COLUMNS: DataTableColumn<SerialItem>[] = [
     header: "Location",
     headerClassName: "hidden md:table-cell",
     className: "text-muted-foreground hidden md:table-cell",
-    cell: (row) => <>{row.locationName ?? "—"}</>,
+    cell: (row) => <TruncatedText text={row.locationName ?? "—"} className="text-muted-foreground" />,
   },
   {
     key: "warehouseName",
     header: "Warehouse",
     headerClassName: "hidden md:table-cell",
     className: "text-muted-foreground hidden md:table-cell",
-    cell: (row) => <>{row.warehouseName ?? "—"}</>,
+    cell: (row) => <TruncatedText text={row.warehouseName ?? "—"} className="text-muted-foreground" />,
   },
   {
     key: "lotNumber",

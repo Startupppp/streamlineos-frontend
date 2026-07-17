@@ -9,8 +9,10 @@ export default async function EditEmployeePage({
 }: {
   params: Promise<{ employeeId: string }>;
 }) {
-  await requirePermission("hr:employees:view");
-  const { employeeId } = await params;
+  const [, { employeeId }] = await Promise.all([
+    requirePermission("hr:employees:view"),
+    params,
+  ]);
 
   let employee: EmployeeData | null = null;
   try {

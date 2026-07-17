@@ -269,7 +269,7 @@ export function useDealAging() {
   return useQuery<AgingResponse>({
     queryKey: queryKeys.deals.aging(),
     queryFn: () => apiClient.get<AgingResponse>("/deals/aging"),
-    staleTime: 300_000,
+    staleTime: 305_000,
     refetchInterval: 300_000,
   });
 }

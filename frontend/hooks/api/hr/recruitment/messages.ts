@@ -59,7 +59,7 @@ export function useMessageThreads() {
   return useQuery({
     queryKey: queryKeys.hr.messageThreads(),
     queryFn: () => apiClient.get<MessageThread[]>("/hr/recruitment/messages/threads"),
-    staleTime: 30_000,
+    staleTime: 65_000,
     refetchInterval: 60_000,
   });
 }

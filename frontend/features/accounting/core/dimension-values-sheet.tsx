@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   useDimensionValues,
   useUpdateDimensionValue,
@@ -62,7 +63,7 @@ function buildColumns(
     {
       key: "name",
       header: "Name",
-      cell: (row) => row.name,
+      cell: (row) => <TruncatedText text={row.name} className="text-sm" />,
     },
     {
       key: "isActive",

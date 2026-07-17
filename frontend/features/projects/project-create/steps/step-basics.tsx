@@ -270,7 +270,7 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
                                   {getUserInitials({ name: selectedManager.name, email: selectedManager.email })}
                                 </AvatarFallback>
                               </Avatar>
-                              <span className="truncate text-sm">
+                              <span className="min-w-0 truncate text-sm">
                                 {getUserDisplayName({ name: selectedManager.name, email: selectedManager.email })}
                               </span>
                             </span>

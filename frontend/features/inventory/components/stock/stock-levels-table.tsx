@@ -85,14 +85,17 @@ export const StockLevelsTable = memo(function StockLevelsTable({ rows, onShowAva
       header: "SKU",
       className: "font-mono text-muted-foreground hidden md:table-cell",
       headerClassName: "hidden md:table-cell",
-      cell: (row) => row.sku,
+      cell: (row) => <TruncatedText text={row.sku} className="font-mono text-muted-foreground" />,
     },
     {
       key: "location",
       header: "Warehouse / Location",
       className: "text-muted-foreground hidden md:table-cell",
       headerClassName: "hidden md:table-cell",
-      cell: (row) => [row.warehouseName, row.locationCode].filter(Boolean).join(" / ") || "—",
+      cell: (row) => {
+        const label = [row.warehouseName, row.locationCode].filter(Boolean).join(" / ") || "—";
+        return <TruncatedText text={label} className="text-muted-foreground" />;
+      },
     },
     {
       key: "onHand",

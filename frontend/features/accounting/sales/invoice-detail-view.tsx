@@ -336,7 +336,7 @@ export function InvoiceDetailContent({ invoiceId }: InvoiceDetailContentProps) {
       {
         key: "description",
         header: "Description",
-        cell: (item) => <span className="text-xs">{item.description}</span>,
+        cell: (item) => <TruncatedText text={item.description} lines={2} className="text-xs" />,
       },
       {
         key: "quantity",
@@ -425,9 +425,7 @@ export function InvoiceDetailContent({ invoiceId }: InvoiceDetailContentProps) {
               <p className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground mb-0.5">
                 Customer
               </p>
-              <p className="text-sm font-medium">
-                {invoice.client?.name ?? "—"}
-              </p>
+              <TruncatedText text={invoice.client?.name ?? "—"} className="text-sm font-medium" />
             </div>
             <div>
               <p className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground mb-0.5">
@@ -478,7 +476,7 @@ export function InvoiceDetailContent({ invoiceId }: InvoiceDetailContentProps) {
                 <p className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground mb-0.5">
                   Project
                 </p>
-                <p className="text-sm">{invoice.project.name}</p>
+                <TruncatedText text={invoice.project.name} className="text-sm" />
               </div>
             )}
           </div>

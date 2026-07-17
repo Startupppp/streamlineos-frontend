@@ -1,6 +1,6 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 import { PM_TOOLBAR, PmPageShell, PmPanel, PmSection } from "@/features/projects/shared/pm-chrome";
 import { cn } from "@/lib/utils";
 

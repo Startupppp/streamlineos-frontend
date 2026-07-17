@@ -10,7 +10,8 @@ import { ChevronLeftIcon, ChevronRightIcon, XIcon } from "@animateicons/react/lu
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
-import { useCurrentPeriod, useSubmitPeriod, useRecallPeriod, useTimesheetEntries } from "@/hooks/api/timesheets-core";
+import { AiActionsMenu, type AiAction } from "@/components/ai";
+import { useCurrentPeriod, useSubmitPeriod, useRecallPeriod, useTimesheetEntries, fetchTimesheetPeriodSummary } from "@/hooks/api/timesheets-core";
 import { PERIOD_STATUS_BADGE, PERIOD_STATUS_LABEL } from "@/features/timesheets-core";
 import { useWeek } from "./use-week";
 import { TimerPanel } from "./timer-panel";
@@ -66,6 +67,22 @@ export function MyTimeView() {
   const handlePeriodRetry = useCallback(() => { void refetchPeriod(); }, [refetchPeriod]);
   const handleDismissRejection = useCallback(() => setRejectionDismissed(true), []);
 
+  const aiActions = useMemo<AiAction[]>(() => {
+    if (!period) return [];
+    const periodId = period.id;
+    return [
+      {
+        key: "summarize-period",
+        label: "Summarize this timesheet",
+        description: "Narrate hours by project, billable ratio, and notable patterns",
+        run: async () => {
+          const res = await fetchTimesheetPeriodSummary(periodId);
+          return { text: res.narration };
+        },
+      },
+    ];
+  }, [period]);
+
   const motionProps = shouldReduceMotion
     ? {}
     : { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.22, ease: "easeOut" as const } };
@@ -78,6 +95,13 @@ export function MyTimeView() {
 
   const weekNavActions = (
     <div className="flex items-center gap-2">
+      <AiActionsMenu
+        actions={aiActions}
+        disabled={!period}
+        menuLabel="Timesheet AI"
+        align="end"
+      />
+
       <div className="flex items-center rounded-md border border-border overflow-hidden">
         <AnimatedIconButton
           icon={ChevronLeftIcon}

@@ -90,7 +90,7 @@ function buildColumns(
       key: "warehouse",
       header: "Warehouse",
       className: "text-muted-foreground",
-      cell: (rule) => rule.warehouseName,
+      cell: (rule) => <TruncatedText text={rule.warehouseName} className="text-sm text-muted-foreground" />,
     },
     {
       key: "minQty",
@@ -126,7 +126,7 @@ function buildColumns(
       key: "vendor",
       header: "Vendor",
       className: "text-muted-foreground",
-      cell: (rule) => rule.vendorName ?? "—",
+      cell: (rule) => <TruncatedText text={rule.vendorName ?? "—"} className="text-sm text-muted-foreground" />,
     },
     {
       key: "status",

@@ -1,6 +1,7 @@
 "use client";
 
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import type { LotStockByLocation } from "@/hooks/api/inventory/traceability";
 
@@ -12,12 +13,12 @@ const columns: DataTableColumn<LotStockByLocation>[] = [
   {
     key: "location",
     header: "Location",
-    cell: (row) => <span className="font-medium text-foreground">{row.locationName}</span>,
+    cell: (row) => <TruncatedText text={row.locationName} className="font-medium text-foreground" />,
   },
   {
     key: "warehouse",
     header: "Warehouse",
-    cell: (row) => <span className="text-muted-foreground">{row.warehouseName}</span>,
+    cell: (row) => <TruncatedText text={row.warehouseName} className="text-muted-foreground" />,
   },
   {
     key: "qty",

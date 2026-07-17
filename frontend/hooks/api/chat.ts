@@ -120,7 +120,7 @@ export function useChatOnlineUsers(enabled = true) {
     queryKey: queryKeys.chat.onlineUsers(),
     queryFn: () => apiClient.get<OnlineUser[]>("/chat/presence/online"),
     refetchInterval: 60_000,
-    staleTime: 30_000,
+    staleTime: 65_000,
     enabled,
   });
 }

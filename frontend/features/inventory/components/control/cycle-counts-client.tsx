@@ -41,6 +41,7 @@ import {
 } from "@/features/inventory/lib/inventory-status";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 function ViewCountButton({ href }: { href: string }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -233,19 +234,19 @@ export function CycleCountsClient() {
     {
       key: "warehouse",
       header: "Warehouse",
-      cell: (row) => row.warehouseName,
+      cell: (row) => <TruncatedText text={row.warehouseName} className="text-sm" />,
     },
     {
       key: "location",
       header: "Location",
       className: "text-muted-foreground",
-      cell: (row) => row.locationName ?? "—",
+      cell: (row) => <TruncatedText text={row.locationName ?? "—"} className="text-sm text-muted-foreground" />,
     },
     {
       key: "category",
       header: "Category",
       className: "text-muted-foreground",
-      cell: (row) => row.categoryName ?? "—",
+      cell: (row) => <TruncatedText text={row.categoryName ?? "—"} className="text-sm text-muted-foreground" />,
     },
     {
       key: "lineCount",

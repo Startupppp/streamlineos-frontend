@@ -11,6 +11,7 @@ import { DateRangeFilter } from "./date-range-filter";
 import { useSalesByCustomer } from "@/hooks/api/accounting/reports";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { downloadCsv } from "@/features/accounting/shared";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { formatCurrencyFull } from "@/lib/format-utils";
 
 function currentMonthRange(): { from: string; to: string } {
@@ -26,7 +27,7 @@ const SALES_BY_CUSTOMER_COLUMNS: DataTableColumn<SalesByCustomerRow>[] = [
   {
     key: "clientName",
     header: "Customer",
-    cell: (row) => row.clientName,
+    cell: (row) => <TruncatedText text={row.clientName} className="text-sm" />,
   },
   {
     key: "invoiceCount",

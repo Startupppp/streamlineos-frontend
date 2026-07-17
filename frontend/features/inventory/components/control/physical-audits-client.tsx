@@ -40,6 +40,7 @@ import {
 } from "@/features/inventory/lib/inventory-status";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 function ViewAuditButton({ href }: { href: string }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -175,7 +176,7 @@ export function PhysicalAuditsClient() {
     {
       key: "warehouse",
       header: "Warehouse",
-      cell: (row) => row.warehouseName,
+      cell: (row) => <TruncatedText text={row.warehouseName} className="text-sm" />,
     },
     {
       key: "lineCount",

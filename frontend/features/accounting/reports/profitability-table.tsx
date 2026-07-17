@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { formatCurrencyFull } from "@/lib/format-utils";
 import type { ProfitabilityRow } from "@/hooks/api/accounting/reports";
 import { cn } from "@/lib/utils";
@@ -30,7 +31,7 @@ export function ProfitabilityTable({ data, nameKey }: ProfitabilityTableProps) {
         header: "Name",
         cell: (row) => {
           const name = nameKey === "projectName" ? row.projectName : row.departmentName;
-          return <span className="text-sm text-foreground">{name ?? "—"}</span>;
+          return <TruncatedText text={name ?? "—"} className="text-sm text-foreground" />;
         },
       },
       {

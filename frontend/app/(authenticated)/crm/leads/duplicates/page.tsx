@@ -19,6 +19,7 @@ import {
   type DuplicateGroup,
 } from "@/hooks/api/crm/leads";
 import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 function scoreToTone(score: number): string {
   if (score >= 80) return "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30";
@@ -87,12 +88,12 @@ function DuplicateGroupCard({
     {
       key: "name",
       header: "Name",
-      cell: (row) => <span className="text-[11px] font-medium">{row.name}</span>,
+      cell: (row) => <TruncatedText text={row.name} className="text-[11px] font-medium max-w-[120px]" />,
     },
     {
       key: "email",
       header: "Email",
-      cell: (row) => <span className="text-[11px] text-muted-foreground">{row.email ?? "—"}</span>,
+      cell: (row) => <span className="text-[11px] text-muted-foreground break-all">{row.email ?? "—"}</span>,
     },
     {
       key: "phone",

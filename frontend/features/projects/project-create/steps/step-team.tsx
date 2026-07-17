@@ -99,10 +99,10 @@ export function StepTeam({ draft, updateDraft }: StepSharedProps) {
                 {displayName.charAt(0).toUpperCase() || <User className="h-3.5 w-3.5" />}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-sm font-medium truncate flex items-center gap-1.5">
-                  {displayName}
+                <div className="flex items-center gap-1.5">
+                  <span className="min-w-0 truncate text-sm font-medium">{displayName}</span>
                   {isCreator && (
-                    <span className="text-[10px] font-normal text-muted-foreground bg-muted rounded px-1 py-0.5">
+                    <span className="shrink-0 text-[10px] font-normal text-muted-foreground bg-muted rounded px-1 py-0.5">
                       You
                     </span>
                   )}

@@ -511,4 +511,17 @@ export type PermissionKey =
   | "crm:ai:use"
   | "accounting:ai:use"
   | "blog:ai:use"
-  | "surveys:ai:use";
+  | "surveys:ai:use"
+  | "sign:documents:upload"
+  | "sign:documents:view"
+  | "sign:envelope:create"
+  | "sign:envelope:view"
+  | "sign:envelope:view_all"
+  | "sign:envelope:send"
+  | "sign:envelope:void"
+  | "sign:envelope:correct"
+  | "sign:template:manage"
+  | "sign:bulk_send:run"
+  | "sign:admin:manage"
+  | "sign:audit:view"
+  | "sign:certificate:download";

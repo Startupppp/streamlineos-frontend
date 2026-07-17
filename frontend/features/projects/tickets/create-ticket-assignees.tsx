@@ -53,7 +53,7 @@ export function CreateTicketAssignees({
                     {getUserInitials(member)}
                   </AvatarFallback>
                 </Avatar>
-                <span className="truncate max-w-[100px]">{displayName}</span>
+                <span className="inline-block max-w-[100px] truncate" title={displayName}>{displayName}</span>
                 <button
                   type="button"
                   className="text-accent/70 hover:text-destructive transition-colors"
@@ -87,7 +87,7 @@ export function CreateTicketAssignees({
                       {getUserInitials(member)}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="truncate">
+                  <span className="min-w-0 flex-1 truncate">
                     {getUserDisplayName(member)}
                   </span>
                 </div>

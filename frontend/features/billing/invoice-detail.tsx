@@ -38,6 +38,7 @@ import {
   useDeleteInvoice,
 } from "@/hooks/api/invoice";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import type { InvoiceStatus } from "@/types/invoice";
 import { InvoiceLineItems } from "./invoice-line-items";
 import { RecordPaymentDialog } from "./record-payment-dialog";
@@ -489,19 +490,19 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
           {invoice.client && (
             <div className="col-span-2">
               <p className="text-xs text-muted-foreground mb-0.5">Client</p>
-              <p className="font-medium">{invoice.client.name}</p>
+              <TruncatedText text={invoice.client.name} className="font-medium" />
             </div>
           )}
           {invoice.project && (
             <div className="col-span-2">
               <p className="text-xs text-muted-foreground mb-0.5">Project</p>
-              <p>{invoice.project.name}</p>
+              <TruncatedText text={invoice.project.name} className="text-sm" />
             </div>
           )}
           {invoice.creator && (
             <div className="col-span-2">
               <p className="text-xs text-muted-foreground mb-0.5">Created by</p>
-              <p>{invoice.creator.name ?? invoice.creator.id}</p>
+              <TruncatedText text={String(invoice.creator.name ?? invoice.creator.id)} className="text-sm" />
             </div>
           )}
         </div>

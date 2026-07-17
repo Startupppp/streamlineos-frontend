@@ -67,7 +67,11 @@ const COLUMNS: DataTableColumn<ExpenseWithExtras>[] = [
   {
     key: "merchant",
     header: "Merchant",
-    cell: (row) => <span className="text-sm">{row.merchant ?? "—"}</span>,
+    cell: (row) => row.merchant ? (
+      <TruncatedText text={row.merchant} className="text-sm" />
+    ) : (
+      <span className="text-sm text-muted-foreground">—</span>
+    ),
   },
   {
     key: "category",

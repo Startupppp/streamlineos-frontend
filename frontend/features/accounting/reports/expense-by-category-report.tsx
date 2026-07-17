@@ -13,6 +13,7 @@ import { useExpenseByCategory } from "@/hooks/api/accounting/reports";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { downloadCsv } from "@/features/accounting/shared";
 import { formatCurrencyFull } from "@/lib/format-utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 function currentMonthRange(): { from: string; to: string } {
   const now = new Date();
@@ -32,7 +33,7 @@ const EXPENSE_BY_CATEGORY_COLUMNS: DataTableColumn<ExpenseByCategoryRow>[] = [
   {
     key: "categoryName",
     header: "Category",
-    cell: (row) => row.categoryName,
+    cell: (row) => <TruncatedText text={row.categoryName} className="text-sm" />,
   },
   {
     key: "count",

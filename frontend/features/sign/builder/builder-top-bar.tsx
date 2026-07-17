@@ -21,6 +21,7 @@ import {
 import { useSaveEnvelopeAsTemplate } from "@/hooks/api/sign/templates";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { EnvelopeStatusBadge } from "../components/envelope-status-badge";
+import { EnvelopeAiMenu } from "./envelope-ai-menu";
 import type { SignEnvelope } from "@/types/sign";
 
 export function BuilderTopBar({ envelope, onShowAudit }: { envelope: SignEnvelope; onShowAudit: () => void }) {
@@ -135,6 +136,7 @@ export function BuilderTopBar({ envelope, onShowAudit }: { envelope: SignEnvelop
             Download signed PDF
           </Button>
         )}
+        <EnvelopeAiMenu envelopeId={envelope.id} />
         <Button variant="ghost" size="sm" onClick={onShowAudit}>
           <History className="size-4" />
           Audit trail

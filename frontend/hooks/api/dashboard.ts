@@ -127,7 +127,7 @@ export const useTeamAvailability = (
     queryKey: queryKeys.dashboard.teamAvailability(orgId),
     queryFn: () => apiClient.get<TeamMember[]>("/dashboard/team-availability"),
     refetchInterval: 60_000,
-    staleTime: 60_000,
+    staleTime: 65_000,
     refetchIntervalInBackground: false,
     ...options,
     enabled: !!orgId,
@@ -246,7 +246,7 @@ export const useLeavesToday = (
   return useQuery<LeaveToday[], Error>({
     queryKey: hrWidgetKeys(orgId).leavesToday,
     queryFn: () => apiClient.get<LeaveToday[]>("/dashboard/leaves-today"),
-    staleTime: 60_000,
+    staleTime: 65_000,
     refetchInterval: 60_000,
     refetchIntervalInBackground: false,
     ...options,
@@ -299,7 +299,7 @@ export const usePendingApprovals = (
   return useQuery<PendingApprovalsCount, Error>({
     queryKey: hrWidgetKeys(orgId).pendingApprovals,
     queryFn: () => apiClient.get<PendingApprovalsCount>("/dashboard/pending-approvals"),
-    staleTime: 60_000,
+    staleTime: 65_000,
     refetchInterval: 60_000,
     refetchIntervalInBackground: false,
     ...options,
@@ -313,7 +313,7 @@ export const useTeamAttendance = () => {
   return useQuery<TeamAttendance>({
     queryKey: hrWidgetKeys(orgId).teamAttendance,
     queryFn: () => apiClient.get<TeamAttendance>("/dashboard/team-attendance"),
-    staleTime: 60_000,
+    staleTime: 65_000,
     refetchInterval: 60_000,
     enabled: !!orgId,
   });

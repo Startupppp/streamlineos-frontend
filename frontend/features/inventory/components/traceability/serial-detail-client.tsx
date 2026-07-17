@@ -94,7 +94,7 @@ export function SerialDetailClient({ serialId }: SerialDetailClientProps) {
               </CardTitle>
             </CardHeader>
             <CardContent className="px-3 pb-3">
-              <p className="text-sm font-semibold text-foreground font-mono">{serial.variantSku}</p>
+              <p className="text-sm font-semibold text-foreground font-mono break-all">{serial.variantSku}</p>
             </CardContent>
           </Card>
           <Card>
@@ -104,11 +104,9 @@ export function SerialDetailClient({ serialId }: SerialDetailClientProps) {
               </CardTitle>
             </CardHeader>
             <CardContent className="px-3 pb-3">
-              <p className="text-sm font-semibold text-foreground">
-                {serial.locationName ?? "—"}
-              </p>
+              <TruncatedText text={serial.locationName ?? "—"} className="text-sm font-semibold text-foreground" />
               {serial.warehouseName && (
-                <p className="text-[11px] text-muted-foreground mt-0.5">{serial.warehouseName}</p>
+                <TruncatedText text={serial.warehouseName} className="text-[11px] text-muted-foreground mt-0.5" />
               )}
             </CardContent>
           </Card>

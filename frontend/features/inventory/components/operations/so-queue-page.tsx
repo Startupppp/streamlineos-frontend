@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -14,6 +14,7 @@ import { SearchInput } from "@/components/ui/search-input";
 import { useSalesOrders } from "@/hooks/api/inventory/sales-orders";
 import { SO_STATUS_BADGE, SO_STATUS_LABEL } from "@/features/inventory/lib/inventory-status";
 import type { SalesOrderListItem, SalesOrderStatus } from "@/hooks/api/inventory/sales-orders";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface SoQueuePageProps {
   status: SalesOrderStatus;
@@ -55,7 +56,7 @@ const columns: DataTableColumn<SalesOrderListItem>[] = [
   {
     key: "customerName",
     header: "Customer",
-    cell: (so) => so.customerName ?? "—",
+    cell: (so) => <TruncatedText text={so.customerName ?? "—"} className="text-sm" />,
   },
   {
     key: "orderDate",

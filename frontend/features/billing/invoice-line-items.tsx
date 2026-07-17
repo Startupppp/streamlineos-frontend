@@ -19,6 +19,7 @@ import {
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { useUpdateInvoice } from "@/hooks/api/invoice";
 
 function fmt(amount: string | number) {
@@ -56,7 +57,7 @@ const lineItemColumns: DataTableColumn<LineItem>[] = [
   {
     key: "description",
     header: "Description",
-    cell: (row) => <span className="text-sm">{row.description}</span>,
+    cell: (row) => <TruncatedText text={row.description} lines={2} className="text-sm" />,
   },
   {
     key: "quantity",
