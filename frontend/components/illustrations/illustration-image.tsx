@@ -36,7 +36,6 @@ export type IllustrationName =
   | "empty-clients"
   | "empty-payroll"
   | "authentication"
-  | "forgot-password"
   | "onboarding"
   | "welcome"
   | "survey"
@@ -119,7 +118,6 @@ export const EmptyClientsIllustration = createIllustration("empty-clients");
 export const EmptyPayroll = createIllustration("empty-payroll");
 
 export const AuthenticationIllustration = createIllustration("authentication");
-export const ForgotPasswordIllustration = createIllustration("forgot-password");
 export const OnboardingIllustration = createIllustration("onboarding");
 export const WelcomeIllustration = createIllustration("welcome");
 export const SurveyIllustration = createIllustration("survey");

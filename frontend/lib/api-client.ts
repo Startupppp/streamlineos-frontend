@@ -206,10 +206,6 @@ const MIGRATED_PREFIXES = [
 ] as const;
 
 const PUBLIC_AUTH_PATHS = new Set([
-  "/auth/register",
-  "/auth/login",
-  "/auth/forgot-password",
-  "/auth/reset-password",
   "/auth/magic-link",
   "/auth/magic-link/verify",
   "/auth/verify-email",

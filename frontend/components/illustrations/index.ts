@@ -37,7 +37,6 @@ export {
   EmptyClientsIllustration,
   EmptyPayroll,
   AuthenticationIllustration,
-  ForgotPasswordIllustration,
   OnboardingIllustration,
   WelcomeIllustration,
   SurveyIllustration,

@@ -28,23 +28,6 @@ export function useVerifyEmail() {
   });
 }
 
-export function useForgotPassword() {
-  return useMutation({
-    mutationFn: (variables: { email: string }) =>
-      apiClient.post<{ message: string }>("/auth/forgot-password", variables),
-  });
-}
-
-export function useResetPassword() {
-  return useMutation({
-    mutationFn: (variables: { token: string; password: string }) =>
-      apiClient.post<{ message: string }>("/auth/reset-password", {
-        token: variables.token,
-        newPassword: variables.password,
-      }),
-  });
-}
-
 export function useAcceptInvitation() {
   return useMutation({
     mutationFn: (variables: {
