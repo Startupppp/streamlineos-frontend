@@ -52,7 +52,6 @@ import {
 
 export default function HRDashboardPage() {
   const { data: session } = useSession();
-  const currentUserRole = session?.user?.role;
   const currentUserId = session?.user?.id;
 
   const searchParams = useSearchParams();
@@ -357,7 +356,6 @@ export default function HRDashboardPage() {
                 totalPages={totalPages}
                 showFrom={showFrom}
                 showTo={showTo}
-                currentUserRole={currentUserRole}
                 currentUserId={currentUserId}
                 onPageChange={setPage}
                 onPageSizeChange={handlePageSizeChange}

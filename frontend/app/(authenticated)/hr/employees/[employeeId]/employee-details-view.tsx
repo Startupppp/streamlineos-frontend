@@ -322,6 +322,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
   const router = useRouter();
   const { data: session } = useSession();
   const canManageEmployees = useCan("hr:employees:manage");
+  const canUpdateEmployee = useCan("hr:employees:update");
   const canViewSensitive = useCan("hr:sensitive:view");
   const [terminateOpen, setTerminateOpen] = useState(false);
   const searchParams = useSearchParams();
@@ -404,8 +405,8 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
       employeeAsEmployee.role ?? "",
       employee.id,
       true,
-      session?.user?.role,
       session?.user?.id,
+      canUpdateEmployee,
     );
 
   return (

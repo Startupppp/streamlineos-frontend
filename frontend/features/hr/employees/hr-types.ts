@@ -45,15 +45,13 @@ export function canDeleteEmployee(
   targetRole: UserRole,
   targetId: string,
   targetIsActive: boolean,
-  currentRole: string | undefined,
   currentId: string | undefined,
+  canManageEmployees: boolean,
 ): boolean {
   if (!targetIsActive) return false;
   if (targetId === currentId) return false;
   if (PROTECTED_TARGET_ROLES.has(targetRole)) return false;
-  if (currentRole === "CEO" || currentRole === "OWNER") return true;
-  if (currentRole === "HR") return targetRole !== "HR";
-  return false;
+  return canManageEmployees;
 }
 
 export function getDisplayName(employee: Employee): string {
