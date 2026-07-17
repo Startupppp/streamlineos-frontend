@@ -47,6 +47,7 @@ import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
@@ -63,14 +64,17 @@ import {
 const holidaySchema = z.object({
   name: z
     .string()
-    .transform((v) => v.trim())
+    .transform((v) => v.trim().replace(/\s+/g, " "))
     .pipe(
       z
         .string()
-        .min(3, "Name must be at least 3 characters")
-        .max(100, "Name must be at most 100 characters")
-        .refine((v) => /[a-zA-Z]/.test(v), "Name must contain at least one letter")
-        .refine((v) => /[a-zA-Z]{3}/.test(v), "Name must contain at least 3 letters"),
+        .min(2, "Holiday name must be at least 2 characters")
+        .max(100, "Holiday name must be at most 100 characters")
+        .refine((v) => /[a-zA-Z]/.test(v), "Holiday name must contain at least one letter")
+        .refine(
+          (v) => !/[^\p{L}\p{N}\s]{2,}/u.test(v),
+          "Holiday name cannot have consecutive special characters",
+        ),
     ),
   date: z.string().min(1, "Date is required"),
   recurring: z.boolean(),
@@ -234,15 +238,14 @@ function CalendarView({
           {format(viewDate, "MMMM")} Holidays
         </h3>
         {monthHolidays.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center bg-muted/20 rounded-lg border border-border">
-            <CalendarDays className="w-8 text-muted-foreground/40 mb-2" />
-            <p className="text-muted-foreground text-sm">No holidays in {format(viewDate, "MMMM")}</p>
-            {canManage && (
-              <Button variant="ghost" size="sm" className="mt-2" onClick={onAdd}>
-                <Plus className="h-3.5 w-3.5 mr-1" /> Add one
-              </Button>
-            )}
-          </div>
+          <EmptyState
+            illustrationPreset="calendar"
+            illustrationSize="md"
+            title={`No holidays in ${format(viewDate, "MMMM")}`}
+            action={canManage ? { label: "Add one", onClick: onAdd } : undefined}
+            compact
+            className="rounded-lg border border-border bg-muted/20 py-8"
+          />
         ) : (
           monthHolidays.map((h) => (
             <HolidayItem
@@ -445,13 +448,14 @@ function UpcomingView({
 
 function LocationView() {
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center bg-muted/20 rounded-lg border border-border">
-      <Globe className="w-8 text-muted-foreground/40 mb-2" />
-      <p className="text-sm font-medium text-muted-foreground">Location-based holidays not yet configured</p>
-      <p className="text-xs text-muted-foreground mt-1 max-w-xs">
-        Assign offices or regions to employees in Org settings to group holidays by location.
-      </p>
-    </div>
+    <EmptyState
+      illustrationPreset="travel"
+      illustrationSize="md"
+      title="Location-based holidays not yet configured"
+      description="Assign offices or regions to employees in Org settings to group holidays by location."
+      compact
+      className="rounded-lg border border-border bg-muted/20 py-10"
+    />
   );
 }
 
