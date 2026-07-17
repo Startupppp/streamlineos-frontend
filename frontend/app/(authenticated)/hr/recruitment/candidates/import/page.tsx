@@ -13,6 +13,8 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { toast } from "sonner";
 import { queryKeys } from "@/lib/query-keys";
 import { useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const CANDIDATE_FIELDS = [
   { key: "firstName", label: "First Name", required: true },
@@ -161,18 +163,15 @@ export default function BulkImportPage() {
 
     setImporting(true);
     try {
-      const res = await fetch("/api/hr/recruitment/candidates/bulk-import", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rows: mappedRows }),
-      });
-      const data = await res.json();
-      if (!res.ok) { toast.error(data.error ?? "Import failed"); return; }
+      const data = await apiClient.post<{ created: number; skipped: number; errors: string[] }>(
+        "/hr/recruitment/candidates/bulk-import",
+        { rows: mappedRows },
+      );
       setImportResult(data);
       setStep("done");
       void qc.invalidateQueries({ queryKey: queryKeys.hr.candidates() });
-    } catch {
-      toast.error("An unexpected error occurred.");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     } finally {
       setImporting(false);
     }
