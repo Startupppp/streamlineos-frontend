@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Sparkles, TrendingUp, AlertCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { AiConfidenceBadge } from "@/components/ai";
@@ -51,20 +51,17 @@ export function InterviewNotesSummaryButton({ candidateId, jobPostingId, candida
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button
+        <LoadingButton
           variant="ghost"
           size="sm"
           className="px-2 text-xs gap-1"
           onClick={handleSummarize}
-          disabled={mutation.isPending}
+          isPending={mutation.isPending}
+          loadingText="Summarizing…"
         >
-          {mutation.isPending ? (
-            <span className="h-3 w-3 animate-spin rounded-full border border-current border-t-transparent" />
-          ) : (
-            <Sparkles className="h-3 w-3 text-primary" />
-          )}
+          <Sparkles className="h-3 w-3 text-primary" />
           {result ? "Summary" : "Summarize Notes"}
-        </Button>
+        </LoadingButton>
       </PopoverTrigger>
 
       {result && (

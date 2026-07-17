@@ -2,10 +2,9 @@
 
 import { useState } from "react";
 import { Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { CopyIcon } from "@animateicons/react/lucide";
+import { CopyIcon, SparklesIcon } from "@animateicons/react/lucide";
 import {
   Sheet,
   SheetContent,
@@ -74,12 +73,23 @@ export function LetterDraftButton({ userId, userName }: LetterDraftButtonProps) 
     }
   }
 
+  function handleOpen() {
+    setOpen(true);
+  }
+
   return (
     <>
-      <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setOpen(true)}>
-        <Sparkles className="h-3.5 w-3.5 text-primary" />
+      <AnimatedIconButton
+        variant="outline"
+        size="sm"
+        className="gap-1.5"
+        icon={SparklesIcon}
+        iconSize={14}
+        iconClassName="text-primary"
+        onClick={handleOpen}
+      >
         Draft Letter
-      </Button>
+      </AnimatedIconButton>
 
       <Sheet open={open} onOpenChange={handleOpenChange}>
         <SheetContent className="w-[480px] sm:w-[540px] flex flex-col gap-0 p-0">
@@ -97,7 +107,7 @@ export function LetterDraftButton({ userId, userName }: LetterDraftButtonProps) 
             <div className="space-y-1.5">
               <Label className="text-xs font-medium">Letter Type</Label>
               <Select value={letterType} onValueChange={(v) => setLetterType(v as LetterType)}>
-                <SelectTrigger className="h-8 text-sm">
+                <SelectTrigger className="h-9 text-sm">
                   <SelectValue placeholder="Select letter type…" />
                 </SelectTrigger>
                 <SelectContent>

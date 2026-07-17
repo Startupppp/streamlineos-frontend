@@ -35,6 +35,10 @@ const DraftProposalCard = memo(function DraftProposalCard({
     minute: "2-digit",
   });
 
+  function handleConfirmClick() {
+    onConfirm(proposal.proposalId, proposal.token);
+  }
+
   return (
     <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-2">
       <div className="flex items-center justify-between gap-2">
@@ -49,7 +53,7 @@ const DraftProposalCard = memo(function DraftProposalCard({
           className="text-[10px] h-7 px-2 shrink-0"
           isPending={isPending}
           loadingText="Creating…"
-          onClick={() => onConfirm(proposal.proposalId, proposal.token)}
+          onClick={handleConfirmClick}
         >
           Confirm &amp; Create Draft PO
         </LoadingButton>

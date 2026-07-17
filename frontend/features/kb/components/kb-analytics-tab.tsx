@@ -1,8 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { LoadingState } from "@/components/shared/loading-state";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Sparkles, Search, BookOpen, AlertCircle } from "lucide-react";
@@ -26,7 +25,7 @@ export function KbAnalyticsTab() {
     void refetch();
   }
 
-  if (isLoading) return <LoadingState variant="cards" rows={4} />;
+  if (isLoading) return <StatCardGridSkeleton count={4} />;
   if (error) {
     return (
       <ErrorState

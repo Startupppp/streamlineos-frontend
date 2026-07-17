@@ -7,11 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { AiCitationChips, type Citation } from "@/components/ai/ai-citation-chips";
-import { ThumbsUp, ThumbsDown, Loader2 } from "lucide-react";
+import { ThumbsUpIcon, ThumbsDownIcon } from "@animateicons/react/lucide";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useKbResearchBrief, useRateResearchBrief } from "@/hooks/api/kb/research-briefs";
 import type { KbResearchBriefCitation, KbResearchBriefStatus } from "@/types/kb";
 
@@ -45,12 +48,17 @@ function buildBriefCitations(citations: KbResearchBriefCitation[]): Citation[] {
 function BriefFeedback({ briefId, currentRating }: { briefId: number; currentRating: "helpful" | "not_helpful" | null }) {
   const rateMutation = useRateResearchBrief();
 
-  function handleRate(rating: "helpful" | "not_helpful") {
+  function handleRateHelpful() {
     rateMutation.mutate(
-      { briefId, rating },
-      {
-        onError: (e) => toast.error(getErrorMessage(e)),
-      },
+      { briefId, rating: "helpful" },
+      { onError: (e) => toast.error(getErrorMessage(e)) },
+    );
+  }
+
+  function handleRateNotHelpful() {
+    rateMutation.mutate(
+      { briefId, rating: "not_helpful" },
+      { onError: (e) => toast.error(getErrorMessage(e)) },
     );
   }
 
@@ -66,24 +74,28 @@ function BriefFeedback({ briefId, currentRating }: { briefId: number; currentRat
   return (
     <div className="flex items-center gap-2">
       <span className="text-[12px] text-muted-foreground">Was this brief helpful?</span>
-      <Button
+      <AnimatedIconButton
+        icon={ThumbsUpIcon}
+        iconSize={12}
         variant="outline"
         size="sm"
         className="h-7 gap-1.5 text-[12px]"
-        onClick={() => handleRate("helpful")}
+        onClick={handleRateHelpful}
         disabled={rateMutation.isPending}
       >
-        <ThumbsUp className="h-3 w-3" /> Yes
-      </Button>
-      <Button
+        Yes
+      </AnimatedIconButton>
+      <AnimatedIconButton
+        icon={ThumbsDownIcon}
+        iconSize={12}
         variant="outline"
         size="sm"
         className="h-7 gap-1.5 text-[12px]"
-        onClick={() => handleRate("not_helpful")}
+        onClick={handleRateNotHelpful}
         disabled={rateMutation.isPending}
       >
-        <ThumbsDown className="h-3 w-3" /> No
-      </Button>
+        No
+      </AnimatedIconButton>
     </div>
   );
 }

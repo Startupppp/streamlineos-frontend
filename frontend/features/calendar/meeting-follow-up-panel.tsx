@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Sparkles, Send, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { Sparkles, Send, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -391,7 +391,7 @@ export function MeetingFollowUpPanel({ eventId, eventTitle: _eventTitle, onClose
               onClick={handleConfirmSend}
               className="text-xs gap-1.5"
             >
-              {!confirmPending && <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />}
+              <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
               Confirm
             </LoadingButton>
           </DialogFooter>

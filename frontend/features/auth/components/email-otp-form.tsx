@@ -1,7 +1,7 @@
-﻿"use client";
+"use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useMutation } from "@tanstack/react-query";
@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
@@ -32,9 +33,10 @@ interface EmailOtpFormProps {
   isVisible: boolean;
   onShow: () => void;
   getCallbackUrl: () => string;
+  prefillEmail?: string;
 }
 
-export function EmailOtpForm({ isVisible, onShow, getCallbackUrl }: EmailOtpFormProps) {
+export function EmailOtpForm({ isVisible, onShow, getCallbackUrl, prefillEmail }: EmailOtpFormProps) {
   const router = useRouter();
   const [stage, setStage] = useState<"email" | "code">("email");
   const [submittedEmail, setSubmittedEmail] = useState("");
@@ -43,7 +45,7 @@ export function EmailOtpForm({ isVisible, onShow, getCallbackUrl }: EmailOtpForm
 
   const emailForm = useForm<EmailValues>({
     resolver: zodResolver(emailSchema),
-    defaultValues: { email: "" },
+    defaultValues: { email: prefillEmail ?? "" },
   });
 
   const codeForm = useForm<CodeValues>({
@@ -154,33 +156,39 @@ export function EmailOtpForm({ isVisible, onShow, getCallbackUrl }: EmailOtpForm
           noValidate
           className="space-y-3"
         >
-          <div className="space-y-1.5">
-            <Label htmlFor="otp-code" className="text-[13px] font-medium">
+          <div className="space-y-2">
+            <Label className="text-[13px] font-medium">
               Enter the 6-digit code
             </Label>
             <p className="text-[12px] text-muted-foreground">
               Sent to <span className="font-medium text-foreground">{submittedEmail}</span>
             </p>
-            <Input
-              id="otp-code"
-              type="text"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              maxLength={6}
-              placeholder="000000"
-              autoFocus
-              {...codeForm.register("code")}
-              disabled={verifyOtpMutation.isPending}
-              className={cn(
-                "h-8 text-sm text-center font-mono tracking-[0.25em]",
-                codeForm.formState.errors.code &&
-                  "border-destructive focus-visible:ring-destructive/30",
-              )}
-              aria-invalid={!!codeForm.formState.errors.code}
-              aria-describedby={codeForm.formState.errors.code ? "otp-code-error" : undefined}
-            />
+            <div className="flex justify-center">
+              <Controller
+                control={codeForm.control}
+                name="code"
+                render={({ field }) => (
+                  <InputOTP
+                    maxLength={6}
+                    value={field.value}
+                    onChange={field.onChange}
+                    disabled={verifyOtpMutation.isPending}
+                    autoFocus
+                  >
+                    <InputOTPGroup>
+                      <InputOTPSlot index={0} />
+                      <InputOTPSlot index={1} />
+                      <InputOTPSlot index={2} />
+                      <InputOTPSlot index={3} />
+                      <InputOTPSlot index={4} />
+                      <InputOTPSlot index={5} />
+                    </InputOTPGroup>
+                  </InputOTP>
+                )}
+              />
+            </div>
             {codeForm.formState.errors.code && (
-              <p id="otp-code-error" role="alert" className="text-[12px] text-destructive">
+              <p role="alert" className="text-[12px] text-destructive text-center">
                 {codeForm.formState.errors.code.message}
               </p>
             )}

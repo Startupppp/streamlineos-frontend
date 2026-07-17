@@ -1,38 +1,41 @@
-"use client";
+﻿"use client";
 
-import { useState, useCallback, useMemo, useEffect, useRef } from "react";
-import { useForm } from "react-hook-form";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { toast } from "sonner";
-import { Loader2, Eye, EyeOff, CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { signIn } from "next-auth/react";
 import { useMutation } from "@tanstack/react-query";
-import { getPasswordStrength, PASSWORD_REGEX, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH } from "@/lib/password-utils";
-import { PasswordStrengthIndicator } from "@/components/auth/password-strength-indicator";
+import { useRouter } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
 const signupSchema = z.object({
   email: z.string().email("Please enter a valid email"),
-  password: z
-    .string()
-    .min(PASSWORD_MIN_LENGTH, `Minimum ${PASSWORD_MIN_LENGTH} characters`)
-    .max(PASSWORD_MAX_LENGTH, `Maximum ${PASSWORD_MAX_LENGTH} characters`)
-    .regex(PASSWORD_REGEX, "Must include uppercase, lowercase, number, and special character"),
   terms: z
     .boolean()
     .refine((v) => v === true, { message: "You must accept the terms" }),
 });
 
+const otpSchema = z.object({
+  code: z.string().regex(/^\d{6}$/, "Enter the 6-digit code from your email"),
+});
+
 type FormValues = z.infer<typeof signupSchema>;
+type OtpValues = z.infer<typeof otpSchema>;
+
+const OTP_RESEND_COOLDOWN = 60;
 
 function deriveFirstName(email: string): string {
   const prefix = email.split("@")[0] ?? "";
@@ -49,13 +52,10 @@ function deriveCompanyName(email: string): string {
 }
 
 const hasGoogleProvider = !!process.env.NEXT_PUBLIC_GOOGLE_ENABLED;
-const RESEND_COOLDOWN_SECONDS = 60;
 
 export default function SignupPage() {
-  const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
   const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
-  const [isResending, setIsResending] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const cooldownRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -66,7 +66,7 @@ export default function SignupPage() {
   }, []);
 
   const startCooldown = useCallback(() => {
-    setCooldown(RESEND_COOLDOWN_SECONDS);
+    setCooldown(OTP_RESEND_COOLDOWN);
     if (cooldownRef.current) clearInterval(cooldownRef.current);
     cooldownRef.current = setInterval(() => {
       setCooldown((prev) => {
@@ -92,100 +92,159 @@ export default function SignupPage() {
     resolver: zodResolver(signupSchema),
     defaultValues: {
       email: "",
-      password: "",
       terms: false,
     },
   });
 
-  const password = form.watch("password");
-  const passwordStrength = useMemo(
-    () => (password ? getPasswordStrength(password) : null),
-    [password],
-  );
+  const otpForm = useForm<OtpValues>({
+    resolver: zodResolver(otpSchema),
+    defaultValues: { code: "" },
+  });
 
-  const handleSubmit = useCallback(async (data: FormValues) => {
-    setIsSubmitting(true);
-    try {
-      await apiClient.post("/auth/register", {
+  const registerMutation = useMutation({
+    mutationFn: (data: FormValues) =>
+      apiClient.post("/auth/register", {
         firstName: deriveFirstName(data.email),
         lastName: "",
         companyName: deriveCompanyName(data.email),
         email: data.email,
-        password: data.password,
         plan: "STARTER",
-      });
+      }),
+    onSuccess: (_result, data) => {
       setRegisteredEmail(data.email);
       startCooldown();
-      toast.success("Account created! Check your email to verify.");
-    } catch (error) {
+    },
+    onError: (error) => {
       toast.error(getErrorMessage(error));
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [startCooldown]);
+    },
+  });
 
-  const handleResendVerification = useCallback(async () => {
-    if (!registeredEmail || cooldown > 0) return;
-    setIsResending(true);
-    try {
-      await apiClient.post("/auth/resend-verification", {
-        email: registeredEmail,
+  const verifyMutation = useMutation({
+    mutationFn: (variables: { email: string; code: string }) =>
+      apiClient.post<{ autoLoginToken: string }>("/auth/email-otp/verify", variables),
+    onSuccess: async (data) => {
+      const result = await signIn("credentials", {
+        magicToken: data.autoLoginToken,
+        redirect: false,
       });
-      toast.success("Verification email resent.");
-      startCooldown();
-    } catch {
-      toast.error("Failed to resend. Please try again.");
-    } finally {
-      setIsResending(false);
-    }
-  }, [registeredEmail, cooldown, startCooldown]);
+      if (result?.ok) {
+        router.push("/org-setup");
+      } else {
+        toast.error("Sign-in failed after verification. Please sign in manually.");
+        router.push("/signin");
+      }
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+      otpForm.reset({ code: "" });
+    },
+  });
 
-  const handleTogglePassword = useCallback(() => {
-    setShowPassword((v) => !v);
-  }, []);
+  const resendMutation = useMutation({
+    mutationFn: (email: string) =>
+      apiClient.post<{ ok: true }>("/auth/email-otp", { email }),
+    onSuccess: () => {
+      toast.success("A new code has been sent to your email.");
+      startCooldown();
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+
+  const handleSubmit = useCallback((data: FormValues) => {
+    registerMutation.mutate(data);
+  }, [registerMutation]);
+
+  const handleVerify = useCallback((values: OtpValues) => {
+    if (!registeredEmail) return;
+    verifyMutation.mutate({ email: registeredEmail, code: values.code });
+  }, [verifyMutation, registeredEmail]);
+
+  const handleResend = useCallback(() => {
+    if (!registeredEmail || cooldown > 0) return;
+    resendMutation.mutate(registeredEmail);
+  }, [registeredEmail, cooldown, resendMutation]);
 
   const handleGoogleSignUp = useCallback(() => googleSignUpMutation.mutate(), [googleSignUpMutation]);
   const handleLinkClick = useCallback((e: React.MouseEvent) => e.stopPropagation(), []);
 
   if (registeredEmail) {
     return (
-      <div className="w-full max-w-sm text-center animate-fade-up">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-50">
-          <CheckCircle2 className="w-7 text-green-600" />
+      <div className="w-full max-w-sm animate-fade-up">
+        <div className="mb-4 sm:mb-6 text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+            <CheckCircle2 className="w-6 text-primary" />
+          </div>
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
+            Check your email
+          </h1>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            We sent a 6-digit code to{" "}
+            <span className="font-semibold text-foreground">{registeredEmail}</span>.
+            Enter it below to activate your account.
+          </p>
         </div>
-        <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
-          Check your email
-        </h1>
-        <p className="mt-1.5 text-sm text-muted-foreground">
-          We sent a verification link to{" "}
-          <span className="font-semibold text-foreground">{registeredEmail}</span>
-          . Click it to activate your account.
-        </p>
-        <div className="mt-6 space-y-3">
-          <Button
-            onClick={handleResendVerification}
-            disabled={isResending || cooldown > 0}
-            variant="outline"
-            className="w-full h-9 text-sm"
-            aria-label={
-              cooldown > 0
-                ? `Resend available in ${cooldown} seconds`
-                : "Resend verification email"
-            }
-          >
-            {isResending && (
-              <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
-            )}
-            {cooldown > 0
-              ? `Resend available in ${cooldown}s`
-              : "Resend verification email"}
-          </Button>
-          <p className="text-sm text-muted-foreground">
-            Already verified?{" "}
-            <Link
-              href="/signin"
-              className="text-blue-600 hover:underline font-medium"
+
+        <div className="rounded-xl p-4 space-y-4">
+          <form onSubmit={otpForm.handleSubmit(handleVerify)} noValidate className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-[13px] font-medium">Verification code</Label>
+              <div className="flex justify-center">
+                <Controller
+                  control={otpForm.control}
+                  name="code"
+                  render={({ field }) => (
+                    <InputOTP
+                      maxLength={6}
+                      value={field.value}
+                      onChange={field.onChange}
+                      disabled={verifyMutation.isPending}
+                      autoFocus
+                    >
+                      <InputOTPGroup>
+                        <InputOTPSlot index={0} />
+                        <InputOTPSlot index={1} />
+                        <InputOTPSlot index={2} />
+                        <InputOTPSlot index={3} />
+                        <InputOTPSlot index={4} />
+                        <InputOTPSlot index={5} />
+                      </InputOTPGroup>
+                    </InputOTP>
+                  )}
+                />
+              </div>
+              {otpForm.formState.errors.code && (
+                <p role="alert" className="text-[12px] text-destructive text-center">
+                  {otpForm.formState.errors.code.message}
+                </p>
+              )}
+            </div>
+
+            <LoadingButton
+              type="submit"
+              className="w-full h-9 text-sm font-medium"
+              isPending={verifyMutation.isPending}
+              loadingText="Verifying..."
             >
+              Verify and continue
+            </LoadingButton>
+          </form>
+
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={cooldown > 0 || resendMutation.isPending}
+              className="text-[12px] text-muted-foreground hover:text-foreground transition-colors underline-offset-2 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {cooldown > 0 ? `Resend code in ${cooldown}s` : "Resend code"}
+            </button>
+          </div>
+
+          <p className="text-sm text-center text-muted-foreground">
+            Already have an account?{" "}
+            <Link href="/signin" className="text-blue-600 hover:underline font-medium">
               Sign in
             </Link>
           </p>
@@ -246,7 +305,7 @@ export default function SignupPage() {
               </div>
               <div className="relative flex justify-center">
                 <span className="bg-card px-2 text-[11px] text-muted-foreground/60">
-                  or continue with
+                  or continue with email
                 </span>
               </div>
             </div>
@@ -268,7 +327,7 @@ export default function SignupPage() {
               autoComplete="email"
               {...form.register("email")}
               placeholder="you@company.com"
-              disabled={isSubmitting}
+              disabled={registerMutation.isPending}
               className={cn(
                 "h-8 text-sm",
                 form.formState.errors.email &&
@@ -278,57 +337,6 @@ export default function SignupPage() {
             {form.formState.errors.email && (
               <p className="text-[12px] text-destructive">
                 {form.formState.errors.email.message}
-              </p>
-            )}
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="password" className="text-[13px] font-medium">
-              Password
-            </Label>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                autoComplete="new-password"
-                {...form.register("password")}
-                placeholder="Create a strong password"
-                disabled={isSubmitting}
-                className={cn(
-                  "h-8 text-sm pr-9",
-                  form.formState.errors.password &&
-                    "border-destructive focus-visible:ring-destructive/30",
-                )}
-              />
-              <button
-                type="button"
-                onClick={handleTogglePassword}
-                tabIndex={-1}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5"
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
-            </div>
-            {passwordStrength ? (
-              <PasswordStrengthIndicator
-                strength={passwordStrength}
-                showRequirements={
-                  form.formState.submitCount > 0 && Boolean(form.formState.errors.password)
-                }
-              />
-            ) : (
-              <p className="text-[11px] text-muted-foreground/60">
-                8+ chars · upper · lower · number · symbol
-              </p>
-            )}
-            {form.formState.errors.password && (
-              <p className="text-[12px] text-destructive">
-                {form.formState.errors.password.message}
               </p>
             )}
           </div>
@@ -370,20 +378,14 @@ export default function SignupPage() {
             )}
           </div>
 
-          <Button
+          <LoadingButton
             type="submit"
-            disabled={isSubmitting}
             className="w-full h-9 text-sm font-medium"
+            isPending={registerMutation.isPending}
+            loadingText="Creating account..."
           >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" />
-                Creating account…
-              </>
-            ) : (
-              "Start free trial"
-            )}
-          </Button>
+            Start free trial
+          </LoadingButton>
         </form>
 
         <p className="text-sm text-center text-muted-foreground">

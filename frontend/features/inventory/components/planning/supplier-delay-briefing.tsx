@@ -4,7 +4,7 @@ import { memo } from "react";
 import { RefreshCw, TruckIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AiGeneratedLabel } from "@/components/ai/ai-generated-label";
@@ -93,6 +93,10 @@ export const SupplierDelayBriefing = memo(function SupplierDelayBriefing({
   const { data, isLoading, isError, error, refetch, isFetching } =
     useSupplierDelayBriefing(vendorId);
 
+  function handleRefetch() {
+    void refetch();
+  }
+
   return (
     <Card className="border-border shadow-sm">
       <CardHeader className="pb-2 pt-3 px-4">
@@ -100,16 +104,17 @@ export const SupplierDelayBriefing = memo(function SupplierDelayBriefing({
           <CardTitle className="text-[13px] font-semibold text-foreground">
             Supplier Delay Briefing
           </CardTitle>
-          <Button
+          <LoadingButton
             variant="outline"
             size="sm"
             className="h-7 text-[10px] gap-1.5"
-            onClick={() => void refetch()}
-            disabled={isFetching}
+            onClick={handleRefetch}
+            isPending={isFetching}
+            loadingText="Refreshing…"
           >
-            <RefreshCw className={`h-3 w-3 ${isFetching ? "animate-spin" : ""}`} />
+            <RefreshCw className="h-3 w-3" />
             Refresh
-          </Button>
+          </LoadingButton>
         </div>
       </CardHeader>
 

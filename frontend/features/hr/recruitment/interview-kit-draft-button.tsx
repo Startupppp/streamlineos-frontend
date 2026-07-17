@@ -2,10 +2,9 @@
 
 import { useState } from "react";
 import { Sparkles, ChevronDown, ChevronUp } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { CopyIcon } from "@animateicons/react/lucide";
+import { CopyIcon, SparklesIcon } from "@animateicons/react/lucide";
 import {
   Dialog,
   DialogContent,
@@ -62,12 +61,23 @@ export function InterviewKitDraftButton({ jobPostingId, jobTitle }: InterviewKit
     setExpandedRound(expandedRound === idx ? null : idx);
   }
 
+  function handleOpen() {
+    setOpen(true);
+  }
+
   return (
     <>
-      <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setOpen(true)}>
-        <Sparkles className="h-3.5 w-3.5 text-primary" />
+      <AnimatedIconButton
+        variant="outline"
+        size="sm"
+        className="gap-1.5"
+        icon={SparklesIcon}
+        iconSize={14}
+        iconClassName="text-primary"
+        onClick={handleOpen}
+      >
         Draft Interview Kit
-      </Button>
+      </AnimatedIconButton>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl flex flex-col p-0 gap-0 max-h-[85vh]">

@@ -2,7 +2,7 @@ import { cache } from "react";
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import { randomUUID } from "crypto";
 import { SignJWT, decodeJwt } from "jose";
 import type { Plan } from "@/lib/billing/feature-gates";
@@ -172,7 +172,7 @@ async function resolveGoogleUser(
 function buildUserFromSessionData(
   userId: string,
   sessionData: SessionData,
-  extra?: { forceChangePassword?: boolean; daysUntilExpiry?: number },
+  extra?: { daysUntilExpiry?: number },
 ) {
   return {
     id: userId,
@@ -183,7 +183,6 @@ function buildUserFromSessionData(
         : (sessionData.name ?? sessionData.email),
     image: sessionData.image,
     role: sessionData.role ?? undefined,
-    forceChangePassword: extra?.forceChangePassword ?? false,
     isActive: sessionData.isActive,
     hasDashboardAccess: sessionData.hasDashboardAccess,
     orgId: sessionData.orgId ?? null,
@@ -213,7 +212,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Credentials({
       credentials: {
         email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
         magicToken: { label: "Magic token", type: "text" },
         totpCode: { label: "MFA code", type: "text" },
       },
@@ -227,93 +225,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             if (!raw) return null;
             const data = unwrapBackend<{
               userId: string;
-              forceChangePassword: boolean;
             }>(raw);
             const sessionData = await fetchSessionData(data.userId);
             if (!sessionData) return null;
-            return buildUserFromSessionData(data.userId, sessionData, {
-              forceChangePassword: data.forceChangePassword,
-            });
+            return buildUserFromSessionData(data.userId, sessionData);
           } catch {
             return null;
           }
         }
-
-        if (!credentials?.email || !credentials?.password) return null;
-
-        try {
-          let raw: unknown = null;
-          try {
-            const response = await axios.post<unknown>(
-              `${BACKEND_URL}/auth/login`,
-              {
-                email: credentials.email,
-                password: credentials.password,
-                totpCode: credentials.totpCode ?? undefined,
-              },
-            );
-            raw = response.data;
-          } catch (loginErr: unknown) {
-            if (loginErr instanceof AxiosError) {
-              const errData = loginErr.response?.data as
-                | Record<string, unknown>
-                | undefined;
-              const code =
-                typeof errData?.code === "string" ? errData.code : null;
-              const details = errData?.details as
-                | Record<string, unknown>
-                | undefined;
-              if (code === "AUTH_ACCOUNT_LOCKED") {
-                const retryAfterSeconds =
-                  typeof details?.retryAfterSeconds === "number"
-                    ? details.retryAfterSeconds
-                    : 900;
-                throw new Error(`AUTH_ACCOUNT_LOCKED:${retryAfterSeconds}`);
-              }
-              if (code === "AUTH_SUBSCRIPTION_INACTIVE")
-                throw new Error("AUTH_SUBSCRIPTION_INACTIVE");
-              if (code === "AUTH_EMAIL_NOT_VERIFIED")
-                throw new Error("AUTH_EMAIL_NOT_VERIFIED");
-              if (code === "AUTH_INVALID_MFA_CODE")
-                throw new Error("AUTH_INVALID_MFA_CODE");
-            }
-            return null;
-          }
-
-          if (!raw) return null;
-          const data = unwrapBackend<{
-            userId: string;
-            orgId: string;
-            sessionId?: string;
-            forceChangePassword: boolean;
-            daysUntilExpiry?: number;
-            requiresMfa?: boolean;
-          }>(raw);
-
-          if (data.requiresMfa) throw new Error("AUTH_MFA_REQUIRED");
-
-          const sessionData = await fetchSessionData(data.userId);
-          if (!sessionData) return null;
-
-          return {
-            ...buildUserFromSessionData(data.userId, sessionData, {
-              forceChangePassword: data.forceChangePassword,
-              daysUntilExpiry: data.daysUntilExpiry,
-            }),
-            sessionId: data.sessionId,
-          };
-        } catch (err) {
-          if (
-            err instanceof Error &&
-            (err.message.startsWith("AUTH_ACCOUNT_LOCKED:") ||
-              err.message === "AUTH_SUBSCRIPTION_INACTIVE" ||
-              err.message === "AUTH_MFA_REQUIRED" ||
-              err.message === "AUTH_INVALID_MFA_CODE" ||
-              err.message === "AUTH_EMAIL_NOT_VERIFIED")
-          )
-            throw err;
-          return null;
-        }
+        return null;
       },
     }),
   ],
@@ -370,7 +290,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.email = user.email;
         token.name = user.name ?? null;
         token.role = user.role;
-        token.forceChangePassword = user.forceChangePassword ?? false;
         token.isActive = user.isActive ?? true;
         token.orgId = user.orgId ?? null;
         token.isOrgOwner = user.isOrgOwner ?? false;
@@ -398,8 +317,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             token.totpEnabled = fresh.totpEnabled;
           }
         }
-        if (session?.forceChangePassword !== undefined)
-          token.forceChangePassword = session.forceChangePassword as boolean;
       }
 
       if (!token.sessionId) {
@@ -433,7 +350,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.role = role;
         session.user.image =
           fresh?.image ?? (token.picture as string | null | undefined) ?? null;
-        session.user.forceChangePassword = token.forceChangePassword as boolean;
         session.user.isActive = fresh?.isActive ?? (token.isActive as boolean);
         session.user.hasDashboardAccess = fresh?.hasDashboardAccess ?? true;
         session.user.isPlatformAdmin =

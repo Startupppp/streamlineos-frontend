@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Copy, CheckCheck, Edit2, Check, X } from "lucide-react";
+import { Edit2, Check, X } from "lucide-react";
+import { CopyIcon, CheckCheckIcon } from "@animateicons/react/lucide";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { AiGeneratedLabel } from "@/components/ai";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -16,6 +18,48 @@ interface DraftComposerProps {
   onDiscard?: () => void;
   acceptLabel?: string;
   className?: string;
+}
+
+interface CopyButtonProps {
+  copied: boolean;
+  onClick: () => void;
+}
+
+function CopyButton({ copied, onClick }: CopyButtonProps) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+      {...hoverHandlers}
+    >
+      {copied ? (
+        <CheckCheckIcon ref={iconRef} size={12} className="text-emerald-500" />
+      ) : (
+        <CopyIcon ref={iconRef} size={12} />
+      )}
+      {copied ? "Copied" : "Copy"}
+    </button>
+  );
+}
+
+interface EditToggleButtonProps {
+  editing: boolean;
+  onClick: () => void;
+}
+
+function EditToggleButton({ editing, onClick }: EditToggleButtonProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors ml-2"
+    >
+      {editing ? <Check className="h-3 w-3" /> : <Edit2 className="h-3 w-3" />}
+      {editing ? "Done" : "Edit"}
+    </button>
+  );
 }
 
 export function DraftComposer({
@@ -60,26 +104,8 @@ export function DraftComposer({
       <div className="flex items-center justify-between gap-2">
         <AiGeneratedLabel timestamp={generatedAt} />
         <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={handleCopy}
-            className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-          >
-            {copied ? (
-              <CheckCheck className="h-3 w-3 text-emerald-500" />
-            ) : (
-              <Copy className="h-3 w-3" />
-            )}
-            {copied ? "Copied" : "Copy"}
-          </button>
-          <button
-            type="button"
-            onClick={handleEditToggle}
-            className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors ml-2"
-          >
-            {editing ? <Check className="h-3 w-3" /> : <Edit2 className="h-3 w-3" />}
-            {editing ? "Done" : "Edit"}
-          </button>
+          <CopyButton copied={copied} onClick={handleCopy} />
+          <EditToggleButton editing={editing} onClick={handleEditToggle} />
         </div>
       </div>
 
