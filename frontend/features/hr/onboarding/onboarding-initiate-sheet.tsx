@@ -14,7 +14,7 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useInitiateOnboarding } from "@/hooks/api/hr/onboarding";
+import { useInitiateOnboarding, useOnboardingStatus } from "@/hooks/api/hr/onboarding";
 import { useHrEmployees,
   unwrapEmployees} from "@/hooks/api/hr";
 import type { Employee, PaginatedEmployees } from "@/types/hr";
@@ -44,6 +44,7 @@ export function OnboardingInitiateSheet({ open, onOpenChange }: OnboardingInitia
   const form = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: { userId: "" } });
   const initiate = useInitiateOnboarding();
   const { data: employeesRaw } = useHrEmployees({ limit: 500 });
+  const { data: onboardingStatuses } = useOnboardingStatus();
 
   const employees = useMemo<Employee[]>(() => {
     if (!employeesRaw) return [];
@@ -51,15 +52,20 @@ export function OnboardingInitiateSheet({ open, onOpenChange }: OnboardingInitia
     return (employeesRaw as PaginatedEmployees).data ?? [];
   }, [employeesRaw]);
 
+  const initiatedUserIds = useMemo(
+    () => new Set((onboardingStatuses ?? []).map((s) => s.userId)),
+    [onboardingStatuses],
+  );
+
   const employeeOptions = useMemo<ComboboxOption[]>(() =>
     employees
-      .filter((e) => e.isActive)
+      .filter((e) => e.isActive && !initiatedUserIds.has(e.id))
       .map((e) => ({
         value: e.id,
         label: e.firstName && e.lastName ? `${e.firstName} ${e.lastName}` : (e.name ?? e.email),
         sublabel: e.designation ?? e.employeeId ?? e.email,
       })),
-    [employees]
+    [employees, initiatedUserIds]
   );
 
   const onSubmit = useCallback(
