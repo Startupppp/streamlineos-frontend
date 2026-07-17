@@ -58,7 +58,7 @@ export function MeetingFollowUpComposer({
         attendeeId,
         outcome: outcome.trim(),
         actionItems: parsedActionItems,
-        meetingTitle: meetingTitle ?? undefined,
+        meetingTitle: meetingTitle ?? "Meeting",
         scheduledAt: scheduledAt ?? new Date().toISOString(),
       },
       {

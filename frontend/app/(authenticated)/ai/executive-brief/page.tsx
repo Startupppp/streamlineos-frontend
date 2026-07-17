@@ -68,7 +68,7 @@ function BriefContent({ data }: { data: LatestBriefResponse }) {
     return (
       <div className="flex flex-col items-center justify-center flex-1 min-h-[300px] gap-3 text-muted-foreground">
         <RefreshCw className="h-8 w-8 opacity-30" />
-        <p className="text-sm">No executive brief yet. Click "Generate Brief" to create one.</p>
+        <p className="text-sm">No executive brief yet. Click &quot;Generate Brief&quot; to create one.</p>
       </div>
     );
   }

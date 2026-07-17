@@ -400,7 +400,7 @@ export interface KbResearchBrief {
   updatedAt: string;
 }
 
-export interface KbResearchBriefListItem extends Omit<KbResearchBrief, "report"> {}
+export type KbResearchBriefListItem = Omit<KbResearchBrief, "report">;
 
 export interface CreateResearchBriefInput {
   topic: string;

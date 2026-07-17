@@ -296,6 +296,7 @@ export type PermissionKey =
   | "payroll:policies:view"
   | "integrations:connections:view"
   | "integrations:connections:manage"
+  | "calendar:ai:use"
   | "projects:qa:view"
   | "projects:qa:manage"
   | "projects:qa:execute"

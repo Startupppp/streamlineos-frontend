@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useForm } from "react-hook-form";
@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { apiClient } from "@/lib/api-client";
 import { parseAuthErrorCode } from "@/lib/parse-auth-error";
-import { MfaStep, MagicLinkForm, OAuthButtons, SignInAlerts, formatLockoutTime } from "@/features/auth";
+import { MfaStep, MagicLinkForm, EmailOtpForm, OAuthButtons, SignInAlerts, formatLockoutTime } from "@/features/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -100,16 +100,14 @@ export default function SignInPage() {
     }
   }, []);
 
-  const getCallbackUrl = () => {
+  const getCallbackUrl = useCallback(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const url = params.get("callbackUrl");
       if (url && url.startsWith("/")) return url;
     }
-    // Route through /post-signin so the server can decide between
-    // /owner (PLATFORM_OWNER) and /dashboard (everyone else) based on role.
     return "/post-signin";
-  };
+  }, []);
 
   const doSignIn = async (
     email: string,
@@ -263,6 +261,7 @@ export default function SignInPage() {
   const [magicLinkEmail, setMagicLinkEmail] = useState("");
   const [showMagicLink, setShowMagicLink] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [showEmailOtp, setShowEmailOtp] = useState(false);
 
   const magicLinkMutation = useMutation({
     mutationFn: (email: string) =>
@@ -277,6 +276,7 @@ export default function SignInPage() {
 
   const handleTogglePassword = useCallback(() => setShowPassword((v) => !v), []);
   const handleShowMagicLink = useCallback(() => setShowMagicLink(true), []);
+  const handleShowEmailOtp = useCallback(() => setShowEmailOtp(true), []);
   const handleMagicLinkEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setMagicLinkEmail(e.target.value), []);
   const handleSendMagicLink = useCallback(() => magicLinkMutation.mutate(magicLinkEmail), [magicLinkMutation, magicLinkEmail]);
   const handleGoogleSignIn = useCallback(() => googleSignInMutation.mutate(), [googleSignInMutation]);
@@ -381,7 +381,7 @@ export default function SignInPage() {
                   id="password"
                   type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
-                  placeholder="••••••••"
+                  placeholder="........"
                   {...form.register("password")}
                   disabled={isPending}
                   className={cn(
@@ -446,7 +446,7 @@ export default function SignInPage() {
             {isPending ? (
               <>
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                Signing in…
+                Signing in...
               </>
             ) : (
               <>
@@ -465,6 +465,12 @@ export default function SignInPage() {
           onSend={handleSendMagicLink}
           isPending={magicLinkMutation.isPending}
           onShow={handleShowMagicLink}
+        />
+
+        <EmailOtpForm
+          isVisible={showEmailOtp}
+          onShow={handleShowEmailOtp}
+          getCallbackUrl={getCallbackUrl}
         />
 
         {hasOAuthProviders && (

@@ -27,6 +27,10 @@ export function AiReportClient() {
 
   const handleClear = useCallback(() => setFilters({}), []);
 
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
   return (
     <PageWrapper
       title="AI Report"
@@ -60,7 +64,7 @@ export function AiReportClient() {
         ) : isError ? (
           <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
             {getErrorMessage(error)}
-            <Button variant="ghost" size="sm" className="mt-2 h-7 text-xs" onClick={refetch}>
+            <Button variant="ghost" size="sm" className="mt-2 h-7 text-xs" onClick={handleRetry}>
               Retry
             </Button>
           </div>
