@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { cookies, headers } from "next/headers";
 import { DashboardShell } from "../../components/layout/dashboard-shell";
 import { FeedbucketEmbed } from "../../components/feedbucket/feedbucket-embed";
-import { SessionProvider } from "../../components/providers/session-provider";
 import { AppThemeProvider } from "../../components/theme/app-theme-provider";
 import { AppThemeScript } from "../../components/theme/app-theme-script";
 
@@ -29,15 +28,13 @@ export default async function DashboardLayout({
     <>
       <AppThemeScript nonce={nonce} />
       <AppThemeProvider>
-        <SessionProvider session={session}>
-          <DashboardShell
-            userId={session.user.id}
-            hasDashboardAccess={hasDashboardAccess}
-            defaultCollapsed={defaultCollapsed}
-          >
-            {children}
-          </DashboardShell>
-        </SessionProvider>
+        <DashboardShell
+          userId={session.user.id}
+          hasDashboardAccess={hasDashboardAccess}
+          defaultCollapsed={defaultCollapsed}
+        >
+          {children}
+        </DashboardShell>
         <FeedbucketEmbed />
       </AppThemeProvider>
     </>

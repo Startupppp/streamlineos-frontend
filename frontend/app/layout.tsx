@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import "../globals.css";
 import { Toaster } from "../components/ui/sonner";
 import { SessionProvider } from "../components/providers/session-provider";
+import { getServerAuth } from "../lib/get-server-auth";
 import { MotionProvider } from "../components/providers/motion-provider";
 import { QueryProvider } from "../components/providers/query-provider";
 import {
@@ -119,6 +120,7 @@ export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const nonce = (await headers()).get("x-nonce") ?? undefined;
+  const session = await getServerAuth();
 
   return (
     <html
@@ -134,7 +136,7 @@ export default async function RootLayout({
       </head>
       <body className="font-sans min-h-screen bg-background text-foreground antialiased selection:bg-blue-500/20 selection:text-blue-950 dark:selection:bg-blue-400/30 dark:selection:text-blue-50">
         <GoogleTagManagerNoscript />
-        <SessionProvider>
+        <SessionProvider session={session}>
           <QueryProvider>
             <MotionProvider>{children}</MotionProvider>
             <Toaster position="top-right" richColors />

@@ -11,7 +11,11 @@ export function SessionProvider({
   session?: Session | null;
 }) {
   return (
-    <NextAuthSessionProvider session={session}>
+    <NextAuthSessionProvider
+      session={session}
+      refetchOnWindowFocus={false}
+      refetchInterval={0}
+    >
       {children}
     </NextAuthSessionProvider>
   );
