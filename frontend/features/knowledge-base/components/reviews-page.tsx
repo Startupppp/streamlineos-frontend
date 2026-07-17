@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   Select,
@@ -141,9 +142,7 @@ function ApproveDialog({ review, onClose }: ApproveDialogProps) {
           <DialogTitle>Approve review</DialogTitle>
         </DialogHeader>
         <div className="space-y-3 px-0 py-2">
-          <p className="text-sm text-muted-foreground line-clamp-2">
-            {review.pageTitle}
-          </p>
+          <TruncatedText text={review.pageTitle ?? ""} lines={2} className="text-sm text-muted-foreground" />
           <div className="space-y-1.5">
             <Label className="text-xs">Note (optional)</Label>
             <Textarea
@@ -207,9 +206,7 @@ function RejectDialog({ review, onClose }: RejectDialogProps) {
           <DialogTitle>Reject review</DialogTitle>
         </DialogHeader>
         <div className="space-y-3 px-0 py-2">
-          <p className="text-sm text-muted-foreground line-clamp-2">
-            {review.pageTitle}
-          </p>
+          <TruncatedText text={review.pageTitle ?? ""} lines={2} className="text-sm text-muted-foreground" />
           <div className="space-y-1.5">
             <Label className="text-xs">
               Reason <span className="text-destructive">*</span>

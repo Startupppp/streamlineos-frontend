@@ -9,6 +9,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { Sparkles } from "lucide-react";
+import { MeetingPrepPanel } from "./meeting-prep-panel";
+import { MeetingFollowUpPanel } from "./meeting-follow-up-panel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -45,6 +48,7 @@ import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { resolveImageUrl } from "@/lib/utils";
 import Link from "next/link";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const EVENT_COLORS: Record<string, string> = {
   blue: "#3b82f6",
@@ -71,6 +75,16 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [unlinkConfirmOpen, setUnlinkConfirmOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [aiPrepOpen, setAiPrepOpen] = useState(false);
+  const [aiFollowUpOpen, setAiFollowUpOpen] = useState(false);
+
+  const handleOpenAiPrep = useCallback(() => setAiPrepOpen(true), []);
+  const handleCloseAiPrep = useCallback(() => setAiPrepOpen(false), []);
+  const handleCloseAiFollowUp = useCallback(() => setAiFollowUpOpen(false), []);
+  const handleSwitchToFollowUp = useCallback(() => {
+    setAiPrepOpen(false);
+    setAiFollowUpOpen(true);
+  }, []);
   const { mutateAsync: deleteEvent, isPending: deleteEventIsPending } =
     useDeleteCalendarEvent();
   const { mutateAsync: rsvpMutation, isPending: rsvpMutationIsPending } =
@@ -147,12 +161,12 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
       <Sheet open={!!event} onOpenChange={(v) => !v && onClose()}>
         <SheetContent className="flex flex-col p-0 w-[360px] sm:max-w-[360px]">
           <SheetHeader className="px-5 py-4 border-b shrink-0">
-            <SheetTitle className="text-sm font-semibold flex items-center gap-2">
+            <SheetTitle className="text-sm font-semibold flex items-center gap-2 min-w-0">
               <span
                 className="h-3 w-3 rounded-full shrink-0"
                 style={{ backgroundColor: colorHex }}
               />
-              {event?.title ?? ""}
+              <TruncatedText text={event?.title ?? ""} className="min-w-0 flex-1" />
             </SheetTitle>
           </SheetHeader>
           <ScrollArea className="flex-1 min-h-0">
@@ -241,9 +255,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                               >
                                 {event.linkedTicket.key}
                               </Badge>
-                              <span className="text-sm truncate flex-1 text-foreground">
-                                {event.linkedTicket.title}
-                              </span>
+                              <TruncatedText text={event.linkedTicket.title} className="text-sm flex-1 text-foreground" />
                               <Badge
                                 variant="secondary"
                                 className="text-[10px] h-4 px-1.5 shrink-0 capitalize"
@@ -361,9 +373,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                                     .toUpperCase()}
                                 </AvatarFallback>
                               </Avatar>
-                              <span className="flex-1 truncate text-xs">
-                                {a.user?.name ?? a.user?.email ?? "Unknown"}
-                              </span>
+                              <TruncatedText text={a.user?.name ?? a.user?.email ?? "Unknown"} className="flex-1 text-xs" />
                               <Badge
                                 variant="outline"
                                 className={`text-[10px] h-4 px-1.5 capitalize ${
@@ -418,6 +428,17 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
               <div />
             )}
             <div className="flex items-center gap-2">
+              {isCalendarEvent && event?.category !== "huddle" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleOpenAiPrep}
+                  className="gap-1.5"
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  AI Prep
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"
@@ -467,6 +488,51 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
         onOpenChange={setEditOpen}
         event={event}
       />
+      <Sheet open={aiPrepOpen} onOpenChange={setAiPrepOpen}>
+        <SheetContent className="flex flex-col p-0 w-[360px] sm:max-w-[360px]">
+          <SheetHeader className="px-5 py-4 border-b shrink-0">
+            <SheetTitle className="text-sm font-semibold">AI Meeting Prep</SheetTitle>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+            {event && (
+              <>
+                <MeetingPrepPanel
+                  eventId={String(event.id)}
+                  eventTitle={event.title ?? ""}
+                  onClose={handleCloseAiPrep}
+                />
+                <div className="pt-2 border-t">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full text-xs text-muted-foreground hover:text-foreground gap-1.5"
+                    onClick={handleSwitchToFollowUp}
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />
+                    Draft Follow-up instead
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
+      <Sheet open={aiFollowUpOpen} onOpenChange={setAiFollowUpOpen}>
+        <SheetContent className="flex flex-col p-0 w-[360px] sm:max-w-[360px]">
+          <SheetHeader className="px-5 py-4 border-b shrink-0">
+            <SheetTitle className="text-sm font-semibold">AI Follow-up</SheetTitle>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto px-5 py-4">
+            {event && (
+              <MeetingFollowUpPanel
+                eventId={String(event.id)}
+                eventTitle={event.title ?? ""}
+                onClose={handleCloseAiFollowUp}
+              />
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }

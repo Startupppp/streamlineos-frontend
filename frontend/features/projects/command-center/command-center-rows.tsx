@@ -26,7 +26,8 @@ import {
   pmSpring,
 } from "@/features/projects/shared/pm-motion";
 import { PM_ROW } from "@/features/projects/shared/pm-chrome";
-import { TEXT_FLEX_CHILD, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TEXT_FLEX_CHILD } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { getTicketDetailHref } from "@/features/projects/shared/format-ticket-key";
 
 export const STATUS_COLOR: Record<string, string> = {
@@ -82,26 +83,16 @@ export const MyWorkRow = memo(function MyWorkRow({
           <PriorityBadge priority={item.priority} size="sm" />
         </motion.div>
         <div className={cn(TEXT_FLEX_CHILD, "flex-1")}>
-          <p
-            className={cn(
-              TEXT_ONE_LINE,
-              "text-[13px] font-medium leading-tight text-foreground transition-colors group-hover:text-primary",
-            )}
-            title={item.title}
-          >
-            {item.title}
-          </p>
+          <TruncatedText
+            text={item.title}
+            className="text-[13px] font-medium leading-tight text-foreground transition-colors group-hover:text-primary"
+          />
           <div className="mt-0.5 flex min-w-0 items-center gap-1.5">
             <span className="shrink-0 font-mono text-[10px] font-medium text-primary/80">
               {item.projectKey}
             </span>
             <span className="shrink-0 text-[10px] text-muted-foreground/70">·</span>
-            <span
-              className={cn(TEXT_ONE_LINE, "text-[10px] text-muted-foreground")}
-              title={item.projectName}
-            >
-              {item.projectName}
-            </span>
+            <TruncatedText text={item.projectName} className="text-[10px] text-muted-foreground" />
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
@@ -176,22 +167,12 @@ export const ProjectCard = memo(function ProjectCard({
           {project.key.substring(0, 2).toUpperCase()}
         </Link>
         <Link href={base} className={cn(TEXT_FLEX_CHILD, "flex-1")}>
-          <p
-            className={cn(
-              TEXT_ONE_LINE,
-              "text-[13px] font-medium text-foreground transition-colors group-hover:text-primary",
-            )}
-            title={project.name}
-          >
-            {project.name}
-          </p>
+          <TruncatedText
+            text={project.name}
+            className="text-[13px] font-medium text-foreground transition-colors group-hover:text-primary"
+          />
           {project.description ? (
-            <p
-              className={cn(TEXT_ONE_LINE, "text-[11px] text-muted-foreground")}
-              title={project.description}
-            >
-              {project.description}
-            </p>
+            <TruncatedText text={project.description} className="text-[11px] text-muted-foreground" />
           ) : (
             <p className="font-mono text-[10px] text-muted-foreground/80">{project.key}</p>
           )}

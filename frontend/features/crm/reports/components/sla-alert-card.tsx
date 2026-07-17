@@ -1,6 +1,7 @@
 import { AlertTriangle, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import type { SlaAlertResponse } from "@/types/leads";
 
@@ -25,9 +26,7 @@ export function SlaAlertCard({ slaData }: SlaAlertCardProps) {
               className="flex items-center justify-between p-2 rounded-lg bg-background/60 border border-red-500/10"
             >
               <div className="flex items-center gap-2.5 min-w-0">
-                <span className="text-sm font-medium truncate">
-                  {lead.leadName}
-                </span>
+                <TruncatedText text={lead.leadName} className="text-sm font-medium" />
                 <Badge variant="outline" className="text-[10px] shrink-0">
                   {lead.status}
                 </Badge>

@@ -3,7 +3,8 @@
 import { useMemo } from "react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { PM_PANEL_SOLID } from "@/features/projects/shared/pm-chrome";
-import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TABLE_TITLE_CELL } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { toTableTicket, type TableRow } from "./all-work-ticket-utils";
 import type { AllWorkTicket } from "@/types/projects";
@@ -26,10 +27,9 @@ function buildTableColumns(onTicketClick: (id: number) => void): DataTableColumn
         <button
           type="button"
           onClick={() => onTicketClick(row.id)}
-          className={cn("text-left text-[13px] font-medium hover:underline underline-offset-2", TEXT_ONE_LINE)}
-          title={row.title}
+          className="text-left text-[13px] font-medium hover:underline underline-offset-2 min-w-0 w-full"
         >
-          {row.title}
+          <TruncatedText text={row.title} />
         </button>
       ),
     },
@@ -61,9 +61,7 @@ function buildTableColumns(onTicketClick: (id: number) => void): DataTableColumn
           .join(" ");
         const name = row.assignee.name ?? (fullName || (row.assignee.email ?? "—"));
         return (
-          <span className={cn("max-w-[8rem] text-[11px]", TEXT_ONE_LINE)} title={name}>
-            {name}
-          </span>
+          <TruncatedText text={name} className="max-w-[8rem] text-[11px]" />
         );
       },
     },

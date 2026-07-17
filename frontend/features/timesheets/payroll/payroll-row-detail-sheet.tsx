@@ -2,6 +2,7 @@
 
 import { memo, useCallback } from "react";
 import Link from "next/link";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   Sheet,
   SheetBody,
@@ -48,11 +49,11 @@ export function PayrollRowDetailSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="p-0 flex flex-col gap-0 overflow-hidden sm:max-w-lg">
         <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
-          <SheetTitle className="text-base leading-tight truncate">
-            {row?.userName ?? "Employee"}
+          <SheetTitle className="text-base leading-tight">
+            <TruncatedText text={row?.userName ?? "Employee"} />
           </SheetTitle>
           {row && (
-            <p className="text-xs text-muted-foreground truncate">{row.userEmail}</p>
+            <TruncatedText text={row.userEmail ?? ""} className="text-xs text-muted-foreground" />
           )}
         </SheetHeader>
 

@@ -5,6 +5,7 @@ import { MessageCircleIcon, BookOpenTextIcon } from "@animateicons/react/lucide"
 import { MarkdownContent } from "@/components/markdown/markdown-content";
 import { AnimatedLogo } from "@/features/landing/components/animated-logo";
 import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import type { KbAskCitation } from "@/types/kb";
 
 export interface ChatMessage {
@@ -192,7 +193,7 @@ function Citations({
                 className="inline-flex max-w-[12rem] items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-[11px] text-accent transition-colors hover:bg-muted"
               >
                 <BookOpenTextIcon size={11} />
-                <span className="truncate">{(citation.title ?? "").trim() || "Untitled page"}</span>
+                <TruncatedText text={(citation.title ?? "").trim() || "Untitled page"} />
               </button>
             );
           }
@@ -205,7 +206,7 @@ function Citations({
               className="inline-flex max-w-[12rem] items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-[11px] text-muted-foreground"
             >
               <BookOpenTextIcon size={11} />
-              <span className="truncate">{label}</span>
+              <TruncatedText text={label} />
             </span>
           );
         })}

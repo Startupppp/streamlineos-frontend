@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useBlueprints, useUpdateBlueprint, useCrmMetadata } from "@/hooks/api/crm";
 import type { CrmBlueprint } from "@/types/crm/metadata";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { CreateBlueprintDialog } from "@/features/crm/settings/blueprints/create-blueprint-dialog";
 import { TransitionMatrix } from "@/features/crm/settings/blueprints/transition-matrix";
@@ -122,10 +123,8 @@ export default function BlueprintsPage() {
                       )}
                     >
                       <div className="flex-1 min-w-0">
-                        <div className="text-xs font-medium truncate">{bp.name}</div>
-                        <div className="text-[10px] text-muted-foreground truncate">
-                          {getPipelineName(bp.pipelineId)}
-                        </div>
+                        <TruncatedText text={bp.name} className="text-xs font-medium" />
+                        <TruncatedText text={getPipelineName(bp.pipelineId)} className="text-[10px] text-muted-foreground" />
                       </div>
                       <Switch
                         checked={bp.isActive}

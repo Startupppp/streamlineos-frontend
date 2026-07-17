@@ -33,6 +33,7 @@ import type { JobPostingStatus } from "@/types/hr";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { CONTENT_FILL_PANEL, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 
 const STATUS_OPTIONS: { value: string; label: string }[] = [
@@ -285,12 +286,12 @@ export default function JobPostingsPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <div className={cn("h-2 w-2 rounded-full shrink-0", statusStyle.dot)} />
-                          <h3 className="text-sm font-semibold text-foreground truncate">{job.title}</h3>
+                          <TruncatedText text={job.title} className="text-sm font-semibold text-foreground" />
                         </div>
                         {deptName && (
                           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                             <Building2 className="h-3 w-3 shrink-0" />
-                            <span className="truncate">{deptName}</span>
+                            <TruncatedText text={deptName} />
                           </div>
                         )}
                       </div>

@@ -16,7 +16,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { UserCombobox } from "@/components/ui/user-combobox";
 import {
   Select,
   SelectContent,
@@ -24,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Trash2, Play, CheckCircle2, XCircle, MinusCircle } from "lucide-react";
+import { Plus, Trash2, Play, CheckCircle2, XCircle, MinusCircle, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import {
   useCreateAutomation,
@@ -35,9 +34,14 @@ import {
   type AutomationCondition,
   type AutomationConditionOp,
   type AutomationAction,
-  type AutomationActionType,
   type AutomationTestResult,
 } from "@/hooks/api/automations";
+import {
+  type AiAutomationAction,
+  type ExtendedAutomationAction,
+  type ExtendedAutomationActionType,
+} from "@/hooks/api/automation-ai-nodes";
+import { AiActionConfigRenderer, StandardActionConfigRenderer } from "./ai-node-config-forms";
 import {
   TRIGGER_META,
   CONDITION_OPS,
@@ -53,7 +57,7 @@ interface AutomationBuilderSheetProps {
   defaultTrigger?: AutomationTrigger;
 }
 
-function defaultActionConfig(type: AutomationActionType): AutomationAction {
+function defaultActionConfig(type: ExtendedAutomationActionType): ExtendedAutomationAction {
   switch (type) {
     case "notify_roles":
       return { type, config: { roles: [], title: "", message: "", link: "" } };
@@ -73,6 +77,14 @@ function defaultActionConfig(type: AutomationActionType): AutomationAction {
       return { type, config: { tagId: 0 } };
     case "support_internal_note":
       return { type, config: { body: "" } };
+    case "ai_classify":
+      return { type, config: { labels: [], field: "" } };
+    case "ai_summarize":
+      return { type, config: { fields: [] } };
+    case "ai_extract":
+      return { type, config: { fields: [] } };
+    case "ai_routing_suggestion":
+      return { type, config: { options: [], field: "" } };
     default:
       return { type: "notify_all", config: { title: "", message: "" } };
   }
@@ -127,7 +139,7 @@ export function AutomationBuilderSheet({
   const [description, setDescription] = useState(rule?.description ?? "");
   const [triggerEvent, setTriggerEvent] = useState<AutomationTrigger>(resolvedDefault);
   const [conditions, setConditions] = useState<AutomationCondition[]>(rule?.conditions ?? []);
-  const [actions, setActions] = useState<AutomationAction[]>(rule?.actions ?? []);
+  const [actions, setActions] = useState<ExtendedAutomationAction[]>(rule?.actions ?? []);
   const [isEnabled, setIsEnabled] = useState(rule?.isEnabled ?? true);
   const [testResult, setTestResult] = useState<AutomationTestResult | null>(null);
 
@@ -164,7 +176,7 @@ export function AutomationBuilderSheet({
     setConditions((prev) => prev.map((c, i) => (i === index ? { ...c, value } : c)));
   }
 
-  function handleAddAction(type: AutomationActionType) {
+  function handleAddAction(type: ExtendedAutomationActionType) {
     setActions((prev) => [...prev, defaultActionConfig(type)]);
   }
 
@@ -175,7 +187,7 @@ export function AutomationBuilderSheet({
   function handleActionConfig(index: number, patch: Record<string, unknown>) {
     setActions((prev) =>
       prev.map((a, i) =>
-        i === index ? ({ ...a, config: { ...a.config, ...patch } } as AutomationAction) : a,
+        i === index ? ({ ...a, config: { ...a.config, ...patch } } as ExtendedAutomationAction) : a,
       ),
     );
   }
@@ -187,7 +199,7 @@ export function AutomationBuilderSheet({
       description: description.trim() || undefined,
       triggerEvent,
       conditions: validConditions,
-      actions,
+      actions: actions as AutomationAction[],
       isEnabled,
     };
   }
@@ -224,6 +236,20 @@ export function AutomationBuilderSheet({
       }
       if (action.type === "support_internal_note" && !action.config.body.trim()) {
         return "Add internal note action needs a body";
+      }
+      if (action.type === "ai_classify") {
+        if (action.config.labels.length < 2) return "AI Classify needs at least 2 labels";
+        if (!action.config.field.trim()) return "AI Classify needs a payload field";
+      }
+      if (action.type === "ai_summarize" && action.config.fields.length < 1) {
+        return "AI Summarize needs at least one field";
+      }
+      if (action.type === "ai_extract" && action.config.fields.length < 1) {
+        return "AI Extract needs at least one field to extract";
+      }
+      if (action.type === "ai_routing_suggestion") {
+        if (action.config.options.length < 1) return "AI Routing Suggestion needs at least one option";
+        if (!action.config.field.trim()) return "AI Routing Suggestion needs a payload field";
       }
     }
     return null;
@@ -399,7 +425,7 @@ export function AutomationBuilderSheet({
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label>Actions *</Label>
-                <Select value="" onValueChange={(v) => handleAddAction(v as AutomationActionType)}>
+                <Select value="" onValueChange={(v) => handleAddAction(v as ExtendedAutomationActionType)}>
                   <SelectTrigger className="w-44">
                     <SelectValue placeholder="Add action" />
                   </SelectTrigger>
@@ -419,9 +445,14 @@ export function AutomationBuilderSheet({
                   {actions.map((action, index) => (
                     <div key={index} className="rounded-lg border border-border/60 p-3 space-y-2.5">
                       <div className="flex items-center justify-between">
-                        <Badge variant="secondary" className="text-[11px]">
-                          {ACTION_TYPES.find((a) => a.value === action.type)?.label ?? action.type}
-                        </Badge>
+                        <div className="flex items-center gap-1.5">
+                          <Badge variant="secondary" className="text-[11px]">
+                            {ACTION_TYPES.find((a) => a.value === action.type)?.label ?? action.type}
+                          </Badge>
+                          {action.type.startsWith("ai_") && (
+                            <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                          )}
+                        </div>
                         <Button
                           type="button"
                           size="icon"
@@ -433,175 +464,25 @@ export function AutomationBuilderSheet({
                         </Button>
                       </div>
 
-                      {action.type === "notify_roles" && (
-                        <div className="space-y-2">
-                          <Input
-                            placeholder="Roles (comma separated, e.g. CEO, SALES)"
-                            value={action.config.roles.join(", ")}
-                            onChange={(e) =>
-                              handleActionConfig(index, {
-                                roles: e.target.value
-                                  .split(",")
-                                  .map((r) => r.trim())
-                                  .filter(Boolean),
-                              })
-                            }
-                          />
-                          <Input
-                            placeholder="Notification title"
-                            value={action.config.title}
-                            onChange={(e) => handleActionConfig(index, { title: e.target.value })}
-                          />
-                          <Textarea
-                            rows={2}
-                            placeholder="Notification message"
-                            value={action.config.message}
-                            onChange={(e) => handleActionConfig(index, { message: e.target.value })}
-                          />
-                          <Input
-                            placeholder="Link (optional, e.g. /crm/leads)"
-                            value={action.config.link ?? ""}
-                            onChange={(e) => handleActionConfig(index, { link: e.target.value })}
-                          />
-                        </div>
-                      )}
-
-                      {action.type === "notify_all" && (
-                        <div className="space-y-2">
-                          <Input
-                            placeholder="Notification title"
-                            value={action.config.title}
-                            onChange={(e) => handleActionConfig(index, { title: e.target.value })}
-                          />
-                          <Textarea
-                            rows={2}
-                            placeholder="Notification message"
-                            value={action.config.message}
-                            onChange={(e) => handleActionConfig(index, { message: e.target.value })}
-                          />
-                          <Input
-                            placeholder="Link (optional)"
-                            value={action.config.link ?? ""}
-                            onChange={(e) => handleActionConfig(index, { link: e.target.value })}
-                          />
-                        </div>
-                      )}
-
-                      {action.type === "email" && (
-                        <div className="space-y-2">
-                          <Input
-                            type="email"
-                            placeholder="Recipient email"
-                            value={action.config.to}
-                            onChange={(e) => handleActionConfig(index, { to: e.target.value })}
-                          />
-                          <Input
-                            placeholder="Subject"
-                            value={action.config.subject}
-                            onChange={(e) => handleActionConfig(index, { subject: e.target.value })}
-                          />
-                          <Textarea
-                            rows={3}
-                            placeholder="Body (HTML allowed)"
-                            value={action.config.body}
-                            onChange={(e) => handleActionConfig(index, { body: e.target.value })}
-                          />
-                        </div>
-                      )}
-
-                      {action.type === "create_task" && (
-                        <div className="space-y-2">
-                          <Input
-                            placeholder="Task title"
-                            value={action.config.title}
-                            onChange={(e) => handleActionConfig(index, { title: e.target.value })}
-                          />
-                          <UserCombobox
-                            value={action.config.assigneeId ?? ""}
-                            onChange={(assigneeId) =>
-                              handleActionConfig(index, {
-                                assigneeId: assigneeId || undefined,
-                              })
-                            }
-                            placeholder="Select assignee (optional)…"
-                            allowUnassigned
-                          />
-                          <Input
-                            type="number"
-                            min={0}
-                            placeholder="Due in days (optional)"
-                            value={
-                              action.config.dueInDays === undefined
-                                ? ""
-                                : String(action.config.dueInDays)
-                            }
-                            onChange={(e) =>
-                              handleActionConfig(index, {
-                                dueInDays:
-                                  e.target.value === "" ? undefined : Number(e.target.value),
-                              })
-                            }
-                          />
-                        </div>
-                      )}
-
-                      {action.type === "webhook" && (
-                        <Input
-                          placeholder="Webhook event name (e.g. lead.hot)"
-                          value={action.config.event}
-                          onChange={(e) => handleActionConfig(index, { event: e.target.value })}
+                      {action.type.startsWith("ai_") ? (
+                        <AiActionConfigRenderer
+                          action={action as AiAutomationAction}
+                          onChange={(patch) => handleActionConfig(index, patch)}
                         />
-                      )}
-
-                      {action.type === "support_assign_ticket" && (
-                        <UserCombobox
-                          value={action.config.assigneeId}
-                          onChange={(assigneeId) =>
-                            handleActionConfig(index, { assigneeId })
-                          }
-                          placeholder="Select assignee…"
-                        />
-                      )}
-
-                      {action.type === "support_set_priority" && (
-                        <Select
-                          value={action.config.priority}
-                          onValueChange={(value) => handleActionConfig(index, { priority: value })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Priority" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="LOW">Low</SelectItem>
-                            <SelectItem value="MEDIUM">Medium</SelectItem>
-                            <SelectItem value="HIGH">High</SelectItem>
-                            <SelectItem value="URGENT">Urgent</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      )}
-
-                      {action.type === "support_add_tag" && (
-                        <Input
-                          type="number"
-                          min={1}
-                          placeholder="Tag ID"
-                          value={action.config.tagId === 0 ? "" : String(action.config.tagId)}
-                          onChange={(e) =>
-                            handleActionConfig(index, { tagId: Number(e.target.value) || 0 })
-                          }
-                        />
-                      )}
-
-                      {action.type === "support_internal_note" && (
-                        <Textarea
-                          rows={2}
-                          placeholder="Internal note body"
-                          value={action.config.body}
-                          onChange={(e) => handleActionConfig(index, { body: e.target.value })}
+                      ) : (
+                        <StandardActionConfigRenderer
+                          action={action as AutomationAction}
+                          onChange={(patch) => handleActionConfig(index, patch)}
                         />
                       )}
                     </div>
                   ))}
+                </div>
+              )}
+              {actions.some((a) => a.type.startsWith("ai_")) && (
+                <div className="flex items-start gap-1.5 rounded-md bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-800 p-2 text-xs text-amber-700 dark:text-amber-300">
+                  <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                  <span>AI actions consume credits from your organization&apos;s AI budget.</span>
                 </div>
               )}
             </div>

@@ -2,15 +2,60 @@ import { cache } from "react";
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import { randomUUID } from "crypto";
-import { SignJWT } from "jose";
+import { SignJWT, decodeJwt } from "jose";
 import type { Plan } from "@/lib/billing/feature-gates";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL;
 const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET ?? "";
 
 if (!BACKEND_URL) throw new Error("NEXT_PUBLIC_API_URL is not set");
+
+const SESSION_DATA_TTL_MS = 30_000;
+const sessionDataStore = new Map<string, { data: SessionData; expiresAt: number }>();
+
+function getSessionDataFromStore(key: string): SessionData | null {
+  const entry = sessionDataStore.get(key);
+  if (!entry) return null;
+  if (Date.now() > entry.expiresAt) {
+    sessionDataStore.delete(key);
+    return null;
+  }
+  return entry.data;
+}
+
+function setSessionDataInStore(key: string, data: SessionData): void {
+  sessionDataStore.set(key, { data, expiresAt: Date.now() + SESSION_DATA_TTL_MS });
+}
+
+interface BackendJwtEntry {
+  token: string;
+  expiresAt: number;
+}
+const backendJwtStore = new Map<string, BackendJwtEntry>();
+
+function getBackendJwtFromStore(key: string): string | null {
+  const entry = backendJwtStore.get(key);
+  if (!entry) return null;
+  if (Date.now() > entry.expiresAt) {
+    backendJwtStore.delete(key);
+    return null;
+  }
+  return entry.token;
+}
+
+function setBackendJwtInStore(key: string, token: string): void {
+  try {
+    const claims = decodeJwt(token);
+    const exp = typeof claims.exp === "number" ? claims.exp : 0;
+    const expiresAt = exp * 1000 - 60_000;
+    if (expiresAt > Date.now()) {
+      backendJwtStore.set(key, { token, expiresAt });
+    }
+  } catch {
+  }
+}
 
 interface SessionData {
   userId: string;
@@ -56,7 +101,16 @@ async function fetchSessionData(userId: string): Promise<SessionData | null> {
   return null;
 }
 
-const fetchSessionDataCached = cache(fetchSessionData);
+async function fetchSessionDataWithCache(userId: string, orgId: string | null): Promise<SessionData | null> {
+  const storeKey = `${userId}:${orgId ?? ""}`;
+  const cached = getSessionDataFromStore(storeKey);
+  if (cached) return cached;
+  const data = await fetchSessionData(userId);
+  if (data) setSessionDataInStore(storeKey, data);
+  return data;
+}
+
+const fetchSessionDataCached = cache(fetchSessionDataWithCache);
 
 function parsePlatformAdminEmails(): ReadonlySet<string> {
   const raw = process.env.PLATFORM_ADMIN_EMAILS ?? "";
@@ -118,7 +172,7 @@ async function resolveGoogleUser(
 function buildUserFromSessionData(
   userId: string,
   sessionData: SessionData,
-  extra?: { forceChangePassword?: boolean; daysUntilExpiry?: number },
+  extra?: { daysUntilExpiry?: number },
 ) {
   return {
     id: userId,
@@ -129,7 +183,6 @@ function buildUserFromSessionData(
         : (sessionData.name ?? sessionData.email),
     image: sessionData.image,
     role: sessionData.role ?? undefined,
-    forceChangePassword: extra?.forceChangePassword ?? false,
     isActive: sessionData.isActive,
     hasDashboardAccess: sessionData.hasDashboardAccess,
     orgId: sessionData.orgId ?? null,
@@ -159,7 +212,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Credentials({
       credentials: {
         email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
         magicToken: { label: "Magic token", type: "text" },
         totpCode: { label: "MFA code", type: "text" },
       },
@@ -173,93 +225,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             if (!raw) return null;
             const data = unwrapBackend<{
               userId: string;
-              forceChangePassword: boolean;
             }>(raw);
             const sessionData = await fetchSessionData(data.userId);
             if (!sessionData) return null;
-            return buildUserFromSessionData(data.userId, sessionData, {
-              forceChangePassword: data.forceChangePassword,
-            });
+            return buildUserFromSessionData(data.userId, sessionData);
           } catch {
             return null;
           }
         }
-
-        if (!credentials?.email || !credentials?.password) return null;
-
-        try {
-          let raw: unknown = null;
-          try {
-            const response = await axios.post<unknown>(
-              `${BACKEND_URL}/auth/login`,
-              {
-                email: credentials.email,
-                password: credentials.password,
-                totpCode: credentials.totpCode ?? undefined,
-              },
-            );
-            raw = response.data;
-          } catch (loginErr: unknown) {
-            if (loginErr instanceof AxiosError) {
-              const errData = loginErr.response?.data as
-                | Record<string, unknown>
-                | undefined;
-              const code =
-                typeof errData?.code === "string" ? errData.code : null;
-              const details = errData?.details as
-                | Record<string, unknown>
-                | undefined;
-              if (code === "AUTH_ACCOUNT_LOCKED") {
-                const retryAfterSeconds =
-                  typeof details?.retryAfterSeconds === "number"
-                    ? details.retryAfterSeconds
-                    : 900;
-                throw new Error(`AUTH_ACCOUNT_LOCKED:${retryAfterSeconds}`);
-              }
-              if (code === "AUTH_SUBSCRIPTION_INACTIVE")
-                throw new Error("AUTH_SUBSCRIPTION_INACTIVE");
-              if (code === "AUTH_EMAIL_NOT_VERIFIED")
-                throw new Error("AUTH_EMAIL_NOT_VERIFIED");
-              if (code === "AUTH_INVALID_MFA_CODE")
-                throw new Error("AUTH_INVALID_MFA_CODE");
-            }
-            return null;
-          }
-
-          if (!raw) return null;
-          const data = unwrapBackend<{
-            userId: string;
-            orgId: string;
-            sessionId?: string;
-            forceChangePassword: boolean;
-            daysUntilExpiry?: number;
-            requiresMfa?: boolean;
-          }>(raw);
-
-          if (data.requiresMfa) throw new Error("AUTH_MFA_REQUIRED");
-
-          const sessionData = await fetchSessionData(data.userId);
-          if (!sessionData) return null;
-
-          return {
-            ...buildUserFromSessionData(data.userId, sessionData, {
-              forceChangePassword: data.forceChangePassword,
-              daysUntilExpiry: data.daysUntilExpiry,
-            }),
-            sessionId: data.sessionId,
-          };
-        } catch (err) {
-          if (
-            err instanceof Error &&
-            (err.message.startsWith("AUTH_ACCOUNT_LOCKED:") ||
-              err.message === "AUTH_SUBSCRIPTION_INACTIVE" ||
-              err.message === "AUTH_MFA_REQUIRED" ||
-              err.message === "AUTH_INVALID_MFA_CODE" ||
-              err.message === "AUTH_EMAIL_NOT_VERIFIED")
-          )
-            throw err;
-          return null;
-        }
+        return null;
       },
     }),
   ],
@@ -316,7 +290,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.email = user.email;
         token.name = user.name ?? null;
         token.role = user.role;
-        token.forceChangePassword = user.forceChangePassword ?? false;
         token.isActive = user.isActive ?? true;
         token.orgId = user.orgId ?? null;
         token.isOrgOwner = user.isOrgOwner ?? false;
@@ -344,8 +317,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             token.totpEnabled = fresh.totpEnabled;
           }
         }
-        if (session?.forceChangePassword !== undefined)
-          token.forceChangePassword = session.forceChangePassword as boolean;
       }
 
       if (!token.sessionId) {
@@ -356,9 +327,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
 
     async session({ session, token }) {
-      // Volatile data (permissions, modules, plan, org context) is resolved live here, never from the cookie — 485 permission keys once ballooned it to ~16KB (5 chunks), breaking every auth request with 431s.
+      const tokenOrgId = (token.orgId as string | null | undefined) ?? null;
       const fresh = token.id
-        ? await fetchSessionDataCached(token.id as string)
+        ? await fetchSessionDataCached(token.id as string, tokenOrgId)
         : null;
 
       const orgId = fresh
@@ -379,7 +350,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.role = role;
         session.user.image =
           fresh?.image ?? (token.picture as string | null | undefined) ?? null;
-        session.user.forceChangePassword = token.forceChangePassword as boolean;
         session.user.isActive = fresh?.isActive ?? (token.isActive as boolean);
         session.user.hasDashboardAccess = fresh?.hasDashboardAccess ?? true;
         session.user.isPlatformAdmin =
@@ -400,22 +370,31 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       const jwtSecret = process.env.BACKEND_JWT_SECRET;
       const sessionId = (token.sessionId as string | undefined)?.trim();
       if (jwtSecret && token.id && sessionId) {
-        session.backendJwt = await new SignJWT({
-          orgId,
-          branchId,
-          role,
-          enabledModules,
-          plan,
-          isPlatformAdmin:
-            (token.isPlatformAdmin as boolean | undefined) === true,
-          isOrgOwner,
-          sessionId,
-        })
-          .setProtectedHeader({ alg: "HS256" })
-          .setSubject(token.id as string)
-          .setIssuedAt()
-          .setExpirationTime("10m")
-          .sign(new TextEncoder().encode(jwtSecret));
+        const userId = token.id as string;
+        const jwtCacheKey = `${userId}:${orgId ?? ""}`;
+        const cachedJwt = getBackendJwtFromStore(jwtCacheKey);
+        if (cachedJwt) {
+          session.backendJwt = cachedJwt;
+        } else {
+          const minted = await new SignJWT({
+            orgId,
+            branchId,
+            role,
+            enabledModules,
+            plan,
+            isPlatformAdmin:
+              (token.isPlatformAdmin as boolean | undefined) === true,
+            isOrgOwner,
+            sessionId,
+          })
+            .setProtectedHeader({ alg: "HS256" })
+            .setSubject(userId)
+            .setIssuedAt()
+            .setExpirationTime("10m")
+            .sign(new TextEncoder().encode(jwtSecret));
+          setBackendJwtInStore(jwtCacheKey, minted);
+          session.backendJwt = minted;
+        }
       }
 
       return session;

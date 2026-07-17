@@ -19,6 +19,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useMyTravelRequests, useCreateTravelRequest, type TravelRequest } from "@/hooks/api/hr";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { format } from "date-fns";
@@ -130,10 +131,10 @@ function TravelCard({ request }: { request: TravelRequest }) {
                 <Plane className="h-4 w-4 text-foreground" />
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-foreground truncate">{request.purpose}</p>
+                <TruncatedText text={request.purpose} className="text-sm font-semibold text-foreground" />
                 <div className="flex items-center gap-1 mt-0.5">
                   <MapPin className="h-3 w-3 text-muted-foreground shrink-0" />
-                  <p className="text-xs text-muted-foreground truncate">{request.destination}</p>
+                  <TruncatedText text={request.destination} className="text-xs text-muted-foreground" />
                 </div>
               </div>
             </div>

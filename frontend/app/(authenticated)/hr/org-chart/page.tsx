@@ -13,6 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { Users, Network, Building2, Download } from "lucide-react";
 import type { OrgChartNode } from "@/types/hr";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { toast } from "sonner";
 
 interface TreeNode {
@@ -109,8 +110,8 @@ function PersonCard({ emp, size = "md" }: { emp: OrgChartNode; size?: "sm" | "md
         </AvatarFallback>
       </Avatar>
       <div className="min-w-0 flex-1">
-        <p className={cn("font-semibold truncate", isSm ? "text-xs" : "text-sm")}>{emp.name ?? "Unknown"}</p>
-        <p className="text-[10px] text-muted-foreground truncate">{emp.designation ?? emp.role}</p>
+        <TruncatedText text={emp.name ?? "Unknown"} className={cn("font-semibold", isSm ? "text-xs" : "text-sm")} />
+        <TruncatedText text={emp.designation ?? emp.role} className="text-[10px] text-muted-foreground" />
       </div>
       <span className={cn("h-2 w-2 rounded-full shrink-0", ROLE_DOT[emp.role] ?? "bg-muted-foreground/40")} />
     </div>
@@ -370,7 +371,7 @@ export default function OrgChartPage() {
                           </AvatarFallback>
                         </Avatar>
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs font-medium truncate">{emp.name}</p>
+                          <TruncatedText text={emp.name ?? ""} className="text-xs font-medium" />
                         </div>
                         <span className="text-[10px] text-muted-foreground shrink-0">{emp.designation ?? emp.role}</span>
                       </div>

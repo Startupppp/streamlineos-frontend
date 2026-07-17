@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/select";
 import { Plus, Trash2, UserPlus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 function CreatePoolSheet() {
   const [open, setOpen] = useState(false);
@@ -175,8 +176,8 @@ function PoolMembersList({ poolId }: { poolId: number }) {
       {members.map((m) => (
         <div key={m.membershipId} className="flex items-center justify-between gap-3 rounded-xl border border-border px-3 py-2.5">
           <div className="min-w-0">
-            <p className="text-sm font-medium text-foreground truncate">{m.firstName} {m.lastName}</p>
-            <p className="text-[11px] text-muted-foreground truncate">{m.currentRole ?? m.email}</p>
+            <TruncatedText text={`${m.firstName} ${m.lastName}`} className="text-sm font-medium text-foreground" />
+            <TruncatedText text={m.currentRole ?? m.email ?? ""} className="text-[11px] text-muted-foreground" />
           </div>
           <Button
             variant="ghost"
@@ -247,7 +248,7 @@ export default function TalentPoolsPage() {
                     <Badge variant="secondary" className="text-[10px] shrink-0">{pool.memberCount}</Badge>
                   </div>
                   {pool.description && (
-                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{pool.description}</p>
+                    <TruncatedText text={pool.description} lines={2} className="text-xs text-muted-foreground mt-1" />
                   )}
                 </button>
               ))}

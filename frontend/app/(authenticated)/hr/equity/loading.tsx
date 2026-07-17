@@ -1,15 +1,19 @@
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 
 export default function EquityLoading() {
   return (
-    <div className="p-6 space-y-4">
-      <Skeleton className="h-8 w-48" />
-      <Skeleton className="h-4 w-72" />
-      <div className="space-y-2 mt-6">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <Skeleton key={i} className="h-12 rounded-lg" />
-        ))}
+    <PageWrapper
+      title="Equity & ESOP"
+      subtitle="Manage equity grants, vesting schedules, and exercises"
+      actions={<Skeleton className="h-9 w-28 rounded-md" />}
+    >
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <div className="lg:col-span-5">
+          <DataTableSkeleton rows={10} columns={8} />
+        </div>
       </div>
-    </div>
+    </PageWrapper>
   );
 }

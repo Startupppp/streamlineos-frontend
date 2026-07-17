@@ -2,6 +2,7 @@
 
 import { CalendarDays } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { LeadActivityTimeline } from "./lead-activity-timeline";
 import { LeadAiSummaryCard } from "./lead-ai-summary-card";
@@ -83,12 +84,8 @@ export function LeadSidebar({
                 {avatarInitials}
               </div>
               <div className="min-w-0">
-                <p className="font-semibold text-sm truncate">
-                  {lead.assignedTo.name ?? "Unknown"}
-                </p>
-                <p className="text-xs text-muted-foreground truncate">
-                  {lead.assignedTo.email ?? ""}
-                </p>
+                <TruncatedText text={lead.assignedTo.name ?? "Unknown"} className="font-semibold text-sm" />
+                <TruncatedText text={lead.assignedTo.email ?? ""} className="text-xs text-muted-foreground" />
               </div>
             </div>
           </CardContent>

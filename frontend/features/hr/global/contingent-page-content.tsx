@@ -27,6 +27,7 @@ import {
   type HrContract,
 } from "@/hooks/api/hr/global";
 import { ContractSheet } from "./contract-sheet";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 function ContractTypeBadge({ type }: { type: HrContract["contractType"] }) {
   const colors: Record<HrContract["contractType"], string> = {
@@ -129,7 +130,7 @@ export function ContingentPageContent() {
                 <div className="flex items-center gap-2 mb-0.5">
                   <ContractTypeBadge type={contract.contractType} />
                   {contract.agencyVendor && (
-                    <span className="text-xs text-muted-foreground truncate">via {contract.agencyVendor}</span>
+                    <TruncatedText text={`via ${contract.agencyVendor}`} className="text-xs text-muted-foreground" />
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground">

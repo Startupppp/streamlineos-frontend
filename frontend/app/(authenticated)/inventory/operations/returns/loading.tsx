@@ -1,27 +1,13 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 
 export default function ReturnsLoading() {
   return (
-    <PageWrapper
-      title="Returns"
-      filters={<Skeleton className="h-8 w-64" />}
-    >
+    <PageWrapper title="Returns">
       <div className="space-y-4">
-        <div className="rounded-md border border-border bg-card overflow-hidden min-h-[200px]">
-          <div className="border-b border-border bg-muted/80 px-3 py-2 flex gap-4">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <Skeleton key={i} className="h-3 w-20" />
-            ))}
-          </div>
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="border-b border-border/50 px-3 py-2 flex gap-4">
-              {Array.from({ length: 12 }).map((__, j) => (
-                <Skeleton key={j} className="h-3 w-20" />
-              ))}
-            </div>
-          ))}
-        </div>
+        <Skeleton className="h-9 w-[240px]" />
+        <DataTableSkeleton rows={8} columns={5} />
       </div>
     </PageWrapper>
   );

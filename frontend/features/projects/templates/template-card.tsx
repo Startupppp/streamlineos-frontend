@@ -12,7 +12,8 @@ import { cn } from "@/lib/utils";
 import type { ProjectTemplate } from "@/hooks/api/projects";
 import { PM_PANEL } from "@/features/projects/shared/pm-chrome";
 import { listItem, listItemReduced, pmSnappy } from "@/features/projects/shared/pm-motion";
-import { TEXT_ONE_LINE, TEXT_TWO_LINES } from "@/features/projects/shared/text-overflow";
+import { TEXT_TWO_LINES } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   categoryAccentBar,
   categoryAvatarTints,
@@ -92,9 +93,7 @@ const TaskPreviewRow = memo(function TaskPreviewRow({
       >
         {type}
       </span>
-      <span className={cn(TEXT_ONE_LINE, "flex-1 text-[11px] text-foreground/90")} title={title}>
-        {title}
-      </span>
+      <TruncatedText text={title} className="flex-1 text-[11px] text-foreground/90" />
       {phase ? (
         <span className="shrink-0 rounded bg-muted px-1 py-px text-[9px] text-muted-foreground">
           {phase}
@@ -155,15 +154,10 @@ export const TemplateCard = memo(function TemplateCard({
 
           <div className="min-w-0 flex-1">
             <div className="flex min-w-0 items-start justify-between gap-2">
-              <h3
-                className={cn(
-                  TEXT_ONE_LINE,
-                  "text-sm font-semibold text-foreground transition-colors group-hover:text-primary",
-                )}
-                title={template.name}
-              >
-                {template.name}
-              </h3>
+              <TruncatedText
+                text={template.name}
+                className="text-sm font-semibold text-foreground transition-colors group-hover:text-primary"
+              />
               <span className="inline-flex shrink-0 items-center gap-0.5 rounded-md bg-muted px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground">
                 <ListChecks className="h-2.5 w-2.5" aria-hidden="true" />
                 {taskCount} {taskCount === 1 ? "task" : "tasks"}

@@ -13,8 +13,11 @@ import { ErrorState } from "@/components/shared";
 import { FinanceStatusBadge, Money } from "@/features/accounting/shared";
 import { RecordPaymentDialog } from "@/features/accounting/sales/record-payment-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { useInvoice } from "@/hooks/api/invoice";
 import { useCreditNotes } from "@/hooks/api/accounting/ar";
+import { useCan } from "@/hooks/api/access";
+import { AiActionsMenu, type AiAction } from "@/components/ai";
 import type { FinanceStatus } from "@/features/accounting/shared";
 import type { Invoice, Payment } from "@/types/invoice";
 import type { CreditNote } from "@/types/accounting/ar";
@@ -235,6 +238,41 @@ function CollectionPanel({ invoice }: CollectionPanelProps) {
   );
 }
 
+interface InvoiceAiActionsProps {
+  invoice: Invoice;
+}
+
+function InvoiceAiActions({ invoice }: InvoiceAiActionsProps) {
+  const canAi = useCan("accounting:ai:use");
+
+  const actions = useMemo<AiAction[]>(
+    () => [
+      {
+        key: "extract-document",
+        label: "Extract document",
+        description: "Upload an invoice image/PDF for AI-assisted draft",
+        run: async () => {
+          return {
+            text: `Document extraction requires uploading a file.\n\nTo extract invoice fields from a PDF or image:\n1. Navigate to Purchases → Bills and open the bill for this invoice\n2. Use the "Extract document" action to upload the file\n\nAI extracts: vendor, date, document number, amounts, and line items as a human-reviewed draft. AI never posts or approves entries automatically.\n\nInvoice reference: ${invoice.invoiceNumber} · ${invoice.client?.name ?? "—"}`,
+          };
+        },
+      },
+    ],
+    [invoice.invoiceNumber, invoice.client?.name],
+  );
+
+  if (!canAi) return null;
+
+  return (
+    <AiActionsMenu
+      actions={actions}
+      triggerLabel="AI"
+      menuLabel="Invoice AI"
+      align="end"
+    />
+  );
+}
+
 export function InvoiceDetailSkeleton() {
   return (
     <PageWrapper title="Invoice" backHref="/accounting/invoices">
@@ -367,6 +405,7 @@ export function InvoiceDetailContent({ invoiceId }: InvoiceDetailContentProps) {
       badge={<FinanceStatusBadge status={toFinanceStatus(invoice.status)} />}
       actions={
         <div className="flex items-center gap-2">
+          <InvoiceAiActions invoice={invoice} />
           <Button variant="outline" size="sm" onClick={handleBack}>
             <ArrowLeft className="size-3.5 mr-1" />
             Back

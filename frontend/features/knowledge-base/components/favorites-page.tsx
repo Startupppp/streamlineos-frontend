@@ -17,6 +17,7 @@ import {
   KbFileTextIcon,
   KbStarIcon,
 } from "@/features/knowledge-base/lib/kb-icons";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 function FavoriteRow({ page }: { page: KbPage }) {
   const toggleFavorite = useToggleFavoriteKbPage();
@@ -43,9 +44,7 @@ function FavoriteRow({ page }: { page: KbPage }) {
           <KbFileTextIcon className="h-4 w-4 text-muted-foreground" />
         )}
       </span>
-      <span className="flex-1 text-sm truncate font-medium">
-        {page.title || "Untitled"}
-      </span>
+      <TruncatedText text={page.title || "Untitled"} className="flex-1 text-sm font-medium" />
       <Button
         variant="ghost"
         size="icon"

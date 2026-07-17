@@ -9,6 +9,7 @@ import {
   Activity as ActivityIcon,
 } from "lucide-react";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -81,20 +82,22 @@ export function ActivityTab({ candidateId }: Props) {
               )}
             </div>
             <div className="pb-4 min-w-0 flex-1">
-              <p className="text-sm text-foreground font-medium">
-                {formatLabel(event.label)}
-              </p>
+              <TruncatedText
+                text={formatLabel(event.label)}
+                className="text-sm text-foreground font-medium"
+              />
               {event.detail &&
                 "from" in event.detail &&
                 "to" in event.detail && (
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {String(event.detail.from)} → {String(event.detail.to)}
-                  </p>
+                  <TruncatedText
+                    text={`${String(event.detail.from)} → ${String(event.detail.to)}`}
+                    className="text-xs text-muted-foreground mt-0.5"
+                  />
                 )}
-              <p className="text-[11px] text-muted-foreground mt-1">
-                {event.actor ? `${event.actor} · ` : ""}
-                {formatDistanceToNow(new Date(event.at), { addSuffix: true })}
-              </p>
+              <TruncatedText
+                text={`${event.actor ? `${event.actor} · ` : ""}${formatDistanceToNow(new Date(event.at), { addSuffix: true })}`}
+                className="text-[11px] text-muted-foreground mt-1"
+              />
             </div>
           </div>
         );

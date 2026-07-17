@@ -27,6 +27,7 @@ import {
   KbPlusIcon,
   KbStarIcon,
 } from "@/features/knowledge-base/lib/kb-icons";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -57,7 +58,7 @@ const PageCard = memo(function PageCard({ id, icon, title, updatedAt }: PageCard
           {icon ?? <KbFileTextIcon className="h-5 w-5 text-muted-foreground mt-0.5" />}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="font-medium text-sm truncate">{title || "Untitled"}</p>
+          <TruncatedText text={title || "Untitled"} className="font-medium text-sm" />
           <p className="text-xs text-muted-foreground mt-0.5">{timeAgo(updatedAt)}</p>
         </div>
       </div>
@@ -184,7 +185,7 @@ export default function WikiHomePage() {
                   <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center leading-none">
                     {node.icon ?? <KbFileTextIcon className="h-4 w-4 text-muted-foreground" />}
                   </span>
-                  <span className="flex-1 truncate text-sm leading-normal">{node.title || "Untitled"}</span>
+                  <TruncatedText text={node.title || "Untitled"} className="flex-1 text-sm leading-normal" />
                 </Link>
               </motion.div>
             ))}

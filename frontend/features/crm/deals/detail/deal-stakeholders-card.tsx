@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -58,10 +59,10 @@ function StakeholderRow({
           {isPrimary && (
             <Star className="h-3 w-3 fill-amber-400 text-amber-400 shrink-0" />
           )}
-          <p className="text-sm font-medium truncate">{name}</p>
+          <TruncatedText text={name} className="text-sm font-medium" />
         </div>
         {title && (
-          <p className="text-xs text-muted-foreground truncate">{title}</p>
+          <TruncatedText text={title} className="text-xs text-muted-foreground" />
         )}
         <div className="flex gap-1 mt-1 flex-wrap">
           {roleKey && (

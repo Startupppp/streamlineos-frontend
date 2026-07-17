@@ -31,6 +31,7 @@ import {
   HrStatusBadge,
 } from "@/features/hr/shared/hr-ui";
 import { toast } from "sonner";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 type ViewMode = "grid" | "list";
 
@@ -57,10 +58,8 @@ function buildEmployeeListColumns(
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-foreground truncate">{displayName}</p>
-              {emp.email && (
-                <p className="text-[11px] text-muted-foreground truncate">{emp.email}</p>
-              )}
+              <TruncatedText text={displayName} className="text-sm font-semibold text-foreground" />
+              {emp.email && <TruncatedText text={emp.email} className="text-[11px] text-muted-foreground" />}
             </div>
           </div>
         );

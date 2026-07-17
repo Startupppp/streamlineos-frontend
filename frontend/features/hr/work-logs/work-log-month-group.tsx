@@ -6,6 +6,7 @@ import { ChevronDownIcon, ChevronRightIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { cn } from "@/lib/utils";
 import { WorkLogEntryRow } from "./work-log-entry-row";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface WorkLog {
   id: number;
@@ -93,7 +94,7 @@ export function WorkLogMonthGroup({
                 <ChevronDownIcon ref={chevronRef} size={16} className="text-muted-foreground" aria-hidden="true" />
               )}
             </div>
-            <CardTitle className="text-sm font-semibold text-foreground truncate">{label}</CardTitle>
+            <CardTitle className="text-sm font-semibold text-foreground min-w-0"><TruncatedText text={label} /></CardTitle>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             {!searchTerm.trim() && filled > 0 && (

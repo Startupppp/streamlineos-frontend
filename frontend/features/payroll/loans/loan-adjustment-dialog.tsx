@@ -12,6 +12,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   Form,
   FormControl,
@@ -121,7 +122,10 @@ export function LoanAdjustmentDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Loan Adjustment — {loanEmployeeName}</DialogTitle>
+          <DialogTitle className="flex items-center gap-1 min-w-0">
+            <span className="shrink-0">Loan Adjustment —</span>
+            <TruncatedText text={loanEmployeeName} className="min-w-0 flex-1" />
+          </DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col gap-4">

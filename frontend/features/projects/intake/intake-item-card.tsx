@@ -8,6 +8,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PriorityBadge } from "@/features/projects/shared/priority-badge";
 import { PM_PANEL } from "@/features/projects/shared/pm-chrome";
 import { TEXT_ONE_LINE, TEXT_TWO_LINES } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const STATUS_BADGE_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   pending: "secondary",
@@ -63,7 +64,7 @@ export const IntakeItemCard = memo(function IntakeItemCard({ item, onAccept, onD
       <div className={cn("w-1 shrink-0", STATUS_LEFT_COLOR[item.status] ?? "bg-border")} />
       <div className="min-w-0 flex-1 px-4 py-3">
         <div className="mb-1 flex flex-wrap items-center gap-2">
-          <p className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>{item.title}</p>
+          <TruncatedText text={item.title} className="text-sm font-semibold" />
           <Badge
             variant={STATUS_BADGE_VARIANT[item.status] ?? "outline"}
             className="text-xs font-medium px-1.5 py-0.5 rounded-md"

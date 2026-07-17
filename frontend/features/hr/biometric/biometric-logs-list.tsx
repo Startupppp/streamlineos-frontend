@@ -15,7 +15,9 @@ const columns: DataTableColumn<BiometricLog>[] = [
   {
     key: "employee",
     header: "Employee",
-    cell: (log) => <span className="text-sm">{log.userId ?? "—"}</span>,
+    cell: (log) => (
+      <span className="text-sm truncate min-w-0 block max-w-[160px]">{log.userId ?? "—"}</span>
+    ),
   },
   {
     key: "punchTime",

@@ -37,6 +37,7 @@ import type { CustomState } from "@/hooks/api/projects/custom-states";
 import type { WorkflowTransition, CreateTransitionInput } from "@/types/projects/workflow";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 
 function AddTransitionButton({ onClick }: { onClick: () => void }) {
@@ -169,9 +170,7 @@ export function TransitionsTable({ projectId, statuses }: TransitionsTableProps)
       className: TABLE_TITLE_CELL,
       cell: (row) =>
         row.name ? (
-          <span className={cn("text-sm font-medium", TEXT_ONE_LINE)} title={row.name}>
-            {row.name}
-          </span>
+          <TruncatedText text={row.name} className="text-sm font-medium" />
         ) : (
           <span className="text-xs text-muted-foreground">—</span>
         ),

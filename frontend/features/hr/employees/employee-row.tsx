@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TableCell, TableRow } from "@/components/ui/table";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { resolveImageUrl } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import type { Employee } from "@/types/hr";
@@ -30,13 +31,15 @@ export function EmployeeRow({ employee: emp, department }: EmployeeRowProps) {
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors duration-200">
-              {displayName}
-            </p>
+            <TruncatedText
+              text={displayName}
+              className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors duration-200"
+            />
             {emp.email && (
-              <p className="text-[11px] text-muted-foreground truncate">
-                {emp.email}
-              </p>
+              <TruncatedText
+                text={emp.email}
+                className="text-[11px] text-muted-foreground"
+              />
             )}
           </div>
         </Link>
@@ -56,8 +59,8 @@ export function EmployeeRow({ employee: emp, department }: EmployeeRowProps) {
           <span className="text-xs text-muted-foreground">—</span>
         )}
       </TableCell>
-      <TableCell className="text-xs text-muted-foreground truncate max-w-[180px]">
-        {emp.email}
+      <TableCell className="text-xs text-muted-foreground max-w-[180px]">
+        <TruncatedText text={emp.email ?? ""} className="text-xs text-muted-foreground" />
       </TableCell>
       <TableCell>
         <span

@@ -23,8 +23,8 @@ import {
   PM_PANEL,
   PM_ROW,
 } from "@/features/projects/shared/pm-chrome";
-import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const CR_STATUS_LABELS: Record<ChangeRequestStatus, string> = {
   submitted: "Submitted",
@@ -188,9 +188,7 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
             <PmPanel>
               {milestones.map((m) => (
                 <div key={m.id} className={PM_ROW}>
-                  <span className={cn(TEXT_ONE_LINE, "flex-1 text-[11px] font-medium")} title={m.name}>
-                    {m.name}
-                  </span>
+                  <TruncatedText text={m.name} className="flex-1 text-[11px] font-medium" />
                   {m.dueDate ? (
                     <span className="shrink-0 text-[10px] text-muted-foreground">
                       Due{" "}
@@ -230,9 +228,7 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
                   <span className="w-16 shrink-0 font-mono text-[10px] text-muted-foreground">
                     #{t.ticketNumber}
                   </span>
-                  <span className={cn(TEXT_ONE_LINE, "flex-1 text-[11px]")} title={t.title}>
-                    {t.title}
-                  </span>
+                  <TruncatedText text={t.title} className="flex-1 text-[11px]" />
                   {t.dueDate ? (
                     <span className="hidden shrink-0 text-[10px] text-muted-foreground sm:block">
                       {new Date(t.dueDate).toLocaleDateString("en-IN", {
@@ -267,9 +263,7 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
               {attachments.map((f) => (
                 <div key={f.id} className={PM_ROW}>
                   <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  <span className={cn(TEXT_ONE_LINE, "flex-1 text-[11px]")} title={f.filename}>
-                    {f.filename}
-                  </span>
+                  <TruncatedText text={f.filename} className="flex-1 text-[11px]" />
                   <DownloadLink href={f.url} />
                 </div>
               ))}
@@ -313,9 +307,7 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
                   <span className="w-14 shrink-0 font-mono text-[10px] text-muted-foreground">
                     CR-{cr.crNumber}
                   </span>
-                  <span className={cn(TEXT_ONE_LINE, "flex-1 text-[11px]")} title={cr.title}>
-                    {cr.title}
-                  </span>
+                  <TruncatedText text={cr.title} className="flex-1 text-[11px]" />
                   <Badge
                     variant="outline"
                     className={cn("shrink-0 text-[10px]", CR_STATUS_STYLES[cr.status])}

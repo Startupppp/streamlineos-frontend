@@ -3,26 +3,20 @@
 import { useHrAttendanceAnalytics } from "@/hooks/api/hr/analytics";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Clock, Building2, CalendarCheck } from "lucide-react";
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-} from "recharts";
+import dynamic from "next/dynamic";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   AnalyticsChartCard,
   AnalyticsSectionHeader,
-  CHART_SEMANTIC,
   EmptyChart,
   SectionSkeleton,
   SimpleBar,
-  chartAxisTick,
-  chartGridProps,
-  chartTooltipStyle,
 } from "./shared";
+
+const AttendanceTrendChart = dynamic(
+  () => import("./attendance-trend-chart").then((m) => ({ default: m.AttendanceTrendChart })),
+  { ssr: false, loading: () => <Skeleton className="h-[200px] w-full" /> },
+);
 
 interface AttendanceSectionProps {
   year: number;
@@ -97,35 +91,7 @@ export function AttendanceSection({ year, month }: AttendanceSectionProps) {
 
         <AnalyticsChartCard title="Daily Attendance Trend">
           {dailyChartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart
-                data={dailyChartData}
-                margin={{ top: 8, right: 8, left: -16, bottom: 0 }}
-                barCategoryGap="28%"
-              >
-                <CartesianGrid {...chartGridProps} />
-                <XAxis
-                  dataKey="date"
-                  tick={chartAxisTick}
-                  interval={Math.max(0, Math.floor(dailyChartData.length / 8) - 1)}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  tick={chartAxisTick}
-                  allowDecimals={false}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip contentStyle={chartTooltipStyle} />
-                <Bar
-                  dataKey="count"
-                  fill={CHART_SEMANTIC.primary}
-                  radius={[4, 4, 0, 0]}
-                  maxBarSize={24}
-                />
-              </BarChart>
-            </ResponsiveContainer>
+            <AttendanceTrendChart data={dailyChartData} />
           ) : (
             <EmptyChart label="No daily attendance data" />
           )}

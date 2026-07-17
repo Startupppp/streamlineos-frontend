@@ -12,6 +12,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { FinanceStatusBadge, Money } from "@/features/accounting/shared";
 import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
 import type { ExpenseWithRelations } from "@/types/hr/expenses";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import type { ExpenseStatus } from "@/features/accounting/shared";
 
 function formatDate(value: string | null | undefined): string {
@@ -53,7 +54,7 @@ const COLUMNS: DataTableColumn<ExpenseWithExtras>[] = [
           <Avatar className="h-6 w-6 shrink-0">
             <AvatarFallback className="text-[10px] bg-primary/10 text-primary">{initials}</AvatarFallback>
           </Avatar>
-          <span className="text-sm truncate">{displayName}</span>
+          <TruncatedText text={displayName} className="text-sm" />
         </div>
       );
     },

@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { ActivityTypeBadge } from "./activity-type-badge";
 import { useCompleteCrmActivity } from "@/hooks/api/crm/crm-activities";
@@ -98,9 +99,7 @@ export function ActivityCard({ activity, index }: ActivityCardProps) {
 
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 flex-wrap">
-            <p className="text-sm font-semibold text-foreground truncate max-w-sm">
-              {activity.title}
-            </p>
+            <TruncatedText text={activity.title} className="text-sm font-semibold text-foreground max-w-sm" />
             <Badge
               className={cn(
                 "text-[10px] border-0 gap-1 font-medium shrink-0",

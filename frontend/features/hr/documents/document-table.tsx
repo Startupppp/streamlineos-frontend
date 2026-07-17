@@ -30,6 +30,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { viewFile, downloadFile } from "@/hooks/common/use-file-url";
@@ -247,9 +248,10 @@ export function DocumentTable({
                 <FileIcon className={cn("h-3.5 w-3.5", fileConfig.text)} />
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-medium text-foreground truncate leading-snug">
-                  {doc.fileName ?? doc.name}
-                </p>
+                <TruncatedText
+                  text={doc.fileName ?? doc.name}
+                  className="text-sm font-medium text-foreground leading-snug"
+                />
                 {doc.tags && doc.tags.length > 0 && (
                   <div className="flex gap-1 mt-0.5 flex-wrap">
                     {doc.tags.slice(0, 3).map((tag) => (
@@ -501,9 +503,10 @@ export function DocumentTable({
                     <Folder className="h-3.5 w-3.5" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xs font-medium text-foreground truncate">
-                      {folder.name}
-                    </p>
+                    <TruncatedText
+                      text={folder.name}
+                      className="text-xs font-medium text-foreground"
+                    />
                     <p className="text-[10px] text-muted-foreground">
                       {folder.count} files
                     </p>

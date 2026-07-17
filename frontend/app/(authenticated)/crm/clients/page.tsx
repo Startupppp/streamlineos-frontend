@@ -31,6 +31,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared";
 import { fadeUp } from "@/lib/motion-variants";
 import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { useClientAccounts } from "@/hooks/api/crm/clients";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { formatAmount, formatDate } from "@/features/crm/clients/utils";
@@ -111,18 +112,16 @@ const COLUMNS: DataTableColumn<ClientAccount>[] = [
         <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center text-[10px] font-semibold text-muted-foreground shrink-0">
           {(a.clientName[0] ?? "?").toUpperCase()}
         </div>
-        <span className="font-medium truncate max-w-[140px]">{a.clientName}</span>
+        <TruncatedText text={a.clientName} className="font-medium max-w-[140px]" />
       </div>
     ),
   },
   {
     key: "email",
     header: "Email",
-    cell: (a) => (
-      <span className="text-muted-foreground truncate block max-w-[160px]">
-        {a.clientEmail ?? "—"}
-      </span>
-    ),
+    cell: (a) => a.clientEmail
+      ? <TruncatedText text={a.clientEmail} className="text-muted-foreground max-w-[160px] block" />
+      : <span className="text-muted-foreground">—</span>,
   },
   {
     key: "phone",

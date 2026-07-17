@@ -9,6 +9,8 @@ import type {
   PlanResult,
   ExtractTasksResult,
   AskResult,
+  WeeklyUpdateResult,
+  ChangeImpactResult,
 } from "@/types/projects/ai";
 
 export function useProjectAiSummary(pid: number) {
@@ -56,5 +58,21 @@ export function useAskProjectAi(pid: number) {
     mutationKey: ["projects", pid, "ai", "ask"],
     mutationFn: (input: { question: string }) =>
       apiClient.post<AskResult>(`/ai/projects/${pid}/ask`, input),
+  });
+}
+
+export function useWeeklyUpdate(pid: number) {
+  return useMutation({
+    mutationKey: ["projects", pid, "ai", "weekly-update"],
+    mutationFn: (input?: { startDate?: string; endDate?: string }) =>
+      apiClient.post<WeeklyUpdateResult>(`/ai/projects/${pid}/weekly-update`, input ?? {}),
+  });
+}
+
+export function useChangeImpact(pid: number) {
+  return useMutation({
+    mutationKey: ["projects", pid, "ai", "change-impact"],
+    mutationFn: () =>
+      apiClient.post<ChangeImpactResult>(`/ai/projects/${pid}/change-impact`),
   });
 }

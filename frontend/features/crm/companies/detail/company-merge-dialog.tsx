@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useMergeCrmOrganizations } from "@/hooks/api/crm";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { DuplicateOrgPair } from "@/types/crm";
 
@@ -86,8 +87,8 @@ export function CompanyMergeDialog({ pair, currentOrgId, open, onOpenChange, onM
                         {org.name[0]?.toUpperCase() ?? "?"}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-medium truncate">{org.name}</p>
-                        {org.domain && <p className="text-[10px] text-muted-foreground truncate">{org.domain}</p>}
+                        <TruncatedText text={org.name} className="text-xs font-medium" />
+                        {org.domain && <TruncatedText text={org.domain} className="text-[10px] text-muted-foreground" />}
                       </div>
                       {isPrimary && (
                         <Badge className="text-[9px] px-1.5 py-0 h-4 bg-primary shrink-0">Primary</Badge>

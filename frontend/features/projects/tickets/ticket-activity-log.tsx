@@ -71,14 +71,14 @@ const ActivityItem = memo(function ActivityItem({ entry }: ActivityItemProps) {
         {showTransition && (
           <span className="mt-0.5 flex flex-wrap items-center gap-1 text-muted-foreground/90">
             {entry.fromValue && (
-              <span className="truncate rounded bg-muted px-1.5 py-0.5 text-[11px] text-foreground/80 line-through decoration-muted-foreground/50">
+              <span className="max-w-[16rem] truncate rounded bg-muted px-1.5 py-0.5 text-[11px] text-foreground/80 line-through decoration-muted-foreground/50" title={entry.fromValue}>
                 {entry.fromValue}
               </span>
             )}
             {entry.toValue && (
               <>
                 {entry.fromValue && <ArrowRight className="h-3 w-3 shrink-0" />}
-                <span className="truncate rounded bg-primary/10 px-1.5 py-0.5 text-[11px] text-primary">
+                <span className="max-w-[16rem] truncate rounded bg-primary/10 px-1.5 py-0.5 text-[11px] text-primary" title={entry.toValue}>
                   {entry.toValue}
                 </span>
               </>

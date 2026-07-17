@@ -8,7 +8,8 @@ import { TicketQuickActions } from "./ticket-quick-actions";
 import { InlineStatus, InlinePriority, InlineAssignee, InlineEstimate, InlineFieldWrapper, stopEvent } from "./card-inline-fields";
 import { InlineType, InlineLabels, InlineCycle, InlineSprint } from "./card-inline-extra-fields";
 import { InlineDueDate } from "./card-inline-date-fields";
-import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TABLE_TITLE_CELL } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface Ticket {
   id: number;
@@ -72,10 +73,9 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
           <button
             type="button"
             onClick={handleClick}
-            className={cn("text-left text-[13px] font-medium hover:underline underline-offset-2", TEXT_ONE_LINE)}
-            title={ticket.title}
+            className="text-left text-[13px] font-medium hover:underline underline-offset-2 min-w-0 w-full"
           >
-            {ticket.title}
+            <TruncatedText text={ticket.title} />
           </button>
         );
       },

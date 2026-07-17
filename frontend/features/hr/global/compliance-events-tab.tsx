@@ -11,6 +11,7 @@ import {
   useMarkEventDone,
   type ComplianceEvent,
 } from "@/hooks/api/hr/global";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 function EventStatusBadge({ status }: { status: ComplianceEvent["status"] }) {
   if (status === "done") return <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">Done</Badge>;
@@ -73,7 +74,7 @@ export function ComplianceEventsTab() {
             >
               <EventStatusIcon status={event.status} />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{event.requirementName ?? `Requirement #${event.requirementId}`}</p>
+                <TruncatedText text={event.requirementName ?? `Requirement #${event.requirementId}`} className="text-sm font-medium" />
                 <p className="text-xs text-muted-foreground">
                   Due: {format(parseISO(event.dueDate), "d MMM yyyy")}
                   {event.category && ` · ${event.category.replace(/_/g, " ")}`}

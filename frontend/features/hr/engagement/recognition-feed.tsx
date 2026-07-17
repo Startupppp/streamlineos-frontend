@@ -10,6 +10,7 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { MemberPicker } from "@/components/shared";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   Select,
   SelectContent,
@@ -249,7 +250,7 @@ export function BadgesGrid() {
           >
             <span className="text-2xl">{badge.icon}</span>
             <p className="text-xs font-semibold text-foreground leading-tight">{badge.name}</p>
-            <p className="text-[10px] text-muted-foreground leading-tight line-clamp-2">{badge.description}</p>
+            <TruncatedText text={badge.description} lines={2} className="text-[10px] text-muted-foreground leading-tight" />
             <Badge variant="secondary" className="text-[10px] px-1.5 h-4">
               {badge.points} pts
             </Badge>

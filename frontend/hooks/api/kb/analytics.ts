@@ -10,6 +10,7 @@ import type {
   KbVerificationItem,
   KbPageAnalyticsRow,
   KbGapRow,
+  KbContentGapRow,
 } from "@/types/kb";
 
 export function useKbAnalyticsOverview(range?: KbAnalyticsRange) {
@@ -51,6 +52,15 @@ export function useKnowledgeGaps(range?: KbAnalyticsRange) {
   return useQuery({
     queryKey: queryKeys.kb.knowledgeGaps(queryParams),
     queryFn: () => apiClient.get<KbGapRow[]>("/kb/analytics/gaps", queryParams),
+    staleTime: 60_000,
+  });
+}
+
+export function useKbContentGaps(range?: KbAnalyticsRange) {
+  const queryParams: Record<string, unknown> = { ...range };
+  return useQuery({
+    queryKey: queryKeys.kb.contentGaps(queryParams),
+    queryFn: () => apiClient.get<KbContentGapRow[]>("/kb/analytics/content-gaps", queryParams),
     staleTime: 60_000,
   });
 }

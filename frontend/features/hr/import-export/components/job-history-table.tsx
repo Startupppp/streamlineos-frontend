@@ -13,6 +13,7 @@ import {
 } from "@/hooks/api/hr/import-export";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { JobErrorsSheet } from "./job-errors-sheet";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface JobHistoryTableProps {
   entity?: HrImportEntity;
@@ -60,9 +61,7 @@ const COLUMNS: DataTableColumn<HrImportJob>[] = [
     key: "fileName",
     header: "File",
     cell: (row) => (
-      <span className="text-xs text-muted-foreground truncate max-w-[160px] block">
-        {row.fileName}
-      </span>
+      <TruncatedText text={row.fileName} className="text-xs text-muted-foreground max-w-[160px]" />
     ),
   },
   {

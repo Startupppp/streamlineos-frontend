@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, type ReactNode } from "react";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { Skeleton } from "@/components/ui/skeleton";
 import type {
   TraceabilityResult,
@@ -51,7 +52,7 @@ const EventRow = memo(function EventRow({
           </span>
         )}
         {event.notes && (
-          <p className="text-muted-foreground mt-0.5 truncate">{event.notes}</p>
+          <TruncatedText text={event.notes} className="text-muted-foreground mt-0.5" />
         )}
       </div>
       <div className="text-right shrink-0 text-muted-foreground tabular-nums">

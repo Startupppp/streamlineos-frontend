@@ -19,7 +19,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
-import { ChevronDown, AlertCircle } from "lucide-react";
+import { ChevronDown, AlertCircle, Users, BarChart3, MapPin, Globe } from "lucide-react";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { cn } from "@/lib/utils";
 import type { Department } from "@/types/hr";
 
@@ -255,24 +256,12 @@ export default function DiversityReportPage() {
         />
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-4 mb-6">
-            {[
-              { label: "Total Applicants", value: data.total },
-              {
-                label: "Gender Categories",
-                value: data.genderBreakdown.length,
-              },
-              { label: "Locations", value: data.locationBreakdown.length },
-              { label: "Sources", value: data.sourceBreakdown.length },
-            ].map((stat) => (
-              <Card key={stat.label}>
-                <CardContent className="p-4">
-                  <p className="text-xs text-muted-foreground">{stat.label}</p>
-                  <p className="text-2xl font-bold mt-1">{stat.value}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <StatCardGrid cols={4} className="mb-6">
+            <StatCard label="Total Applicants" value={data.total} icon={Users} tone="blue" />
+            <StatCard label="Gender Categories" value={data.genderBreakdown.length} icon={BarChart3} tone="default" />
+            <StatCard label="Locations" value={data.locationBreakdown.length} icon={MapPin} tone="emerald" />
+            <StatCard label="Sources" value={data.sourceBreakdown.length} icon={Globe} tone="amber" />
+          </StatCardGrid>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Card>

@@ -29,10 +29,13 @@ import { AIGenerateReviewButton } from "@/features/hr/performance/ai-generate-re
 import { toast } from "sonner";
 import { resolveImageUrl, cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Plus, Star, CheckCircle2, Trash2, ChevronsUpDown, Check, Pencil } from "lucide-react";
+import { Star, CheckCircle2, ChevronsUpDown, Check, Pencil } from "lucide-react";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Employee, PerformanceReview, ReviewCycle } from "@/types/hr";
 import { EmptyLeaderboardIllustration } from "@/components/illustrations";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 export function ReviewsTab() {
   const { data: reviews, isLoading } = useHrPerformanceReviews();
@@ -192,9 +195,9 @@ export function ReviewsTab() {
             <TabsTrigger value="COMPLETED" className="text-[11px] px-3">Completed</TabsTrigger>
           </TabsList>
         </Tabs>
-        <Button size="sm" className="gap-1.5" onClick={handleOpenSheet}>
-          <Plus className="h-3.5 w-3.5" />New Review
-        </Button>
+        <AnimatedIconButton icon={PlusIcon} size="sm" className="gap-1.5" iconSize={14} onClick={handleOpenSheet}>
+          New Review
+        </AnimatedIconButton>
       </div>
 
       {filteredReviews.length === 0 ? (
@@ -248,9 +251,7 @@ export function ReviewsTab() {
                           <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground transition-colors duration-200" onClick={() => handleOpenEdit(review)}>
                             <Pencil className="h-3 w-3" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive transition-colors duration-200" onClick={() => setDeleteId(review.id)}>
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
+                          <AnimatedIconButton icon={Trash2Icon} variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive transition-colors duration-200" iconSize={12} onClick={() => setDeleteId(review.id)} />
                         </>
                       )}
                     </div>
@@ -263,9 +264,15 @@ export function ReviewsTab() {
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-foreground truncate">{review.user?.name ?? "Employee"}</p>
+                      <TruncatedText
+                        text={review.user?.name ?? "Employee"}
+                        className="text-sm font-semibold text-foreground"
+                      />
                       {review.reviewer?.name && (
-                        <p className="text-[10px] text-muted-foreground truncate">by {review.reviewer.name}</p>
+                        <TruncatedText
+                          text={`by ${review.reviewer.name}`}
+                          className="text-[10px] text-muted-foreground"
+                        />
                       )}
                     </div>
                   </div>

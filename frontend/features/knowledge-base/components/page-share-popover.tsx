@@ -11,6 +11,7 @@ import {
   type KbIconComponent,
 } from "@/features/knowledge-base/lib/kb-icons";
 import { Button } from "@/components/ui/button";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
@@ -108,9 +109,7 @@ export default function PageSharePopover({ page }: PageSharePopoverProps) {
             <div className="h-px bg-border mx-4" />
             <div className="px-4 py-3">
               <div className="flex items-center gap-2 rounded-md border border-border bg-muted px-2 py-1.5">
-                <span className="flex-1 min-w-0 text-xs text-muted-foreground truncate">
-                  {publicUrl}
-                </span>
+                <TruncatedText text={publicUrl} className="flex-1 min-w-0 text-xs text-muted-foreground" />
                 <Button
                   type="button"
                   variant="ghost"

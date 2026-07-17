@@ -1,9 +1,19 @@
 "use client";
 
 import { Clock, TrendingUp, CheckCircle2, AlertTriangle, Users } from "lucide-react";
+import dynamic from "next/dynamic";
+import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ByDayChart, ByProjectChart } from "./report-charts";
+
+const ByDayChart = dynamic(
+  () => import("./report-charts").then((m) => ({ default: m.ByDayChart })),
+  { ssr: false, loading: () => <Skeleton className="h-[220px]" /> }
+);
+const ByProjectChart = dynamic(
+  () => import("./report-charts").then((m) => ({ default: m.ByProjectChart })),
+  { ssr: false, loading: () => <Skeleton className="h-[280px]" /> }
+);
 import type { ReportOverview } from "@/features/timesheets-core/types";
 
 interface OverviewReportProps {

@@ -23,6 +23,7 @@ import { ContactRolesCard } from "@/features/crm/contacts/detail/contact-roles-c
 import { ContactDuplicateBanner } from "@/features/crm/contacts/detail/contact-merge-dialog";
 import { CreateTaskDialog } from "@/features/crm/tasks/create-task-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { ContactInlineAiMenu } from "@/features/crm/shared/crm-inline-ai-menu";
 
 function ContactDetailSkeleton() {
   return (
@@ -110,6 +111,11 @@ export default function ContactDetailPage({
         backHref="/crm/contacts"
         actions={
           <div className="flex items-center gap-2">
+            <ContactInlineAiMenu
+              contactId={id}
+              contactName={contact.name}
+              contactEmail={contact.email}
+            />
             <Button size="sm" onClick={handleOpenLogActivity}>
               <Plus className="h-3.5 w-3.5 mr-1.5" />
               Log Activity

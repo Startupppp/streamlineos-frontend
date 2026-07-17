@@ -375,12 +375,16 @@ export function ProductSwitcherMenu({
       side="bottom"
       className="w-full max-w-none gap-0 p-0 px-4 pb-6 pt-4"
     >
-      <ProductGrid
-        activeProduct={activeProduct}
-        enabledModules={enabledModules}
-        onClose={handleClose}
-        shouldReduceMotion={shouldReduceMotion}
-      />
+      <AnimatePresence>
+        {open && (
+          <ProductGrid
+            activeProduct={activeProduct}
+            enabledModules={enabledModules}
+            onClose={handleClose}
+            shouldReduceMotion={shouldReduceMotion}
+          />
+        )}
+      </AnimatePresence>
     </SheetContent>
   );
 

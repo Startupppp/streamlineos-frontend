@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -114,7 +115,7 @@ export function LogicRulesSection({ surveyId, question, sections, rules }: Logic
       <Label>Logic</Label>
       {questionRules.map((rule) => (
         <div key={rule.id} className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm">
-          <span className="flex-1 truncate">{summarizeRule(rule)}</span>
+          <TruncatedText text={summarizeRule(rule)} className="flex-1" />
           <AnimatedIconButton icon={Trash2Icon} iconSize={14} iconClassName="text-destructive" variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => handleDelete(rule.id)} />
         </div>
       ))}

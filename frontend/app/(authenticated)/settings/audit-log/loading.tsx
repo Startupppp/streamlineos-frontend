@@ -1,19 +1,9 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export default function AuditLogLoading() {
-  const filtersBar = (
-    <div className="flex flex-wrap gap-2 items-end">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="flex flex-col gap-1 min-w-[140px] flex-1">
-          <Skeleton className="h-3 w-16" />
-          <Skeleton className="h-9 w-full rounded-md" />
-        </div>
-      ))}
-    </div>
-  );
-
   return (
     <PageWrapper
       title="Audit Log"
@@ -21,10 +11,17 @@ export default function AuditLogLoading() {
       actions={
         <div className="flex items-center gap-2">
           <Skeleton className="h-4 w-4 rounded" />
-          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-4 w-28" />
         </div>
       }
-      filters={filtersBar}
+      filters={
+        <div className={FILTER_TOOLBAR_ROW}>
+          <Skeleton className="h-9 w-[160px] rounded-md" />
+          <Skeleton className="h-9 w-[130px] rounded-md" />
+          <Skeleton className="h-9 w-[140px] rounded-md" />
+          <Skeleton className="h-9 w-[140px] rounded-md" />
+        </div>
+      }
     >
       <DataTableSkeleton rows={15} columns={6} />
     </PageWrapper>

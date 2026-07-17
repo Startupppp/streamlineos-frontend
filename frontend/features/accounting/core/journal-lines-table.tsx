@@ -1,6 +1,7 @@
 "use client";
 
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import type { JournalLine } from "@/types/accounting";
 
 function parseAmount(value: string): number {
@@ -38,7 +39,7 @@ function buildColumns(lines: JournalLine[]): DataTableColumn<JournalLine>[] {
     {
       key: "accountName",
       header: "Account name",
-      cell: (row) => <span className="text-sm text-foreground">{row.accountName}</span>,
+      cell: (row) => <TruncatedText text={row.accountName} className="text-sm text-foreground" />,
     },
     {
       key: "debit",
@@ -63,7 +64,9 @@ function buildColumns(lines: JournalLine[]): DataTableColumn<JournalLine>[] {
     {
       key: "description",
       header: "Description",
-      cell: (row) => <span className="text-sm text-muted-foreground">{row.description ?? ""}</span>,
+      cell: (row) => row.description ? (
+        <TruncatedText text={row.description} lines={2} className="text-sm text-muted-foreground" />
+      ) : null,
     },
   ];
 }

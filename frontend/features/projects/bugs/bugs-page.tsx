@@ -34,7 +34,8 @@ import {
   PM_FILL_PANEL,
   PM_TOOLBAR,
 } from "@/features/projects/shared/pm-chrome";
-import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TABLE_TITLE_CELL } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { BugSheet } from "./bug-sheet";
 
 const BUG_STATUSES: readonly BugStatus[] = [
@@ -184,12 +185,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
       className: TABLE_TITLE_CELL,
       cell: (row) => (
         <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
-          <span
-            className={cn("text-[11px] font-medium", TEXT_ONE_LINE)}
-            title={row.title}
-          >
-            {row.title}
-          </span>
+          <TruncatedText text={row.title} className="text-[11px] font-medium" />
           {row.reopenCount > 0 ? (
             <Badge variant="outline" className="shrink-0 text-[9px] text-orange-600 border-orange-200 dark:text-orange-400 dark:border-orange-500/30">
               ×{row.reopenCount}
@@ -235,9 +231,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
         const member = members.find((m) => m.id === row.assigneeId);
         const label = member ? getUserDisplayName(member) : "—";
         return (
-          <span className={cn("max-w-[7rem] text-[11px] text-muted-foreground", TEXT_ONE_LINE)} title={label}>
-            {label}
-          </span>
+          <TruncatedText text={label} className="max-w-[7rem] text-[11px] text-muted-foreground" />
         );
       },
       className: "w-[120px]",

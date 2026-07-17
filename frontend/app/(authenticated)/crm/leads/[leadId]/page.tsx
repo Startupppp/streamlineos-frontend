@@ -16,6 +16,7 @@ import { useCreateTask } from "@/hooks/api/tasks";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 
+import { LeadInlineAiMenu } from "@/features/crm/shared/crm-inline-ai-menu";
 import { LeadAttachmentsSection } from "@/features/crm/leads/detail/lead-attachments-section";
 import { LeadDetailHeader } from "@/features/crm/leads/detail/lead-detail-header";
 import { LeadInfoCard } from "@/features/crm/leads/detail/lead-info-card";
@@ -276,6 +277,14 @@ export default function LeadDetailPage({
     <PageWrapper
       title={lead.name}
       backHref="/crm/leads"
+      actions={
+        <LeadInlineAiMenu
+          leadId={leadId}
+          leadName={lead.name}
+          leadEmail={lead.email}
+          onDraftEmail={handleDraftEmail}
+        />
+      }
     >
       <motion.div
         className="space-y-4"

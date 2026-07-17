@@ -137,10 +137,14 @@ export function CommandPalette() {
 
   const projectId = useMemo(() => extractProjectId(pathname), [pathname]);
 
+  const navGroups = useMemo(
+    () => getNavGroupsForUser(role, permissions, enabledModules),
+    [role, permissions, enabledModules],
+  );
+
   const pages = useMemo(() => {
-    const groups = getNavGroupsForUser(role, permissions, enabledModules);
     const seen = new Set<string>();
-    return groups.flatMap((group) =>
+    return navGroups.flatMap((group) =>
       flattenNavRoutes(group.routes)
         .filter((r) => {
           if (seen.has(r.href)) return false;
@@ -154,7 +158,7 @@ export function CommandPalette() {
           group: group.label,
         })),
     );
-  }, [role, permissions, enabledModules]);
+  }, [navGroups]);
 
   useEffect(() => {
     const handleDown = (e: KeyboardEvent) => {
@@ -250,9 +254,8 @@ export function CommandPalette() {
   );
 
   const quickNavGroups = useMemo(() => {
-    const groups = getNavGroupsForUser(role, permissions, enabledModules);
     const seen = new Set<string>();
-    return groups.slice(0, 5).map((group) => ({
+    return navGroups.slice(0, 5).map((group) => ({
       label: group.label,
       routes: flattenNavRoutes(group.routes)
         .filter((r) => {
@@ -262,7 +265,7 @@ export function CommandPalette() {
         })
         .slice(0, 4),
     }));
-  }, [role, permissions, enabledModules]);
+  }, [navGroups]);
 
   const hasResults = filteredPages.length > 0 || entityResults.length > 0;
   const showEmpty = !isSearching && query.length >= 2 && !hasResults;

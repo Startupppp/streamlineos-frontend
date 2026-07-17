@@ -20,6 +20,7 @@ import {
 import { useSignOut } from "@/hooks/common/auth-hooks";
 import { cn } from "@/lib/utils";
 import { AnimatedLogo } from "@/features/landing/components/animated-logo";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 type Item = {
   href: string;
@@ -100,9 +101,7 @@ export function OwnerSidebar({
           <AnimatedLogo size={26} className="rounded-md shrink-0" />
           {!collapsed && (
             <div className="min-w-0 leading-tight">
-              <p className="font-display text-[12.5px] font-bold tracking-tight text-foreground truncate">
-                StreamlineOS
-              </p>
+              <TruncatedText text="StreamlineOS" className="font-display text-[12.5px] font-bold tracking-tight text-foreground" />
               <p className="text-[9px] font-mono uppercase tracking-[0.16em] text-blue-600">
                 Owner
               </p>
@@ -153,7 +152,7 @@ export function OwnerSidebar({
               />
               {!collapsed && (
                 <>
-                  <span className="flex-1 truncate">{item.label}</span>
+                  <TruncatedText text={item.label} className="flex-1" />
                   {badgeCount > 0 && (
                     <span className="text-[9.5px] font-mono px-1.5 py-px rounded bg-blue-600 text-white">
                       {badgeCount}
@@ -186,12 +185,8 @@ export function OwnerSidebar({
           </span>
           {!collapsed && (
             <div className="min-w-0 flex-1">
-              <p className="text-[11.5px] font-semibold text-foreground truncate leading-tight">
-                {ownerName}
-              </p>
-              <p className="text-[10px] font-mono text-muted-foreground truncate">
-                {ownerEmail}
-              </p>
+              <TruncatedText text={ownerName} className="text-[11.5px] font-semibold text-foreground leading-tight" />
+              <TruncatedText text={ownerEmail} className="text-[10px] font-mono text-muted-foreground" />
             </div>
           )}
         </div>

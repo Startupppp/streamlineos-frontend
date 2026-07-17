@@ -37,6 +37,7 @@ import {
 } from "@/features/knowledge-base/lib/kb-icons";
 import type { KbPageTemplate } from "@/hooks/api/kb/page-templates";
 import type { StarterTemplate } from "@/features/knowledge-base/lib/starter-templates";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface TemplateCardProps {
   template: KbPageTemplate;
@@ -78,11 +79,9 @@ function TemplateCard({
       <div className="flex items-start gap-3 p-3 rounded-lg border border-border bg-card hover:bg-muted/30 transition-colors">
         <span className="text-xl shrink-0 mt-0.5">{template.icon ?? "📄"}</span>
         <div className="flex-1 min-w-0">
-          <p className="text-[13px] font-medium truncate">{template.name}</p>
+          <TruncatedText text={template.name} className="text-[13px] font-medium" />
           {template.description && (
-            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-              {template.description}
-            </p>
+            <TruncatedText text={template.description} lines={2} className="text-xs text-muted-foreground mt-0.5" />
           )}
         </div>
         <div className="flex items-center gap-1 shrink-0">
@@ -157,10 +156,8 @@ function StarterCard({ template, onUse, isCreating }: StarterCardProps) {
     <div className="flex items-start gap-3 p-3 rounded-lg border border-border bg-card hover:bg-muted/30 transition-colors">
       <span className="text-xl shrink-0 mt-0.5">{template.icon}</span>
       <div className="flex-1 min-w-0">
-        <p className="text-[13px] font-medium truncate">{template.name}</p>
-        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-          {template.description}
-        </p>
+        <TruncatedText text={template.name} className="text-[13px] font-medium" />
+        <TruncatedText text={template.description} lines={2} className="text-xs text-muted-foreground mt-0.5" />
       </div>
       <Button
         size="sm"

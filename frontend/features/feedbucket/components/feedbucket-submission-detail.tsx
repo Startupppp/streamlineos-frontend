@@ -23,6 +23,7 @@ import type {
   FeedbucketMetadata,
   FeedbucketNetworkEntry,
 } from "@/types/feedbucket";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const STATUS_LABELS: Record<FeedbucketSubmissionStatus, string> = {
   open: "Open",
@@ -54,7 +55,7 @@ function MetadataPanel({ meta }: { meta: FeedbucketMetadata }) {
       {rows.filter((r) => r.value).map((r) => (
         <div key={r.label} className="flex justify-between gap-4 text-sm">
           <span className="text-muted-foreground">{r.label}</span>
-          <span className="text-foreground text-right truncate max-w-[220px]">{r.value}</span>
+          <TruncatedText text={r.value ?? ""} className="text-foreground text-right max-w-[220px]" />
         </div>
       ))}
     </div>
@@ -142,10 +143,8 @@ function NetworkLogsPanel({ logs }: { logs: FeedbucketNetworkEntry[] }) {
                   <td className={`py-0.5 pr-2 font-semibold ${statusColor(entry)}`}>
                     {entry.status === 0 ? "FAIL" : entry.status}
                   </td>
-                  <td className="py-0.5 pr-2 max-w-0 truncate">
-                    <span className="block truncate text-foreground" title={entry.url}>
-                      {entry.url}
-                    </span>
+                  <td className="py-0.5 pr-2 max-w-0">
+                    <TruncatedText text={entry.url} className="text-foreground" />
                   </td>
                   <td className="py-0.5 text-right text-muted-foreground">
                     {entry.durationMs}ms
@@ -293,9 +292,9 @@ export function FeedbucketSubmissionDetail({ submissionId }: FeedbucketSubmissio
       {submission.reporterName || submission.reporterEmail ? (
         <div className="rounded-xl border border-border bg-card p-4 space-y-2">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Reporter</p>
-          {submission.reporterName && <p className="text-sm text-foreground">{submission.reporterName}</p>}
+          {submission.reporterName && <TruncatedText text={submission.reporterName} className="text-sm text-foreground" />}
           {submission.reporterEmail && (
-            <p className="text-sm text-muted-foreground">{submission.reporterEmail}</p>
+            <p className="text-sm text-muted-foreground break-all">{submission.reporterEmail}</p>
           )}
         </div>
       ) : null}

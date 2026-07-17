@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Switch } from "@/components/ui/switch";
 import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -247,11 +247,7 @@ export default function AiCreditsPage() {
           ) : (
             <>
               {isLoading ? (
-                <StatCardGrid cols={3}>
-                  <StatCard isLoading label="Balance" icon={Zap} tone="blue" value="" />
-                  <StatCard isLoading label="Total Granted" icon={TrendingUp} tone="emerald" value="" />
-                  <StatCard isLoading label="Total Used" icon={TrendingDown} tone="amber" value="" />
-                </StatCardGrid>
+                <StatCardGridSkeleton cols={3} count={3} />
               ) : (
                 <StatCardGrid cols={3}>
                   <StatCard label="Balance" value={wallet?.balance ?? 0} icon={Zap} tone="blue" hint="credits" />

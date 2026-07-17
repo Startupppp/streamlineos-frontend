@@ -5,12 +5,12 @@ import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 
 export default function CrmHubLoading() {
   return (
-    <PageWrapper title="CRM" subtitle="Command center">
+    <PageWrapper title="CRM" subtitle="Command center" variant="display">
       <div className="space-y-4 pb-4">
-        <StatCardGridSkeleton cols={4} />
+        <StatCardGridSkeleton cols={4} count={8} />
 
         <div className="flex items-center gap-4 flex-wrap px-1">
-          {Array.from({ length: 12 }).map((_, i) => (
+          {Array.from({ length: 10 }).map((_, i) => (
             <Skeleton key={i} className="h-3.5 w-24" />
           ))}
         </div>
@@ -19,7 +19,7 @@ export default function CrmHubLoading() {
           <Card>
             <CardContent className="p-4 space-y-3">
               <Skeleton className="h-5 w-32" />
-              {Array.from({ length: 12 }).map((_, i) => (
+              {Array.from({ length: 5 }).map((_, i) => (
                 <Skeleton key={i} className="h-4 w-full" />
               ))}
             </CardContent>
@@ -27,7 +27,7 @@ export default function CrmHubLoading() {
           <Card>
             <CardContent className="p-4 space-y-3">
               <Skeleton className="h-5 w-32" />
-              {Array.from({ length: 12 }).map((_, i) => (
+              {Array.from({ length: 5 }).map((_, i) => (
                 <Skeleton key={i} className="h-4 w-full" />
               ))}
             </CardContent>
@@ -35,7 +35,7 @@ export default function CrmHubLoading() {
         </div>
 
         <div className="grid gap-2 grid-cols-2 md:grid-cols-4">
-          {Array.from({ length: 12 }).map((_, i) => (
+          {Array.from({ length: 10 }).map((_, i) => (
             <Card key={i} className="shadow-sm">
               <CardContent className="p-3 flex items-center gap-2.5">
                 <Skeleton className="h-8 w-8 rounded-md shrink-0" />

@@ -4,10 +4,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function NewSalesOrderLoading() {
   return (
     <PageWrapper title="New Sales Order">
-      <div className="space-y-1">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <Skeleton key={i} className="h-4 w-full rounded" />
-        ))}
+      <div className="space-y-4">
+        <Skeleton className="h-40 w-full rounded-xl" />
+        <Skeleton className="h-40 w-full rounded-xl" />
+        <Skeleton className="h-40 w-full rounded-xl" />
+        <Skeleton className="h-40 w-full rounded-xl" />
       </div>
     </PageWrapper>
   );

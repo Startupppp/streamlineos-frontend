@@ -46,6 +46,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
@@ -501,7 +502,7 @@ function RequisitionCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <div className={cn("h-2 w-2 rounded-full shrink-0", statusStyle.dot)} />
-              <h3 className="text-sm font-semibold text-foreground truncate">{req.title}</h3>
+              <TruncatedText text={req.title} className="text-sm font-semibold text-foreground" />
             </div>
             <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               {req.department && (

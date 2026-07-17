@@ -16,6 +16,7 @@ import { EmptyActivityIllustration } from "@/components/illustrations";
 import { CheckCircle2, XCircle, MinusCircle } from "lucide-react";
 import { format } from "date-fns";
 import { useAutomationRuns, type AutomationRunStatus } from "@/hooks/api/automations";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface AutomationRunsDialogProps {
   ruleId: number;
@@ -86,9 +87,7 @@ export function AutomationRunsDialog({ ruleId, ruleName, onClose }: AutomationRu
                       {run.createdAt ? format(new Date(run.createdAt), "MMM d, HH:mm") : ""}
                     </span>
                   </div>
-                  <p className="text-xs text-muted-foreground truncate">
-                    Trigger: {run.triggerEvent}
-                  </p>
+                  <TruncatedText text={`Trigger: ${run.triggerEvent}`} className="text-xs text-muted-foreground" />
                   {run.error && (
                     <p className="text-xs text-destructive break-words">{run.error}</p>
                   )}

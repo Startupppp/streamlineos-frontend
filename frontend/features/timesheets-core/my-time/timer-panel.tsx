@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { Square, Timer, Loader2, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { PlayIcon, PauseIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -39,6 +40,7 @@ import {
   useTimesheetEntries,
 } from "@/hooks/api/timesheets-core";
 import { BILLING_TYPE_LABEL } from "@/features/timesheets-core";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 function formatDuration(totalSec: number): string {
   const h = Math.floor(totalSec / 3600);
@@ -171,7 +173,7 @@ export function TimerPanel({ weekStart, weekEnd }: TimerPanelProps) {
                   {timer.project?.name ?? "No project"}
                   {timer.ticket && <span className="ml-1.5 text-muted-foreground/70">· #{timer.ticket.id}</span>}
                 </p>
-                <p className="text-sm text-foreground truncate">{timer.description ?? "No description"}</p>
+                <TruncatedText text={timer.description ?? "No description"} className="text-sm text-foreground" />
                 <div className="flex items-center gap-2 mt-1">
                   <Badge variant="outline" className="text-[10px] h-4 px-1">
                     {timer.billable ? BILLING_TYPE_LABEL.BILLABLE : BILLING_TYPE_LABEL.NON_BILLABLE}
@@ -273,9 +275,9 @@ export function TimerPanel({ weekStart, weekEnd }: TimerPanelProps) {
             </div>
             <DialogFooter>
               <Button variant="outline" size="sm" onClick={handleCloseConvert}>Cancel</Button>
-              <Button size="sm" onClick={handleConvertConfirm} disabled={convertTimer.isPending}>
-                {convertTimer.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Save entry"}
-              </Button>
+              <LoadingButton size="sm" onClick={handleConvertConfirm} isPending={convertTimer.isPending} loadingText="Saving…">
+                Save entry
+              </LoadingButton>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -308,10 +310,10 @@ export function TimerPanel({ weekStart, weekEnd }: TimerPanelProps) {
               <Switch checked={startBillable} onCheckedChange={handleStartBillableChange} />
               <Label className="text-xs">Billable</Label>
             </div>
-            <Button size="sm" className="h-7 text-xs gap-1" onClick={handleStart} disabled={startTimer.isPending}>
-              {startTimer.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />}
+            <LoadingButton size="sm" className="h-7 text-xs gap-1" onClick={handleStart} isPending={startTimer.isPending} loadingText="Starting…">
+              <Play className="h-3 w-3" />
               Start
-            </Button>
+            </LoadingButton>
           </div>
         </CardContent>
       </Card>

@@ -1,6 +1,9 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback, useEffect } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -16,13 +19,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { useProjects } from "@/hooks/api/projects/projects";
 import { useSetDueDateFromChat } from "@/hooks/api/chat";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { TicketCombobox } from "./ticket-combobox";
+
+const schema = z.object({
+  projectIdStr: z.string(),
+  ticketIdStr: z
+    .string()
+    .refine((v) => v === "" || /^\d+$/.test(v), { message: "Must be a positive integer" }),
+  dueDate: z.string().min(1, "Due date is required"),
+});
+
+type FormValues = z.infer<typeof schema>;
 
 interface Props {
   open: boolean;
@@ -39,22 +53,33 @@ export function SetDueDateDialog({
   ticketId,
   projectId,
 }: Props) {
-  const [projectIdStr, setProjectIdStr] = useState("");
-  const [ticketIdStr, setTicketIdStr] = useState("");
-  const [dueDateValue, setDueDateValue] = useState("");
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      projectIdStr: projectId !== undefined ? String(projectId) : "",
+      ticketIdStr: ticketId !== undefined ? String(ticketId) : "",
+      dueDate: "",
+    },
+  });
 
-  const [prevOpen, setPrevOpen] = useState(open);
-  if (open !== prevOpen) {
-    setPrevOpen(open);
+  useEffect(() => {
     if (open) {
-      setProjectIdStr(projectId !== undefined ? String(projectId) : "");
-      setTicketIdStr(ticketId !== undefined ? String(ticketId) : "");
-      setDueDateValue("");
+      form.reset({
+        projectIdStr: projectId !== undefined ? String(projectId) : "",
+        ticketIdStr: ticketId !== undefined ? String(ticketId) : "",
+        dueDate: "",
+      });
     }
-  }
+  }, [open, projectId, ticketId, form]);
+
+  const watchedProjectIdStr = form.watch("projectIdStr");
 
   const effectiveProjectId =
-    projectId !== undefined ? projectId : projectIdStr ? Number(projectIdStr) : 0;
+    projectId !== undefined
+      ? projectId
+      : watchedProjectIdStr
+      ? Number(watchedProjectIdStr)
+      : 0;
 
   const { data: projectsData, isLoading: loadingProjects } = useProjects(undefined, {
     enabled: open && projectId === undefined,
@@ -62,42 +87,48 @@ export function SetDueDateDialog({
 
   const dueDateMutation = useSetDueDateFromChat();
 
-  const handleTicketIdChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setTicketIdStr(e.target.value),
-    [],
+  const handleCancel = useCallback(() => onOpenChange(false), [onOpenChange]);
+
+  const handleProjectChange = useCallback(
+    (value: string) => {
+      form.setValue("projectIdStr", value);
+      form.setValue("ticketIdStr", "");
+    },
+    [form],
   );
 
-  const handleDueDateChange = useCallback((value: string) => setDueDateValue(value), []);
-
-  const handleSubmit = useCallback(async () => {
+  async function handleSubmit(values: FormValues) {
     const resolvedTicketId =
-      ticketId !== undefined ? ticketId : ticketIdStr ? Number(ticketIdStr) : 0;
+      ticketId !== undefined
+        ? ticketId
+        : values.ticketIdStr
+        ? Number(values.ticketIdStr)
+        : 0;
     const resolvedProjectId =
-      projectId !== undefined ? projectId : projectIdStr ? Number(projectIdStr) : 0;
-    if (!resolvedProjectId || !resolvedTicketId || !dueDateValue) {
+      projectId !== undefined
+        ? projectId
+        : values.projectIdStr
+        ? Number(values.projectIdStr)
+        : 0;
+
+    if (!resolvedProjectId || !resolvedTicketId) {
       toast.error("Fill in all fields");
       return;
     }
+
     try {
       await dueDateMutation.mutateAsync({
         channelId,
         ticketId: resolvedTicketId,
         projectId: resolvedProjectId,
-        dueDate: dueDateValue,
+        dueDate: values.dueDate,
       });
       toast.success("Due date set");
       onOpenChange(false);
     } catch (e) {
       toast.error(getErrorMessage(e));
     }
-  }, [channelId, ticketId, ticketIdStr, projectId, projectIdStr, dueDateValue, dueDateMutation, onOpenChange]);
-
-  const handleCancel = useCallback(() => onOpenChange(false), [onOpenChange]);
-
-  const resolvedTicketId =
-    ticketId !== undefined ? ticketId : ticketIdStr ? Number(ticketIdStr) : 0;
-  const isReady =
-    effectiveProjectId > 0 && resolvedTicketId > 0 && !!dueDateValue;
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -105,64 +136,90 @@ export function SetDueDateDialog({
         <DialogHeader>
           <DialogTitle>Set Due Date</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-2">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 py-2">
           {projectId === undefined && (
             <div className="space-y-1.5">
               <Label>Project</Label>
-              <Select
-                value={projectIdStr}
-                onValueChange={setProjectIdStr}
-                disabled={loadingProjects}
-              >
-                <SelectTrigger>
-                  <SelectValue
-                    placeholder={loadingProjects ? "Loading…" : "Select project"}
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {projectsData?.data.map((p) => (
-                    <SelectItem key={p.id} value={String(p.id)}>
-                      {p.key} — {p.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Controller
+                control={form.control}
+                name="projectIdStr"
+                render={({ field }) => (
+                  <Select
+                    value={field.value}
+                    onValueChange={handleProjectChange}
+                    disabled={loadingProjects}
+                  >
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={loadingProjects ? "Loading…" : "Select project"}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {projectsData?.data.map((p) => (
+                        <SelectItem key={p.id} value={String(p.id)}>
+                          {p.key} — {p.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </div>
           )}
           {ticketId === undefined && (
             <div className="space-y-1.5">
-              <Label htmlFor="sdd-ticket">Ticket ID</Label>
-              <Input
-                id="sdd-ticket"
-                type="number"
-                min={1}
-                value={ticketIdStr}
-                onChange={handleTicketIdChange}
-                placeholder="e.g. 42"
+              <Label>Ticket</Label>
+              <Controller
+                control={form.control}
+                name="ticketIdStr"
+                render={({ field }) => (
+                  <TicketCombobox
+                    projectId={effectiveProjectId}
+                    value={field.value ? Number(field.value) : null}
+                    onChange={(id) => field.onChange(String(id))}
+                  />
+                )}
               />
+              {form.formState.errors.ticketIdStr && (
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.ticketIdStr.message}
+                </p>
+              )}
             </div>
           )}
           <div className="space-y-1.5">
             <Label htmlFor="sdd-date">Due Date</Label>
-            <DatePicker
-              id="sdd-date"
-              value={dueDateValue}
-              onChange={handleDueDateChange}
-              placeholder="Pick a date"
+            <Controller
+              control={form.control}
+              name="dueDate"
+              render={({ field }) => (
+                <DatePicker
+                  id="sdd-date"
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="Pick a date"
+                />
+              )}
             />
+            {form.formState.errors.dueDate && (
+              <p className="text-xs text-destructive">
+                {form.formState.errors.dueDate.message}
+              </p>
+            )}
           </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={handleCancel}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={dueDateMutation.isPending || !isReady}
-          >
-            {dueDateMutation.isPending ? "Saving…" : "Set Date"}
-          </Button>
-        </DialogFooter>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={handleCancel}>
+              Cancel
+            </Button>
+            <LoadingButton
+              type="submit"
+              isPending={dueDateMutation.isPending}
+              loadingText="Saving…"
+            >
+              Set Date
+            </LoadingButton>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

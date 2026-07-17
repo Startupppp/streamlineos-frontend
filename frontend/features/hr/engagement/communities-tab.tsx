@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { EmptyState } from "@/components/ui/empty-state";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import {
   useEngagementCommunities,
@@ -78,11 +79,9 @@ function CommunityCard({ community, currentUserId }: CommunityCardProps) {
         )}
       </div>
       <div className="space-y-0.5">
-        <p className="text-sm font-semibold text-foreground leading-tight">{community.name}</p>
+        <TruncatedText text={community.name} className="text-sm font-semibold text-foreground leading-tight" />
         {community.description && (
-          <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
-            {community.description}
-          </p>
+          <TruncatedText text={community.description} lines={2} className="text-xs text-muted-foreground leading-relaxed" />
         )}
       </div>
       <p className="text-[11px] text-muted-foreground">

@@ -6,7 +6,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Trash2, Pencil, Clock, Calendar } from "lucide-react";
+import { Pencil, Clock, Calendar } from "lucide-react";
+import { Trash2Icon, PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetBody } from "@/components/ui/sheet";
@@ -84,14 +86,14 @@ function PolicyCard({
             <Button variant="ghost" size="icon" className="w-7" onClick={handleEditClick}>
               <Pencil className="h-3.5 w-3.5" />
             </Button>
-            <Button
+            <AnimatedIconButton
+              icon={Trash2Icon}
               variant="ghost"
               size="icon"
               className="w-7 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
+              iconSize={14}
               onClick={handleDeleteClick}
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
+            />
           </div>
         )}
       </div>
@@ -257,9 +259,9 @@ export default function LeavePoliciesPage() {
       subtitle="Define accrual and carry-forward rules per leave type"
       actions={
         canManage ? (
-          <Button size="sm" onClick={handleCreateClick}>
-            <Plus className="h-4 w-4 mr-2" /> New Policy
-          </Button>
+          <AnimatedIconButton icon={PlusIcon} size="sm" iconSize={16} onClick={handleCreateClick}>
+            {" New Policy"}
+          </AnimatedIconButton>
         ) : undefined
       }
     >

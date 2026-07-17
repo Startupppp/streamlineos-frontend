@@ -31,6 +31,7 @@ import { Ticket, Link as LinkIcon, MapPin } from "lucide-react";
 import { XIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 type EventCategory = "general" | "meeting" | "deadline" | "reminder" | "leave" | "project" | "other";
 
@@ -641,7 +642,7 @@ export function EventCreateDialog({
                         {displayLinkedKey}
                       </span>
                       {displayLinkedTitle && (
-                        <span className="text-xs truncate flex-1">{displayLinkedTitle}</span>
+                        <TruncatedText text={displayLinkedTitle} className="text-xs flex-1" />
                       )}
                       <RemoveTicketButton
                         type="button"

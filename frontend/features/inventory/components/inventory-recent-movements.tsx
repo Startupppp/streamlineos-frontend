@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState } from "@/components/shared";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { useStockTransactions, type TransactionType, type StockTransaction } from "@/hooks/api/inventory/stock";
 
 const MOVEMENT_TYPE_CONFIG: Record<TransactionType, { label: string; className: string }> = {
@@ -47,12 +48,14 @@ function renderDateCell(row: StockTransaction) {
 function renderProductCell(row: StockTransaction) {
   return (
     <>
-      <p className="text-[11px] font-medium text-foreground truncate max-w-[160px]">
-        {row.productVariant?.product?.name ?? row.productVariant?.name ?? "—"}
-      </p>
-      <p className="text-[11px] text-muted-foreground font-mono truncate">
-        {row.productVariant?.sku ?? "—"}
-      </p>
+      <TruncatedText
+        text={row.productVariant?.product?.name ?? row.productVariant?.name ?? "—"}
+        className="text-[11px] font-medium text-foreground"
+      />
+      <TruncatedText
+        text={row.productVariant?.sku ?? "—"}
+        className="text-[11px] text-muted-foreground font-mono"
+      />
     </>
   );
 }
@@ -82,17 +85,13 @@ function renderQtyCell(row: StockTransaction) {
 
 function renderLocationCell(row: StockTransaction) {
   return (
-    <p className="text-[11px] text-foreground truncate max-w-[120px]">
-      {row.location?.name ?? "—"}
-    </p>
+    <TruncatedText text={row.location?.name ?? "—"} className="text-[11px] text-foreground" />
   );
 }
 
 function renderUserCell(row: StockTransaction) {
   return (
-    <span className="text-[11px] text-muted-foreground truncate max-w-[100px] block">
-      {row.creator?.name ?? "System"}
-    </span>
+    <TruncatedText text={row.creator?.name ?? "System"} className="text-[11px] text-muted-foreground" />
   );
 }
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import type { LotMovement } from "@/hooks/api/inventory/traceability";
@@ -49,9 +50,9 @@ const columns: DataTableColumn<LotMovement>[] = [
   {
     key: "notes",
     header: "Notes",
-    className: "hidden lg:table-cell max-w-[200px] truncate text-muted-foreground",
+    className: "hidden lg:table-cell text-muted-foreground",
     headerClassName: "hidden lg:table-cell",
-    cell: (row) => row.notes ?? "—",
+    cell: (row) => <TruncatedText text={row.notes ?? "—"} className="max-w-[200px]" />,
   },
   {
     key: "by",

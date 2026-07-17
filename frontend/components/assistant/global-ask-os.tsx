@@ -51,6 +51,10 @@ import {
   dayKey,
   EmptyAskOs,
 } from "./ask-os-chat-utils";
+import {
+  PersonaChipStrip,
+  type PersonaId,
+} from "@/features/ai-summaries/components/persona-chip-strip";
 
 const CONTEXT_WINDOW = 24;
 
@@ -74,6 +78,7 @@ export function GlobalAskOs() {
     number | null
   >(null);
   const [convSearch, setConvSearch] = useState("");
+  const [selectedPersona, setSelectedPersona] = useState<PersonaId | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const topSentinelRef = useRef<HTMLDivElement>(null);
@@ -197,6 +202,7 @@ export function GlobalAskOs() {
             );
           },
           convId,
+          selectedPersona ?? undefined,
         );
 
         const finalConvId = convId;
@@ -250,6 +256,7 @@ export function GlobalAskOs() {
       qc,
       activeConversationId,
       createConversation.mutateAsync,
+      selectedPersona,
     ],
   );
 
@@ -568,9 +575,16 @@ export function GlobalAskOs() {
                       )}
                     </AnimatePresence>
                   </div>
+                  <div className="shrink-0 border-t border-border bg-background/60 px-3 pt-2">
+                    <PersonaChipStrip
+                      selected={selectedPersona}
+                      onSelect={setSelectedPersona}
+                      className="pb-1.5"
+                    />
+                  </div>
                   <form
                     onSubmit={handleSubmit}
-                    className="flex shrink-0 items-center gap-2 border-t border-border bg-background/60 p-3"
+                    className="flex shrink-0 items-center gap-2 bg-background/60 px-3 pb-3"
                   >
                     <input
                       type="text"

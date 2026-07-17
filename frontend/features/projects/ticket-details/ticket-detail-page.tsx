@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
 import { AlertCircle, PanelRightOpen, Share2 } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -18,6 +18,7 @@ import { TicketDetailRightPanel } from "./ticket-detail-right-panel";
 import { TicketDetailActions } from "./ticket-detail-actions";
 import { useTicketDetail } from "./use-ticket-detail";
 import { resolveTicketId } from "./resolve-ticket-id";
+import { TicketAiMenu } from "@/features/projects/ai/ticket-ai-menu";
 
 
 interface TicketDetailPageProps {
@@ -102,6 +103,14 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
   } = useTicketDetail({ projectId, ticketId, onDeleted: handleDeleted });
 
   const displayKey = formatTicketKey(projectData?.key, ticket?.ticketNumber ?? parsed?.ticketNumber);
+
+  const handleApplyAiDescription = useCallback(
+    (html: string) => {
+      autoSave({ description: html });
+      toast.success("Description updated");
+    },
+    [autoSave],
+  );
 
   const handleShare = async () => {
     try {
@@ -195,6 +204,12 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
               <PanelRightOpen />
             </Button>
           )}
+          <TicketAiMenu
+            projectId={projectId}
+            ticketId={ticketId}
+            currentDescription={ticket.description}
+            onApplyDescription={handleApplyAiDescription}
+          />
           <Button
             size="icon-sm"
             variant="outline"

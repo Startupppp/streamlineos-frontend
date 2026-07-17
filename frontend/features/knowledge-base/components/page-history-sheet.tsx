@@ -22,6 +22,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useKbPageVersions, useKbPageVersion, useRestoreKbPageVersion } from "@/hooks/api/kb";
@@ -147,7 +148,7 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
                             {v.authorName ? `${v.authorName} · ` : ""}{formatRelativeTime(v.createdAt)}
                           </p>
                           {v.changeSummary && (
-                            <p className="text-xs text-muted-foreground mt-0.5 truncate">{v.changeSummary}</p>
+                            <TruncatedText text={v.changeSummary ?? ""} className="text-xs text-muted-foreground mt-0.5" />
                           )}
                         </div>
                         <KbChevronRightIcon className="h-4 w-4 text-muted-foreground group-hover:text-foreground shrink-0" />

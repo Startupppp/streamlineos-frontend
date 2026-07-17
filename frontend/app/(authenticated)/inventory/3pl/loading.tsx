@@ -1,18 +1,15 @@
-import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 
 export default function ThreePlLoading() {
   return (
     <PageWrapper
       title="3PL Connections"
       subtitle="Manage third-party logistics provider connections"
-      actions={<Skeleton className="h-4 w-32" />}
+      actions={<Skeleton className="h-9 w-36" />}
     >
-      <div className="space-y-2">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <Skeleton key={i} className="h-10 w-full rounded-md" />
-        ))}
-      </div>
+      <DataTableSkeleton rows={10} columns={7} className="flex-1 min-h-0" />
     </PageWrapper>
   );
 }

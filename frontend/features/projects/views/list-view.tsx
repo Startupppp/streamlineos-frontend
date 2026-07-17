@@ -38,7 +38,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import type { DisplayOptions } from "../shared/types";
 import { pmSnappy } from "@/features/projects/shared/pm-motion";
-import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 export interface Ticket {
   id: number;
@@ -162,13 +162,9 @@ const ListViewItem = memo(function ListViewItem({
         )}
         <button
           onClick={handleClick}
-          className={cn(
-            "flex-1 text-left text-sm text-foreground hover:underline underline-offset-2",
-            TEXT_ONE_LINE,
-          )}
-          title={ticket.title}
+          className="flex-1 text-left text-sm text-foreground hover:underline underline-offset-2 min-w-0"
         >
-          {ticket.title}
+          <TruncatedText text={ticket.title} />
         </button>
         {showLabels && hasProjectId && (
           <InlineLabels

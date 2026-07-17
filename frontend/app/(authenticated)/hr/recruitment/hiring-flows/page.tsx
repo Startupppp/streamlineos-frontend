@@ -34,6 +34,7 @@ import {
 } from "@/hooks/api/hr/recruitment";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { HiringFlow, HiringFlowRound } from "@/types/hr/recruitment";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const ROUND_TYPES = [
   { value: "HR_SCREENING", label: "HR Screening" },
@@ -123,7 +124,7 @@ function RoundItem({ round, flowId, onEdit }: RoundItemProps) {
         <circle cx="9" cy="5" r="1" /><circle cx="9" cy="12" r="1" /><circle cx="9" cy="19" r="1" />
         <circle cx="15" cy="5" r="1" /><circle cx="15" cy="12" r="1" /><circle cx="15" cy="19" r="1" />
       </svg>
-      <span className="flex-1 text-sm font-medium truncate">{round.name}</span>
+      <TruncatedText text={round.name} className="flex-1 text-sm font-medium" />
       <div className="flex items-center gap-1.5 shrink-0">
         <RoundTypeBadge type={round.roundType} />
         <ModeBadge mode={round.mode} />
@@ -178,7 +179,7 @@ function FlowCard({ flow, onEdit, onAddRound, onEditRound, onDelete }: FlowCardP
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
-            <CardTitle className="text-sm font-semibold truncate">{flow.name}</CardTitle>
+            <CardTitle className="text-sm font-semibold"><TruncatedText text={flow.name} /></CardTitle>
             {flow.isDefault && (
               <Badge variant="secondary" className="text-[10px] shrink-0">Default</Badge>
             )}

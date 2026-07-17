@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { useEssSalaryStructure } from "@/hooks/api/payroll/ess";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
 import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 function formatDate(iso: string | null): string {
   if (!iso) return "—";
@@ -98,10 +99,10 @@ export function EssSalarySection() {
             {earnings.map((c, idx) => (
               <div
                 key={c.code}
-                className={cn("flex items-center justify-between px-4 py-2.5 text-sm", idx < earnings.length - 1 && "border-b border-border")}
+                className={cn("flex items-center justify-between gap-2 px-4 py-2.5 text-sm min-w-0", idx < earnings.length - 1 && "border-b border-border")}
               >
-                <span className="text-foreground">{c.name}</span>
-                <span className="tabular-nums font-medium text-foreground">{formatMoney(c.amount)}</span>
+                <TruncatedText text={c.name} className="min-w-0 flex-1 text-foreground" />
+                <span className="tabular-nums font-medium text-foreground shrink-0">{formatMoney(c.amount)}</span>
               </div>
             ))}
           </div>
@@ -116,10 +117,10 @@ export function EssSalarySection() {
             {deductions.map((c, idx) => (
               <div
                 key={c.code}
-                className={cn("flex items-center justify-between px-4 py-2.5 text-sm", idx < deductions.length - 1 && "border-b border-border")}
+                className={cn("flex items-center justify-between gap-2 px-4 py-2.5 text-sm min-w-0", idx < deductions.length - 1 && "border-b border-border")}
               >
-                <span className="text-foreground">{c.name}</span>
-                <span className="tabular-nums font-medium text-red-600">– {formatMoney(c.amount)}</span>
+                <TruncatedText text={c.name} className="min-w-0 flex-1 text-foreground" />
+                <span className="tabular-nums font-medium text-red-600 shrink-0">– {formatMoney(c.amount)}</span>
               </div>
             ))}
           </div>

@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCan } from "@/hooks/api/access";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   useKbPageRecordLinks,
   useAddKbPageRecordLink,
@@ -68,9 +69,7 @@ const RecordLinkRow = memo(function RecordLinkRow({
       <Badge variant="secondary" className="text-[10px] h-4 px-1.5 shrink-0">
         {TARGET_TYPE_LABELS[link.targetType as KbRecordTargetType] ?? link.targetType}
       </Badge>
-      <span className="text-[12px] text-foreground truncate flex-1">
-        {link.label ?? link.targetId ?? "—"}
-      </span>
+      <TruncatedText text={link.label ?? link.targetId ?? "—"} className="text-[12px] text-foreground flex-1" />
       {canUpdate && (
         <Button
           variant="ghost"

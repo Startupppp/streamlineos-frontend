@@ -14,15 +14,11 @@ export default function PortfolioDetailLoading() {
             <Skeleton className="h-4 w-32" />
           </div>
           <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="h-4 w-2/3" />
         </div>
         <div className={cn(PM_PANEL, "space-y-2 p-2")}>
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-3 border-b border-border/40 py-2.5 last:border-0">
-              <Skeleton className="h-4 w-16" />
-              <Skeleton className="h-4 w-40" />
-              <Skeleton className="h-5 w-16 rounded-full" />
-            </div>
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} className="h-10 w-full rounded-md" />
           ))}
         </div>
       </PmPageShell>

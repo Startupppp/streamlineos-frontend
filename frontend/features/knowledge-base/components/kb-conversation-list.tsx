@@ -6,6 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   KbChevronUpIcon,
   KbLoader2Icon,
@@ -248,9 +249,7 @@ export function KbConversationList({
                         onClick={handleSelectItem}
                         className="min-w-0 flex-1 text-left"
                       >
-                        <p className="truncate text-xs font-medium leading-tight text-foreground">
-                          {conv.title ?? "New conversation"}
-                        </p>
+                        <TruncatedText text={conv.title ?? "New conversation"} className="text-xs font-medium leading-tight text-foreground" />
                         <p className="text-[10px] text-muted-foreground">{relativeTime(conv.updatedAt)}</p>
                       </button>
                     )}

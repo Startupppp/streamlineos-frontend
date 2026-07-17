@@ -30,6 +30,7 @@ import {
   SERIAL_STATUS_LABEL,
   type SerialStatus,
 } from "@/features/inventory/lib";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 
 function SerialViewButton({ id, serialNumber }: { id: number; serialNumber: string }) {
@@ -71,9 +72,7 @@ const SERIALS_COLUMNS: DataTableColumn<SerialItem>[] = [
     header: "Product / SKU",
     cell: (row) => (
       <>
-        <span className="font-medium text-foreground block truncate max-w-[160px]">
-          {row.productName}
-        </span>
+        <TruncatedText text={row.productName} className="font-medium text-foreground" />
         <span className="text-muted-foreground font-mono text-[10px]">{row.variantSku}</span>
       </>
     ),

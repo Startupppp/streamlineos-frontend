@@ -3,9 +3,10 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon } from "@animateicons/react/lucide";
 import { EmptyState } from "@/components/ui/empty-state";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAddSignField } from "@/hooks/api/sign/fields";
 import { useUpdateSignField } from "@/hooks/api/sign/fields";
@@ -95,15 +96,11 @@ export function BuilderCanvasArea({ envelopeId, document, documentUrl, recipient
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-muted/30">
       <div className="shrink-0 flex items-center justify-center gap-3 border-b border-border py-2 bg-background">
-        <Button variant="ghost" size="icon" className="size-7" disabled={currentPage <= 1} onClick={() => setCurrentPage(currentPage - 1)}>
-          <ChevronLeft className="size-4" />
-        </Button>
+        <AnimatedIconButton icon={ChevronLeftIcon} iconSize={16} variant="ghost" size="icon" className="size-7" disabled={currentPage <= 1} onClick={() => setCurrentPage(currentPage - 1)} aria-label="Previous page" />
         <span className="text-xs text-muted-foreground">
           Page {currentPage} of {pageCount}
         </span>
-        <Button variant="ghost" size="icon" className="size-7" disabled={currentPage >= pageCount} onClick={() => setCurrentPage(currentPage + 1)}>
-          <ChevronRight className="size-4" />
-        </Button>
+        <AnimatedIconButton icon={ChevronRightIcon} iconSize={16} variant="ghost" size="icon" className="size-7" disabled={currentPage >= pageCount} onClick={() => setCurrentPage(currentPage + 1)} aria-label="Next page" />
       </div>
       <div className="flex-1 overflow-auto p-6 flex justify-center">
         <PdfCanvas

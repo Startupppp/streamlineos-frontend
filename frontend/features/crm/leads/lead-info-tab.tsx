@@ -42,7 +42,7 @@ export function LeadInfoTab({
       {campaign && (
         <div className="p-3 rounded-lg bg-muted/20 border border-border/30">
           <p className="text-[11px] text-muted-foreground mb-1">Campaign</p>
-          <p className="text-sm font-medium">{campaign.name}</p>
+          <p className="text-sm font-medium truncate">{campaign.name}</p>
         </div>
       )}
     </div>

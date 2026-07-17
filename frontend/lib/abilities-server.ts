@@ -1,9 +1,9 @@
 import "server-only";
-import { auth } from "@/lib/auth";
+import { getServerAuth } from "@/lib/get-server-auth";
 import { defineAbilityFor, emptyAbility, type AppAbility } from "@/lib/abilities";
 
 export async function getSessionAbility(): Promise<AppAbility> {
-  const session = await auth();
+  const session = await getServerAuth();
   if (!session?.user) return emptyAbility();
   return defineAbilityFor({
     isPlatformAdmin: session.user.isPlatformAdmin ?? false,

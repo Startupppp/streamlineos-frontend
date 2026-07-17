@@ -15,6 +15,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { useFindExpert, useHrDepartments, type ExpertResult } from "@/hooks/api/hr";
 import { Search, X } from "lucide-react";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { resolveImageUrl, cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import Link from "next/link";
@@ -202,14 +203,12 @@ export default function FindExpertPage() {
                                 </AvatarFallback>
                               </Avatar>
                               <div className="min-w-0">
-                                <p className="font-medium text-sm group-hover:text-primary transition-colors truncate">
-                                  {expert.name ?? "Unknown"}
-                                </p>
+                                <TruncatedText text={expert.name ?? "Unknown"} className="font-medium text-sm group-hover:text-primary transition-colors" />
                                 {expert.designation && (
-                                  <p className="text-xs text-muted-foreground truncate">{expert.designation}</p>
+                                  <TruncatedText text={expert.designation} className="text-xs text-muted-foreground" />
                                 )}
                                 {expert.role && (
-                                  <p className="text-[10px] text-muted-foreground/70 truncate">{expert.role}</p>
+                                  <TruncatedText text={expert.role} className="text-[10px] text-muted-foreground/70" />
                                 )}
                               </div>
                             </Link>

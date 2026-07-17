@@ -20,6 +20,7 @@ import { LoadingState, ErrorState } from "@/components/shared";
 import { FinanceStatusBadge } from "@/features/accounting/shared";
 import { Money } from "@/features/accounting/shared";
 import { BudgetMatrix } from "@/features/accounting/planning/budget-matrix";
+import { BvaExplainCell } from "@/features/accounting/planning/bva-explain-column";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   useBudget,
@@ -162,6 +163,12 @@ const BVA_COLUMNS: DataTableColumn<BvaAccountPeriodRow>[] = [
           Over
         </Badge>
       ) : null,
+  },
+  {
+    key: "ai",
+    header: "",
+    className: "px-3 py-2",
+    cell: (row: BvaAccountPeriodRow): ReactNode => <BvaExplainCell row={row} />,
   },
 ];
 

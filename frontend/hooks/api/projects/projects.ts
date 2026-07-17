@@ -27,7 +27,6 @@ export function useProjects(
     queryFn: () =>
       apiClient.get<PaginatedResponse<ProjectListItem>>("/projects", filters ? { ...filters } : undefined),
     staleTime: 30_000,
-    refetchInterval: 30_000,
     ...options,
   });
 }

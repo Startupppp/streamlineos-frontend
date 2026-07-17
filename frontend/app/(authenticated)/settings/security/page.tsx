@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
-import { Shield, Clock, Globe, Monitor } from "lucide-react";
+import { Shield, Globe, Monitor } from "lucide-react";
 import { useOrgSettings, useUpdateOrgSecuritySettings } from "@/hooks/api/organization";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -21,7 +21,6 @@ export default function SecurityPage() {
   const updateSecurity = useUpdateOrgSecuritySettings();
 
   const [mfaEnforced, setMfaEnforced] = useState(false);
-  const [expiryDays, setExpiryDays] = useState("");
   const [allowedDomains, setAllowedDomains] = useState("");
   const [maxSessions, setMaxSessions] = useState("");
   const [prevOrg, setPrevOrg] = useState(org);
@@ -30,7 +29,6 @@ export default function SecurityPage() {
     setPrevOrg(org);
     if (org) {
       setMfaEnforced(org.mfaEnforced ?? false);
-      setExpiryDays(org.passwordExpiryDays != null ? String(org.passwordExpiryDays) : "");
       setAllowedDomains(org.allowedEmailDomains?.length ? org.allowedEmailDomains.join("\n") : "");
       setMaxSessions(org.maxConcurrentSessions != null ? String(org.maxConcurrentSessions) : "");
     }
@@ -38,10 +36,6 @@ export default function SecurityPage() {
 
   const handleMfaChange = useCallback((checked: boolean) => {
     setMfaEnforced(checked);
-  }, []);
-
-  const handleExpiryChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setExpiryDays(e.target.value);
   }, []);
 
   const handleAllowedDomainsChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -53,16 +47,6 @@ export default function SecurityPage() {
   }, []);
 
   const handleSave = useCallback(() => {
-    let passwordExpiryDays: number | null = null;
-    if (expiryDays.trim() !== "") {
-      const parsed = parseInt(expiryDays, 10);
-      if (isNaN(parsed) || parsed < 30 || parsed > 365) {
-        toast.error("Password expiry must be between 30 and 365 days");
-        return;
-      }
-      passwordExpiryDays = parsed;
-    }
-
     let maxConcurrentSessions: number | null = null;
     if (maxSessions.trim() !== "") {
       const parsed = parseInt(maxSessions, 10);
@@ -79,13 +63,13 @@ export default function SecurityPage() {
       .filter(Boolean);
 
     updateSecurity.mutate(
-      { mfaEnforced, passwordExpiryDays, allowedEmailDomains, maxConcurrentSessions },
+      { mfaEnforced, allowedEmailDomains, maxConcurrentSessions },
       {
         onSuccess: () => toast.success("Security policy saved"),
         onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
-  }, [expiryDays, mfaEnforced, allowedDomains, maxSessions, updateSecurity]);
+  }, [mfaEnforced, allowedDomains, maxSessions, updateSecurity]);
 
   if (isLoading) {
     return (
@@ -94,7 +78,6 @@ export default function SecurityPage() {
         subtitle="Configure authentication and access controls for your organisation."
       >
         <div className="space-y-4 pt-2">
-          <Skeleton className="h-[120px] w-full rounded-xl" />
           <Skeleton className="h-[120px] w-full rounded-xl" />
           <Skeleton className="h-[140px] w-full rounded-xl" />
           <Skeleton className="h-[120px] w-full rounded-xl" />
@@ -146,35 +129,6 @@ export default function SecurityPage() {
                 checked={mfaEnforced}
                 onCheckedChange={handleMfaChange}
               />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <CardTitle className="text-base">Password Expiry</CardTitle>
-            </div>
-            <CardDescription>
-              Require a password change every N days. Enforced at the next sign-in once the period has elapsed. Leave blank to never expire. Per NIST 800-63B, periodic rotation is only recommended for specific compliance requirements.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-3">
-              <Input
-                id="expiry-days"
-                type="number"
-                min={30}
-                max={365}
-                placeholder="e.g. 90"
-                value={expiryDays}
-                onChange={handleExpiryChange}
-                className="w-36"
-              />
-              <Label htmlFor="expiry-days" className="text-sm text-muted-foreground">
-                days (30–365, blank to disable)
-              </Label>
             </div>
           </CardContent>
         </Card>

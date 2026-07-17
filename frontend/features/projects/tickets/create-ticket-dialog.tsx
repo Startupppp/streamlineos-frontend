@@ -99,7 +99,7 @@ function AttachmentPreview({
         </div>
       )}
       <div className="flex-1 min-w-0">
-        <p className="truncate text-xs font-medium">{file.name}</p>
+        <p className="truncate text-xs font-medium" title={file.name}>{file.name}</p>
         <p className="text-[10px] text-muted-foreground">
           {formatBytes(file.size)}
         </p>

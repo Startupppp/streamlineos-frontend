@@ -16,12 +16,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyApprovalIllustration, EmptyCalendarIllustration } from "@/components/illustrations";
-import { Home, CheckCircle2, XCircle, Loader2, CalendarDays, Clock, UserCheck, AlertTriangle } from "lucide-react";
+import { Home, CheckCircle2, XCircle, CalendarDays, Clock, UserCheck, AlertTriangle } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { staggerContainer, fadeIn } from "@/lib/motion-variants";
 
 import type { LeaveRequest, WfhRequest } from "./leaves-shared";
 import { WfhRequestItem, priorityConfig } from "./leaves-shared";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 function LeaveStatusBadge({ status }: { status: string }) {
   const config: Record<string, { label: string; className: string; icon: React.ComponentType<{ className?: string }> }> = {
@@ -112,7 +114,7 @@ function LeaveApprovalItem({
               {format(new Date(req.startDate), "MMM dd")} – {format(new Date(req.endDate), "MMM dd, yyyy")}
             </p>
             {req.reason && (
-              <p className="text-xs text-muted-foreground mt-0.5 truncate">{req.reason}</p>
+              <TruncatedText text={req.reason} className="text-xs text-muted-foreground mt-0.5" />
             )}
             {!isPending && req.approver?.name && (
               <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
@@ -128,19 +130,15 @@ function LeaveApprovalItem({
               <span className="text-xs text-muted-foreground italic">Cannot approve own request</span>
             ) : (
               <>
-                <Button
+                <LoadingButton
                   size="sm"
                   className="h-7 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-semibold px-3 gap-1 border-0 transition-colors duration-200"
-                  disabled={processingId === req.id}
+                  isPending={processingId === req.id}
                   onClick={handleApprove}
                 >
-                  {processingId === req.id ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                  ) : (
-                    <CheckCircle2 className="h-3 w-3" />
-                  )}
+                  <CheckCircle2 className="h-3 w-3" />
                   Approve
-                </Button>
+                </LoadingButton>
                 <Button
                   size="sm"
                   className="h-7 rounded-full bg-transparent border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 text-[11px] font-semibold px-3 gap-1 transition-colors duration-200"
@@ -449,17 +447,15 @@ export function LeaveApprovalsContent({
             <Button variant="outline" className="flex-1 h-9" onClick={handleRejectCancel}>
               Cancel
             </Button>
-            <Button
+            <LoadingButton
               variant="destructive"
               className="flex-1 h-9"
               onClick={handleWfhRejectConfirm}
-              disabled={processWfhRequestMutation.isPending}
+              isPending={processWfhRequestMutation.isPending}
+              loadingText="Rejecting…"
             >
-              {processWfhRequestMutation.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
-              )}
               Reject Request
-            </Button>
+            </LoadingButton>
           </div>
         </SheetContent>
       </Sheet>
@@ -487,15 +483,15 @@ function WfhApprovalActions({
 
   return (
     <div className="flex gap-2">
-      <Button
+      <LoadingButton
         size="sm"
         className="h-7 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-semibold px-3 gap-1 border-0 transition-colors duration-200"
         onClick={handleApprove}
-        disabled={isPending}
+        isPending={isPending}
       >
-        {isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3" />}
+        <CheckCircle2 className="h-3 w-3" />
         Approve
-      </Button>
+      </LoadingButton>
       <Button
         size="sm"
         className="h-7 rounded-full bg-transparent border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 text-[11px] font-semibold px-3 gap-1 transition-colors duration-200"

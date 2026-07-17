@@ -8,6 +8,7 @@ import {
 } from "@/features/knowledge-base/lib/kb-icons";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { useKbPageBacklinks } from "@/hooks/api/kb";
 import { useKbPageRecordLinks } from "@/hooks/api/kb/record-links";
 import type { KbPageDetail } from "@/hooks/api/kb/pages";
@@ -153,7 +154,7 @@ export default function PageRightPanel({
                     <span className="shrink-0 text-sm">
                       {bl.icon ?? <KbFileTextIcon className="h-3 w-3 text-muted-foreground" />}
                     </span>
-                    <span className="truncate">{bl.title || "Untitled"}</span>
+                    <TruncatedText text={bl.title || "Untitled"} />
                   </button>
                 ))}
               </div>
@@ -173,9 +174,7 @@ export default function PageRightPanel({
                     key={rl.id}
                     className="flex items-center gap-1.5 text-xs px-1 py-1"
                   >
-                    <span className="truncate text-muted-foreground capitalize">
-                      {rl.label ?? rl.targetType}
-                    </span>
+                    <TruncatedText text={rl.label ?? rl.targetType} className="text-muted-foreground capitalize" />
                   </div>
                 ))}
               </div>

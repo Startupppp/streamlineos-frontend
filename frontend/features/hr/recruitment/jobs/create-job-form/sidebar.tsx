@@ -3,6 +3,7 @@
 import { Check, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface Step {
   number: number;
@@ -81,18 +82,15 @@ export function FormSidebar({ steps, onStepClick }: FormSidebarProps) {
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <p
+              <TruncatedText
+                text={step.title}
                 className={cn(
-                  "text-xs font-medium leading-tight truncate",
+                  "text-xs font-medium leading-tight",
                   step.active ? "text-foreground" : "text-muted-foreground",
                   step.hasError && "text-rose-600 dark:text-rose-400"
                 )}
-              >
-                {step.title}
-              </p>
-              <p className="text-[10px] text-muted-foreground/70 leading-tight truncate mt-0.5">
-                {step.subtitle}
-              </p>
+              />
+              <TruncatedText text={step.subtitle} className="text-[10px] text-muted-foreground/70 leading-tight mt-0.5" />
             </div>
           </button>
         ))}

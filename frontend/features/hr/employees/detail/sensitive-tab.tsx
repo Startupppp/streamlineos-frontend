@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { useEmployeeEmployment, useEmployeeSensitive, useUpdateSensitive } from "@/hooks/api/hr/employees";
 import { useCan } from "@/hooks/api/access";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,67 +12,138 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingButton } from "@/components/ui/loading-button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Shield, AlertCircle } from "lucide-react";
+import { Shield, AlertCircle, Lock } from "lucide-react";
 import { EyeIcon, EyeOffIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { Lock } from "lucide-react";
 import type { HrSensitiveData } from "@/types/hr/core";
-import { useForm } from "react-hook-form";
+import type { Control } from "react-hook-form";
 
-interface Props {
-  userId: string;
+const emptyOrValid = (schema: z.ZodString) =>
+  schema.or(z.literal(""));
+
+const sensitiveSchema = z.object({
+  bankAccountNumber: emptyOrValid(
+    z.string().refine(
+      (v) => /^\d{9,18}$/.test(v),
+      "Must be 9–18 digits"
+    )
+  ),
+  bankName: emptyOrValid(z.string().min(1).max(100)),
+  ifscCode: emptyOrValid(
+    z.string().regex(/^[A-Za-z]{4}0[A-Za-z0-9]{6}$/, "Invalid IFSC code")
+  ),
+  taxId: emptyOrValid(z.string().min(1).max(100)),
+  panNumber: emptyOrValid(
+    z.string().regex(/^[A-Za-z]{5}\d{4}[A-Za-z]$/, "Invalid PAN number")
+  ),
+  passportNumber: emptyOrValid(
+    z.string().regex(/^[A-Za-z0-9]{6,9}$/, "Must be 6–9 alphanumeric characters")
+  ),
+  nationalId: emptyOrValid(z.string().min(1).max(100)),
+  aadharNumber: emptyOrValid(
+    z.string().regex(/^\d{12}$/, "Must be exactly 12 digits")
+  ),
+  ssn: emptyOrValid(
+    z.string().regex(/^(\d{3}-\d{2}-\d{4}|\d{9})$/, "Invalid SSN format")
+  ),
+});
+
+type FormValues = z.infer<typeof sensitiveSchema>;
+
+function sensitiveToForm(data: HrSensitiveData | undefined): FormValues {
+  return {
+    bankAccountNumber: data?.bankAccountNumber ?? "",
+    bankName: data?.bankName ?? "",
+    ifscCode: data?.ifscCode ?? "",
+    taxId: data?.taxId ?? "",
+    panNumber: data?.panNumber ?? "",
+    passportNumber: data?.passportNumber ?? "",
+    nationalId: data?.nationalId ?? "",
+    aadharNumber: data?.aadharNumber ?? "",
+    ssn: data?.ssn ?? "",
+  };
 }
 
-function MaskedField({
-  label,
-  value,
-  editMode,
-  fieldName,
-  register,
-}: {
+function formToSensitive(values: FormValues): HrSensitiveData {
+  return {
+    bankAccountNumber: values.bankAccountNumber === "" ? null : values.bankAccountNumber,
+    bankName: values.bankName === "" ? null : values.bankName,
+    ifscCode: values.ifscCode === "" ? null : values.ifscCode,
+    taxId: values.taxId === "" ? null : values.taxId,
+    panNumber: values.panNumber === "" ? null : values.panNumber,
+    passportNumber: values.passportNumber === "" ? null : values.passportNumber,
+    nationalId: values.nationalId === "" ? null : values.nationalId,
+    aadharNumber: values.aadharNumber === "" ? null : values.aadharNumber,
+    ssn: values.ssn === "" ? null : values.ssn,
+  };
+}
+
+interface MaskedFieldProps {
   label: string;
   value: string | null | undefined;
   editMode: boolean;
-  fieldName: keyof HrSensitiveData;
-  register: ReturnType<typeof useForm<HrSensitiveData>>["register"];
-}) {
+  fieldName: keyof FormValues;
+  control: Control<FormValues>;
+}
+
+function MaskedField({ label, value, editMode, fieldName, control }: MaskedFieldProps) {
   const [revealed, setRevealed] = useState(false);
   const handleToggle = () => setRevealed((prev) => !prev);
 
   return (
-    <div className="space-y-1.5">
-      <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-        <Lock className="h-3 w-3" />
-        {label}
-      </Label>
-      {editMode ? (
-        <Input
-          {...register(fieldName)}
-          className="text-sm font-mono"
-          placeholder={`Enter ${label}`}
-        />
-      ) : (
-        <div className="flex items-center gap-2">
-          <span className="flex-1 h-8 flex items-center px-3 rounded-md border border-border bg-muted/40 text-sm font-mono min-w-0 truncate">
-            {!value ? (
-              <span className="text-muted-foreground text-xs italic">Not set</span>
-            ) : revealed ? (
-              value
+    <FormField
+      control={control}
+      name={fieldName}
+      render={({ field }) => (
+        <FormItem className="space-y-1.5">
+          <FormLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+            <Lock className="h-3 w-3" />
+            {label}
+          </FormLabel>
+          <FormControl>
+            {editMode ? (
+              <Input
+                {...field}
+                className="text-sm font-mono"
+                placeholder={`Enter ${label}`}
+              />
             ) : (
-              "•".repeat(Math.min(value.length, 12))
+              <div className="flex items-center gap-2">
+                <span className="flex-1 h-8 flex items-center px-3 rounded-md border border-border bg-muted/40 text-sm font-mono min-w-0 truncate">
+                  {!value ? (
+                    <span className="text-muted-foreground text-xs italic">Not set</span>
+                  ) : revealed ? (
+                    value
+                  ) : (
+                    "•".repeat(Math.min(value.length, 12))
+                  )}
+                </span>
+                {value && (
+                  <Button variant="ghost" size="icon" className="w-8 shrink-0" onClick={handleToggle} type="button">
+                    {revealed ? <EyeOffIcon size={14} /> : <EyeIcon size={14} />}
+                  </Button>
+                )}
+              </div>
             )}
-          </span>
-          {value && (
-            <Button variant="ghost" size="icon" className="w-8 shrink-0" onClick={handleToggle}>
-              {revealed ? <EyeOffIcon size={14} /> : <EyeIcon size={14} />}
-            </Button>
-          )}
-        </div>
+          </FormControl>
+          <FormMessage />
+        </FormItem>
       )}
-    </div>
+    />
   );
+}
+
+interface Props {
+  userId: string;
 }
 
 export function EmployeeSensitiveTab({ userId }: Props) {
@@ -84,19 +158,23 @@ export function EmployeeSensitiveTab({ userId }: Props) {
 
   const updateMutation = useUpdateSensitive(employment?.id ?? 0);
 
-  const { register, handleSubmit, reset } = useForm<HrSensitiveData>({
-    values: sensitive ?? undefined,
+  const form = useForm<FormValues>({
+    resolver: zodResolver(sensitiveSchema),
+    values: sensitive !== undefined ? sensitiveToForm(sensitive) : undefined,
   });
 
   const handleEnableEdit = () => {
-    reset(sensitive ?? undefined);
+    form.reset(sensitiveToForm(sensitive));
     setEditMode(true);
   };
 
-  const handleCancel = () => setEditMode(false);
+  const handleCancel = () => {
+    form.reset(sensitiveToForm(sensitive));
+    setEditMode(false);
+  };
 
-  const onSubmit = handleSubmit((data) => {
-    updateMutation.mutate(data, {
+  const onSubmit = form.handleSubmit((values) => {
+    updateMutation.mutate(formToSensitive(values), {
       onSuccess: () => {
         toast.success("Sensitive data updated");
         setEditMode(false);
@@ -134,7 +212,7 @@ export function EmployeeSensitiveTab({ userId }: Props) {
     );
   }
 
-  const fields: Array<{ label: string; key: keyof HrSensitiveData }> = [
+  const fields: Array<{ label: string; key: keyof FormValues }> = [
     { label: "Bank Account Number", key: "bankAccountNumber" },
     { label: "Bank Name", key: "bankName" },
     { label: "IFSC / Routing Code", key: "ifscCode" },
@@ -147,46 +225,48 @@ export function EmployeeSensitiveTab({ userId }: Props) {
   ];
 
   return (
-    <form onSubmit={onSubmit}>
-      <Card className="rounded-2xl border border-border/70 bg-card/90 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_10px_28px_-14px_rgba(15,23,42,0.12)]">
-        <CardContent className="p-4 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-7 rounded-lg bg-rose-100 dark:bg-rose-950/40 flex items-center justify-center">
-                <Shield className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold">Sensitive Information</p>
-                <p className="text-[11px] text-muted-foreground">Encrypted at rest — access is audited</p>
-              </div>
-            </div>
-            {canManage && (
+    <Form {...form}>
+      <form onSubmit={onSubmit}>
+        <Card className="rounded-xl border border-border bg-card shadow-sm">
+          <CardContent className="p-4 space-y-4">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                {editMode ? (
-                  <>
-                    <Button type="button" variant="ghost" size="sm" className="text-xs" onClick={handleCancel}>Cancel</Button>
-                    <LoadingButton type="submit" size="sm" className="text-xs" isPending={updateMutation.isPending}>Save</LoadingButton>
-                  </>
-                ) : (
-                  <Button type="button" variant="outline" size="sm" className="text-xs" onClick={handleEnableEdit}>Edit</Button>
-                )}
+                <div className="w-7 rounded-lg bg-rose-100 dark:bg-rose-950/40 flex items-center justify-center">
+                  <Shield className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">Sensitive Information</p>
+                  <p className="text-[11px] text-muted-foreground">Encrypted at rest — access is audited</p>
+                </div>
               </div>
-            )}
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {fields.map(({ label, key }) => (
-              <MaskedField
-                key={key}
-                label={label}
-                value={sensitive?.[key]}
-                editMode={editMode}
-                fieldName={key}
-                register={register}
-              />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    </form>
+              {canManage && (
+                <div className="flex items-center gap-2">
+                  {editMode ? (
+                    <>
+                      <Button type="button" variant="ghost" size="sm" className="text-xs" onClick={handleCancel}>Cancel</Button>
+                      <LoadingButton type="submit" size="sm" className="text-xs" isPending={updateMutation.isPending}>Save</LoadingButton>
+                    </>
+                  ) : (
+                    <Button type="button" variant="outline" size="sm" className="text-xs" onClick={handleEnableEdit}>Edit</Button>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {fields.map(({ label, key }) => (
+                <MaskedField
+                  key={key}
+                  label={label}
+                  value={sensitive?.[key]}
+                  editMode={editMode}
+                  fieldName={key}
+                  control={form.control}
+                />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </form>
+    </Form>
   );
 }

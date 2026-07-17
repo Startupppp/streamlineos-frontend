@@ -17,6 +17,7 @@ import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import type { InterviewQuestion } from "@/hooks/api/hr/recruitment";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { QuestionFormDialog } from "./question-form-dialog";
 
 const DIFFICULTY_VARIANT: Record<string, "default" | "secondary" | "destructive"> = {
@@ -45,7 +46,7 @@ export function QuestionList({
       className: "max-w-[400px]",
       cell: (q) => (
         <div>
-          <p className="text-sm line-clamp-2">{q.question}</p>
+          <TruncatedText text={q.question} lines={2} className="text-sm" />
           {q.keywords && q.keywords.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-1">
               {q.keywords.slice(0, 3).map((kw) => (

@@ -10,11 +10,12 @@ import { PhoneInput } from "@/components/ui/phone-input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Pencil } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { useUpdateOrgSettings } from "@/hooks/api/organization";
 import type { OrgSettings } from "@/types/organization";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { LoadingButton } from "@/components/ui/loading-button";
 
 const INDUSTRIES = [
   "Technology", "Finance & Banking", "Healthcare", "Retail & E-commerce",
@@ -208,10 +209,9 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
               </div>
             </div>
             <div className="flex gap-2 pt-2">
-              <Button type="submit" disabled={isPending} size="sm" className="gap-1.5">
-                {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                {isPending ? "Saving…" : "Save changes"}
-              </Button>
+              <LoadingButton type="submit" isPending={isPending} size="sm" className="gap-1.5" loadingText="Saving…">
+                Save changes
+              </LoadingButton>
               <Button type="button" variant="ghost" size="sm" onClick={handleCancel} disabled={isPending}>
                 Cancel
               </Button>

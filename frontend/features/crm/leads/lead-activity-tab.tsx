@@ -6,6 +6,7 @@ import { EmptyActivityIllustration } from "@/components/illustrations";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 function timeAgo(date: string | Date) {
   const now = new Date();
   const d = new Date(date);
@@ -78,12 +79,10 @@ export function LeadActivityTab({ activities }: LeadActivityTabProps) {
                 </span>
               </div>
               {activity.subject && (
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {activity.subject}
-                </p>
+                <TruncatedText text={activity.subject} className="text-xs text-muted-foreground mt-0.5" />
               )}
               {activity.notes && (
-                <p className="text-xs mt-1.5 leading-relaxed">{activity.notes}</p>
+                <p className="text-xs mt-1.5 leading-relaxed line-clamp-3">{activity.notes}</p>
               )}
               {activity.outcome && (
                 <Badge variant="outline" className="text-[10px] mt-2">

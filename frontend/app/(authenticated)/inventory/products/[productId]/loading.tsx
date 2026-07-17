@@ -1,19 +1,18 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { StatCardGridSkeleton } from "@/components/ui/stat-card";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 
 export default function ProductDetailLoading() {
   return (
     <PageWrapper
       title="Product"
-      actions={<Skeleton className="h-4 w-20 rounded-md" />}
+      subtitle="Loading..."
+      actions={<Skeleton className="h-9 w-28" />}
     >
       <div className="space-y-4">
-        <div className="flex gap-2">
-          <Skeleton className="h-4 w-16 rounded-md" />{" "}
-          <Skeleton className="h-4 w-20 rounded-md" />{" "}
-          <Skeleton className="h-8 w-14 rounded-md" />
-        </div>
-        <Skeleton className="h-64 w-full rounded-xl" />
+        <StatCardGridSkeleton cols={4} count={4} />
+        <DataTableSkeleton rows={6} className="flex-1 min-h-0" />
       </div>
     </PageWrapper>
   );

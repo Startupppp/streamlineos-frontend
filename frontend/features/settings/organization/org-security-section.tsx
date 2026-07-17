@@ -7,13 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Shield, Clock, Globe, Network, X, Users } from "lucide-react";
+import { Loader2, Shield, Globe, Network, X, Users } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 
 interface OrgSecuritySectionProps {
   mfaEnforced: boolean;
-  passwordExpiryDays: string;
   maxConcurrentSessions: string;
   allowedEmailDomains: string[];
   domainInput: string;
@@ -23,7 +22,6 @@ interface OrgSecuritySectionProps {
   isUpdatingSecurity: boolean;
   isUpdatingOrg: boolean;
   onMfaChange: (checked: boolean) => void;
-  onPasswordExpiryChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onMaxConcurrentSessionsChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onDomainInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onDomainInputKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
@@ -39,7 +37,6 @@ interface OrgSecuritySectionProps {
 
 export function OrgSecuritySection({
   mfaEnforced,
-  passwordExpiryDays,
   maxConcurrentSessions,
   allowedEmailDomains,
   domainInput,
@@ -49,7 +46,6 @@ export function OrgSecuritySection({
   isUpdatingSecurity,
   isUpdatingOrg,
   onMfaChange,
-  onPasswordExpiryChange,
   onMaxConcurrentSessionsChange,
   onDomainInputChange,
   onDomainInputKeyDown,
@@ -71,7 +67,7 @@ export function OrgSecuritySection({
             Security Policies
           </CardTitle>
           <CardDescription>
-            Configure authentication and password policies for your organization.
+            Configure authentication and access controls for your organization.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
@@ -86,31 +82,6 @@ export function OrgSecuritySection({
               checked={mfaEnforced}
               onCheckedChange={onMfaChange}
               aria-label="Require MFA for all members"
-            />
-          </div>
-
-          <Separator />
-
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <Label htmlFor="password-expiry" className="text-sm font-medium">
-                Password expires every N days
-              </Label>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Leave empty to disable password expiry. Allowed range: 30–365 days.
-            </p>
-            <Input
-              id="password-expiry"
-              type="number"
-              min={30}
-              max={365}
-              placeholder="e.g. 90"
-              value={passwordExpiryDays}
-              onChange={onPasswordExpiryChange}
-              className="w-40"
-              aria-label="Password expiry days"
             />
           </div>
 

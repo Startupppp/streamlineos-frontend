@@ -1,20 +1,19 @@
 "use client";
 
-import { useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from "react";
+import { useState, type ChangeEvent, type FormEvent } from "react";
+import { Sparkles, Send, Loader2, ThumbsUp, ThumbsDown, BookMarked, FileText, Paperclip } from "lucide-react";
 import Link from "next/link";
-import { Sparkles, Send, Loader2, FileText, Paperclip } from "lucide-react";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { getApiError } from "@/lib/api-client";
-import {
-  useAskKb,
-  usePublicAskKb,
-  type KbAnswer,
-  type KbAnswerSource,
-} from "@/hooks/api/support/kb-rag";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { AiCitationChips, type Citation } from "@/components/ai/ai-citation-chips";
+import { useKbAsk, useKbAiAnswerFeedback } from "@/hooks/api/kb/ask";
+import { usePublicAskKb, type KbAnswer } from "@/hooks/api/support/kb-rag";
+import type { KbAskResponse, KbAskCitation } from "@/types/kb";
 
 type KbAskPanelProps =
   | { mode: "authed"; articleId?: number; className?: string }
@@ -22,13 +21,92 @@ type KbAskPanelProps =
 
 const MIN_QUESTION_LENGTH = 3;
 
-export function KbAskPanel(props: KbAskPanelProps) {
-  const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState<KbAnswer | null>(null);
+function buildCitations(citations: KbAskCitation[]): Citation[] {
+  return citations.map((c) => {
+    const freshness = c.updatedAt;
+    if (c.kind === "article") {
+      return { id: `a-${c.articleId}`, title: c.title, href: `/support/kb/${c.articleId}`, freshness };
+    }
+    if (c.kind === "page") {
+      return { id: `p-${c.pageId}`, title: c.title, freshness };
+    }
+    return { id: `s-${c.sourceId}`, title: c.title, freshness };
+  });
+}
 
-  const authedAsk = useAskKb();
-  const publicAsk = usePublicAskKb();
-  const isPending = props.mode === "public" ? publicAsk.isPending : authedAsk.isPending;
+function PublicSourceLink({ source, orgId }: { source: { articleId: number; title: string; slug: string; attachmentName: string | null }; orgId: string }) {
+  return (
+    <Link
+      href={`/help/${orgId}/${source.slug}`}
+      className="flex items-center gap-1.5 text-xs text-primary hover:underline min-w-0"
+    >
+      {source.attachmentName ? (
+        <Paperclip className="h-3 w-3 shrink-0" />
+      ) : (
+        <FileText className="h-3 w-3 shrink-0" />
+      )}
+      <TruncatedText text={`${source.title}${source.attachmentName ? ` · ${source.attachmentName}` : ""}`} />
+    </Link>
+  );
+}
+
+type FeedbackRating = "helpful" | "not_helpful" | "missing_source";
+
+function AnswerFeedback({ question, onGiven }: { question: string; onGiven: () => void }) {
+  const feedbackMutation = useKbAiAnswerFeedback();
+
+  function handleFeedback(rating: FeedbackRating) {
+    feedbackMutation.mutate(
+      { rating, question },
+      {
+        onSuccess: () => {
+          toast.success("Thanks for the feedback");
+          onGiven();
+        },
+        onError: (e) => toast.error(getErrorMessage(e)),
+      },
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-1 pt-1 border-t">
+      <span className="text-[10px] text-muted-foreground mr-1">Helpful?</span>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-6 px-1.5 text-[11px] gap-1"
+        onClick={() => handleFeedback("helpful")}
+        disabled={feedbackMutation.isPending}
+      >
+        <ThumbsUp className="h-3 w-3" /> Yes
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-6 px-1.5 text-[11px] gap-1"
+        onClick={() => handleFeedback("not_helpful")}
+        disabled={feedbackMutation.isPending}
+      >
+        <ThumbsDown className="h-3 w-3" /> No
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-6 px-1.5 text-[11px] gap-1"
+        onClick={() => handleFeedback("missing_source")}
+        disabled={feedbackMutation.isPending}
+      >
+        <BookMarked className="h-3 w-3" /> Missing source
+      </Button>
+    </div>
+  );
+}
+
+function AuthedAskPanel({ className, articleId }: { className?: string; articleId?: number }) {
+  const [question, setQuestion] = useState("");
+  const [answer, setAnswer] = useState<KbAskResponse | null>(null);
+  const [feedbackGiven, setFeedbackGiven] = useState(false);
+  const askMutation = useKbAsk();
 
   function handleQuestionChange(event: ChangeEvent<HTMLInputElement>) {
     setQuestion(event.target.value);
@@ -39,39 +117,30 @@ export function KbAskPanel(props: KbAskPanelProps) {
     submitQuestion();
   }
 
-  function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
-    if (event.key === "Enter" && !isPending) {
-      event.preventDefault();
-      submitQuestion();
-    }
-  }
-
   function submitQuestion() {
     const trimmed = question.trim();
     if (trimmed.length < MIN_QUESTION_LENGTH) {
       toast.error("Please enter a longer question");
       return;
     }
-    const handlers = {
-      onSuccess: (data: KbAnswer) => setAnswer(data),
-      onError: (error: unknown) => toast.error(getApiError(error)),
-    };
-    if (props.mode === "public") {
-      publicAsk.mutate({ orgId: props.orgId, question: trimmed }, handlers);
-    } else {
-      authedAsk.mutate({ question: trimmed, articleId: props.articleId }, handlers);
-    }
+    setFeedbackGiven(false);
+    askMutation.mutate(
+      { question: trimmed, ...(articleId ? { spaceId: undefined } : {}) },
+      {
+        onSuccess: (data) => setAnswer(data),
+        onError: (e) => toast.error(getErrorMessage(e)),
+      },
+    );
   }
 
-  function buildSourceHref(source: KbAnswerSource): string {
-    if (props.mode === "public") {
-      return `/help/${props.orgId}/${source.slug}`;
-    }
-    return `/support/kb/${source.articleId}`;
+  function handleFeedbackGiven() {
+    setFeedbackGiven(true);
   }
+
+  const citations = answer ? buildCitations(answer.citations) : [];
 
   return (
-    <Card className={cn("border-primary/20", props.className)}>
+    <Card className={cn("border-primary/20", className)}>
       <CardContent className="p-3 space-y-2">
         <div className="flex items-center gap-2 min-w-0">
           <div className="h-6 w-6 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
@@ -89,51 +158,117 @@ export function KbAskPanel(props: KbAskPanelProps) {
           <Input
             value={question}
             onChange={handleQuestionChange}
-            onKeyDown={handleKeyDown}
             placeholder="e.g. How do I reset my password?"
             className="flex-1 text-[13px]"
-            disabled={isPending}
+            disabled={askMutation.isPending}
           />
           <Button
             type="submit"
             size="sm"
-            disabled={isPending || question.trim().length < MIN_QUESTION_LENGTH}
+            disabled={askMutation.isPending || question.trim().length < MIN_QUESTION_LENGTH}
             className="gap-1.5 text-xs shrink-0"
           >
-            {isPending ? (
+            {askMutation.isPending ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
             ) : (
               <Send className="h-3.5 w-3.5" />
             )}
-            {isPending ? "Thinking…" : "Ask"}
+            {askMutation.isPending ? "Thinking…" : "Ask"}
           </Button>
         </form>
 
-        {answer && !isPending && (
+        {answer && !askMutation.isPending && (
           <div className="rounded-lg border bg-muted/30 p-2.5 space-y-2">
             <p className="text-[13px] whitespace-pre-wrap leading-relaxed">{answer.answer}</p>
-            {answer.sources.length > 0 && (
+            {citations.length > 0 && (
               <div className="space-y-1 pt-1 border-t">
                 <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                   Sources
                 </p>
+                <AiCitationChips citations={citations} />
+              </div>
+            )}
+            {answer.hasContext && (
+              feedbackGiven ? (
+                <p className="text-[10px] text-muted-foreground pt-1 border-t">Thanks for the feedback</p>
+              ) : (
+                <AnswerFeedback question={question} onGiven={handleFeedbackGiven} />
+              )
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function PublicAskPanel({ className, orgId }: { className?: string; orgId: string }) {
+  const [question, setQuestion] = useState("");
+  const [answer, setAnswer] = useState<KbAnswer | null>(null);
+  const publicAsk = usePublicAskKb();
+
+  function handleQuestionChange(event: ChangeEvent<HTMLInputElement>) {
+    setQuestion(event.target.value);
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const trimmed = question.trim();
+    if (trimmed.length < MIN_QUESTION_LENGTH) {
+      toast.error("Please enter a longer question");
+      return;
+    }
+    publicAsk.mutate(
+      { orgId, question: trimmed },
+      {
+        onSuccess: (data) => setAnswer(data),
+        onError: (e) => toast.error(getErrorMessage(e)),
+      },
+    );
+  }
+
+  return (
+    <Card className={cn("border-primary/20", className)}>
+      <CardContent className="p-3 space-y-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="h-6 w-6 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+          </div>
+          <p className="text-sm font-semibold leading-none">Ask the knowledge base</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="flex gap-2">
+          <Input
+            value={question}
+            onChange={handleQuestionChange}
+            placeholder="e.g. How do I reset my password?"
+            className="flex-1 text-[13px]"
+            disabled={publicAsk.isPending}
+          />
+          <Button
+            type="submit"
+            size="sm"
+            disabled={publicAsk.isPending || question.trim().length < MIN_QUESTION_LENGTH}
+            className="gap-1.5 text-xs shrink-0"
+          >
+            {publicAsk.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+            {publicAsk.isPending ? "Thinking…" : "Ask"}
+          </Button>
+        </form>
+
+        {answer && !publicAsk.isPending && (
+          <div className="rounded-lg border bg-muted/30 p-2.5 space-y-2">
+            <p className="text-[13px] whitespace-pre-wrap leading-relaxed">{answer.answer}</p>
+            {answer.sources.length > 0 && (
+              <div className="space-y-1 pt-1 border-t">
+                <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Sources</p>
                 <div className="flex flex-col gap-0.5">
                   {answer.sources.map((source) => (
-                    <Link
+                    <PublicSourceLink
                       key={`${source.articleId}-${source.attachmentId ?? "body"}`}
-                      href={buildSourceHref(source)}
-                      className="flex items-center gap-1.5 text-xs text-primary hover:underline min-w-0"
-                    >
-                      {source.attachmentName ? (
-                        <Paperclip className="h-3 w-3 shrink-0" />
-                      ) : (
-                        <FileText className="h-3 w-3 shrink-0" />
-                      )}
-                      <span className="truncate">
-                        {source.title}
-                        {source.attachmentName ? ` · ${source.attachmentName}` : ""}
-                      </span>
-                    </Link>
+                      source={source}
+                      orgId={orgId}
+                    />
                   ))}
                 </div>
               </div>
@@ -143,4 +278,11 @@ export function KbAskPanel(props: KbAskPanelProps) {
       </CardContent>
     </Card>
   );
+}
+
+export function KbAskPanel(props: KbAskPanelProps) {
+  if (props.mode === "public") {
+    return <PublicAskPanel orgId={props.orgId} className={props.className} />;
+  }
+  return <AuthedAskPanel articleId={props.articleId} className={props.className} />;
 }

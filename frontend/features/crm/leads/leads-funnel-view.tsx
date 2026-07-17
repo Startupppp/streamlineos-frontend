@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import type { BoardLead } from "@/features/crm/leads/leads-types";
 
 type LeadBoard = Record<string, BoardLead[]>;
@@ -70,26 +71,23 @@ export function LeadsFunnelView({ board }: LeadsFunnelViewProps) {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="grid grid-cols-3 gap-4 mb-2">
-        <div className="bg-card rounded-lg border border-border shadow-sm p-4 text-center">
-          <p className="text-xs text-muted-foreground">Total Leads</p>
-          <p className="text-2xl font-bold tabular-nums text-foreground">
-            {STAGE_ORDER.reduce((s, st) => s + (board[st]?.length ?? 0), 0)}
-          </p>
-        </div>
-        <div className="bg-card rounded-lg border border-border shadow-sm p-4 text-center">
-          <p className="text-xs text-muted-foreground">Converted</p>
-          <p className="text-2xl font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
-            {board["CONVERTED"]?.length ?? 0}
-          </p>
-        </div>
-        <div className="bg-card rounded-lg border border-border shadow-sm p-4 text-center">
-          <p className="text-xs text-muted-foreground">Pipeline Value</p>
-          <p className="text-2xl font-bold tabular-nums text-primary">
-            ₹{(totalRevenue / 100000).toFixed(1)}L
-          </p>
-        </div>
-      </div>
+      <StatCardGrid cols={3} className="mb-2">
+        <StatCard
+          label="Total Leads"
+          value={STAGE_ORDER.reduce((s, st) => s + (board[st]?.length ?? 0), 0)}
+          tone="default"
+        />
+        <StatCard
+          label="Converted"
+          value={board["CONVERTED"]?.length ?? 0}
+          tone="emerald"
+        />
+        <StatCard
+          label="Pipeline Value"
+          value={`₹${(totalRevenue / 100000).toFixed(1)}L`}
+          tone="accent"
+        />
+      </StatCardGrid>
 
       <div className="space-y-3">
         {stages.map(({ stage, count, conversionRate }, idx) => {

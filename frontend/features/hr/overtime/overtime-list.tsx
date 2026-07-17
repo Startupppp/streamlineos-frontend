@@ -8,6 +8,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api-client";
 import { useOvertimeRequests, useApproveOvertime, useRejectOvertime } from "@/hooks/api/hr/overtime";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface Props {
   canManage: boolean;
@@ -61,9 +62,7 @@ export function OvertimeList({ canManage }: Props) {
         key: "reason",
         header: "Reason",
         cell: (req) => (
-          <span className="text-sm text-muted-foreground max-w-[200px] truncate block">
-            {req.reason ?? "—"}
-          </span>
+          <TruncatedText text={req.reason ?? "—"} className="text-sm text-muted-foreground max-w-[200px]" />
         ),
       },
       {

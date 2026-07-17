@@ -9,6 +9,7 @@ import {
   Users,
   AlertTriangle,
 } from "lucide-react";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -155,7 +156,7 @@ export function PermissionMatrix({
       <div className="flex items-start justify-between gap-3 p-4 pb-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <h2 className="text-base font-semibold truncate">{role.name}</h2>
+            <TruncatedText text={role.name} className="text-base font-semibold" />
             {role.isSystem && (
               <Badge variant="outline" className="text-[10px] shrink-0">
                 System role

@@ -7,6 +7,7 @@ import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components
 import { usePayoutBatch } from "@/hooks/api/payroll/payout-batches";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { formatMoney } from "@/features/payroll/shared";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { ItemActionDialog, RevealCell } from "./batch-item-actions";
 import { cn } from "@/lib/utils";
 import {
@@ -47,9 +48,9 @@ function buildColumns(
     {
       key: "userId",
       header: "Employee",
-      className: "max-w-[180px] truncate",
+      className: "max-w-[180px]",
       cell: (row) => (
-        <span className="font-medium text-foreground">{resolveMemberName(row.userId)}</span>
+        <TruncatedText text={resolveMemberName(row.userId)} className="font-medium text-foreground" />
       ),
     },
     {

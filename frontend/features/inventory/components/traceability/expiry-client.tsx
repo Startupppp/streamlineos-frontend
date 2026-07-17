@@ -19,6 +19,7 @@ import { EmptyReportIllustration } from "@/components/illustrations";
 import { fadeUp } from "@/lib/motion-variants";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useExpiryItems } from "@/hooks/api/inventory/traceability";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 
 function ExpiryLotViewButton({ lotId, lotNumber }: { lotId: number; lotNumber: string }) {
@@ -75,8 +76,7 @@ const EXPIRY_COLUMNS: DataTableColumn<ExpiryItem>[] = [
   {
     key: "productName",
     header: "Product",
-    className: "font-medium text-foreground truncate max-w-[160px]",
-    cell: (row) => <>{row.productName}</>,
+    cell: (row) => <TruncatedText text={row.productName} className="font-medium text-foreground" />,
   },
   {
     key: "variantSku",

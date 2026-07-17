@@ -71,3 +71,65 @@ export interface AskResult {
   confidence: AiSeverity;
   evidence?: ProjectAiEvidence;
 }
+
+export interface WeeklyUpdateCitation {
+  source: "ticket" | "blocker" | "risk" | "decision" | "discussion";
+  label: string;
+}
+
+export interface WeeklyUpdateResult {
+  headline: string;
+  completedHighlights: string[];
+  blockers: string[];
+  upcomingFocus: string[];
+  citations: WeeklyUpdateCitation[];
+  dateRange?: { startDate?: string; endDate?: string };
+}
+
+export interface ChangeImpactCitation {
+  source: "change_request" | "risk" | "approval" | "plan";
+  label: string;
+}
+
+export interface ChangeImpactEvidence {
+  openChangeRequests: number;
+  openRisks: number;
+  pendingApprovals: number;
+}
+
+export interface ChangeImpactResult {
+  headline: string;
+  scopeImpact: string;
+  scheduleImpact: string;
+  budgetImpact: string;
+  riskSummary: string[];
+  pendingApprovals: string[];
+  citations: ChangeImpactCitation[];
+  evidence: ChangeImpactEvidence;
+}
+
+export interface ProposedActionItem {
+  title: string;
+  ownerName: string;
+  dueDateHint: string;
+  rationale: string;
+}
+
+export interface MeetingExtractActionsResult {
+  actions: ProposedActionItem[];
+  summary: string;
+  suggestions: boolean;
+}
+
+export interface TicketHandoffCitation {
+  source: "description" | "comment" | "decision";
+  excerpt: string;
+}
+
+export interface TicketHandoffResult {
+  currentState: string;
+  keyDecisions: string[];
+  nextAction: string;
+  blockers: string[];
+  citations: TicketHandoffCitation[];
+}

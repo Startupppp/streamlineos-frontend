@@ -10,11 +10,11 @@ export default function TravelApprovalsLoading() {
           <div key={si} className="space-y-3">
             <Skeleton className="h-5 w-48" />
             {Array.from({ length: 2 }).map((_, i) => (
-              <Card key={i} className="rounded-2xl">
+              <Card key={i} className="rounded-lg">
                 <CardContent className="p-5">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-2">
-                      <Skeleton className="h-9 w-9 rounded-xl shrink-0" />
+                      <Skeleton className="h-9 w-9 rounded-lg shrink-0" />
                       <div className="space-y-1.5">
                         <Skeleton className="h-4 w-32" />
                         <Skeleton className="h-3 w-48" />

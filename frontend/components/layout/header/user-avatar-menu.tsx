@@ -17,6 +17,7 @@ import { useCan } from "@/hooks/api/access";
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import { ThemeMenuSubmenu } from "@/components/theme/theme-switcher";
 import { resolveImageUrl, cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface UserAvatarMenuProps {
   variant?: "header" | "bottom-nav";
@@ -81,12 +82,8 @@ export function UserAvatarMenu({ variant = "header" }: UserAvatarMenuProps) {
         sideOffset={8}
       >
         <div className="px-2 py-1.5">
-          <p className="text-xs font-semibold text-foreground truncate">
-            {name}
-          </p>
-          <p className="text-[11px] text-muted-foreground truncate mt-0.5">
-            {email}
-          </p>
+          <TruncatedText text={name} className="text-xs font-semibold text-foreground" />
+          <TruncatedText text={email} className="text-[11px] text-muted-foreground mt-0.5" />
         </div>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>

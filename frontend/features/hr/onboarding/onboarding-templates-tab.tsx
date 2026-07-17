@@ -27,6 +27,7 @@ import {
   type OnboardingTemplateStep,
 } from "@/hooks/api/hr/onboarding";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const OWNER_ROLES = ["NEW_HIRE", "HR", "MANAGER", "IT"] as const;
 
@@ -242,7 +243,7 @@ export function OnboardingTemplatesTab() {
             <Card key={template.id} className="rounded-2xl border border-border/70 bg-card/90 shadow-sm">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm font-semibold text-foreground truncate">{template.name}</p>
+                  <TruncatedText text={template.name} className="text-sm font-semibold text-foreground" />
                   {!template.isActive && (
                     <span className="text-[10px] font-medium text-muted-foreground border rounded-full px-2 py-0.5 shrink-0">
                       Inactive

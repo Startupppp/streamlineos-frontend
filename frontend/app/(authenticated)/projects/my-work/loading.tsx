@@ -1,19 +1,31 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { StatCardGridSkeleton } from "@/components/ui/stat-card";
+import { PmPageShell, PmPanel, PmSection } from "@/features/projects/shared/pm-chrome";
 
 export default function MyWorkLoading() {
   return (
     <PageWrapper title="My Work" subtitle="Your assigned tickets across all projects">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-14 rounded-lg" />
-        ))}
-      </div>
-      <div className="space-y-3">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <Skeleton key={i} className="h-12 w-full rounded-md" />
-        ))}
-      </div>
+      <PmPageShell>
+        <PmSection index={0}>
+          <StatCardGridSkeleton cols={4} className="mb-4" />
+        </PmSection>
+        <PmSection index={1}>
+          <div className="flex gap-1">
+            <Skeleton className="h-7 w-20 rounded-md" />
+            <Skeleton className="h-7 w-20 rounded-md" />
+            <Skeleton className="h-7 w-24 rounded-md" />
+            <Skeleton className="h-7 w-20 rounded-md" />
+          </div>
+          <PmPanel className="p-2">
+            <div className="space-y-1.5">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <Skeleton key={i} className="h-10 w-full rounded-md" />
+              ))}
+            </div>
+          </PmPanel>
+        </PmSection>
+      </PmPageShell>
     </PageWrapper>
   );
 }

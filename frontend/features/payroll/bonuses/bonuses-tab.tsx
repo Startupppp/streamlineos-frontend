@@ -51,6 +51,7 @@ import {
 } from "@/hooks/api/payroll/bonuses-admin";
 import { useCan } from "@/hooks/api/access";
 import { EmptyReportIllustration } from "@/components/illustrations";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const TYPE_OPTIONS = [
   { value: "all", label: "All Types" },
@@ -431,13 +432,9 @@ export function BonusesTab() {
       header: "Employee",
       cell: (row) => (
         <div className="min-w-0">
-          <p className="text-[11px] font-medium text-foreground truncate max-w-[140px]">
-            {row.userName ?? row.userId}
-          </p>
+          <TruncatedText text={row.userName ?? "Unknown user"} className="text-[11px] font-medium text-foreground max-w-[140px]" />
           {row.userEmail && (
-            <p className="text-[10px] text-muted-foreground truncate max-w-[140px]">
-              {row.userEmail}
-            </p>
+            <TruncatedText text={row.userEmail} className="text-[10px] text-muted-foreground max-w-[140px]" />
           )}
         </div>
       ),
@@ -467,9 +464,7 @@ export function BonusesTab() {
       key: "reason",
       header: "Reason",
       cell: (row) => (
-        <span className="text-[10px] text-muted-foreground truncate max-w-[160px] block">
-          {row.reason ?? "—"}
-        </span>
+        <TruncatedText text={row.reason ?? "—"} className="text-[10px] text-muted-foreground max-w-[160px]" />
       ),
     },
     {

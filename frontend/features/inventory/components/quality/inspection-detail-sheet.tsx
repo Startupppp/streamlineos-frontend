@@ -27,6 +27,7 @@ import {
   INSPECTION_STATUS_BADGE,
   INSPECTION_STATUS_LABEL,
 } from "@/features/inventory/lib";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 
 type Disposition = "RELEASE_TO_AVAILABLE" | "QUARANTINE" | "RETURN_TO_VENDOR" | "SCRAP";
@@ -66,7 +67,7 @@ const LineDispositionRow = memo(function LineDispositionRow({
 
   return (
     <div className="flex items-center gap-2 py-1.5 border-b border-border/40 last:border-0">
-      <span className="flex-1 text-xs truncate">{line.variantName}</span>
+      <TruncatedText text={line.variantName} className="flex-1 text-xs" />
       <span className="text-xs text-muted-foreground w-12 text-right tabular-nums">{line.qty}</span>
       <Select value={value} onValueChange={handleChange}>
         <SelectTrigger className="w-44 text-xs">
@@ -88,8 +89,8 @@ const INSPECTION_LINE_COLUMNS: DataTableColumn<InspectionLine>[] = [
   {
     key: "variantName",
     header: "Variant",
-    className: "truncate max-w-[160px] text-xs",
-    cell: (line) => line.variantName,
+    className: "text-xs",
+    cell: (line) => <TruncatedText text={line.variantName} className="max-w-[160px]" />,
   },
   {
     key: "qty",

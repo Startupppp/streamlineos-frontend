@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { usePayrollDeptCost } from "@/hooks/api/payroll/reports";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import type { DeptCostRow } from "@/types/payroll/reports";
 
 interface ReportDeptCostProps {
@@ -19,7 +20,7 @@ const COLUMNS: DataTableColumn<DeptCostRow>[] = [
   {
     key: "department",
     header: "Department",
-    cell: (row) => <span className="text-[11px] font-medium">{row.department}</span>,
+    cell: (row) => <TruncatedText text={row.department ?? ""} className="text-[11px] font-medium" />,
   },
   {
     key: "employeeCount",

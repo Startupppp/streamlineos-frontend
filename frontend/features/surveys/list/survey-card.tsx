@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { SurveyStatusBadge } from "./survey-status-badge";
 import { SURVEY_MODE_META } from "@/features/surveys/shared/survey-mode-meta";
 import type { SurveyForm } from "@/hooks/api/surveys/forms";
@@ -16,7 +17,7 @@ export function SurveyCard({ survey }: { survey: SurveyForm }) {
           <div className="flex items-start gap-2 min-w-0">
             <ModeIcon className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" />
             <div className="min-w-0">
-              <p className="font-semibold text-sm truncate">{survey.title}</p>
+              <TruncatedText text={survey.title} className="font-semibold text-sm" />
               <p className="text-xs text-muted-foreground">{modeMeta.label}</p>
             </div>
           </div>

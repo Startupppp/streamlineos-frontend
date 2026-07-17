@@ -10,7 +10,7 @@ export default function InboxLoading() {
             <Skeleton key={i} className="h-[52px] rounded-lg" />
           ))}
         </div>
-        {Array.from({ length: 9 }).map((_, i) => (
+        {Array.from({ length: 8 }).map((_, i) => (
           <Skeleton key={i} className="h-10 w-full rounded-lg" />
         ))}
       </div>

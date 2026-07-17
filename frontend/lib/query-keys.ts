@@ -672,6 +672,9 @@ export const queryKeys = {
       range === undefined
         ? ([...base, "kb", "knowledgeGaps"] as const)
         : ([...base, "kb", "knowledgeGaps", range] as const),
+    contentGaps: (params?: Record<string, unknown>) => [...base, "kb", "content-gaps", params] as const,
+    researchBriefs: () => [...base, "kb", "research-briefs"] as const,
+    researchBrief: (id: number) => [...base, "kb", "research-brief", id] as const,
     settings: () => [...base, "kb", "settings"] as const,
   },
 
@@ -774,6 +777,16 @@ export const queryKeys = {
   supportAiSuggestions: {
     all: [...base, "supportAiSuggestions"] as const,
     list: (ticketId: number) => [...base, "supportAiSuggestions", "list", ticketId] as const,
+  },
+
+  supportAiReport: {
+    all: [...base, "supportAiReport"] as const,
+    get: (params?: Record<string, unknown>) => [...base, "supportAiReport", "get", params] as const,
+  },
+
+  supportAiSettings: {
+    all: [...base, "supportAiSettings"] as const,
+    get: () => [...base, "supportAiSettings", "get"] as const,
   },
 
   supportReports: {
@@ -978,6 +991,8 @@ export const queryKeys = {
     settings: () => [...base, "inventory", "settings"] as const,
     numberSequences: () => [...base, "inventory", "numberSequences"] as const,
     aiInsights: (params?: object) => [...base, "inventory", "aiInsights", params] as const,
+    aiDigest: (narrate?: boolean) => [...base, "inventory", "aiDigest", narrate] as const,
+    supplierDelayBriefing: (vendorId?: string) => [...base, "inventory", "supplierDelayBriefing", vendorId] as const,
     barcodeLookup: (code: string) => [...base, "inventory", "barcodeLookup", code] as const,
     qualityHold: (id: number) => [...base, "inventory", "qualityHold", id] as const,
     webhooks: () => [...base, "inventory", "webhooks"] as const,
@@ -1193,9 +1208,31 @@ export const queryKeys = {
     form: (slug: string) => [...base, "signPublic", "form", slug] as const,
   },
 
+  billing: {
+    all: [...base, "billing"] as const,
+    aiCredits: () => [...base, "billing", "ai-credits"] as const,
+    aiCreditTransactions: (params: Record<string, unknown>) => [...base, "billing", "ai-credits", "transactions", params] as const,
+    entitlements: () => [...base, "billing", "entitlements"] as const,
+  },
+
   crmDataQuality: {
-    all: ["crm", "data-quality"] as const,
-    report: () => ["crm", "data-quality", "report"] as const,
+    all: [...base, "crm", "data-quality"] as const,
+    report: () => [...base, "crm", "data-quality", "report"] as const,
+  },
+
+  workspaceSearch: {
+    all: [...base, "workspace-search"] as const,
+    search: (q: string, types?: string[]) => [...base, "workspace-search", "search", q, types] as const,
+  },
+
+  aiSummaries: {
+    all: [...base, "aiSummaries"] as const,
+    latest: (entityType: string, entityId: string) =>
+      [...base, "aiSummaries", entityType, entityId] as const,
+  },
+
+  meetingsAi: {
+    all: [...base, "ai", "meetings"] as const,
   },
 
 } as const;

@@ -16,6 +16,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { resolveImageUrl } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 export function SettingsProfile() {
   const { data: session, update: updateSession } = useSession();
@@ -203,8 +204,8 @@ export function SettingsProfile() {
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="text-[13px] font-semibold text-foreground truncate">{name || "—"}</p>
-          <p className="text-xs text-muted-foreground truncate">{email}</p>
+          <TruncatedText text={name || "—"} className="text-[13px] font-semibold text-foreground" />
+          <TruncatedText text={email ?? ""} className="text-xs text-muted-foreground" />
           <div className="flex items-center gap-2 mt-2">
             <Button
               variant="outline"

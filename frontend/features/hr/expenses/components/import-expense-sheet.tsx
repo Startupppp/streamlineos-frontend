@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { ImportValidationPreview } from "@/features/hr/expenses/import-validation-preview";
 import { useImportExpenses } from "@/hooks/api/use-import-expenses";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const TEMPLATE_COLUMNS = [
   "category", "amount", "description", "merchant", "payment_method", "expense_date",
@@ -281,7 +282,7 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
                 <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
                   <FileText className="w-8 text-primary shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{file.name}</p>
+                    <TruncatedText text={file.name} className="text-sm font-medium" />
                     <p className="text-xs text-muted-foreground">{(file.size / 1024).toFixed(1)} KB</p>
                   </div>
                   <Button variant="ghost" size="icon" className="w-7 shrink-0" onClick={resetState} aria-label="Remove file">

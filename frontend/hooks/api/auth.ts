@@ -78,10 +78,3 @@ export function useLoginHistory(params?: { page?: number; limit?: number; succes
   });
 }
 
-export function useChangePassword() {
-  return useMutation({
-    mutationKey: ["auth", "change-password"],
-    mutationFn: (data: { currentPassword?: string; newPassword: string }) =>
-      apiClient.patch<{ message: string }>("/me/change-password", data),
-  });
-}

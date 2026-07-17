@@ -47,6 +47,7 @@ import { DealSidebarCards } from "@/features/crm/deals/detail/deal-sidebar-cards
 import { DealOrdersSection } from "@/features/crm/deals/deal-orders-section";
 import { DealQuotesSection } from "@/features/crm/deals/deal-quotes-section";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { DealInlineAiMenu } from "@/features/crm/shared/crm-inline-ai-menu";
 
 
 function formatINR(v: number) {
@@ -339,6 +340,7 @@ export default function DealDetailPage({
           </Button>
         ) : (
           <>
+            <DealInlineAiMenu dealId={dealId} dealName={deal.name} />
             {isActiveDeal && (
               <>
                 <Button

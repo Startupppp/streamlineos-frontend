@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatINRCompact } from "@/lib/format-utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import type { Deal, DealStage } from "@/types/crm";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 
 const STAGE_PROBABILITY: Record<string, number> = {
@@ -109,9 +110,7 @@ export function DealForecastChart({ deals }: DealForecastChartProps) {
                 <div className="flex items-center justify-between mb-1.5 gap-2">
                   <div className="flex items-center gap-2 min-w-0">
                     <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${STAGE_DOT[row.stage] ?? "bg-muted-foreground"}`} />
-                    <span className="text-sm font-medium truncate">
-                      {STAGE_LABEL[row.stage] ?? row.stage}
-                    </span>
+                    <TruncatedText text={STAGE_LABEL[row.stage] ?? row.stage} className="text-sm font-medium" />
                     <Badge variant="outline" className="text-[10px] h-4 px-1.5 shrink-0">
                       {row.probability}%
                     </Badge>

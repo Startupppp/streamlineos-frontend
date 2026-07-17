@@ -31,6 +31,7 @@ import {
 } from "./notification-types";
 import { formatRelativeTime } from "./format-relative-time";
 import { useNotificationEvents } from "./use-notification-events";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import type { Notification } from "@/types/notifications";
 
 const HOVER_CLOSE_DELAY_MS = 175;
@@ -79,24 +80,24 @@ function PopoverNotificationItem({
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
-          <p
+          <TruncatedText
+            text={notification.title}
             className={cn(
-              "text-[13px] truncate leading-snug",
+              "text-[13px] leading-snug",
               notification.isRead
                 ? "font-medium text-muted-foreground"
                 : "font-semibold text-foreground",
             )}
-          >
-            {notification.title}
-          </p>
+          />
           <span className="text-[11px] text-muted-foreground/50 shrink-0">
             {formatRelativeTime(notification.createdAt)}
           </span>
         </div>
         {notification.message && (
-          <p className="text-xs text-muted-foreground truncate mt-0.5">
-            {notification.message}
-          </p>
+          <TruncatedText
+            text={notification.message}
+            className="text-xs text-muted-foreground mt-0.5"
+          />
         )}
       </div>
       {!notification.isRead && (

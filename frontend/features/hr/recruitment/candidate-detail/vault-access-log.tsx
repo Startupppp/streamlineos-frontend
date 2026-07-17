@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useVaultAccessLogs } from "@/hooks/api/hr/recruitment";
 import { useSession } from "next-auth/react";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface VaultAccessLogProps {
   candidateId: number;
@@ -49,7 +50,7 @@ export function VaultAccessLog({ candidateId }: VaultAccessLogProps) {
                 >
                   {log.action}
                 </Badge>
-                <span className="font-medium truncate flex-1">{log.fileName}</span>
+                <TruncatedText text={log.fileName} className="font-medium flex-1" />
                 <span className="text-muted-foreground shrink-0">{log.accessorDisplayName}</span>
                 <span className="text-muted-foreground shrink-0 tabular-nums">
                   {log.accessedAt ? format(new Date(log.accessedAt), "dd MMM, HH:mm") : "—"}

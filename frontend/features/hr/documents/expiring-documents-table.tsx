@@ -5,6 +5,7 @@ import { format, differenceInDays, parseISO } from "date-fns";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface ExpiringDoc {
   id: number;
@@ -60,7 +61,7 @@ const columns: DataTableColumn<MergedItem>[] = [
     header: "Name",
     cell: (item) => (
       <div>
-        <p className="text-sm font-medium text-foreground truncate max-w-[200px]">{item.name}</p>
+        <TruncatedText text={item.name} className="text-sm font-medium text-foreground max-w-[200px]" />
         <p className="text-[10px] text-muted-foreground">{item.type}</p>
       </div>
     ),

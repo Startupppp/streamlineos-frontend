@@ -20,7 +20,8 @@ import { PlusIcon } from "@animateicons/react/lucide";
 import { useCan } from "@/hooks/api/access";
 import { useHrCases, useDisciplinaryActions } from "@/hooks/api/hr/cases";
 import type { HrCase, CaseCategory, CaseStatus, CaseSeverity } from "@/hooks/api/hr/cases";
-import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
+import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import type { DataTableColumn } from "@/components/ui/data-table";
@@ -114,9 +115,7 @@ export function CasesPageContent() {
       className: TABLE_TITLE_CELL,
       cell: (row) => (
         <div className="flex min-w-0 items-center gap-2 overflow-hidden">
-          <span className={cn(TEXT_ONE_LINE, "text-sm")} title={row.summary}>
-            {row.summary}
-          </span>
+          <TruncatedText text={row.summary} className="text-sm" />
           {row.anonymous && (
             <Badge variant="outline" className="text-xs text-muted-foreground shrink-0">Anon</Badge>
           )}

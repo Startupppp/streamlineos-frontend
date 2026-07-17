@@ -8,14 +8,15 @@ export default function CalendarLoading() {
 
         <div className="flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
-            <Skeleton className="h-8 w-8 rounded-md" />
+            <Skeleton className="h-9 w-9 rounded-md" />
             <Skeleton className="h-5 w-40 rounded" />
-            <Skeleton className="h-8 w-8 rounded-md" />
-            <Skeleton className="h-8 w-16 rounded-md" />
+            <Skeleton className="h-9 w-9 rounded-md" />
+            <Skeleton className="h-9 w-16 rounded-md" />
           </div>
           <div className="flex items-center gap-2">
-            <Skeleton className="h-8 w-28 rounded-md" />
-            <Skeleton className="h-8 w-24 rounded-md" />
+            <Skeleton className="h-9 w-28 rounded-md" />
+            <Skeleton className="h-9 w-24 rounded-md" />
+            <Skeleton className="h-9 w-9 rounded-md" />
           </div>
         </div>
 

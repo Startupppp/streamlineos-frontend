@@ -4,7 +4,7 @@ import { useCallback, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Sheet,
   SheetBody,
@@ -37,7 +37,7 @@ const schema = z.object({
   projectId: z.string(),
   userId: z.string(),
   billingType: z.enum(["BILLABLE", "NON_BILLABLE", "INTERNAL"]),
-  billRate: z.string().min(1),
+  billRate: z.string().regex(/^\d+(\.\d+)?$/, "Enter a valid non-negative number").refine((v) => parseFloat(v) >= 0, "Must be non-negative"),
   costRate: z.string(),
   currency: z.string().min(1).max(10),
   priority: z.string(),
@@ -76,7 +76,7 @@ export function RateFormSheet({ open, onOpenChange, rate }: RateFormSheetProps) 
 
   const projectList = projectsData?.data ?? [];
 
-  const { control, handleSubmit, reset, register } = useForm<FormValues>({
+  const { control, handleSubmit, reset, register, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       projectId: SELECT_NONE,
@@ -227,6 +227,7 @@ export function RateFormSheet({ open, onOpenChange, rate }: RateFormSheetProps) 
                       className="h-8 text-xs"
                       {...register("billRate")}
                     />
+                    {errors.billRate && <p className="text-xs text-destructive">{errors.billRate.message}</p>}
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-xs font-medium">Cost rate</Label>
@@ -249,6 +250,7 @@ export function RateFormSheet({ open, onOpenChange, rate }: RateFormSheetProps) 
                       placeholder="USD"
                       {...register("currency")}
                     />
+                    {errors.currency && <p className="text-xs text-destructive">{errors.currency.message}</p>}
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-xs font-medium">Priority</Label>
@@ -276,15 +278,15 @@ export function RateFormSheet({ open, onOpenChange, rate }: RateFormSheetProps) 
             >
               Cancel
             </Button>
-            <Button
+            <LoadingButton
               type="submit"
               size="sm"
               className="h-8 text-xs"
-              disabled={isPending}
+              isPending={isPending}
+              loadingText={rate ? "Saving…" : "Adding…"}
             >
-              {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
               {rate ? "Save changes" : "Add rate"}
-            </Button>
+            </LoadingButton>
           </SheetFooter>
         </form>
       </SheetContent>

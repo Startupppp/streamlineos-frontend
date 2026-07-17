@@ -1,34 +1,22 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DataTableSkeleton } from "@/components/ui/data-table";
+import { StatCardGridSkeleton } from "@/components/ui/stat-card";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export default function ReorderReportLoading() {
   return (
-    <PageWrapper title="Reorder Report">
-      <div className="flex flex-nowrap items-center gap-2 mb-4 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-        <Skeleton className="h-8 w-64 flex-1 max-w-xs" />
-        <Skeleton className="h-8 w-24 ml-auto" />
-      </div>
-      <div className="grid grid-cols-3 gap-3 mb-4">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <Skeleton key={i} className="h-16 rounded-lg" />
-        ))}
-      </div>
-      <div className="rounded-md border border-border bg-card overflow-hidden">
-        <div className="bg-muted/80" />
-        {Array.from({ length: 12 }).map((_, i) => (
-          <div key={i} className="border-t border-border flex items-center px-2 gap-3">
-            <Skeleton className="h-3 w-32 flex-1" />
-            <Skeleton className="h-3 w-16" />
-            <Skeleton className="h-3 w-16" />
-            <Skeleton className="h-3 w-20" />
-            <Skeleton className="h-3 w-20" />
-            <Skeleton className="h-3 w-12" />
-            <Skeleton className="h-3 w-12" />
-            <Skeleton className="h-3 w-12" />
-            <Skeleton className="h-4 w-16 rounded" />
-          </div>
-        ))}
-      </div>
+    <PageWrapper
+      title="Reorder Report"
+      filters={
+        <div className={FILTER_TOOLBAR_ROW}>
+          <Skeleton className="h-9 flex-1 max-w-md" />
+          <Skeleton className="h-9 w-32" />
+        </div>
+      }
+    >
+      <StatCardGridSkeleton cols={3} count={3} />
+      <DataTableSkeleton rows={10} columns={9} className="flex-1 min-h-0" />
     </PageWrapper>
   );
 }

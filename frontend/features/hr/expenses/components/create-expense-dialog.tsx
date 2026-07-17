@@ -34,6 +34,7 @@ import { toast } from "sonner";
 import { useCreateExpense, useUpdateExpense } from "@/hooks/api/hr";
 import { useUploadFile } from "@/hooks/api/use-upload-file";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const CONTAINS_LETTER_OR_DIGIT_REGEX = /[\p{L}\p{N}]/u;
 
@@ -470,9 +471,7 @@ export function CreateExpenseDialog({
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">
-                    {receiptFile?.name ?? "Existing receipt"}
-                  </p>
+                  <TruncatedText text={receiptFile?.name ?? "Existing receipt"} className="text-sm font-medium text-foreground" />
                   {receiptFile && (
                     <p className="text-[11px] text-muted-foreground">
                       {(receiptFile.size / 1024).toFixed(1)} KB

@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
 import { EyeIcon, EyeOffIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import {
@@ -14,6 +13,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -102,14 +102,14 @@ export function ItemActionDialog({
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             onClick={handleSubmit}
-            disabled={!value.trim() || isPending}
+            disabled={!value.trim()}
+            isPending={isPending}
             variant={type === "failed" ? "destructive" : "default"}
           >
-            {isPending && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
             {type === "paid" ? "Confirm Paid" : "Mark Failed"}
-          </Button>
+          </LoadingButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

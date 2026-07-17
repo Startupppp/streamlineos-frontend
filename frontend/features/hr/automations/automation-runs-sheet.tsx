@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useHrAutomationRuns } from "@/hooks/api/hr/hr-automations";
 import type { HrAutomationRun, HrAutomationRunStatus } from "@/types/hr/automations";
 import { ChevronDown, ChevronRight } from "lucide-react";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const STATUS_COLORS: Record<HrAutomationRunStatus, string> = {
   success: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
@@ -47,10 +48,10 @@ function RunRow({ run }: { run: HrAutomationRun }) {
         <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded border ${STATUS_COLORS[run.status]}`}>
           {run.status}
         </span>
-        <span className="text-xs text-muted-foreground truncate flex-1">
-          {run.triggerEvent}
-          {run.depth > 0 && <span className="ml-2 text-[10px] bg-muted px-1 rounded">depth {run.depth}</span>}
-        </span>
+        <div className="flex items-center gap-1 flex-1 min-w-0">
+          <TruncatedText text={run.triggerEvent} className="text-xs text-muted-foreground" />
+          {run.depth > 0 && <span className="shrink-0 ml-1 text-[10px] bg-muted px-1 rounded">depth {run.depth}</span>}
+        </div>
         <span className="text-[10px] text-muted-foreground shrink-0">
           {run.durationMs != null ? `${run.durationMs}ms` : "—"}
         </span>

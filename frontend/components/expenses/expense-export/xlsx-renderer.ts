@@ -1,5 +1,3 @@
-import ExcelJS from "exceljs";
-
 export type XlsxData = {
   sheets: { name: string; data: (string | number | null)[][] }[];
 };
@@ -20,6 +18,7 @@ export async function downloadXLSX(
   data: XlsxData,
   filename: string,
 ): Promise<void> {
+  const ExcelJS = (await import("exceljs")).default;
   const workbook = new ExcelJS.Workbook();
 
   data.sheets.forEach((sheet) => {

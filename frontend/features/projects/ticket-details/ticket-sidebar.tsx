@@ -16,6 +16,7 @@ import type { ProjectMember } from "./types";
 import { SidebarSelectFields } from "./sidebar-select-fields";
 import { SidebarAssigneeSection, type DisplayedAssignee } from "./sidebar-assignee-section";
 import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface TicketSidebarProps {
   ticket: {
@@ -304,9 +305,7 @@ export function TicketSidebar({
                 {getUserInitials(ticket.reporter)}
               </AvatarFallback>
             </Avatar>
-            <span className="text-xs truncate">
-              {getUserDisplayName(ticket.reporter)}
-            </span>
+            <TruncatedText text={getUserDisplayName(ticket.reporter)} className="min-w-0 flex-1 text-xs" />
           </div>
         </div>
       )}

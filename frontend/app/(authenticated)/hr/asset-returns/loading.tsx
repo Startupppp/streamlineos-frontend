@@ -1,44 +1,14 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 
 export default function AssetReturnsLoading() {
   return (
     <PageWrapper
       title="Asset Returns"
-      subtitle="Track returned company assets during offboarding"
-      actions={<Skeleton className="h-8 w-32 rounded-md" />}
+      subtitle="Track and manage company asset returns from employees"
+      actions={<div className="h-9 w-[130px]" />}
     >
-      <div className="space-y-4">
-        <div className="grid gap-3 md:grid-cols-3">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <Card key={i}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <Skeleton className="h-3.5 w-20" />
-                  <Skeleton className="h-4 w-4 rounded" />
-                </div>
-                <Skeleton className="h-12 w-12" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <Card key={i}>
-              <CardContent className="p-4 space-y-2">
-                <div className="flex items-center justify-between">
-                  <Skeleton className="h-4 w-28" />
-                  <Skeleton className="h-5 w-16 rounded-full" />
-                </div>
-                <Skeleton className="h-3 w-32" />
-                <Skeleton className="h-3 w-24" />
-                <Skeleton className="h-9 w-full rounded-md" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
+      <DataTableSkeleton rows={12} columns={5} className="flex-1 min-h-0" />
     </PageWrapper>
   );
 }

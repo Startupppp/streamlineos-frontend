@@ -8,15 +8,29 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptyLeaderboardIllustration } from "@/components/illustrations";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
-} from "recharts";
+import dynamic from "next/dynamic";
+import { TruncatedText } from "@/components/ui/truncated-text";
+import { BarChart3, Star, Users } from "lucide-react";
+
+const ScorecardCharts = dynamic(
+  () => import("@/features/hr/recruitment/components/scorecard-charts").then((m) => ({ default: m.ScorecardCharts })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Skeleton className="h-[268px] rounded-xl" />
+        <Skeleton className="h-[268px] rounded-xl" />
+      </div>
+    ),
+  },
+);
 
 interface InterviewerStat {
   interviewerId: string;
@@ -67,12 +81,8 @@ export default function ScorecardAnalyticsPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Scorecard Analytics" subtitle="Interviewer performance and scoring patterns" variant="display">
-        <div className="grid gap-4 sm:grid-cols-3 mb-4">
-          <Skeleton className="h-24 rounded-xl" />
-          <Skeleton className="h-24 rounded-xl" />
-          <Skeleton className="h-24 rounded-xl" />
-        </div>
+      <PageWrapper title="Scorecard Analytics" subtitle="Interviewer performance and scoring patterns">
+        <StatCardGridSkeleton cols={3} count={3} className="mb-4" />
         <div className="grid gap-4 lg:grid-cols-2">
           <Skeleton className="h-72 rounded-xl" />
           <Skeleton className="h-72 rounded-xl" />
@@ -101,26 +111,11 @@ export default function ScorecardAnalyticsPage() {
         </Select>
       }
     >
-      <div className="grid gap-3 sm:grid-cols-3 mb-4">
-        <Card>
-          <CardContent className="pt-5 pb-4">
-            <p className="text-xs text-muted-foreground">Total Scorecards</p>
-            <p className="text-2xl font-bold mt-1">{data?.totalScorecards ?? 0}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-5 pb-4">
-            <p className="text-xs text-muted-foreground">Org Avg Rating</p>
-            <p className="text-2xl font-bold mt-1">{data?.orgAvgRating ?? 0} <span className="text-sm font-normal text-muted-foreground">/ 10</span></p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-5 pb-4">
-            <p className="text-xs text-muted-foreground">Active Interviewers</p>
-            <p className="text-2xl font-bold mt-1">{stats.length}</p>
-          </CardContent>
-        </Card>
-      </div>
+      <StatCardGrid cols={3} className="mb-4">
+        <StatCard label="Total Scorecards" value={data?.totalScorecards ?? 0} icon={BarChart3} tone="blue" />
+        <StatCard label="Org Avg Rating" value={`${data?.orgAvgRating ?? 0} / 10`} icon={Star} tone="amber" />
+        <StatCard label="Active Interviewers" value={stats.length} icon={Users} tone="default" />
+      </StatCardGrid>
 
       {stats.length === 0 ? (
         <RecruitmentEmptyState
@@ -129,62 +124,10 @@ export default function ScorecardAnalyticsPage() {
           description="Scorecard analytics will appear once interviewers submit scorecards for completed interviews."
         />
       ) : (
-        <div className="grid gap-4 lg:grid-cols-2">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Avg Rating by Interviewer</CardTitle>
-              <p className="text-xs text-muted-foreground">Org average: {data?.orgAvgRating} — deviations highlight potential bias</p>
-            </CardHeader>
-            <CardContent className="p-0 pb-2">
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={stats} margin={{ left: -10, right: 16, top: 8, bottom: 4 }}>
-                  <XAxis
-                    dataKey="name"
-                    tick={{ fontSize: 10 }}
-                    tickFormatter={(v: string | null) => v ? v.split(" ")[0] : "?"}
-                  />
-                  <YAxis domain={[0, 10]} tick={{ fontSize: 10 }} />
-                  <Tooltip
-                    formatter={(v) => [`${v} / 10`, "Avg Rating"]}
-                    labelFormatter={(label) => `Interviewer: ${label}`}
-                  />
-                  <Bar dataKey="avgRating" radius={[4, 4, 0, 0]}>
-                    {stats.map((s) => (
-                      <Cell
-                        key={s.interviewerId}
-                        fill={
-                          s.avgRating < (data?.orgAvgRating ?? 5) - 1.5
-                            ? "hsl(var(--destructive))"
-                            : s.avgRating > (data?.orgAvgRating ?? 5) + 1.5
-                            ? "hsl(142 76% 36%)"
-                            : "hsl(var(--primary))"
-                        }
-                      />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+        <div className="space-y-4">
+          <ScorecardCharts stats={stats} dist={dist} orgAvgRating={data?.orgAvgRating} />
 
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Score Distribution</CardTitle>
-              <p className="text-xs text-muted-foreground">Count of scorecards by avg rating range</p>
-            </CardHeader>
-            <CardContent className="p-0 pb-2">
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={dist} margin={{ left: -10, right: 16, top: 8, bottom: 4 }}>
-                  <XAxis dataKey="range" tick={{ fontSize: 10 }} />
-                  <YAxis allowDecimals={false} tick={{ fontSize: 10 }} />
-                  <Tooltip />
-                  <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          <Card className="lg:col-span-2">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">Interviewer Details</CardTitle>
             </CardHeader>
@@ -196,7 +139,7 @@ export default function ScorecardAnalyticsPage() {
                       <AvatarFallback className="text-xs">{initials(s.name, s.email)}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{s.name ?? s.email}</p>
+                      <TruncatedText text={s.name ?? s.email} className="text-sm font-medium" />
                       <p className="text-xs text-muted-foreground">{s.totalScorecards} scorecards</p>
                     </div>
                     <div className="text-right shrink-0 space-y-0.5">

@@ -4,6 +4,7 @@ import { memo, useState, useCallback } from "react";
 import { ChevronDown, Tag as TagIcon, Link2, GitMerge, Split, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -43,9 +44,7 @@ const LinkedTicketRow = memo(function LinkedTicketRow({ link }: LinkedTicketRowP
       <Badge variant="outline" className="text-[9px] px-1 py-0">
         {link.relation}
       </Badge>
-      <span className="truncate">
-        #{link.linkedTicketId} {link.linkedTicket?.title ?? ""}
-      </span>
+      <TruncatedText text={`#${link.linkedTicketId} ${link.linkedTicket?.title ?? ""}`} />
     </li>
   );
 });

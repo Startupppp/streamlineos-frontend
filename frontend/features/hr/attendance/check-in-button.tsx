@@ -28,7 +28,10 @@ import {
   Loader2,
   Play,
   Pause,
+  Timer,
+  Utensils,
 } from "lucide-react";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { formatDuration, formatTimerSegment } from "./attendance-utils";
 import { cn } from "@/lib/utils";
 
@@ -391,23 +394,11 @@ export const TimerCard = memo(function TimerCard() {
         )}
 
         {dailyStats && (
-          <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border">
-            <div className="bg-muted/30 rounded-xl p-3 text-center">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                Work
-              </p>
-              <p className="text-sm font-bold text-emerald-700 dark:text-emerald-400 tabular-nums">
-                {formatDuration(dailyStats.workHours)}
-              </p>
-            </div>
-            <div className="bg-muted/30 rounded-xl p-3 text-center">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                Break
-              </p>
-              <p className="text-sm font-bold text-amber-700 dark:text-amber-400 tabular-nums">
-                {formatDuration(dailyStats.breakHours)}
-              </p>
-            </div>
+          <div className="pt-3 border-t border-border">
+            <StatCardGrid cols={2}>
+              <StatCard label="Work" value={formatDuration(dailyStats.workHours)} icon={Timer} tone="emerald" />
+              <StatCard label="Break" value={formatDuration(dailyStats.breakHours)} icon={Utensils} tone="amber" />
+            </StatCardGrid>
           </div>
         )}
       </CardContent>

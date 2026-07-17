@@ -2,7 +2,10 @@
 
 import { useState, useCallback } from "react";
 import type { ReactNode } from "react";
-import { Plus, Pencil, Trash2, FlaskConical } from "lucide-react";
+import { Pencil, FlaskConical } from "lucide-react";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -147,6 +150,23 @@ function TestPanel({ entityType }: TestPanelProps) {
   );
 }
 
+function EditRuleButton({ onClick }: { onClick: () => void }) {
+  return (
+    <Button variant="ghost" size="icon" className="w-7" onClick={onClick} aria-label="Edit rule">
+      <Pencil className="h-3.5 w-3.5" />
+    </Button>
+  );
+}
+
+function DeleteRuleButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button variant="ghost" size="icon" className="w-7 text-destructive" onClick={onClick} aria-label="Delete rule" {...hoverHandlers}>
+      <Trash2Icon ref={iconRef} size={14} />
+    </Button>
+  );
+}
+
 interface EntityRulesTabProps {
   entityType: CrmValidationEntityType;
   onNewRule: () => void;
@@ -282,12 +302,8 @@ function EntityRulesTab({ entityType, onNewRule }: EntityRulesTabProps) {
         const onDeleteRow = () => handleDeleteRequest(row.id);
         return (
           <div className="flex items-center justify-end gap-1">
-            <Button variant="ghost" size="icon" className="w-7" onClick={onEditRow} aria-label="Edit rule">
-              <Pencil className="h-3.5 w-3.5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="w-7 text-destructive" onClick={onDeleteRow} aria-label="Delete rule">
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
+            <EditRuleButton onClick={onEditRow} />
+            <DeleteRuleButton onClick={onDeleteRow} />
           </div>
         );
       },
@@ -408,10 +424,9 @@ export default function ValidationRulesPage() {
         title="Validation Rules"
         subtitle="Define field validation for CRM entities"
         actions={
-          <Button onClick={handleOpenNew}>
-            <Plus className="h-4 w-4 mr-2" />
+          <AnimatedIconButton icon={PlusIcon} iconSize={16} onClick={handleOpenNew}>
             New Rule
-          </Button>
+          </AnimatedIconButton>
         }
       >
         <Tabs value={activeTab} onValueChange={handleTabChange}>

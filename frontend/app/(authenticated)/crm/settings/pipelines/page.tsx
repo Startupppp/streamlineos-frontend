@@ -25,6 +25,7 @@ import {
 } from "@/hooks/api/crm";
 import type { CrmPipelineWithStages, CrmPipelineStage } from "@/types/crm/metadata";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { CreatePipelineDialog } from "@/features/crm/settings/pipelines/create-pipeline-dialog";
 import { StageAdvancedSheet } from "@/features/crm/settings/pipelines/stage-advanced-sheet";
@@ -201,7 +202,7 @@ export default function PipelinesPage() {
                         >
                           {typeMeta?.label}
                         </Badge>
-                        <span className="text-xs font-medium flex-1 truncate">{pipeline.name}</span>
+                        <TruncatedText text={pipeline.name} className="text-xs font-medium flex-1" />
                         {pipeline.isDefault && (
                           <Star className="h-3 w-3 text-amber-500 shrink-0 fill-amber-400" />
                         )}

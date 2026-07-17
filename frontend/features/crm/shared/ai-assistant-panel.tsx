@@ -10,10 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { useCrmEmailDraft, useSummarizeNotes, useCrmObjectionHelp } from "@/hooks/api/crm";
 import { useOrgFeatureFlags } from "@/hooks/api/ai";
+import { MeetingFollowUpTab, NextActionsTab } from "./ai-panel-extra-tabs";
 
 type AiEntityType = "lead" | "deal" | "contact";
 type EmailTone = "formal" | "friendly" | "urgent";
@@ -369,6 +371,7 @@ function ObjectionHelpTab({ aiEnabled }: { aiEnabled: boolean }) {
   );
 }
 
+
 export function AiAssistantPanel({ entityType, entityId, entityName, onOpenEmailCompose }: AiAssistantPanelProps) {
   const [expanded, setExpanded] = useState(false);
   const { data: flags } = useOrgFeatureFlags();
@@ -391,7 +394,7 @@ export function AiAssistantPanel({ entityType, entityId, entityName, onOpenEmail
           <Sparkles className="h-4 w-4 text-primary" />
           <span className="text-sm font-semibold text-foreground">AI Sales Assistant</span>
           {entityName && (
-            <span className="text-xs text-muted-foreground truncate max-w-[120px]">{entityName}</span>
+            <TruncatedText text={entityName} className="text-xs text-muted-foreground max-w-[120px]" />
           )}
         </div>
         <motion.div animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
@@ -410,10 +413,14 @@ export function AiAssistantPanel({ entityType, entityId, entityName, onOpenEmail
           >
             <div className="px-4 pb-4">
               <Tabs defaultValue="email">
-                <TabsList className="w-full text-xs mb-3">
-                  <TabsTrigger value="email" className="flex-1 text-xs">Email Draft</TabsTrigger>
-                  <TabsTrigger value="notes" className="flex-1 text-xs">Notes Summary</TabsTrigger>
-                  <TabsTrigger value="objection" className="flex-1 text-xs">Objection Help</TabsTrigger>
+                <TabsList className="w-full mb-3">
+                  <TabsTrigger value="email" className="flex-1 text-[10px]">Email Draft</TabsTrigger>
+                  <TabsTrigger value="notes" className="flex-1 text-[10px]">Notes</TabsTrigger>
+                  <TabsTrigger value="objection" className="flex-1 text-[10px]">Objection</TabsTrigger>
+                  <TabsTrigger value="followup" className="flex-1 text-[10px]">Follow-up</TabsTrigger>
+                  {entityType === "lead" && (
+                    <TabsTrigger value="actions" className="flex-1 text-[10px]">Next Actions</TabsTrigger>
+                  )}
                 </TabsList>
                 <TabsContent value="email">
                   {emailEnabled ? (
@@ -432,6 +439,19 @@ export function AiAssistantPanel({ entityType, entityId, entityName, onOpenEmail
                 <TabsContent value="objection">
                   <ObjectionHelpTab aiEnabled={chatEnabled} />
                 </TabsContent>
+                <TabsContent value="followup">
+                  <MeetingFollowUpTab
+                    entityType={entityType}
+                    entityId={entityId}
+                    entityName={entityName}
+                    emailEnabled={emailEnabled}
+                  />
+                </TabsContent>
+                {entityType === "lead" && (
+                  <TabsContent value="actions">
+                    <NextActionsTab chatEnabled={chatEnabled} />
+                  </TabsContent>
+                )}
               </Tabs>
             </div>
           </motion.div>

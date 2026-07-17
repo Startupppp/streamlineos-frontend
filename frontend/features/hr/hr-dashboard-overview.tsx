@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const HR_ADMIN_ROLES = ["CEO", "HR", "ADMIN", "BRANCH_HR", "BRANCH_MANAGER"];
 
@@ -107,9 +108,7 @@ function LeaveCalendarWidget() {
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-foreground truncate">
-                    {leave.userName}
-                  </p>
+                  <TruncatedText text={leave.userName} className="text-xs font-semibold text-foreground" />
                   <p className="text-[10px] text-muted-foreground mt-0.5">
                     {formatDateLabel(leave.startDate)} –{" "}
                     {formatDateLabel(leave.endDate)}
@@ -225,9 +224,7 @@ function OnboardingStatusWidget() {
                       {hire.name.slice(0, 2).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0 space-y-1">
-                      <p className="text-xs font-medium text-foreground truncate">
-                        {hire.name}
-                      </p>
+                      <TruncatedText text={hire.name} className="text-xs font-medium text-foreground" />
                       <div className="flex items-center gap-2">
                         <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
                           <div

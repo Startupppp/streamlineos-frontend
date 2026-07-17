@@ -1,6 +1,9 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback, useEffect } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -16,12 +19,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { useProjects, useProjectMembers } from "@/hooks/api/projects/projects";
 import { useAssignTicketFromChat } from "@/hooks/api/chat";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { TicketCombobox } from "./ticket-combobox";
+
+const schema = z.object({
+  projectIdStr: z.string(),
+  ticketIdStr: z
+    .string()
+    .refine((v) => v === "" || /^\d+$/.test(v), { message: "Must be a positive integer" }),
+  assigneeId: z.string().min(1, "Assignee is required"),
+});
+
+type FormValues = z.infer<typeof schema>;
 
 interface Props {
   open: boolean;
@@ -38,22 +52,33 @@ export function AssignTicketDialog({
   ticketId,
   projectId,
 }: Props) {
-  const [projectIdStr, setProjectIdStr] = useState("");
-  const [ticketIdStr, setTicketIdStr] = useState("");
-  const [assigneeId, setAssigneeId] = useState("");
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      projectIdStr: projectId !== undefined ? String(projectId) : "",
+      ticketIdStr: ticketId !== undefined ? String(ticketId) : "",
+      assigneeId: "",
+    },
+  });
 
-  const [prevOpen, setPrevOpen] = useState(open);
-  if (open !== prevOpen) {
-    setPrevOpen(open);
+  useEffect(() => {
     if (open) {
-      setProjectIdStr(projectId !== undefined ? String(projectId) : "");
-      setTicketIdStr(ticketId !== undefined ? String(ticketId) : "");
-      setAssigneeId("");
+      form.reset({
+        projectIdStr: projectId !== undefined ? String(projectId) : "",
+        ticketIdStr: ticketId !== undefined ? String(ticketId) : "",
+        assigneeId: "",
+      });
     }
-  }
+  }, [open, projectId, ticketId, form]);
+
+  const watchedProjectIdStr = form.watch("projectIdStr");
 
   const effectiveProjectId =
-    projectId !== undefined ? projectId : projectIdStr ? Number(projectIdStr) : 0;
+    projectId !== undefined
+      ? projectId
+      : watchedProjectIdStr
+      ? Number(watchedProjectIdStr)
+      : 0;
 
   const { data: projectsData, isLoading: loadingProjects } = useProjects(undefined, {
     enabled: open && projectId === undefined,
@@ -64,39 +89,48 @@ export function AssignTicketDialog({
 
   const assign = useAssignTicketFromChat();
 
-  const handleTicketIdChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setTicketIdStr(e.target.value),
-    [],
+  const handleCancel = useCallback(() => onOpenChange(false), [onOpenChange]);
+
+  const handleProjectChange = useCallback(
+    (value: string) => {
+      form.setValue("projectIdStr", value);
+      form.setValue("ticketIdStr", "");
+    },
+    [form],
   );
 
-  const handleSubmit = useCallback(async () => {
+  async function handleSubmit(values: FormValues) {
     const resolvedTicketId =
-      ticketId !== undefined ? ticketId : ticketIdStr ? Number(ticketIdStr) : 0;
+      ticketId !== undefined
+        ? ticketId
+        : values.ticketIdStr
+        ? Number(values.ticketIdStr)
+        : 0;
     const resolvedProjectId =
-      projectId !== undefined ? projectId : projectIdStr ? Number(projectIdStr) : 0;
-    if (!resolvedProjectId || !resolvedTicketId || !assigneeId) {
+      projectId !== undefined
+        ? projectId
+        : values.projectIdStr
+        ? Number(values.projectIdStr)
+        : 0;
+
+    if (!resolvedProjectId || !resolvedTicketId) {
       toast.error("Fill in all fields");
       return;
     }
+
     try {
       await assign.mutateAsync({
         channelId,
         ticketId: resolvedTicketId,
         projectId: resolvedProjectId,
-        assigneeId,
+        assigneeId: values.assigneeId,
       });
       toast.success("Ticket assigned");
       onOpenChange(false);
     } catch (e) {
       toast.error(getErrorMessage(e));
     }
-  }, [channelId, ticketId, ticketIdStr, projectId, projectIdStr, assigneeId, assign, onOpenChange]);
-
-  const handleCancel = useCallback(() => onOpenChange(false), [onOpenChange]);
-
-  const resolvedTicketId =
-    ticketId !== undefined ? ticketId : ticketIdStr ? Number(ticketIdStr) : 0;
-  const isReady = effectiveProjectId > 0 && resolvedTicketId > 0 && !!assigneeId;
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -104,73 +138,98 @@ export function AssignTicketDialog({
         <DialogHeader>
           <DialogTitle>Assign Ticket</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-2">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 py-2">
           {projectId === undefined && (
             <div className="space-y-1.5">
               <Label>Project</Label>
-              <Select
-                value={projectIdStr}
-                onValueChange={setProjectIdStr}
-                disabled={loadingProjects}
-              >
-                <SelectTrigger>
-                  <SelectValue
-                    placeholder={loadingProjects ? "Loading…" : "Select project"}
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {projectsData?.data.map((p) => (
-                    <SelectItem key={p.id} value={String(p.id)}>
-                      {p.key} — {p.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Controller
+                control={form.control}
+                name="projectIdStr"
+                render={({ field }) => (
+                  <Select
+                    value={field.value}
+                    onValueChange={handleProjectChange}
+                    disabled={loadingProjects}
+                  >
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={loadingProjects ? "Loading…" : "Select project"}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {projectsData?.data.map((p) => (
+                        <SelectItem key={p.id} value={String(p.id)}>
+                          {p.key} — {p.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </div>
           )}
           {ticketId === undefined && (
             <div className="space-y-1.5">
-              <Label htmlFor="atd-ticket">Ticket ID</Label>
-              <Input
-                id="atd-ticket"
-                type="number"
-                min={1}
-                value={ticketIdStr}
-                onChange={handleTicketIdChange}
-                placeholder="e.g. 42"
+              <Label>Ticket</Label>
+              <Controller
+                control={form.control}
+                name="ticketIdStr"
+                render={({ field }) => (
+                  <TicketCombobox
+                    projectId={effectiveProjectId}
+                    value={field.value ? Number(field.value) : null}
+                    onChange={(id) => field.onChange(String(id))}
+                  />
+                )}
               />
+              {form.formState.errors.ticketIdStr && (
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.ticketIdStr.message}
+                </p>
+              )}
             </div>
           )}
           <div className="space-y-1.5">
             <Label>Assignee</Label>
-            <Select
-              value={assigneeId}
-              onValueChange={setAssigneeId}
-              disabled={loadingMembers || effectiveProjectId === 0}
-            >
-              <SelectTrigger>
-                <SelectValue
-                  placeholder={loadingMembers ? "Loading…" : "Select member"}
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {members?.map((m) => (
-                  <SelectItem key={m.id} value={m.id}>
-                    {m.name ?? m.email}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Controller
+              control={form.control}
+              name="assigneeId"
+              render={({ field }) => (
+                <Select
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  disabled={loadingMembers || effectiveProjectId === 0}
+                >
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={loadingMembers ? "Loading…" : "Select member"}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {members?.map((m) => (
+                      <SelectItem key={m.id} value={m.id}>
+                        {m.name ?? m.email}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {form.formState.errors.assigneeId && (
+              <p className="text-xs text-destructive">
+                {form.formState.errors.assigneeId.message}
+              </p>
+            )}
           </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={handleCancel}>
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} disabled={assign.isPending || !isReady}>
-            {assign.isPending ? "Assigning…" : "Assign"}
-          </Button>
-        </DialogFooter>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={handleCancel}>
+              Cancel
+            </Button>
+            <LoadingButton type="submit" isPending={assign.isPending} loadingText="Assigning…">
+              Assign
+            </LoadingButton>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

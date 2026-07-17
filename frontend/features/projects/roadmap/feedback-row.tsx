@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { PM_PANEL } from "@/features/projects/shared/pm-chrome";
 import { listItem, listItemReduced, pmSnappy } from "@/features/projects/shared/pm-motion";
 import { TEXT_ONE_LINE, TEXT_TWO_LINES } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { FEEDBACK_STATUS_OPTIONS, FEEDBACK_STATUS_VARIANT } from "./roadmap-constants";
 
 interface FeedbackRowProps {
@@ -86,9 +87,7 @@ export const FeedbackRow = memo(function FeedbackRow({
         <div className="min-w-0 flex-1 space-y-2">
           <div className="flex min-w-0 items-start justify-between gap-2">
             <div className="min-w-0">
-              <p className={cn(TEXT_ONE_LINE, "text-sm font-medium")} title={post.title}>
-                {post.title}
-              </p>
+              <TruncatedText text={post.title} className="text-sm font-medium" />
               {post.description ? (
                 <p
                   className={cn(TEXT_TWO_LINES, "mt-0.5 text-xs text-muted-foreground")}

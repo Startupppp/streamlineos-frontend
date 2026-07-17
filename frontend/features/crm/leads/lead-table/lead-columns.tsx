@@ -9,6 +9,7 @@ import {
 import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { ArrowUpDown, ArrowUp, ArrowDown, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -83,10 +84,10 @@ export function useLeadCellRenderer({
       case "name":
         return (
           <button
-            className="font-medium text-[12px] hover:text-primary hover:underline text-left truncate max-w-[140px] block"
+            className="font-medium text-[12px] hover:text-primary hover:underline text-left block max-w-[140px]"
             onClick={() => router.push(`/crm/leads/${lead.id}`)}
           >
-            {lead.name}
+            <TruncatedText text={lead.name} />
           </button>
         );
 
@@ -94,9 +95,9 @@ export function useLeadCellRenderer({
         return lead.email ? (
           <button
             onClick={() => copyToClipboard(lead.email!, "Email")}
-            className="text-[11px] text-muted-foreground hover:text-foreground truncate max-w-[140px] block"
+            className="text-[11px] text-muted-foreground hover:text-foreground block max-w-[140px]"
           >
-            {lead.email}
+            <TruncatedText text={lead.email} />
           </button>
         ) : <span className="text-[11px] text-muted-foreground/50">—</span>;
 
@@ -124,7 +125,9 @@ export function useLeadCellRenderer({
         ) : <span className="text-[11px] text-muted-foreground/50">—</span>;
 
       case "company":
-        return <span className="text-[11px] truncate max-w-[100px] block">{lead.company || "—"}</span>;
+        return lead.company
+          ? <TruncatedText text={lead.company} className="text-[11px] max-w-[100px] block" />
+          : <span className="text-[11px]">—</span>;
 
       case "city":
         return <span className="text-[11px]">{lead.city || "—"}</span>;
@@ -264,7 +267,7 @@ export function useLeadCellRenderer({
                 {lead.assignedTo.name?.charAt(0) || "?"}
               </AvatarFallback>
             </Avatar>
-            <span className="text-[11px] truncate max-w-[70px]">{lead.assignedTo.name}</span>
+            <TruncatedText text={lead.assignedTo.name} className="text-[11px] max-w-[70px]" />
           </div>
         ) : (
           <span

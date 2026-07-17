@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useForm, useFieldArray } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { toast } from "sonner";
 import { BarChart3, Vote } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,9 +12,16 @@ import { PlusIcon } from "@animateicons/react/lucide";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { EmptyState } from "@/components/ui/empty-state";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import {
   useEngagementPolls,
@@ -23,6 +33,29 @@ import {
 } from "@/hooks/api/hr/engagement";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
+
+const pollSchema = z.object({
+  question: z.string().trim().min(1, "Question is required").max(300, "Question must be at most 300 characters"),
+  options: z
+    .array(z.object({ value: z.string() }))
+    .min(2, "At least 2 options are required")
+    .max(10)
+    .refine(
+      (opts) => opts.filter((o) => o.value.trim().length > 0).length >= 2,
+      "At least 2 non-empty options are required",
+    ),
+  closesAt: z.string().optional(),
+  anonymous: z.boolean(),
+});
+
+type PollFormValues = z.infer<typeof pollSchema>;
+
+const DEFAULT_VALUES: PollFormValues = {
+  question: "",
+  options: [{ value: "" }, { value: "" }],
+  closesAt: "",
+  anonymous: false,
+};
 
 function PollCard({
   poll,
@@ -166,36 +199,20 @@ export function PollsTab() {
   const createPoll = useCreatePoll();
 
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [question, setQuestion] = useState("");
-  const [options, setOptions] = useState(["", ""]);
-  const [anonymous, setAnonymous] = useState(false);
-  const [closesAt, setClosesAt] = useState("");
 
-  const handleQuestionChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setQuestion(e.target.value);
-  }, []);
+  const form = useForm<PollFormValues>({
+    resolver: zodResolver(pollSchema),
+    defaultValues: DEFAULT_VALUES,
+  });
 
-  const handleOptionChange = useCallback((idx: number, val: string) => {
-    setOptions((prev) => prev.map((o, i) => (i === idx ? val : o)));
-  }, []);
-
-  const handleAddOption = useCallback(() => setOptions((prev) => [...prev, ""]), []);
-
-  const handleRemoveOption = useCallback(
-    (idx: number) => setOptions((prev) => prev.filter((_, i) => i !== idx)),
-    [],
-  );
-
-  const handleClosesAtChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setClosesAt(e.target.value);
-  }, []);
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "options",
+  });
 
   const handleReset = useCallback(() => {
-    setQuestion("");
-    setOptions(["", ""]);
-    setAnonymous(false);
-    setClosesAt("");
-  }, []);
+    form.reset(DEFAULT_VALUES);
+  }, [form]);
 
   const handleSheetChange = useCallback(
     (open: boolean) => {
@@ -205,30 +222,28 @@ export function PollsTab() {
     [handleReset],
   );
 
-  const handleCreate = useCallback(() => {
-    const validOptions = options.filter((o) => o.trim().length > 0);
-    if (!question.trim() || validOptions.length < 2) {
-      toast.error("Question and at least 2 options required");
-      return;
-    }
-    toast.promise(
-      createPoll.mutateAsync({
-        question,
-        options: validOptions,
-        anonymous,
-        closesAt: closesAt || undefined,
-      }),
-      {
-        loading: "Creating poll...",
-        success: () => {
-          setSheetOpen(false);
-          handleReset();
-          return "Poll created!";
+  const handleCreate = useCallback(
+    (data: PollFormValues) => {
+      toast.promise(
+        createPoll.mutateAsync({
+          question: data.question,
+          options: data.options.filter((o) => o.value.trim().length > 0).map((o) => o.value.trim()),
+          anonymous: data.anonymous,
+          closesAt: data.closesAt || undefined,
+        }),
+        {
+          loading: "Creating poll...",
+          success: () => {
+            setSheetOpen(false);
+            handleReset();
+            return "Poll created!";
+          },
+          error: getErrorMessage,
         },
-        error: getErrorMessage,
-      },
-    );
-  }, [question, options, anonymous, closesAt, createPoll, handleReset]);
+      );
+    },
+    [createPoll, handleReset],
+  );
 
   if (isLoading) {
     return (
@@ -275,74 +290,102 @@ export function PollsTab() {
         onOpenChange={handleSheetChange}
         title="Create Poll"
         description="Ask your team a quick question."
-        onSubmit={handleCreate}
+        onSubmit={form.handleSubmit(handleCreate)}
         submitLabel="Create Poll"
         isPending={createPoll.isPending}
       >
-        <div className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="poll-q" className="text-xs font-medium">Question</Label>
-            <Input
-              id="poll-q"
-              placeholder="Ask a question..."
-              value={question}
-              onChange={handleQuestionChange}
-              className="text-sm"
+        <Form {...form}>
+          <div className="space-y-4">
+            <FormField
+              control={form.control}
+              name="question"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs font-medium">Question</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ask a question..." {...field} className="text-sm" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-xs font-medium">Options</Label>
-            {options.map((opt, idx) => (
-              <div key={idx} className="flex items-center gap-2">
-                <Input
-                  placeholder={`Option ${idx + 1}`}
-                  value={opt}
-                  onChange={(e) => handleOptionChange(idx, e.target.value)}
-                  className="text-sm flex-1"
-                />
-                {options.length > 2 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="w-8 shrink-0"
-                    onClick={() => handleRemoveOption(idx)}
-                  >
-                    ×
-                  </Button>
-                )}
-              </div>
-            ))}
-            {options.length < 10 && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="text-xs"
-                onClick={handleAddOption}
-              >
-                + Add option
-              </Button>
-            )}
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="poll-closes" className="text-xs font-medium">Closes At (optional)</Label>
-            <Input
-              id="poll-closes"
-              type="datetime-local"
-              value={closesAt}
-              onChange={handleClosesAtChange}
-              className="text-sm"
-            />
-          </div>
-          <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-4 py-3">
-            <div>
-              <p className="text-xs font-medium">Anonymous voting</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">Voters remain hidden</p>
+
+            <div className="space-y-2">
+              <FormLabel className="text-xs font-medium">Options</FormLabel>
+              {fields.map((field, idx) => (
+                <div key={field.id} className="flex items-center gap-2">
+                  <FormField
+                    control={form.control}
+                    name={`options.${idx}.value`}
+                    render={({ field: inputField }) => (
+                      <FormItem className="flex-1">
+                        <FormControl>
+                          <Input placeholder={`Option ${idx + 1}`} {...inputField} className="text-sm" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  {fields.length > 2 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="w-8 shrink-0"
+                      onClick={() => remove(idx)}
+                    >
+                      ×
+                    </Button>
+                  )}
+                </div>
+              ))}
+              {fields.length < 10 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                  onClick={() => append({ value: "" })}
+                >
+                  + Add option
+                </Button>
+              )}
             </div>
-            <Switch checked={anonymous} onCheckedChange={setAnonymous} />
+
+            <FormField
+              control={form.control}
+              name="closesAt"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs font-medium">Closes At (optional)</FormLabel>
+                  <FormControl>
+                    <Input type="datetime-local" {...field} className="text-sm" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="anonymous"
+              render={({ field }) => (
+                <FormItem>
+                  <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-4 py-3">
+                    <div>
+                      <FormLabel className="text-xs font-medium">Anonymous voting</FormLabel>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">Voters remain hidden</p>
+                    </div>
+                    <FormControl>
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
-        </div>
+        </Form>
       </HrSheet>
     </div>
   );

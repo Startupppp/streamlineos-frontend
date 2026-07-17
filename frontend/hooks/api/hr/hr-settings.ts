@@ -19,11 +19,6 @@ import type {
   ProcessWfhRequestInput,
 } from "@/types/hr";
 
-interface ChangePasswordInput {
-  currentPassword: string;
-  newPassword: string;
-}
-
 export function useHrAssets() {
   return useQuery({
     queryKey: queryKeys.hr.assets(),
@@ -178,10 +173,4 @@ export function useProcessWfhRequest() {
   });
 }
 
-export function useChangePassword() {
-  return useMutation({
-    mutationFn: (data: ChangePasswordInput) =>
-      apiClient.patch<{ success: boolean }>("/me/change-password", data),
-  });
-}
 

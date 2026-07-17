@@ -33,6 +33,7 @@ import { EmptyTeamIllustration } from "@/components/illustrations";
 import { HrSheet } from "@/features/hr/hr-sheet";
 
 import { useOrgTeams, useUpdateOrgTeam, useDeleteOrgTeam } from "@/hooks/api/org-hierarchy";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { useHrEmployees } from "@/hooks/api/hr/employees";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { resolveImageUrl } from "@/lib/utils";
@@ -292,11 +293,9 @@ export default function TeamDetailPage({ params }: { params: Promise<{ teamId: s
                         </span>
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold group-hover:text-primary transition-colors truncate">
-                          {leadName ?? leadEmployee.email}
-                        </p>
+                        <TruncatedText text={leadName ?? leadEmployee.email} className="text-sm font-semibold group-hover:text-primary transition-colors" />
                         {leadEmployee.designation && (
-                          <p className="text-xs text-muted-foreground truncate">{leadEmployee.designation}</p>
+                          <TruncatedText text={leadEmployee.designation} className="text-xs text-muted-foreground" />
                         )}
                         <Badge variant="outline" className="text-[10px] mt-0.5">{leadEmployee.role}</Badge>
                       </div>

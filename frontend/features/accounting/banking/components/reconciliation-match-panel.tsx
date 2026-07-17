@@ -1,11 +1,14 @@
 "use client";
 
 import { useState, type KeyboardEvent } from "react";
-import { X, DollarSign, FileText, ArrowLeftRight } from "lucide-react";
+import { DollarSign, FileText, ArrowLeftRight } from "lucide-react";
+import { XIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   Select,
   SelectContent,
@@ -28,6 +31,7 @@ import { AppDialog } from "@/components/shared/app-dialog";
 import { Money } from "@/features/accounting/shared";
 import { BankTxnStatusBadge } from "./bank-txn-status-badge";
 import { useConfirmMatch, useUnmatch, useIgnoreTransaction } from "@/hooks/api/accounting/banking";
+import { ReconciliationExplainPanel } from "@/features/accounting/ai";
 import type { ReconciliationTxn, MatchType } from "@/hooks/api/accounting/banking";
 import { useAccounts } from "@/hooks/api/accounting";
 
@@ -150,17 +154,13 @@ export function ReconciliationMatchPanel({ txn, bankAccountId, onClose }: Props)
           <p className="text-xs text-muted-foreground mb-0.5">
             {txn.txnDate}
           </p>
-          <p className="text-sm font-semibold text-foreground line-clamp-2">
-            {txn.description}
-          </p>
+          <TruncatedText text={txn.description ?? ""} lines={2} className="text-sm font-semibold text-foreground" />
           <div className="flex items-center gap-2 mt-1">
             <Money value={amount} className={amount >= 0 ? "text-emerald-600" : "text-red-600"} />
             <BankTxnStatusBadge status={txn.status} size="chip" />
           </div>
         </div>
-        <Button variant="ghost" size="icon" className="w-7 shrink-0" onClick={onClose}>
-          <X className="h-4 w-4" />
-        </Button>
+        <AnimatedIconButton icon={XIcon} iconSize={16} variant="ghost" size="icon" className="w-7 shrink-0" onClick={onClose} />
       </div>
 
       {suggestions.length > 0 && (
@@ -213,6 +213,17 @@ export function ReconciliationMatchPanel({ txn, bankAccountId, onClose }: Props)
           })}
         </div>
       )}
+
+      {isReconciled && (() => {
+        const confirmedMatchId =
+          suggestions.find((s) => s.isConfirmed)?.id ?? null;
+        if (!confirmedMatchId) return null;
+        return (
+          <div className="mb-4">
+            <ReconciliationExplainPanel matchId={confirmedMatchId} />
+          </div>
+        );
+      })()}
 
       <div className="mt-auto space-y-2">
         <p className="text-xs font-medium text-muted-foreground">Manual actions</p>

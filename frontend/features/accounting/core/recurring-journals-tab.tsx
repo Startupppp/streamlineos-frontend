@@ -34,6 +34,7 @@ import {
   useRunRecurringJournalNow,
 } from "@/hooks/api/accounting/core";
 import type { RecurringJournal, RecurringFrequency } from "@/hooks/api/accounting/core";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { RecurringJournalSheet } from "./recurring-journal-sheet";
 
 const FREQUENCY_LABELS: Record<RecurringFrequency, string> = {
@@ -112,11 +113,9 @@ const COLUMNS: DataTableColumn<RecurringJournal>[] = [
     header: "Name",
     cell: (row) => (
       <div>
-        <p className="text-sm font-medium text-foreground">{row.name}</p>
+        <TruncatedText text={row.name} className="text-sm font-medium text-foreground" />
         {row.description && (
-          <p className="text-xs text-muted-foreground truncate max-w-[280px]">
-            {row.description}
-          </p>
+          <TruncatedText text={row.description} className="text-xs text-muted-foreground max-w-[280px]" />
         )}
       </div>
     ),

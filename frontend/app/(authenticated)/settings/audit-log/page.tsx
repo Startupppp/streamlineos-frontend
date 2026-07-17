@@ -203,7 +203,7 @@ const AUDIT_LOG_COLUMNS: DataTableColumn<AuditLogRow>[] = [
           <AvatarFallback className="text-[9px]">{getInitials(log.userName)}</AvatarFallback>
         </Avatar>
         <span className="text-[13px] font-medium truncate max-w-[120px]">
-          {log.userName ?? log.userEmail ?? log.userId}
+          {log.userName ?? log.userEmail ?? "Unknown user"}
         </span>
       </div>
     ),

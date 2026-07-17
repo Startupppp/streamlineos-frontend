@@ -70,7 +70,6 @@ export default function OrganizationSettingsPage() {
   const [ipAllowlistInitialized, setIpAllowlistInitialized] = useState(false);
 
   const [mfaEnforced, setMfaEnforced] = useState(false);
-  const [passwordExpiryDays, setPasswordExpiryDays] = useState<string>("");
   const [maxConcurrentSessions, setMaxConcurrentSessions] = useState<string>("");
   const [allowedEmailDomains, setAllowedEmailDomains] = useState<string[]>([]);
   const [domainInput, setDomainInput] = useState("");
@@ -86,7 +85,6 @@ export default function OrganizationSettingsPage() {
   const initSecurity = useCallback(() => {
     if (!securityInitialized && org) {
       setMfaEnforced(org.mfaEnforced ?? false);
-      setPasswordExpiryDays(String(org.passwordExpiryDays ?? ""));
       setMaxConcurrentSessions(String(org.maxConcurrentSessions ?? ""));
       setAllowedEmailDomains(org.allowedEmailDomains ?? []);
       setSecurityInitialized(true);
@@ -213,7 +211,6 @@ export default function OrganizationSettingsPage() {
   const handleDirectoryPublicChange = useCallback((checked: boolean) => setDirectoryPublic(checked), []);
   const handlePrimaryColorChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setPrimaryColor(e.target.value), []);
   const handleLoginBgUrlChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setLoginBgUrl(e.target.value), []);
-  const handlePasswordExpiryChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setPasswordExpiryDays(e.target.value), []);
   const handleMaxConcurrentSessionsChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setMaxConcurrentSessions(e.target.value), []);
 
   const handleAddDomain = useCallback(() => {
@@ -247,15 +244,6 @@ export default function OrganizationSettingsPage() {
   }, [handleAddIp]);
 
   const handleSaveSecurity = useCallback(() => {
-    let expiryDaysNum: number | null = null;
-    if (passwordExpiryDays) {
-      const parsed = parseInt(passwordExpiryDays, 10);
-      if (isNaN(parsed) || parsed < 30 || parsed > 365) {
-        toast.error("Password expiry must be between 30 and 365 days");
-        return;
-      }
-      expiryDaysNum = parsed;
-    }
     let maxSessionsNum: number | null = null;
     if (maxConcurrentSessions) {
       const parsedSessions = parseInt(maxConcurrentSessions, 10);
@@ -266,13 +254,13 @@ export default function OrganizationSettingsPage() {
       maxSessionsNum = parsedSessions;
     }
     updateSecurity(
-      { mfaEnforced, passwordExpiryDays: expiryDaysNum, allowedEmailDomains, maxConcurrentSessions: maxSessionsNum },
+      { mfaEnforced, allowedEmailDomains, maxConcurrentSessions: maxSessionsNum },
       {
         onSuccess: () => toast.success("Security settings saved"),
         onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
-  }, [mfaEnforced, passwordExpiryDays, maxConcurrentSessions, allowedEmailDomains, updateSecurity]);
+  }, [mfaEnforced, maxConcurrentSessions, allowedEmailDomains, updateSecurity]);
 
   if (isLoading) {
     return (
@@ -365,7 +353,6 @@ export default function OrganizationSettingsPage() {
         {canEdit && (
           <OrgSecuritySection
             mfaEnforced={mfaEnforced}
-            passwordExpiryDays={passwordExpiryDays}
             maxConcurrentSessions={maxConcurrentSessions}
             allowedEmailDomains={allowedEmailDomains}
             domainInput={domainInput}
@@ -375,7 +362,6 @@ export default function OrganizationSettingsPage() {
             isUpdatingSecurity={isUpdatingSecurity}
             isUpdatingOrg={isUpdatingOrg}
             onMfaChange={setMfaEnforced}
-            onPasswordExpiryChange={handlePasswordExpiryChange}
             onMaxConcurrentSessionsChange={handleMaxConcurrentSessionsChange}
             onDomainInputChange={handleDomainInputChange}
             onDomainInputKeyDown={handleDomainInputKeyDown}

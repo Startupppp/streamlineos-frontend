@@ -18,6 +18,7 @@ import { formatMoney } from "@/features/payroll/shared";
 import { FnfStatusBadge } from "./fnf-status-badge";
 import { FnfDetailSheet } from "./fnf-detail-sheet";
 import type { FnfSettlement, FnfStatus } from "@/types/payroll";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const STATUS_OPTIONS: { value: FnfStatus; label: string }[] = [
   { value: "PENDING", label: "Pending" },
@@ -35,8 +36,8 @@ const columns: DataTableColumn<FnfSettlement>[] = [
     header: "Employee",
     cell: (row) => (
       <div className="flex flex-col gap-0.5 min-w-0">
-        <span className="text-[11px] font-medium truncate">{row.userName}</span>
-        <span className="text-[10px] text-muted-foreground truncate">{row.userEmail}</span>
+        <TruncatedText text={row.userName} className="text-[11px] font-medium" />
+        <TruncatedText text={row.userEmail} className="text-[10px] text-muted-foreground" />
       </div>
     ),
   },

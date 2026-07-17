@@ -13,6 +13,7 @@ import { EmptyUploadIllustration } from "@/components/illustrations";
 import { Pencil, PowerOff, Power } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface DocumentType {
   id: number;
@@ -129,9 +130,7 @@ export function DocumentTypeList({
               <div>
                 <p className="text-sm font-semibold text-foreground">{dt.name}</p>
                 {dt.description && (
-                  <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">
-                    {dt.description}
-                  </p>
+                  <TruncatedText text={dt.description} className="text-[11px] text-muted-foreground mt-0.5" />
                 )}
               </div>
             </div>

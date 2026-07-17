@@ -41,6 +41,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -299,9 +300,7 @@ export function WebhooksSettingsCard() {
       key: "url",
       header: "URL",
       cell: (wh) => (
-        <span className="font-mono text-xs truncate max-w-[240px] block">
-          {wh.url}
-        </span>
+        <TruncatedText text={wh.url} className="font-mono text-xs max-w-[240px]" />
       ),
     },
     {

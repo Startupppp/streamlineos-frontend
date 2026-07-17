@@ -7,6 +7,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useDeleteSignRecipient } from "@/hooks/api/sign/recipients";
 import type { SignRecipient } from "@/types/sign";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { useBuilder } from "./builder-context";
 import { recipientColor } from "./recipient-colors";
 import { AddRecipientDialog } from "./add-recipient-dialog";
@@ -57,10 +58,8 @@ export function RecipientsPanel({ envelopeId, recipients, editable }: Recipients
             >
               <span className={`size-2.5 rounded-full shrink-0 ${color.solid}`} />
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium truncate">{recipient.name}</p>
-                <p className="text-xs text-muted-foreground truncate">
-                  {recipient.roleName} · order {recipient.routingOrder}
-                </p>
+                <TruncatedText text={recipient.name} className="text-sm font-medium" />
+                <TruncatedText text={`${recipient.roleName} · order ${recipient.routingOrder}`} className="text-xs text-muted-foreground" />
               </div>
               {editable && (
                 <AnimatedIconButton

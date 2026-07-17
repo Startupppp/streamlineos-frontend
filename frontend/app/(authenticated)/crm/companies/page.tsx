@@ -22,6 +22,7 @@ import { CreateOrgDialog } from "@/features/crm/companies/create-org-dialog";
 import { CompanyMergeDialog } from "@/features/crm/companies/detail/company-merge-dialog";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import type { CrmOrganization, DuplicateOrgPair } from "@/types/crm";
 
@@ -147,9 +148,9 @@ export default function CompaniesPage() {
           </div>
           <Link
             href={`/crm/companies/${o.id}`}
-            className="font-medium truncate max-w-[140px] hover:text-primary hover:underline transition-colors"
+            className="font-medium max-w-[140px] hover:text-primary hover:underline transition-colors"
           >
-            {o.name}
+            <TruncatedText text={o.name} />
           </Link>
         </div>
       ),
@@ -157,11 +158,10 @@ export default function CompaniesPage() {
     {
       key: "industry",
       header: "Industry",
-      cell: (o) => (
-        <span className="text-muted-foreground truncate block max-w-[120px]">
-          {o.industry ?? "—"}
-        </span>
-      ),
+      cell: (o) =>
+        o.industry
+          ? <TruncatedText text={o.industry} className="text-muted-foreground max-w-[120px] block" />
+          : <span className="text-muted-foreground">—</span>,
     },
     {
       key: "domain",
@@ -170,7 +170,7 @@ export default function CompaniesPage() {
         o.domain ? (
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Globe className="h-3 w-3 shrink-0" />
-            <span className="truncate max-w-[100px]">{o.domain}</span>
+            <TruncatedText text={o.domain} className="max-w-[100px]" />
           </div>
         ) : (
           <span className="text-muted-foreground">—</span>
@@ -210,10 +210,10 @@ export default function CompaniesPage() {
             href={o.website}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-xs text-primary hover:underline truncate max-w-[120px]"
+            className="flex items-center gap-1.5 text-xs text-primary hover:underline max-w-[120px] min-w-0"
           >
             <Building2 className="h-3 w-3 shrink-0" />
-            <span className="truncate">{o.website.replace(/^https?:\/\//, "")}</span>
+            <TruncatedText text={o.website.replace(/^https?:\/\//, "")} />
           </a>
         ) : (
           <span className="text-muted-foreground">—</span>

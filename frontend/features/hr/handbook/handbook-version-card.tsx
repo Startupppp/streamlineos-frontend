@@ -7,6 +7,7 @@ import { Trash2Icon, ExternalLinkIcon, EyeOffIcon } from "@animateicons/react/lu
 import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 
 interface HandbookVersion {
@@ -93,7 +94,7 @@ export function HandbookVersionCard({
           </div>
           <div className="flex gap-3 text-[10px] text-muted-foreground mt-1 flex-wrap items-center">
             {v.changelog && (
-              <span className="line-clamp-1 max-w-[280px]">{v.changelog}</span>
+              <TruncatedText text={v.changelog} className="max-w-[280px] text-[10px] text-muted-foreground" />
             )}
             {v.documentUrl && (
               <a

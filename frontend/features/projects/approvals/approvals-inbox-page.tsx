@@ -28,7 +28,8 @@ import {
   PM_FILL_PANEL,
   PM_PANEL,
 } from "@/features/projects/shared/pm-chrome";
-import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TABLE_TITLE_CELL } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface DecideTarget {
   approvalId: number;
@@ -97,11 +98,10 @@ export function ApprovalsInboxPage() {
       cell: (row) => (
         <Link
           href={`/projects/${row.projectId}`}
-          className={cn("max-w-[6rem] text-[11px] font-medium text-primary hover:underline", TEXT_ONE_LINE)}
-          title={row.projectKey}
+          className="max-w-[6rem] text-[11px] font-medium text-primary hover:underline min-w-0"
           onClick={(e) => e.stopPropagation()}
         >
-          {row.projectKey}
+          <TruncatedText text={row.projectKey} />
         </Link>
       ),
     },
@@ -119,12 +119,7 @@ export function ApprovalsInboxPage() {
       header: "Title",
       className: TABLE_TITLE_CELL,
       cell: (row) => (
-        <span
-          className={cn("font-medium text-foreground", TEXT_ONE_LINE)}
-          title={row.title}
-        >
-          {row.title}
-        </span>
+        <TruncatedText text={row.title} className="font-medium text-foreground" />
       ),
       sortable: true,
       sortValue: (row) => row.title,
@@ -135,9 +130,7 @@ export function ApprovalsInboxPage() {
       cell: (row) => {
         const name = memberName(row.requestedById);
         return (
-          <span className={cn("max-w-[8rem] text-muted-foreground", TEXT_ONE_LINE)} title={name}>
-            {name}
-          </span>
+          <TruncatedText text={name} className="max-w-[8rem] text-muted-foreground" />
         );
       },
     },

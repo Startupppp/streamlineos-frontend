@@ -66,7 +66,9 @@ export const useUnreadNotificationCount = (
   return useQuery<UnreadCount, Error>({
     queryKey: queryKeys.notifications.unreadCount(),
     queryFn: () => apiClient.get<UnreadCount>("/notifications/unread-count"),
-    staleTime: 30_000,
+    staleTime: 120_000,
+    refetchInterval: 60_000,
+    refetchIntervalInBackground: false,
     ...options,
     enabled: !!orgId,
   });
@@ -230,6 +232,7 @@ export const useNotificationTemplates = (
 export const useCreateNotificationTemplate = () => {
   const queryClient = useQueryClient();
   return useMutation<NotificationTemplate, Error, CreateTemplateInput>({
+    mutationKey: ["notifications", "templates", "create"],
     mutationFn: (dto) => apiClient.post<NotificationTemplate>("/notification-templates", dto),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.templates() });
@@ -240,6 +243,7 @@ export const useCreateNotificationTemplate = () => {
 export const useUpdateNotificationTemplate = () => {
   const queryClient = useQueryClient();
   return useMutation<NotificationTemplate, Error, { id: number } & UpdateTemplateInput>({
+    mutationKey: ["notifications", "templates", "update"],
     mutationFn: ({ id, ...dto }) =>
       apiClient.patch<NotificationTemplate>(`/notification-templates/${id}`, dto),
     onSuccess: (_data, vars) => {
@@ -252,6 +256,7 @@ export const useUpdateNotificationTemplate = () => {
 export const useDeleteNotificationTemplate = () => {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, number>({
+    mutationKey: ["notifications", "templates", "delete"],
     mutationFn: (id) => apiClient.delete<{ success: boolean }>(`/notification-templates/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.templates() });
@@ -261,6 +266,7 @@ export const useDeleteNotificationTemplate = () => {
 
 export const usePreviewTemplate = () => {
   return useMutation<TemplatePreviewResult, Error, { id: number; variables: Record<string, string> }>({
+    mutationKey: ["notifications", "templates", "preview"],
     mutationFn: ({ id, variables }) =>
       apiClient.post<TemplatePreviewResult>(`/notification-templates/${id}/preview`, { variables }),
   });
@@ -285,6 +291,7 @@ export const useBroadcasts = (
 export const useCreateBroadcast = () => {
   const queryClient = useQueryClient();
   return useMutation<Broadcast, Error, CreateBroadcastInput>({
+    mutationKey: ["notifications", "broadcasts", "create"],
     mutationFn: (dto) => apiClient.post<Broadcast>("/broadcasts", dto),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.broadcasts() });
@@ -295,6 +302,7 @@ export const useCreateBroadcast = () => {
 export const useUpdateBroadcast = () => {
   const queryClient = useQueryClient();
   return useMutation<Broadcast, Error, { id: number } & UpdateBroadcastInput>({
+    mutationKey: ["notifications", "broadcasts", "update"],
     mutationFn: ({ id, ...dto }) => apiClient.patch<Broadcast>(`/broadcasts/${id}`, dto),
     onSuccess: (_data, vars) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.broadcasts() });
@@ -306,6 +314,7 @@ export const useUpdateBroadcast = () => {
 export const usePublishBroadcast = () => {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, number>({
+    mutationKey: ["notifications", "broadcasts", "publish"],
     mutationFn: (id) => apiClient.post<{ success: boolean }>(`/broadcasts/${id}/publish`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.broadcasts() });
@@ -316,6 +325,7 @@ export const usePublishBroadcast = () => {
 export const useCancelBroadcast = () => {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, number>({
+    mutationKey: ["notifications", "broadcasts", "cancel"],
     mutationFn: (id) => apiClient.post<{ success: boolean }>(`/broadcasts/${id}/cancel`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.broadcasts() });
@@ -348,6 +358,7 @@ export const useNotificationPreferences = (
 export const useUpdateNotificationPreferences = () => {
   const queryClient = useQueryClient();
   return useMutation<NotificationPreferences, Error, UpdatePreferencesInput>({
+    mutationKey: ["notifications", "preferences", "update"],
     mutationFn: (dto) => apiClient.patch<NotificationPreferences>("/notification-preferences", dto),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.preferences() });

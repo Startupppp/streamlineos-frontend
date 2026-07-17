@@ -23,8 +23,11 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { toast } from "sonner";
-import { Plus, Trash2, Copy, Pencil, AlertCircle, Sparkles } from "lucide-react";
+import { Pencil, AlertCircle, Sparkles } from "lucide-react";
+import { CopyIcon, Trash2Icon, PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { EmptyMailIllustration } from "@/components/illustrations";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 
 interface EmailTemplate {
@@ -79,25 +82,20 @@ function TemplateCard({ template, onCopy, onEdit, onDelete }: TemplateCardProps)
             {categoryKey}
           </span>
           <div className="flex gap-1">
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleCopy}>
-              <Copy className="h-3 w-3" />
-            </Button>
+            <AnimatedIconButton icon={CopyIcon} variant="ghost" size="icon" className="h-6 w-6" iconSize={12} onClick={handleCopy} />
             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleEdit}>
               <Pencil className="h-3 w-3" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={handleDelete}>
-              <Trash2 className="h-3 w-3" />
-            </Button>
+            <AnimatedIconButton icon={Trash2Icon} variant="ghost" size="icon" className="h-6 w-6 text-destructive" iconSize={12} onClick={handleDelete} />
           </div>
         </div>
         <div>
-          <h3 className="font-semibold text-sm leading-tight truncate" title={template.name}>
-            {template.name}
-          </h3>
-          <p className="text-xs text-muted-foreground mt-0.5 truncate" title={template.subject}>
-            <span className="text-muted-foreground">Sub:</span> {template.subject}
-          </p>
-          <p className="line-clamp-2 text-xs text-muted-foreground mt-1">{template.body}</p>
+          <TruncatedText text={template.name} className="font-semibold text-sm leading-tight" />
+          <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
+            <span className="text-muted-foreground shrink-0">Sub:</span>
+            <TruncatedText text={template.subject} className="text-xs text-muted-foreground" />
+          </div>
+          <TruncatedText text={template.body} lines={2} className="text-xs text-muted-foreground mt-1" />
         </div>
         <div>
           <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-primary/10 text-foreground border-primary/20">
@@ -292,10 +290,9 @@ function EmailTemplatesContent() {
       title="Email Templates"
       subtitle="Manage reusable email templates for HR communications"
       actions={
-        <Button size="sm" className="gap-1.5" onClick={handleOpenSheet}>
-          <Plus className="h-3.5 w-3.5" />
+        <AnimatedIconButton icon={PlusIcon} size="sm" className="gap-1.5" iconSize={14} onClick={handleOpenSheet}>
           New Template
-        </Button>
+        </AnimatedIconButton>
       }
     >
       {!templates?.length ? (

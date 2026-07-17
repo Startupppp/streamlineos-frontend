@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 
 import { OnboardingInitiateSheet } from "./onboarding-initiate-sheet";
 import { useOnboardingStatus, type OnboardingStatus } from "@/hooks/api/hr/onboarding";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 function isStalledBadge(row: OnboardingStatus): boolean {
   if (row.percentComplete >= 100) return false;
@@ -109,7 +110,7 @@ export function OnboardingList() {
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap mb-1.5">
-                        <p className="text-sm font-semibold truncate">{row.userName}</p>
+                        <TruncatedText text={row.userName} className="text-sm font-semibold" />
                         {rowStatus === "completed" && (
                           <Badge
                             variant="outline"

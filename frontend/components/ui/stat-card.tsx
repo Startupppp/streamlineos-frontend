@@ -117,12 +117,29 @@ export function StatCardGrid({ children, cols = 4, className }: StatCardGridProp
   );
 }
 
+export function StatCardSkeleton({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn(
+        "flex h-full items-center gap-2.5 rounded-lg border border-border bg-card px-3 py-2.5 shadow-sm",
+        className,
+      )}
+    >
+      <Skeleton className="h-8 w-8 rounded-md shrink-0" />
+      <div className="min-w-0 flex-1 space-y-1.5">
+        <Skeleton className="h-3 w-14" />
+        <Skeleton className="h-5 w-10" />
+      </div>
+    </div>
+  );
+}
+
 export function StatCardGridSkeleton({ cols = 4, count, className }: StatCardGridSkeletonProps) {
   const itemCount = count ?? cols;
   return (
     <StatCardGrid cols={cols} className={className}>
       {Array.from({ length: itemCount }).map((_, i) => (
-        <StatCard key={i} label="—" value="—" isLoading />
+        <StatCardSkeleton key={i} />
       ))}
     </StatCardGrid>
   );

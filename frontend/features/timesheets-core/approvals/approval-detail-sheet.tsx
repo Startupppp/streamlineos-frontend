@@ -27,6 +27,7 @@ import {
   ENTRY_STATUS_BADGE,
 } from "@/features/timesheets-core/types";
 import type { TimesheetPeriod, TimesheetEntry } from "@/features/timesheets-core/types";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 
 interface ApprovalDetailSheetProps {
@@ -205,13 +206,9 @@ export function ApprovalDetailSheet({
                         className="flex items-start justify-between px-2.5 py-1.5 rounded-md bg-muted/40 text-[11px]"
                       >
                         <div className="min-w-0">
-                          <p className="font-medium truncate max-w-[280px]">
-                            {entry.project?.name ?? "—"}
-                          </p>
+                          <TruncatedText text={entry.project?.name ?? "—"} className="font-medium max-w-[280px]" />
                           {entry.description && (
-                            <p className="text-muted-foreground truncate max-w-[280px]">
-                              {entry.description}
-                            </p>
+                            <TruncatedText text={entry.description} className="text-muted-foreground max-w-[280px]" />
                           )}
                         </div>
                         <div className="shrink-0 ml-3 text-right">

@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select";
 import { CheckCircle2, XCircle, AlertTriangle, Sparkles } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { DuplicateResolutionDialog } from "@/features/hr/recruitment/candidates-list/duplicate-resolution-dialog";
 import type { DuplicateCandidateGroup } from "@/hooks/api/hr/recruitment";
 import { formatDistanceToNow } from "date-fns";
@@ -187,9 +188,7 @@ export default function IntakeInboxPage() {
                       {c.firstName?.[0]}{c.lastName?.[0]}
                     </div>
                     <Link href={`/hr/recruitment/candidates/${c.id}`} className="flex-1 min-w-0 group">
-                      <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
-                        {c.firstName} {c.lastName}
-                      </p>
+                      <TruncatedText text={`${c.firstName ?? ""} ${c.lastName ?? ""}`.trim()} className="text-sm font-medium text-foreground group-hover:text-primary transition-colors" />
                       <p className="text-[11px] text-muted-foreground mt-0.5">{c.email}</p>
                     </Link>
                     <div className="flex items-center gap-2 shrink-0">

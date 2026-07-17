@@ -31,7 +31,8 @@ import {
   projectStatusDisplayLabels,
 } from "@/lib/theme-constants";
 import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
-import { TABLE_TITLE_CELL, TEXT_ONE_LINE, TEXT_FLEX_CHILD } from "@/features/projects/shared/text-overflow";
+import { TABLE_TITLE_CELL, TEXT_FLEX_CHILD } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { PmPanel } from "@/features/projects/shared/pm-chrome";
 import { useCan } from "@/hooks/api/access";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -201,15 +202,7 @@ export const ProjectTable = React.memo(function ProjectTable({ projects }: Proje
           >
             {p.key.slice(0, 2).toUpperCase()}
           </span>
-          <span
-            className={cn(
-              TEXT_ONE_LINE,
-              "text-[13px] font-medium text-foreground transition-colors group-hover:text-primary",
-            )}
-            title={p.name}
-          >
-            {p.name}
-          </span>
+          <TruncatedText text={p.name} className="text-[13px] font-medium text-foreground transition-colors group-hover:text-primary" />
           <span className="hidden shrink-0 font-mono text-[10px] text-muted-foreground/60 sm:inline-block">
             {p.key}
           </span>
@@ -258,9 +251,7 @@ export const ProjectTable = React.memo(function ProjectTable({ projects }: Proje
               ) : null}
               <AvatarFallback className="text-[9px]">{leadInitials}</AvatarFallback>
             </Avatar>
-            <span className={cn(TEXT_ONE_LINE, "max-w-[96px] text-xs text-muted-foreground")} title={leadName}>
-              {leadName}
-            </span>
+            <TruncatedText text={leadName} className="max-w-[96px] text-xs text-muted-foreground" />
           </div>
         ) : (
           <span className="flex items-center gap-1 text-xs text-muted-foreground/50">

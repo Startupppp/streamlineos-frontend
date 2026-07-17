@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useHydrated } from "@/hooks/common/use-hydrated";
 import dynamic from "next/dynamic";
 import { EditEmployeeForm, type EmployeeData } from "./edit-employee-form";
@@ -54,6 +54,10 @@ import { resolveImageUrl, cn } from "@/lib/utils";
 import { format } from "date-fns";
 import type { Employee } from "@/types/hr";
 import { canDeleteEmployee } from "@/features/hr/employees/hr-types";
+import { TruncatedText } from "@/components/ui/truncated-text";
+import { AiActionsMenu } from "@/components/ai";
+import type { AiAction } from "@/components/ai";
+import { useAIAttritionRisk, useAIGenerateReview } from "@/hooks/api/ai";
 
 const EmployeeTimelineTab = dynamic(
   () => import("@/features/hr/employees/detail/timeline-tab").then(m => ({ default: m.EmployeeTimelineTab })),
@@ -171,7 +175,7 @@ function InfoField({
         <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
           {label}
         </p>
-        <p className="text-sm font-medium truncate">{value}</p>
+        <TruncatedText text={value} className="text-sm font-medium" />
       </div>
     </div>
   );
@@ -231,13 +235,15 @@ function DirectReportsSection({ employeeId }: { employeeId: string }) {
                 </AvatarFallback>
               </Avatar>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium truncate">
-                  {r.name ?? r.email}
-                </p>
+                <TruncatedText
+                  text={r.name ?? r.email ?? ""}
+                  className="text-sm font-medium"
+                />
                 {r.designation && (
-                  <p className="text-[11px] text-muted-foreground truncate">
-                    {r.designation}
-                  </p>
+                  <TruncatedText
+                    text={r.designation}
+                    className="text-[11px] text-muted-foreground"
+                  />
                 )}
               </div>
             </Link>
@@ -347,6 +353,41 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
 
   const handleBack = useCallback(() => router.back(), [router]);
 
+  const attritionRiskMutation = useAIAttritionRisk();
+  const generateReviewMutation = useAIGenerateReview();
+
+  const aiActions = useMemo<AiAction[]>(() => {
+    if (!canManageEmployees) return [];
+    return [
+      {
+        key: "attrition-risk",
+        label: "Attrition insight (advisory)",
+        description: "AI-estimated attrition risk and retention actions",
+        run: async () => {
+          const result = await attritionRiskMutation.mutateAsync(employee.id);
+          return {
+            text: `Risk level: ${result.riskLevel} (${result.attritionRiskScore}/100)\n\nReasoning: ${result.reasoning}\n\nRisk factors:\n${result.riskFactors.map((f) => "• " + f).join("\n")}\n\nRetention actions:\n${result.retentionActions.map((a) => "• " + a).join("\n")}\n\n⚠ Advisory only. This is an AI estimate — all people decisions require human judgment.`,
+          };
+        },
+      },
+      {
+        key: "draft-review",
+        label: "Draft performance review",
+        description: "Generate a performance review draft for this employee",
+        run: async () => {
+          const result = await generateReviewMutation.mutateAsync({
+            userId: employee.id,
+            periodStart: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+            periodEnd: new Date().toISOString().slice(0, 10),
+          });
+          return {
+            text: `Overall: ${result.overallRating}/5\n\nStrengths:\n${result.strengths}\n\nAreas for improvement:\n${result.improvements}\n\nComments:\n${result.comments}\n\nCategory ratings:\n${result.ratings.map((r) => `• ${r.category}: ${r.score}/5 — ${r.comment}`).join("\n")}`,
+          };
+        },
+      },
+    ];
+  }, [canManageEmployees, employee.id, attritionRiskMutation, generateReviewMutation]);
+
   const employeeAsEmployee = employee as unknown as Employee;
   const employmentStatus =
     typeof (employee as Record<string, unknown>).employmentStatus === "string"
@@ -410,6 +451,9 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                 <UserX className="h-3.5 w-3.5" />
                 Terminate
               </Button>
+            )}
+            {showManageActions && aiActions.length > 0 && (
+              <AiActionsMenu actions={aiActions} menuLabel="HR AI assist" />
             )}
           </div>
         }
@@ -511,9 +555,11 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                 </div>
 
                 {(employeeAsEmployee as Employee).bio && (
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {(employeeAsEmployee as Employee).bio}
-                  </p>
+                  <TruncatedText
+                    text={(employeeAsEmployee as Employee).bio ?? ""}
+                    lines={2}
+                    className="text-sm text-muted-foreground"
+                  />
                 )}
 
                 {isSelf && completeness < 100 && (

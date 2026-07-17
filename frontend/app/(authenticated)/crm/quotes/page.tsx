@@ -35,6 +35,7 @@ import { useQuotes, useUpdateQuoteStatus, useDeleteQuote } from "@/hooks/api/crm
 import { downloadQuotesCsv } from "@/hooks/api/crm/quotes";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { toast } from "sonner";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { QuoteListItem, QuoteStatus } from "@/types/crm/quotes";
 import { QuoteRowActions } from "@/features/crm/quotes/components/quote-row-actions";
@@ -213,9 +214,7 @@ export default function QuotesPage() {
         sortable: true,
         sortValue: (q) => q.subject,
         cell: (q) => (
-          <span className="text-[11px] font-medium truncate block max-w-[160px]">
-            {q.subject}
-          </span>
+          <TruncatedText text={q.subject} className="text-[11px] font-medium max-w-[160px] block" />
         ),
       },
       {
@@ -225,9 +224,9 @@ export default function QuotesPage() {
           q.deal ? (
             <Link
               href={`/crm/deals/${q.deal.id}`}
-              className="text-[11px] text-primary hover:underline truncate max-w-[100px] block"
+              className="text-[11px] text-primary hover:underline max-w-[100px] block"
             >
-              {q.deal.name}
+              <TruncatedText text={q.deal.name} />
             </Link>
           ) : (
             <span className="text-[11px] text-muted-foreground">—</span>

@@ -59,7 +59,7 @@ function CommentItem({ comment, isPendingDelete, onDelete }: CommentItemProps) {
               {getCommentInitials(comment.userName)}
             </AvatarFallback>
           </Avatar>
-          <span className="text-xs font-medium truncate">{comment.userName ?? "Unknown"}</span>
+          <span className="text-xs font-medium truncate min-w-0">{comment.userName ?? "Unknown"}</span>
           {comment.createdAt && (
             <span className="text-[10px] text-muted-foreground shrink-0">
               {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}

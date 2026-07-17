@@ -1,15 +1,18 @@
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ContingentLoading() {
   return (
-    <div className="p-6 space-y-4">
-      <Skeleton className="h-8 w-56" />
-      <Skeleton className="h-6 w-96" />
-      <div className="space-y-2">
-        {Array.from({ length: 12 }).map((_, i) => (
+    <PageWrapper
+      title="Contingent Workforce"
+      subtitle="Manage contractor, intern, temporary, and agency engagements."
+      actions={<Skeleton className="h-8 w-36 rounded-md" />}
+    >
+      <div className="flex flex-col flex-1 min-h-0 space-y-2">
+        {Array.from({ length: 10 }).map((_, i) => (
           <Skeleton key={i} className="h-16 w-full rounded-lg" />
         ))}
       </div>
-    </div>
+    </PageWrapper>
   );
 }

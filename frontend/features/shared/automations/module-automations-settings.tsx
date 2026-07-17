@@ -25,6 +25,7 @@ import { EmptyActivityIllustration } from "@/components/illustrations";
 import { Pencil, History, Building2 } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import {
@@ -107,7 +108,7 @@ function AutomationCard({
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <p className="font-medium text-sm truncate">{rule.name}</p>
+              <TruncatedText text={rule.name} className="font-medium text-sm" />
               <Badge variant="secondary" className="text-[10px]">
                 {triggerLabel(rule.triggerEvent)}
               </Badge>
@@ -118,9 +119,7 @@ function AutomationCard({
               )}
             </div>
             {rule.description && (
-              <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                {rule.description}
-              </p>
+              <TruncatedText text={rule.description} className="text-xs text-muted-foreground mt-0.5" />
             )}
             <p className="text-xs text-muted-foreground mt-1.5">
               <span className="font-medium text-foreground/70">Actions:</span>{" "}

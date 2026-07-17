@@ -40,9 +40,9 @@ import {
 } from "@/features/projects/shared/pm-chrome";
 import {
   TABLE_TITLE_CELL,
-  TEXT_ONE_LINE,
   TEXT_FLEX_CHILD,
 } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const STATUS_CONFIG: Record<
   Release["status"],
@@ -184,24 +184,8 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
         className: TABLE_TITLE_CELL,
         cell: (r) => (
           <div className={cn(TEXT_FLEX_CHILD, "space-y-0.5 overflow-hidden")}>
-            <p
-              className={cn(
-                TEXT_ONE_LINE,
-                "text-xs font-medium text-foreground",
-              )}
-              title={r.name}
-            >
-              {r.name}
-            </p>
-            <p
-              className={cn(
-                TEXT_ONE_LINE,
-                "font-mono text-[10px] text-muted-foreground",
-              )}
-              title={r.version}
-            >
-              {r.version}
-            </p>
+            <TruncatedText text={r.name} className="text-xs font-medium text-foreground" />
+            <TruncatedText text={r.version} className="font-mono text-[10px] text-muted-foreground" />
           </div>
         ),
       },

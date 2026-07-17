@@ -1,19 +1,26 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 
 export default function PayrollCommandCenterLoading() {
   return (
-    <PageWrapper title="Payroll" variant="display">
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <Skeleton key={i} className="h-16 rounded-lg" />
-          ))}
+    <PageWrapper
+      title="Payroll"
+      variant="display"
+      subtitle="Loading payroll…"
+      actions={
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-9 w-44 rounded-md" />
+          <Skeleton className="h-9 w-36 rounded-md" />
         </div>
+      }
+    >
+      <div className="space-y-4">
+        <StatCardGridSkeleton cols={5} count={5} />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <Skeleton className="h-64 rounded-xl" />
           <div className="lg:col-span-2 grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {Array.from({ length: 12 }).map((_, i) => (
+            {Array.from({ length: 4 }).map((_, i) => (
               <Skeleton key={i} className="h-40 rounded-xl" />
             ))}
           </div>

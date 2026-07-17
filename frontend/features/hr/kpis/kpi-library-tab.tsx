@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/sheet";
 import { useKpis, useCreateKpi, useUpdateKpi, useDeleteKpi } from "@/hooks/api/hr";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const CATEGORY_COLORS: Record<string, string> = {
   Sales: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
@@ -234,9 +235,9 @@ export function KpiLibraryTab() {
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-foreground truncate">{kpi.name}</h3>
+                  <TruncatedText text={kpi.name} className="font-semibold text-foreground" />
                   {kpi.description && (
-                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{kpi.description}</p>
+                    <TruncatedText text={kpi.description} lines={2} className="text-xs text-muted-foreground mt-0.5" />
                   )}
                 </div>
                 <KpiDeleteButton onClick={() => handleDelete(kpi.id)} />

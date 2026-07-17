@@ -1,0 +1,50 @@
+[
+  {
+    "id": "task-ai-action-copilot-task13",
+    "key": "ai-action-copilot-task13",
+    "content": "Task completed: ai-action-copilot-task13",
+    "namespace": "tasks",
+    "type": "task-outcome",
+    "metadata": {
+      "success": true,
+      "quality": 0.85
+    },
+    "createdAt": 1784216992419
+  },
+  {
+    "id": "task-crm-ai-phase2-hooks",
+    "key": "crm-ai-phase2-hooks",
+    "content": "Task completed: crm-ai-phase2-hooks",
+    "namespace": "tasks",
+    "type": "task-outcome",
+    "metadata": {
+      "success": true,
+      "quality": 0.85
+    },
+    "createdAt": 1784222180854
+  },
+  {
+    "id": "task-kb-ai-features",
+    "key": "kb-ai-features",
+    "content": "Task completed: kb-ai-features",
+    "namespace": "tasks",
+    "type": "task-outcome",
+    "metadata": {
+      "success": true,
+      "quality": 0.85
+    },
+    "createdAt": 1784223598424
+  },
+  {
+    "id": "task-crm-ai-phase2-backend",
+    "key": "crm-ai-phase2-backend",
+    "content": "Task completed: crm-ai-phase2-backend",
+    "namespace": "tasks",
+    "type": "task-outcome",
+    "metadata": {
+      "success": true,
+      "quality": 0.85
+    },
+    "createdAt": 1784223601063
+  }
+]

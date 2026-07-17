@@ -42,8 +42,16 @@ export interface AiSpamPayload {
   isSpam: true;
 }
 
+export interface AiReplySource {
+  title: string;
+  url: string;
+  articleId: number;
+}
+
 export interface AiReplyPayload {
   body: string;
+  sources?: AiReplySource[];
+  escalated?: boolean;
 }
 
 export interface AiMacroPayload {
@@ -64,6 +72,7 @@ export interface AiHandoffSummaryPayload {
   summary: string;
   keyPoints: string[];
   suggestedNextStep: string;
+  sources?: AiReplySource[];
 }
 
 export interface AiRootCauseClusterPayload {
@@ -259,6 +268,102 @@ export function useResolveAiSuggestion(ticketId: number) {
     onSuccess: () => {
       invalidateSuggestions(qc, ticketId);
       qc.invalidateQueries({ queryKey: queryKeys.support.detail(ticketId) });
+    },
+  });
+}
+
+export interface ImproveReplyInput {
+  content: string;
+  macroId?: number;
+}
+
+export interface ImproveReplyResult {
+  improved: string;
+  changes: string[];
+}
+
+export interface TranslateDraftInput {
+  language: string;
+  content?: string;
+}
+
+export interface TranslateDraftResult {
+  translatedText: string;
+  detectedSourceLanguage: string;
+}
+
+export interface SupportAiSettings {
+  confidenceThreshold: number;
+}
+
+export interface SupportAiReportParams {
+  dateFrom?: string;
+  dateTo?: string;
+  cursor?: number;
+  limit?: number;
+}
+
+export interface SupportAiReportResult {
+  acceptanceRate: number;
+  resolutionRate: number;
+  reopenRate: number;
+  escalationRate: number;
+  sourceCoverage: number;
+  unsupportedRate: number;
+  csatImpact: { aiResolved: number | null; nonAiResolved: number | null } | null;
+}
+
+export function useImproveReply(ticketId: number) {
+  return useMutation({
+    mutationKey: ["supportAi", "improve-reply", ticketId],
+    mutationFn: (input: ImproveReplyInput) =>
+      apiClient.post<ImproveReplyResult>(`/support/ai/improve-reply`, { ticketId, ...input }),
+  });
+}
+
+export function useTranslateDraft(ticketId: number) {
+  return useMutation({
+    mutationKey: ["supportAi", "translate-draft", ticketId],
+    mutationFn: (input: TranslateDraftInput) =>
+      apiClient.post<TranslateDraftResult>(`/support/ai/translate-draft`, { ticketId, ...input }),
+  });
+}
+
+function reportParamsToRecord(params?: SupportAiReportParams): Record<string, unknown> | undefined {
+  if (!params) return undefined;
+  const out: Record<string, unknown> = {};
+  if (params.dateFrom !== undefined) out["dateFrom"] = params.dateFrom;
+  if (params.dateTo !== undefined) out["dateTo"] = params.dateTo;
+  if (params.cursor !== undefined) out["cursor"] = params.cursor;
+  if (params.limit !== undefined) out["limit"] = params.limit;
+  return Object.keys(out).length > 0 ? out : undefined;
+}
+
+export function useSupportAiReport(params?: SupportAiReportParams) {
+  const record = reportParamsToRecord(params);
+  return useQuery({
+    queryKey: queryKeys.supportAiReport.get(record),
+    queryFn: () => apiClient.get<SupportAiReportResult>(`/support/ai/report`, record),
+    staleTime: 2 * 60_000,
+  });
+}
+
+export function useSupportAiSettings() {
+  return useQuery({
+    queryKey: queryKeys.supportAiSettings.get(),
+    queryFn: () => apiClient.get<SupportAiSettings>(`/support/settings`),
+    staleTime: 5 * 60_000,
+  });
+}
+
+export function useUpdateSupportAiSettings() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["supportAiSettings", "update"],
+    mutationFn: (input: Partial<SupportAiSettings>) =>
+      apiClient.patch<SupportAiSettings>(`/support/settings`, input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.supportAiSettings.all });
     },
   });
 }

@@ -3,6 +3,7 @@
 import { memo, useState, useCallback } from "react";
 import { ChevronDown, Boxes, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -49,7 +50,7 @@ const ExternalLinkRow = memo(function ExternalLinkRow({ link, onRemove }: Extern
       <Badge variant="outline" className="text-[9px] px-1 py-0">
         {entityTypeLabel(link.entityType)}
       </Badge>
-      <span className="truncate flex-1">{link.label}</span>
+      <TruncatedText text={link.label} className="flex-1" />
       <button
         type="button"
         onClick={handleRemove}

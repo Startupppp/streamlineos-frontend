@@ -97,17 +97,11 @@ const PROTECTED_ROUTES = [
 
 const AUTH_ROUTES = [
   "/signin",
-  "/signup",
-  "/forgot-password",
-  "/reset-password",
-  "/setup-password",
   "/verify-email",
 ];
 
 const ALLOW_AUTHENTICATED = [
   "/invitation",
-  "/reset-password",
-  "/setup-password",
 ];
 
 const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
@@ -206,9 +200,6 @@ function canAccessRoute(
 
 export default async function middleware(req: NextRequest) {
   const { pathname, searchParams } = req.nextUrl;
-  const nonceBytes = new Uint8Array(16);
-  crypto.getRandomValues(nonceBytes);
-  const nonce = btoa(String.fromCharCode(...nonceBytes));
 
   if (
     process.env.NODE_ENV === "production" &&
@@ -223,6 +214,10 @@ export default async function middleware(req: NextRequest) {
   if (pathname.startsWith("/api/")) {
     return NextResponse.next();
   }
+
+  const nonceBytes = new Uint8Array(16);
+  crypto.getRandomValues(nonceBytes);
+  const nonce = btoa(String.fromCharCode(...nonceBytes));
 
   const token = await getToken({
     req,
@@ -266,29 +261,6 @@ export default async function middleware(req: NextRequest) {
     url.search = "";
     return NextResponse.redirect(url);
   }
-  if (
-    isAuthenticated &&
-    token?.forceChangePassword &&
-    !pathname.startsWith("/reset-password") &&
-    !pathname.startsWith("/api/auth/signout")
-  ) {
-    const url = req.nextUrl.clone();
-    url.pathname = "/reset-password";
-    url.search = "";
-    return NextResponse.redirect(url);
-  }
-  if (
-    isAuthenticated &&
-    pathname.startsWith("/reset-password") &&
-    !token?.forceChangePassword &&
-    !req.nextUrl.searchParams.get("token")
-  ) {
-    const url = req.nextUrl.clone();
-    url.pathname = "/dashboard";
-    url.search = "";
-    return NextResponse.redirect(url);
-  }
-
   const orgSetupDone = req.cookies.get("org-setup-done")?.value;
   if (
     isAuthenticated &&

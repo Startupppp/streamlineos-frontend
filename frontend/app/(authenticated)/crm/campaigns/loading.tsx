@@ -1,14 +1,21 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { DataTableSkeleton } from "@/components/ui/data-table";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export default function CrmCampaignsLoading() {
   return (
-    <PageWrapper title="Campaigns" subtitle="Track lead sources and ROI">
-      <div className="space-y-3">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <Skeleton key={i} className="h-10 w-full" />
-        ))}
-      </div>
+    <PageWrapper
+      title="Campaigns"
+      subtitle="Track lead sources and ROI"
+      actions={<Skeleton className="h-9 w-36 rounded-md" />}
+      filters={
+        <div className={FILTER_TOOLBAR_ROW}>
+          <Skeleton className="h-9 w-36 rounded-md" />
+        </div>
+      }
+    >
+      <DataTableSkeleton rows={9} columns={9} />
     </PageWrapper>
   );
 }

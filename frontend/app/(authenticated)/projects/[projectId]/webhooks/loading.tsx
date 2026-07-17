@@ -7,12 +7,12 @@ export default function WebhooksLoading() {
     <PageWrapper
       title="Webhooks"
       subtitle="Receive HTTP POST notifications when project events occur"
-      actions={<Skeleton className="h-8 w-32 rounded-md" />}
+      actions={<Skeleton className="h-9 w-32 rounded-md" />}
     >
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col gap-3">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <Skeleton key={i} className="h-20 w-full rounded-lg" />
+          {Array.from({ length: 2 }).map((_, i) => (
+            <Skeleton key={i} className="h-20 w-full rounded-xl" />
           ))}
         </PmSection>
       </PmPageShell>

@@ -3,6 +3,7 @@
 import { Calendar, User, Phone, Mail, Clock } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 function formatINR(v: number) {
   if (v >= 10000000) return `₹${(v / 10000000).toFixed(1)}Cr`;
@@ -81,16 +82,16 @@ export function DealInfoCard({ deal }: DealInfoCardProps) {
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {fields.map((item) => (
-            <div key={item.label} className="flex items-start gap-2">
+            <div key={item.label} className="flex items-start gap-2 min-w-0">
               <item.icon className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-              <div>
+              <div className="min-w-0 flex-1">
                 <p className="text-xs text-muted-foreground">{item.label}</p>
                 {item.href ? (
-                  <a href={item.href} className="text-sm text-primary hover:underline">
+                  <a href={item.href} className="text-sm text-primary hover:underline break-all">
                     {item.value || "—"}
                   </a>
                 ) : (
-                  <p className="text-sm">{item.value || "—"}</p>
+                  <TruncatedText text={item.value ?? "—"} className="text-sm" />
                 )}
               </div>
             </div>

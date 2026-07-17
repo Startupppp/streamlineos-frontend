@@ -24,7 +24,8 @@ import {
   PM_FILL_PANEL,
   PM_TOOLBAR,
 } from "@/features/projects/shared/pm-chrome";
-import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TABLE_TITLE_CELL } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { FORM_TYPE_LABELS, FORM_TYPES } from "./field-type-meta";
 import type { ProjectForm } from "@/types/projects/forms";
@@ -113,9 +114,9 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
       cell: (row) => (
         <Link
           href={`/projects/${projectId}/forms/${row.id}`}
-          className={cn("text-sm font-medium hover:underline", TEXT_ONE_LINE)}
+          className="text-sm font-medium hover:underline min-w-0 block"
         >
-          {row.name}
+          <TruncatedText text={row.name} />
         </Link>
       ),
       sortable: true,

@@ -9,6 +9,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Pencil } from "lucide-react";
 import { UserXIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { resolveImageUrl } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import {
@@ -83,9 +84,10 @@ export function HrEmployeeTable({
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0">
-              <span className="text-sm font-semibold text-foreground hover:text-primary transition-colors duration-200 whitespace-nowrap block truncate">
-                {displayName}
-              </span>
+              <TruncatedText
+                text={displayName}
+                className="text-sm font-semibold text-foreground hover:text-primary transition-colors duration-200"
+              />
             </div>
           </Link>
         );

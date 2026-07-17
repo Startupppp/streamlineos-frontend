@@ -49,10 +49,32 @@ function buildContentSecurityPolicy(): string {
   ].join("; ");
 }
 
+const optimizePackageImports =
+  process.env.NODE_ENV === "production"
+    ? [
+        "lucide-react",
+        "@animateicons/react/lucide",
+        "recharts",
+        "date-fns",
+        "framer-motion",
+        "@radix-ui/react-dialog",
+        "@radix-ui/react-select",
+        "@radix-ui/react-dropdown-menu",
+        "@radix-ui/react-popover",
+        "@radix-ui/react-tooltip",
+        "@radix-ui/react-tabs",
+        "@radix-ui/react-alert-dialog",
+        "@radix-ui/react-scroll-area",
+        "@radix-ui/react-checkbox",
+        "@radix-ui/react-radio-group",
+        "@radix-ui/react-avatar",
+      ]
+    : ["lucide-react"];
+
 const nextConfig: NextConfig = {
   productionBrowserSourceMaps: false,
   experimental: {
-    optimizePackageImports: ["lucide-react"],
+    optimizePackageImports,
     serverActions: {
       allowedOrigins: [
         ...(process.env.NODE_ENV === "development" ? ["*.devtunnels.ms", "*.vscode.dev"] : []),

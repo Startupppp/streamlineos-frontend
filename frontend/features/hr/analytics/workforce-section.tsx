@@ -6,27 +6,20 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Users, TrendingUp, UserMinus, UserPlus } from "lucide-react";
-import {
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-} from "recharts";
+import dynamic from "next/dynamic";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   AnalyticsChartCard,
   AnalyticsSectionHeader,
-  CHART_SEMANTIC,
   EmptyChart,
   SectionSkeleton,
   SimpleBar,
-  chartAxisTick,
-  chartGridProps,
-  chartTooltipStyle,
 } from "./shared";
+
+const WorkforceTrendChart = dynamic(
+  () => import("./workforce-trend-chart").then((m) => ({ default: m.WorkforceTrendChart })),
+  { ssr: false, loading: () => <Skeleton className="h-[220px] w-full" /> },
+);
 
 interface WorkforceSectionProps {
   data: ReturnType<typeof useHrAnalytics>["data"];
@@ -145,46 +138,7 @@ export function WorkforceSection({ data, isLoading }: WorkforceSectionProps) {
 
         <AnalyticsChartCard title="Joining vs Exits Trend (YTD)" className="md:col-span-2">
           {data.joiningExitsTrend.some((m) => m.joins > 0 || m.exits > 0) ? (
-            <ResponsiveContainer width="100%" height={220}>
-              <LineChart
-                data={data.joiningExitsTrend}
-                margin={{ top: 8, right: 12, left: -16, bottom: 0 }}
-              >
-                <CartesianGrid {...chartGridProps} />
-                <XAxis
-                  dataKey="month"
-                  tick={chartAxisTick}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  tick={chartAxisTick}
-                  allowDecimals={false}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip contentStyle={chartTooltipStyle} />
-                <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
-                <Line
-                  type="monotone"
-                  dataKey="joins"
-                  name="New Joins"
-                  stroke={CHART_SEMANTIC.success}
-                  strokeWidth={2.5}
-                  dot={{ r: 3, fill: CHART_SEMANTIC.success }}
-                  activeDot={{ r: 5 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="exits"
-                  name="Exits"
-                  stroke={CHART_SEMANTIC.danger}
-                  strokeWidth={2.5}
-                  dot={{ r: 3, fill: CHART_SEMANTIC.danger }}
-                  activeDot={{ r: 5 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            <WorkforceTrendChart data={data.joiningExitsTrend} />
           ) : (
             <EmptyChart label="No joining or exit data for this year" />
           )}

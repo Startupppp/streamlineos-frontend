@@ -17,6 +17,7 @@ import { useUpdateOrgSettings } from "@/hooks/api/organization";
 import { useUploadFile } from "@/hooks/api/use-upload-file";
 import type { OrgSettings } from "@/types/organization";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { LoadingButton } from "@/components/ui/loading-button";
 
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
 
@@ -275,10 +276,9 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
             />
 
             <div className="flex gap-2 pt-1">
-              <Button type="submit" disabled={isPending} size="sm" className="gap-1.5">
-                {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                {isPending ? "Saving…" : "Save branding"}
-              </Button>
+              <LoadingButton type="submit" isPending={isPending} size="sm" className="gap-1.5" loadingText="Saving…">
+                Save branding
+              </LoadingButton>
               <Button type="button" variant="ghost" size="sm" onClick={handleCancel} disabled={isPending}>
                 Cancel
               </Button>

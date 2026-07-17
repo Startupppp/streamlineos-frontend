@@ -21,6 +21,7 @@ import { ErrorState, AppSheet } from "@/components/shared";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useCan } from "@/hooks/api/access";
 import { useWarehouses } from "@/hooks/api/inventory/warehouses";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   useValuationReport,
   useValuationLayers,
@@ -170,7 +171,7 @@ function buildValuationColumns(
       header: "Product / SKU",
       cell: (row) => (
         <div>
-          <p className="text-sm font-medium text-foreground truncate max-w-[180px]">{row.productName}</p>
+          <TruncatedText text={row.productName} className="text-sm font-medium text-foreground" />
           <p className="text-xs text-muted-foreground font-mono">{row.variantSku}</p>
         </div>
       ),

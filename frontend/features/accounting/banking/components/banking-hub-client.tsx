@@ -20,6 +20,7 @@ import { useBankAccounts } from "@/hooks/api/accounting/banking";
 import type { BankAccount, BankAccountType } from "@/hooks/api/accounting/banking";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { AddBankAccountSheet } from "./add-bank-account-sheet";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const TYPE_ICON: Record<BankAccountType, React.ElementType> = {
   BANK: Landmark,
@@ -53,9 +54,9 @@ function AccountCard({ account, index }: { account: BankAccount; index: number }
                 <Icon className="h-4 w-4 text-primary" />
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-foreground truncate">{account.name}</p>
+                <TruncatedText text={account.name} className="text-sm font-semibold text-foreground" />
                 {account.bankName && (
-                  <p className="text-[11px] text-muted-foreground truncate">{account.bankName}</p>
+                  <TruncatedText text={account.bankName} className="text-[11px] text-muted-foreground" />
                 )}
               </div>
             </div>

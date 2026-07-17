@@ -10,9 +10,11 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { TruncatedText } from "@/components/ui/truncated-text";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useKbPagesTree, useMoveKbPage } from "@/hooks/api/kb";
-import { KbMoveRightIcon, KbFileTextIcon, KbLoader2Icon } from "@/features/knowledge-base/lib/kb-icons";
+import { KbMoveRightIcon, KbFileTextIcon } from "@/features/knowledge-base/lib/kb-icons";
 import type { KbPageTreeNode } from "@/hooks/api/kb/pages";
 
 function getPageDepth(nodes: KbPageTreeNode[], id: number): number {
@@ -121,7 +123,7 @@ export default function MovePageDialog({
                       <span className="shrink-0 text-base leading-none">
                         {node.icon ?? <KbFileTextIcon className="h-3.5 w-3.5" />}
                       </span>
-                      <span className="truncate">{node.title || "Untitled"}</span>
+                      <TruncatedText text={node.title || "Untitled"} />
                     </button>
                   );
                 })
@@ -132,10 +134,9 @@ export default function MovePageDialog({
           <Button variant="outline" size="sm" onClick={handleCancel}>
             Cancel
           </Button>
-          <Button size="sm" onClick={handleConfirm} disabled={movePage.isPending}>
-            {movePage.isPending ? <KbLoader2Icon className="h-4 w-4 animate-spin mr-2" /> : null}
+          <LoadingButton size="sm" onClick={handleConfirm} isPending={movePage.isPending} loadingText="Moving…">
             Move here
-          </Button>
+          </LoadingButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

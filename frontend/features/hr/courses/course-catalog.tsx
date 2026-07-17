@@ -16,6 +16,7 @@ import {
   CONTENT_FILL_PANEL,
   FILTER_SELECT_TRIGGER,
 } from "@/components/ui/content-fill-panel";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { useCourses, useCourseCategories, useEnrollCourse } from "@/hooks/api/hr/courses";
 import { getErrorMessage } from "@/lib/api-client";
@@ -202,7 +203,7 @@ export function CourseCatalog({ canManage }: Props) {
 
               <div className="p-4 space-y-3">
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground line-clamp-2 leading-snug">{course.title}</h3>
+                  <TruncatedText text={course.title} lines={2} className="text-sm font-semibold text-foreground leading-snug" />
                   {(course.externalInstructor ?? course.instructorId) && (
                     <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
                       <Users className="h-3 w-3" />

@@ -24,6 +24,7 @@ import {
 import { getErrorMessage } from "@/lib/get-error-message";
 import { resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "./chat-helpers";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 type OrgUser = {
   id: string;
@@ -60,10 +61,8 @@ function DMUserItem({ user, isOnline, isPending, onSelect }: DMUserItemProps) {
         )}
       </div>
       <div className="flex-1 text-left min-w-0">
-        <p className="text-[13px] font-medium truncate">{user.name}</p>
-        <p className="text-[11px] text-muted-foreground truncate">
-          {user.email}
-        </p>
+        <TruncatedText text={user.name ?? ""} className="text-[13px] font-medium" />
+        <TruncatedText text={user.email ?? ""} className="text-[11px] text-muted-foreground" />
       </div>
       <Badge
         variant="outline"

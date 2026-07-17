@@ -1,32 +1,38 @@
-import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Skeleton } from "@/components/ui/skeleton";
+import { DataTableSkeleton } from "@/components/ui/data-table";
+import { StatCardGridSkeleton } from "@/components/ui/stat-card";
+import {
+  PmPageShell,
+  PmSection,
+  PM_TOOLBAR,
+} from "@/features/projects/shared/pm-chrome";
 
 export default function IncidentsLoading() {
   return (
-    <PageWrapper title="Incidents" subtitle="Track incidents and SLA compliance">
-      <div className="px-4 pb-4 space-y-3">
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-8 w-44 rounded-md" />
-          <Skeleton className="h-8 w-32 rounded-md" />
-          <Skeleton className="h-8 w-28 rounded-md" />
-          <Skeleton className="h-8 w-24 rounded-md ml-auto" />
-        </div>
-        <div className="grid grid-cols-3 gap-2">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <Skeleton key={i} className="h-[60px] rounded-lg" />
-          ))}
-        </div>
-        {Array.from({ length: 12 }).map((_, i) => (
-          <div key={i} className="flex items-center gap-3 h-8 border-b border-border/50 px-2">
-            <Skeleton className="h-3 w-16" />
-            <Skeleton className="h-3 flex-1" />
-            <Skeleton className="h-4 w-16 rounded-full" />
-            <Skeleton className="h-4 w-20 rounded-full" />
-            <Skeleton className="h-4 w-16 rounded-full" />
-            <Skeleton className="h-3 w-20" />
+    <PageWrapper
+      title="Incidents"
+      subtitle="Track incidents and SLA compliance"
+      filters={
+        <div className={PM_TOOLBAR}>
+          <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+            <Skeleton className="h-9 w-44 rounded-md" />
+            <Skeleton className="h-9 w-36 rounded-md" />
+            <Skeleton className="h-9 w-28 rounded-md" />
           </div>
-        ))}
-      </div>
+        </div>
+      }
+      actions={<Skeleton className="h-9 w-28 rounded-md" />}
+    >
+      <PmPageShell>
+        <PmSection index={0} className="shrink-0">
+          <StatCardGridSkeleton cols={3} count={3} />
+        </PmSection>
+
+        <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
+          <DataTableSkeleton rows={12} columns={8} className="flex-1" />
+        </PmSection>
+      </PmPageShell>
     </PageWrapper>
   );
 }

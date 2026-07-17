@@ -21,6 +21,7 @@ import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/conte
 import { BankTxnStatusBadge } from "./bank-txn-status-badge";
 import { useBankAccount, useBankTransactions } from "@/hooks/api/accounting/banking";
 import type { BankTransaction, BankTxnStatus } from "@/hooks/api/accounting/banking";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 type StatusFilter = "ALL" | BankTxnStatus;
 
@@ -73,11 +74,7 @@ const TXN_COLUMNS: DataTableColumn<BankTransaction>[] = [
     key: "description",
     header: "Description",
     cell: (row) => (
-      <span className="text-[11px]" title={row.description}>
-        {row.description.length > 40
-          ? `${row.description.slice(0, 40)}…`
-          : row.description}
-      </span>
+      <TruncatedText text={row.description} className="text-[11px]" />
     ),
   },
   {
@@ -93,10 +90,10 @@ const TXN_COLUMNS: DataTableColumn<BankTransaction>[] = [
   {
     key: "counterparty",
     header: "Counterparty",
-    cell: (row) => (
-      <span className="text-[11px] text-muted-foreground">
-        {row.counterparty ?? "—"}
-      </span>
+    cell: (row) => row.counterparty ? (
+      <TruncatedText text={row.counterparty} className="text-[11px] text-muted-foreground" />
+    ) : (
+      <span className="text-[11px] text-muted-foreground">—</span>
     ),
     className: "w-[150px]",
   },

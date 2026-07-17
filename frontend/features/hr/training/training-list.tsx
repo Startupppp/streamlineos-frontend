@@ -11,10 +11,10 @@ import {
   Users,
   Monitor,
   BookMarked,
-  Loader2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
@@ -33,6 +33,7 @@ import {
   useEnrollTraining,
   type TrainingProgram,
 } from "@/hooks/api/hr/training";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface Props {
   canManage: boolean;
@@ -166,7 +167,7 @@ export function TrainingList({ canManage, onSelectProgram, selectedProgramId }: 
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-foreground truncate">{program.name}</p>
+                  <TruncatedText text={program.name} className="text-sm font-semibold text-foreground" />
                   <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
                     <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[11px] font-medium border ${TYPE_COLORS[program.type]}`}>
                       {program.type}
@@ -183,7 +184,11 @@ export function TrainingList({ canManage, onSelectProgram, selectedProgramId }: 
               </div>
 
               {program.description && (
-                <p className="text-xs text-muted-foreground line-clamp-2">{program.description}</p>
+                <TruncatedText
+                  text={program.description}
+                  lines={2}
+                  className="text-xs text-muted-foreground"
+                />
               )}
 
               <div className="space-y-1 text-xs text-muted-foreground">
@@ -197,7 +202,7 @@ export function TrainingList({ canManage, onSelectProgram, selectedProgramId }: 
                 {program.venue && (
                   <div className="flex items-center gap-1.5">
                     <MapPin className="h-3 w-3 shrink-0" />
-                    <span className="truncate">{program.venue}</span>
+                    <TruncatedText text={program.venue} className="text-xs text-muted-foreground" />
                   </div>
                 )}
                 {program.virtualLink && (
@@ -223,17 +228,18 @@ export function TrainingList({ canManage, onSelectProgram, selectedProgramId }: 
               </div>
 
               {program.status !== "COMPLETED" && program.status !== "CANCELLED" && (
-                <Button
+                <LoadingButton
                   size="sm"
                   className="w-full text-xs bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleEnroll(program.id);
                   }}
-                  disabled={enroll.isPending}
+                  isPending={enroll.isPending}
+                  loadingText="Enrolling…"
                 >
-                  {enroll.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : "Enroll"}
-                </Button>
+                  Enroll
+                </LoadingButton>
               )}
             </motion.div>
           ))}

@@ -58,6 +58,7 @@ import { Users,
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { formatDistanceToNow } from "date-fns";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 function getInitials(name: string | null, email: string): string {
   if (name) {
@@ -278,9 +279,9 @@ export function UsersPage() {
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0">
-            <p className="text-[11px] font-medium truncate leading-tight">{user.name ?? "—"}</p>
+            <TruncatedText text={user.name ?? "—"} className="text-[11px] font-medium leading-tight" />
             {user.designation && (
-              <p className="text-[10px] text-muted-foreground truncate">{user.designation}</p>
+              <TruncatedText text={user.designation} className="text-[10px] text-muted-foreground" />
             )}
           </div>
         </div>
@@ -290,7 +291,7 @@ export function UsersPage() {
       key: "email",
       header: "Email",
       cell: (user) => (
-        <span className="text-muted-foreground truncate max-w-[180px] block">{user.email}</span>
+        <TruncatedText text={user.email} className="text-muted-foreground max-w-[180px]" />
       ),
     },
     {

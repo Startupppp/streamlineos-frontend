@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { apiClient } from "@/lib/api-client";
 
 interface Attachment {
@@ -137,7 +138,7 @@ export function LeadAttachmentsSection({ leadId }: LeadAttachmentsSectionProps) 
             >
               <File className="h-4 w-4 text-primary shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-foreground truncate">{att.fileName}</p>
+                <TruncatedText text={att.fileName} className="text-xs font-medium text-foreground" />
                 <p className="text-[10px] text-muted-foreground">{formatFileSize(att.fileSize)}</p>
               </div>
               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">

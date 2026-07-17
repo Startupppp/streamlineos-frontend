@@ -20,3 +20,5 @@ export * from "./record-links";
 export * from "./article-migration";
 export * from "./sources";
 export * from "./settings";
+export * from "./research-briefs";
+export * from "./page-ai";

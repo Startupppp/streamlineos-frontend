@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { Badge } from "@/components/ui/badge";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePortalTickets } from "@/hooks/api/support/portal";
@@ -72,9 +73,7 @@ export function PortalTicketListPage() {
               className="group rounded-xl border border-border bg-card p-4 shadow-sm hover:shadow-md hover:border-primary/30 transition-all"
             >
               <div className="flex items-start justify-between gap-2">
-                <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2 min-w-0">
-                  {ticket.title}
-                </p>
+                <TruncatedText text={ticket.title} lines={2} className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors" />
                 <Badge variant="outline" className={STATUS_COLORS[ticket.status]}>
                   {STATUS_LABELS[ticket.status]}
                 </Badge>

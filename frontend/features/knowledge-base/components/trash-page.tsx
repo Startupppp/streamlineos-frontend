@@ -17,6 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   useKbPagesTrash,
   useRestoreKbPage,
@@ -73,9 +74,7 @@ function TrashRow({ page }: { page: KbPage }) {
           {page.icon ?? "📄"}
         </span>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium truncate">
-            {page.title || "Untitled"}
-          </p>
+          <TruncatedText text={page.title || "Untitled"} className="text-sm font-medium" />
           <p className="text-xs text-muted-foreground">
             Deleted {page.deletedAt ? formatRelativeTime(page.deletedAt) : ""}
           </p>

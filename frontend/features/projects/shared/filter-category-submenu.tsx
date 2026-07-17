@@ -162,7 +162,7 @@ function OptionRow({
       ) : !leading && dotClassName ? (
         <span className={cn("h-2.5 w-2.5 shrink-0 rounded-full", dotClassName)} />
       ) : null}
-      <span className="truncate">{label}</span>
+      <span className="min-w-0 flex-1 truncate">{label}</span>
     </button>
   );
 }

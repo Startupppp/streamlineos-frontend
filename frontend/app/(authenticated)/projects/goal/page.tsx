@@ -62,7 +62,8 @@ import {
   pmSnappy,
   pmStagger,
 } from "@/features/projects/shared/pm-motion";
-import { TEXT_ONE_LINE, TEXT_TWO_LINES } from "@/features/projects/shared/text-overflow";
+import { TEXT_TWO_LINES } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 
 function NewGoalButton({ onClick }: { onClick: () => void }) {
@@ -121,7 +122,7 @@ function GoalCard({ goal }: { goal: GoalListItem }) {
           <div className="flex min-w-0 items-center justify-between text-xs text-muted-foreground">
             <span className="flex min-w-0 items-center gap-1.5">
               <Users className="h-3.5 w-3.5 shrink-0" />
-              <span className={TEXT_ONE_LINE}>{ownerName ?? "Unassigned"}</span>
+              <TruncatedText text={ownerName ?? "Unassigned"} />
             </span>
             <span className="flex shrink-0 items-center gap-1.5">
               <ListChecks className="h-3.5 w-3.5" />

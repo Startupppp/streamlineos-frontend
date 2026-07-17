@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { GOALS, INDUSTRIES, TEAM_SIZES } from "../lib/constants";
 import type { WizardData } from "../lib/types";
 import { NavButtons } from "./nav-buttons";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 type StepBasicsProps = {
   data: WizardData;
@@ -134,7 +135,7 @@ export function StepBasics({ data, patch, onToggleGoal, onBack, onNext }: StepBa
                 )}
               >
                 <Icon className={cn("h-3.5 w-3.5 shrink-0", selected ? "text-blue-600" : "text-muted-foreground")} />
-                <span className="truncate">{ind}</span>
+                <TruncatedText text={ind} />
               </button>
             );
           })}

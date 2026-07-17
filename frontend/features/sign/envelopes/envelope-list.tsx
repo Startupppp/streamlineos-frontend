@@ -23,8 +23,9 @@ import { EnvelopeStatusBadge } from "../components/envelope-status-badge";
 import { CreateEnvelopeDialog } from "../components/create-envelope-dialog";
 import { EditEnvelopeSheet } from "../components/edit-envelope-sheet";
 import type { SignEnvelope } from "@/types/sign";
-import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
+import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const STATUS_FILTERS = [
   { value: "all", label: "All" },
@@ -120,9 +121,7 @@ export function EnvelopeList() {
       header: "Title",
       className: TABLE_TITLE_CELL,
       cell: (envelope) => (
-        <span className={cn("font-medium", TEXT_ONE_LINE)} title={envelope.title}>
-          {envelope.title}
-        </span>
+        <TruncatedText text={envelope.title} className="font-medium" />
       ),
     },
     {

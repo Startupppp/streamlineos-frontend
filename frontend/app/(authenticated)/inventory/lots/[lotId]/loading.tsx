@@ -3,11 +3,10 @@ import { InventoryDetailPageLoading } from "@/features/inventory/components/inve
 export default function LotDetailLoading() {
   return (
     <InventoryDetailPageLoading
-      title="Loading…"
+      title="Lot"
       backHref="/inventory/lots"
       statCols={3}
       statCount={3}
-      actions={null}
     />
   );
 }

@@ -17,6 +17,7 @@ import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyCalendarIllustration } from "@/components/illustrations";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { Loader2, RefreshCw, Unplug } from "lucide-react";
 import { StarIcon, XIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -90,13 +91,14 @@ const AccountRow = memo(function AccountRow({
         aria-hidden
       />
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium truncate">
-          {connection.accountEmail ?? TOOLKIT_LABELS[connection.toolkit]}
-        </p>
-        <p className="text-[11px] text-muted-foreground truncate">
-          {TOOLKIT_LABELS[connection.toolkit]}
-          {connection.isPrimary ? " · Default" : ""}
-        </p>
+        <TruncatedText
+          text={connection.accountEmail ?? TOOLKIT_LABELS[connection.toolkit]}
+          className="text-sm font-medium"
+        />
+        <TruncatedText
+          text={`${TOOLKIT_LABELS[connection.toolkit]}${connection.isPrimary ? " · Default" : ""}`}
+          className="text-[11px] text-muted-foreground"
+        />
       </div>
       {connection.status === "needs_reauth" ? (
         <Button

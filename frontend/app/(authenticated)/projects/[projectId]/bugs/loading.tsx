@@ -1,6 +1,7 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { PM_PANEL, PM_TOOLBAR } from "@/features/projects/shared/pm-chrome";
+import { DataTableSkeleton } from "@/components/ui/data-table";
+import { PM_TOOLBAR, PmPageShell, PmSection } from "@/features/projects/shared/pm-chrome";
 import { cn } from "@/lib/utils";
 
 export default function BugsLoading() {
@@ -20,20 +21,11 @@ export default function BugsLoading() {
         </div>
       }
     >
-      <div className={cn("space-y-2 p-2", PM_PANEL)}>
-        {Array.from({ length: 12 }).map((_, i) => (
-          <div
-            key={i}
-            className="flex h-9 items-center gap-3 border-b border-border/50 px-2 last:border-0"
-          >
-            <Skeleton className="h-3 w-14" />
-            <Skeleton className="h-3 max-w-[16rem] flex-1" />
-            <Skeleton className="h-4 w-16 rounded-full" />
-            <Skeleton className="h-4 w-20 rounded-full" />
-            <Skeleton className="h-3 w-16" />
-          </div>
-        ))}
-      </div>
+      <PmPageShell>
+        <PmSection index={0}>
+          <DataTableSkeleton rows={12} columns={7} />
+        </PmSection>
+      </PmPageShell>
     </PageWrapper>
   );
 }

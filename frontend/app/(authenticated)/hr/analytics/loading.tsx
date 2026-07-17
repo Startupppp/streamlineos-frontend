@@ -1,44 +1,40 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { StatCardGridSkeleton } from "@/components/ui/stat-card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export default function HrAnalyticsLoading() {
   return (
-    <PageWrapper title="HR Analytics" subtitle="Workforce insights and metrics">
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <Card key={i}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <Skeleton className="h-3.5 w-20" />
-                  <Skeleton className="h-4 w-4 rounded" />
-                </div>
-                <Skeleton className="h-4 w-16" />
-                <Skeleton className="h-3 w-20 mt-1" />
-              </CardContent>
-            </Card>
-          ))}
+    <PageWrapper
+      title="HR Analytics"
+      subtitle="Workforce insights and operational metrics"
+    >
+      <div className="flex min-h-0 flex-1 flex-col gap-4">
+        <StatCardGridSkeleton cols={4} count={4} />
+
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-1">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-7 w-24 rounded-md" />
+            ))}
+          </div>
+          <div className={`ml-auto ${FILTER_TOOLBAR_ROW}`}>
+            <Skeleton className="h-9 w-36 rounded-md" />
+          </div>
         </div>
-        <div className="grid md:grid-cols-2 gap-3">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <Card key={i}>
-              <CardHeader className="p-4 pb-2">
-                <Skeleton className="h-4 w-40" />
-              </CardHeader>
-              <CardContent className="p-4 pt-2">
-                <div className="space-y-2">
-                  {Array.from({ length: 12 }).map((_, j) => (
-                    <div key={j} className="flex items-center gap-3">
-                      <Skeleton className="h-3 w-24 shrink-0" />
-                      <Skeleton className="h-5 flex-1 rounded-full" />
-                      <Skeleton className="h-3 w-8" />
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+
+        <div className="rounded-xl border border-border bg-card shadow-sm flex min-h-0 flex-1 flex-col">
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-border shrink-0">
+            <Skeleton className="h-7 w-7 rounded-lg" />
+            <Skeleton className="h-4 w-36" />
+          </div>
+          <div className="p-4 flex min-h-0 flex-1 flex-col gap-4">
+            <div className="grid md:grid-cols-2 gap-4">
+              <Skeleton className="h-[220px] rounded-xl" />
+              <Skeleton className="h-[220px] rounded-xl" />
+            </div>
+            <Skeleton className="h-[180px] rounded-xl" />
+          </div>
         </div>
       </div>
     </PageWrapper>

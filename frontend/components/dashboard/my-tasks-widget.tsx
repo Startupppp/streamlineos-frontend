@@ -8,6 +8,7 @@ import { usePersonalDashboard } from "@/hooks/api/dashboard";
 import { ListChecks } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const priorityColors: Record<string, string> = {
   URGENT: "bg-red-100 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
@@ -52,12 +53,10 @@ export function MyTasksWidget() {
               className="flex items-start gap-3 rounded-lg border border-border/60 px-3 py-2 bg-muted/30 hover:bg-muted/50 transition-colors"
             >
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{task.title}</p>
+                <TruncatedText text={task.title} className="text-sm font-medium" />
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
                   {task.projectName && (
-                    <span className="text-xs text-muted-foreground truncate max-w-[120px]">
-                      {task.projectName}
-                    </span>
+                    <TruncatedText text={task.projectName} className="text-xs text-muted-foreground max-w-[120px]" />
                   )}
                   {task.priority && (
                     <span

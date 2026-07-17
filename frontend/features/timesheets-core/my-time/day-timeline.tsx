@@ -17,6 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { LogTimeSheet } from "./log-time-sheet";
 import { useVoidTimesheetEntry } from "@/hooks/api/timesheets-core";
@@ -49,14 +50,14 @@ const EntryRow = memo(function EntryRow({ entry, onEdit, onVoid }: EntryRowProps
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm font-semibold tabular-nums text-foreground">{Number(entry.hours).toFixed(2)}h</span>
           {entry.project && (
-            <span className="text-xs text-muted-foreground truncate">{entry.project.name}</span>
+            <TruncatedText text={entry.project.name} className="text-xs text-muted-foreground" />
           )}
           {entry.ticket && (
             <span className="text-[11px] text-muted-foreground/70">#{entry.ticket.ticketNumber}</span>
           )}
         </div>
         {entry.description && (
-          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{entry.description}</p>
+          <TruncatedText text={entry.description} className="text-xs text-muted-foreground mt-0.5" />
         )}
         <div className="flex items-center gap-1.5 mt-1">
           <Badge variant="outline" className={cn("text-[10px] h-4 px-1.5 border", ENTRY_STATUS_BADGE[entry.status])}>

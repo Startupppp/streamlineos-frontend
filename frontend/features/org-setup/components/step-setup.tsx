@@ -9,6 +9,7 @@ import {
 } from "../lib/constants";
 import type { PaymentsChoice, StartingDataChoice, WizardData } from "../lib/types";
 import { NavButtons } from "./nav-buttons";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 type StepSetupProps = {
   data: WizardData;
@@ -57,7 +58,7 @@ export function StepSetup({ data, recommendedReasons, onToggleModule, patch, onB
                       {selected ? "Included" : "Optional"}
                     </span>
                   </div>
-                  <p className="text-[10.5px] text-muted-foreground truncate">{reason ?? meta.description}</p>
+                  <TruncatedText text={reason ?? meta.description ?? ""} className="text-[10.5px] text-muted-foreground" />
                 </div>
                 <Switch checked={selected} onCheckedChange={() => onToggleModule(key)} aria-label={`Toggle ${meta.label}`} className="shrink-0" />
               </div>

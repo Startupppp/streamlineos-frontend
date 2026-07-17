@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Pencil, Clock } from "lucide-react";
+import { Pencil, Clock } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
 import { useUpdateOrgSettings } from "@/hooks/api/organization";
 import type { OrgSettings } from "@/types/organization";
@@ -155,10 +156,9 @@ export function OrgBusinessHoursSection({ org, canEdit }: OrgBusinessHoursSectio
               );
             })}
             <div className="flex gap-2 pt-3">
-              <Button size="sm" disabled={isPending} onClick={handleSave} className="gap-1.5">
-                {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                {isPending ? "Saving…" : "Save hours"}
-              </Button>
+              <LoadingButton size="sm" isPending={isPending} onClick={handleSave} className="gap-1.5" loadingText="Saving…">
+                Save hours
+              </LoadingButton>
               <Button type="button" variant="ghost" size="sm" onClick={handleCancel} disabled={isPending}>
                 Cancel
               </Button>

@@ -31,6 +31,7 @@ import {
   getUserInitials,
   type NamedUser,
 } from "@/features/projects/shared/resolve-user-name";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { MoodCheckinWidget } from "@/features/hr/engagement/mood-checkin-widget";
 import {
   RecognitionFeed,
@@ -310,7 +311,7 @@ function MoodTab() {
               <div key={entry.id} className="flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-muted/50">
                 <span className="text-lg">{MOODS[entry.mood]}</span>
                 <span className="text-xs text-muted-foreground w-24 shrink-0">{entry.date}</span>
-                {entry.note && <span className="text-xs text-foreground truncate">{entry.note}</span>}
+                {entry.note && <TruncatedText text={entry.note} className="text-xs text-foreground" />}
               </div>
             ))}
           </div>

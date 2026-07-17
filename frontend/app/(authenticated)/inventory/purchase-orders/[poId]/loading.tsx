@@ -5,6 +5,7 @@ export default function PurchaseOrderDetailLoading() {
     <InventoryDetailPageLoading
       title="Purchase Order"
       backHref="/inventory/purchase-orders"
+      statCount={4}
     />
   );
 }

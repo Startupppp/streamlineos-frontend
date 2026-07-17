@@ -24,9 +24,16 @@ import {
   ArrowRight,
   AlertTriangle,
   ChevronRight,
+  Layers,
+  Users,
+  Calendar,
+  MessageSquare,
+  UserCheck,
+  Clock,
+  TrendingUp,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { healthDotColors } from "@/lib/theme-constants";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const CREATE_ACTIONS = [
   { label: "New requisition", href: "/hr/recruitment/requisitions" },
@@ -38,23 +45,6 @@ const CREATE_ACTIONS = [
   { label: "Add vendor", href: "/hr/recruitment/vendors" },
 ] as const;
 
-function HealthChip({
-  label,
-  value,
-  status,
-}: {
-  label: string;
-  value: number | string;
-  status?: "healthy" | "at_risk" | "critical";
-}) {
-  return (
-    <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 shrink-0">
-      {status && <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", healthDotColors[status])} />}
-      <span className="text-lg font-bold tabular-nums text-foreground leading-none">{value}</span>
-      <span className="text-xs text-muted-foreground leading-none whitespace-nowrap">{label}</span>
-    </div>
-  );
-}
 
 function QueueSection({
   title,
@@ -182,25 +172,19 @@ export default function RecruitmentCommandCenterPage() {
           </div>
         ) : (
           <>
-            <div className="flex items-center gap-2 overflow-x-auto pb-1">
-              {statsLoading ? (
-                Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-10 w-28 rounded-lg shrink-0" />)
-              ) : (
-                <>
-                  <HealthChip label="open roles" value={stats?.openJobs ?? 0} />
-                  <HealthChip label="new this week" value={stats?.newCandidates ?? 0} />
-                  <HealthChip label="interviews today" value={interviewsToday.length} />
-                  <HealthChip
-                    label="awaiting feedback"
-                    value={overdueFeedback.length}
-                    status={overdueFeedback.length > 0 ? "at_risk" : "healthy"}
-                  />
-                  <HealthChip label="hired this month" value={stats?.hiredThisMonth ?? 0} />
-                  <HealthChip label="avg days to hire" value={stats?.avgTimeToHireDays ?? "—"} />
-                  {analytics && <HealthChip label="hire rate" value={`${analytics.hireRate}%`} />}
-                </>
-              )}
-            </div>
+            {statsLoading ? (
+              <StatCardGridSkeleton cols={6} count={analytics ? 7 : 6} />
+            ) : (
+              <StatCardGrid cols={6}>
+                <StatCard label="Open Roles" value={stats?.openJobs ?? 0} icon={Layers} tone="default" />
+                <StatCard label="New This Week" value={stats?.newCandidates ?? 0} icon={Users} tone="accent" />
+                <StatCard label="Interviews Today" value={interviewsToday.length} icon={Calendar} tone="blue" />
+                <StatCard label="Awaiting Feedback" value={overdueFeedback.length} icon={MessageSquare} tone={overdueFeedback.length > 0 ? "amber" : "default"} />
+                <StatCard label="Hired This Month" value={stats?.hiredThisMonth ?? 0} icon={UserCheck} tone="emerald" />
+                <StatCard label="Avg Days to Hire" value={stats?.avgTimeToHireDays ?? "—"} icon={Clock} tone="default" />
+                {analytics && <StatCard label="Hire Rate" value={`${analytics.hireRate}%`} icon={TrendingUp} tone="emerald" />}
+              </StatCardGrid>
+            )}
 
             <div className="grid lg:grid-cols-3 gap-4 items-start">
               <div className="lg:col-span-2 space-y-4">
@@ -223,9 +207,7 @@ export default function RecruitmentCommandCenterPage() {
                         {c.lastName?.[0]}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">
-                          {c.firstName} {c.lastName}
-                        </p>
+                        <TruncatedText text={`${c.firstName ?? ""} ${c.lastName ?? ""}`.trim()} className="text-sm font-medium text-foreground" />
                         <p className="text-[11px] text-muted-foreground mt-0.5">{c.source ?? "Unknown source"}</p>
                       </div>
                       <ChevronRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -248,9 +230,7 @@ export default function RecruitmentCommandCenterPage() {
                         {interview.candidate?.lastName?.[0]}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">
-                          {interview.candidate?.firstName} {interview.candidate?.lastName}
-                        </p>
+                        <TruncatedText text={`${interview.candidate?.firstName ?? ""} ${interview.candidate?.lastName ?? ""}`.trim()} className="text-sm font-medium text-foreground" />
                         <p className="text-[11px] text-muted-foreground mt-0.5">{interview.type}</p>
                       </div>
                     </div>
@@ -275,7 +255,7 @@ export default function RecruitmentCommandCenterPage() {
                         <Briefcase className="h-4 w-4 text-amber-600" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">{job.title}</p>
+                        <TruncatedText text={job.title} className="text-sm font-medium text-foreground" />
                         <p className="text-[11px] text-muted-foreground mt-0.5">{job.location ?? "Remote"}</p>
                       </div>
                       <ChevronRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />

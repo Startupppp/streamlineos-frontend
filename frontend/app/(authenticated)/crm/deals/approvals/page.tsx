@@ -31,6 +31,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { useDealApprovals, useResolveDealApproval } from "@/hooks/api/crm";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
@@ -200,9 +201,7 @@ export default function DealApprovalsPage() {
         sortable: true,
         sortValue: (r) => r.dealName ?? "",
         cell: (r) => (
-          <span className="font-medium truncate block max-w-[180px]">
-            {r.dealName ?? `Deal #${r.dealId}`}
-          </span>
+          <TruncatedText text={r.dealName ?? `Deal #${r.dealId}`} className="font-medium max-w-[180px] block" />
         ),
       },
       {

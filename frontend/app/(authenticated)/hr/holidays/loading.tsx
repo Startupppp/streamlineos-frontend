@@ -1,24 +1,27 @@
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function HolidaysLoading() {
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <PageWrapper
+      title="Holiday Calendar"
+      subtitle="Manage organization holidays across the year"
+      actions={
+        <div className="flex gap-2 items-center flex-nowrap">
+          <Skeleton className="h-8 w-[120px] rounded-md" />
+          <Skeleton className="h-8 w-24 rounded-md" />
+        </div>
+      }
+    >
+      <div className="space-y-4">
+        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-72 rounded-lg" />
         <div className="space-y-2">
-          <Skeleton className="h-4 w-44" />
-          <Skeleton className="h-4 w-56" />
-        </div>
-        <div className="flex gap-2">
-          <Skeleton className="h-9 w-32" />
-          <Skeleton className="h-9 w-32" />
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} className="h-16 rounded-lg" />
+          ))}
         </div>
       </div>
-      <Skeleton className="h-72 rounded-2xl" />
-      <div className="space-y-2">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <Skeleton key={i} className="h-16 rounded-xl" />
-        ))}
-      </div>
-    </div>
+    </PageWrapper>
   );
 }

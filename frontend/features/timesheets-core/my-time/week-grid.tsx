@@ -12,6 +12,7 @@ import {
   useVoidTimesheetEntry,
   useTimesheetEntries,
 } from "@/hooks/api/timesheets-core";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import type { TimesheetEntry } from "@/features/timesheets-core";
 
 interface GridRow {
@@ -249,9 +250,9 @@ export function WeekGrid({ entries, isLoading, days, weekStart, weekEnd }: WeekG
               return (
                 <tr key={row.rowKey} className="group hover:bg-muted/20 transition-colors">
                   <td className="px-3 py-1.5">
-                    <div className="truncate font-medium text-foreground">{row.projectName}</div>
+                    <TruncatedText text={row.projectName} className="font-medium text-foreground" />
                     {row.ticketLabel && (
-                      <div className="truncate text-[10px] text-muted-foreground">{row.ticketLabel}</div>
+                      <TruncatedText text={row.ticketLabel} className="text-[10px] text-muted-foreground" />
                     )}
                   </td>
                   {days.map((d) => {

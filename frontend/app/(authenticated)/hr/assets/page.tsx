@@ -61,6 +61,7 @@ import { cn, resolveImageUrl } from "@/lib/utils";
 import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { EmptyDevicesIllustration } from "@/components/illustrations";
 import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import type { Asset, Employee } from "@/types/hr";
 
 function fmtCost(amount: string | number | null) {
@@ -224,7 +225,7 @@ function ASSET_COLUMNS(
                 {initials}
               </AvatarFallback>
             </Avatar>
-            <span className="text-sm text-foreground truncate max-w-[120px]">{displayName}</span>
+            <TruncatedText text={displayName} className="text-sm text-foreground max-w-[120px]" />
           </div>
         );
       },

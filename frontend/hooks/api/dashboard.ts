@@ -126,8 +126,9 @@ export const useTeamAvailability = (
   return useQuery<TeamMember[], Error>({
     queryKey: queryKeys.dashboard.teamAvailability(orgId),
     queryFn: () => apiClient.get<TeamMember[]>("/dashboard/team-availability"),
-    refetchInterval: 30_000,
-    staleTime: 15_000,
+    refetchInterval: 60_000,
+    staleTime: 60_000,
+    refetchIntervalInBackground: false,
     ...options,
     enabled: !!orgId,
   });
@@ -247,6 +248,7 @@ export const useLeavesToday = (
     queryFn: () => apiClient.get<LeaveToday[]>("/dashboard/leaves-today"),
     staleTime: 60_000,
     refetchInterval: 60_000,
+    refetchIntervalInBackground: false,
     ...options,
     enabled: !!orgId,
   });
@@ -299,6 +301,7 @@ export const usePendingApprovals = (
     queryFn: () => apiClient.get<PendingApprovalsCount>("/dashboard/pending-approvals"),
     staleTime: 60_000,
     refetchInterval: 60_000,
+    refetchIntervalInBackground: false,
     ...options,
     enabled: !!orgId,
   });

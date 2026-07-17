@@ -2,6 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Lock } from "lucide-react";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface FieldPreviewProps {
   name: string;
@@ -24,8 +25,8 @@ export function FieldPreview({
 }: FieldPreviewProps) {
   return (
     <div className="p-3 border rounded-md bg-muted/30 space-y-1.5">
-      <div className="flex items-center gap-1.5 flex-wrap">
-        <span className="text-sm font-medium">{name || "Untitled"}</span>
+      <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+        <TruncatedText text={name || "Untitled"} className="min-w-0 flex-1 text-sm font-medium" />
         {isRequired && (
           <Badge variant="outline" className="text-[10px] h-4 px-1 text-primary border-primary/30">
             required
@@ -37,7 +38,7 @@ export function FieldPreview({
           </Badge>
         )}
       </div>
-      {helpText && <p className="text-[11px] text-muted-foreground">{helpText}</p>}
+      {helpText && <TruncatedText text={helpText} lines={2} className="text-[11px] text-muted-foreground" />}
       <div className="mt-1">
         {fieldType === "boolean" ? (
           <div className="flex items-center gap-2">

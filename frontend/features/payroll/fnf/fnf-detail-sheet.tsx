@@ -21,6 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCan } from "@/hooks/api/access";
 import { useFnfSettlement, useFnfStatement, useApproveFnf, downloadFnfStatement } from "@/hooks/api/payroll/fnf";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { FnfStatusBadge } from "./fnf-status-badge";
 import { FnfStatementView } from "./fnf-statement-view";
 import type { FnfStatus } from "@/types/payroll";
@@ -86,10 +87,9 @@ function FnfDetailSheetInner({ settlementId, onClose }: FnfDetailSheetInnerProps
             <Skeleton className="h-3 w-24" />
           </div>
         ) : (
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-semibold">
-              Settlement — {settlement?.userName ?? "—"}
-            </span>
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-sm font-semibold shrink-0">Settlement —</span>
+            <TruncatedText text={settlement?.userName ?? "—"} className="text-sm font-semibold min-w-0 flex-1" />
             {settlement && <FnfStatusBadge status={settlement.status} />}
           </div>
         )}

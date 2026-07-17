@@ -38,6 +38,7 @@ import {
   HELPDESK_CATEGORY_LABELS,
   type HelpdeskCategory,
 } from "@/hooks/api/hr/helpdesk";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const formSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters").max(150),
@@ -134,10 +135,16 @@ export function CreateTicketDialog({ open, onClose }: Props) {
                 <p className="text-xs font-medium text-muted-foreground">Suggested articles that may help:</p>
                 <ul className="space-y-1">
                   {suggestions.results.map((r) => (
-                    <li key={`${r.source}-${r.id}`} className="text-xs text-primary hover:underline cursor-default">
-                      {r.title}
+                    <li key={`${r.source}-${r.id}`} className="min-w-0">
+                      <TruncatedText
+                        text={r.title}
+                        className="text-xs text-primary hover:underline cursor-default"
+                      />
                       {r.excerpt && (
-                        <span className="text-muted-foreground ml-1 not-italic">— {r.excerpt.slice(0, 60)}…</span>
+                        <TruncatedText
+                          text={`— ${r.excerpt.slice(0, 60)}…`}
+                          className="text-xs text-muted-foreground not-italic"
+                        />
                       )}
                     </li>
                   ))}

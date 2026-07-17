@@ -23,6 +23,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useApproveDeclaration, useRejectDeclaration } from "@/hooks/api/payroll/tax-admin";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import type { TaxDeclarationAdmin } from "@/types/payroll/reports";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
 
@@ -126,9 +127,9 @@ export function DeclarationReviewSheet({ declaration, onClose }: DeclarationRevi
           </SheetHeader>
 
           <SheetBody className="px-6 py-4 space-y-5">
-            <div className="space-y-1">
-              <p className="text-sm font-medium">{declaration.userName}</p>
-              <p className="text-xs text-muted-foreground">{declaration.userEmail}</p>
+            <div className="space-y-1 min-w-0">
+              <TruncatedText text={declaration.userName ?? ""} className="text-sm font-medium" />
+              <TruncatedText text={declaration.userEmail ?? ""} className="text-xs text-muted-foreground break-all" />
               <div className="flex items-center gap-2 mt-2">
                 <span className="text-xs text-muted-foreground">FY {declaration.financialYear}</span>
                 <span

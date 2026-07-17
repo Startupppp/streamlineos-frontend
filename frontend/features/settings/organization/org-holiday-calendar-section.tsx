@@ -12,13 +12,15 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2, CalendarDays } from "lucide-react";
+import { CalendarDays } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
 import { apiClient, getApiError } from "@/lib/api-client";
 import { format, parseISO } from "date-fns";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 type OrgHoliday = {
   id: string;
@@ -149,10 +151,9 @@ export function OrgHolidayCalendarSection({ canEdit }: OrgHolidayCalendarSection
               <span className="text-sm">Repeat annually</span>
             </label>
             <div className="flex gap-2">
-              <Button type="submit" size="sm" disabled={createMutation.isPending} className="gap-1.5 h-8">
-                {createMutation.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              <LoadingButton type="submit" size="sm" isPending={createMutation.isPending} className="gap-1.5 h-8" loadingText="Saving…">
                 Save
-              </Button>
+              </LoadingButton>
               <Button type="button" variant="ghost" size="sm" className="h-8" onClick={() => { setShowAdd(false); form.reset(); }}>
                 Cancel
               </Button>
@@ -171,7 +172,7 @@ export function OrgHolidayCalendarSection({ canEdit }: OrgHolidayCalendarSection
             {holidays.map((h) => (
               <div key={h.id} className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted/50 group">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{h.name}</p>
+                  <TruncatedText text={h.name} className="text-sm font-medium" />
                   <p className="text-xs text-muted-foreground">
                     {format(parseISO(h.date), "dd MMM yyyy")}
                     {h.recurring && " · Recurring annually"}

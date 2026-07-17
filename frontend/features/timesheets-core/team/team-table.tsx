@@ -7,6 +7,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { BellIcon } from "@animateicons/react/lucide";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { PERIOD_STATUS_BADGE, PERIOD_STATUS_LABEL } from "@/features/timesheets-core/types";
 import type { PeriodStatus, TimesheetPeriod } from "@/features/timesheets-core/types";
 import { cn } from "@/lib/utils";
@@ -59,9 +60,9 @@ export function TeamTable({ rows, weekStart, isLoading, onRowClick, onRemindAll 
         key: "name",
         header: "Member",
         cell: (row) => (
-          <div>
-            <p className="text-[11px] font-medium text-foreground">{row.name || row.email}</p>
-            {row.name && <p className="text-[10px] text-muted-foreground">{row.email}</p>}
+          <div className="min-w-0">
+            <TruncatedText text={row.name || row.email} className="font-medium text-[11px] text-foreground" />
+            {row.name && <TruncatedText text={row.email} className="text-[10px] text-muted-foreground" />}
           </div>
         ),
         sortable: true,

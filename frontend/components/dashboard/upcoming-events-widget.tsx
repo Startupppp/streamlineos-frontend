@@ -7,6 +7,7 @@ import { WidgetCard } from "@/components/ui/widget-card";
 import { usePersonalDashboard } from "@/hooks/api/dashboard";
 import { CalendarDays } from "lucide-react";
 import { format } from "date-fns";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 export function UpcomingEventsWidget() {
   const { data, isLoading, error } = usePersonalDashboard();
@@ -48,7 +49,7 @@ export function UpcomingEventsWidget() {
               </span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{ev.title}</p>
+              <TruncatedText text={ev.title} className="text-sm font-medium" />
               <p className="text-xs text-muted-foreground">
                 {format(new Date(ev.startTime), "h:mm a")}
                 {" – "}

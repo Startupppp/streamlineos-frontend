@@ -1,6 +1,7 @@
 "use client";
 
 import { Skeleton } from "@/components/ui/skeleton";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageSection } from "@/components/ui/page-wrapper";
 import { useKbExportJobs } from "@/hooks/api/kb";
@@ -25,7 +26,7 @@ function JobRow({ job }: { job: KbExportJob }) {
   return (
     <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border bg-card text-sm">
       <KbFileTextIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-      <span className="flex-1 truncate capitalize">{job.format} export</span>
+      <TruncatedText text={`${job.format} export`} className="flex-1 capitalize" />
       <span className="text-xs text-muted-foreground shrink-0 capitalize">
         {job.status}
       </span>

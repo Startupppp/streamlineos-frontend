@@ -1,12 +1,22 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { toast } from "sonner";
 import { Star, CheckCircle2, XCircle, HelpCircle, EyeOff } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { cn } from "@/lib/utils";
 import {
   useSubmitScorecard,
@@ -14,6 +24,14 @@ import {
   type InterviewScorecard,
 } from "@/hooks/api/hr/recruitment";
 
+const schema = z.object({
+  recommendation: z.enum(["HIRE", "NO_HIRE", "MAYBE"], {
+    error: "Please select a recommendation",
+  }),
+  notes: z.string().max(1000).optional(),
+});
+
+type FormValues = z.infer<typeof schema>;
 
 const DEFAULT_CRITERIA = [
   "Technical Skills",
@@ -197,26 +215,25 @@ export function ScorecardForm({
 
   const [ratings, setRatings] =
     useState<Record<string, number>>(initialRatings);
-  const [recommendation, setRecommendation] = useState<Recommendation | null>(
-    existingScorecard?.recommendation ?? null,
-  );
-  const [notes, setNotes] = useState(existingScorecard?.notes ?? "");
 
   const submitScorecard = useSubmitScorecard(interviewId);
 
   const isSubmitted = Boolean(existingScorecard?.submittedAt);
   const isBlindMode = existingScorecard?.isBlindMode ?? false;
 
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      recommendation: existingScorecard?.recommendation ?? undefined,
+      notes: existingScorecard?.notes ?? "",
+    },
+  });
+
   const handleRatingChange = useCallback((criterion: string, value: number) => {
     setRatings((prev) => ({ ...prev, [criterion]: value }));
   }, []);
 
-  const handleSubmit = useCallback(() => {
-    if (!recommendation) {
-      toast.error("Please select a recommendation before submitting.");
-      return;
-    }
-
+  function onSubmit(values: FormValues) {
     const unrated = criteriaNames.filter((name) => !ratings[name]);
     if (unrated.length > 0) {
       toast.error(`Please rate: ${unrated.join(", ")}`);
@@ -226,8 +243,8 @@ export function ScorecardForm({
     submitScorecard.mutate(
       {
         ratings,
-        recommendation,
-        notes: notes.trim() || undefined,
+        recommendation: values.recommendation,
+        notes: values.notes?.trim() || undefined,
         templateId: template?.id ?? undefined,
       },
       {
@@ -239,14 +256,7 @@ export function ScorecardForm({
         },
       },
     );
-  }, [
-    ratings,
-    recommendation,
-    notes,
-    criteriaNames,
-    template,
-    submitScorecard,
-  ]);
+  }
 
   if (isSubmitted && existingScorecard) {
     return (
@@ -258,96 +268,122 @@ export function ScorecardForm({
   }
 
   return (
-    <div className="space-y-6">
-      {isBlindMode && (
-        <div className="flex items-start gap-2 rounded-md border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-800 dark:border-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-300">
-          <EyeOff className="mt-0.5 h-4 w-4 shrink-0" />
-          <span>Your scorecard is hidden from others until you submit</span>
-        </div>
-      )}
-
-      <div className="space-y-4">
-        <h4 className="text-sm font-semibold text-foreground">
-          Criteria Ratings
-        </h4>
-        {criteriaNames.map((name) => (
-          <div key={name} className="flex items-center justify-between gap-4">
-            <span className="text-sm text-foreground">{name}</span>
-            <StarRating
-              value={ratings[name] ?? 0}
-              onChange={(v) => handleRatingChange(name, v)}
-              label={name}
-            />
+    <Form {...form}>
+      <div className="space-y-6">
+        {isBlindMode && (
+          <div className="flex items-start gap-2 rounded-md border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-800 dark:border-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-300">
+            <EyeOff className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>Your scorecard is hidden from others until you submit</span>
           </div>
-        ))}
-      </div>
+        )}
 
-      <Separator />
-
-      <div className="space-y-3">
-        <h4 className="text-sm font-semibold text-foreground">
-          Recommendation
-        </h4>
-        <div
-          className="flex flex-col gap-2 sm:flex-row"
-          role="group"
-          aria-label="Hiring recommendation"
-        >
-          {RECOMMENDATION_OPTIONS.map(
-            ({ value, label, Icon, badgeClass, activeClass }) => {
-              const selected = recommendation === value;
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setRecommendation(value)}
-                  aria-pressed={selected}
-                  className={cn(
-                    "flex flex-1 items-center justify-center gap-2 rounded-md border-2 px-4 py-2.5 text-sm font-medium transition-colors",
-                    selected
-                      ? activeClass + " border-current"
-                      : "border-border bg-background hover:bg-muted",
-                  )}
-                >
-                  <Badge
-                    className={cn("gap-1 pointer-events-none", badgeClass)}
-                  >
-                    <Icon className="h-3.5 w-3.5" />
-                    {label}
-                  </Badge>
-                </button>
-              );
-            },
-          )}
+        <div className="space-y-4">
+          <h4 className="text-sm font-semibold text-foreground">
+            Criteria Ratings
+          </h4>
+          {criteriaNames.map((name) => (
+            <div key={name} className="flex items-center justify-between gap-4">
+              <span className="text-sm text-foreground">{name}</span>
+              <StarRating
+                value={ratings[name] ?? 0}
+                onChange={(v) => handleRatingChange(name, v)}
+                label={name}
+              />
+            </div>
+          ))}
         </div>
-      </div>
 
-      <Separator />
+        <Separator />
 
-      <div className="space-y-2">
-        <h4 className="text-sm font-semibold text-foreground">
-          Notes{" "}
-          <span className="font-normal text-muted-foreground">(optional)</span>
-        </h4>
-        <Textarea
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Add any observations, feedback, or follow-up items…"
-          rows={4}
-          className="resize-none"
-          aria-label="Scorecard notes"
+        <FormField
+          control={form.control}
+          name="recommendation"
+          render={({ field }) => (
+            <FormItem className="space-y-3">
+              <h4 className="text-sm font-semibold text-foreground">
+                Recommendation
+              </h4>
+              <FormControl>
+                <div
+                  className="flex flex-col gap-2 sm:flex-row"
+                  role="group"
+                  aria-label="Hiring recommendation"
+                >
+                  {RECOMMENDATION_OPTIONS.map(
+                    ({ value, label, Icon, badgeClass, activeClass }) => {
+                      const selected = field.value === value;
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={() => field.onChange(value)}
+                          aria-pressed={selected}
+                          className={cn(
+                            "flex flex-1 items-center justify-center gap-2 rounded-md border-2 px-4 py-2.5 text-sm font-medium transition-colors",
+                            selected
+                              ? activeClass + " border-current"
+                              : "border-border bg-background hover:bg-muted",
+                          )}
+                        >
+                          <Badge
+                            className={cn(
+                              "gap-1 pointer-events-none",
+                              badgeClass,
+                            )}
+                          >
+                            <Icon className="h-3.5 w-3.5" />
+                            {label}
+                          </Badge>
+                        </button>
+                      );
+                    },
+                  )}
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
 
-      <Button
-        type="button"
-        className="w-full"
-        onClick={handleSubmit}
-        disabled={isSubmitted || submitScorecard.isPending}
-        aria-label="Submit scorecard"
-      >
-        {submitScorecard.isPending ? "Submitting…" : "Submit Scorecard"}
-      </Button>
-    </div>
+        <Separator />
+
+        <FormField
+          control={form.control}
+          name="notes"
+          render={({ field }) => (
+            <FormItem className="space-y-2">
+              <h4 className="text-sm font-semibold text-foreground">
+                Notes{" "}
+                <span className="font-normal text-muted-foreground">
+                  (optional)
+                </span>
+              </h4>
+              <FormControl>
+                <Textarea
+                  {...field}
+                  placeholder="Add any observations, feedback, or follow-up items…"
+                  rows={4}
+                  className="resize-none"
+                  aria-label="Scorecard notes"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <LoadingButton
+          type="button"
+          className="w-full"
+          isPending={submitScorecard.isPending}
+          loadingText="Submitting…"
+          disabled={isSubmitted}
+          aria-label="Submit scorecard"
+          onClick={form.handleSubmit(onSubmit)}
+        >
+          Submit Scorecard
+        </LoadingButton>
+      </div>
+    </Form>
   );
 }

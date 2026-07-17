@@ -44,6 +44,7 @@ import {
   KbFileTextIcon,
 } from "@/features/knowledge-base/lib/kb-icons";
 import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface PageTreeItemProps {
   node: KbPageTreeNode;
@@ -284,9 +285,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
               className="flex-1 h-6 text-sm py-0 px-1 min-w-0"
             />
           ) : (
-            <span className="min-w-0 flex-1 line-clamp-1 break-all overflow-hidden">
-              {node.title || "Untitled"}
-            </span>
+            <TruncatedText text={node.title || "Untitled"} className="flex-1" />
           )}
 
           {!renaming && (

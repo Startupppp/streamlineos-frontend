@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useHrWebhookDeliveries,
@@ -87,7 +88,7 @@ function DeliveryRow({
           )}
         </div>
         {delivery.error && (
-          <p className="text-xs text-red-600 truncate">{delivery.error}</p>
+          <TruncatedText text={delivery.error} className="text-xs text-red-600 min-w-0" />
         )}
         <p className="text-[11px] text-muted-foreground">
           {delivery.lastAttemptAt
@@ -119,8 +120,13 @@ export function WebhookDeliveriesSheet({ open, onOpenChange, subscription }: Pro
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-lg flex flex-col gap-0 p-0">
         <SheetHeader className="px-6 pt-6 pb-4 border-b shrink-0">
-          <SheetTitle className="truncate">Deliveries — {subscription.name}</SheetTitle>
-          <p className="text-xs text-muted-foreground font-mono truncate">{subscription.url}</p>
+          <SheetTitle>
+            <TruncatedText text={`Deliveries — ${subscription.name}`} className="min-w-0" />
+          </SheetTitle>
+          <TruncatedText
+            text={subscription.url}
+            className="text-xs text-muted-foreground font-mono min-w-0"
+          />
         </SheetHeader>
 
         <ScrollArea className="flex-1">

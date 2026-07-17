@@ -1,15 +1,23 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
+import dynamic from "next/dynamic";
 import { AnimatedLogo } from "@/features/landing/components/animated-logo";
 import { MarkdownContent } from "@/components/markdown/markdown-content";
 import type { AskAiHistoryMessage } from "@/hooks/api/chat-ai-assistant";
+
+const AskOsConfirmationCard = dynamic(
+  () => import("./ask-os-confirmation-card").then((m) => m.AskOsConfirmationCard),
+  { ssr: false },
+);
 
 export const SUGGESTIONS = [
   "Summarize my day",
   "What are my hot leads right now?",
   "Search the knowledge base for our leave policy",
-  "Create a task to follow up tomorrow",
+  "Schedule a reminder for STRE-42",
+  "Send kudos to John for shipping the feature",
 ];
 
 export type MsgRow =
@@ -76,6 +84,43 @@ export function EmptyAskOs({
   );
 }
 
+interface ConfirmPayload {
+  requiresConfirmation: true;
+  proposalId: number;
+  token: string;
+  action: string;
+  summary: string;
+  preview: Record<string, unknown>;
+}
+
+function parseConfirmPayload(content: string): ConfirmPayload | null {
+  const prefix = "CONFIRM_ACTION:";
+  if (!content.startsWith(prefix)) return null;
+  try {
+    const parsed: unknown = JSON.parse(content.slice(prefix.length).trim());
+    if (
+      typeof parsed !== "object" || parsed === null ||
+      !("token" in parsed) || typeof (parsed as Record<string, unknown>)["token"] !== "string" ||
+      !("action" in parsed) || typeof (parsed as Record<string, unknown>)["action"] !== "string" ||
+      !("summary" in parsed) || typeof (parsed as Record<string, unknown>)["summary"] !== "string" ||
+      !("preview" in parsed) || typeof (parsed as Record<string, unknown>)["preview"] !== "object"
+    ) {
+      return null;
+    }
+    const p = parsed as Record<string, unknown>;
+    return {
+      requiresConfirmation: true,
+      proposalId: Number(p["proposalId"]),
+      token: p["token"] as string,
+      action: p["action"] as string,
+      summary: p["summary"] as string,
+      preview: (p["preview"] ?? {}) as Record<string, unknown>,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export function AskOsBubble({
   role,
   content,
@@ -87,6 +132,9 @@ export function AskOsBubble({
   streaming: boolean;
   reduce: boolean;
 }) {
+  const [confirmedResult, setConfirmedResult] = useState<Record<string, unknown> | null>(null);
+  const [cancelled, setCancelled] = useState(false);
+
   if (role === "user") {
     return (
       <motion.div initial={reduce ? false : { opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="flex justify-end">
@@ -96,11 +144,27 @@ export function AskOsBubble({
       </motion.div>
     );
   }
+
+  const confirmPayload = parseConfirmPayload(content);
+
   return (
     <motion.div initial={reduce ? false : { opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="flex justify-start gap-2">
       <AnimatedLogo size={24} gradient className="mt-0.5 shrink-0 rounded-full" />
       <div className="min-w-0 max-w-[85%] rounded-2xl rounded-bl-sm border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm">
-        {content ? (
+        {confirmPayload && !confirmedResult && !cancelled ? (
+          <AskOsConfirmationCard
+            action={confirmPayload.action}
+            summary={confirmPayload.summary}
+            preview={confirmPayload.preview}
+            token={confirmPayload.token}
+            onConfirmed={setConfirmedResult}
+            onCancelled={() => setCancelled(true)}
+          />
+        ) : confirmedResult ? (
+          <p className="text-xs text-muted-foreground">Action completed.</p>
+        ) : cancelled ? (
+          <p className="text-xs text-muted-foreground">Cancelled.</p>
+        ) : content ? (
           <div className="break-words"><MarkdownContent content={content} /></div>
         ) : streaming ? (
           <TypingDots reduce={reduce} />

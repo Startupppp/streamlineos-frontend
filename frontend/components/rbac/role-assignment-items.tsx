@@ -2,6 +2,7 @@
 
 import { useCallback } from "react";
 import { Loader2, Plus, X, Building2 } from "lucide-react";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { CommandItem } from "@/components/ui/command";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -40,11 +41,9 @@ export function AssignableUserItem({
         </AvatarFallback>
       </Avatar>
       <div className="min-w-0 flex-1">
-        <p className="text-[13px] truncate">{member.name ?? member.email}</p>
+        <TruncatedText text={member.name ?? member.email ?? ""} className="text-[13px]" />
         {member.name && (
-          <p className="text-[11px] text-muted-foreground truncate">
-            {member.email}
-          </p>
+          <TruncatedText text={member.email ?? ""} className="text-[11px] text-muted-foreground" />
         )}
       </div>
       {busy ? (
@@ -84,7 +83,7 @@ export function AssignableDepartmentItem({
       aria-label={`Assign department ${department.name}`}
     >
       <Building2 className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-      <span className="text-[13px] truncate flex-1">{department.name}</span>
+      <TruncatedText text={department.name} className="text-[13px] flex-1" />
       {busy ? (
         <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
       ) : (
@@ -131,13 +130,9 @@ export function MemberRow({
         </AvatarFallback>
       </Avatar>
       <div className="min-w-0 flex-1">
-        <p className="text-[13px] font-medium truncate">
-          {name ?? subtitle ?? "Unknown"}
-        </p>
+        <TruncatedText text={name ?? subtitle ?? "Unknown"} className="text-[13px] font-medium" />
         {subtitle && name && (
-          <p className="text-[11px] text-muted-foreground truncate">
-            {subtitle}
-          </p>
+          <TruncatedText text={subtitle} className="text-[11px] text-muted-foreground" />
         )}
       </div>
       <Button
@@ -187,9 +182,7 @@ export function DepartmentRow({
       >
         <Building2 className="h-4 w-4 text-muted-foreground" />
       </span>
-      <p className="text-[13px] font-medium truncate flex-1">
-        {name ?? "Department"}
-      </p>
+      <TruncatedText text={name ?? "Department"} className="text-[13px] font-medium flex-1" />
       <Button
         variant="ghost"
         size="icon"

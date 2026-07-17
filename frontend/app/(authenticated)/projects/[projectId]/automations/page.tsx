@@ -65,7 +65,7 @@ import {
   PM_FILL_PANEL,
   PM_PANEL,
 } from "@/features/projects/shared/pm-chrome";
-import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { LoadingButton } from "@/components/ui/loading-button";
 import {
   useAutomations,
@@ -170,9 +170,7 @@ function AutomationCard({ automation, onToggle, onDelete, onEdit }: AutomationCa
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className={cn("text-sm font-semibold text-foreground", TEXT_ONE_LINE)}>
-              {automation.name}
-            </p>
+            <TruncatedText text={automation.name} className="text-sm font-semibold text-foreground" />
             <Badge
               variant="secondary"
               className="text-[10px] bg-muted text-muted-foreground border-border shrink-0"

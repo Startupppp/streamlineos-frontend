@@ -1,5 +1,9 @@
 "use client";
 
+import { useCallback } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { format } from "date-fns";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,10 +25,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useRecordPayment } from "@/hooks/api/invoice";
 import { useManualMethods } from "@/hooks/api/payments";
 import type { PaymentMethod } from "@/types/invoice";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
 const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
   { value: "bank_transfer", label: "Bank Transfer" },
@@ -42,6 +47,22 @@ function fmt(amount: string | number) {
   })}`;
 }
 
+const schema = z.object({
+  amount: z
+    .string()
+    .trim()
+    .min(1, "Amount is required")
+    .refine((v) => /^\d+(\.\d{1,2})?$/.test(v) && Number(v) > 0, {
+      message: "Enter a valid positive amount",
+    }),
+  paymentDate: z.string().min(1, "Payment date is required"),
+  paymentMethod: z.string().min(1, "Payment method is required"),
+  referenceNumber: z.string(),
+  notes: z.string(),
+});
+
+type FormValues = z.infer<typeof schema>;
+
 interface RecordPaymentDialogProps {
   open: boolean;
   invoiceId: number;
@@ -58,15 +79,19 @@ export function RecordPaymentDialog({
   const recordPayment = useRecordPayment();
   const { data: manualMethods } = useManualMethods();
 
-  const [form, setForm] = useState({
-    amount: "",
-    paymentDate: format(new Date(), "yyyy-MM-dd"),
-    paymentMethod: "bank_transfer" as PaymentMethod,
-    referenceNumber: "",
-    notes: "",
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      amount: "",
+      paymentDate: format(new Date(), "yyyy-MM-dd"),
+      paymentMethod: "bank_transfer",
+      referenceNumber: "",
+      notes: "",
+    },
   });
 
-  // Configured methods (real bank/UPI instructions saved in Settings > Payments) surface first.
+  const watchedMethod = form.watch("paymentMethod");
+
   const orderedMethods = useMemo(() => {
     const configuredTypes = new Set<string>(
       (manualMethods ?? []).filter((m) => m.status === "enabled").map((m) => m.methodType),
@@ -76,52 +101,27 @@ export function RecordPaymentDialog({
     );
   }, [manualMethods]);
 
-  const selectedMethodConfig = manualMethods?.find((m) => m.methodType === form.paymentMethod && m.status === "enabled");
+  const selectedMethodConfig = manualMethods?.find(
+    (m) => m.methodType === watchedMethod && m.status === "enabled",
+  );
 
-  function handleAmountChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setForm((p) => ({ ...p, amount: e.target.value }));
-  }
+  const handleCancel = useCallback(() => onOpenChange(false), [onOpenChange]);
 
-  function handleDateChange(v: string) {
-    setForm((p) => ({ ...p, paymentDate: v }));
-  }
-
-  function handleMethodChange(v: string) {
-    setForm((p) => ({ ...p, paymentMethod: v as PaymentMethod }));
-  }
-
-  function handleRefChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setForm((p) => ({ ...p, referenceNumber: e.target.value }));
-  }
-
-  function handleNotesChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setForm((p) => ({ ...p, notes: e.target.value }));
-  }
-
-  function handleCancel() {
-    onOpenChange(false);
-  }
-
-  function handleSubmit() {
-    const amount = Number(form.amount);
-    if (!amount || amount <= 0) {
-      toast.error("Enter a valid amount");
-      return;
-    }
+  function handleSubmit(values: FormValues) {
     recordPayment.mutate(
       {
         invoiceId,
-        amount,
-        paymentDate: form.paymentDate,
-        paymentMethod: form.paymentMethod,
-        referenceNumber: form.referenceNumber || undefined,
-        notes: form.notes || undefined,
+        amount: Number(values.amount),
+        paymentDate: values.paymentDate,
+        paymentMethod: values.paymentMethod as PaymentMethod,
+        referenceNumber: values.referenceNumber || undefined,
+        notes: values.notes || undefined,
       },
       {
         onSuccess: () => {
           toast.success("Payment recorded");
           onOpenChange(false);
-          setForm({
+          form.reset({
             amount: "",
             paymentDate: format(new Date(), "yyyy-MM-dd"),
             paymentMethod: "bank_transfer",
@@ -129,7 +129,7 @@ export function RecordPaymentDialog({
             notes: "",
           });
         },
-        onError: () => toast.error("Failed to record payment"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }
@@ -140,53 +140,68 @@ export function RecordPaymentDialog({
         <DialogHeader>
           <DialogTitle className="text-sm">Record Payment</DialogTitle>
         </DialogHeader>
-        <div className="space-y-3 py-1">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3 py-1">
           <div className="space-y-1">
             <Label htmlFor="pay-amount" className="text-xs">
               Amount <span className="text-destructive">*</span>
             </Label>
             <Input
               id="pay-amount"
-              type="number"
-              step="0.01"
+              type="text"
+              inputMode="decimal"
               placeholder={`Max: ${fmt(Math.max(0, outstanding))}`}
-              value={form.amount}
-              onChange={handleAmountChange}
               className="text-sm"
               autoFocus
+              {...form.register("amount")}
             />
+            {form.formState.errors.amount && (
+              <p className="text-xs text-destructive">
+                {form.formState.errors.amount.message}
+              </p>
+            )}
           </div>
           <div className="space-y-1">
             <Label htmlFor="pay-date" className="text-xs">
               Payment Date
             </Label>
-            <DatePicker
-              id="pay-date"
-              value={form.paymentDate}
-              onChange={handleDateChange}
-              placeholder="Select payment date"
+            <Controller
+              control={form.control}
+              name="paymentDate"
+              render={({ field }) => (
+                <DatePicker
+                  id="pay-date"
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="Select payment date"
+                />
+              )}
             />
+            {form.formState.errors.paymentDate && (
+              <p className="text-xs text-destructive">
+                {form.formState.errors.paymentDate.message}
+              </p>
+            )}
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Payment Method</Label>
-            <Select
-              value={form.paymentMethod}
-              onValueChange={handleMethodChange}
-            >
-              <SelectTrigger
-                className="text-xs"
-                aria-label="Payment method"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {orderedMethods.map((m) => (
-                  <SelectItem key={m.value} value={m.value}>
-                    {m.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Controller
+              control={form.control}
+              name="paymentMethod"
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger className="text-xs" aria-label="Payment method">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {orderedMethods.map((m) => (
+                      <SelectItem key={m.value} value={m.value}>
+                        {m.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
             {selectedMethodConfig && (
               <p className="text-[11px] text-muted-foreground bg-muted/40 rounded px-2 py-1.5 mt-1">
                 {selectedMethodConfig.instructions ||
@@ -203,9 +218,8 @@ export function RecordPaymentDialog({
             <Input
               id="pay-ref"
               placeholder="UTR, cheque #, etc."
-              value={form.referenceNumber}
-              onChange={handleRefChange}
               className="text-sm"
+              {...form.register("referenceNumber")}
             />
           </div>
           <div className="space-y-1">
@@ -215,26 +229,25 @@ export function RecordPaymentDialog({
             <Input
               id="pay-notes"
               placeholder="Optional"
-              value={form.notes}
-              onChange={handleNotesChange}
               className="text-sm"
+              {...form.register("notes")}
             />
           </div>
-        </div>
-        <div className="flex justify-end gap-2 pt-1">
-          <Button variant="outline" size="sm" onClick={handleCancel}>
-            Cancel
-          </Button>
-          <LoadingButton
-            size="sm"
-            onClick={handleSubmit}
-            isPending={recordPayment.isPending}
-            loadingText="Recording…"
-          >
-            <Check className="h-3.5 w-3.5 mr-1" />
-            Record Payment
-          </LoadingButton>
-        </div>
+          <div className="flex justify-end gap-2 pt-1">
+            <Button type="button" variant="outline" size="sm" onClick={handleCancel}>
+              Cancel
+            </Button>
+            <LoadingButton
+              type="submit"
+              size="sm"
+              isPending={recordPayment.isPending}
+              loadingText="Recording…"
+            >
+              <Check className="h-3.5 w-3.5 mr-1" />
+              Record Payment
+            </LoadingButton>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   );

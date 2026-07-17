@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { usePresence, usePresenceListener } from "ably/react";
 import { Users } from "lucide-react";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const TYPING_EVENT = "support:ticket-typing";
 const TYPING_IDLE_MS = 3000;
@@ -96,11 +97,9 @@ function TicketPresenceInner({ ticketId, orgId, userId, name }: TicketPresenceIn
     <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
       <Users className="h-3.5 w-3.5 shrink-0" />
       {typingNames.length > 0 ? (
-        <span className="truncate">
-          {typingNames.join(", ")} {typingNames.length === 1 ? "is" : "are"} typing…
-        </span>
+        <TruncatedText text={`${typingNames.join(", ")} ${typingNames.length === 1 ? "is" : "are"} typing…`} />
       ) : (
-        <span className="truncate">Also viewing: {viewingNames.join(", ")}</span>
+        <TruncatedText text={`Also viewing: ${viewingNames.join(", ")}`} />
       )}
     </div>
   );

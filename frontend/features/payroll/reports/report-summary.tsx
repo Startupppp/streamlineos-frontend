@@ -2,9 +2,8 @@
 
 import { Users, TrendingUp, Wallet, Building2, TrendingDown, AlertTriangle } from "lucide-react";
 
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { usePayrollSummary } from "@/hooks/api/payroll/reports";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
@@ -16,22 +15,10 @@ interface ReportSummaryProps {
   workerType?: string;
 }
 
-function SummarySkeletons() {
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {Array.from({ length: 7 }).map((_, i) => (
-          <Skeleton key={i} className="h-16 rounded-lg" />
-        ))}
-      </div>
-    </div>
-  );
-}
-
 export function ReportSummary({ month, department, costCenter, workerType }: ReportSummaryProps) {
   const { data, isLoading } = usePayrollSummary({ month, department, costCenter, workerType });
 
-  if (isLoading) return <SummarySkeletons />;
+  if (isLoading) return <StatCardGridSkeleton cols={4} count={7} />;
 
   if (!data?.run) {
     return (

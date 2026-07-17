@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { GoalDetail } from "@/hooks/api/goals";
 import { PM_ROW } from "@/features/projects/shared/pm-chrome";
-import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 
 interface LinkRowProps {
@@ -34,9 +34,7 @@ export function LinkRow({ link, onRemove }: LinkRowProps) {
         ) : (
           <FolderKanban className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
         )}
-        <span className={cn(TEXT_ONE_LINE, "text-sm")} title={label}>
-          {label}
-        </span>
+        <TruncatedText text={label} className="text-sm" />
         {link.ticketId && link.projectKey ? (
           <Badge variant="outline" className="shrink-0 text-[9px]">
             {link.projectKey}

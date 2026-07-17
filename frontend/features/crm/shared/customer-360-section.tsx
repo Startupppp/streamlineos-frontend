@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   Users,
   TrendingUp,
@@ -200,9 +201,9 @@ export function Customer360Section({ data, isLoading }: Customer360SectionProps)
                       <li key={item.id}>
                         <Link
                           href={cfg.href(item)}
-                          className="text-[11px] text-primary hover:underline truncate block"
+                          className="text-[11px] text-primary hover:underline block"
                         >
-                          {cfg.getLabel(item)}
+                          <TruncatedText text={cfg.getLabel(item)} />
                         </Link>
                       </li>
                     ))}

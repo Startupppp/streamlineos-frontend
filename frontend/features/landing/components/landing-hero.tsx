@@ -105,7 +105,7 @@ export function LandingHero() {
             className="flex flex-col sm:flex-row items-center lg:justify-start justify-center gap-3 mb-6"
           >
             <Magnetic strength={0.35}>
-              <Link href="/signup">
+              <Link href="/signin">
                 <Button size="lg" className="h-12 px-7 text-[15px]">
                   Start now — it&apos;s free
                   <ArrowRight className="ml-2 h-4 w-4" />

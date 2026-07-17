@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Mail, Phone, Briefcase, Calendar, Star, ExternalLink } from "lucide-react";
 import type { CandidateStatus } from "@/types/hr";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const STATUSES: CandidateStatus[] = ["NEW", "SCREENING", "INTERVIEW", "OFFER", "HIRED", "REJECTED"];
 
@@ -88,7 +89,7 @@ export const CandidateProfileCard = memo(function CandidateProfileCard({
         <div className="space-y-2 text-sm">
           <div className="flex items-center gap-2 text-muted-foreground">
             <Mail className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">{email}</span>
+            <TruncatedText text={email ?? ""} />
           </div>
           {phone && (
             <div className="flex items-center gap-2 text-muted-foreground">

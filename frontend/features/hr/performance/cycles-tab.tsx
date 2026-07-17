@@ -2,6 +2,9 @@
 
 import { parseISO } from "date-fns";
 import { useState, useCallback, useMemo, memo } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
   useReviewCycles,
   useCreateReviewCycle,
@@ -18,6 +21,9 @@ import { EmptyState } from "@/components/ui/empty-state";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import {
+  Form, FormField, FormItem, FormLabel, FormControl, FormMessage,
+} from "@/components/ui/form";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
@@ -30,6 +36,29 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { ReviewCycle } from "@/types/hr";
+import { TruncatedText } from "@/components/ui/truncated-text";
+
+const cycleSchema = z.object({
+  name: z.string()
+    .trim()
+    .min(3, "Name must be at least 3 characters")
+    .max(100, "Name must be at most 100 characters")
+    .regex(/[a-zA-Z0-9]/, "Must contain at least one letter or number")
+    .refine((v) => !/\s{2,}/.test(v), "Cannot have consecutive spaces"),
+  type: z.enum(["QUARTERLY", "HALF_YEARLY", "ANNUAL", "CUSTOM"]),
+  periodStart: z.string().min(1, "Period start is required"),
+  periodEnd: z.string().min(1, "Period end is required"),
+  deadline: z.string().min(1, "Deadline is required"),
+}).superRefine((data, ctx) => {
+  if (data.periodStart && data.periodEnd && data.periodEnd <= data.periodStart) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Period end must be after period start", path: ["periodEnd"] });
+  }
+  if (data.periodEnd && data.deadline && data.deadline <= data.periodEnd) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Deadline must be after period end", path: ["deadline"] });
+  }
+});
+
+type CycleFormValues = z.infer<typeof cycleSchema>;
 
 function getCycleProgress(cycle: ReviewCycle): number {
   if (cycle.status === "COMPLETED") return 100;
@@ -69,47 +98,41 @@ export function CyclesTab() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editCycle, setEditCycle] = useState<ReviewCycle | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [name, setName] = useState("");
-  const [type, setType] = useState("QUARTERLY");
-  const [periodStart, setPeriodStart] = useState("");
-  const [periodEnd, setPeriodEnd] = useState("");
-  const [deadline, setDeadline] = useState("");
+
+  const cycleForm = useForm<CycleFormValues>({
+    resolver: zodResolver(cycleSchema),
+    defaultValues: { name: "", type: "QUARTERLY", periodStart: "", periodEnd: "", deadline: "" },
+  });
 
   const openCreate = useCallback(() => {
     setEditCycle(null);
-    setName(""); setType("QUARTERLY"); setPeriodStart(""); setPeriodEnd(""); setDeadline("");
+    cycleForm.reset({ name: "", type: "QUARTERLY", periodStart: "", periodEnd: "", deadline: "" });
     setSheetOpen(true);
-  }, []);
+  }, [cycleForm]);
 
   const openEdit = useCallback((cycle: ReviewCycle) => {
     setEditCycle(cycle);
-    setName(cycle.name ?? "");
-    setType(cycle.type ?? "QUARTERLY");
-    setPeriodStart(cycle.periodStart ?? "");
-    setPeriodEnd(cycle.periodEnd ?? "");
-    setDeadline(cycle.deadline ?? "");
+    cycleForm.reset({
+      name: cycle.name ?? "",
+      type: (cycle.type as CycleFormValues["type"]) ?? "QUARTERLY",
+      periodStart: cycle.periodStart ?? "",
+      periodEnd: cycle.periodEnd ?? "",
+      deadline: cycle.deadline ?? "",
+    });
     setSheetOpen(true);
-  }, []);
+  }, [cycleForm]);
 
-  const handleCreate = useCallback(() => {
-    const trimmedName = name.trim();
-    if (!trimmedName) { toast.error("Cycle name is required"); return; }
-    if (trimmedName.length < 3) { toast.error("Cycle name must be at least 3 characters"); return; }
-    if (trimmedName.length > 100) { toast.error("Cycle name must be at most 100 characters"); return; }
-    if (!/[a-zA-Z0-9]/.test(trimmedName)) { toast.error("Cycle name must contain at least one letter or number"); return; }
-    if (!periodStart) { toast.error("Period start date is required"); return; }
+  const handleCreate = useCallback((data: CycleFormValues) => {
     if (!editCycle) {
       const today = new Date().toISOString().slice(0, 10);
-      if (periodStart < today) { toast.error("Period start date cannot be earlier than today"); return; }
+      if (data.periodStart < today) {
+        toast.error("Period start date cannot be earlier than today");
+        return;
+      }
     }
-    if (!periodEnd) { toast.error("Period end date is required"); return; }
-    if (periodEnd <= periodStart) { toast.error("Period end must be after period start"); return; }
-    if (periodStart === periodEnd) { toast.error("Period start and end dates cannot be the same"); return; }
-    if (!deadline) { toast.error("Submission deadline is required"); return; }
-    if (deadline <= periodEnd) { toast.error("Submission deadline must be after period end"); return; }
     if (editCycle) {
       updateCycle.mutate(
-        { id: editCycle.id, name: trimmedName, type, periodStart, periodEnd, deadline: deadline || undefined },
+        { id: editCycle.id, name: data.name, type: data.type, periodStart: data.periodStart, periodEnd: data.periodEnd, deadline: data.deadline },
         {
           onSuccess: () => { toast.success("Cycle updated"); setSheetOpen(false); setEditCycle(null); },
           onError: (e) => toast.error(getErrorMessage(e)),
@@ -117,18 +140,14 @@ export function CyclesTab() {
       );
     } else {
       createCycle.mutate(
-        { name: trimmedName, type, periodStart, periodEnd, deadline: deadline || undefined },
+        { name: data.name, type: data.type, periodStart: data.periodStart, periodEnd: data.periodEnd, deadline: data.deadline },
         {
-          onSuccess: () => {
-            toast.success("Cycle created");
-            setSheetOpen(false);
-            setName(""); setPeriodStart(""); setPeriodEnd(""); setDeadline("");
-          },
+          onSuccess: () => { toast.success("Cycle created"); setSheetOpen(false); },
           onError: (e) => toast.error(getErrorMessage(e)),
         }
       );
     }
-  }, [name, type, periodStart, periodEnd, deadline, editCycle, createCycle, updateCycle]);
+  }, [editCycle, createCycle, updateCycle]);
 
   const handleDelete = useCallback(() => {
     if (!deleteId) return;
@@ -139,10 +158,14 @@ export function CyclesTab() {
   }, [deleteId, deleteCycle]);
 
   const handleDeleteDialogChange = useCallback((open: boolean) => { if (!open) setDeleteId(null); }, []);
-  const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value), []);
-  const handlePeriodStartChange = useCallback((value: string) => setPeriodStart(value), []);
-  const handlePeriodEndChange = useCallback((value: string) => setPeriodEnd(value), []);
-  const handleDeadlineChange = useCallback((value: string) => setDeadline(value), []);
+
+  const handleSheetOpenChange = useCallback((open: boolean) => {
+    if (!open) {
+      setEditCycle(null);
+      cycleForm.reset({ name: "", type: "QUARTERLY", periodStart: "", periodEnd: "", deadline: "" });
+    }
+    setSheetOpen(open);
+  }, [cycleForm]);
 
   const cycleStats = useMemo(() => {
     const list = cycles ?? [];
@@ -152,6 +175,10 @@ export function CyclesTab() {
       completed: list.filter((c: ReviewCycle) => c.status === "COMPLETED").length,
     };
   }, [cycles]);
+
+  const watchedType = cycleForm.watch("type");
+  const watchedPeriodStart = cycleForm.watch("periodStart");
+  const watchedPeriodEnd = cycleForm.watch("periodEnd");
 
   if (isLoading) {
     return <LoadingState variant="list" rows={12} />;
@@ -215,7 +242,7 @@ export function CyclesTab() {
                   <div className="flex items-start gap-3">
                     <div className="min-w-0 flex-1 space-y-2.5">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-sm font-semibold text-foreground truncate">{cycle.name}</p>
+                        <TruncatedText text={cycle.name ?? ""} className="text-sm font-semibold text-foreground" />
                         <Badge className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${badgeClass}`}>
                           {cycle.status ?? "DRAFT"}
                         </Badge>
@@ -263,43 +290,90 @@ export function CyclesTab() {
         </div>
       )}
 
-      <HrSheet open={sheetOpen} onOpenChange={(open) => { if (!open) { setEditCycle(null); setName(""); setType("QUARTERLY"); setPeriodStart(""); setPeriodEnd(""); setDeadline(""); } setSheetOpen(open); }} title={editCycle ? "Edit Review Cycle" : "Create Review Cycle"} onSubmit={handleCreate} submitLabel={editCycle ? "Save Changes" : "Create"} isPending={createCycle.isPending || updateCycle.isPending}>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Cycle Name</label>
-          <Input placeholder="e.g., Q2 2026 Review" value={name} onChange={handleNameChange} />
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Type</label>
-          <Select value={type} onValueChange={setType}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent className="w-[var(--radix-select-trigger-width)]">
-              <SelectItem value="QUARTERLY">Quarterly — 3-month cycle</SelectItem>
-              <SelectItem value="HALF_YEARLY">Half-Yearly — 6-month cycle</SelectItem>
-              <SelectItem value="ANNUAL">Annual — Full-year cycle</SelectItem>
-              <SelectItem value="CUSTOM">Custom — Define your own period</SelectItem>
-            </SelectContent>
-          </Select>
-          <p className="text-[11px] text-muted-foreground">
-            {type === "QUARTERLY" && "3-month performance review. Best for fast-paced teams that need frequent check-ins and course corrections."}
-            {type === "HALF_YEARLY" && "6-month review cycle. Provides a balanced mid-year checkpoint for goal progress and development feedback."}
-            {type === "ANNUAL" && "Comprehensive year-end evaluation covering overall performance, growth, and compensation decisions."}
-            {type === "CUSTOM" && "Flexible review period tailored to your team's schedule. Define any start/end dates and deadline that fits your workflow."}
-          </p>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">Period Start</label>
-            <DatePicker value={periodStart ?? ""} onChange={handlePeriodStartChange} placeholder="Pick a date" className="text-sm" />
+      <HrSheet open={sheetOpen} onOpenChange={handleSheetOpenChange} title={editCycle ? "Edit Review Cycle" : "Create Review Cycle"} onSubmit={cycleForm.handleSubmit(handleCreate)} submitLabel={editCycle ? "Save Changes" : "Create"} isPending={createCycle.isPending || updateCycle.isPending}>
+        <Form {...cycleForm}>
+          <FormField
+            control={cycleForm.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Cycle Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g., Q2 2026 Review" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={cycleForm.control}
+            name="type"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Type</FormLabel>
+                <FormControl>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                      <SelectItem value="QUARTERLY">Quarterly — 3-month cycle</SelectItem>
+                      <SelectItem value="HALF_YEARLY">Half-Yearly — 6-month cycle</SelectItem>
+                      <SelectItem value="ANNUAL">Annual — Full-year cycle</SelectItem>
+                      <SelectItem value="CUSTOM">Custom — Define your own period</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <p className="text-[11px] text-muted-foreground">
+                  {watchedType === "QUARTERLY" && "3-month performance review. Best for fast-paced teams that need frequent check-ins and course corrections."}
+                  {watchedType === "HALF_YEARLY" && "6-month review cycle. Provides a balanced mid-year checkpoint for goal progress and development feedback."}
+                  {watchedType === "ANNUAL" && "Comprehensive year-end evaluation covering overall performance, growth, and compensation decisions."}
+                  {watchedType === "CUSTOM" && "Flexible review period tailored to your team's schedule. Define any start/end dates and deadline that fits your workflow."}
+                </p>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <div className="grid grid-cols-2 gap-3">
+            <FormField
+              control={cycleForm.control}
+              name="periodStart"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Period Start</FormLabel>
+                  <FormControl>
+                    <DatePicker value={field.value} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={cycleForm.control}
+              name="periodEnd"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Period End</FormLabel>
+                  <FormControl>
+                    <DatePicker value={field.value} onChange={field.onChange} fromDate={watchedPeriodStart ? parseISO(watchedPeriodStart) : undefined} placeholder="Pick a date" className="text-sm" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">Period End</label>
-            <DatePicker value={periodEnd ?? ""} onChange={handlePeriodEndChange} fromDate={periodStart ? parseISO(periodStart) : undefined} placeholder="Pick a date" className="text-sm" />
-          </div>
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Submission Deadline</label>
-          <DatePicker value={deadline ?? ""} onChange={handleDeadlineChange} fromDate={periodEnd ? parseISO(periodEnd) : undefined} placeholder="Pick a date" className="text-sm" />
-        </div>
+          <FormField
+            control={cycleForm.control}
+            name="deadline"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Submission Deadline</FormLabel>
+                <FormControl>
+                  <DatePicker value={field.value} onChange={field.onChange} fromDate={watchedPeriodEnd ? parseISO(watchedPeriodEnd) : undefined} placeholder="Pick a date" className="text-sm" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </Form>
       </HrSheet>
 
       <ConfirmDialog

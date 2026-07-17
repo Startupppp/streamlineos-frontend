@@ -11,6 +11,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTasksIllustration } from "@/components/illustrations";
 import { getColorSafe, priorityColors } from "@/lib/theme-constants";
 import { isTicketType, typeIcons, DEFAULT_TICKET_ICON } from "./ticket-types";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const MAX_VISIBLE_TICKETS = 10;
 
@@ -70,7 +71,7 @@ export const MyIssuesCard = memo(function MyIssuesCard({ tickets, isLoading, err
                         <span className="text-xs text-muted-foreground font-mono">
                           {project?.key ?? "???"}-{ticket.ticketNumber ?? "?"}
                         </span>
-                        <span className="font-medium text-sm text-foreground truncate">{ticket.title}</span>
+                        <TruncatedText text={ticket.title ?? ""} className="font-medium text-sm text-foreground" />
                       </div>
                       <p className="text-xs text-muted-foreground">{project?.name}</p>
                     </div>

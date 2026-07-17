@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { Loader2, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { useCompany360Timeline } from "@/hooks/api/crm";
 import type { TimelineEvent } from "@/types/crm";
 
@@ -18,7 +19,7 @@ function TimelineEventRow({ event }: { event: TimelineEvent }) {
     <div className="flex items-start gap-2.5 py-2 border-b border-border/50 last:border-0">
       <Clock className="h-3 w-3 text-muted-foreground mt-0.5 shrink-0" />
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-medium truncate">{event.label}</p>
+        <TruncatedText text={event.label} className="text-xs font-medium" />
         <div className="flex items-center gap-2 mt-0.5">
           <span className="text-[10px] text-muted-foreground">
             {TYPE_LABELS[event.type] ?? event.type}

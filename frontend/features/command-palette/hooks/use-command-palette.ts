@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback } from "react";
+import { createContext, useContext, useState, useCallback, useMemo } from "react";
 
 interface CommandPaletteContextValue {
   paletteOpen: boolean;
@@ -37,14 +37,17 @@ export function useCommandPaletteState(): CommandPaletteContextValue {
     setCreateTicketProjectId(null);
   }, []);
 
-  return {
-    paletteOpen,
-    setPaletteOpen,
-    helpOpen,
-    setHelpOpen,
-    createTicketOpen,
-    createTicketProjectId,
-    openCreateTicket,
-    closeCreateTicket,
-  };
+  return useMemo(
+    () => ({
+      paletteOpen,
+      setPaletteOpen,
+      helpOpen,
+      setHelpOpen,
+      createTicketOpen,
+      createTicketProjectId,
+      openCreateTicket,
+      closeCreateTicket,
+    }),
+    [paletteOpen, helpOpen, createTicketOpen, createTicketProjectId, openCreateTicket, closeCreateTicket],
+  );
 }

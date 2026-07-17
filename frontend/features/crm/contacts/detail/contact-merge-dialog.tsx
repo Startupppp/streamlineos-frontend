@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useContactDuplicates, useMergeContacts } from "@/hooks/api/crm";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { DuplicateContactPair } from "@/types/crm";
 
@@ -128,8 +129,8 @@ export function ContactMergeDialog({ pair, currentContactId, open, onOpenChange,
                         {c.name[0]?.toUpperCase() ?? "?"}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-medium truncate">{c.name}</p>
-                        {c.email && <p className="text-[10px] text-muted-foreground truncate">{c.email}</p>}
+                        <TruncatedText text={c.name} className="text-xs font-medium" />
+                        {c.email && <TruncatedText text={c.email} className="text-[10px] text-muted-foreground" />}
                         {c.phone && <p className="text-[10px] text-muted-foreground font-mono">{c.phone}</p>}
                       </div>
                       {isPrimary && (

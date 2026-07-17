@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -311,9 +312,7 @@ const ReferenceCheckCard = memo(function ReferenceCheckCard({
             )}
 
             {check.notes && (
-              <p className="text-[11px] text-muted-foreground mt-2 line-clamp-2 leading-relaxed">
-                {check.notes}
-              </p>
+              <TruncatedText text={check.notes} lines={2} className="text-[11px] text-muted-foreground mt-2 leading-relaxed" />
             )}
           </div>
 

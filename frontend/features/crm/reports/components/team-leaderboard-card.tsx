@@ -3,6 +3,7 @@ import { Trophy } from "lucide-react";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import type { SalesLeaderboardEntry } from "@/types/leads";
 import { formatCurrency } from "../lib/types";
@@ -38,7 +39,7 @@ const columns: DataTableColumn<RankedEntry>[] = [
     header: "Name",
     sortable: true,
     sortValue: (row) => row.name,
-    cell: (row) => <span className="text-[11px] font-medium">{row.name}</span>,
+    cell: (row) => <TruncatedText text={row.name} className="text-[11px] font-medium max-w-[120px]" />,
   },
   {
     key: "leadsAssigned",

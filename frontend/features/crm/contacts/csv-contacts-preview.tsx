@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
+import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 
 const VALID_SOURCES = [
@@ -73,11 +74,9 @@ const contactColumns: DataTableColumn<ParsedContactWithIdx>[] = [
     key: "title",
     header: "Title",
     className: TABLE_TITLE_CELL,
-    cell: (row) => (
-      <span className={cn("text-xs text-muted-foreground", TEXT_ONE_LINE)} title={row.title ?? undefined}>
-        {row.title ?? "—"}
-      </span>
-    ),
+    cell: (row) => row.title
+      ? <TruncatedText text={row.title} className="text-xs text-muted-foreground" />
+      : <span className="text-xs text-muted-foreground">—</span>,
   },
   {
     key: "source",

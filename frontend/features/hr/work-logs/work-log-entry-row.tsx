@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2, Save, Link2, ExternalLink, Ticket } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 interface WorkLogEntryRowProps {
   date: Date;
   initialContent: string;
@@ -179,7 +180,7 @@ export function WorkLogEntryRow({
                 {ticket.project.key}
               </span>
             )}
-            <span className="text-sm font-medium text-foreground truncate">{ticket.title}</span>
+            <TruncatedText text={ticket.title} className="text-sm font-medium text-foreground" />
             {ticket.project && (
               <span className="text-xs text-muted-foreground">— {ticket.project.name}</span>
             )}
@@ -246,7 +247,9 @@ export function WorkLogEntryRow({
         )}
 
         {highlighted && !hasUnsavedChanges && (
-          <p className="text-xs text-muted-foreground px-1 truncate">{highlighted}</p>
+          <span className="line-clamp-2 text-xs text-muted-foreground px-1" title={content}>
+            {highlighted}
+          </span>
         )}
 
         {hasUnsavedChanges && !readOnly && (

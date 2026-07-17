@@ -4,23 +4,19 @@ import { useRecruitmentStats } from "@/hooks/api/hr/recruitment";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Briefcase, Users, TrendingUp, Clock } from "lucide-react";
-import {
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  Legend,
-} from "recharts";
+import dynamic from "next/dynamic";
 import {
   AnalyticsChartCard,
   AnalyticsSectionHeader,
   EmptyChart,
-  PIE_COLORS,
   SectionSkeleton,
   SimpleBar,
-  chartTooltipStyle,
 } from "./shared";
+
+const RecruitmentPieChart = dynamic(
+  () => import("./recruitment-pie-chart").then((m) => ({ default: m.RecruitmentPieChart })),
+  { ssr: false, loading: () => <Skeleton className="h-[200px] w-full" /> },
+);
 
 interface RecruitmentSectionProps {
   isLoading: boolean;
@@ -99,28 +95,7 @@ export function RecruitmentSection({ isLoading }: RecruitmentSectionProps) {
 
         <AnalyticsChartCard title="Candidate Sources">
           {stats.sources.length > 0 ? (
-            <ResponsiveContainer width="100%" height={200}>
-              <PieChart>
-                <Pie
-                  data={stats.sources.map((s) => ({ name: s.source, value: s.count }))}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={72}
-                  innerRadius={44}
-                  paddingAngle={3}
-                  stroke="var(--card)"
-                  strokeWidth={2}
-                >
-                  {stats.sources.map((_, idx) => (
-                    <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={chartTooltipStyle} />
-                <Legend wrapperStyle={{ fontSize: 11, paddingTop: 4 }} />
-              </PieChart>
-            </ResponsiveContainer>
+            <RecruitmentPieChart sources={stats.sources} />
           ) : (
             <EmptyChart label="No source data" />
           )}

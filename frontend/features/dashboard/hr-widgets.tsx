@@ -16,6 +16,7 @@ import {
   UserCheck,
   UserX,
 } from "lucide-react";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   useLeavesToday,
   useUpcomingHolidays,
@@ -59,7 +60,7 @@ export function LeavesTodayWidget() {
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium truncate">{l.employeeName}</p>
+              <TruncatedText text={l.employeeName ?? ""} className="text-xs font-medium" />
               <p className="text-[10px] text-muted-foreground">
                 Leave · back {format(new Date(l.endDate), "MMM d")}
               </p>
@@ -92,7 +93,7 @@ export function UpcomingHolidaysWidget() {
               <CalendarHeart className="h-4 w-4 text-emerald-600" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium truncate">{h.name}</p>
+              <TruncatedText text={h.name} className="text-xs font-medium" />
               <p className="text-[10px] text-muted-foreground">
                 {format(new Date(h.date), "EEEE, MMM d")}
               </p>
@@ -128,9 +129,7 @@ export function LeaveBalanceWidget() {
               key={b.id}
               className="rounded-lg border border-border/60 p-2.5"
             >
-              <p className="text-[10px] text-muted-foreground truncate">
-                {b.leaveTypeName}
-              </p>
+              <TruncatedText text={b.leaveTypeName ?? ""} className="text-[10px] text-muted-foreground" />
               <div className="flex items-baseline gap-1 mt-0.5">
                 <span className="text-lg font-bold tabular-nums">
                   {parseFloat(b.balance)}
@@ -176,7 +175,7 @@ export function BirthdaysWidget() {
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium truncate">{b.name}</p>
+              <TruncatedText text={b.name ?? ""} className="text-xs font-medium" />
               <div className="flex items-center gap-1.5">
                 {b.type === "birthday" && (
                   <span className="text-[10px] text-pink-600 flex items-center gap-0.5">

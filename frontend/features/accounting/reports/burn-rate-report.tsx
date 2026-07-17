@@ -1,8 +1,6 @@
 "use client";
 
-import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer,
-} from "recharts";
+import dynamic from "next/dynamic";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -15,14 +13,13 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { formatCurrencyFull, formatINRCompact } from "@/lib/format-utils";
 import { Flame, Clock, TrendingDown } from "lucide-react";
 
-const TOOLTIP_STYLE = {
-  background: "hsl(var(--card))",
-  border: "1px solid hsl(var(--border))",
-  borderRadius: 8,
-  fontSize: 12,
-} as const;
-
-const AXIS_TICK = { fill: "hsl(var(--muted-foreground))", fontSize: 11 } as const;
+const BurnRateChart = dynamic(
+  () =>
+    import("./burn-rate-chart").then((m) => ({
+      default: m.BurnRateChart,
+    })),
+  { ssr: false, loading: () => <Skeleton className="h-[268px] w-full rounded-xl" /> },
+);
 
 type BurnMonth = NonNullable<ReturnType<typeof useBurnRate>["data"]>["months"][number];
 
@@ -136,33 +133,7 @@ export function BurnRateReport() {
           </StatCardGrid>
 
           {projectedData.length > 0 ? (
-            <div className="rounded-xl border border-border bg-card p-4">
-              <p className="text-sm font-semibold text-foreground mb-4">Projected Cash Balance</p>
-              <ResponsiveContainer width="100%" height={220}>
-                <LineChart data={projectedData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="month" tick={AXIS_TICK} />
-                  <YAxis
-                    tick={AXIS_TICK}
-                    tickFormatter={(v: number) => formatINRCompact(v)}
-                    width={64}
-                  />
-                  <Tooltip
-                    contentStyle={TOOLTIP_STYLE}
-                    formatter={(v: unknown) => [formatCurrencyFull(Number(v)), "Projected Balance"]}
-                  />
-                  <ReferenceLine y={0} stroke="hsl(var(--destructive))" strokeDasharray="4 4" />
-                  <Line
-                    type="monotone"
-                    dataKey="balance"
-                    stroke="#3b82f6"
-                    strokeWidth={2}
-                    dot={{ r: 3, fill: "#3b82f6" }}
-                    activeDot={{ r: 5 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
+            <BurnRateChart projectedData={projectedData} />
           ) : (
             <div className="rounded-xl border border-border bg-card p-4 flex items-center justify-center min-h-[200px]">
               <EmptyState

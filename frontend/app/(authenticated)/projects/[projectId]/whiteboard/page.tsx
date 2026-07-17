@@ -53,6 +53,7 @@ import {
   PM_ROW,
 } from "@/features/projects/shared/pm-chrome";
 import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 const BOARDS_COLLAPSED_KEY = "streamlineos:whiteboard:boards-collapsed";
@@ -123,8 +124,8 @@ const BoardItem = memo(function BoardItem({
       >
         <StickyNote className="h-3.5 w-3.5 shrink-0" />
         <div className="min-w-0 flex-1">
-          <p className={cn("flex items-center gap-1 font-medium", TEXT_ONE_LINE)}>
-            <span className={TEXT_ONE_LINE}>{board.name}</span>
+          <p className="flex min-w-0 items-center gap-1 font-medium">
+            <TruncatedText text={board.name} />
             {visibilityIcon}
           </p>
           <p className={cn("text-[11px] text-muted-foreground", TEXT_ONE_LINE)}>

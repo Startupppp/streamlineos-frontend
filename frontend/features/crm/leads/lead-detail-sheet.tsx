@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "@/lib/format-utils";
 import { useLeadDetail, useLogLeadActivity } from "@/hooks/api";
@@ -31,6 +32,7 @@ import { CrmOptionBadge, getCrmTokenClasses } from "@/features/crm/shared/metada
 import { toast } from "sonner";
 import type { LeadStatus } from "./leads-types";
 import { ActivityForm } from "./activity-form";
+import type { ActivityFormValues } from "./activity-form";
 import { AIScoreButton } from "./ai-score-button";
 import { AIEmailDialog } from "./ai-email-dialog";
 import { AINextActionButton } from "./ai-next-action-button";
@@ -107,28 +109,23 @@ export function LeadDetailSheet({
   }, [leadId, onClose, router]);
 
   const handleLogActivity = useCallback(
-    async (formData: FormData) => {
+    async (values: ActivityFormValues) => {
       if (!leadId) return;
       try {
-        const activityType = formData.get("activityType");
         const validTypes = activityTypeOptions.map((o) => o.key);
-        if (typeof activityType !== "string" || !validTypes.includes(activityType)) {
+        if (!validTypes.includes(values.activityType)) {
           toast.error("Invalid activity type");
           return;
         }
         await logActivity.mutateAsync({
           leadId,
-          type: activityType,
+          type: values.activityType,
           date: new Date().toISOString(),
-          duration: formData.get("duration")
-            ? Number(formData.get("duration"))
-            : undefined,
-          subject: (formData.get("subject") as string) || undefined,
-          notes: (formData.get("activityNotes") as string) || undefined,
-          outcome: (formData.get("outcome") as string) || undefined,
-          location: (formData.get("location") as string) || undefined,
-          messageSummary:
-            (formData.get("messageSummary") as string) || undefined,
+          duration: values.duration,
+          subject: values.subject,
+          notes: values.activityNotes,
+          outcome: values.outcome,
+          location: values.location,
         });
         toast.success("Activity logged");
       } catch {
@@ -170,7 +167,7 @@ export function LeadDetailSheet({
                   {lead.company && (
                     <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-1.5">
                       <Building2 className="h-3.5 w-3.5 shrink-0" />
-                      <span className="truncate">{lead.company}</span>
+                      <TruncatedText text={lead.company} />
                       {lead.designation && (
                         <span className="text-muted-foreground/60">
                           · {lead.designation}
@@ -252,13 +249,13 @@ export function LeadDetailSheet({
                 </p>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                   {lead.email && (
-                    <div className="flex items-center gap-2.5 text-sm">
+                    <div className="flex items-center gap-2.5 text-sm min-w-0">
                       <div className="w-7 rounded-md bg-muted/50 flex items-center justify-center shrink-0">
                         <Mail className="h-3.5 w-3.5 text-muted-foreground" />
                       </div>
                       <a
                         href={`mailto:${lead.email}`}
-                        className="text-primary hover:underline truncate text-sm"
+                        className="text-primary hover:underline break-all text-sm min-w-0"
                       >
                         {lead.email}
                       </a>
@@ -345,11 +342,11 @@ export function LeadDetailSheet({
                         {getInitials(lead.assignedTo.name ?? "")}
                       </AvatarFallback>
                     </Avatar>
-                    <div>
-                      <p className="text-sm font-medium">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium truncate">
                         {lead.assignedTo.name}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-muted-foreground break-all">
                         {lead.assignedTo.email}
                       </p>
                     </div>

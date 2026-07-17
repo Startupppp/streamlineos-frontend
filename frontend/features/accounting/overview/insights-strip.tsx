@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { useAnomalies, useInsightsDigest } from "@/hooks/api/accounting/insights";
 import type { Anomaly, AnomalySeverity } from "@/hooks/api/accounting/insights";
 
@@ -86,9 +87,7 @@ export function InsightsStrip({ from, to }: { from?: string; to?: string }) {
                 <p className={`text-xs font-semibold leading-tight ${severityTextClass(anomaly.severity)}`}>
                   {anomaly.title}
                 </p>
-                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-                  {anomaly.detail}
-                </p>
+                <TruncatedText text={anomaly.detail ?? ""} lines={2} className="text-xs text-muted-foreground mt-0.5" />
               </div>
             </Link>
           ))}

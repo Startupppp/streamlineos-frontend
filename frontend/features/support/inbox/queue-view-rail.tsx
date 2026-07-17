@@ -3,6 +3,7 @@
 import { useCallback } from "react";
 import { Inbox, Layers, Bookmark, Clock } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { useSupportQueues } from "@/hooks/api/support/queues";
 import { useSupportSavedViews } from "@/hooks/api/support/views";
@@ -74,7 +75,7 @@ export function QueueViewRail({
                 )}
               >
                 <Layers className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                <span className="truncate flex-1">{queue.name}</span>
+                <TruncatedText text={queue.name} className="flex-1" />
                 {queue.openTicketCount > 0 && (
                   <span className="text-[10px] text-muted-foreground tabular-nums">
                     {queue.openTicketCount}
@@ -104,7 +105,7 @@ export function QueueViewRail({
                 className="w-full flex items-center gap-2 text-left text-[13px] rounded-md px-2 py-1.5 hover:bg-muted/50 transition-colors"
               >
                 <Bookmark className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                <span className="truncate flex-1">{view.name}</span>
+                <TruncatedText text={view.name} className="flex-1" />
               </button>
             ))
           )}

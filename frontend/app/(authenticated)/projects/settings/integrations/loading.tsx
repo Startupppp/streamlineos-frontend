@@ -8,11 +8,11 @@ export default function IntegrationsLoading() {
     <PageWrapper
       title="Integrations"
       subtitle="Connect Git repositories to link commits and pull requests to tickets"
-      actions={<Skeleton className="h-8 w-36 rounded-md" />}
+      actions={<Skeleton className="h-9 w-36 rounded-md" />}
     >
       <PmPageShell>
         <div className="space-y-3">
-          {Array.from({ length: 12 }).map((_, i) => (
+          {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className={cn(PM_PANEL, "space-y-3 p-4")}>
               <div className="flex items-center gap-3">
                 <Skeleton className="h-9 w-9 rounded-lg" />

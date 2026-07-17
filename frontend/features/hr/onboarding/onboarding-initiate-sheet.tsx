@@ -1,12 +1,15 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { toast } from "sonner";
 import { Info } from "lucide-react";
 import { UserPlusIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 
-import { Label } from "@/components/ui/label";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 
@@ -15,6 +18,12 @@ import { useInitiateOnboarding } from "@/hooks/api/hr/onboarding";
 import { useHrEmployees,
   unwrapEmployees} from "@/hooks/api/hr";
 import type { Employee, PaginatedEmployees } from "@/types/hr";
+
+const schema = z.object({
+  userId: z.string().min(1, "Please select an employee"),
+});
+
+type FormValues = z.infer<typeof schema>;
 
 function StartOnboardingLabel() {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -32,7 +41,7 @@ interface OnboardingInitiateSheetProps {
 }
 
 export function OnboardingInitiateSheet({ open, onOpenChange }: OnboardingInitiateSheetProps) {
-  const [userId, setUserId] = useState("");
+  const form = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: { userId: "" } });
   const initiate = useInitiateOnboarding();
   const { data: employeesRaw } = useHrEmployees({ limit: 500 });
 
@@ -53,27 +62,26 @@ export function OnboardingInitiateSheet({ open, onOpenChange }: OnboardingInitia
     [employees]
   );
 
-  const handleSubmit = useCallback(() => {
-    if (!userId.trim()) {
-      toast.error("Please select an employee");
-      return;
-    }
-    initiate.mutate(userId.trim(), {
-      onSuccess: (data) => {
-        toast.success(`Onboarding initiated — ${data.tasksCreated} tasks created`);
-        setUserId("");
-        onOpenChange(false);
-      },
-      onError: (e) => toast.error(getErrorMessage(e)),
-    });
-  }, [userId, initiate, onOpenChange]);
+  const onSubmit = useCallback(
+    (data: FormValues) => {
+      initiate.mutate(data.userId.trim(), {
+        onSuccess: (result) => {
+          toast.success(`Onboarding initiated — ${result.tasksCreated} tasks created`);
+          form.reset();
+          onOpenChange(false);
+        },
+        onError: (e) => toast.error(getErrorMessage(e)),
+      });
+    },
+    [initiate, form, onOpenChange]
+  );
 
   const handleSheetOpenChange = useCallback(
     (v: boolean) => {
-      if (!v) setUserId("");
+      if (!v) form.reset();
       onOpenChange(v);
     },
-    [onOpenChange]
+    [form, onOpenChange]
   );
 
   return (
@@ -82,7 +90,7 @@ export function OnboardingInitiateSheet({ open, onOpenChange }: OnboardingInitia
       onOpenChange={handleSheetOpenChange}
       title="Initiate Onboarding"
       description="Create an onboarding checklist for an employee using the active template."
-      onSubmit={handleSubmit}
+      onSubmit={form.handleSubmit(onSubmit)}
       submitLabel={<StartOnboardingLabel />}
       isPending={initiate.isPending}
     >
@@ -93,21 +101,32 @@ export function OnboardingInitiateSheet({ open, onOpenChange }: OnboardingInitia
         </span>
       </div>
 
-      <div className="space-y-1.5">
-        <Label className="text-sm font-semibold text-foreground">
-          Employee <span className="text-destructive">*</span>
-        </Label>
-        <Combobox
-          options={employeeOptions}
-          value={userId}
-          onChange={setUserId}
-          placeholder="Select an employee…"
-          searchPlaceholder="Search by name or designation…"
+      <Form {...form}>
+        <FormField
+          control={form.control}
+          name="userId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-sm font-semibold text-foreground">
+                Employee <span className="text-destructive">*</span>
+              </FormLabel>
+              <FormControl>
+                <Combobox
+                  options={employeeOptions}
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="Select an employee…"
+                  searchPlaceholder="Search by name or designation…"
+                />
+              </FormControl>
+              <p className="text-[11px] text-muted-foreground">
+                Only active employees without an existing onboarding workflow are shown.
+              </p>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-        <p className="text-[11px] text-muted-foreground">
-          Only active employees without an existing onboarding workflow are shown.
-        </p>
-      </div>
+      </Form>
     </HrSheet>
   );
 }

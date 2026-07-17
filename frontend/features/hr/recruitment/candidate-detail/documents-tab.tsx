@@ -21,6 +21,7 @@ import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { useRolloutDocuments, type RolloutDocumentRecord } from "@/hooks/api/hr/recruitment";
 import { RolloutDocumentsDialog } from "@/components/hr/recruitment/rollout-documents-dialog";
 import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 type DocStatus = "GENERATED" | "SENT" | "VIEWED" | "SIGNED" | "DECLINED";
 
@@ -220,7 +221,7 @@ export function DocumentsTab({
                         <div className="w-7 rounded-lg bg-muted flex items-center justify-center shrink-0">
                           <FileText className="h-3.5 w-3.5 text-muted-foreground" />
                         </div>
-                        <span className="text-sm font-semibold text-foreground truncate">{doc.title}</span>
+                        <TruncatedText text={doc.title} className="text-sm font-semibold text-foreground" />
                       </div>
                       {doc.createdAt && (
                         <p className="text-[11px] text-muted-foreground mt-1 ml-9">

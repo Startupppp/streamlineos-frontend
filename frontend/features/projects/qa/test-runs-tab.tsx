@@ -34,7 +34,8 @@ import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TABLE_TITLE_CELL } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { TestRunSheet } from "./test-run-sheet";
 
 const RUN_STATUS_STYLES: Record<TestRunStatus, string> = {
@@ -156,10 +157,9 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
       cell: (row) => (
         <Link
           href={`/projects/${projectId}/qa/runs/${row.id}`}
-          className={cn("text-[11px] font-medium hover:underline", TEXT_ONE_LINE)}
-          title={row.name}
+          className="text-[11px] font-medium hover:underline min-w-0 block"
         >
-          {row.name}
+          <TruncatedText text={row.name} />
         </Link>
       ),
     },
@@ -180,9 +180,7 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
       key: "environment",
       header: "Environment",
       cell: (row) => (
-        <span className={cn("max-w-[7rem] text-[11px] text-muted-foreground", TEXT_ONE_LINE)}>
-          {row.environment ?? "—"}
-        </span>
+        <TruncatedText text={row.environment ?? "—"} className="max-w-[7rem] text-[11px] text-muted-foreground" />
       ),
       className: "w-[110px]",
     },

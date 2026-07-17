@@ -22,6 +22,7 @@ import { HuddleChatPanel } from "./huddle-chat-panel";
 import { useAblyConnection } from "./use-ably-connection";
 import { safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
 import { UserCombobox } from "@/components/ui/user-combobox";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface AudioLevelMap {
   [userId: string]: number;
@@ -308,9 +309,7 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
           <div className="h-5 w-5 rounded-full bg-green-500/20 flex items-center justify-center shrink-0">
             <Mic className="h-3 w-3 text-green-500" />
           </div>
-          <span className="text-sm font-medium text-green-500 truncate">
-            Huddle · {elapsed}
-          </span>
+          <TruncatedText text={`Huddle · ${elapsed}`} className="text-sm font-medium text-green-500" />
           <span className="text-xs text-muted-foreground">
             {participantCount} {participantCount === 1 ? "participant" : "participants"}
           </span>
@@ -644,9 +643,10 @@ function ParticipantCard({ participant, audioLevel, isCurrentUser, isHost, onKic
           </span>
         )}
       </div>
-      <span className="text-[11px] text-center truncate w-full leading-tight">
-        {isCurrentUser ? "You" : (participant.user?.name ?? "Unknown")}
-      </span>
+      <TruncatedText
+        text={isCurrentUser ? "You" : (participant.user?.name ?? "Unknown")}
+        className="text-[11px] text-center w-full leading-tight"
+      />
       {isHost && !isCurrentUser && onKick && (
         <button
           onClick={onKick}

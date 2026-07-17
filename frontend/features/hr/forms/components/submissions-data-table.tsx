@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { FormRenderer } from "./form-renderer";
@@ -44,7 +45,9 @@ export function SubmissionsDataTable({ formId, submissions, canManage }: Submiss
     {
       key: "submittedBy",
       header: "Submitted by",
-      cell: (row) => row.submittedByName ?? row.submittedBy ?? "Anonymous",
+      cell: (row) => (
+        <TruncatedText text={row.submittedByName ?? row.submittedBy ?? "Anonymous"} className="min-w-0 max-w-[180px] text-sm" />
+      ),
     },
     {
       key: "date",

@@ -43,7 +43,8 @@ import { cn } from "@/lib/utils";
 import { getColorSafe, priorityColors } from "@/lib/theme-constants";
 import type { ProjectStatusRecord, Ticket } from "@/types/projects";
 import { PM_PANEL } from "@/features/projects/shared/pm-chrome";
-import { TEXT_ONE_LINE, TEXT_TWO_LINES } from "@/features/projects/shared/text-overflow";
+import { TEXT_TWO_LINES } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 export interface EpicCardProps {
   epic: {
@@ -75,13 +76,9 @@ export const LinkStoryItem = memo(function LinkStoryItem({ story, onSelect }: Li
   return (
     <button
       onClick={handleClick}
-      className={cn(
-        TEXT_ONE_LINE,
-        "w-full rounded-md p-2 text-left text-xs transition-colors hover:bg-primary/[0.06]",
-      )}
-      title={story.title}
+      className="w-full min-w-0 rounded-md p-2 text-left text-xs transition-colors hover:bg-primary/[0.06]"
     >
-      {story.title}
+      <TruncatedText text={story.title} />
     </button>
   );
 });
@@ -200,9 +197,7 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
               <div className="min-w-0 space-y-0.5">
                 <CardTitle className="flex min-w-0 items-center gap-1.5 text-[13px] font-semibold">
                   <Layers className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                  <span className={TEXT_ONE_LINE} title={epic.title}>
-                    {epic.title}
-                  </span>
+                  <TruncatedText text={epic.title} />
                 </CardTitle>
                 {epic.description ? (
                   <p className={cn(TEXT_TWO_LINES, "text-[11px] text-muted-foreground")} title={epic.description}>

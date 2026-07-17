@@ -24,6 +24,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptyMailIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -306,7 +307,7 @@ function SequenceCard({ sequence, togglingId, onToggle, onEdit, onDelete }: Sequ
               </Badge>
             </div>
             {sequence.description && (
-              <p className="text-xs text-muted-foreground mt-0.5 truncate">{sequence.description}</p>
+              <TruncatedText text={sequence.description} className="text-xs text-muted-foreground mt-0.5" />
             )}
             <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
               <span>{sequence.steps?.length ?? 0} steps</span>

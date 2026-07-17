@@ -22,7 +22,8 @@ import { StatusBadge } from "@/features/projects/shared/status-badge";
 import { formatTicketKey } from "@/features/projects/shared/format-ticket-key";
 import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
 import { PmPageShell, PM_TOOLBAR, PmPanel } from "@/features/projects/shared/pm-chrome";
-import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TABLE_TITLE_CELL } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { format } from "date-fns";
 
@@ -160,12 +161,7 @@ export default function BacklogPage({ params }: PageProps) {
         header: "Title",
         className: TABLE_TITLE_CELL,
         cell: (ticket) => (
-          <span
-            className={cn("text-[11px] font-medium", TEXT_ONE_LINE)}
-            title={ticket.title ?? undefined}
-          >
-            {ticket.title}
-          </span>
+          <TruncatedText text={ticket.title ?? "—"} className="text-[11px] font-medium" />
         ),
       },
       {
@@ -195,7 +191,7 @@ export default function BacklogPage({ params }: PageProps) {
                   {getUserInitials(ticket.assignee)}
                 </AvatarFallback>
               </Avatar>
-              <span className={cn(TEXT_ONE_LINE, "text-[11px]")}>{getUserDisplayName(ticket.assignee)}</span>
+              <TruncatedText text={getUserDisplayName(ticket.assignee)} className="text-[11px]" />
             </div>
           ) : (
             <span className="text-xs text-muted-foreground">—</span>

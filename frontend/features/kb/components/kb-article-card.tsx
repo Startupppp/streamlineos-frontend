@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import type { KbArticleListItem, KbArticleStatus, KbArticleVisibility } from "@/hooks/api/support/kb";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const STATUS_VARIANT: Record<KbArticleStatus, "secondary" | "default" | "outline"> = {
   draft: "secondary",
@@ -48,14 +49,12 @@ export function KbArticleCard({ article, categoryName, onNavigate, onDelete }: K
             <button
               type="button"
               onClick={handleNavigate}
-              className="text-left font-medium text-sm hover:underline truncate block w-full"
+              className="text-left font-medium text-sm hover:underline block w-full min-w-0"
             >
-              {article.title}
+              <TruncatedText text={article.title} />
             </button>
             {article.excerpt && (
-              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
-                {article.excerpt}
-              </p>
+              <TruncatedText text={article.excerpt} className="text-xs text-muted-foreground mt-0.5" />
             )}
             <div className="flex flex-wrap items-center gap-2 mt-2">
               <Badge variant={STATUS_VARIANT[article.status]} className="text-[10px]">

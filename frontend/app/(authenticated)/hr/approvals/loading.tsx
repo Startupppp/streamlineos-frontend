@@ -1,19 +1,21 @@
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ApprovalsLoading() {
   return (
-    <div className="p-6 space-y-4">
-      <Skeleton className="h-8 w-48" />
-      <Skeleton className="h-4 w-72" />
-      <div className="flex gap-2 mt-4">
-        <Skeleton className="h-24 w-24 rounded-full" />
-        <Skeleton className="h-20 w-20 rounded-full" />
+    <PageWrapper
+      title="Approvals"
+      subtitle="Review and act on pending approval requests"
+      actions={<Skeleton className="h-9 w-32 rounded-md" />}
+    >
+      <div className="flex flex-col flex-1 min-h-0 gap-4">
+        <Skeleton className="h-9 w-48 rounded-md" />
+        <div className="space-y-2">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <Skeleton key={i} className="h-16 w-full rounded-lg" />
+          ))}
+        </div>
       </div>
-      <div className="space-y-2 mt-4">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <Skeleton key={i} className="h-16 rounded-lg" />
-        ))}
-      </div>
-    </div>
+    </PageWrapper>
   );
 }

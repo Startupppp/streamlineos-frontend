@@ -28,6 +28,7 @@ import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recr
 import type { AtsPipelineCandidate, CandidateStatus } from "@/types/hr";
 import { getInitials, formatDate, SLA_CONFIG, COLUMNS } from "./types";
 import { SlaBadge } from "./sla-badge";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface CandidateSheetProps {
   candidate: AtsPipelineCandidate | null;
@@ -71,7 +72,7 @@ export const CandidateSheet = memo(function CandidateSheet({
             <div className="min-w-0 flex-1">
               <SheetTitle className="text-base font-semibold leading-tight">{candidate.name}</SheetTitle>
               {candidate.jobTitle && (
-                <p className="text-sm text-muted-foreground truncate mt-0.5">{candidate.jobTitle}</p>
+                <TruncatedText text={candidate.jobTitle} className="text-sm text-muted-foreground mt-0.5" />
               )}
               <div className="flex items-center gap-2 mt-2 flex-wrap">
                 {stageConfig && (
@@ -145,7 +146,7 @@ export const CandidateSheet = memo(function CandidateSheet({
                 <div className="space-y-2">
                   <div className="flex items-center gap-2.5">
                     <MailIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    <span className="text-sm truncate">{candidate.email}</span>
+                    <TruncatedText text={candidate.email} className="text-sm" />
                   </div>
                   {candidate.phone && (
                     <div className="flex items-center gap-2.5">

@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { ChevronDown, ChevronRight } from "lucide-react";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   Sheet,
   SheetBody,
@@ -317,9 +318,7 @@ export function BreakdownSheet({
                   </Button>
                 ))}
               {data?.holdReason && (
-                <span className="text-[10px] text-amber-600 truncate">
-                  On hold: {data.holdReason}
-                </span>
+                <TruncatedText text={`On hold: ${data.holdReason}`} className="text-[10px] text-amber-600" />
               )}
             </div>
           )}

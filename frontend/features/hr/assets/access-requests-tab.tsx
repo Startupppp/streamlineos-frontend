@@ -19,6 +19,7 @@ import {
 } from "@/hooks/api/hr/access-requests";
 import type { Employee } from "@/types/hr";
 import { format } from "date-fns";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { SecurityIllustration } from "@/components/illustrations";
 
@@ -170,7 +171,7 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
                     <Shield className="h-4 w-4 text-primary" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{req.systemName}</p>
+                    <TruncatedText text={req.systemName} className="text-sm font-medium text-foreground" />
                     <p className="text-[10px] text-muted-foreground">
                       {getEmployeeName(employees, req.employeeId)} · {req.accessLevel} · {format(new Date(req.createdAt), "MMM d, yyyy")}
                     </p>

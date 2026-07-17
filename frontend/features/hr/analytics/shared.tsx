@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 export const CHART_COLORS = [
   "var(--chart-1)",
@@ -112,7 +113,7 @@ export function SimpleBar({
         return (
           <div key={item.label} className="space-y-1.5">
             <div className="flex items-center justify-between gap-3 text-xs">
-              <span className="truncate text-muted-foreground">{item.label}</span>
+              <TruncatedText text={item.label} className="text-muted-foreground" />
               <span className="shrink-0 font-semibold tabular-nums text-foreground">
                 {item.value}
               </span>

@@ -56,6 +56,7 @@ import {
 } from "@/features/knowledge-base/lib/kb-icons";
 import type { KbSpace, KbAudience } from "@/types/kb";
 import Link from "next/link";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const spaceSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -123,9 +124,7 @@ function SpaceCard({
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-lg shrink-0">{space.icon ?? "📚"}</span>
-          <span className="text-sm font-semibold text-foreground truncate">
-            {space.name}
-          </span>
+          <TruncatedText text={space.name} className="text-sm font-semibold text-foreground" />
         </div>
         <Badge
           variant="outline"
@@ -135,9 +134,7 @@ function SpaceCard({
         </Badge>
       </div>
       {space.description && (
-        <p className="text-sm text-muted-foreground line-clamp-1">
-          {space.description}
-        </p>
+        <TruncatedText text={space.description} className="text-sm text-muted-foreground" />
       )}
       <p className="text-xs text-muted-foreground">
         {pageCount} {pageCount === 1 ? "page" : "pages"}

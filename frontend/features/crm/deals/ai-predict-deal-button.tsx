@@ -91,7 +91,8 @@ export function AIPredictDealButton({
               <span
                 className={cn("font-bold", probColor(result.winProbability))}
               >
-                {result.winProbability}%
+                ~{result.winProbability}%
+                <span className="text-[9px] font-normal ml-0.5 opacity-70">est.</span>
               </span>
             ) : (
               "Predict"
@@ -144,6 +145,7 @@ interface PredictResult {
   riskFactors: string[];
   positiveSignals: string[];
   recommendedActions: string[];
+  estimateDisclaimer?: string;
 }
 
 function PredictDetails({
@@ -168,10 +170,10 @@ function PredictDetails({
           )}
         >
           <span className="text-base leading-none">
-            {result.winProbability}%
+            ~{result.winProbability}%
           </span>
           <span className="text-[8px] uppercase tracking-wider mt-0.5">
-            win
+            AI est.
           </span>
         </div>
         <div className="flex-1 min-w-0">
@@ -230,6 +232,11 @@ function PredictDetails({
             </div>
           ))}
         </div>
+      )}
+      {result.estimateDisclaimer && (
+        <p className="text-[10px] text-muted-foreground italic border-t border-border pt-1.5 mt-1">
+          {result.estimateDisclaimer}
+        </p>
       )}
     </div>
   );

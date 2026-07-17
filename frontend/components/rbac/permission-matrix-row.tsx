@@ -2,6 +2,7 @@
 
 import { useCallback } from "react";
 import { ChevronDown, ChevronRight, Lock } from "lucide-react";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -65,9 +66,7 @@ export function PermissionRow({
           aria-label={perm.description}
         />
         <span className="min-w-0">
-          <span className="block text-[13px] leading-tight truncate">
-            {perm.description}
-          </span>
+          <TruncatedText text={perm.description} className="block text-[13px] leading-tight" />
           <span className="block text-[10px] text-muted-foreground font-mono truncate">
             {perm.name}
           </span>
@@ -156,7 +155,7 @@ export function ModuleSection({
           ) : (
             <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
           )}
-          <span className="text-sm font-medium truncate">{module.label}</span>
+          <TruncatedText text={module.label} className="text-sm font-medium" />
           <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0">
             {enabledCount}/{module.perms.length}
           </Badge>

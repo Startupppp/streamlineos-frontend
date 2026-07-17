@@ -5,7 +5,7 @@ export default function PhysicalAuditDetailLoading() {
     <InventoryDetailPageLoading
       title="Physical Audit"
       backHref="/inventory/physical-audits"
-      actions={null}
+      statCount={4}
     />
   );
 }

@@ -33,6 +33,7 @@ import { LeadsKanban } from "@/features/crm/leads/leads-kanban";
 import { LeadsFunnelView } from "@/features/crm/leads/leads-funnel-view";
 import { LeadDetailSheet } from "@/features/crm/leads/lead-detail-sheet";
 import { CreateLeadSheet } from "@/features/crm/leads/create-lead-sheet";
+import type { CreateLeadFormValues } from "@/features/crm/leads/create-lead-sheet";
 import type { BoardLead, LeadStatus } from "@/features/crm/leads/leads-types";
 
 export default function LeadsPipelinePage() {
@@ -142,56 +143,25 @@ export default function LeadsPipelinePage() {
   }, [board, searchQuery]);
 
   const handleCreateLead = useCallback(
-    async (formData: FormData) => {
-      const name = (formData.get("name") as string)?.trim();
-      if (!name) {
-        toast.error("Name is required");
-        return;
-      }
-
-      const potentialValueRaw = (
-        formData.get("potentialValue") as string
-      )?.trim();
-      const investmentInterestRaw = (
-        formData.get("investmentInterest") as string
-      )?.trim();
-
-      if (
-        potentialValueRaw &&
-        (isNaN(Number(potentialValueRaw)) || Number(potentialValueRaw) < 0)
-      ) {
-        toast.error("Potential value must be a valid positive number");
-        return;
-      }
-      if (
-        investmentInterestRaw &&
-        (isNaN(Number(investmentInterestRaw)) ||
-          Number(investmentInterestRaw) < 0)
-      ) {
-        toast.error("Investment interest must be a valid positive number");
-        return;
-      }
-
-      const data = {
-        name,
-        email: (formData.get("email") as string)?.trim() || undefined,
-        phone: (formData.get("phone") as string)?.trim() || undefined,
-        company: (formData.get("company") as string)?.trim() || undefined,
-        source: ((formData.get("source") as string)?.trim() || "other") as "referral" | "campaign" | "cold_call" | "website" | "social_media" | "walk_in" | "other",
-        potentialValue: potentialValueRaw || undefined,
-        investmentInterest: investmentInterestRaw || undefined,
-        priority: ((formData.get("priority") as string)?.trim() || "WARM") as "HOT" | "WARM" | "COLD",
-        notes: (formData.get("notes") as string)?.trim() || undefined,
-        city: (formData.get("city") as string)?.trim() || undefined,
-        referredBy: (formData.get("referredBy") as string)?.trim() || undefined,
-      };
-
+    async (values: CreateLeadFormValues) => {
       try {
-        await createLead.mutateAsync(data);
+        await createLead.mutateAsync({
+          name: values.name,
+          email: values.email,
+          phone: values.phone,
+          company: values.company,
+          city: values.city,
+          source: (values.source || "other") as "referral" | "campaign" | "cold_call" | "website" | "social_media" | "walk_in" | "other",
+          potentialValue: values.potentialValue !== undefined ? String(values.potentialValue) : undefined,
+          investmentInterest: values.investmentInterest !== undefined ? String(values.investmentInterest) : undefined,
+          priority: (values.priority || "WARM") as "HOT" | "WARM" | "COLD",
+          notes: values.notes,
+          referredBy: values.referredBy,
+        });
         toast.success("Lead created successfully");
         setCreateOpen(false);
-      } catch {
-        toast.error("Failed to create lead");
+      } catch (err) {
+        toast.error(getErrorMessage(err));
       }
     },
     [createLead],

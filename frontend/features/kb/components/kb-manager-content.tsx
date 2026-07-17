@@ -37,13 +37,14 @@ import {
   EmptyKnowledgeIllustration,
   EmptySearchIllustration,
 } from "@/components/illustrations";
-import { CheckCircle2, FileText, FolderTree, Globe, Loader2, Sparkles } from "lucide-react";
+import { BarChart2, CheckCircle2, FileText, FolderTree, Globe, Loader2, Sparkles } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { KbArticleCard } from "./kb-article-card";
 import { KbCategoryListItem } from "./kb-category-list-item";
 import { KbCategoryDialog } from "./kb-category-dialog";
 import { KbNewArticleDialog } from "./kb-new-article-dialog";
+import { KbAnalyticsTab } from "./kb-analytics-tab";
 import { KbAskPanel } from "@/components/support/kb-ask-panel";
 import {
   useKbArticles,
@@ -358,6 +359,9 @@ export function KbManagerContent() {
           <TabsTrigger value="categories">
             <FolderTree className="h-4 w-4 mr-1.5" /> Categories
           </TabsTrigger>
+          <TabsTrigger value="analytics">
+            <BarChart2 className="h-4 w-4 mr-1.5" /> Analytics
+          </TabsTrigger>
         </TabsList>
 
         {filters}
@@ -401,6 +405,10 @@ export function KbManagerContent() {
               ))}
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="analytics" className="mt-0">
+          <KbAnalyticsTab />
         </TabsContent>
 
         <TabsContent value="categories" className="mt-0">

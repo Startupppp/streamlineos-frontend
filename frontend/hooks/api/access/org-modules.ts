@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient, clearBackendTokenCache } from "@/lib/api-client";
@@ -25,17 +26,21 @@ const BACKEND_MODULE_NAMES: Record<string, string> = {
   sign: "SIGN",
 };
 
+const EMPTY_MODULES: string[] = [];
+
 export function useEnabledModules(): string[] {
   const { data: session } = useSession();
   const { data } = useAccess();
 
-  if (!data?.modules) {
-    return session?.enabledModules ?? [];
-  }
+  return useMemo(() => {
+    if (!data?.modules) {
+      return session?.enabledModules ?? EMPTY_MODULES;
+    }
 
-  return Object.entries(BACKEND_MODULE_NAMES)
-    .filter(([key]) => data.modules[key])
-    .map(([, name]) => name);
+    return Object.entries(BACKEND_MODULE_NAMES)
+      .filter(([key]) => data.modules[key])
+      .map(([, name]) => name);
+  }, [data?.modules, session?.enabledModules]);
 }
 
 export function useOrgModules() {

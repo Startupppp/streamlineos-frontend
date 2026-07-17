@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { BenefitPlan } from "@/hooks/api/hr";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 
 const CATEGORY_META: Record<
@@ -42,9 +43,9 @@ export function BenefitPlanCard({ plan, enrolled, onEnroll, onWaive, onEdit, isA
               {meta.icon}
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-foreground truncate">{plan.name}</p>
+              <TruncatedText text={plan.name} className="text-sm font-semibold text-foreground" />
               {plan.provider && (
-                <p className="text-xs text-muted-foreground truncate">{plan.provider}</p>
+                <TruncatedText text={plan.provider} className="text-xs text-muted-foreground" />
               )}
             </div>
           </div>
@@ -54,7 +55,7 @@ export function BenefitPlanCard({ plan, enrolled, onEnroll, onWaive, onEdit, isA
         </div>
 
         {plan.description && (
-          <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{plan.description}</p>
+          <TruncatedText text={plan.description} lines={2} className="text-xs text-muted-foreground mb-3" />
         )}
 
         <div className="flex flex-wrap gap-3 mb-4 text-xs text-muted-foreground">

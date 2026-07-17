@@ -20,6 +20,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { EmptyState } from "@/components/ui/empty-state";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 import type { Termination, TerminationStatus } from "@/hooks/api/hr";
 import {
@@ -91,7 +92,7 @@ function TerminationCard({
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <p className="text-sm font-semibold truncate">{employee?.name ?? "Employee"}</p>
+              <TruncatedText text={employee?.name ?? "Employee"} className="text-sm font-semibold" />
               <StatusBadge status={status} label={statusLabel(status)} className="text-[10px] shrink-0" />
               {emailStatus === "failed" && (
                 <Badge

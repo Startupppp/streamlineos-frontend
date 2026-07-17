@@ -167,18 +167,21 @@ export type KbAskCitation =
       title: string;
       slug: string;
       spaceId: number | null;
+      updatedAt: string;
     }
   | {
       kind: "page";
       pageId: number;
       title: string;
       spaceId: number | null;
+      updatedAt: string;
     }
   | {
       kind: "source";
       sourceId: number;
       title: string;
       spaceId: number | null;
+      updatedAt: string;
     };
 
 export interface KbAskResponse {
@@ -223,6 +226,7 @@ export interface KbAnalyticsOverview {
   noResults: number;
   searchSuccessRate: number;
   aiAnswers: number;
+  aiNoContext: number;
   views: number;
   verifiedPublished: number;
   trustScore: number;
@@ -360,4 +364,51 @@ export interface KbGapRow {
   query: string | null;
   count: number;
   lastOccurredAt: string;
+}
+
+export interface KbContentGapRow {
+  query: string | null;
+  count: number;
+  lastOccurredAt: string;
+  gapKind: "search" | "ai_no_context";
+}
+
+export type KbResearchBriefStatus = "queued" | "running" | "completed" | "failed";
+
+export interface KbResearchBriefCitation {
+  kind: string;
+  id: number;
+  title: string;
+  href: string | null;
+  updatedAt: string | null;
+}
+
+export interface KbResearchBrief {
+  id: number;
+  orgId: string;
+  userId: string | null;
+  topic: string;
+  spaceId: number | null;
+  status: KbResearchBriefStatus;
+  jobId: number | null;
+  sourceCount: number;
+  report: string | null;
+  citations: KbResearchBriefCitation[] | null;
+  errorMessage: string | null;
+  rating: "helpful" | "not_helpful" | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type KbResearchBriefListItem = Omit<KbResearchBrief, "report">;
+
+export interface CreateResearchBriefInput {
+  topic: string;
+  spaceId?: number;
+}
+
+export interface KbAiFeedbackInput {
+  rating: "helpful" | "not_helpful" | "missing_source";
+  question: string;
+  comment?: string;
 }

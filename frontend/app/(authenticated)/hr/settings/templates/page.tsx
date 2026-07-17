@@ -20,6 +20,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { useCan } from "@/hooks/api/access";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { useHrTemplates, useSeedHrTemplateDefaults } from "@/hooks/api/hr/hr-templates";
@@ -50,7 +51,7 @@ function buildTemplateColumns(
         <div>
           <p className="font-medium text-[13px] text-foreground">{t.name}</p>
           {t.description && (
-            <p className="text-[11px] text-muted-foreground truncate max-w-xs mt-0.5">{t.description}</p>
+            <TruncatedText text={t.description} className="text-[11px] text-muted-foreground max-w-xs mt-0.5" />
           )}
         </div>
       ),

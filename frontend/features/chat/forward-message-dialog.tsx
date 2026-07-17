@@ -11,6 +11,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useChatChannels, useSendMessage } from "@/hooks/api";
 import type { Channel, MessageMetadata } from "@/types/chat";
 import { getForwardedDisplay } from "./chat-helpers";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface ForwardableMessage {
   content: string | null;
@@ -148,7 +149,7 @@ export function ForwardMessageDialog({ message, open, onOpenChange }: ForwardMes
               )}>
                 {getChannelIcon(c)}
               </div>
-              <span className="text-[13px] font-medium flex-1 truncate">{getChannelLabel(c)}</span>
+              <TruncatedText text={getChannelLabel(c)} className="text-[13px] font-medium flex-1" />
               {selectedChannelId === c.id && (
                 <div className="h-4 w-4 rounded-full bg-primary flex items-center justify-center shrink-0">
                   <div className="h-1.5 w-1.5 rounded-full bg-white" />

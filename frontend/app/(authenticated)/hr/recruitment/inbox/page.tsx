@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 function candidateName(thread: MessageThread | CandidateMessage): string {
   const first = thread.candidateFirstName ?? "";
@@ -54,9 +55,7 @@ function ThreadItem({
       )}
     >
       <div className="flex items-center justify-between gap-2 mb-0.5">
-        <span className="text-sm font-medium truncate">
-          {candidateName(thread)}
-        </span>
+        <TruncatedText text={candidateName(thread)} className="text-sm font-medium" />
         <div className="flex items-center gap-1.5 shrink-0">
           {thread.unreadCount > 0 && (
             <Badge

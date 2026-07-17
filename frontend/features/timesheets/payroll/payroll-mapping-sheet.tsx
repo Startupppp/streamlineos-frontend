@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { useUpdateTimesheetPayrollSettings } from "@/hooks/api/timesheets/payroll";
 import type { PayrollSettings, PayrollMapping, PayrollProvider } from "./types";
 
@@ -147,6 +147,9 @@ function MappingColumnRow({ form, index, columnKey }: MappingColumnRowProps) {
         {...form.register(`columns.${index}.header`)}
         aria-label={`Header for ${columnKey}`}
       />
+      {form.formState.errors.columns?.[index]?.header && (
+        <p className="text-xs text-destructive">{form.formState.errors.columns[index].header?.message}</p>
+      )}
     </div>
   );
 }
@@ -256,15 +259,15 @@ export function PayrollMappingSheet({
             >
               Cancel
             </Button>
-            <Button
+            <LoadingButton
               type="submit"
               size="sm"
               className="h-8 text-xs"
-              disabled={updateSettings.isPending}
+              isPending={updateSettings.isPending}
+              loadingText="Saving…"
             >
-              {updateSettings.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
               Save Mapping
-            </Button>
+            </LoadingButton>
           </SheetFooter>
         </form>
       </SheetContent>

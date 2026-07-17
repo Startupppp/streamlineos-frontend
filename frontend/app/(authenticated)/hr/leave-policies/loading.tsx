@@ -1,20 +1,18 @@
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function LeavePoliciesLoading() {
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-44" />
-          <Skeleton className="h-4 w-72" />
-        </div>
-        <Skeleton className="h-10 w-32" />
-      </div>
+    <PageWrapper
+      title="Leave Policies"
+      subtitle="Define accrual and carry-forward rules per leave type"
+      actions={<Skeleton className="h-9 w-28 rounded-md" />}
+    >
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <Skeleton key={i} className="h-52 rounded-2xl" />
+        {Array.from({ length: 10 }).map((_, i) => (
+          <Skeleton key={i} className="h-52 rounded-lg" />
         ))}
       </div>
-    </div>
+    </PageWrapper>
   );
 }

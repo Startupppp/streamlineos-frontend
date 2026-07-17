@@ -15,6 +15,7 @@ import {
   Link2,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -105,9 +106,7 @@ export function SupportActivityLog({ supportTicketId }: SupportActivityLogProps)
                     {getInitials(entry.userName)}
                   </AvatarFallback>
                 </Avatar>
-                <span className="text-xs font-medium truncate">
-                  {entry.userName ?? "System"}
-                </span>
+                <TruncatedText text={entry.userName ?? "System"} className="text-xs font-medium" />
                 <span className="text-xs text-muted-foreground">{entry.label}</span>
                 {entry.createdAt && (
                   <span className="text-[10px] text-muted-foreground">
@@ -118,9 +117,7 @@ export function SupportActivityLog({ supportTicketId }: SupportActivityLogProps)
                 )}
               </div>
               {change && (
-                <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
-                  {change}
-                </p>
+                <TruncatedText text={change} className="text-[11px] text-muted-foreground mt-0.5" />
               )}
             </div>
           </li>

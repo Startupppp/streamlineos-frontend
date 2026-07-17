@@ -4,6 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useMemo,
   useState,
 } from "react";
 
@@ -30,5 +31,5 @@ export function useAskOsState(): AskOsContextValue {
     setOpen((prev) => !prev);
   }, []);
 
-  return { open, setOpen, toggle };
+  return useMemo(() => ({ open, setOpen, toggle }), [open, toggle]);
 }

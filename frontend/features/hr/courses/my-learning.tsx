@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { useMyEnrollments } from "@/hooks/api/hr/courses";
 import type { CourseEnrollment } from "@/hooks/api/hr/courses";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const STATUS_CONFIG: Record<CourseEnrollment["status"], { label: string; className: string }> = {
   ENROLLED: { label: "Enrolled", className: "bg-primary/5 text-foreground border-primary/30" },
@@ -80,9 +81,7 @@ export function MyLearning() {
                     )}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">
-                      Course #{enrollment.courseId}
-                    </p>
+                    <TruncatedText text={`Course #${enrollment.courseId}`} className="text-sm font-medium text-foreground" />
                     {enrollment.completedAt && (
                       <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                         <Clock className="h-3 w-3" />

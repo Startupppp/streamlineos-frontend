@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FormField } from "@/components/ui/form";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { fadeUp } from "@/lib/motion-variants";
 import { apiClient } from "@/lib/api-client";
@@ -225,7 +226,7 @@ export function AutomationCard({ rule, onToggle, onDeleteRequest }: AutomationCa
           <div className="flex items-center gap-3">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-sm font-semibold truncate text-foreground">{rule.name}</h3>
+                <TruncatedText text={rule.name} className="text-sm font-semibold text-foreground" />
                 <Badge variant="secondary" className="text-[10px] shrink-0 font-normal">
                   {TRIGGER_LABELS[rule.trigger]}
                 </Badge>

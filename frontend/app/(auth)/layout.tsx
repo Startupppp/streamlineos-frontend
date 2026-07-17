@@ -1,8 +1,13 @@
+import type { Metadata } from "next";
 import { ReactNode } from "react";
 import Link from "next/link";
 import { AnimatedLogo } from "@/features/landing/components/animated-logo";
 import { AuthRightPanel } from "@/features/auth/auth-right-panel";
 import { BRAND_NAME } from "@/lib/branding";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (

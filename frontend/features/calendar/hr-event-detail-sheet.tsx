@@ -8,6 +8,7 @@ import { CalendarDays } from "lucide-react";
 import { HR_CALENDAR_TYPE_LABELS, HR_CALENDAR_TYPE_COLORS } from "@/hooks/api/hr/hr-calendar";
 import type { HrCalendarEventType } from "@/hooks/api/hr/hr-calendar";
 import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import type { BigCalEvent } from "./big-calendar-wrapper";
 
 interface HrEventDetailSheetProps {
@@ -22,7 +23,7 @@ export function HrEventDetailSheet({ event, onClose }: HrEventDetailSheetProps) 
     <Sheet open={event !== null} onOpenChange={onClose}>
       <SheetContent side="right" className="w-full sm:max-w-sm p-0 flex flex-col">
         <SheetHeader className="px-5 py-4 border-b shrink-0">
-          <SheetTitle className="text-base leading-snug">{event?.title}</SheetTitle>
+          <TruncatedText text={event?.title ?? ""} className="text-base font-semibold leading-snug" />
           {type && (
             <Badge
               variant="outline"

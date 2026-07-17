@@ -1,11 +1,30 @@
 "use client";
 
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil } from "lucide-react";
+import { Trash2Icon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Switch } from "@/components/ui/switch";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Money } from "@/features/accounting/shared";
 import type { FinExpensePolicy } from "@/types/accounting/expenses";
+
+function EditPolicyButton({ onClick }: { onClick: () => void }) {
+  return (
+    <Button variant="ghost" size="icon" className="w-7" onClick={onClick}>
+      <Pencil className="h-3.5 w-3.5" />
+    </Button>
+  );
+}
+
+function DeletePolicyButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button variant="ghost" size="icon" className="w-7 text-destructive hover:text-destructive" onClick={onClick} {...hoverHandlers}>
+      <Trash2Icon ref={iconRef} size={14} />
+    </Button>
+  );
+}
 
 interface PolicyTableProps {
   policies: FinExpensePolicy[];
@@ -86,17 +105,8 @@ export function PolicyTable({ policies, onEdit, onDelete, onToggleActive, toggli
       header: "",
       cell: (row) => (
         <div className="flex items-center gap-0.5">
-          <Button variant="ghost" size="icon" className="w-7" onClick={() => onEdit(row)}>
-            <Pencil className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="w-7 text-destructive hover:text-destructive"
-            onClick={() => onDelete(row)}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
+          <EditPolicyButton onClick={() => onEdit(row)} />
+          <DeletePolicyButton onClick={() => onDelete(row)} />
         </div>
       ),
     },

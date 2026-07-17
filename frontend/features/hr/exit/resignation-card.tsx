@@ -21,6 +21,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { ProgressTimeline } from "./progress-timeline";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 function statusBadgeClass(status: string | null): string {
   if (!status)
@@ -109,9 +110,10 @@ export function ResignationCard({
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-sm font-semibold truncate">
-              {r.user?.name ?? "Employee"}
-            </p>
+            <TruncatedText
+              text={r.user?.name ?? "Employee"}
+              className="text-sm font-semibold"
+            />
             <Badge
               variant="outline"
               className={cn(

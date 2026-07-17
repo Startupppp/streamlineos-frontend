@@ -132,14 +132,7 @@ export interface RunEmployee {
 }
 
 export interface RunEmployeeDetail extends RunEmployee {
-  lineItems: CalculationSnapshotLine[];
-  exceptions: PayrollException[];
   calculationSnapshot?: CalculationSnapshot;
-  scheduledDays?: string;
-  paidDays?: string;
-  lopDays?: string;
-  halfDays?: string;
-  overtimeHours?: string;
 }
 
 export interface PayrollException {

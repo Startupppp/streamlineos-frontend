@@ -2,7 +2,10 @@
 
 import { useState, useCallback } from "react";
 import type { ReactNode } from "react";
-import { MapPin, Plus, Trash2, Pencil, Eye } from "lucide-react";
+import { MapPin, Pencil, Eye } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { Trash2Icon, PlusIcon } from "@animateicons/react/lucide";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -127,6 +130,15 @@ function PreviewPanel() {
   );
 }
 
+function DeleteTerritoryButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button variant="ghost" size="icon" className="w-7 text-destructive" onClick={onClick} {...hoverHandlers}>
+      <Trash2Icon ref={iconRef} size={14} />
+    </Button>
+  );
+}
+
 function buildColumns(
   onEdit: (t: Territory) => void,
   onToggle: (id: number, isActive: boolean) => void,
@@ -186,9 +198,7 @@ function buildColumns(
             <Button variant="ghost" size="icon" className="w-7" onClick={handleEdit} aria-label="Edit territory">
               <Pencil className="h-3.5 w-3.5" />
             </Button>
-            <Button variant="ghost" size="icon" className="w-7 text-destructive" onClick={handleDelete} aria-label="Delete territory">
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
+            <DeleteTerritoryButton onClick={handleDelete} />
           </div>
         );
       },
@@ -314,10 +324,7 @@ export default function TerritoriesPage() {
         title="Territories"
         subtitle={isLoading ? undefined : `${count} territor${count !== 1 ? "ies" : "y"} defined`}
         actions={
-          <Button onClick={handleOpenNew}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Territory
-          </Button>
+          <AnimatedIconButton icon={PlusIcon} iconSize={16} onClick={handleOpenNew}>New Territory</AnimatedIconButton>
         }
       >
         {isLoading ? (

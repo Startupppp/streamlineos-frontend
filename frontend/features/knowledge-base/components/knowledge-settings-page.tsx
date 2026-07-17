@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,6 +20,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useCan } from "@/hooks/api/access";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import {
   useArticleMigrationPreview,
   useRunArticleMigration,
@@ -334,29 +336,12 @@ function ArticleMigrationSection() {
           {isLoading ? (
             <div className="h-16 animate-pulse rounded-md bg-muted" />
           ) : preview ? (
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {[
-                { label: "Total articles", value: preview.total },
-                { label: "Already migrated", value: preview.alreadyMigrated },
-                { label: "Will migrate", value: preview.willMigrate },
-                {
-                  label: "Published",
-                  value: preview.byStatus["published"] ?? 0,
-                },
-              ].map((stat) => (
-                <div
-                  key={stat.label}
-                  className="rounded-md border border-border bg-muted/20 px-3 py-2"
-                >
-                  <p className="text-[11px] text-muted-foreground">
-                    {stat.label}
-                  </p>
-                  <p className="text-lg font-semibold tabular-nums text-foreground">
-                    {stat.value}
-                  </p>
-                </div>
-              ))}
-            </div>
+            <StatCardGrid cols={4}>
+              <StatCard label="Total articles" value={preview.total} />
+              <StatCard label="Already migrated" value={preview.alreadyMigrated} tone="emerald" />
+              <StatCard label="Will migrate" value={preview.willMigrate} tone="accent" />
+              <StatCard label="Published" value={preview.byStatus["published"] ?? 0} tone="emerald" />
+            </StatCardGrid>
           ) : null}
 
           {preview && preview.sample.length > 0 && (
@@ -367,8 +352,8 @@ function ArticleMigrationSection() {
               </p>
               <ul className="space-y-0.5">
                 {preview.sample.slice(0, 10).map((a) => (
-                  <li key={a.id} className="text-sm text-foreground truncate">
-                    {a.title}
+                  <li key={a.id} className="text-sm text-foreground">
+                    <TruncatedText text={a.title ?? ""} />
                   </li>
                 ))}
               </ul>

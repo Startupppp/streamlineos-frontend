@@ -15,6 +15,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import { usePolicyPreview } from "@/hooks/api/hr/policies";
 import { SCOPE_TYPE_LABELS } from "@/types/hr/policies";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface Props {
   policyId: number;
@@ -83,9 +84,9 @@ export function PolicyPreviewDialog({ policyId, open, onOpenChange }: Props) {
             <div className="rounded-lg border border-border p-3 space-y-3 bg-muted/30">
               {data ? (
                 <>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">{data.policy.name}</span>
-                    <Badge variant="outline" className="text-xs">
+                  <div className="flex items-center justify-between gap-2 min-w-0">
+                    <TruncatedText text={data.policy.name ?? ""} className="text-sm font-medium min-w-0 flex-1" />
+                    <Badge variant="outline" className="text-xs shrink-0">
                       v{data.policy.version}
                     </Badge>
                   </div>
@@ -101,7 +102,7 @@ export function PolicyPreviewDialog({ policyId, open, onOpenChange }: Props) {
                         <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
                           {SCOPE_TYPE_LABELS[s.scopeType as keyof typeof SCOPE_TYPE_LABELS] ?? s.scopeType}
                         </Badge>
-                        <span className="font-mono">{s.scopeValue || "(org)"}</span>
+                        <TruncatedText text={s.scopeValue || "(org)"} className="font-mono min-w-0 flex-1" />
                         <span className="ml-auto text-muted-foreground">
                           specificity {s.specificity}
                         </span>

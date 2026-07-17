@@ -1,28 +1,26 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { StatCardGridSkeleton } from "@/components/ui/stat-card";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 
 export default function PayrollRunDetailLoading() {
   return (
-    <PageWrapper title="Payroll Run" backHref="/payroll/runs">
+    <PageWrapper
+      title="Payroll Run"
+      subtitle="Loading run…"
+      backHref="/payroll/runs"
+      actions={<Skeleton className="h-9 w-28 rounded-md" />}
+    >
       <div className="space-y-4">
         <Skeleton className="h-24 rounded-xl" />
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-16 rounded-lg" />
-          ))}
+        <StatCardGridSkeleton cols={4} count={4} />
+        <div className="flex gap-1 border-b border-border pb-0">
+          <Skeleton className="h-9 w-28 rounded-t-md" />
+          <Skeleton className="h-9 w-28 rounded-t-md" />
+          <Skeleton className="h-9 w-24 rounded-t-md" />
+          <Skeleton className="h-9 w-24 rounded-t-md" />
         </div>
-        <div className="border border-border rounded-md overflow-hidden">
-          <div className="h-10 bg-muted/30 border-b" />
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="border-b border-border px-3 flex items-center gap-3">
-              <Skeleton className="h-3 w-32" />
-              <Skeleton className="h-3 w-16" />
-              <Skeleton className="ml-auto h-3 w-20" />
-              <Skeleton className="h-3 w-20" />
-              <Skeleton className="h-3 w-20" />
-            </div>
-          ))}
-        </div>
+        <DataTableSkeleton rows={12} columns={6} />
       </div>
     </PageWrapper>
   );

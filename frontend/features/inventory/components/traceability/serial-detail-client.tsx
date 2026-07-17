@@ -11,6 +11,7 @@ import { ErrorState } from "@/components/shared";
 import { InventoryDetailPageLoading } from "@/features/inventory/components/inventory-detail-page-loading";
 import { fadeUp } from "@/lib/motion-variants";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { useSerial, useTraceability } from "@/hooks/api/inventory/traceability";
 import { SERIAL_STATUS_LABEL } from "@/features/inventory/lib";
 import { MovementHistoryTable } from "./movement-history-table";
@@ -83,7 +84,7 @@ export function SerialDetailClient({ serialId }: SerialDetailClientProps) {
               </CardTitle>
             </CardHeader>
             <CardContent className="px-3 pb-3">
-              <p className="text-sm font-semibold text-foreground truncate">{serial.productName}</p>
+              <TruncatedText text={serial.productName} className="text-sm font-semibold text-foreground" />
             </CardContent>
           </Card>
           <Card>

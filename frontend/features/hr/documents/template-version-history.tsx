@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { History, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface TemplateVersion {
   id: number;
@@ -45,16 +46,14 @@ function VersionItem({ version: v, isLatest, isLast, onRestore }: VersionItemPro
       <div className="flex items-center justify-between rounded-lg px-3 py-2.5 text-xs hover:bg-muted/40 transition-colors duration-200 group">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="font-semibold text-foreground truncate">
-              v{v.version} — {v.title}
-            </p>
+            <TruncatedText text={`v${v.version} — ${v.title}`} className="font-semibold text-foreground" />
             {isLatest && (
               <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30 shrink-0">
                 Latest
               </span>
             )}
           </div>
-          <p className="text-muted-foreground truncate mt-0.5">{v.type}</p>
+          <TruncatedText text={v.type} className="text-muted-foreground mt-0.5" />
         </div>
         <div className="ml-3 flex items-center gap-2 shrink-0">
           <span className="text-[11px] text-muted-foreground">

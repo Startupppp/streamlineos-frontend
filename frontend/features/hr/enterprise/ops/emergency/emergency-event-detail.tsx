@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Separator } from "@/components/ui/separator";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Radio, CheckCircle, AlertCircle, Clock } from "lucide-react";
 import { useCan } from "@/hooks/api/access";
 import {
@@ -94,23 +95,11 @@ export function EmergencyEventDetail({ eventId, onBack }: Props) {
         </div>
 
         {total > 0 && (
-          <div className="grid grid-cols-3 gap-3">
-            <div className="rounded-xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 p-4 text-center">
-              <CheckCircle className="h-5 w-5 text-emerald-600 dark:text-emerald-400 mx-auto mb-1" />
-              <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{safe}</p>
-              <p className="text-xs text-emerald-600 dark:text-emerald-400">Safe</p>
-            </div>
-            <div className="rounded-xl border border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 p-4 text-center">
-              <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 mx-auto mb-1" />
-              <p className="text-2xl font-bold text-red-700 dark:text-red-300">{needHelp}</p>
-              <p className="text-xs text-red-600 dark:text-red-400">Need Help</p>
-            </div>
-            <div className="rounded-xl border border-border bg-muted p-4 text-center">
-              <Clock className="h-5 w-5 text-muted-foreground mx-auto mb-1" />
-              <p className="text-2xl font-bold text-foreground">{noResponse}</p>
-              <p className="text-xs text-muted-foreground">No Response</p>
-            </div>
-          </div>
+          <StatCardGrid cols={3}>
+            <StatCard label="Safe" value={safe} icon={CheckCircle} tone="emerald" />
+            <StatCard label="Need Help" value={needHelp} icon={AlertCircle} tone="red" />
+            <StatCard label="No Response" value={noResponse} icon={Clock} tone="default" />
+          </StatCardGrid>
         )}
 
         {event.status === "active" && (

@@ -4,24 +4,17 @@ import { useHrAttritionAnalytics } from "@/hooks/api/hr/analytics";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Users, UserMinus, TrendingDown } from "lucide-react";
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-} from "recharts";
+import dynamic from "next/dynamic";
 import {
   AnalyticsChartCard,
   AnalyticsSectionHeader,
-  CHART_SEMANTIC,
   EmptyChart,
-  chartAxisTick,
-  chartGridProps,
-  chartTooltipStyle,
 } from "./shared";
+
+const AttritionTrendChart = dynamic(
+  () => import("./attrition-trend-chart").then((m) => ({ default: m.AttritionTrendChart })),
+  { ssr: false, loading: () => <Skeleton className="h-[220px] w-full" /> },
+);
 
 interface AttritionSectionProps {
   isLoading: boolean;
@@ -74,34 +67,7 @@ export function AttritionSection({ isLoading }: AttritionSectionProps) {
 
       <AnalyticsChartCard title="Resignation Trend by Month (YTD)">
         {monthlyData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart
-              data={monthlyData}
-              margin={{ top: 8, right: 8, left: -16, bottom: 0 }}
-              barCategoryGap="32%"
-            >
-              <CartesianGrid {...chartGridProps} />
-              <XAxis
-                dataKey="month"
-                tick={chartAxisTick}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                tick={chartAxisTick}
-                allowDecimals={false}
-                axisLine={false}
-                tickLine={false}
-              />
-              <Tooltip contentStyle={chartTooltipStyle} />
-              <Bar
-                dataKey="resignations"
-                fill={CHART_SEMANTIC.danger}
-                radius={[4, 4, 0, 0]}
-                maxBarSize={28}
-              />
-            </BarChart>
-          </ResponsiveContainer>
+          <AttritionTrendChart data={monthlyData} />
         ) : (
           <EmptyChart label="No resignation data for this year" />
         )}

@@ -22,6 +22,7 @@ import {
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getErrorMessage } from "@/lib/api-client";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   useSalaryStructureTemplates,
   useCreateSalaryTemplate,
@@ -68,8 +69,8 @@ const TemplateCard = memo(function TemplateCard({ template, index, onEdit, onDel
       transition={{ duration: 0.22, ease: "easeOut", delay: index * 0.08 }}
       className="bg-card border border-border rounded-xl shadow-sm p-5 flex flex-col gap-4"
     >
-      <div className="flex items-start justify-between gap-2">
-        <h3 className="text-sm font-semibold text-foreground leading-tight">{template.name}</h3>
+      <div className="flex items-start justify-between gap-2 min-w-0">
+        <TruncatedText text={template.name} className="min-w-0 flex-1 text-sm font-semibold text-foreground leading-tight" />
         <Badge
           variant={template.isActive ? "default" : "secondary"}
           className={

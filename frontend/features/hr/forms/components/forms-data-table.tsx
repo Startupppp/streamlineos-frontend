@@ -10,6 +10,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import Link from "next/link";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { useActivateHrForm, useArchiveHrForm, useDeleteHrForm } from "../hooks/use-hr-forms";
 import type { HrForm } from "../lib/types";
 
@@ -65,7 +66,7 @@ export function FormsDataTable({ forms }: FormsDataTableProps) {
             {row.name}
           </Link>
           {row.description && (
-            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{row.description}</p>
+            <TruncatedText text={row.description} className="text-xs text-muted-foreground mt-0.5" />
           )}
         </div>
       ),

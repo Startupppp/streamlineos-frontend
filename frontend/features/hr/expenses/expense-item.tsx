@@ -19,6 +19,7 @@ import {
   getCategoryConfig,
   ADMIN_CATEGORY_LABELS,
 } from "./expense-constants";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface AdminExpenseItemProps {
   expense: ExpenseWithRelations;
@@ -157,12 +158,14 @@ export function AdminExpenseItem({
             {expense.id.toString().padStart(3, "0")}
           </span>
         </div>
-        <h4 className="font-semibold text-sm text-foreground mb-0.5 truncate">
-          {expense.merchant || expense.description || "Expense Claim"}
-        </h4>
-        <p className="text-xs text-muted-foreground line-clamp-1 mb-2.5">
-          {expense.description || "-"}
-        </p>
+        <TruncatedText
+          text={expense.merchant || expense.description || "Expense Claim"}
+          className="font-semibold text-sm text-foreground mb-0.5"
+        />
+        <TruncatedText
+          text={expense.description || "-"}
+          className="text-xs text-muted-foreground mb-2.5"
+        />
         <div className="flex items-center gap-2 flex-wrap">
           <Avatar className="h-5 w-5">
             <AvatarImage src={resolveImageUrl(expense.user?.image)} />

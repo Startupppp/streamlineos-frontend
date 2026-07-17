@@ -5,6 +5,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Globe, Hash, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { PublicChannel } from "@/types/chat";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 export function PublicChannelRow({
   channel,
@@ -39,9 +40,9 @@ export function PublicChannelRow({
         <Hash className="h-4 w-4 text-emerald-600" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[13px] font-semibold truncate">{channel.name}</p>
+        <TruncatedText text={channel.name} className="text-[13px] font-semibold" />
         {channel.description && (
-          <p className="text-[11px] text-muted-foreground truncate">{channel.description}</p>
+          <TruncatedText text={channel.description} className="text-[11px] text-muted-foreground" />
         )}
         <div className="flex items-center gap-1 mt-0.5">
           <Users className="h-3 w-3 text-muted-foreground/50" />

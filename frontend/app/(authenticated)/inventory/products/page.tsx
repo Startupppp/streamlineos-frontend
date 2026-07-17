@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import Link from "next/link";
@@ -8,7 +8,10 @@ import { Package } from "lucide-react";
 import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
-import { EmptyProductsIllustration, EmptySearchIllustration } from "@/components/illustrations";
+import {
+  EmptyProductsIllustration,
+  EmptySearchIllustration,
+} from "@/components/illustrations";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -42,7 +45,10 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
-import { CONTENT_FILL_PANEL, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import {
+  CONTENT_FILL_PANEL,
+  FILTER_SELECT_TRIGGER,
+} from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 import {
   useProducts,
@@ -60,19 +66,28 @@ function formatPrice(value: string | number | null | undefined): string {
   if (value === null || value === undefined || value === "") return "—";
   const n = Number(value);
   if (!Number.isFinite(n)) return "—";
-  return n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return n.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 }
 
 function StatusBadge({ status }: { status: string }) {
   if (status === "ACTIVE") {
     return (
-      <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 border-emerald-200 text-emerald-700 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
+      <Badge
+        variant="outline"
+        className="h-4 text-[9px] px-1.5 py-0 border-emerald-200 text-emerald-700 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
+      >
         Active
       </Badge>
     );
   }
   return (
-    <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 border-border text-muted-foreground bg-muted">
+    <Badge
+      variant="outline"
+      className="h-4 text-[9px] px-1.5 py-0 border-border text-muted-foreground bg-muted"
+    >
       Inactive
     </Badge>
   );
@@ -81,38 +96,57 @@ function StatusBadge({ status }: { status: string }) {
 function StockBadge({ qty }: { qty: number }) {
   if (qty <= 0) {
     return (
-      <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 tabular-nums border-red-200 text-red-700 bg-red-50 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30">
+      <Badge
+        variant="outline"
+        className="h-4 text-[9px] px-1.5 py-0 tabular-nums border-red-200 text-red-700 bg-red-50 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30"
+      >
         Out
       </Badge>
     );
   }
   if (qty < 10) {
     return (
-      <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 tabular-nums border-amber-200 text-amber-700 bg-amber-50 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
+      <Badge
+        variant="outline"
+        className="h-4 text-[9px] px-1.5 py-0 tabular-nums border-amber-200 text-amber-700 bg-amber-50 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30"
+      >
         {qty} low
       </Badge>
     );
   }
   return (
-    <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 tabular-nums border-emerald-200 text-emerald-700 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
+    <Badge
+      variant="outline"
+      className="h-4 text-[9px] px-1.5 py-0 tabular-nums border-emerald-200 text-emerald-700 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
+    >
       {qty}
     </Badge>
   );
 }
 
-function TrackingBadge({ method }: { method: TrackingMethod | null | undefined }) {
+function TrackingBadge({
+  method,
+}: {
+  method: TrackingMethod | null | undefined;
+}) {
   if (!method || method === "NONE") {
     return <span className="text-muted-foreground text-[10px]">—</span>;
   }
   if (method === "LOT") {
     return (
-      <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
+      <Badge
+        variant="outline"
+        className="h-4 text-[9px] px-1.5 py-0 bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30"
+      >
         Lot
       </Badge>
     );
   }
   return (
-    <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30">
+    <Badge
+      variant="outline"
+      className="h-4 text-[9px] px-1.5 py-0 bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30"
+    >
       Serial
     </Badge>
   );
@@ -120,7 +154,8 @@ function TrackingBadge({ method }: { method: TrackingMethod | null | undefined }
 
 function ProductRowActions({ product }: { product: InventoryProduct }) {
   const [alertOpen, setAlertOpen] = useState<boolean>(false);
-  const { iconRef: ellipsisRef, hoverHandlers: ellipsisHover } = useAnimatedIcon();
+  const { iconRef: ellipsisRef, hoverHandlers: ellipsisHover } =
+    useAnimatedIcon();
   const archiveMutation = useArchiveProduct();
   const restoreMutation = useRestoreProduct();
   const deleteMutation = useDeleteProduct();
@@ -148,7 +183,9 @@ function ProductRowActions({ product }: { product: InventoryProduct }) {
       },
       onError: (err) => {
         setAlertOpen(false);
-        toast.error(getErrorMessage(err), { description: "Consider archiving this product instead." });
+        toast.error(getErrorMessage(err), {
+          description: "Consider archiving this product instead.",
+        });
       },
     });
   }
@@ -161,7 +198,12 @@ function ProductRowActions({ product }: { product: InventoryProduct }) {
     <AlertDialog open={alertOpen} onOpenChange={handleAlertOpenChange}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="w-7" {...ellipsisHover}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="w-7"
+            {...ellipsisHover}
+          >
             <EllipsisIcon ref={ellipsisRef} size={14} />
             <span className="sr-only">Product actions</span>
           </Button>
@@ -181,9 +223,7 @@ function ProductRowActions({ product }: { product: InventoryProduct }) {
             <DropdownMenuItem onClick={handleRestore}>Restore</DropdownMenuItem>
           )}
           <AlertDialogTrigger asChild>
-            <DropdownMenuItem variant="destructive">
-              Delete
-            </DropdownMenuItem>
+            <DropdownMenuItem variant="destructive">Delete</DropdownMenuItem>
           </AlertDialogTrigger>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -191,12 +231,16 @@ function ProductRowActions({ product }: { product: InventoryProduct }) {
         <AlertDialogHeader>
           <AlertDialogTitle>Delete product?</AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone. Archiving preserves history without removing the product.
+            This action cannot be undone. Archiving preserves history without
+            removing the product.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={handleDeleteConfirm} disabled={deleteMutation.isPending}>
+          <AlertDialogAction
+            onClick={handleDeleteConfirm}
+            disabled={deleteMutation.isPending}
+          >
             Delete
           </AlertDialogAction>
         </AlertDialogFooter>
@@ -215,21 +259,23 @@ function ProductsPageInner() {
   const productTypeParam = searchParams.get("productType") ?? "";
   const page = Math.max(1, Number(searchParams.get("page") ?? "1"));
 
-  const [search, setSearch] = useState<string>(searchParams.get("search") ?? "");
+  const [search, setSearch] = useState<string>(
+    searchParams.get("search") ?? "",
+  );
   const debouncedSearch = useDebouncedValue(search, 300);
 
-  function updateParams(updates: Record<string, string | null>): void {
-    const params = new URLSearchParams(searchParams.toString());
-    for (const [key, value] of Object.entries(updates)) {
-      if (!value) {
-        params.delete(key);
-      } else {
-        params.set(key, value);
+  const updateParams = useCallback(
+    (updates: Record<string, string | null>): void => {
+      const params = new URLSearchParams(searchParams.toString());
+      for (const [key, value] of Object.entries(updates)) {
+        if (!value) params.delete(key);
+        else params.set(key, value);
       }
-    }
-    params.delete("page");
-    router.replace(`?${params.toString()}`, { scroll: false });
-  }
+      params.delete("page");
+      router.replace(`?${params.toString()}`, { scroll: false });
+    },
+    [searchParams, router],
+  );
 
   useEffect(() => {
     const trimmed = debouncedSearch.trim() || null;
@@ -304,8 +350,17 @@ function ProductsPageInner() {
     router.replace("?", { scroll: false });
   }
 
-  const hasFilters = !!(search.trim() || statusParam || categoryIdParam || productTypeParam);
-  const isFirstLoad = !productsQuery.isLoading && !productsQuery.error && total === 0 && !hasFilters;
+  const hasFilters = !!(
+    search.trim() ||
+    statusParam ||
+    categoryIdParam ||
+    productTypeParam
+  );
+  const isFirstLoad =
+    !productsQuery.isLoading &&
+    !productsQuery.error &&
+    total === 0 &&
+    !hasFilters;
 
   const columns: DataTableColumn<InventoryProduct>[] = [
     {
@@ -314,7 +369,10 @@ function ProductsPageInner() {
       cell: (p) => (
         <div className="flex items-center gap-2">
           <div className="h-5 w-5 rounded bg-muted flex items-center justify-center shrink-0">
-            <Package className="h-3 w-3 text-muted-foreground/60" aria-hidden="true" />
+            <Package
+              className="h-3 w-3 text-muted-foreground/60"
+              aria-hidden="true"
+            />
           </div>
           <Link
             href={`/inventory/products/${p.id}`}
@@ -392,11 +450,17 @@ function ProductsPageInner() {
   const filtersRow = isFirstLoad ? undefined : (
     <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
       <div className="w-full max-w-md min-w-[200px]">
-          <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search products by name, SKU, or barcode..." />
-        </div>
+        <SearchInput
+          value={search}
+          onValueChange={handleSearchChange}
+          placeholder="Search products by name, SKU, or barcode..."
+        />
+      </div>
       <div className="hidden min-w-0 flex-row flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide sm:flex [&>*]:shrink-0">
         <Select value={statusParam || "all"} onValueChange={handleStatusChange}>
-          <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "min-w-0 flex-1 text-xs")}>
+          <SelectTrigger
+            className={cn(FILTER_SELECT_TRIGGER, "min-w-0 flex-1 text-xs")}
+          >
             <SelectValue placeholder="All statuses" />
           </SelectTrigger>
           <SelectContent>
@@ -405,8 +469,13 @@ function ProductsPageInner() {
             <SelectItem value="INACTIVE">Inactive</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={categoryIdParam || "all"} onValueChange={handleCategoryChange}>
-          <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "min-w-0 flex-1 text-xs")}>
+        <Select
+          value={categoryIdParam || "all"}
+          onValueChange={handleCategoryChange}
+        >
+          <SelectTrigger
+            className={cn(FILTER_SELECT_TRIGGER, "min-w-0 flex-1 text-xs")}
+          >
             <SelectValue placeholder="All categories" />
           </SelectTrigger>
           <SelectContent>
@@ -418,8 +487,13 @@ function ProductsPageInner() {
             ))}
           </SelectContent>
         </Select>
-        <Select value={productTypeParam || "all"} onValueChange={handleProductTypeChange}>
-          <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "min-w-0 flex-1 text-xs")}>
+        <Select
+          value={productTypeParam || "all"}
+          onValueChange={handleProductTypeChange}
+        >
+          <SelectTrigger
+            className={cn(FILTER_SELECT_TRIGGER, "min-w-0 flex-1 text-xs")}
+          >
             <SelectValue placeholder="All types" />
           </SelectTrigger>
           <SelectContent>
@@ -465,7 +539,10 @@ function ProductsPageInner() {
           title="Add your first product"
           description="Start building your product catalogue. Define SKUs, set pricing, configure stock tracking, and manage variants all in one place."
           action={{ label: "Add Product", href: "/inventory/products/new" }}
-          secondaryAction={{ label: "Import Products", href: "/inventory/import" }}
+          secondaryAction={{
+            label: "Import Products",
+            href: "/inventory/import",
+          }}
           className={CONTENT_FILL_PANEL}
         />
       ) : (

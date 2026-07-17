@@ -1,6 +1,7 @@
 "use client";
 
 import { LayoutGrid, Sparkles, Wallet } from "lucide-react";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { MODULE_CATALOG, needsPaymentsStep } from "../lib/constants";
 import type { WizardData } from "../lib/types";
 
@@ -28,9 +29,9 @@ export function WorkspacePreviewPanel({ data }: WorkspacePreviewPanelProps) {
                 <li key={moduleKey} className="flex items-center gap-2 rounded-lg border border-border bg-card px-2.5 py-1.5">
                   <LayoutGrid className="h-3.5 w-3.5 text-blue-600 shrink-0" />
                   <div className="min-w-0">
-                    <p className="text-[12px] font-medium text-foreground truncate">{meta?.label ?? moduleKey}</p>
+                    <TruncatedText text={meta?.label ?? moduleKey} className="text-[12px] font-medium text-foreground" />
                     {meta?.description && (
-                      <p className="text-[10.5px] text-muted-foreground truncate">{meta.description}</p>
+                      <TruncatedText text={meta.description} className="text-[10.5px] text-muted-foreground" />
                     )}
                   </div>
                 </li>
@@ -45,7 +46,7 @@ export function WorkspacePreviewPanel({ data }: WorkspacePreviewPanelProps) {
           <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">Summary</p>
           <div className="rounded-lg border border-border bg-card p-2.5 space-y-1">
             {data.companyName && (
-              <p className="text-[12px] text-foreground font-medium truncate">{data.companyName}</p>
+              <TruncatedText text={data.companyName} className="text-[12px] text-foreground font-medium" />
             )}
             {data.industry && <p className="text-[11.5px] text-muted-foreground">{data.industry}</p>}
             {data.goals.length > 0 && (

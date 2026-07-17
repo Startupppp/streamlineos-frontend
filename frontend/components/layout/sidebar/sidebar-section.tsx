@@ -7,6 +7,7 @@ import { ChevronRight, ChevronDown } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { flattenNavRoutes, type NavGroup, type NavRoute, type ModuleAccent } from "./sidebar-nav-items";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 function hoistSingletonParentRoutes(routes: NavRoute[]): NavRoute[] {
   if (routes.length !== 1) return routes;
@@ -227,7 +228,7 @@ function ExpandedItem({ route, depth, pathname, pendingLeaves, onNavigate, accen
             isActive && accent.text,
           )}
         />
-        <span className={cn("flex-1 min-w-0 truncate text-[0.8125rem]", isActive && "text-sidebar-foreground")}>{route.label}</span>
+        <TruncatedText text={route.label} className={cn("flex-1 text-[0.8125rem]", isActive && "text-sidebar-foreground")} />
         {hasBadge && (
           <span className="inline-flex items-center justify-center h-[18px] min-w-[18px] px-1 rounded-full text-[10px] font-bold tabular-nums leading-none bg-amber-500 text-white">
             {count > 99 ? "99+" : count}

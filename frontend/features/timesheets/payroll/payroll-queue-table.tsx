@@ -6,6 +6,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import type { DataTableColumn } from "@/components/ui/data-table";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import type { PayrollSummaryRow } from "./types";
 
 interface PayrollQueueTableProps {
@@ -61,8 +62,8 @@ export function PayrollQueueTable({
         header: "Employee",
         cell: (row) => (
           <div className="min-w-0">
-            <p className="truncate font-medium text-[11px]">{row.userName}</p>
-            <p className="truncate text-[10px] text-muted-foreground">{row.userEmail}</p>
+            <TruncatedText text={row.userName ?? ""} className="font-medium text-[11px]" />
+            <TruncatedText text={row.userEmail ?? ""} className="text-[10px] text-muted-foreground" />
           </div>
         ),
         className: "min-w-[160px] max-w-[200px]",

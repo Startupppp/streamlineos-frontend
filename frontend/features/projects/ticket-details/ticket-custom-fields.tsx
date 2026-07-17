@@ -177,6 +177,7 @@ export function TicketCustomFields({
               field.required &&
                 "after:content-['*'] after:text-red-400 after:ml-0.5",
             )}
+            title={field.name}
           >
             {field.name}
           </Label>

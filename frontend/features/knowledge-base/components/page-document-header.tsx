@@ -22,6 +22,7 @@ import {
   KbUnlockIcon,
 } from "@/features/knowledge-base/lib/kb-icons";
 import { Badge } from "@/components/ui/badge";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import PageMetadataSheet from "./page-metadata-sheet";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
@@ -67,6 +68,7 @@ import {
 import { useCan } from "@/hooks/api/access";
 import type { KbPageDetail } from "@/hooks/api/kb/pages";
 import PageCommentsSheet from "./page-comments-sheet";
+import { KbPageAiActions } from "./kb-page-ai-actions";
 import PageHistorySheet from "./page-history-sheet";
 import MovePageDialog from "./move-page-dialog";
 import PageSharePopover from "./page-share-popover";
@@ -78,6 +80,7 @@ interface PageDocumentHeaderProps {
   pageId: number;
   saveState: "idle" | "pending" | "saving" | "saved";
   onNavigate: (pageId: number) => void;
+  onApplyImprovement?: (text: string) => void;
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -109,6 +112,7 @@ export default function PageDocumentHeader({
   pageId,
   saveState,
   onNavigate,
+  onApplyImprovement,
 }: PageDocumentHeaderProps) {
   const router = useRouter();
   const canCreate = useCan("kb:pages:create");
@@ -258,11 +262,12 @@ export default function PageDocumentHeader({
             Wiki
           </Link>
           {ancestors.map((a) => (
-            <span key={a.id} className="flex items-center gap-1 shrink-0">
-              <KbChevronRightIcon className="h-3 w-3" />
+            <span key={a.id} className="flex items-center gap-1 min-w-0">
+              <KbChevronRightIcon className="h-3 w-3 shrink-0" />
               <Link
                 href={pageHref(a.id)}
-                className="hover:text-foreground transition-colors truncate max-w-[120px]"
+                className="hover:text-foreground transition-colors truncate max-w-[120px] min-w-0"
+                title={a.title || "Untitled"}
               >
                 {a.title || "Untitled"}
               </Link>
@@ -270,9 +275,7 @@ export default function PageDocumentHeader({
           ))}
           <span className="flex items-center gap-1 shrink-0">
             <KbChevronRightIcon className="h-3 w-3" />
-            <span className="text-foreground font-medium truncate max-w-[200px]">
-              {page.title || "Untitled"}
-            </span>
+            <TruncatedText text={page.title || "Untitled"} className="text-foreground font-medium max-w-[200px]" />
           </span>
         </nav>
 
@@ -314,6 +317,11 @@ export default function PageDocumentHeader({
               )}
             </div>
           )}
+
+            <KbPageAiActions
+              pageId={pageId}
+              onApplyImprovement={onApplyImprovement}
+            />
 
             <HeaderToolbarTooltip label="Page info">
               <Button
@@ -395,7 +403,7 @@ export default function PageDocumentHeader({
                       onClick={handleBacklinkClick}
                     >
                       <span className="shrink-0">{bl.icon ?? "📄"}</span>
-                      <span className="truncate">{bl.title || "Untitled"}</span>
+                      <TruncatedText text={bl.title || "Untitled"} />
                     </button>
                   ))}
                 </div>

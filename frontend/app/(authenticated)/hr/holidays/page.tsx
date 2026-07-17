@@ -24,11 +24,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import {
-  ChevronLeft,
-  ChevronRight,
-  Plus,
   CalendarDays,
-  Trash2,
   Pencil,
   RotateCcw,
   List,
@@ -36,6 +32,8 @@ import {
   Globe,
   Clock,
 } from "lucide-react";
+import { Trash2Icon, PlusIcon, ChevronLeftIcon, ChevronRightIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetBody } from "@/components/ui/sheet";
@@ -51,6 +49,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/api-client";
 import {
@@ -124,7 +123,7 @@ function HolidayItem({
         <p className="text-lg font-bold text-foreground leading-none">{format(parseISO(holiday.date), "d")}</p>
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-foreground truncate">{holiday.name}</p>
+        <TruncatedText text={holiday.name} className="font-medium text-foreground" />
         <p className="text-xs text-muted-foreground">{format(parseISO(holiday.date), "EEEE, MMMM d")}</p>
       </div>
       {holiday.recurring && (
@@ -137,14 +136,14 @@ function HolidayItem({
           <Button variant="ghost" size="icon" className="w-7" onClick={handleEditClick}>
             <Pencil className="h-3.5 w-3.5" />
           </Button>
-          <Button
+          <AnimatedIconButton
+            icon={Trash2Icon}
             variant="ghost"
             size="icon"
             className="w-7 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
+            iconSize={14}
             onClick={handleDeleteClick}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
+          />
         </div>
       )}
     </motion.div>
@@ -189,13 +188,9 @@ function CalendarView({
     <div className="space-y-4">
       <div className="bg-card border border-border rounded-lg shadow-sm p-4">
         <div className="flex items-center justify-between mb-4">
-          <Button variant="ghost" size="icon" onClick={onPrev}>
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
+          <AnimatedIconButton icon={ChevronLeftIcon} variant="ghost" size="icon" iconSize={16} onClick={onPrev} />
           <h2 className="text-lg font-semibold text-foreground">{format(viewDate, "MMMM yyyy")}</h2>
-          <Button variant="ghost" size="icon" onClick={onNext}>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+          <AnimatedIconButton icon={ChevronRightIcon} variant="ghost" size="icon" iconSize={16} onClick={onNext} />
         </div>
         <div className="grid grid-cols-7 gap-1">
           {WEEKDAYS.map((day) => (
@@ -323,9 +318,9 @@ function ListView({
             {search ? "No holidays match your search" : "No holidays for this period"}
           </p>
           {canManage && !search && (
-            <Button size="sm" className="mt-3" onClick={onAdd}>
-              <Plus className="h-4 w-4 mr-2" /> Add Holiday
-            </Button>
+            <AnimatedIconButton icon={PlusIcon} iconSize={16} size="sm" className="mt-3" onClick={onAdd}>
+              {" Add Holiday"}
+            </AnimatedIconButton>
           )}
         </div>
       ) : (
@@ -371,7 +366,7 @@ function YearOverview({
                     <span className="text-xs font-medium text-foreground tabular-nums w-5 shrink-0">
                       {format(parseISO(h.date), "d")}
                     </span>
-                    <span className="text-xs text-muted-foreground truncate">{h.name}</span>
+                    <TruncatedText text={h.name} className="text-xs text-muted-foreground" />
                     {h.recurring && <RotateCcw className="h-2.5 w-2.5 text-muted-foreground/60 shrink-0" />}
                   </div>
                 ))}
@@ -415,9 +410,9 @@ function UpcomingView({
         <Clock className="w-8 text-muted-foreground/40 mb-2" />
         <p className="text-muted-foreground text-sm font-medium">No upcoming holidays</p>
         {canManage && (
-          <Button size="sm" className="mt-3" onClick={onAdd}>
-            <Plus className="h-4 w-4 mr-2" /> Add Holiday
-          </Button>
+          <AnimatedIconButton icon={PlusIcon} iconSize={16} size="sm" className="mt-3" onClick={onAdd}>
+            {" Add Holiday"}
+          </AnimatedIconButton>
         )}
       </div>
     );
@@ -603,9 +598,9 @@ export default function HolidaysPage() {
             })}
           </div>
           {canManage && (
-            <Button onClick={handleCreateClick} size="sm" className="">
-              <Plus className="h-3.5 w-3.5 mr-1.5" /> Add Holiday
-            </Button>
+            <AnimatedIconButton icon={PlusIcon} iconSize={14} onClick={handleCreateClick} size="sm">
+              {" Add Holiday"}
+            </AnimatedIconButton>
           )}
         </div>
       }

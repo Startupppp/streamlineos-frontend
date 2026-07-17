@@ -140,6 +140,7 @@ export function useAskAI() {
       messages: AskAIMessage[],
       onToken: (token: string) => void,
       conversationId?: number,
+      persona?: string,
     ): Promise<void> => {
       const controller = new AbortController();
       abortRef.current = controller;
@@ -154,6 +155,7 @@ export function useAskAI() {
             body: JSON.stringify({
               messages,
               ...(conversationId !== undefined && { conversationId }),
+              ...(persona !== undefined && { persona }),
             }),
             signal: controller.signal,
           },

@@ -1,13 +1,13 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 
 export default function CrmDataQualityLoading() {
   return (
     <PageWrapper title="Data Quality" subtitle="CRM data health overview">
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <Skeleton key={i} className="h-20 rounded-xl" />
-        ))}
+      <div className="space-y-4">
+        <StatCardGridSkeleton cols={4} count={4} />
+        <Skeleton className="h-64 w-full rounded-xl" />
       </div>
     </PageWrapper>
   );

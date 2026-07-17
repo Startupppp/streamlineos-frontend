@@ -3,6 +3,8 @@
 import { useCallback, useRef, useState } from "react";
 import { Loader2, Send, Paperclip, X, FileText, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
@@ -65,7 +67,7 @@ export function PortalReplyComposer({ ticketId }: PortalReplyComposerProps) {
         }
         setPendingFiles((prev) => [...prev, ...uploaded]);
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : "File upload failed");
+        toast.error(getErrorMessage(err));
       } finally {
         setUploading(false);
         e.target.value = "";
@@ -93,7 +95,7 @@ export function PortalReplyComposer({ ticketId }: PortalReplyComposerProps) {
           setPendingFiles([]);
           toast.success("Reply sent");
         },
-        onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to send reply"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }, [replyText, pendingFiles, reply]);
@@ -153,15 +155,16 @@ export function PortalReplyComposer({ ticketId }: PortalReplyComposerProps) {
           >
             {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Paperclip className="h-3.5 w-3.5" />}
           </Button>
-          <Button
+          <LoadingButton
             onClick={handleReply}
-            disabled={!replyText.trim() || reply.isPending}
+            disabled={!replyText.trim()}
+            isPending={reply.isPending}
             size="icon"
             className="h-[28px] w-10 shrink-0"
             aria-label="Send reply"
           >
-            {reply.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
-          </Button>
+            <Send className="h-3.5 w-3.5" />
+          </LoadingButton>
         </div>
       </div>
       <input

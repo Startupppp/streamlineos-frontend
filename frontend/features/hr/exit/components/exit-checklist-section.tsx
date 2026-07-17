@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { useExitChecklist, type ExitChecklistItem } from "@/hooks/api/hr/exit";
 
 interface ExitChecklistSectionProps {
@@ -20,9 +21,11 @@ function ChecklistItemRow({ item }: { item: ExitChecklistItem }) {
             : "bg-amber-400",
         )}
       />
-      <p className={cn("text-sm flex-1 min-w-0", isCompleted && "line-through text-muted-foreground")}>
-        {item.item}
-      </p>
+      <TruncatedText
+        text={item.item ?? ""}
+        lines={2}
+        className={cn("text-sm flex-1 min-w-0", isCompleted && "line-through text-muted-foreground")}
+      />
       <span
         className={cn(
           "text-[10px] font-semibold px-2 py-0.5 rounded-full border",

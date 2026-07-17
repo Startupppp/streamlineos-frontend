@@ -5,6 +5,7 @@ import { EmptyCalendarIllustration } from "@/components/illustrations";
 import { WidgetCard } from "@/components/ui/widget-card";
 import { usePersonalDashboard } from "@/hooks/api/dashboard";
 import { Umbrella } from "lucide-react";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 export function LeaveBalanceWidget() {
   const { data, isLoading, error } = usePersonalDashboard();
@@ -34,7 +35,7 @@ export function LeaveBalanceWidget() {
           return (
             <li key={b.type} className="space-y-1">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-medium truncate">{b.type}</span>
+                <TruncatedText text={b.type} className="font-medium" />
                 <span className="text-muted-foreground tabular-nums shrink-0 ml-2">
                   {b.remaining} / {b.total} days
                 </span>

@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { FinanceStatusBadge } from "@/features/accounting/shared";
 import { JournalLinesTable } from "./journal-lines-table";
 import type { JournalEntry, JournalLine } from "@/types/accounting";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 function formatDate(value: string): string {
   if (!value) return "";
@@ -119,7 +120,7 @@ export function JournalEntryView({
             )}
             <div className="min-w-0">
               <p className="text-[11px] font-medium text-muted-foreground leading-none">Created by</p>
-              <p className="mt-1 text-sm text-foreground truncate">{entry.createdBy}</p>
+              <TruncatedText text={entry.createdBy} className="mt-1 text-sm text-foreground" />
             </div>
             <div className="min-w-0">
               <p className="text-[11px] font-medium text-muted-foreground leading-none">Created at</p>

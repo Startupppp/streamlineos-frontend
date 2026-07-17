@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { Clock, AlertTriangle, CheckCircle2, Pause, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyInboxIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
@@ -52,7 +53,7 @@ function TicketListItem({ ticket, isSelected, onSelect }: TicketListItemProps) {
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <p className="text-[13px] font-semibold truncate">{toTitleCase(ticket.title)}</p>
+          <TruncatedText text={toTitleCase(ticket.title)} className="text-[13px] font-semibold" />
           <p className="text-[11px] text-muted-foreground mt-0.5">
             #{ticket.id} {ticket.client?.name ? `- ${ticket.client.name}` : ""}
           </p>

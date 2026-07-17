@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -168,7 +169,7 @@ export function IncentivesTab() {
       header: "Sales Rep",
       cell: (row) => (
         <div className="flex flex-col gap-0.5 min-w-0">
-          <span className="text-[11px] font-medium truncate">{row.salesRep.name ?? "—"}</span>
+          <TruncatedText text={row.salesRep.name ?? "—"} className="text-[11px] font-medium" />
         </div>
       ),
     },

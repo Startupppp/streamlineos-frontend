@@ -18,6 +18,7 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { toast } from "sonner";
 import { Plus, CheckCircle2, BookOpen, Users, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const LEVELS = [
   { value: "1", label: "Beginner" },
@@ -239,9 +240,7 @@ export default function SkillsPage() {
                       return (
                         <div key={s.id} className="flex items-center gap-2">
                           <span className={cn("h-2 w-2 rounded-full shrink-0", profMeta.dot)} />
-                          <span className="flex-1 text-xs text-foreground truncate">
-                            {s.user?.name ?? "You"}
-                          </span>
+                          <TruncatedText text={s.user?.name ?? "You"} className="flex-1 text-xs text-foreground" />
                           <span className={cn(
                             "inline-flex items-center gap-1 text-[9px] font-semibold px-1.5 py-0.5 rounded-full border shrink-0",
                             profMeta.badge,

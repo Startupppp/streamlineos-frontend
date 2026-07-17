@@ -1,6 +1,5 @@
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent } from "@/components/ui/card";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function FeedbackLoading() {
   return (
@@ -8,32 +7,21 @@ export default function FeedbackLoading() {
       title="360° Feedback"
       subtitle="Manage feedback cycles and review submissions"
     >
-      <div className="space-y-6">
-        <div className="flex gap-2">
-          <Skeleton className="h-9 w-24 rounded-lg" />
-          <Skeleton className="h-9 w-28 rounded-lg" />
-          <Skeleton className="h-9 w-24 rounded-lg" />
-        </div>
+      <div className="flex flex-col flex-1 min-h-0 gap-4">
+        <Skeleton className="h-9 w-56 rounded-md" />
         <div className="space-y-3">
-          {Array.from({ length: 9 }).map((_, i) => (
-            <Card
-              key={i}
-              className="bg-card border border-border rounded-xl shadow-sm"
-            >
-              <CardContent className="p-5 space-y-3">
-                <div className="flex justify-between items-start">
-                  <div className="space-y-2">
-                    <Skeleton className="h-5 w-48" />
-                    <div className="flex gap-2">
-                      <Skeleton className="h-5 w-16 rounded-full" />
-                      <Skeleton className="h-5 w-16 rounded-full" />
-                    </div>
-                    <Skeleton className="h-3 w-40" />
-                  </div>
-                  <Skeleton className="h-4 w-24 rounded-lg" />{" "}
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="rounded-2xl border border-border bg-card p-5 space-y-3 shadow-sm">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-5 w-40" />
+                  <Skeleton className="h-5 w-16 rounded-full" />
+                  <Skeleton className="h-5 w-12 rounded-full" />
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+              <Skeleton className="h-3 w-48" />
+              <Skeleton className="h-3 w-24" />
+            </div>
           ))}
         </div>
       </div>

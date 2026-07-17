@@ -2,6 +2,7 @@
 
 import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import type { TicketHandoffResult } from "@/types/projects/ai";
 
 export interface TicketSummaryResult {
   summary: string;
@@ -49,5 +50,13 @@ export function useTicketAiSuggestSubtasks(projectId: number, ticketId: number) 
       apiClient.post<TicketSuggestSubtasksResult>(
         `/ai/tickets/${projectId}/${ticketId}/suggest-subtasks`,
       ),
+  });
+}
+
+export function useTicketHandoff(projectId: number, ticketId: number) {
+  return useMutation({
+    mutationKey: ["projects", projectId, "tickets", ticketId, "ai", "handoff"],
+    mutationFn: () =>
+      apiClient.post<TicketHandoffResult>(`/ai/tickets/${projectId}/${ticketId}/handoff`),
   });
 }

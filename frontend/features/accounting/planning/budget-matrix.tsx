@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useReplaceBudgetLines } from "@/hooks/api/accounting/planning";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { BudgetDetail } from "@/types/accounting/planning";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface BudgetMatrixProps {
   budget: BudgetDetail;
@@ -167,9 +168,7 @@ export function BudgetMatrix({ budget, readOnly = false }: BudgetMatrixProps) {
                 >
                   <td className="sticky left-0 z-10 bg-inherit min-w-[220px] px-3 py-1.5 border border-border/40">
                     <div className="flex flex-col leading-tight">
-                      <span className="text-xs font-medium truncate max-w-[200px]">
-                        {acc.accountName}
-                      </span>
+                      <TruncatedText text={acc.accountName} className="text-xs font-medium max-w-[200px]" />
                       <span className="text-[10px] text-muted-foreground font-mono">
                         {acc.accountCode}
                       </span>

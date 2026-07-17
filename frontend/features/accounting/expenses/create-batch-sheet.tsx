@@ -16,6 +16,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
 import { useCreateReimbursementBatch, usePendingForBatch } from "@/hooks/api/accounting/expenses";
 import type { ExpenseWithRelations } from "@/types/hr/expenses";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const batchSchema = z.object({
   name: z.string().min(1, "Name is required").max(200),
@@ -183,10 +184,8 @@ export function CreateBatchSheet({ open, onOpenChange, onCreated }: CreateBatchS
                   className="shrink-0"
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm truncate">{getUserDisplayName(expense.user)}</p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {expense.category} · {expense.expenseDate}
-                  </p>
+                  <TruncatedText text={getUserDisplayName(expense.user)} className="text-sm" />
+                  <TruncatedText text={`${expense.category} · ${expense.expenseDate}`} className="text-xs text-muted-foreground" />
                 </div>
                 <Money value={parseFloat(expense.amount)} className="text-sm font-medium shrink-0" />
               </div>

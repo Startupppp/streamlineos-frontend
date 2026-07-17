@@ -24,6 +24,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { Plus, GraduationCap, Clock, Target, BookOpen, AlertCircle } from "lucide-react";
 import { useCan } from "@/hooks/api/access";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 
 interface LearningPath {
@@ -200,9 +201,7 @@ export default function LearningPathsPage() {
                       <div className="w-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/40 flex items-center justify-center shrink-0">
                         <GraduationCap className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                       </div>
-                      <h3 className="text-sm font-semibold text-foreground leading-tight truncate">
-                        {lp.title}
-                      </h3>
+                      <TruncatedText text={lp.title} className="text-sm font-semibold text-foreground leading-tight" />
                     </div>
                     {lp.level && levelCfg && (
                       <span className={cn("inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0", levelCfg.badge)}>
@@ -212,7 +211,7 @@ export default function LearningPathsPage() {
                   </div>
 
                   {lp.description && (
-                    <p className="text-xs text-muted-foreground line-clamp-2">{lp.description}</p>
+                    <TruncatedText text={lp.description} lines={2} className="text-xs text-muted-foreground" />
                   )}
 
                   <div className="space-y-1">

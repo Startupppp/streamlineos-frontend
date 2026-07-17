@@ -33,6 +33,7 @@ import { NewDMDialog } from "./new-dm-dialog";
 import { NewGroupDialog } from "./new-group-dialog";
 import { ChatSearchDialog } from "./chat-search-dialog";
 import { ChatSidebarNav } from "./chat-sidebar-nav";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface ChannelListEntryProps {
   channel: Channel;
@@ -542,7 +543,7 @@ export function ChannelSidebar({
                 <span className={cn("absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-background", STATUS_OPTIONS.find(o => o.value === currentStatus)?.color ?? "bg-emerald-500")} />
               </div>
               <div className={cn("flex-1 min-w-0 text-left", isCollapsed && "md:hidden")}>
-                <p className="text-[12px] font-medium truncate">{session?.user?.name ?? "You"}</p>
+                <TruncatedText text={session?.user?.name ?? "You"} className="text-[12px] font-medium" />
                 <p className="text-[10px] text-muted-foreground">{STATUS_OPTIONS.find(o => o.value === currentStatus)?.label ?? "Online"}</p>
               </div>
               <ChevronDownIcon size={12} className={cn("text-muted-foreground/50 shrink-0", isCollapsed && "md:hidden")} />

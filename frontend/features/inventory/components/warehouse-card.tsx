@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { fadeUp } from "@/lib/motion-variants";
 import { useSetDefaultWarehouse } from "@/hooks/api/inventory/warehouses";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import Link from "next/link";
 
 export interface WarehouseCardData {
@@ -63,9 +64,7 @@ export const WarehouseCard = memo(function WarehouseCard({ warehouse }: { wareho
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-semibold text-foreground truncate">
-                      {warehouse.name}
-                    </span>
+                    <TruncatedText text={warehouse.name} className="text-sm font-semibold text-foreground" />
                     {warehouse.isDefault && (
                       <Badge
                         variant="outline"
@@ -89,7 +88,7 @@ export const WarehouseCard = memo(function WarehouseCard({ warehouse }: { wareho
                   {cityLine && (
                     <div className="mt-1.5 flex items-center gap-1 text-[11px] text-muted-foreground">
                       <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
-                      <span className="truncate">{cityLine}</span>
+                      <TruncatedText text={cityLine} />
                     </div>
                   )}
                 </div>

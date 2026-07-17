@@ -1,43 +1,17 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { DataTableSkeleton } from "@/components/ui/data-table";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function BackgroundVerificationLoading() {
   return (
     <PageWrapper
       title="Background Verification"
-      subtitle="Manage employee background checks"
-      actions={<Skeleton className="h-8 w-32 rounded-md" />}
+      subtitle="Initiate, track employee background checks, and view candidate compliance"
+      actions={<Skeleton className="h-9 w-36 rounded-md" />}
     >
-      <div className="space-y-4">
-        <div className="grid gap-3 md:grid-cols-4">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <Card key={i}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <Skeleton className="h-3.5 w-20" />
-                  <Skeleton className="h-4 w-4 rounded" />
-                </div>
-                <Skeleton className="h-12 w-12" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <Card key={i}>
-              <CardContent className="p-4 space-y-2">
-                <div className="flex items-center justify-between">
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-5 w-20 rounded-full" />
-                </div>
-                <Skeleton className="h-3 w-24" />
-                <Skeleton className="h-3 w-28" />
-                <Skeleton className="h-3 w-20" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+      <div className="flex flex-col flex-1 min-h-0 gap-4">
+        <Skeleton className="h-9 w-64 rounded-md" />
+        <DataTableSkeleton rows={12} columns={7} className="flex-1 min-h-0" />
       </div>
     </PageWrapper>
   );

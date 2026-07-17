@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api-client";
 import { useGeofences, useDeleteGeofence, type Geofence } from "@/hooks/api/hr/geofencing";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface Props {
   canManage: boolean;
@@ -62,7 +63,7 @@ export function GeofenceList({ canManage, onEdit }: Props) {
         >
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-foreground truncate">{fence.name}</p>
+              <TruncatedText text={fence.name} className="text-sm font-semibold text-foreground" />
               <Badge variant="secondary" className="text-[11px] mt-1">{fence.radiusMeters}m radius</Badge>
             </div>
             {canManage && (

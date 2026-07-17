@@ -30,6 +30,7 @@ import {
   LOT_STATUS_LABEL,
   type LotStatus,
 } from "@/features/inventory/lib";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 
 function LotViewButton({ id, lotNumber }: { id: number; lotNumber: string }) {
@@ -72,9 +73,7 @@ const LOTS_COLUMNS: DataTableColumn<LotItem>[] = [
     header: "Product / SKU",
     cell: (row) => (
       <>
-        <span className="font-medium text-foreground block truncate max-w-[160px]">
-          {row.productName}
-        </span>
+        <TruncatedText text={row.productName} className="font-medium text-foreground" />
         <span className="text-muted-foreground font-mono text-[10px]">{row.variantSku}</span>
       </>
     ),

@@ -18,6 +18,7 @@ import { EmptyCalendarIllustration } from "@/components/illustrations";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const RESULT_CONFIG: Record<string, { label: string; className: string; icon: React.ElementType }> = {
   PASSED: {
@@ -152,9 +153,7 @@ export function InterviewList() {
             lastName={interview.candidate?.lastName}
           />
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-foreground truncate">
-              {interview.candidate?.firstName} {interview.candidate?.lastName}
-            </p>
+            <TruncatedText text={`${interview.candidate?.firstName ?? ""} ${interview.candidate?.lastName ?? ""}`.trim()} className="text-sm font-semibold text-foreground" />
           </div>
         </div>
       ),

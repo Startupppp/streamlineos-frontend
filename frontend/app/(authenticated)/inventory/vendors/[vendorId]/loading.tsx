@@ -5,6 +5,7 @@ export default function VendorDetailLoading() {
     <InventoryDetailPageLoading
       title="Vendor"
       subtitle="Loading..."
+      backHref="/inventory/vendors"
       statCols={3}
       statCount={6}
       actions={null}

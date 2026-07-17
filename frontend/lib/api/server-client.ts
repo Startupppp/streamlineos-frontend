@@ -1,7 +1,7 @@
 import "server-only";
 import axios, { isAxiosError, type AxiosRequestConfig } from "axios";
 import { SignJWT } from "jose";
-import { auth } from "@/lib/auth";
+import { getServerAuth } from "@/lib/get-server-auth";
 import { ApiError } from "@/lib/api-client";
 
 const BACKEND = process.env.NEXT_PUBLIC_API_URL;
@@ -90,12 +90,18 @@ function normalizeRequestError(error: unknown): never {
   throw new ApiError("Something went wrong. Please try again.");
 }
 
+const MINTED_TOKEN_TTL_MS = 5 * 60 * 1000;
+const mintedTokenStore = new Map<string, { token: string; expiresAt: number }>();
+
 async function mintBackendToken(): Promise<string | null> {
-  const session = await auth();
+  const session = await getServerAuth();
   if (!session?.user?.id || !session.orgId) return null;
   const secret = process.env.BACKEND_JWT_SECRET;
   if (!secret) return null;
-  return new SignJWT({
+  const cacheKey = `${session.user.id}:${session.orgId}:${session.sessionId ?? ""}:${session.user.role}`;
+  const cached = mintedTokenStore.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) return cached.token;
+  const token = await new SignJWT({
     orgId: session.orgId,
     branchId: session.branchId ?? null,
     role: session.user.role,
@@ -110,6 +116,8 @@ async function mintBackendToken(): Promise<string | null> {
     .setIssuedAt()
     .setExpirationTime("10m")
     .sign(new TextEncoder().encode(secret));
+  mintedTokenStore.set(cacheKey, { token, expiresAt: Date.now() + MINTED_TOKEN_TTL_MS });
+  return token;
 }
 
 function buildUrl(path: string, params?: Record<string, unknown>): string {

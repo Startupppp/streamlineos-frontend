@@ -10,6 +10,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import type { DataTableColumn } from "@/components/ui/data-table";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   useTimesheetPayrollExports,
   payrollExportRowsQueryOptions,
@@ -96,16 +97,14 @@ export function PayrollExportsHistory({ fallbackMapping }: PayrollExportsHistory
         key: "note",
         header: "Note",
         cell: (row) => (
-          <span className="text-[11px] text-muted-foreground truncate max-w-[120px] block">
-            {row.note ?? "—"}
-          </span>
+          <TruncatedText text={row.note ?? "—"} className="text-[11px] text-muted-foreground max-w-[120px]" />
         ),
       },
       {
         key: "createdByName",
         header: "By",
         cell: (row) => (
-          <span className="text-[11px] truncate block">{row.createdByName ?? "—"}</span>
+          <TruncatedText text={row.createdByName ?? "—"} className="text-[11px]" />
         ),
       },
       {

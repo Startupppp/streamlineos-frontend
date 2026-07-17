@@ -11,6 +11,7 @@ import { useSkillsMatrix } from "@/hooks/api/hr";
 import { getInitials } from "@/lib/format-utils";
 import { EmptyTeamIllustration } from "@/components/illustrations";
 import { LayoutGrid, Table2, AlertCircle } from "lucide-react";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const LEVEL_COLORS: Record<number, string> = {
   1: "bg-slate-100 text-slate-700 dark:bg-slate-900/30 dark:text-slate-400",
@@ -135,7 +136,7 @@ export default function SkillsMatrixPage() {
                             <AvatarImage src={emp.image ?? undefined} />
                             <AvatarFallback className="text-[9px]">{getInitials(emp.name)}</AvatarFallback>
                           </Avatar>
-                          <span className="font-medium truncate max-w-[110px]">{emp.name}</span>
+                          <TruncatedText text={emp.name ?? ""} className="font-medium max-w-[110px]" />
                         </div>
                       </td>
                       {skills.map((skill) => {

@@ -1,30 +1,18 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent } from "@/components/ui/card";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 
 export default function CrmDealsForecastLoading() {
   return (
-    <PageWrapper title="Deal Forecast" subtitle="Loading...">
+    <PageWrapper
+      title="Deal Forecast"
+      subtitle="Pipeline forecast and revenue projection"
+      backHref="/crm/deals"
+    >
       <div className="space-y-4">
-        <div className="grid gap-4 sm:grid-cols-3">
-          <Skeleton className="h-24 rounded-xl" />
-          <Skeleton className="h-24 rounded-xl" />
-          <Skeleton className="h-24 rounded-xl" />
-        </div>
-        <Card>
-          <CardContent className="p-6 space-y-3">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <Skeleton key={i} className="h-10 w-full" />
-            ))}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6 space-y-3">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <Skeleton key={i} className="h-10 w-full" />
-            ))}
-          </CardContent>
-        </Card>
+        <StatCardGridSkeleton cols={3} count={3} />
+        <Skeleton className="h-48 rounded-lg" />
+        <Skeleton className="h-64 rounded-lg" />
       </div>
     </PageWrapper>
   );

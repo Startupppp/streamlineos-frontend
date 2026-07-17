@@ -15,18 +15,12 @@ import { EmptyReportIllustration } from "@/components/illustrations";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-} from "recharts";
+import dynamic from "next/dynamic";
 
-const STAGE_COLORS = [
-  "#06b6d4",
-  "#3b82f6",
-  "#ef4444",
-  "#10b981",
-  "#8b5cf6",
-  "#f59e0b",
-];
+const SlaBreachChart = dynamic(
+  () => import("@/features/hr/recruitment/components/sla-breach-chart").then((m) => ({ default: m.SlaBreachChart })),
+  { ssr: false, loading: () => <Skeleton className="h-[260px] w-full" /> },
+);
 
 function breachColor(pct: number) {
   if (pct >= 50) return "text-destructive";
@@ -211,33 +205,7 @@ export default function SlaReportPage() {
               <CardTitle className="text-sm">Breach % by Stage — Last 6 Months</CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-0">
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart
-                  data={data.report.map((r) => {
-                    const row: Record<string, string | number> = { month: r.label };
-                    for (const s of r.stages) {
-                      row[s.stage] = s.breachPct;
-                    }
-                    return row;
-                  })}
-                  margin={{ top: 4, right: 8, left: -10, bottom: 0 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                  <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                  <YAxis tickFormatter={(v: number) => `${v}%`} tick={{ fontSize: 11 }} />
-                  <Tooltip formatter={(v: unknown) => [`${v}%`, ""]} />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
-                  {data.stages.map((stage, i) => (
-                    <Bar
-                      key={stage}
-                      dataKey={stage}
-                      name={stage}
-                      fill={STAGE_COLORS[i % STAGE_COLORS.length]}
-                      radius={[2, 2, 0, 0]}
-                    />
-                  ))}
-                </BarChart>
-              </ResponsiveContainer>
+              <SlaBreachChart reportData={data.report} stages={data.stages} />
             </CardContent>
           </Card>
 

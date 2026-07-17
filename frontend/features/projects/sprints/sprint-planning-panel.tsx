@@ -27,6 +27,7 @@ import { TicketTypeIcon } from "@/features/projects/shared/ticket-type-icon";
 import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
 import { formatTicketKey } from "@/features/projects/shared/format-ticket-key";
 import { resolveImageUrl } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import type { SprintData } from "./sprint-card";
 
 interface PlanningTicketUser {
@@ -192,7 +193,7 @@ const PlanningCard = function PlanningCard({
             <div className="flex items-center gap-1 min-w-0">
               {ticket.type && <TicketTypeIcon type={ticket.type} size="sm" />}
               <span className="font-mono text-[10px] text-muted-foreground shrink-0">{ticketKey}</span>
-              <span className="truncate font-medium">{ticket.title}</span>
+              <TruncatedText text={ticket.title ?? ""} className="min-w-0 flex-1 font-medium" />
             </div>
             <div className="flex items-center gap-1.5 flex-wrap">
               {ticket.status && <StatusBadge status={ticket.status} />}

@@ -8,6 +8,7 @@ import {
 } from "@animateicons/react/lucide";
 import { StickyNote, Loader2 } from "lucide-react";
 import { AppSheet } from "@/components/shared/app-sheet";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -163,9 +164,7 @@ function SourceRow({
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-foreground">
-          {source.title}
-        </p>
+        <TruncatedText text={source.title ?? ""} className="text-sm font-medium text-foreground" />
         <p className="text-xs text-muted-foreground">
           {source.chunkCount > 0 ? `${source.chunkCount} chunks` : "—"}
         </p>

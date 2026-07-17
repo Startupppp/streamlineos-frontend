@@ -342,6 +342,15 @@
   animation: fade-up 0.35s ease forwards;
 }
 
+@keyframes caret-blink {
+  0%,70%,100% { opacity: 1; }
+  20%,50% { opacity: 0; }
+}
+
+.animate-caret-blink {
+  animation: caret-blink 1.25s ease-out infinite;
+}
+
 /* â”€â”€â”€ Scrollbars â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 * {
   scrollbar-width: thin;
@@ -522,6 +531,55 @@
   gap: 3rem;
   width: max-content;
   animation: marquee-x 32s linear infinite;
+}
+
+@keyframes skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.skeleton-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in oklab, var(--foreground) 6%, transparent) 45%,
+    color-mix(in oklab, var(--foreground) 10%, transparent) 50%,
+    color-mix(in oklab, var(--foreground) 6%, transparent) 55%,
+    transparent 100%
+  );
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+.dark .skeleton-shimmer::after {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in oklab, white 5%, transparent) 45%,
+    color-mix(in oklab, white 9%, transparent) 50%,
+    color-mix(in oklab, white 5%, transparent) 55%,
+    transparent 100%
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-shimmer::after {
+    animation: none;
+  }
+  .skeleton-shimmer.animate-pulse,
+  .skeleton-shimmer .animate-pulse {
+    animation: none;
+  }
 }
 
 /* â”€â”€â”€ Sidebar nav item â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */

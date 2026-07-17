@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { PM_PANEL } from "@/features/projects/shared/pm-chrome";
 import { listItem, listItemReduced, pmSnappy } from "@/features/projects/shared/pm-motion";
 import { TEXT_ONE_LINE, TEXT_TWO_LINES } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface RoadmapItemCardProps {
   item: RoadmapItem;
@@ -45,9 +46,7 @@ export const RoadmapItemCard = memo(function RoadmapItemCard({
     >
       <div className="space-y-2">
         <div className="flex min-w-0 items-start justify-between gap-2">
-          <p className={cn(TEXT_TWO_LINES, "text-sm font-medium leading-snug")} title={item.title}>
-            {item.title}
-          </p>
+          <TruncatedText text={item.title} lines={2} className="text-sm font-medium leading-snug" />
           <div className="flex shrink-0 items-center gap-0.5 opacity-70 transition-opacity group-hover:opacity-100">
             <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleEdit}>
               <Pencil className="h-3 w-3" />

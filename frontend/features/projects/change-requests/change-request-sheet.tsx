@@ -17,9 +17,19 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TiptapEditor } from "@/components/editor/tiptap-editor";
+import dynamic from "next/dynamic";
+
+const TiptapEditor = dynamic(
+  () => import("@/components/editor/tiptap-editor").then((m) => ({ default: m.TiptapEditor })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="rounded-md border border-input bg-background animate-pulse min-h-[120px]" />
+    ),
+  },
+);
 import { toast } from "sonner";
 import { useCreateChangeRequest, useUpdateChangeRequest } from "@/hooks/api/projects/change-requests";
 import { ProjectMemberSelect } from "@/components/members/project-member-select";

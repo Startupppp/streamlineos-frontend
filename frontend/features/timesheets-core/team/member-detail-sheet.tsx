@@ -18,6 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { usePeriod } from "@/hooks/api/timesheets-core/periods";
 import { PERIOD_STATUS_BADGE, PERIOD_STATUS_LABEL } from "@/features/timesheets-core/types";
 import type { TimesheetPeriod, TimesheetEntry } from "@/features/timesheets-core/types";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 
 interface MemberDetailSheetProps {
@@ -143,9 +144,7 @@ export function MemberDetailSheet({
                         key={entry.id}
                         className="flex items-center justify-between px-2.5 py-1.5 rounded-md bg-muted/40 text-[11px]"
                       >
-                        <span className="text-foreground truncate max-w-[280px]">
-                          {entry.project?.name ?? entry.description ?? "—"}
-                        </span>
+                        <TruncatedText text={entry.project?.name ?? entry.description ?? "—"} className="text-foreground max-w-[280px]" />
                         <span className="tabular-nums text-muted-foreground shrink-0 ml-2">
                           {parseFloat(entry.hours).toFixed(1)}h
                         </span>

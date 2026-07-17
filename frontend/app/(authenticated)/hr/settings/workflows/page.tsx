@@ -29,6 +29,7 @@ import {
   type HrWorkflowStatus,
 } from "@/types/hr/workflows";
 import { getErrorMessage } from "@/lib/api-client";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -188,7 +189,7 @@ export default function WorkflowSettingsPage() {
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-medium truncate">{def.name}</span>
+                      <TruncatedText text={def.name} className="text-sm font-medium" />
                       {def.isDefault && (
                         <Badge variant="secondary" className="text-[10px]">Default</Badge>
                       )}

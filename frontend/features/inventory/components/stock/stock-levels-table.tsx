@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { type StockLevelRow } from "@/hooks/api/inventory/stock";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 
 type StockStatus = "critical" | "low" | "ok";
@@ -77,8 +78,7 @@ export const StockLevelsTable = memo(function StockLevelsTable({ rows, onShowAva
     {
       key: "product",
       header: "Product",
-      className: "font-medium max-w-[200px] truncate",
-      cell: (row) => row.productName,
+      cell: (row) => <TruncatedText text={row.productName} className="font-medium" />,
     },
     {
       key: "sku",

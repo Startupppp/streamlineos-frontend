@@ -36,7 +36,10 @@ import { AutomationTestDialog } from "@/features/hr/automations/automation-test-
 import type { HrAutomationRule } from "@/types/hr/automations";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Plus, Pencil, Trash2, History, Play } from "lucide-react";
+import { Pencil, History } from "lucide-react";
+import { PlayIcon, Trash2Icon, PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 const HR_TRIGGER_EVENTS = [
   "employee.created", "employee.onboarded", "employee.probation_due", "employee.confirmed",
@@ -75,12 +78,12 @@ function RuleCard({
         <div className="flex items-start gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-              <p className="font-medium text-sm truncate">{rule.name}</p>
+              <TruncatedText text={rule.name} className="font-medium text-sm" />
               <Badge variant="secondary" className="text-[10px]">{rule.triggerEvent}</Badge>
               {!rule.isEnabled && <Badge variant="outline" className="text-[10px]">Disabled</Badge>}
             </div>
             {rule.description && (
-              <p className="text-xs text-muted-foreground mt-0.5 truncate">{rule.description}</p>
+              <TruncatedText text={rule.description} className="text-xs text-muted-foreground mt-0.5" />
             )}
             <div className="flex items-center gap-4 mt-2 text-[11px] text-muted-foreground">
               <span>{rule.conditions.length} condition{rule.conditions.length !== 1 ? "s" : ""}</span>
@@ -100,23 +103,21 @@ function RuleCard({
               <Button size="icon" variant="ghost" className="w-7" onClick={onViewRuns} title="View runs">
                 <History className="h-3.5 w-3.5" />
               </Button>
-              <Button size="icon" variant="ghost" className="w-7" onClick={onTest} title="Dry-run test">
-                <Play className="h-3.5 w-3.5" />
-              </Button>
+              <AnimatedIconButton icon={PlayIcon} size="icon" variant="ghost" className="w-7" iconSize={14} onClick={onTest} title="Dry-run test" />
               {canManage && (
                 <>
                   <Button size="icon" variant="ghost" className="w-7" onClick={onEdit} title="Edit">
                     <Pencil className="h-3.5 w-3.5" />
                   </Button>
-                  <Button
+                  <AnimatedIconButton
+                    icon={Trash2Icon}
                     size="icon"
                     variant="ghost"
                     className="w-7 text-destructive hover:text-destructive"
+                    iconSize={14}
                     onClick={onDelete}
                     title="Delete"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
+                  />
                 </>
               )}
             </div>
@@ -217,9 +218,9 @@ export default function HrAutomationsPage() {
       subtitle="Configure rules that fire automatically on HR events"
       actions={
         canManage ? (
-          <Button size="sm" onClick={handleOpenCreate}>
-            <Plus className="h-4 w-4 mr-1.5" /> New Rule
-          </Button>
+          <AnimatedIconButton icon={PlusIcon} size="sm" iconSize={16} onClick={handleOpenCreate}>
+            {" New Rule"}
+          </AnimatedIconButton>
         ) : undefined
       }
     >

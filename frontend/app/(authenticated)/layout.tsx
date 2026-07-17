@@ -1,4 +1,4 @@
-import { auth } from "../../lib/auth";
+import { getServerAuth } from "../../lib/get-server-auth";
 import { redirect } from "next/navigation";
 import { cookies, headers } from "next/headers";
 import { DashboardShell } from "../../components/layout/dashboard-shell";
@@ -12,7 +12,7 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth();
+  const session = await getServerAuth();
 
   if (!session?.user) {
     redirect("/signin");

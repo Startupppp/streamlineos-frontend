@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { Mail, Building2, ArrowUpRight, Briefcase } from "lucide-react";
+import { Mail, Building2, Briefcase } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { resolveImageUrl, cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { HrStatusBadge } from "@/features/hr/shared/hr-ui";
 import { ROLE_LABELS } from "@/features/hr/employees/hr-types";
+import { resolveImageUrl, cn } from "@/lib/utils";
 import type { Employee } from "@/types/hr";
 
 interface EmployeeCardProps {
@@ -40,46 +41,24 @@ export function EmployeeCard({ employee: emp, department }: EmployeeCardProps) {
           "group-hover:border-blue-500/25",
         )}
       >
-        {/* Accent rail */}
-        <div
-          className={cn(
-            "absolute inset-y-0 left-0 w-1",
-            emp.isActive
-              ? "bg-gradient-to-b from-emerald-400 to-teal-500"
-              : "bg-slate-300 dark:bg-slate-600",
-          )}
-        />
-
-        {/* Soft hover wash */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-br from-blue-500/[0.04] via-transparent to-sky-400/[0.06]"
-        />
-
         <div className="relative p-4 flex flex-col items-center text-center gap-3">
-          <div className="relative">
-            <Avatar className="h-16 w-16 mt-0.5 ring-2 ring-background shadow-md transition-transform duration-300 group-hover:scale-105">
-              <AvatarImage src={resolveImageUrl(emp.image)} alt="" />
-              <AvatarFallback className="bg-gradient-to-br from-blue-500/15 to-sky-400/20 text-blue-700 dark:text-blue-300 text-lg font-bold">
-                {initial}
-              </AvatarFallback>
-            </Avatar>
-            <span
-              className={cn(
-                "absolute bottom-0.5 right-0.5 h-3 w-3 rounded-full border-2 border-card",
-                emp.isActive ? "bg-emerald-500" : "bg-slate-400",
-              )}
-              title={emp.isActive ? "Active" : "Inactive"}
-            />
-          </div>
+          <Avatar className="h-16 w-16 mt-0.5 ring-2 ring-border shadow-sm transition-transform duration-300 group-hover:scale-105">
+            <AvatarImage src={resolveImageUrl(emp.image)} alt="" />
+            <AvatarFallback className="bg-primary/10 text-primary text-lg font-bold">
+              {initial}
+            </AvatarFallback>
+          </Avatar>
 
           <div className="w-full space-y-0.5 min-w-0">
-            <p className="font-semibold text-sm leading-tight truncate text-foreground flex items-center justify-center gap-1">
-              <span className="truncate">{displayName}</span>
-              <ArrowUpRight className="h-3 w-3 shrink-0 text-muted-foreground opacity-0 -translate-x-1 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0" />
-            </p>
+            <TruncatedText
+              text={displayName}
+              className="font-semibold text-sm leading-tight text-foreground"
+            />
             {emp.designation && (
-              <p className="text-[11px] text-muted-foreground truncate">{emp.designation}</p>
+              <TruncatedText
+                text={emp.designation}
+                className="text-[11px] text-muted-foreground"
+              />
             )}
           </div>
 
@@ -88,13 +67,13 @@ export function EmployeeCard({ employee: emp, department }: EmployeeCardProps) {
               {roleLabel && (
                 <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border max-w-full">
                   <Briefcase className="h-3 w-3 shrink-0" />
-                  <span className="truncate">{roleLabel}</span>
+                  <TruncatedText text={roleLabel} className="text-[10px] font-semibold" />
                 </span>
               )}
               {department && (
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-blue-50 text-blue-700 border-blue-200/70 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-800/50 max-w-full">
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-primary/10 text-foreground border-primary/30 max-w-full">
                   <Building2 className="h-3 w-3 shrink-0" />
-                  <span className="truncate">{department}</span>
+                  <TruncatedText text={department} className="text-[10px] font-semibold" />
                 </span>
               )}
             </div>
@@ -103,7 +82,7 @@ export function EmployeeCard({ employee: emp, department }: EmployeeCardProps) {
           {emp.email && (
             <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground w-full justify-center min-w-0">
               <Mail className="h-3 w-3 shrink-0" />
-              <span className="truncate">{emp.email}</span>
+              <TruncatedText text={emp.email} className="text-[11px] text-muted-foreground" />
             </div>
           )}
 

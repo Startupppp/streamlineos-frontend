@@ -1,15 +1,16 @@
 "use client";
 
 import { useCallback } from "react";
-import { AlertTriangle, RotateCcw } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import { SparklesIcon } from "@animateicons/react/lucide";
-import { Badge } from "@/components/ui/badge";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import type { Plan } from "@/lib/billing/feature-gates";
 import { useProjectAiSummary } from "@/hooks/api/projects/ai";
+import { useSaveSnapshot } from "@/hooks/api/ai-summaries";
+import { StandardSummaryCard } from "@/features/ai-summaries";
 import { EvidenceStrip } from "./evidence-strip";
 
 interface SummaryCardProps {
@@ -20,12 +21,25 @@ interface SummaryCardProps {
 
 export function SummaryCard({ projectId, featureEnabled, requiredPlan }: SummaryCardProps) {
   const mutation = useProjectAiSummary(projectId);
+  const saveSnapshot = useSaveSnapshot("project", String(projectId));
   const result = mutation.data;
   const { iconRef, hoverHandlers } = useAnimatedIcon();
 
-  const handleRun = useCallback(() => {
-    mutation.mutate(undefined);
-  }, [mutation]);
+  const handleRun = useCallback(async () => {
+    try {
+      const data = await mutation.mutateAsync(undefined);
+      saveSnapshot.mutate({
+        summary: data.summary,
+        structured: {
+          highlights: data.highlights,
+          blockers: data.atRisk ? ["Project is at risk"] : [],
+          nextActions: [],
+        },
+      });
+    } catch {
+      // mutation.isError already handles display
+    }
+  }, [mutation, saveSnapshot]);
 
   const isIdle = !result && !mutation.isPending && !mutation.isError;
 
@@ -73,23 +87,18 @@ export function SummaryCard({ projectId, featureEnabled, requiredPlan }: Summary
 
       {result ? (
         <div className="space-y-2.5">
-          {result.atRisk ? (
-            <Badge variant="destructive" className="h-5 gap-1 px-1.5 text-[11px]">
-              <AlertTriangle className="h-2.5 w-2.5" />
-              At risk
-            </Badge>
-          ) : null}
-          <p className="text-[13px] leading-relaxed text-foreground">{result.summary}</p>
-          {result.highlights.length > 0 ? (
-            <ul className="space-y-1">
-              {result.highlights.map((h, i) => (
-                <li key={i} className="flex items-start gap-1.5 text-[12px] text-muted-foreground">
-                  <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary" />
-                  {h}
-                </li>
-              ))}
-            </ul>
-          ) : null}
+          <StandardSummaryCard
+            entityType="project"
+            entityId={String(projectId)}
+            summary={result.summary}
+            structured={{
+              highlights: result.highlights,
+              blockers: result.atRisk ? ["Project is at risk"] : [],
+              nextActions: [],
+            }}
+            generatedAt={new Date()}
+            confidence={0.8}
+          />
           <EvidenceStrip evidence={result.evidence} />
           <LoadingButton
             variant="ghost"

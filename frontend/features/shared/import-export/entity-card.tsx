@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { fadeUp } from "@/lib/motion-variants";
 import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 export interface ImportEntity {
   id: string;
@@ -86,7 +87,7 @@ export function EntityCard({
             >
               <Icon className="h-4 w-4" />
             </span>
-            <h3 className="text-sm font-semibold truncate">{entity.label}</h3>
+            <TruncatedText text={entity.label} className="text-sm font-semibold" />
           </div>
           <div className="flex gap-1 shrink-0">
             {entity.supported.import && (
@@ -108,9 +109,7 @@ export function EntityCard({
           </div>
         </div>
 
-        <p className="text-[12px] text-muted-foreground leading-snug line-clamp-2">
-          {entity.description}
-        </p>
+        <TruncatedText text={entity.description} lines={2} className="text-[12px] text-muted-foreground leading-snug" />
 
         {upload.status !== "idle" && (
           <div className="space-y-1">

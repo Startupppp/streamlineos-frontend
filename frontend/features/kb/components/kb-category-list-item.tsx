@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import type { KbCategory } from "@/hooks/api/support/kb";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 export interface KbCategoryListItemProps {
   category: KbCategory;
@@ -29,7 +30,7 @@ export function KbCategoryListItem({ category, onEdit, onDelete }: KbCategoryLis
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <p className="font-medium text-sm truncate">{category.name}</p>
+            <TruncatedText text={category.name} className="font-medium text-sm" />
             {category.isPublished ? (
               <Badge variant="default" className="text-[10px]">Published</Badge>
             ) : (
@@ -37,9 +38,7 @@ export function KbCategoryListItem({ category, onEdit, onDelete }: KbCategoryLis
             )}
           </div>
           {category.description && (
-            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
-              {category.description}
-            </p>
+            <TruncatedText text={category.description} className="text-xs text-muted-foreground mt-0.5" />
           )}
         </div>
         <div className="flex items-center gap-1 shrink-0">

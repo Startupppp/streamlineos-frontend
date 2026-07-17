@@ -16,6 +16,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { format, differenceInDays } from "date-fns";
 import { Plus, Award, Calendar, ExternalLink, AlertTriangle, CheckCircle2, XCircle, User, AlertCircle } from "lucide-react";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 
 type CertStatus = "VALID" | "EXPIRING_SOON" | "EXPIRED";
@@ -279,11 +280,9 @@ export default function CertificationsPage() {
                             <Award className="h-3.5 w-3.5 text-primary" />
                           </div>
                           <div className="min-w-0">
-                            <h3 className="text-sm font-semibold text-foreground leading-tight truncate">
-                              {cert.name}
-                            </h3>
+                            <TruncatedText text={cert.name} className="text-sm font-semibold text-foreground leading-tight" />
                             {cert.issuingOrganization && (
-                              <p className="text-[11px] text-muted-foreground truncate">{cert.issuingOrganization}</p>
+                              <TruncatedText text={cert.issuingOrganization} className="text-[11px] text-muted-foreground" />
                             )}
                           </div>
                         </div>

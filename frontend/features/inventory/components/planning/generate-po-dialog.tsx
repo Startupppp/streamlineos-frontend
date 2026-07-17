@@ -3,6 +3,7 @@
 import { toast } from "sonner";
 import Link from "next/link";
 import { ShoppingCartIcon } from "@animateicons/react/lucide";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   Dialog,
@@ -112,7 +113,7 @@ export function GeneratePODialog({ suggestions, open, onClose }: GeneratePODialo
               className="flex items-center justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3"
             >
               <div className="min-w-0">
-                <p className="text-sm font-medium truncate">{group.vendorName}</p>
+                <TruncatedText text={group.vendorName} className="text-sm font-medium" />
                 <p className="text-xs text-muted-foreground">
                   {group.items.length} item{group.items.length !== 1 ? "s" : ""} ·{" "}
                   {group.totalQty} units total

@@ -11,6 +11,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { EmptyActivityIllustration } from "@/components/illustrations";
 import { resolveImageUrl } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { getInitials } from "@/lib/format-utils";
 import { formatDistanceToNow } from "date-fns";
 import { isTicketType, typeIcons, DEFAULT_TICKET_ICON } from "./ticket-types";
@@ -74,7 +75,7 @@ export const RecentActivityCard = memo(function RecentActivityCard({ items, isLo
                             {item.status?.replaceAll("_", " ")}
                           </Badge>
                         </div>
-                        <p className="text-sm font-medium text-foreground truncate">{item.title}</p>
+                        <TruncatedText text={item.title ?? ""} className="text-sm font-medium text-foreground" />
                         <div className="flex items-center gap-2 mt-0.5">
                           <span className="text-xs text-muted-foreground">{item.projectName}</span>
                           {item.updatedAt && (

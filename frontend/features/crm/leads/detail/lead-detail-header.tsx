@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { AIScoreButton } from "../ai-score-button";
 import { AIEmailDialog } from "../ai-email-dialog";
@@ -176,28 +177,26 @@ export function LeadDetailHeader({
 
           <div className="flex-1 min-w-0 pt-0.5">
             <div className="flex items-baseline gap-2">
-              <h2 className="text-xl font-bold truncate leading-tight">
-                {lead.name}
-              </h2>
+              <TruncatedText text={lead.name} className="text-xl font-bold leading-tight" />
               <span className="text-xs font-mono text-muted-foreground/60 shrink-0">
                 LD-{String(lead.id).padStart(5, "0")}
               </span>
             </div>
             {(lead.company || lead.designation) && (
-              <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-0.5 flex-wrap">
+              <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-0.5 flex-wrap min-w-0">
                 {lead.company && (
-                  <span className="flex items-center gap-1">
+                  <span className="flex items-center gap-1 min-w-0">
                     <Building2 className="h-3.5 w-3.5 shrink-0" />
-                    {lead.company}
+                    <span className="truncate">{lead.company}</span>
                   </span>
                 )}
                 {lead.company && lead.designation && (
-                  <span className="text-muted-foreground/40">·</span>
+                  <span className="text-muted-foreground/40 shrink-0">·</span>
                 )}
                 {lead.designation && (
-                  <span className="flex items-center gap-1">
+                  <span className="flex items-center gap-1 min-w-0">
                     <MapPin className="h-3.5 w-3.5 shrink-0" />
-                    {lead.designation}
+                    <span className="truncate">{lead.designation}</span>
                   </span>
                 )}
               </p>

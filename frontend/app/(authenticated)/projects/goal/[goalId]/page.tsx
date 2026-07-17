@@ -54,7 +54,8 @@ import {
   PmPanel,
   PmSection,
 } from "@/features/projects/shared/pm-chrome";
-import { TEXT_ONE_LINE, TEXT_BODY } from "@/features/projects/shared/text-overflow";
+import { TEXT_BODY } from "@/features/projects/shared/text-overflow";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 
@@ -195,7 +196,7 @@ export default function GoalDetailPage({ params }: { params: Promise<{ goalId: s
               <Badge variant={cfg.variant}>{cfg.label}</Badge>
               <div className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
                 <Users className="h-3.5 w-3.5 shrink-0" />
-                <span className={TEXT_ONE_LINE}>{ownerName}</span>
+                <TruncatedText text={ownerName} />
               </div>
             </div>
             {detail.description ? (
@@ -226,7 +227,7 @@ export default function GoalDetailPage({ params }: { params: Promise<{ goalId: s
               {detail.project ? (
                 <span className="flex min-w-0 items-center gap-1.5">
                   <FolderKanban className="h-3.5 w-3.5 shrink-0" />
-                  <span className={TEXT_ONE_LINE}>{detail.project.name}</span>
+                  <TruncatedText text={detail.project.name} />
                 </span>
               ) : null}
             </div>

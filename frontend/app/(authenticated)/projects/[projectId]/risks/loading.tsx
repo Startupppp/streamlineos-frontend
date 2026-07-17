@@ -1,26 +1,31 @@
-import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTableSkeleton } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { StatCardGridSkeleton } from "@/components/ui/stat-card";
+import { DataTableSkeleton } from "@/components/ui/data-table";
+import { PM_TOOLBAR, PmPageShell, PmSection } from "@/features/projects/shared/pm-chrome";
+import { cn } from "@/lib/utils";
 
 export default function ProjectRisksLoading() {
   return (
     <PageWrapper
       title="Risk Register"
-      actions={<Skeleton className="h-8 w-28 rounded-md" />}
+      subtitle="Identify, assess, and mitigate project risks"
+      actions={<Skeleton className="h-9 w-28 rounded-md" />}
     >
-      <div className="px-4 pb-4 space-y-4">
-        <div className="grid grid-cols-3 gap-2">
-          <Skeleton className="h-14 rounded-lg" />
-          <Skeleton className="h-14 rounded-lg" />
-          <Skeleton className="h-14 rounded-lg" />
-        </div>
-        <Skeleton className="h-40 w-72 rounded-lg" />
-        <div className="flex gap-2">
-          <Skeleton className="h-8 w-40 rounded-md" />
-          <Skeleton className="h-8 w-52 rounded-md" />
-        </div>
-        <DataTableSkeleton rows={12} columns={8} />
-      </div>
+      <PmPageShell>
+        <PmSection index={0}>
+          <StatCardGridSkeleton cols={3} className="mb-4" />
+        </PmSection>
+        <PmSection index={1}>
+          <div className={cn(PM_TOOLBAR, "mb-3")}>
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-9 w-40 rounded-md" />
+              <Skeleton className="h-9 w-52 rounded-md" />
+            </div>
+          </div>
+          <DataTableSkeleton rows={12} columns={8} />
+        </PmSection>
+      </PmPageShell>
     </PageWrapper>
   );
 }

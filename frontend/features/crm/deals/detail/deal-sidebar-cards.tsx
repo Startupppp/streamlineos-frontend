@@ -4,6 +4,7 @@ import { PhoneCall, StickyNote, Mail, Video } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { ActivityTimeline } from "./activity-timeline";
 import { MeetingsCard } from "./meetings-card";
 import { DealAiInsightsCard } from "./deal-ai-insights-card";
@@ -86,11 +87,11 @@ export function DealSidebarCards({
             <CardTitle className="text-base">Assigned To</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary shrink-0">
                 {assignedTo.name?.[0] ?? "?"}
               </div>
-              <p className="text-sm font-medium">{assignedTo.name}</p>
+              <TruncatedText text={assignedTo.name ?? ""} className="text-sm font-medium min-w-0 flex-1" />
             </div>
           </CardContent>
         </Card>
@@ -104,17 +105,15 @@ export function DealSidebarCards({
           <CardContent>
             <Link
               href={`/crm/leads/${lead.id}`}
-              className="flex items-center gap-3 group"
+              className="flex items-center gap-3 group min-w-0"
             >
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary">
+              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary shrink-0">
                 {lead.name?.[0] ?? "?"}
               </div>
-              <div>
-                <p className="text-sm font-medium group-hover:text-primary transition-colors">
-                  {lead.name}
-                </p>
+              <div className="min-w-0 flex-1">
+                <TruncatedText text={lead.name ?? ""} className="text-sm font-medium group-hover:text-primary transition-colors" />
                 {lead.email && (
-                  <p className="text-xs text-muted-foreground">{lead.email}</p>
+                  <p className="text-xs text-muted-foreground break-all">{lead.email}</p>
                 )}
                 {lead.phone && (
                   <p className="text-xs text-muted-foreground">{lead.phone}</p>
@@ -131,11 +130,11 @@ export function DealSidebarCards({
             <CardTitle className="text-base">Linked Client</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-sm font-semibold text-emerald-400">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-sm font-semibold text-emerald-400 shrink-0">
                 {client.name?.[0] ?? "?"}
               </div>
-              <p className="text-sm font-medium">{client.name}</p>
+              <TruncatedText text={client.name ?? ""} className="text-sm font-medium min-w-0 flex-1" />
             </div>
           </CardContent>
         </Card>

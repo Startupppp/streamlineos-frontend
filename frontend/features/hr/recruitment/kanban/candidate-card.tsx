@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import type { AtsPipelineCandidate } from "@/types/hr";
 import { getInitials } from "./types";
 import { SlaBadge } from "./sla-badge";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { formatDistanceToNow } from "date-fns";
 
 interface CandidateCardProps {
@@ -66,20 +67,20 @@ export const CandidateCard = memo(function CandidateCard({
                 {initials}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold text-foreground truncate leading-tight">{candidate.name}</p>
-                <p className="text-[10px] text-muted-foreground truncate flex items-center gap-1 mt-0.5">
+                <TruncatedText text={candidate.name} className="text-xs font-semibold text-foreground leading-tight" />
+                <div className="flex items-center gap-1 mt-0.5">
                   {candidate.jobTitle ? (
                     <>
-                      <Briefcase className="h-2.5 w-2.5 shrink-0" />
-                      {candidate.jobTitle}
+                      <Briefcase className="h-2.5 w-2.5 shrink-0 text-muted-foreground" />
+                      <TruncatedText text={candidate.jobTitle} className="text-[10px] text-muted-foreground" />
                     </>
                   ) : (
                     <>
-                      <MailIcon className="h-2.5 w-2.5 shrink-0" />
-                      {candidate.email}
+                      <MailIcon className="h-2.5 w-2.5 shrink-0 text-muted-foreground" />
+                      <TruncatedText text={candidate.email} className="text-[10px] text-muted-foreground" />
                     </>
                   )}
-                </p>
+                </div>
               </div>
             </div>
 

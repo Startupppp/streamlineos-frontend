@@ -8,6 +8,7 @@ import { ArrowLeft, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PAGE_CHROME_BOTTOM, PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface PageWrapperProps {
   title: string;
@@ -97,11 +98,16 @@ export function PageWrapper({
                   </span>
                 )}
               </div>
-              {subtitle && (
+              {subtitle && typeof subtitle === "string" ? (
+                <TruncatedText
+                  text={subtitle}
+                  className="mt-1 text-[13px] text-muted-foreground leading-snug max-w-2xl"
+                />
+              ) : subtitle ? (
                 <p className="mt-1 text-[13px] text-muted-foreground leading-snug max-w-2xl line-clamp-1">
                   {subtitle}
                 </p>
-              )}
+              ) : null}
             </div>
           </div>
 

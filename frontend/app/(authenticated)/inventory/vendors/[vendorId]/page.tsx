@@ -15,6 +15,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EditVendorSheet } from "@/features/inventory/components/edit-vendor-sheet";
+import { VendorAiActions } from "@/features/inventory/components/vendor-ai-actions";
 import { useVendor, useVendorPurchaseOrders } from "@/hooks/api/inventory";
 import { useVendorPerformance, useToggleVendorActive } from "@/hooks/api/inventory/vendors";
 import type { PurchaseOrderStatus } from "@/types/inventory";
@@ -140,6 +141,7 @@ export default function VendorDetailPage({ params }: VendorDetailPageProps) {
         backHref="/inventory/vendors"
         actions={
           <div className="flex items-center gap-2">
+            <VendorAiActions vendorId={id} vendorName={vendor.name} />
             <Button
               size="sm"
               variant="outline"
