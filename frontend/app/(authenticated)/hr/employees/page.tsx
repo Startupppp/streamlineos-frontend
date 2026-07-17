@@ -140,7 +140,7 @@ export default function EmployeesPage() {
   const isActiveParam =
     filterStatus === "active"
       ? "true"
-      : filterStatus === "inactive"
+      : filterStatus === "inactive" || filterStatus === "terminated"
         ? "false"
         : "all";
 
