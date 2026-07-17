@@ -367,6 +367,7 @@ export type PermissionKey =
   | "hr:audit:view"
   | "hr:exit:view"
   | "hr:exit:create"
+  | "hr:exit:manage"
   | "hr:exit:approve"
   | "hr:helpdesk:view"
   | "hr:helpdesk:create"

@@ -36,11 +36,11 @@ type StatusFilter = "ALL" | TerminationStatus;
 
 export default function TerminationPage() {
   const { data: session } = useSession();
-  const canManageAll = useCan("hr:employees:manage");
+  const canApproveExit = useCan("hr:exit:approve");
 
   const role = session?.user?.role;
   const isHR = role === "HR";
-  const isCEO = role === "CEO" || canManageAll;
+  const isCEO = canApproveExit;
 
   const { data: terminations, isLoading, isError, refetch } = useTerminations();
   const { data: employeesData } = useHrEmployees({ limit: 500 });

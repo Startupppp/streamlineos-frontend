@@ -63,9 +63,9 @@ export default function ExitManagementPage() {
 
   const role = session?.user?.role;
   const userId = session?.user?.id;
-  const isAdmin = useCan("hr:leaves:approve");
+  const isAdmin = useCan("hr:exit:manage");
   const isHR = role === "HR";
-  const isCEO = useCan("hr:employees:manage");
+  const isCEO = useCan("hr:exit:approve");
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [reason, setReason] = useState("");
