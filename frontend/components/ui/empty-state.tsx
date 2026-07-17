@@ -73,11 +73,14 @@ export function EmptyState({
 }: EmptyStateProps) {
   const size = illustrationSize ?? (compact ? "sm" : "md");
 
-  const visual = illustration ?? (
-    illustrationPreset ? (
-      <StateIllustration preset={illustrationPreset} className="h-full w-full" />
-    ) : null
-  );
+  // Always show an illustration — use explicit prop, preset, or a sensible default SVG
+  const visual =
+    illustration ?? (
+      <StateIllustration
+        preset={illustrationPreset ?? "default"}
+        className="h-full w-full"
+      />
+    );
 
   return (
     <div

@@ -86,7 +86,6 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
       if (trimmedName.length < 2) { toast.error("Holiday name must be at least 2 characters"); return; }
       if (trimmedName.length > 100) { toast.error("Holiday name must be at most 100 characters"); return; }
       if (!/[a-zA-Z]/.test(trimmedName)) { toast.error("Holiday name must contain at least one letter"); return; }
-      if (/\s{2,}/.test(trimmedName)) { toast.error("Holiday name cannot have consecutive spaces"); return; }
       if (!date) { toast.error("Holiday date is required"); return; }
       const duplicate = (holidaysList ?? []).find(
         (h) => h.date === date || h.name.trim().toLowerCase() === trimmedName.toLowerCase()
@@ -149,7 +148,6 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
     if (trimmedName.length < 2) { toast.error("Holiday name must be at least 2 characters"); return; }
     if (trimmedName.length > 100) { toast.error("Holiday name must be at most 100 characters"); return; }
     if (!/[a-zA-Z]/.test(trimmedName)) { toast.error("Holiday name must contain at least one letter"); return; }
-    if (/\s{2,}/.test(trimmedName)) { toast.error("Holiday name cannot have consecutive spaces"); return; }
     if (!editState.date) { toast.error("Holiday date is required"); return; }
     const duplicate = (holidaysList ?? []).find(
       (h) =>

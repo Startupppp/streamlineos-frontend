@@ -32,26 +32,36 @@ import { cn } from "@/lib/utils";
 const addCandidateSchema = z.object({
   firstName: z
     .string()
+    .trim()
     .min(1, "First name is required")
-    .max(50, "First name must be at most 50 characters")
-    .regex(/[a-zA-Z]/, "First name must contain at least one letter"),
+    .max(80, "First name must be at most 80 characters")
+    .refine((v) => /[\p{L}\p{N}]/u.test(v), "First name must contain a letter or number"),
   lastName: z
     .string()
+    .trim()
     .min(1, "Last name is required")
-    .max(50, "Last name must be at most 50 characters")
-    .regex(/[a-zA-Z]/, "Last name must contain at least one letter"),
-  email: z.string().email("Invalid email").max(254, "Email must be at most 254 characters"),
+    .max(80, "Last name must be at most 80 characters")
+    .refine((v) => /[\p{L}\p{N}]/u.test(v), "Last name must contain a letter or number"),
+  email: z.string().trim().email("Invalid email").max(254, "Email must be at most 254 characters"),
   phone: z
     .string()
-    .regex(/^\+?[1-9]\d{7,14}$/, "Enter a valid phone number (7–15 digits)")
     .optional()
-    .or(z.literal("")),
+    .or(z.literal(""))
+    .refine((val) => {
+      if (!val) return true;
+      const digits = val.replace(/\D/g, "");
+      return digits.length >= 7 && digits.length <= 15;
+    }, "Enter a valid phone number (7–15 digits)"),
   source: z.string(),
-  currentRole: z.string().max(100).optional().or(z.literal("")),
-  currentCompany: z.string().max(100).optional().or(z.literal("")),
+  currentRole: z.string().max(120).optional().or(z.literal("")),
+  currentCompany: z.string().max(120).optional().or(z.literal("")),
   experienceYears: z.number().min(0, "Cannot be negative").max(50, "Cannot exceed 50 years").optional(),
   skills: z.string().max(500).optional().or(z.literal("")),
-  linkedinUrl: z.string().url("Enter a valid URL").optional().or(z.literal("")),
+  linkedinUrl: z
+    .string()
+    .optional()
+    .or(z.literal(""))
+    .refine((v) => !v || v.startsWith("http://") || v.startsWith("https://") || v.startsWith("www."), "Enter a valid URL"),
   notes: z.string().max(2000).optional().or(z.literal("")),
 });
 

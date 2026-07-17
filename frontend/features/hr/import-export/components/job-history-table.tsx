@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertCircle } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 import {
   useHrImportJobs,
@@ -147,10 +147,12 @@ export function JobHistoryTable({ entity }: JobHistoryTableProps) {
         getRowKey={(row) => row.id}
         isLoading={isLoading}
         emptyState={
-          <div className="flex flex-col items-center justify-center py-10 text-center gap-2">
-            <AlertCircle className="w-8 text-muted-foreground/40" />
-            <p className="text-sm text-muted-foreground">No import history yet</p>
-          </div>
+          <EmptyState
+            illustrationPreset="upload"
+            title="No import history yet"
+            description="Import jobs will appear here once you run one."
+            compact
+          />
         }
       />
 

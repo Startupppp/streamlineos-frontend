@@ -17,6 +17,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyGoalsIllustration } from "@/components/illustrations";
 import {
   CONTENT_FILL_PANEL,
   FILTER_SELECT_TRIGGER,
@@ -149,7 +150,7 @@ function GoalGrid({
   if (goals.length === 0) {
     return (
       <EmptyState
-        illustrationPreset="default"
+        illustration={<EmptyGoalsIllustration className="h-32 w-32" />}
         title="No goals yet"
         description="Create your first goal to start tracking progress"
         className={CONTENT_FILL_PANEL}

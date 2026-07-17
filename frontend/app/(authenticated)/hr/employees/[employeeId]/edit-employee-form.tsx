@@ -16,109 +16,80 @@ import { PersonalInfoSection } from "@/features/hr/employees/detail/personal-inf
 import { ProfessionalInfoSection } from "@/features/hr/employees/detail/professional-info-section";
 import { BankDetailsSection } from "@/features/hr/employees/detail/bank-details-section";
 
-const formSchema = z
-  .object({
-    firstName: z
-      .string()
-      .trim()
-      .min(2, "First name must be at least 2 characters")
-      .max(50, "First name must be at most 50 characters")
-      .regex(
-        /^[A-Za-z\s'-]+$/,
-        "Only alphabetic characters, spaces, hyphens and apostrophes are allowed",
-      )
-      .refine(
-        (v) => !/\s{2,}/.test(v),
-        "First name cannot have consecutive spaces",
-      ),
-    lastName: z
-      .string()
-      .trim()
-      .min(2, "Last name must be at least 2 characters")
-      .max(50, "Last name must be at most 50 characters")
-      .regex(
-        /^[A-Za-z\s'-]+$/,
-        "Only alphabetic characters, spaces, hyphens and apostrophes are allowed",
-      )
-      .refine(
-        (v) => !/\s{2,}/.test(v),
-        "Last name cannot have consecutive spaces",
-      ),
-    role: z.string(),
-    designation: z
-      .string()
-      .trim()
-      .min(2, "Designation must be at least 2 characters")
-      .max(100, "Designation must be at most 100 characters")
-      .refine(
-        (v) => /[a-zA-Z]/.test(v),
-        "Designation must contain at least one letter",
-      )
-      .refine(
-        (v) => !/\s{2,}/.test(v),
-        "Designation cannot have consecutive spaces",
-      )
-      .optional()
-      .or(z.literal("")),
-    departmentId: z.number().optional(),
-    phone: z
-      .string()
-      .refine((val) => {
-        if (!val) return true;
-        return !/[a-zA-Z]/.test(val);
-      }, "Phone number must not contain letters")
-      .refine((val) => {
-        if (!val) return true;
-        const digits = val.replace(/\D/g, "");
-        return digits.length >= 7 && digits.length <= 15;
-      }, "Phone number must be 7–15 digits")
-      .optional()
-      .or(z.literal("")),
-    gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
-    joiningDate: z.date().optional(),
-    taxId: z
-      .string()
-      .regex(/^[A-Z]{5}[0-9]{4}[A-Z]$/, "Invalid PAN format (e.g. ABCDE1234F)")
-      .optional()
-      .or(z.literal("")),
-    monthlySalary: z
-      .number()
-      .min(0, "Salary cannot be negative")
-      .max(9_999_999, "Salary exceeds maximum allowed value")
-      .optional(),
-    bankAccount: z
-      .string()
-      .regex(/^\d{9,18}$/, "Account number must be 9–18 digits")
-      .optional()
-      .or(z.literal("")),
-    bankName: z
-      .string()
-      .regex(/^[A-Za-z\s]+$/, "Bank name must contain only letters")
-      .optional()
-      .or(z.literal("")),
-    branch: z
-      .string()
-      .regex(/^[A-Za-z\s]+$/, "Branch name must contain only letters")
-      .optional()
-      .or(z.literal("")),
-    ifsc: z
-      .string()
-      .regex(
-        /^[A-Z]{4}0[A-Z0-9]{6}$/,
-        "Invalid IFSC code format (e.g. SBIN0001234)",
-      )
-      .optional()
-      .or(z.literal("")),
-    accountHolder: z
-      .string()
-      .trim()
-      .min(2, "Account holder name must be at least 2 characters")
-      .refine((v) => /[A-Za-z]/.test(v), "Account holder name must contain letters and match the bank account name.")
-      .refine((v) => /^[A-Za-z\s'.,-]+$/.test(v), "Account holder name can only contain letters, spaces, hyphens, apostrophes, and periods")
-      .refine((v) => !/^\s+$/.test(v), "Account holder name cannot be whitespace only")
-      .optional()
-      .or(z.literal("")),
-  });
+const hasLetterOrDigit = (v: string) => /[\p{L}\p{N}]/u.test(v);
+
+const formSchema = z.object({
+  firstName: z
+    .string()
+    .trim()
+    .min(1, "First name is required")
+    .max(80, "First name must be at most 80 characters")
+    .refine(hasLetterOrDigit, "First name must contain a letter or number"),
+  lastName: z
+    .string()
+    .trim()
+    .min(1, "Last name is required")
+    .max(80, "Last name must be at most 80 characters")
+    .refine(hasLetterOrDigit, "Last name must contain a letter or number"),
+  role: z.string(),
+  designation: z
+    .string()
+    .trim()
+    .max(120, "Designation must be at most 120 characters")
+    .refine((v) => v === "" || hasLetterOrDigit(v), "Designation must contain a letter or number")
+    .optional()
+    .or(z.literal("")),
+  departmentId: z.number().optional(),
+  phone: z
+    .string()
+    .refine((val) => {
+      if (!val) return true;
+      const digits = val.replace(/\D/g, "");
+      return digits.length >= 7 && digits.length <= 15;
+    }, "Phone number must be 7–15 digits")
+    .optional()
+    .or(z.literal("")),
+  gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
+  joiningDate: z.date().optional(),
+  taxId: z
+    .string()
+    .trim()
+    .refine(
+      (v) => v === "" || /^[A-Za-z]{5}[0-9]{4}[A-Za-z]$/i.test(v),
+      "Invalid PAN format (e.g. ABCDE1234F)",
+    )
+    .optional()
+    .or(z.literal("")),
+  monthlySalary: z
+    .number()
+    .min(0, "Salary cannot be negative")
+    .max(9_999_999, "Salary exceeds maximum allowed value")
+    .optional(),
+  bankAccount: z
+    .string()
+    .trim()
+    .refine((v) => v === "" || /^\d{6,20}$/.test(v), "Account number must be 6–20 digits")
+    .optional()
+    .or(z.literal("")),
+  bankName: z.string().trim().max(100).optional().or(z.literal("")),
+  branch: z.string().trim().max(100).optional().or(z.literal("")),
+  ifsc: z
+    .string()
+    .trim()
+    .refine(
+      (v) => v === "" || /^[A-Za-z]{4}0[A-Za-z0-9]{6}$/i.test(v),
+      "Invalid IFSC code format (e.g. SBIN0001234)",
+    )
+    .optional()
+    .or(z.literal("")),
+  accountHolder: z
+    .string()
+    .trim()
+    .max(120)
+    .refine((v) => v === "" || hasLetterOrDigit(v), "Account holder name looks invalid")
+    .optional()
+    .or(z.literal("")),
+});
 
 export type EmployeeFormValues = z.infer<typeof formSchema>;
 

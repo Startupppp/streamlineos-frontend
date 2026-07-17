@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { EmptyState } from "@/components/ui/empty-state";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import {
   useEngagementCommunities,
@@ -160,11 +161,12 @@ export function CommunitiesTab({ currentUserId }: { currentUserId: string }) {
       </div>
 
       {(!communities || communities.length === 0) ? (
-        <div className="flex flex-col items-center justify-center py-16 rounded-lg border border-dashed border-border bg-muted/20">
-          <Users className="w-8 text-muted-foreground mb-3" />
-          <p className="text-sm font-medium text-foreground">No communities yet</p>
-          <p className="text-xs text-muted-foreground mt-1">Create a community to bring people together</p>
-        </div>
+        <EmptyState
+          illustrationPreset="team"
+          title="No communities yet"
+          description="Create a community to bring people together"
+          compact
+        />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {communities.map((c) => (

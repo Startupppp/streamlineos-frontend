@@ -178,7 +178,7 @@ export default function LearningPathsPage() {
       {!paths?.length ? (
         <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
           <EmptyState
-            illustration={<GraduationCap className="w-8 text-muted-foreground" />}
+            illustrationPreset="learning"
             title="No learning paths available"
             description="Create structured learning programs to support career development."
           />

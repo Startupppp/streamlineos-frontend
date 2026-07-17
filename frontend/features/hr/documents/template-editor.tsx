@@ -56,9 +56,6 @@ const templateSchema = z.object({
     .max(100, "Template name must be at most 100 characters")
     .refine((v) => /[a-zA-Z]/.test(v), {
       message: "Template name must contain at least one letter",
-    })
-    .refine((v) => !/\s{2,}/.test(v), {
-      message: "Template name cannot have consecutive spaces",
     }),
   type: z.string().min(1, "Type is required"),
   htmlContent: z.string().min(1, "Template content cannot be empty"),

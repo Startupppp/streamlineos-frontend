@@ -293,7 +293,7 @@ export default function ReimbursementsPage() {
         className="flex-1 min-h-0"
         emptyState={
           <EmptyState
-            illustration={<Receipt className="w-8 text-muted-foreground" />}
+            illustrationPreset="expenses"
             title="No reimbursement requests"
             description="Submit expense reimbursement requests for approval."
           />

@@ -31,7 +31,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const VERSION_FORMAT_REGEX = /^\d+\.\d+$/;
-const CONSECUTIVE_SPECIAL_CHARS_REGEX = /[^a-zA-Z0-9 ]{2,}/;
+
 const URL_HTTPS_REGEX = /^https:\/\/.+/;
 
 type DocumentInputMode = "url" | "file";
@@ -99,15 +99,9 @@ function HandbookContent() {
       return;
     }
 
-    const trimmedTitle = title.trim();
+    const trimmedTitle = title.trim().replace(/\s+/g, " ");
     if (!trimmedTitle) { toast.error("Title is required"); return; }
-    if (trimmedTitle.length < 2) { toast.error("Title must be at least 2 characters"); return; }
     if (trimmedTitle.length > 100) { toast.error("Title must be at most 100 characters"); return; }
-    if (/  /.test(trimmedTitle)) { toast.error("Title must not contain consecutive spaces"); return; }
-    if (CONSECUTIVE_SPECIAL_CHARS_REGEX.test(trimmedTitle)) {
-      toast.error("Title must not contain consecutive special characters");
-      return;
-    }
 
     if (changelog.length > 2000) { toast.error("Notes must be at most 2000 characters"); return; }
 

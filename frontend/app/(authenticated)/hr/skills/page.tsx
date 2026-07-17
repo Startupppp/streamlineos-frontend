@@ -27,19 +27,15 @@ const LEVELS = [
   { value: "5", label: "Expert" },
 ];
 
-const SKILL_NAME_RE = /[a-zA-Z]/;
-const CONSECUTIVE_SPACES_RE = /  +/;
-
 function normalizeSkillName(name: string): string {
   return name.trim().replace(/\s+/g, " ").toLowerCase();
 }
 
 function validateSkillName(name: string): string | null {
-  const trimmed = name.trim();
-  if (trimmed.length < 2) return "Skill name must be at least 2 characters.";
-  if (trimmed.length > 50) return "Skill name must be at most 50 characters.";
-  if (!SKILL_NAME_RE.test(trimmed)) return "Skill name must contain at least one letter.";
-  if (CONSECUTIVE_SPACES_RE.test(trimmed)) return "Skill name must not contain consecutive spaces.";
+  const trimmed = name.trim().replace(/\s+/g, " ");
+  if (trimmed.length < 1) return "Skill name is required.";
+  if (trimmed.length > 80) return "Skill name must be at most 80 characters.";
+  if (!/[\p{L}\p{N}]/u.test(trimmed)) return "Skill name must contain a letter or number.";
   return null;
 }
 
@@ -178,7 +174,7 @@ export default function SkillsPage() {
     >
       {!skills?.length ? (
         <EmptyState
-          illustration={<BookOpen className="w-8 text-muted-foreground" />}
+          illustrationPreset="learning"
           title="No skills recorded yet"
           description="Add your skills to build the organization's competency map."
           action={{ label: "Add Skill", onClick: handleOpenSheet }}

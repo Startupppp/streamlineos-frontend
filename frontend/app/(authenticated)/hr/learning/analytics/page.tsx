@@ -289,6 +289,7 @@ export default function LearningAnalyticsPage() {
                       </ResponsiveContainer>
                     ) : (
                       <EmptyState
+                        illustrationPreset="chart"
                         title="No enrollment data"
                         description="Enroll in courses to see your progress here."
                         compact
@@ -334,6 +335,7 @@ export default function LearningAnalyticsPage() {
                       </ul>
                     ) : (
                       <EmptyState
+                        illustrationPreset="learning"
                         title="No courses enrolled"
                         description="Start learning to see top courses here."
                         compact

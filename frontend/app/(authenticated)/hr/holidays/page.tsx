@@ -70,8 +70,7 @@ const holidaySchema = z.object({
         .min(3, "Name must be at least 3 characters")
         .max(100, "Name must be at most 100 characters")
         .refine((v) => /[a-zA-Z]/.test(v), "Name must contain at least one letter")
-        .refine((v) => /[a-zA-Z]{3}/.test(v), "Name must contain at least 3 letters")
-        .refine((v) => !/\s{2,}/.test(v), "Name cannot have consecutive spaces"),
+        .refine((v) => /[a-zA-Z]{3}/.test(v), "Name must contain at least 3 letters"),
     ),
   date: z.string().min(1, "Date is required"),
   recurring: z.boolean(),

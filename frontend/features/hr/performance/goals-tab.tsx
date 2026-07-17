@@ -126,10 +126,6 @@ export function GoalsTab() {
       toast.error("Goal title must contain at least one letter or number");
       return;
     }
-    if (/\s{2,}/.test(trimmedTitle)) {
-      toast.error("Goal title cannot have consecutive spaces");
-      return;
-    }
     if (trimmedDesc && trimmedDesc.length > 1000) {
       toast.error("Description must be at most 1000 characters");
       return;

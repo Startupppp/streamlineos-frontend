@@ -173,6 +173,7 @@ export default function TeamDetailPage({ params }: { params: Promise<{ teamId: s
     return (
       <PageWrapper title="Team" variant="display">
         <EmptyState
+          illustrationPreset="alert"
           title="Failed to load team"
           description="Something went wrong while fetching team data."
           action={{ label: "Retry", onClick: handleRetry }}

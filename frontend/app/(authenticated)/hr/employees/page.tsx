@@ -310,7 +310,7 @@ export default function EmployeesPage() {
           </HrPanel>
         ) : employees.length === 0 ? (
           <EmptyState
-            illustration={<Users className="h-12 w-12 text-muted-foreground/40" />}
+            illustrationPreset="team"
             title="No employees match your filters"
             description={
               hasFilters

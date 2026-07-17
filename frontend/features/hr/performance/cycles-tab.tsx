@@ -97,7 +97,6 @@ export function CyclesTab() {
     if (trimmedName.length < 3) { toast.error("Cycle name must be at least 3 characters"); return; }
     if (trimmedName.length > 100) { toast.error("Cycle name must be at most 100 characters"); return; }
     if (!/[a-zA-Z0-9]/.test(trimmedName)) { toast.error("Cycle name must contain at least one letter or number"); return; }
-    if (/\s{2,}/.test(trimmedName)) { toast.error("Cycle name cannot have consecutive spaces"); return; }
     if (!periodStart) { toast.error("Period start date is required"); return; }
     if (!editCycle) {
       const today = new Date().toISOString().slice(0, 10);

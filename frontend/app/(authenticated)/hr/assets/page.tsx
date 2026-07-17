@@ -106,34 +106,22 @@ const ASSET_TYPES = [
 const assetFormSchema = z.object({
   name: z
     .string()
-    .min(2, "Asset name must be at least 2 characters")
+    .trim()
+    .min(1, "Asset name is required")
     .max(100, "Asset name is too long")
-    .refine((v) => v === v.trim(), "No leading or trailing spaces")
-    .refine((v) => !/\s{2,}/.test(v), "No consecutive spaces")
-    .refine((v) => /[a-zA-Z]/.test(v), "Must contain at least one letter")
-    .refine((v) => !/^[\d\s]+$/.test(v), "Cannot be numeric only")
-    .refine(
-      (v) => !/[!@#$%^&*()\-_=+\[\]{};:'",.<>?/\\|`~]{2,}/.test(v),
-      "Cannot contain multiple consecutive special characters",
-    ),
+    .refine((v) => /[\p{L}\p{N}]/u.test(v), "Must contain a letter or number"),
   type: z.string().min(1, "Type is required"),
   brand: z
     .string()
+    .trim()
     .min(1, "Brand is required")
-    .max(100, "Brand is too long")
-    .refine(
-      (v) => /[a-zA-Z]/.test(v.trim()),
-      "Brand must contain at least one letter",
-    ),
-  model: z.string().min(1, "Model is required").max(100, "Model is too long"),
+    .max(100, "Brand is too long"),
+  model: z.string().trim().min(1, "Model is required").max(100, "Model is too long"),
   serialNumber: z
     .string()
-    .min(3, "Serial number must be at least 3 characters")
-    .max(100, "Serial number is too long")
-    .refine(
-      (v) => /[a-zA-Z0-9]/.test(v.trim()),
-      "Must contain alphanumeric characters",
-    ),
+    .trim()
+    .min(1, "Serial number is required")
+    .max(100, "Serial number is too long"),
   purchaseDate: z.string().optional(),
   purchaseCost: z
     .number()

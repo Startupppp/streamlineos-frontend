@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Settings2, Trash2, Pencil, Clock, Calendar } from "lucide-react";
+import { Plus, Trash2, Pencil, Clock, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetBody } from "@/components/ui/sheet";
@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { EmptyState as UiEmptyState } from "@/components/ui/empty-state";
 import { useCan } from "@/hooks/api/access";
 import {
   useLeavePolicies,
@@ -138,18 +139,14 @@ function EmptyState({ onCreateClick }: { onCreateClick: () => void }) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.22, ease: "easeOut" }}
-      className="flex-1 flex flex-col items-center justify-center text-center py-24"
+      className="flex-1 flex flex-col"
     >
-      <div className="bg-muted rounded-lg p-5 mb-4">
-        <Settings2 className="h-10 w-10 text-muted-foreground" />
-      </div>
-      <h3 className="text-lg font-semibold text-foreground">No leave policies yet</h3>
-      <p className="text-muted-foreground text-sm mt-1 max-w-xs">
-        Define accrual rules and carry-forward policies for each leave type.
-      </p>
-      <Button className="mt-6" onClick={onCreateClick}>
-        <Plus className="h-4 w-4 mr-2" /> Create Policy
-      </Button>
+      <UiEmptyState
+        illustrationPreset="calendar"
+        title="No leave policies yet"
+        description="Define accrual rules and carry-forward policies for each leave type."
+        action={{ label: "Create Policy", onClick: onCreateClick }}
+      />
     </motion.div>
   );
 }
