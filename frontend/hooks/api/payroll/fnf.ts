@@ -60,6 +60,7 @@ export function useApproveFnf() {
       notes?: string;
     }) =>
       apiClient.post<FnfSettlement>(`/payroll/fnf/${settlementId}/approve`, {
+        status: "APPROVED",
         notes,
       }),
     onSuccess: () => {
