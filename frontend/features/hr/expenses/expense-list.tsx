@@ -17,6 +17,7 @@ import {
   getCategoryConfig,
   STATUS_STYLES,
   STATUS_LABELS,
+  parseExpenseReceipts,
 } from "./expense-constants";
 import type { ExpenseWithRelations } from "@/types/hr/expenses";
 import type { ExpenseToEdit } from "@/features/hr/expenses/components/create-expense-dialog";
@@ -340,8 +341,9 @@ export function MemberExpenseList({
           onEdit(toEditPayload());
         }
         function handleView() {
-          if (expense.receiptUrl) {
-            viewFile(expense.receiptUrl);
+          const receipts = parseExpenseReceipts(expense.receiptUrl, expense.receiptFileName);
+          if (receipts[0]) {
+            viewFile(receipts[0].url);
           } else {
             onEdit(toEditPayload());
           }

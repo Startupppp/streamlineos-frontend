@@ -2,9 +2,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import { format } from "date-fns";
-import {
-  Download, FileSpreadsheet, X, CheckCircle2, FileText,
-} from "lucide-react";
+import { Download, X, CheckCircle2, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { Label } from "@/components/ui/label";
@@ -15,6 +13,7 @@ import { ImportValidationPreview } from "@/features/hr/expenses/import-validatio
 import { useImportExpenses } from "@/hooks/api/use-import-expenses";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { EmptyUploadIllustration } from "@/components/illustrations/illustration-image";
 
 const TEMPLATE_COLUMNS = [
   "category", "amount", "description", "merchant", "payment_method", "expense_date",
@@ -46,7 +45,7 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
   const [file, setFile] = useState<File | null>(null);
   const [parsedRows, setParsedRows] = useState<ParsedRow[]>([]);
   const [categoryMapping, setCategoryMapping] = useState<Record<string, string>>({});
-  const [autoApprove, setAutoApprove] = useState(true);
+  const [autoApprove, setAutoApprove] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [isParsing, setIsParsing] = useState(false);
   const [importResult, setImportResult] = useState<{
@@ -59,7 +58,7 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
     setFile(null);
     setParsedRows([]);
     setCategoryMapping({});
-    setAutoApprove(true);
+    setAutoApprove(false);
     setImportResult(null);
     setIsImporting(false);
     setIsParsing(false);
@@ -272,13 +271,15 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
             {!file ? (
               <div className="pl-8 cursor-pointer min-h-[92px]" onClick={handleClickUploadArea}>
                 <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 p-6 transition-colors hover:border-primary/50 hover:bg-primary/5">
-                  <FileSpreadsheet className="w-8 text-muted-foreground/50 mb-2" />
+                  <div className="mb-2 h-16 w-16">
+                    <EmptyUploadIllustration className="h-full w-full" />
+                  </div>
                   <p className="text-sm font-medium text-foreground">Click to upload</p>
                   <p className="text-xs text-muted-foreground mt-1">CSV — Max 5MB</p>
                 </div>
               </div>
             ) : (
-              <div className="pl-8 min-h-[92px]">
+              <div className="pl-8 space-y-2 min-h-[92px]">
                 <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
                   <FileText className="w-8 text-primary shrink-0" />
                   <div className="flex-1 min-w-0">
@@ -289,6 +290,13 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
+                <button
+                  type="button"
+                  onClick={handleClickUploadArea}
+                  className="text-xs font-medium text-primary hover:underline"
+                >
+                  Replace file
+                </button>
               </div>
             )}
 

@@ -15,6 +15,7 @@ import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name
 import { useApproveExpense, useRejectExpense } from "@/hooks/api/accounting/expenses";
 import type { ExpenseWithRelations } from "@/types/hr/expenses";
 import type { ExpenseStatus } from "@/features/accounting/shared";
+import { parseExpenseReceipts } from "@/features/hr/expenses/expense-constants";
 
 function formatDate(value: string | null | undefined): string {
   if (!value) return "—";
@@ -88,6 +89,7 @@ export function ExpenseDetailSheet({ expense, open, onOpenChange }: ExpenseDetai
   const isSubmitted = expense.status === "SUBMITTED";
   const showActions = canManage && isSubmitted;
   const policyFlag = expense.policyFlag;
+  const receipts = parseExpenseReceipts(expense.receiptUrl, expense.receiptFileName);
 
   return (
     <AppSheet
@@ -191,20 +193,27 @@ export function ExpenseDetailSheet({ expense, open, onOpenChange }: ExpenseDetai
           )}
         </div>
 
-        {expense.receiptUrl && (
-          <div>
-            <p className="text-[11px] text-muted-foreground mb-1">Receipt</p>
-            <a
-              href={expense.receiptUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-            >
-              <ExternalLink className="h-3.5 w-3.5" />
-              {expense.receiptFileName ?? "View receipt"}
-            </a>
-          </div>
-        )}
+        {receipts.length > 0 && (
+            <div>
+              <p className="text-[11px] text-muted-foreground mb-1">
+                Receipt{receipts.length > 1 ? "s" : ""}
+              </p>
+              <div className="flex flex-col gap-1">
+                {receipts.map((receipt) => (
+                  <a
+                    key={receipt.url}
+                    href={receipt.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    {receipt.fileName}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
 
         {expense.approvedAt && (
           <div className="pt-2 border-t border-border/50">

@@ -18,6 +18,10 @@ import type { ExpenseWithRelations } from "@/types/hr/expenses";
 import {
   getCategoryConfig,
   ADMIN_CATEGORY_LABELS,
+  parseExpenseReceipts,
+  getReceiptFileKind,
+  receiptKindEmoji,
+  receiptKindLabel,
 } from "./expense-constants";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
@@ -52,15 +56,25 @@ export function AdminExpenseItem({
   const isRejecting = rejectingId === expense.id;
   const adminCatLabel =
     ADMIN_CATEGORY_LABELS[expense.category || ""] || catConfig.label;
+  const receipts = parseExpenseReceipts(expense.receiptUrl, expense.receiptFileName);
+  const primaryReceipt = receipts[0];
+  const receiptKind = primaryReceipt
+    ? getReceiptFileKind(primaryReceipt.url, primaryReceipt.fileName)
+    : null;
+  const primaryImageSrc =
+    primaryReceipt && receiptKind === "image"
+      ? resolveImageUrl(primaryReceipt.url)
+      : undefined;
 
   function handleViewReceiptArea() {
-    if (expense.receiptUrl) viewFile(expense.receiptUrl);
+    if (primaryReceipt) viewFile(primaryReceipt.url);
   }
   function handleViewReceiptBtn() {
-    viewFile(expense.receiptUrl!);
+    if (primaryReceipt) viewFile(primaryReceipt.url);
   }
   function handleDownloadReceipt() {
-    downloadFile(expense.receiptUrl!, expense.receiptFileName || "receipt");
+    if (!primaryReceipt) return;
+    downloadFile(primaryReceipt.url, primaryReceipt.fileName || "receipt");
   }
   function handleRejectionReasonChange(e: ChangeEvent<HTMLInputElement>) {
     onRejectionReasonChange(e.target.value);
@@ -89,24 +103,38 @@ export function AdminExpenseItem({
         <div
           className={cn(
             "relative w-[96px] h-[76px] rounded-xl bg-muted/60 flex items-center justify-center overflow-hidden border border-border",
-            expense.receiptUrl &&
+            primaryReceipt &&
               "cursor-pointer hover:ring-2 hover:ring-primary/40 transition-all duration-200",
           )}
           onClick={handleViewReceiptArea}
         >
-          {expense.receiptUrl ? (
+          {primaryImageSrc ? (
             <Image
-              src={resolveImageUrl(expense.receiptUrl) || ""}
+              src={primaryImageSrc}
               alt="Receipt"
               fill
               unoptimized
               className="object-cover rounded-xl"
             />
+          ) : receiptKind ? (
+            <div className="flex flex-col items-center justify-center gap-0.5 px-1">
+              <span className="text-2xl leading-none" aria-hidden>
+                {receiptKindEmoji(receiptKind)}
+              </span>
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                {receiptKindLabel(receiptKind)}
+              </span>
+            </div>
           ) : (
             <Receipt className="h-6 w-6 text-muted-foreground/50" />
           )}
+          {receipts.length > 1 && (
+            <span className="absolute bottom-1 right-1 rounded-md bg-background/90 px-1.5 py-0.5 text-[10px] font-semibold text-foreground shadow-sm">
+              +{receipts.length - 1}
+            </span>
+          )}
         </div>
-        {expense.receiptUrl && (
+        {primaryReceipt && (
           <div className="flex items-center gap-0.5">
             <Button
               variant="ghost"
