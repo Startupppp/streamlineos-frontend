@@ -78,7 +78,7 @@ export function InventorySettingsClient() {
     );
   }
 
-  async function onSubmit(values: SettingsFormValues) {
+  async function onSubmit(values: SettingsFormValues): Promise<void> {
     try {
       await updateMutation.mutateAsync(values as InventorySettings);
       toast.success("Settings saved.");
@@ -88,8 +88,13 @@ export function InventorySettingsClient() {
     }
   }
 
+  function handleDiscard(): void {
+    reset();
+  }
+
   return (
     <PageWrapper title="Settings" subtitle="Configure stock policies, procurement rules, and system sequences.">
+      <div className="flex flex-1 min-h-0 flex-col gap-6">
       <FormProvider {...methods}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {isLoading ? (
@@ -106,7 +111,7 @@ export function InventorySettingsClient() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => reset()}
+                  onClick={handleDiscard}
                 >
                   Discard
                 </Button>
@@ -119,10 +124,11 @@ export function InventorySettingsClient() {
         </form>
       </FormProvider>
 
-      <div className="mt-6 space-y-6">
+      <div className="space-y-6">
         <NumberSequencesCard />
         <SettingsHealthCard />
         <WebhooksSettingsCard />
+      </div>
       </div>
     </PageWrapper>
   );

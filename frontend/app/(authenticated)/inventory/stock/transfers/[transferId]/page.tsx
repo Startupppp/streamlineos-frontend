@@ -137,7 +137,7 @@ function buildLineColumns(isCompleted: boolean): DataTableColumn<TransferLine>[]
 function TransferDetailSkeleton() {
   return (
     <PageWrapper title="Transfer">
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         <Card>
           <CardContent className="p-4 space-y-4">
             <div className="flex items-center gap-2">
@@ -193,7 +193,7 @@ export default function TransferDetailPage({
 
   const transfer = transferData ?? undefined;
 
-  function handleRetry() {
+  function handleRetry(): void {
     void refetch();
   }
 
@@ -252,12 +252,14 @@ export default function TransferDetailPage({
         title="Transfer"
         actions={<BackToTransfersButton />}
       >
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
         <ErrorState
           title="Failed to load transfer"
           description="An error occurred while fetching this transfer. Please try again."
           onRetry={handleRetry}
-          className="flex-1 min-h-[40vh]"
+          className="flex-1"
         />
+        </div>
       </PageWrapper>
     );
 
@@ -267,13 +269,15 @@ export default function TransferDetailPage({
         title="Transfer not found"
         actions={<BackToTransfersButton />}
       >
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
         <InventoryEmptyState
           illustration={<EmptyTransferIllustration />}
           title="Transfer not found"
           description="This transfer does not exist or you do not have access."
           action={{ label: "Back to Transfers", href: "/inventory/stock/transfers" }}
-          className="flex-1 min-h-[40vh]"
+          className="flex-1"
         />
+        </div>
       </PageWrapper>
     );
 
@@ -357,7 +361,8 @@ export default function TransferDetailPage({
         </div>
       }
     >
-      <motion.div className="space-y-4" variants={staggerContainer} initial="hidden" animate="visible">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
+      <motion.div className="flex flex-col gap-4" variants={staggerContainer} initial="hidden" animate="visible">
         <motion.div variants={fadeUp}>
           <Card>
             <CardContent className="p-4">
@@ -430,6 +435,7 @@ export default function TransferDetailPage({
           </Card>
         </motion.div>
       </motion.div>
+      </div>
 
       {transfer.status === "IN_TRANSIT" && (
         <ReceiveTransferSheet

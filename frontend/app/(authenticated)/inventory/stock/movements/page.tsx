@@ -325,9 +325,9 @@ export default function MovementsPage() {
     setPage(1);
   }, [router, searchParams]);
 
-  function handleRetry() { void refetch(); }
+  function handleRetry(): void { void refetch(); }
 
-  function handleResetFilters() {
+  function handleResetFilters(): void {
     router.replace("?");
     setPage(1);
   }
@@ -414,6 +414,7 @@ export default function MovementsPage() {
         </div>
       }
     >
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
       {isError ? (
         <ErrorState
           title="Failed to load movements"
@@ -490,6 +491,7 @@ export default function MovementsPage() {
           </motion.div>
         </motion.div>
       )}
+      </div>
     </PageWrapper>
   );
 }

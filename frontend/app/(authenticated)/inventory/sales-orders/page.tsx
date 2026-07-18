@@ -207,6 +207,10 @@ function SalesOrdersContent() {
     void query.refetch();
   }
 
+  function handleClearFilters(): void {
+    updateParams({ status: "ALL", dateFrom: "", dateTo: "", page: "1" });
+  }
+
   const { iconRef, hoverHandlers } = useAnimatedIcon();
 
   const filterBar = (
@@ -252,6 +256,7 @@ function SalesOrdersContent() {
       }
       filters={filterBar}
     >
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
       <DataTable
         data={items}
         columns={columns}
@@ -279,9 +284,7 @@ function SalesOrdersContent() {
                 hasFilters
                   ? {
                       label: "Clear filters",
-                      onClick: () => {
-                        updateParams({ status: "ALL", dateFrom: "", dateTo: "", page: "1" });
-                      },
+                      onClick: handleClearFilters,
                     }
                   : { label: "New SO", href: "/inventory/sales-orders/new" }
               }
@@ -301,8 +304,8 @@ function SalesOrdersContent() {
             : undefined
         }
         minWidth="640px"
-        className="flex-1 min-h-0"
       />
+      </div>
     </PageWrapper>
   );
 }

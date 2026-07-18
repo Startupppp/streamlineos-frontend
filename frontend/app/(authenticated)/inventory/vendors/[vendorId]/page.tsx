@@ -162,7 +162,7 @@ export default function VendorDetailPage({ params }: VendorDetailPageProps) {
           </div>
         }
       >
-        <div className="space-y-4">
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
           <Card className="p-4">
             <dl className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
               <dt className="text-muted-foreground">Status</dt>

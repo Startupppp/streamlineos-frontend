@@ -12,6 +12,7 @@ import {
 } from "@/hooks/api/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -202,10 +203,10 @@ export default function IntakeInboxPage() {
           selectedIds.size > 0 ? (
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground">{selectedIds.size} selected</span>
-              <Button size="sm" variant="outline" className="gap-1.5" onClick={handleBulkShortlist} disabled={bulkShortlist.isPending}>
+              <LoadingButton size="sm" variant="outline" className="gap-1.5" onClick={handleBulkShortlist} isPending={bulkShortlist.isPending} loadingText="Shortlisting…">
                 <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
                 Shortlist
-              </Button>
+              </LoadingButton>
               <Button size="sm" variant="outline" className="gap-1.5 text-destructive" onClick={handleOpenReject}>
                 <XCircle className="h-3.5 w-3.5" />
                 Reject

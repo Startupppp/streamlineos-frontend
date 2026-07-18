@@ -149,14 +149,16 @@ export default function ReturnsPage() {
     {
       key: "actions",
       header: "",
-      cell: (r) =>
-        r.status === "DRAFT" ? (
+      cell: (r) => {
+        function handlePost(): void { handlePostVendorReturn(r.id); }
+        function handleCancel(): void { handleCancelVendorReturn(r.id); }
+        return r.status === "DRAFT" ? (
           <div className="flex items-center gap-1.5">
             <Button
               variant="outline"
               size="sm"
               className="h-6 text-[10px] px-2"
-              onClick={() => handlePostVendorReturn(r.id)}
+              onClick={handlePost}
               disabled={postVendorMutation.isPending}
             >
               Post
@@ -177,7 +179,7 @@ export default function ReturnsPage() {
                 <AlertDialogFooter>
                   <AlertDialogCancel>Keep</AlertDialogCancel>
                   <AlertDialogAction
-                    onClick={() => handleCancelVendorReturn(r.id)}
+                    onClick={handleCancel}
                     className="bg-red-600 hover:bg-red-700"
                   >
                     Cancel Return
@@ -186,7 +188,8 @@ export default function ReturnsPage() {
               </AlertDialogContent>
             </AlertDialog>
           </div>
-        ) : null,
+        ) : null;
+      },
     },
   ], [handlePostVendorReturn, handleCancelVendorReturn, postVendorMutation.isPending]);
 
@@ -219,14 +222,16 @@ export default function ReturnsPage() {
     {
       key: "actions",
       header: "",
-      cell: (r) =>
-        r.status === "DRAFT" ? (
+      cell: (r) => {
+        function handlePost(): void { handlePostCustomerReturn(r.id); }
+        function handleCancel(): void { handleCancelCustomerReturn(r.id); }
+        return r.status === "DRAFT" ? (
           <div className="flex items-center gap-1.5">
             <Button
               variant="outline"
               size="sm"
               className="h-6 text-[10px] px-2"
-              onClick={() => handlePostCustomerReturn(r.id)}
+              onClick={handlePost}
               disabled={postCustomerMutation.isPending}
             >
               Post
@@ -245,7 +250,7 @@ export default function ReturnsPage() {
                 <AlertDialogFooter>
                   <AlertDialogCancel>Keep</AlertDialogCancel>
                   <AlertDialogAction
-                    onClick={() => handleCancelCustomerReturn(r.id)}
+                    onClick={handleCancel}
                     className="bg-red-600 hover:bg-red-700"
                   >
                     Cancel Return
@@ -254,7 +259,8 @@ export default function ReturnsPage() {
               </AlertDialogContent>
             </AlertDialog>
           </div>
-        ) : null,
+        ) : null;
+      },
     },
   ], [handlePostCustomerReturn, handleCancelCustomerReturn, postCustomerMutation.isPending]);
 
@@ -263,6 +269,7 @@ export default function ReturnsPage() {
       title="Returns"
       subtitle="Manage vendor and customer return merchandise authorizations"
     >
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
       <Tabs defaultValue="vendor">
         <TabsList className="mb-4">
           <TabsTrigger value="vendor">Vendor Returns</TabsTrigger>
@@ -313,6 +320,7 @@ export default function ReturnsPage() {
           />
         </TabsContent>
       </Tabs>
+      </div>
 
       <VendorReturnSheet open={vendorSheetOpen} onOpenChange={setVendorSheetOpen} />
       <CustomerReturnSheet open={customerSheetOpen} onOpenChange={setCustomerSheetOpen} />

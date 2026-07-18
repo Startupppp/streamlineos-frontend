@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useCreateJobPosting, useUpdateJobPosting } from "@/hooks/api/hr/recruitment";
 import { useHrDepartments } from "@/hooks/api/hr";
@@ -265,16 +266,16 @@ export function CreateJobForm({ job }: CreateJobFormProps) {
             />
             <div className="w-px h-5 bg-border/60 shrink-0" />
             {isEdit ? (
-              <Button size="sm" onClick={handleSaveDraft} disabled={isPending} className="gap-1.5">
+              <LoadingButton size="sm" onClick={handleSaveDraft} isPending={isPending} loadingText="Saving…" className="gap-1.5">
                 <Save className="h-3.5 w-3.5" />
                 Save Changes
-              </Button>
+              </LoadingButton>
             ) : (
               <>
-                <Button variant="outline" size="sm" onClick={handleSaveDraft} disabled={isPending} className="gap-1.5">
+                <LoadingButton variant="outline" size="sm" onClick={handleSaveDraft} isPending={isPending} loadingText="Saving…" className="gap-1.5">
                   <Save className="h-3.5 w-3.5" />
                   Save Draft
-                </Button>
+                </LoadingButton>
                 <AnimatedIconButton icon={SendIcon} size="sm" onClick={handlePublish} disabled={isPending} className="gap-1.5">
                   Publish Job
                 </AnimatedIconButton>

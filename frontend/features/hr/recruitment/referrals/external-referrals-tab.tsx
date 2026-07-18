@@ -153,9 +153,9 @@ function ReferrerRow({ id, name, email, status, referralCount }: { id: number; n
       </div>
       <div className="flex items-center gap-2 shrink-0">
         <Badge variant={status === "ACTIVE" ? "secondary" : "destructive"} className="text-[10px]">{status}</Badge>
-        <Button variant="outline" size="sm" className="text-xs" onClick={handleToggle} disabled={updateStatus.isPending}>
+        <LoadingButton variant="outline" size="sm" className="text-xs" onClick={handleToggle} isPending={updateStatus.isPending} loadingText={status === "ACTIVE" ? "Blocking…" : "Unblocking…"}>
           {status === "ACTIVE" ? "Block" : "Unblock"}
-        </Button>
+        </LoadingButton>
       </div>
     </div>
   );

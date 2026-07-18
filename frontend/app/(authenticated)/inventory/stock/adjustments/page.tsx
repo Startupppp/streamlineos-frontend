@@ -173,16 +173,12 @@ export default function AdjustmentsPage() {
     router.replace(`?${params.toString()}`);
   }
 
-  const subtitle = adjData?.total != null
-    ? `${adjData.total} adjustment${adjData.total !== 1 ? "s" : ""}`
-    : undefined;
-
   const hasActiveFilters = searchQ || reasonFilter !== "all" || statusFilter !== "all";
 
   return (
     <PageWrapper
       title="Stock Adjustments"
-      subtitle={subtitle}
+      subtitle="Create and review inventory quantity corrections."
       actions={
         <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1.5" size="sm" className="text-xs" onClick={handleOpenSheet}>
           New Adjustment
@@ -215,6 +211,7 @@ export default function AdjustmentsPage() {
         </div>
       }
     >
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
       {isError ? (
         <ErrorState
           title="Failed to load adjustments"
@@ -266,6 +263,7 @@ export default function AdjustmentsPage() {
           </motion.div>
         </motion.div>
       )}
+      </div>
 
       <CreateAdjustmentSheet open={sheetOpen} onOpenChange={setSheetOpen} />
 

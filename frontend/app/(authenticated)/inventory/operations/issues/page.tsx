@@ -160,9 +160,10 @@ export default function IssuesPage() {
   return (
     <PageWrapper
       title="Issues"
-      subtitle={query.data ? `${total} ${total === 1 ? "transaction" : "transactions"}` : undefined}
+      subtitle="Outbound stock transactions — sales, transfers, and adjustments."
       filters={filterBar}
     >
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
       <DataTable
         data={items}
         columns={columns}
@@ -185,8 +186,8 @@ export default function IssuesPage() {
             : undefined
         }
         minWidth="640px"
-        className="flex-1 min-h-0"
       />
+      </div>
     </PageWrapper>
   );
 }

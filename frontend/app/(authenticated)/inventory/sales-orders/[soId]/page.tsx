@@ -299,7 +299,7 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
       subtitle={`${so.customerName ?? "Unknown customer"} · ${formatDate(so.orderDate)}`}
       backHref="/inventory/sales-orders"
     >
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         <Card className="p-4">
           <FulfillmentStepper status={status} />
           <div className="mt-3 flex items-center justify-end gap-2 flex-wrap">

@@ -349,6 +349,7 @@ export default function NewSalesOrderPage() {
       subtitle="Create a customer sales order. Confirm it to reserve stock."
       backHref="/inventory/sales-orders"
     >
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <Card className="p-4">
@@ -523,6 +524,7 @@ export default function NewSalesOrderPage() {
           </div>
         </form>
       </Form>
+      </div>
     </PageWrapper>
   );
 }

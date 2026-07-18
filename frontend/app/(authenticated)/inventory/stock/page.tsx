@@ -187,9 +187,6 @@ export default function StockLevelsPage() {
 
   const hasActiveFilters =
     searchInput.trim() || warehouseParam !== "all" || stockStatusParam !== "all" || locationParam !== "all";
-  const subtitle = stockData
-    ? `${total} item${total !== 1 ? "s" : ""}`
-    : undefined;
 
   const viewToggle = (
     <div className="flex items-center rounded-md border border-border overflow-hidden h-8">
@@ -289,7 +286,7 @@ export default function StockLevelsPage() {
     <>
       <PageWrapper
         title="Stock Levels"
-        subtitle={subtitle}
+        subtitle="Track real-time stock levels across all warehouses and locations."
         actions={
           <div className="flex items-center gap-2">
             {viewToggle}
@@ -302,6 +299,7 @@ export default function StockLevelsPage() {
         }
         filters={viewParam === "levels" ? levelsFilters : undefined}
       >
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
         {viewParam === "reservations" ? (
           <ReservationsPanel />
         ) : stockLoading ? (
@@ -369,6 +367,7 @@ export default function StockLevelsPage() {
             )}
           </motion.div>
         )}
+        </div>
       </PageWrapper>
 
       <AvailabilityPopover
