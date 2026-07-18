@@ -272,7 +272,6 @@ export default function VendorsListPage() {
     <PageWrapper
       title="Vendors"
       subtitle="Manage your suppliers and purchase order vendors."
-      badge={query.data ? `${total}` : undefined}
       actions={
         <Button size="sm" onClick={handleNewVendor} {...plusHover}>
           <PlusIcon ref={plusRef} size={14} className="mr-1" />

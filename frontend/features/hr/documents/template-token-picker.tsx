@@ -8,7 +8,7 @@ import { Braces } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { COMMON_TOKENS } from "./template-constants";
 
-const TOKEN_COLORS: Record<string, "blue" | "emerald" | "violet"> = {
+const TOKEN_COLORS: Record<string, "blue" | "emerald" | "primary"> = {
   Candidate_Name: "blue",
   Manager_Name: "blue",
   Reporting_To: "blue",
@@ -17,21 +17,21 @@ const TOKEN_COLORS: Record<string, "blue" | "emerald" | "violet"> = {
   Start_Date: "emerald",
   Probation_Period: "emerald",
   Department: "emerald",
-  Company_Name: "violet",
-  Location: "violet",
+  Company_Name: "primary",
+  Location: "primary",
 };
 
 function getTokenColorClasses(token: string): string {
   const color = TOKEN_COLORS[token];
   switch (color) {
     case "blue":
-      return "bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 dark:text-blue-300 dark:border-blue-700";
+      return "bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:hover:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30";
     case "emerald":
-      return "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-700";
-    case "violet":
-      return "bg-violet-50 hover:bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-900/20 dark:hover:bg-violet-900/40 dark:text-violet-300 dark:border-violet-700";
+      return "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30";
+    case "primary":
+      return "bg-primary/5 hover:bg-primary/10 text-foreground border-primary/20 dark:bg-primary/10 dark:hover:bg-primary/15 dark:text-foreground dark:border-primary/30";
     default:
-      return "bg-muted hover:bg-muted/80 text-foreground border-border dark:bg-slate-900/20 dark:hover:bg-slate-900/40 dark:text-slate-300 dark:border-slate-700";
+      return "bg-muted hover:bg-muted/80 text-foreground border-border";
   }
 }
 

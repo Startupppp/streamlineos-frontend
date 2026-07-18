@@ -7,7 +7,7 @@ export default function NotificationPreferencesLoading() {
       title="Notification Preferences"
       subtitle="Control how and when you receive notifications"
     >
-      <div className="space-y-6">
+      <div className="flex flex-1 min-h-0 flex-col gap-6">
         <div className="space-y-3">
           <Skeleton className="h-4 w-24" />
           <div className="rounded-lg border border-border divide-y divide-border">

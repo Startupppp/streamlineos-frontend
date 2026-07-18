@@ -7,7 +7,7 @@ export default function KbResearchBriefsLoading() {
       title="Research Briefs"
       subtitle="AI-synthesized reports from your knowledge base"
     >
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         <div className="rounded-xl border border-border bg-card p-4 space-y-3">
           <Skeleton className="h-9 w-full rounded-md" />
           <div className="flex items-center gap-2">

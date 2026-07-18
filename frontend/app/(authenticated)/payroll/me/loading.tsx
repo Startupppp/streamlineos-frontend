@@ -5,7 +5,7 @@ import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 export default function MyPayrollLoading() {
   return (
     <PageWrapper title="My Payroll" subtitle="Loading payslip…">
-      <div className="space-y-6">
+      <div className="flex flex-1 min-h-0 flex-col gap-6">
         <StatCardGridSkeleton cols={4} count={4} />
         <Skeleton className="h-9 w-full rounded-none -mx-px" />
         <div className="space-y-8">

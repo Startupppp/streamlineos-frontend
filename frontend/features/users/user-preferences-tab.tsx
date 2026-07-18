@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -419,9 +419,9 @@ export function UserPreferencesTab({ userId }: UserPreferencesTabProps) {
         </div>
 
         <div className="flex justify-end pt-2">
-          <Button type="submit" size="sm" disabled={isPending}>
-            {isPending ? "Saving..." : "Save preferences"}
-          </Button>
+          <LoadingButton type="submit" size="sm" isPending={isPending} loadingText="Saving…">
+            Save preferences
+          </LoadingButton>
         </div>
       </form>
     </Form>

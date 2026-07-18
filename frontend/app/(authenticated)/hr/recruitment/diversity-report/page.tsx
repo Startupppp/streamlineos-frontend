@@ -8,9 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Label } from "@/components/ui/label";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,7 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
-import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
+import { CONTENT_FILL_PANEL, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { ChevronDown, AlertCircle, Users, BarChart3, MapPin, Globe } from "lucide-react";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { cn } from "@/lib/utils";
@@ -150,18 +148,11 @@ export default function DiversityReportPage() {
     <PageWrapper
       title="Diversity Report"
       subtitle="Anonymized applicant pool demographics"
- variant="display">
-      <div className="flex flex-wrap items-end gap-3 mb-6 p-4 rounded-lg border bg-card">
-        <div className="flex flex-col gap-1">
-          <Label className="text-xs">From Date</Label>
-          <DatePicker value={pendingFilters.from ?? ""} onChange={handleFromChange} placeholder="Pick a date" className="text-xs w-36" />
-        </div>
-        <div className="flex flex-col gap-1">
-          <Label className="text-xs">To Date</Label>
-          <DatePicker value={pendingFilters.to ?? ""} onChange={handleToChange} placeholder="Pick a date" className="text-xs w-36" />
-        </div>
-        <div className="flex flex-col gap-1">
-          <Label className="text-xs">Departments</Label>
+      variant="display"
+      filters={
+        <div className={FILTER_TOOLBAR_ROW}>
+          <DatePicker value={pendingFilters.from ?? ""} onChange={handleFromChange} placeholder="From date" className="text-xs w-36" />
+          <DatePicker value={pendingFilters.to ?? ""} onChange={handleToChange} placeholder="To date" className="text-xs w-36" />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -189,10 +180,8 @@ export default function DiversityReportPage() {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
-        <div className="flex items-end gap-2">
           <Button size="sm" className="text-xs" onClick={handleApply}>
-            Apply Filters
+            Apply
           </Button>
           {hasActiveFilters && (
             <Button
@@ -204,28 +193,20 @@ export default function DiversityReportPage() {
               Reset
             </Button>
           )}
+          {hasActiveFilters && filters.from && (
+            <Badge variant="secondary" className="text-[10px]">From: {filters.from}</Badge>
+          )}
+          {hasActiveFilters && filters.to && (
+            <Badge variant="secondary" className="text-[10px]">To: {filters.to}</Badge>
+          )}
+          {hasActiveFilters && filters.departmentIds.length > 0 && (
+            <Badge variant="secondary" className="text-[10px]">
+              {filters.departmentIds.length} dept{filters.departmentIds.length !== 1 ? "s" : ""}
+            </Badge>
+          )}
         </div>
-        {hasActiveFilters && (
-          <div className="flex flex-wrap gap-1 ml-auto">
-            {filters.from && (
-              <Badge variant="secondary" className="text-[10px]">
-                From: {filters.from}
-              </Badge>
-            )}
-            {filters.to && (
-              <Badge variant="secondary" className="text-[10px]">
-                To: {filters.to}
-              </Badge>
-            )}
-            {filters.departmentIds.length > 0 && (
-              <Badge variant="secondary" className="text-[10px]">
-                {filters.departmentIds.length} dept
-                {filters.departmentIds.length !== 1 ? "s" : ""}
-              </Badge>
-            )}
-          </div>
-        )}
-      </div>
+      }
+    >
 
       {isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2">

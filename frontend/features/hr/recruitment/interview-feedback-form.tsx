@@ -247,7 +247,7 @@ export function InterviewFeedbackForm({ interview, open, onOpenChange }: Intervi
             {rubric.map((entry, index) => (
               <div
                 key={index}
-                className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 border-l-blue-400"
+                className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 border-l-primary"
               >
                 <div className="p-3 space-y-2.5">
                   <div className="flex items-center gap-2">

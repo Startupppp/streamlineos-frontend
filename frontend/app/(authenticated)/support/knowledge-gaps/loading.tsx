@@ -8,7 +8,7 @@ export default function KnowledgeGapsLoading() {
       subtitle="Repeated unresolved questions that need KB articles"
       actions={<Skeleton className="h-9 w-28 rounded-md" />}
     >
-      <div className="space-y-3">
+      <div className="flex flex-1 min-h-0 flex-col gap-3">
         {Array.from({ length: 9 }).map((_, i) => (
           <div
             key={i}

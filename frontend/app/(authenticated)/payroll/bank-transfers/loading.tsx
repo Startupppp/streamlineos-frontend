@@ -4,7 +4,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 export default function BankTransfersLoading() {
   return (
     <PageWrapper title="Bank Transfers" subtitle="Generate and track salary payments.">
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         <Skeleton className="h-24 w-full rounded-xl" />
         <Skeleton className="h-48 w-full rounded-xl" />
         <div className="rounded-xl border border-border bg-card">

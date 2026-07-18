@@ -27,6 +27,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { AppSheet } from "@/components/shared/app-sheet";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { useReceiveGoods, useLocations, useWarehouses } from "@/hooks/api/inventory";
 import type { PurchaseOrder, ReceiveGoodsInput, ReceiveGoodsLineInput } from "@/types/inventory";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -367,14 +368,15 @@ export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetP
           <Button variant="outline" size="sm" onClick={handleClose}>
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             type="submit"
             form="receive-goods-form"
             size="sm"
-            disabled={receiveMutation.isPending}
+            isPending={receiveMutation.isPending}
+            loadingText="Recording…"
           >
-            {receiveMutation.isPending ? "Recording…" : "Record receipt"}
-          </Button>
+            Record receipt
+          </LoadingButton>
         </div>
       }
     >

@@ -262,6 +262,10 @@ function ProjectSubmissionsInbox({ widgetId, projectId }: ProjectSubmissionsInbo
     router.push(`/projects/${projectId}/feedbucket/${row.id}`);
   }
 
+  function handleRetry() {
+    void refetch();
+  }
+
   if (isLoading) {
     return (
       <div className="space-y-2">
@@ -273,7 +277,7 @@ function ProjectSubmissionsInbox({ widgetId, projectId }: ProjectSubmissionsInbo
   }
 
   if (isError) {
-    return <ErrorState description="Failed to load submissions." onRetry={refetch} />;
+    return <ErrorState description="Failed to load submissions." onRetry={handleRetry} />;
   }
 
   return (

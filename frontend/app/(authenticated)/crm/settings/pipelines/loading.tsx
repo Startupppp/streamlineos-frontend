@@ -8,7 +8,7 @@ export default function PipelinesLoading() {
       subtitle="Configure deal and lead pipelines and their stages"
       actions={<Skeleton className="h-9 w-32 rounded-md" />}
     >
-      <div className="flex gap-0 border border-border rounded-xl overflow-hidden h-[480px]">
+      <div className="flex min-h-0 flex-1 gap-0 border border-border rounded-xl overflow-hidden">
         <div className="w-[280px] shrink-0 border-r border-border space-y-2 p-3">
           {Array.from({ length: 10 }).map((_, i) => (
             <Skeleton key={i} className="h-12 w-full rounded-md" />

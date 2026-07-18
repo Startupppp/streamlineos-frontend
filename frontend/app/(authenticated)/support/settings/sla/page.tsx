@@ -27,6 +27,7 @@ import {
   type SlaPolicy, type SlaPolicyPriority,
 } from "@/hooks/api/support/sla-policies";
 import { useBusinessHoursList } from "@/hooks/api/support/business-hours";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
 import { getApiError } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
@@ -245,9 +246,9 @@ export default function SupportSlaPage() {
               <Form {...createForm}>
                 <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4">
                   <PolicyFormFields form={createForm} businessHoursOptions={businessHoursOptions} idPrefix="create" />
-                  <Button type="submit" className="w-full" disabled={createPolicy.isPending}>
-                    {createPolicy.isPending ? "Creating..." : "Create Policy"}
-                  </Button>
+                  <LoadingButton type="submit" className="w-full" isPending={createPolicy.isPending} loadingText="Creating…">
+                    Create Policy
+                  </LoadingButton>
                 </form>
               </Form>
             </DialogContent>
@@ -305,9 +306,9 @@ export default function SupportSlaPage() {
                       <PolicyFormFields form={editForm} businessHoursOptions={businessHoursOptions} idPrefix="edit" />
                       <div className="flex justify-end gap-3">
                         <Button type="button" variant="outline" onClick={handleCancelEdit}>Cancel</Button>
-                        <Button type="submit" disabled={updatePolicy.isPending}>
-                          {updatePolicy.isPending ? "Saving..." : "Save Changes"}
-                        </Button>
+                        <LoadingButton type="submit" isPending={updatePolicy.isPending} loadingText="Saving…">
+                          Save Changes
+                        </LoadingButton>
                       </div>
                     </form>
                   </Form>

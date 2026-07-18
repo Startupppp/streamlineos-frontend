@@ -156,7 +156,7 @@ export default function VariablesManagerPage() {
         />
       ) : (
         <AnimatePresence mode="popLayout">
-          <div className="space-y-3">
+          <div className="flex flex-1 min-h-0 flex-col gap-3">
             {list.map((variable, idx) => (
               <VariableCard
                 key={variable.id}

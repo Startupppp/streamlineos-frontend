@@ -5,7 +5,6 @@ import { Plus, X } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -57,10 +56,10 @@ import {
 import {
   NOTIFICATION_CATEGORIES,
   NOTIFICATION_CATEGORY_CONFIG,
-  NOTIFICATION_CATEGORY_VALUES,
   NOTIFICATION_PRIORITIES,
   NOTIFICATION_PRIORITY_CONFIG,
 } from "@/features/notifications/notification-types";
+import { broadcastSchema, type BroadcastFormValues } from "@/features/notifications/broadcast-schema";
 import type { Broadcast, BroadcastStatus } from "@/types/notifications";
 
 const STATUS_TABS: Array<{ value: string; label: string }> = [
@@ -81,18 +80,6 @@ const STATUS_CONFIG: Record<BroadcastStatus, { label: string; className: string 
   CANCELLED: { label: "Cancelled", className: "border-border text-muted-foreground" },
   FAILED: { label: "Failed", className: "border-red-300 text-red-600" },
 };
-
-const broadcastSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  message: z.string().min(1, "Message is required"),
-  type: z.enum(["INFO", "SUCCESS", "WARNING", "ERROR"]),
-  priority: z.enum(["LOW", "NORMAL", "HIGH", "CRITICAL"]),
-  category: z.enum(NOTIFICATION_CATEGORY_VALUES),
-  audienceType: z.enum(["all", "roles", "departments", "users"]),
-  scheduledAt: z.string().optional(),
-});
-
-type BroadcastFormValues = z.infer<typeof broadcastSchema>;
 
 function BroadcastSheet({
   open,
@@ -479,7 +466,7 @@ export default function BroadcastsPage() {
     });
   }, [deleteBroadcast, deleteTarget]);
 
-  function handleRetry() { void refetch(); }
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   const items = broadcastData?.items ?? [];
 

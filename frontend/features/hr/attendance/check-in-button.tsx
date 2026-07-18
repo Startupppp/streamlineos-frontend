@@ -34,6 +34,7 @@ import {
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { formatDuration, formatTimerSegment } from "./attendance-utils";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 export const TimerCard = memo(function TimerCard() {
   const [now, setNow] = useState(new Date());
@@ -72,7 +73,7 @@ export const TimerCard = memo(function TimerCard() {
       toast.success("Clocked in successfully");
       setLocalCooldown(0);
     },
-    onError: (err) => toast.error(err.message),
+    onError: (err) => toast.error(getErrorMessage(err)),
   });
 
   const checkOutMutation = useHrCheckOut({
@@ -80,7 +81,7 @@ export const TimerCard = memo(function TimerCard() {
       toast.success("Clocked out successfully");
       setLocalCooldown(120);
     },
-    onError: (err) => toast.error(err.message),
+    onError: (err) => toast.error(getErrorMessage(err)),
   });
 
   const [localBreakOverride, setLocalBreakOverride] = useState<boolean | null>(

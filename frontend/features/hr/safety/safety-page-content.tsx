@@ -55,6 +55,14 @@ const TYPE_OPTIONS: { value: IncidentType | typeof SENTINEL; label: string }[] =
   { value: "other", label: "Other" },
 ];
 
+const SEVERITY_OPTIONS: { value: IncidentSeverity | typeof SENTINEL; label: string }[] = [
+  { value: SENTINEL, label: "All Severities" },
+  { value: "low", label: "Low" },
+  { value: "medium", label: "Medium" },
+  { value: "high", label: "High" },
+  { value: "critical", label: "Critical" },
+];
+
 type ActiveTab = "incidents" | "wellness";
 
 export function SafetyPageContent() {
@@ -145,6 +153,19 @@ export function SafetyPageContent() {
         </SelectTrigger>
         <SelectContent>
           {TYPE_OPTIONS.map((o) => (
+            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select
+        value={severity || SENTINEL}
+        onValueChange={(v) => { setSeverity(v === SENTINEL ? "" : (v as IncidentSeverity)); setPage(1); }}
+      >
+        <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {SEVERITY_OPTIONS.map((o) => (
             <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
           ))}
         </SelectContent>

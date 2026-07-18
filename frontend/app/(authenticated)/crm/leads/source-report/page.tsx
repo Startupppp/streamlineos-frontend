@@ -33,12 +33,12 @@ const SOURCE_LABELS: Record<string, string> = {
 };
 
 const SOURCE_COLORS = [
-  { bar: "bg-blue-500", badge: "bg-blue-50 text-blue-700 border-blue-200" },
-  { bar: "bg-amber-500", badge: "bg-amber-50 text-amber-700 border-amber-200" },
-  { bar: "bg-emerald-500", badge: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-  { bar: "bg-blue-400", badge: "bg-blue-50 text-blue-700 border-blue-200" },
-  { bar: "bg-rose-500", badge: "bg-rose-50 text-rose-700 border-rose-200" },
-  { bar: "bg-cyan-500", badge: "bg-cyan-50 text-cyan-700 border-cyan-200" },
+  { bar: "bg-blue-500", badge: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30" },
+  { bar: "bg-amber-500", badge: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30" },
+  { bar: "bg-emerald-500", badge: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" },
+  { bar: "bg-blue-400", badge: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30" },
+  { bar: "bg-rose-500", badge: "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30" },
+  { bar: "bg-cyan-500", badge: "bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-500/10 dark:text-cyan-300 dark:border-cyan-500/30" },
   { bar: "bg-muted-foreground", badge: "bg-muted text-muted-foreground border-border" },
 ];
 

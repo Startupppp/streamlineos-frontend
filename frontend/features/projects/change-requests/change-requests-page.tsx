@@ -125,6 +125,10 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
     });
   }, [deleteTarget, deleteCr]);
 
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
   const filtered = useMemo(
     () => (crs ?? []).filter((cr) => !search || cr.title.toLowerCase().includes(search.toLowerCase())),
     [crs, search],
@@ -244,7 +248,7 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
           {isLoading ? (
             <DataTableSkeleton rows={12} columns={7} className="flex-1" />
           ) : isError ? (
-            <ErrorState className={PM_FILL_PANEL} onRetry={() => void refetch()} />
+            <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
           ) : filtered.length === 0 ? (
             <EmptyState
                 className={PM_FILL_PANEL}

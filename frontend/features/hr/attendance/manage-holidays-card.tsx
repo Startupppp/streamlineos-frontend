@@ -17,6 +17,7 @@ import { Pencil, PartyPopper } from "lucide-react";
 import { PlusIcon, Trash2Icon, CheckIcon, XIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { EmptyState } from "@/components/ui/empty-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 interface EditState {
   id: number;
@@ -118,7 +119,7 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
           setPendingHoliday(null);
         },
         onError: (e) => {
-          toast.error(e.message);
+          toast.error(getErrorMessage(e));
           setPendingHoliday(null);
         },
       }
@@ -135,7 +136,7 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
           setDeleteConfirmId(null);
         },
         onError: (e) => {
-          toast.error(e.message);
+          toast.error(getErrorMessage(e));
           setDeleteConfirmId(null);
         },
       }
@@ -176,7 +177,7 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
           toast.success("Holiday updated");
           setEditState(null);
         },
-        onError: (e) => toast.error(e.message),
+        onError: (e) => toast.error(getErrorMessage(e)),
       }
     );
   }, [editState, holidaysList, updateMutation]);

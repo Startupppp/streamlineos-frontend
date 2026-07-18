@@ -401,7 +401,7 @@ export default function EmailSequencesPage() {
   if (isLoading) {
     return (
       <PageWrapper title="Email Sequences" subtitle="Automated drip campaigns for candidates." actions={pageActions} variant="display">
-        <div className="space-y-3">
+        <div className="flex flex-1 min-h-0 flex-col gap-3">
           {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
         </div>
       </PageWrapper>
@@ -418,7 +418,7 @@ export default function EmailSequencesPage() {
           action={{ label: "New Sequence", onClick: handleOpenCreate }}
         />
       ) : (
-        <div className="space-y-3">
+        <div className="flex flex-1 min-h-0 flex-col gap-3">
           {sequences.map((sequence) => (
             <SequenceCard
               key={sequence.id}

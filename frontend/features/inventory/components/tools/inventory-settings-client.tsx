@@ -8,9 +8,11 @@ import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCan } from "@/hooks/api/access";
 import { useInventorySettings, useUpdateInventorySettings } from "@/hooks/api/inventory/admin";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type { InventorySettings } from "@/hooks/api/inventory/admin";
 import { InventorySettingsForm } from "./inventory-settings-form";
 import { NumberSequencesCard } from "./number-sequences-card";
@@ -81,8 +83,8 @@ export function InventorySettingsClient() {
       await updateMutation.mutateAsync(values as InventorySettings);
       toast.success("Settings saved.");
       reset(values);
-    } catch {
-      toast.error("Failed to save settings.");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     }
   }
 
@@ -108,9 +110,9 @@ export function InventorySettingsClient() {
                 >
                   Discard
                 </Button>
-                <Button type="submit" size="sm" disabled={updateMutation.isPending}>
-                  {updateMutation.isPending ? "Saving…" : "Save changes"}
-                </Button>
+                <LoadingButton type="submit" size="sm" isPending={updateMutation.isPending} loadingText="Saving…">
+                  Save changes
+                </LoadingButton>
               </div>
             </div>
           )}

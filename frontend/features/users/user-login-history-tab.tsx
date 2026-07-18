@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,6 +28,29 @@ export function UserLoginHistoryTab({ userId }: UserLoginHistoryTabProps) {
   const entries = data?.data ?? [];
   const pagination = data?.pagination;
 
+  const handleFilterAll = useCallback(() => {
+    setSuccessFilter(undefined);
+    setPage(1);
+  }, []);
+
+  const handleFilterSuccess = useCallback(() => {
+    setSuccessFilter(true);
+    setPage(1);
+  }, []);
+
+  const handleFilterFailed = useCallback(() => {
+    setSuccessFilter(false);
+    setPage(1);
+  }, []);
+
+  const handlePagePrev = useCallback(() => {
+    setPage((p) => Math.max(1, p - 1));
+  }, []);
+
+  const handlePageNext = useCallback((totalPages: number) => {
+    setPage((p) => Math.min(totalPages, p + 1));
+  }, []);
+
   if (isLoading) {
     return (
       <div className="space-y-2 pt-2">
@@ -45,10 +68,7 @@ export function UserLoginHistoryTab({ userId }: UserLoginHistoryTabProps) {
           variant={successFilter === undefined ? "secondary" : "outline"}
           size="sm"
           className="h-7 text-xs"
-          onClick={() => {
-            setSuccessFilter(undefined);
-            setPage(1);
-          }}
+          onClick={handleFilterAll}
         >
           All
         </Button>
@@ -56,10 +76,7 @@ export function UserLoginHistoryTab({ userId }: UserLoginHistoryTabProps) {
           variant={successFilter === true ? "secondary" : "outline"}
           size="sm"
           className="h-7 text-xs"
-          onClick={() => {
-            setSuccessFilter(true);
-            setPage(1);
-          }}
+          onClick={handleFilterSuccess}
         >
           <CheckCircle className="h-3 w-3 mr-1 text-green-600" />
           Successful
@@ -68,10 +85,7 @@ export function UserLoginHistoryTab({ userId }: UserLoginHistoryTabProps) {
           variant={successFilter === false ? "secondary" : "outline"}
           size="sm"
           className="h-7 text-xs"
-          onClick={() => {
-            setSuccessFilter(false);
-            setPage(1);
-          }}
+          onClick={handleFilterFailed}
         >
           <XCircle className="h-3 w-3 mr-1 text-red-500" />
           Failed
@@ -141,7 +155,7 @@ export function UserLoginHistoryTab({ userId }: UserLoginHistoryTabProps) {
               variant="outline"
               size="sm"
               className="h-7 w-7 p-0"
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              onClick={handlePagePrev}
               disabled={page === 1}
             >
               <ChevronLeft className="h-3.5 w-3.5" />
@@ -153,9 +167,7 @@ export function UserLoginHistoryTab({ userId }: UserLoginHistoryTabProps) {
               variant="outline"
               size="sm"
               className="h-7 w-7 p-0"
-              onClick={() =>
-                setPage((p) => Math.min(pagination.totalPages, p + 1))
-              }
+              onClick={() => handlePageNext(pagination.totalPages)}
               disabled={page === pagination.totalPages}
             >
               <ChevronRight className="h-3.5 w-3.5" />

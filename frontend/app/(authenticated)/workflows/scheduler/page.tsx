@@ -191,7 +191,7 @@ export default function SchedulerPage() {
       {isLoading ? (
         <LoadingState variant="list" rows={12} />
       ) : isError ? (
-        <ErrorState title="Failed to load schedules" onRetry={handleRetry} className="flex-1" />
+        <ErrorState title="Failed to load schedules" onRetry={handleRetry} className={CONTENT_FILL_PANEL} />
       ) : list.length === 0 ? (
         <EmptyState
           title="No schedules configured"
@@ -199,7 +199,7 @@ export default function SchedulerPage() {
           className={CONTENT_FILL_PANEL}
         />
       ) : (
-        <div className="space-y-3">
+        <div className="flex flex-1 min-h-0 flex-col gap-3">
           {list.map((schedule) => (
             <ScheduleRow
               key={schedule.id}

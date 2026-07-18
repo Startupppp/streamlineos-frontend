@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Separator } from "@/components/ui/separator";
 import { useUpdateUser } from "@/hooks/api/users";
 import type { User } from "@/hooks/api/users";
@@ -290,9 +291,9 @@ export function UserEditForm({ user, onSuccess, onCancel }: UserEditFormProps) {
           <Button type="button" variant="outline" size="sm" onClick={onCancel} disabled={isPending}>
             Cancel
           </Button>
-          <Button type="submit" size="sm" disabled={isPending}>
-            {isPending ? "Saving..." : "Save changes"}
-          </Button>
+          <LoadingButton type="submit" size="sm" isPending={isPending} loadingText="Saving…">
+            Save changes
+          </LoadingButton>
         </div>
       </form>
     </Form>

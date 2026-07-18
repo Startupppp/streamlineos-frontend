@@ -10,7 +10,7 @@ export default function ProductDetailLoading() {
       subtitle="Loading..."
       actions={<Skeleton className="h-9 w-28" />}
     >
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         <StatCardGridSkeleton cols={4} count={4} />
         <DataTableSkeleton rows={6} className="flex-1 min-h-0" />
       </div>

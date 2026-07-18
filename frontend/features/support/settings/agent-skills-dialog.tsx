@@ -9,6 +9,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -118,9 +119,9 @@ export function AgentSkillsDialog({ userId, label, initialSkills, onClose }: Age
           <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="button" onClick={handleSave} disabled={setAgentSkills.isPending}>
-            {setAgentSkills.isPending ? "Saving…" : "Save"}
-          </Button>
+          <LoadingButton type="button" onClick={handleSave} isPending={setAgentSkills.isPending} loadingText="Saving…">
+            Save
+          </LoadingButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

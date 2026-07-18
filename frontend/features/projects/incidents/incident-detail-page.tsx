@@ -87,6 +87,9 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
   const handleOpenEdit = useCallback(() => setEditOpen(true), []);
   const handleOpenDelete = useCallback(() => setDeleteOpen(true), []);
   const handleDeleteDialogChange = useCallback((open: boolean) => setDeleteOpen(open), []);
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const handleDeleteConfirm = useCallback(() => {
     deleteIncident.mutate(
@@ -120,7 +123,7 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
   if (isError || !incident) {
     return (
       <PageWrapper title="Incident" backHref={`/projects/${projectId}/incidents`}>
-        <ErrorState onRetry={() => void refetch()} />
+        <ErrorState onRetry={handleRetry} />
       </PageWrapper>
     );
   }

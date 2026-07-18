@@ -87,6 +87,10 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
     setSearch("");
   }
 
+  function handleRetry() {
+    void refetch();
+  }
+
   const filtered = (data ?? []).filter(
     (f) => !search.trim() || f.name.toLowerCase().includes(search.toLowerCase()),
   );
@@ -217,7 +221,7 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
           {isLoading ? (
             <DataTableSkeleton rows={12} columns={6} className="flex-1" />
           ) : isError ? (
-            <ErrorState className={PM_FILL_PANEL} onRetry={() => void refetch()} />
+            <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
           ) : filtered.length === 0 ? (
             <EmptyState
                 className={PM_FILL_PANEL}

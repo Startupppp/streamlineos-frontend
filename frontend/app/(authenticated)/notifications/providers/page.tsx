@@ -3,9 +3,9 @@
 import { useState, useCallback } from "react";
 import { Plus, FlaskConical, Server } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
+import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -67,6 +67,7 @@ import {
 } from "@/hooks/api/notifications";
 import { useCan } from "@/hooks/api/access";
 import { formatRelativeTime } from "@/features/notifications/format-relative-time";
+import { providerSchema, type ProviderFormValues } from "@/features/notifications/provider-schema";
 import type {
   NotificationProvider,
   NotificationChannel,
@@ -96,40 +97,6 @@ const PROVIDERS: Array<{ value: NotificationProviderName; label: string }> = [
   { value: "INTERNAL", label: "Internal" },
   { value: "SANDBOX", label: "Sandbox" },
 ];
-
-const providerSchema = z.object({
-  channel: z.enum([
-    "IN_APP",
-    "EMAIL",
-    "PUSH",
-    "SMS",
-    "WHATSAPP",
-    "SLACK",
-    "TEAMS",
-    "WEBHOOK",
-  ]),
-  provider: z.enum([
-    "SMTP",
-    "SENDGRID",
-    "TWILIO",
-    "META_WHATSAPP",
-    "SLACK",
-    "TEAMS",
-    "WEBHOOK",
-    "WEB_PUSH",
-    "INTERNAL",
-    "SANDBOX",
-  ]),
-  displayName: z.string().min(1, "Display name is required"),
-  config: z.string().optional(),
-  enabled: z.boolean(),
-  sandboxMode: z.boolean(),
-  isDefault: z.boolean(),
-  dailySendLimit: z.string().optional(),
-  monthlyCostLimit: z.string().optional(),
-});
-
-type ProviderFormValues = z.infer<typeof providerSchema>;
 
 function ProviderSheet({
   open,

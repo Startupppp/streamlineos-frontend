@@ -7,7 +7,6 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import {
@@ -74,6 +73,10 @@ import {
   type Workflow,
   type WorkflowStatus,
 } from "@/hooks/api/workflows";
+import {
+  createWorkflowSchema,
+  type CreateWorkflowValues,
+} from "./create-workflow-schema";
 
 type StatusFilter = WorkflowStatus | "all";
 
@@ -90,13 +93,6 @@ const STATUS_LEFT_BORDER: Record<WorkflowStatus, string> = {
   disabled: "border-l-yellow-400",
   archived: "border-l-red-400",
 };
-
-const createWorkflowSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  description: z.string().optional(),
-});
-
-type CreateWorkflowValues = z.infer<typeof createWorkflowSchema>;
 
 const WorkflowCard = memo(function WorkflowCard({
   workflow,
@@ -426,7 +422,7 @@ export default function WorkflowsPage() {
         </div>
       }
     >
-      <div className="flex flex-1 min-h-0 flex-col space-y-5">
+      <div className="flex flex-1 min-h-0 flex-col gap-5">
         <StatCardGrid cols={4}>
           <StatCard
             label="Total Workflows"

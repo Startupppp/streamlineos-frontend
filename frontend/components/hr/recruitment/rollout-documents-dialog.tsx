@@ -28,9 +28,11 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, FileText, Send, CheckCircle2 } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { useDocumentTemplates } from "@/hooks/api/hr/document-templates";
 import { useGenerateAndRollout } from "@/hooks/api/hr/recruitment";
 import { extractVariables } from "@/lib/utils/document-variables";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 export interface RolloutDocumentsDialogProps {
   candidateId: number;
@@ -121,11 +123,7 @@ export function RolloutDocumentsDialog({
           `${result.count} document${result.count !== 1 ? "s" : ""} generated${values.sendEmail ? " and sent" : ""} successfully`,
         );
       } catch (error: unknown) {
-        const message =
-          error && typeof error === "object" && "message" in error
-            ? String((error as { message: unknown }).message)
-            : "Failed to generate documents";
-        toast.error(message);
+        toast.error(getErrorMessage(error));
       }
     },
     [rollout],
@@ -285,27 +283,17 @@ export function RolloutDocumentsDialog({
                 >
                   Cancel
                 </Button>
-                <Button
+                <LoadingButton
                   type="submit"
-                  className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
+                  className="flex-1"
+                  isPending={rollout.isPending}
+                  loadingText="Generating…"
                   disabled={rollout.isPending || selectedIds.length === 0}
                   aria-label="Generate and send documents"
                 >
-                  {rollout.isPending ? (
-                    <>
-                      <Loader2
-                        className="h-4 w-4 animate-spin mr-2"
-                        aria-hidden="true"
-                      />
-                      Generating…
-                    </>
-                  ) : (
-                    <>
-                      <Send className="h-4 w-4 mr-2" aria-hidden="true" />
-                      Generate &amp; Send
-                    </>
-                  )}
-                </Button>
+                  <Send className="h-4 w-4 mr-2" aria-hidden="true" />
+                  Generate &amp; Send
+                </LoadingButton>
               </DialogFooter>
             </form>
           </Form>

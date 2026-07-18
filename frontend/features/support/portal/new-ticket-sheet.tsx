@@ -195,7 +195,7 @@ export function NewTicketSheet({ open, onOpenChange }: NewTicketSheetProps) {
               <Input
                 {...form.register("title")}
                 placeholder="Brief description of the issue"
-                className={cn("h-8", form.formState.errors.title && "border-destructive")}
+                className={cn("h-9", form.formState.errors.title && "border-destructive")}
                 maxLength={150}
               />
               {form.formState.errors.title && (

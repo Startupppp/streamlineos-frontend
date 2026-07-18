@@ -36,6 +36,7 @@ export function PortalTicketListPage() {
   const { data, isLoading, isError, refetch } = usePortalTickets();
 
   const handleOpenNewTicket = useCallback(() => setNewTicketOpen(true), []);
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   return (
     <PageWrapper
@@ -55,7 +56,7 @@ export function PortalTicketListPage() {
           ))}
         </div>
       ) : isError ? (
-        <ErrorState onRetry={refetch} />
+        <ErrorState onRetry={handleRetry} />
       ) : (data ?? []).length === 0 ? (
         <EmptyState
           illustrationPreset="ticket"

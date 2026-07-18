@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { ProjectTicketSelect } from "./project-ticket-select";
 import {
@@ -133,9 +134,9 @@ export function LogTimeSheet({
       <Button variant="outline" size="sm" onClick={handleClose} disabled={isPending}>
         Cancel
       </Button>
-      <Button size="sm" onClick={handleSubmitClick} disabled={isPending}>
-        {isPending ? "Saving…" : isEdit ? "Save changes" : "Log time"}
-      </Button>
+      <LoadingButton size="sm" onClick={handleSubmitClick} isPending={isPending} loadingText="Saving…">
+        {isEdit ? "Save changes" : "Log time"}
+      </LoadingButton>
     </>
   );
 

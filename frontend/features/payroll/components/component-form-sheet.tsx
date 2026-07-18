@@ -8,6 +8,7 @@ import { Sheet, SheetBody, SheetContent, SheetDescription, SheetFooter, SheetHea
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useCreatePayrollComponent, useUpdatePayrollComponent } from "@/hooks/api/payroll";
@@ -145,7 +146,7 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
               <div className="space-y-1">
                 <Label className="text-xs font-medium">Type *</Label>
                 <Select value={watch("type")} onValueChange={handleTypeChange}>
-                  <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {COMPONENT_TYPES.map((t) => (
                       <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
@@ -156,7 +157,7 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
               <div className="space-y-1">
                 <Label className="text-xs font-medium">Calc. Method *</Label>
                 <Select value={watch("calcMethod")} onValueChange={handleCalcMethodChange}>
-                  <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {CALC_METHODS.map((m) => (
                       <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
@@ -208,9 +209,9 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
             <Button type="button" variant="outline" size="sm" onClick={() => handleOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" size="sm" disabled={isLoading}>
-              {isLoading ? (isEdit ? "Saving…" : "Creating…") : (isEdit ? "Save Changes" : "Add Component")}
-            </Button>
+            <LoadingButton type="submit" size="sm" isPending={isLoading} loadingText={isEdit ? "Saving…" : "Creating…"}>
+              {isEdit ? "Save Changes" : "Add Component"}
+            </LoadingButton>
           </SheetFooter>
         </form>
       </SheetContent>

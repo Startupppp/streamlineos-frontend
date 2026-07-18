@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -7,6 +8,7 @@ import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Combobox } from "@/components/ui/combobox";
 import {
   Form,
   FormField,
@@ -29,12 +31,13 @@ import {
   useUpsertPricebookEntry,
   useDeletePricebookEntry,
 } from "@/hooks/api/crm/pricebooks";
+import { useProducts } from "@/hooks/api/crm/products";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { Pricebook } from "@/types/crm/pricebooks";
 
 const entrySchema = z.object({
-  productId: z.string().min(1, "Product ID required"),
+  productId: z.string().min(1, "Product required"),
   unitPriceCents: z.string().min(1, "Price required"),
   minQuantity: z.string(),
 });
@@ -63,6 +66,16 @@ export function PricebookEntriesSheet({
   const { data: entries, isLoading } = usePricebookEntries(pricebookId);
   const upsertEntry = useUpsertPricebookEntry();
   const deleteEntry = useDeletePricebookEntry();
+  const { data: productsData } = useProducts();
+  const productOptions = useMemo(
+    () =>
+      (productsData?.products ?? []).map((p) => ({
+        value: String(p.id),
+        label: p.name,
+        sublabel: p.sku ?? undefined,
+      })),
+    [productsData],
+  );
 
   const form = useForm<EntryFormValues>({
     resolver: zodResolver(entrySchema),
@@ -162,15 +175,16 @@ export function PricebookEntriesSheet({
                     control={form.control}
                     name="productId"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs">Product ID</FormLabel>
+                      <FormItem className="col-span-3">
+                        <FormLabel className="text-xs">Product</FormLabel>
                         <FormControl>
-                          <Input
-                            {...field}
-                            type="number"
-                            min="1"
-                            placeholder="123"
-                            className="text-xs"
+                          <Combobox
+                            options={productOptions}
+                            value={field.value}
+                            onChange={field.onChange}
+                            placeholder="Search products…"
+                            searchPlaceholder="Search by name or SKU"
+                            emptyText="No products found"
                           />
                         </FormControl>
                         <FormMessage />
@@ -181,7 +195,7 @@ export function PricebookEntriesSheet({
                     control={form.control}
                     name="unitPriceCents"
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="col-span-2">
                         <FormLabel className="text-xs">Price (cents)</FormLabel>
                         <FormControl>
                           <Input

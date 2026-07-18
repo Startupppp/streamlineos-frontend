@@ -51,6 +51,7 @@ import { useCan } from "@/hooks/api/access";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { resolveImageUrl, cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { format } from "date-fns";
 import type { Employee } from "@/types/hr";
 import { canDeleteEmployee } from "@/features/hr/employees/hr-types";
@@ -348,7 +349,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
         setTerminateOpen(false);
         router.push("/hr/employees");
       },
-      onError: (err) => toast.error((err as Error).message),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [employee.id, employeeName, terminateMutation, router]);
 
@@ -389,12 +390,10 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
     ];
   }, [canManageEmployees, employee.id, attritionRiskMutation, generateReviewMutation]);
 
-  const employeeAsEmployee = employee as unknown as Employee;
+  const employmentStatusRaw = employee.employmentStatus;
   const employmentStatus =
-    typeof (employee as Record<string, unknown>).employmentStatus === "string"
-      ? (
-          (employee as Record<string, unknown>).employmentStatus as string
-        ).toUpperCase()
+    typeof employmentStatusRaw === "string"
+      ? employmentStatusRaw.toUpperCase()
       : null;
   const isAlreadyTerminated =
     employee.isActive === false || employmentStatus === "TERMINATED";
@@ -402,7 +401,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
     hydrated &&
     !isAlreadyTerminated &&
     canDeleteEmployee(
-      employeeAsEmployee.role ?? "",
+      employee.role ?? "",
       employee.id,
       true,
       session?.user?.id,
@@ -716,11 +715,19 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                       </h3>
                     </div>
                     <EmployeeProjectsList
-                      projects={
-                        (projects ?? []) as unknown as Parameters<
-                          typeof EmployeeProjectsList
-                        >[0]["projects"]
-                      }
+                      projects={(projects ?? []).map((p) => ({
+                        id: Number(p["id"]),
+                        name: String(p["name"] ?? ""),
+                        role: p["role"] != null ? String(p["role"]) : null,
+                        description: p["description"] != null ? String(p["description"]) : null,
+                        stats: p["stats"] != null
+                          ? {
+                              todo: Number((p["stats"] as Record<string, unknown>)["todo"] ?? 0),
+                              inProgress: Number((p["stats"] as Record<string, unknown>)["inProgress"] ?? 0),
+                              done: Number((p["stats"] as Record<string, unknown>)["done"] ?? 0),
+                            }
+                          : undefined,
+                      }))}
                     />
                   </CardContent>
                 </Card>

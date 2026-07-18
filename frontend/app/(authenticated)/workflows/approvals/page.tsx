@@ -179,7 +179,7 @@ export default function ApprovalsPage() {
         <ErrorState
           title="Failed to load approvals"
           onRetry={handleRetry}
-          className="flex-1"
+          className={CONTENT_FILL_PANEL}
         />
       ) : pendingApprovals.length === 0 ? (
         <EmptyState
@@ -189,7 +189,7 @@ export default function ApprovalsPage() {
           className={CONTENT_FILL_PANEL}
         />
       ) : (
-        <div className="space-y-3">
+        <div className="flex flex-1 min-h-0 flex-col gap-3">
           {pendingApprovals.map((approval) => (
             <ApprovalCard
               key={approval.id}

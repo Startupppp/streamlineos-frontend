@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+import { useCallback } from "react";
 import { useCreateUser } from "@/hooks/api/users";
 import { useOrgBranches, useOrgDepartments } from "@/hooks/api/org-hierarchy";
 import { getApiError } from "@/lib/api-client";
@@ -32,6 +33,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 
@@ -78,10 +80,12 @@ export function UserCreateDialog({ open, onOpenChange, onSuccess }: UserCreateDi
 
   const sendInvite = form.watch("sendInvite");
 
-  function handleOpenChange(open: boolean) {
+  const handleOpenChange = useCallback((open: boolean) => {
     if (!open) form.reset();
     onOpenChange(open);
-  }
+  }, [form, onOpenChange]);
+
+  const handleCloseDialog = useCallback(() => handleOpenChange(false), [handleOpenChange]);
 
   function handleSubmit(values: CreateUserValues) {
     createUser.mutate(
@@ -303,12 +307,17 @@ export function UserCreateDialog({ open, onOpenChange, onSuccess }: UserCreateDi
         </Form>
 
         <DialogFooter>
-          <Button variant="outline" type="button" onClick={() => handleOpenChange(false)}>
+          <Button variant="outline" type="button" onClick={handleCloseDialog}>
             Cancel
           </Button>
-          <Button type="submit" form="create-user-form" disabled={createUser.isPending}>
-            {createUser.isPending ? "Saving…" : sendInvite ? "Send Invite" : "Create User"}
-          </Button>
+          <LoadingButton
+            type="submit"
+            form="create-user-form"
+            isPending={createUser.isPending}
+            loadingText="Saving…"
+          >
+            {sendInvite ? "Send Invite" : "Create User"}
+          </LoadingButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

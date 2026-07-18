@@ -6,11 +6,9 @@ import axios from "axios";
 import { randomUUID } from "crypto";
 import { SignJWT, decodeJwt } from "jose";
 import type { Plan } from "@/lib/billing/feature-gates";
+import { BACKEND_URL } from "@/lib/backend-url";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL;
 const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET ?? "";
-
-if (!BACKEND_URL) throw new Error("NEXT_PUBLIC_API_URL is not set");
 
 const SESSION_DATA_TTL_MS = 30_000;
 const sessionDataStore = new Map<string, { data: SessionData; expiresAt: number }>();

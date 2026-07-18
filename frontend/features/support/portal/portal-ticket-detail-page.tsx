@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { notFound } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { formatDistanceToNow } from "date-fns";
@@ -45,6 +46,7 @@ interface PortalTicketDetailPageProps {
 export function PortalTicketDetailPage({ portalTicketId }: PortalTicketDetailPageProps) {
   const { data: session } = useSession();
   const { data: ticket, isLoading, isError, refetch } = usePortalTicket(portalTicketId);
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   if (!Number.isFinite(portalTicketId) || portalTicketId <= 0) {
     return notFound();
@@ -61,7 +63,7 @@ export function PortalTicketDetailPage({ portalTicketId }: PortalTicketDetailPag
   if (isError) {
     return (
       <PageWrapper variant="display" title="Support Ticket" backHref="/support/portal">
-        <ErrorState onRetry={refetch} />
+        <ErrorState onRetry={handleRetry} />
       </PageWrapper>
     );
   }

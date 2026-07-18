@@ -3,7 +3,6 @@
 import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -60,6 +59,7 @@ import {
 } from "@/hooks/api/support/custom-fields";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
+import { fieldSchema, type FieldForm } from "@/features/support/settings/custom-field-form.schema";
 
 const FIELD_TYPES: { value: CustomFieldType; label: string }[] = [
   { value: "text", label: "Text" },
@@ -72,21 +72,6 @@ const FIELD_TYPES: { value: CustomFieldType; label: string }[] = [
 function fieldTypeLabel(type: string) {
   return FIELD_TYPES.find((t) => t.value === type)?.label ?? type;
 }
-
-const fieldSchema = z.object({
-  key: z
-    .string()
-    .trim()
-    .min(1, "Key is required")
-    .regex(/^[a-z][a-z0-9_]*$/, "Lowercase snake_case, e.g. order_number"),
-  label: z.string().trim().min(1, "Label is required").max(150),
-  fieldType: z.enum(["text", "number", "select", "checkbox", "date"]),
-  optionsText: z.string(),
-  required: z.boolean(),
-  category: z.string().trim(),
-  isActive: z.boolean(),
-});
-type FieldForm = z.infer<typeof fieldSchema>;
 
 interface FieldDialogProps {
   field?: SupportCustomField;

@@ -55,13 +55,15 @@ interface HeadcountRequest {
   requesterEmail: string | null;
 }
 
-const STATUS_COLORS: Record<HeadcountStatus, string> = {
+type BadgeVariant = "default" | "secondary" | "outline" | "destructive";
+
+const STATUS_COLORS: Record<HeadcountStatus, BadgeVariant> = {
   DRAFT: "secondary",
   SUBMITTED: "outline",
   APPROVED: "default",
   REJECTED: "destructive",
   JOB_CREATED: "default",
-} as const;
+};
 
 const HR_ROLES = ["CEO", "HR", "ADMIN", "HR_MANAGER", "OWNER"];
 
@@ -266,7 +268,7 @@ function RequestCard({
             <p className="font-semibold text-sm">{req.requestedRole}</p>
             {req.level && <p className="text-xs text-muted-foreground">{req.level}</p>}
           </div>
-          <Badge variant={STATUS_COLORS[req.status] as "default" | "secondary" | "outline" | "destructive"} className="text-[10px] shrink-0">
+          <Badge variant={STATUS_COLORS[req.status]} className="text-[10px] shrink-0">
             {statusLabel(req.status)}
           </Badge>
         </div>
@@ -360,8 +362,10 @@ export default function HeadcountPage() {
   if (isLoading) {
     return (
       <PageWrapper title="Headcount Planning" subtitle="Manage hiring requests" variant="display">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-40 rounded-xl" />)}
+        <div className="flex flex-1 min-h-0 flex-col gap-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-40 rounded-xl" />)}
+          </div>
         </div>
       </PageWrapper>
     );
@@ -388,18 +392,20 @@ export default function HeadcountPage() {
           action={{ label: "Create Request", onClick: handleNewRequest }}
         />
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {requests.map((req) => (
-            <RequestCard
-              key={req.id}
-              req={req}
-              isHr={isHr}
-              onEdit={handleEdit}
-              onApprove={handleApprove}
-              onReject={handleReject}
-              onCreateJob={handleCreateJob}
-            />
-          ))}
+        <div className="flex flex-1 min-h-0 flex-col gap-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {requests.map((req) => (
+              <RequestCard
+                key={req.id}
+                req={req}
+                isHr={isHr}
+                onEdit={handleEdit}
+                onApprove={handleApprove}
+                onReject={handleReject}
+                onCreateJob={handleCreateJob}
+              />
+            ))}
+          </div>
         </div>
       )}
 

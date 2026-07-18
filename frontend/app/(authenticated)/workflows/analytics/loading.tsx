@@ -8,7 +8,7 @@ export default function WorkflowAnalyticsLoading() {
       title="Workflow Analytics"
       subtitle="Execution trends and workflow performance metrics."
     >
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         <StatCardGridSkeleton cols={3} count={6} />
         <div className="rounded-xl border border-border bg-card p-4 space-y-3">
           <div className="flex items-center justify-between">

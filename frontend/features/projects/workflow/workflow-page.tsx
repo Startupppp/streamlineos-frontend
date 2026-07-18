@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { useCustomStates } from "@/hooks/api/projects/custom-states";
 import { useCan } from "@/hooks/api/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -33,6 +34,10 @@ export function WorkflowPage({ projectId }: WorkflowPageProps) {
 
   const noStatuses = !isLoading && !isError && (statuses ?? []).length === 0;
 
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
   return (
     <PageWrapper
       title="Workflow"
@@ -45,7 +50,7 @@ export function WorkflowPage({ projectId }: WorkflowPageProps) {
             <DataTableSkeleton rows={12} columns={6} className="flex-1" />
           </div>
         ) : isError ? (
-          <ErrorState className={PM_FILL_PANEL} onRetry={() => void refetch()} />
+          <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
         ) : noStatuses ? (
           <EmptyState
               className={PM_FILL_PANEL}

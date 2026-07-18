@@ -169,8 +169,10 @@ export default function InternalJobsPage() {
   if (isLoading) {
     return (
       <PageWrapper title="Internal Openings" subtitle="Open positions available exclusively for employees." variant="display">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-48 rounded-xl" />)}
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-48 rounded-xl" />)}
+          </div>
         </div>
       </PageWrapper>
     );
@@ -180,7 +182,8 @@ export default function InternalJobsPage() {
     <PageWrapper
       title="Internal Openings"
       subtitle="Open positions available exclusively for existing employees. Apply directly without going through external recruitment."
- variant="display">
+      variant="display"
+    >
       {jobs.length === 0 ? (
         <RecruitmentEmptyState
           illustration={<EmptySearchIllustration />}
@@ -188,10 +191,12 @@ export default function InternalJobsPage() {
           description="There are no internal job openings available at this time. Check back later."
         />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {jobs.map((job) => (
-            <JobCardItem key={job.id} job={job} onApply={setApplyingJob} />
-          ))}
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {jobs.map((job) => (
+              <JobCardItem key={job.id} job={job} onApply={setApplyingJob} />
+            ))}
+          </div>
         </div>
       )}
 

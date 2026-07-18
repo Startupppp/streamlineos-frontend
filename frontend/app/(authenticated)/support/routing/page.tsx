@@ -3,7 +3,6 @@
 import { useCallback, useMemo, useState, type ChangeEvent, type KeyboardEvent } from "react";
 import { useForm, useFieldArray, useWatch, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -64,6 +63,7 @@ import {
 import { useOrgMembers } from "@/hooks/api/organization";
 import { getApiError } from "@/lib/api-client";
 import { toast } from "sonner";
+import { ruleSchema, type RuleForm } from "@/features/support/settings/routing-rule-form.schema";
 
 const NO_ASSIGNEE = "__none__";
 const NO_PRIORITY = "__none__";
@@ -91,24 +91,6 @@ const ASSIGNMENT_MODES: { value: AssignmentMode; label: string; description: str
   { value: "skill_based", label: "Skill Based", description: "Assign to a qualified, load-balanced candidate" },
   { value: "availability_based", label: "Availability Based", description: "Assign to an available, load-balanced candidate" },
 ];
-
-const conditionSchema = z.object({
-  field: z.string().min(1, "Field required"),
-  op: z.enum(["eq", "neq", "contains"]),
-  value: z.string().min(1, "Value required"),
-});
-
-const ruleSchema = z.object({
-  name: z.string().min(1, "Name required").max(100),
-  conditions: z.array(conditionSchema).min(1, "At least one condition required"),
-  assigneeId: z.string(),
-  setPriority: z.string(),
-  assignmentMode: z.enum(["static", "round_robin", "load_balanced", "skill_based", "availability_based"]),
-  candidateAgentIds: z.array(z.string()),
-  requiredSkills: z.array(z.string()),
-  isEnabled: z.boolean(),
-});
-type RuleForm = z.infer<typeof ruleSchema>;
 
 interface ConditionRowProps {
   index: number;

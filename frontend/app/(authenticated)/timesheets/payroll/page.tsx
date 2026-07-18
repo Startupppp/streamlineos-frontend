@@ -4,9 +4,10 @@ import { useState, useMemo, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import { differenceInCalendarDays, parseISO, isValid } from "date-fns";
-import { Banknote, Settings2, Loader2 } from "lucide-react";
+import { Banknote, Settings2 } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { useCan } from "@/hooks/api/access";
@@ -138,19 +139,17 @@ export default function TimesheetPayrollPage() {
         </Button>
       )}
       {canExport && (
-        <Button
+        <LoadingButton
           size="sm"
           className="text-xs gap-1.5"
           onClick={handleExportOpen}
-          disabled={!canDoExport || summaryLoading}
+          disabled={!canDoExport}
+          isPending={summaryLoading}
+          loadingText="Loading…"
         >
-          {summaryLoading ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <Banknote className="h-3.5 w-3.5" />
-          )}
+          <Banknote className="h-3.5 w-3.5" />
           Export
-        </Button>
+        </LoadingButton>
       )}
     </div>
   );

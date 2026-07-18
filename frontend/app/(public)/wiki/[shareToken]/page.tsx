@@ -3,15 +3,11 @@ import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import { format } from "date-fns";
 import { PublicPageContentLoader } from "@/features/knowledge-base/components/public-page-content-loader";
+import { BACKEND_URL } from "@/lib/backend-url";
 
 export const dynamic = "force-dynamic";
 
 const SHARE_TOKEN_RE = /^[A-Za-z0-9-]{8,64}$/;
-
-if (!process.env.NEXT_PUBLIC_API_URL) {
-  throw new Error("NEXT_PUBLIC_API_URL is not set");
-}
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const GRADIENT_PRESETS: Array<{ key: string; css: string }> = [
   { key: "slate", css: "linear-gradient(135deg, #1e293b 0%, #334155 100%)" },

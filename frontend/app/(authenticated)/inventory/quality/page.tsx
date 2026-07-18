@@ -80,7 +80,7 @@ function QualityHubInner() {
       title="Quality Hub"
       subtitle="Overview of inspections, holds, and recalls"
     >
-      <div className="space-y-6">
+      <div className="flex flex-1 min-h-0 flex-col gap-6">
         <StatCardGrid cols={4}>
           <StatCard
             label="Pending Inspections"

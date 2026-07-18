@@ -7,6 +7,7 @@ import { PageWrapper, PageSection } from "@/components/ui/page-wrapper";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -358,19 +359,16 @@ export default function ImportPage() {
                   </div>
                 </div>
 
-                <Button
+                <LoadingButton
                   size="sm"
                   onClick={handleImport}
-                  disabled={importMutation.isPending}
+                  isPending={importMutation.isPending}
+                  loadingText="Importing…"
                   className="gap-1.5"
                 >
-                  {importMutation.isPending ? (
-                    <KbLoader2Icon className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <KbUploadIcon className="h-3.5 w-3.5" />
-                  )}
+                  <KbUploadIcon className="h-3.5 w-3.5" />
                   Import {items.length} page{items.length === 1 ? "" : "s"}
-                </Button>
+                </LoadingButton>
               </div>
             )}
           </div>

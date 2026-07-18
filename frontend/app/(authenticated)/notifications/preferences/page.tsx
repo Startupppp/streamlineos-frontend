@@ -146,9 +146,7 @@ export default function NotificationPreferencesPage() {
     [removeSuppression],
   );
 
-  function handleRetry() {
-    void refetch();
-  }
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   if (isLoading) {
     return (

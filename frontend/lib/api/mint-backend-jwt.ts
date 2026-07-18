@@ -1,10 +1,7 @@
 import { SignJWT } from "jose";
 import type { Session } from "next-auth";
+import { BACKEND_URL } from "@/lib/backend-url";
 
-if (!process.env.NEXT_PUBLIC_API_URL) {
-  throw new Error("NEXT_PUBLIC_API_URL is not set");
-}
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL;
 const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET ?? "";
 
 interface LiveOrgData {

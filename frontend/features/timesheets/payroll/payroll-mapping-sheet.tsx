@@ -3,7 +3,7 @@
 import { useCallback, useEffect } from "react";
 import { useForm, useFieldArray, type UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { mappingFormSchema, type MappingFormValues } from "./payroll-mapping-schema";
 import {
   Sheet,
   SheetBody,
@@ -98,19 +98,6 @@ const PROVIDER_HEADER_PRESETS: Record<PayrollProvider, Record<string, string>> =
     entryCount: "Count",
   },
 };
-
-const columnSchema = z.object({
-  key: z.string(),
-  header: z.string().min(1, "Header required"),
-  enabled: z.boolean(),
-});
-
-const mappingFormSchema = z.object({
-  provider: z.enum(["GENERIC", "ZOHO_PAYROLL", "RAZORPAYX", "ADP", "GUSTO"]),
-  columns: z.array(columnSchema),
-});
-
-type MappingFormValues = z.infer<typeof mappingFormSchema>;
 
 interface PayrollMappingSheetProps {
   open: boolean;

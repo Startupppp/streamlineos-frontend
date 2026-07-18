@@ -295,6 +295,22 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
     setEntityType("all");
   }, []);
 
+  const handleDecideDialogChange = useCallback((open: boolean) => {
+    if (!open) setDecideTarget(null);
+  }, []);
+
+  const handleDelegateDialogChange = useCallback((open: boolean) => {
+    if (!open) setDelegateTarget(null);
+  }, []);
+
+  const handleCancelDialogChange = useCallback((open: boolean) => {
+    if (!open) setCancelTarget(null);
+  }, []);
+
+  const handleDeleteDialogChange = useCallback((open: boolean) => {
+    if (!open) setDeleteTarget(null);
+  }, []);
+
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
@@ -457,20 +473,20 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
       />
       <DecideDialog
         open={!!decideTarget}
-        onOpenChange={(open) => { if (!open) setDecideTarget(null); }}
+        onOpenChange={handleDecideDialogChange}
         onConfirm={handleDecide}
         isPending={decideApproval.isPending}
         approvalTitle={decideTarget?.title}
       />
       <DelegateDialog
         open={!!delegateTarget}
-        onOpenChange={(open) => { if (!open) setDelegateTarget(null); }}
+        onOpenChange={handleDelegateDialogChange}
         onConfirm={handleDelegate}
         isPending={updateApproval.isPending}
         members={members}
         currentApproverId={delegateTarget?.approverId}
       />
-      <AlertDialog open={!!cancelTarget} onOpenChange={(open) => { if (!open) setCancelTarget(null); }}>
+      <AlertDialog open={!!cancelTarget} onOpenChange={handleCancelDialogChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Cancel this approval?</AlertDialogTitle>
@@ -486,7 +502,7 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+      <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteDialogChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this approval?</AlertDialogTitle>

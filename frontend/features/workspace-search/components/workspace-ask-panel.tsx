@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ThumbsUpIcon, ThumbsDownIcon } from "@animateicons/react/lucide";
 import { cn } from "@/lib/utils";
@@ -20,14 +21,14 @@ interface WorkspaceAskPanelProps {
 export function WorkspaceAskPanel({ data, isPending, error, className }: WorkspaceAskPanelProps) {
   const feedback = useWorkspaceAskFeedback();
 
-  function handleFeedback(rating: "up" | "down") {
+  const handleFeedback = useCallback((rating: "up" | "down") => {
     feedback.mutate(
       { feature: "workspace.ask", rating },
       {
         onSuccess: () => toast.success(rating === "up" ? "Thanks for the feedback!" : "Got it, we'll improve."),
       },
     );
-  }
+  }, [feedback]);
 
   if (isPending) {
     return (

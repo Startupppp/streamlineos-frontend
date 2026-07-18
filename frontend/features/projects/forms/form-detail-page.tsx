@@ -104,6 +104,10 @@ export function FormDetailPage({ projectId, formId }: FormDetailPageProps) {
     setDeleteOpen(true);
   }
 
+  function handleRetry() {
+    void refetch();
+  }
+
   if (isLoading) {
     return (
       <PageWrapper
@@ -124,7 +128,7 @@ export function FormDetailPage({ projectId, formId }: FormDetailPageProps) {
         title="Form"
         backHref={`/projects/${projectId}/forms`}
       >
-        <ErrorState onRetry={() => void refetch()} />
+        <ErrorState onRetry={handleRetry} />
       </PageWrapper>
     );
   }

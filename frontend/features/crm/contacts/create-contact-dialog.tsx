@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { isValidPhoneNumber } from "react-phone-number-input";
@@ -14,7 +14,9 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
-import { useCreateContact } from "@/hooks/api/crm";
+import { Combobox } from "@/components/ui/combobox";
+import { useCreateContact, useDeals } from "@/hooks/api/crm";
+import { useLeads } from "@/hooks/api/leads";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -53,6 +55,27 @@ export function CreateContactDialog({
   onOpenChange,
 }: CreateContactDialogProps) {
   const createContactMutation = useCreateContact();
+  const { data: leadsData } = useLeads(undefined, { enabled: open });
+  const { data: dealsData } = useDeals(undefined);
+
+  const leadOptions = useMemo(
+    () =>
+      (leadsData?.leads ?? []).map((l) => ({
+        value: String(l.id),
+        label: l.name,
+        sublabel: l.email ?? undefined,
+      })),
+    [leadsData],
+  );
+
+  const dealOptions = useMemo(
+    () =>
+      (dealsData ?? []).map((d) => ({
+        value: String(d.id),
+        label: d.name,
+      })),
+    [dealsData],
+  );
 
   const handleSubmit = useCallback(
     (data: CreateContactForm) => {
@@ -215,13 +238,15 @@ export function CreateContactDialog({
             name="leadId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Linked Lead ID (optional)</FormLabel>
+                <FormLabel>Linked Lead (optional)</FormLabel>
                 <FormControl>
-                  <Input
-                    {...field}
-                    type="number"
-                    min={1}
-                    placeholder="e.g. 42"
+                  <Combobox
+                    options={leadOptions}
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    placeholder="Search leads…"
+                    searchPlaceholder="Search by name or email"
+                    emptyText="No leads found"
                   />
                 </FormControl>
                 <FormMessage />
@@ -233,13 +258,15 @@ export function CreateContactDialog({
             name="dealId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Linked Deal ID (optional)</FormLabel>
+                <FormLabel>Linked Deal (optional)</FormLabel>
                 <FormControl>
-                  <Input
-                    {...field}
-                    type="number"
-                    min={1}
-                    placeholder="e.g. 7"
+                  <Combobox
+                    options={dealOptions}
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    placeholder="Search deals…"
+                    searchPlaceholder="Search by name"
+                    emptyText="No deals found"
                   />
                 </FormControl>
                 <FormMessage />

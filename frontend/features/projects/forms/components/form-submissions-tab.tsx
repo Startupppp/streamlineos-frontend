@@ -56,6 +56,10 @@ export function FormSubmissionsTab({ projectId, formId }: FormSubmissionsTabProp
     if (!open) setViewTarget(null);
   }
 
+  function handleRetry() {
+    void refetch();
+  }
+
   const columns: DataTableColumn<FormSubmission>[] = [
     {
       key: "submittedByName",
@@ -134,7 +138,7 @@ export function FormSubmissionsTab({ projectId, formId }: FormSubmissionsTabProp
       {isLoading ? (
         <DataTableSkeleton rows={12} columns={6} />
       ) : isError ? (
-        <ErrorState compact onRetry={() => void refetch()} />
+        <ErrorState compact onRetry={handleRetry} />
       ) : items.length === 0 ? (
         <EmptyState
           illustrationPreset="documents"

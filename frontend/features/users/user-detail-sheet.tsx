@@ -24,6 +24,7 @@ import { UserPreferencesTab } from "./user-preferences-tab";
 import { UserLoginHistoryTab } from "./user-login-history-tab";
 import { UserMembershipSection } from "./user-membership-section";
 import { UserAuditTab } from "./user-audit-tab";
+import { useCallback } from "react";
 import {
   Mail,
   Phone,
@@ -46,8 +47,9 @@ interface UserDetailSheetProps {
 function getInitials(name: string | null, email: string): string {
   if (name) {
     const parts = name.split(" ").filter(Boolean);
-    if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    if (parts.length >= 2)
+      return `${parts[0]?.[0] ?? ""}${parts[1]?.[0] ?? ""}`.toUpperCase();
+    if (parts.length === 1) return (parts[0] ?? "").slice(0, 2).toUpperCase();
   }
   return email.slice(0, 2).toUpperCase();
 }
@@ -77,9 +79,17 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
   const [isEditing, setIsEditing] = useState(false);
   const { data: user, isLoading } = useUser(userId ?? "", { enabled: !!userId && open });
 
-  function handleEditSuccess() {
+  const handleEditSuccess = useCallback(() => {
     setIsEditing(false);
-  }
+  }, []);
+
+  const handleStartEditing = useCallback(() => {
+    setIsEditing(true);
+  }, []);
+
+  const handleCancelEditing = useCallback(() => {
+    setIsEditing(false);
+  }, []);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -92,7 +102,7 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
                 variant="outline"
                 size="sm"
                 className="h-7 text-xs"
-                onClick={() => setIsEditing(true)}
+                onClick={handleStartEditing}
               >
                 <Pencil className="h-3.5 w-3.5 mr-1" />
                 Edit
@@ -106,7 +116,7 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
                 variant="ghost"
                 size="sm"
                 className="h-7 text-xs"
-                onClick={() => setIsEditing(false)}
+                onClick={handleCancelEditing}
               >
                 Cancel
               </AnimatedIconButton>
@@ -123,7 +133,7 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
               <UserEditForm
                 user={user}
                 onSuccess={handleEditSuccess}
-                onCancel={() => setIsEditing(false)}
+                onCancel={handleCancelEditing}
               />
             ) : (
               <Tabs defaultValue="profile" className="flex flex-col">

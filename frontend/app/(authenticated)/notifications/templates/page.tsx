@@ -5,7 +5,6 @@ import { Plus, Eye, Edit2, Trash2 } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -60,8 +59,8 @@ import {
 import {
   NOTIFICATION_CATEGORIES,
   NOTIFICATION_CATEGORY_CONFIG,
-  NOTIFICATION_CATEGORY_VALUES,
 } from "@/features/notifications/notification-types";
+import { templateSchema, type TemplateFormValues } from "@/features/notifications/template-schema";
 import type { NotificationTemplate, NotificationChannel } from "@/types/notifications";
 
 const NO_CATEGORY = "none";
@@ -76,19 +75,6 @@ const CHANNELS: Array<{ value: NotificationChannel; label: string }> = [
   { value: "TEAMS", label: "Teams" },
   { value: "WEBHOOK", label: "Webhook" },
 ];
-
-const templateSchema = z.object({
-  templateKey: z.string().min(1).regex(/^[a-z0-9_.-]+$/, "Lowercase letters, numbers, dashes, dots only"),
-  name: z.string().min(1, "Name is required"),
-  channel: z.enum(["IN_APP", "EMAIL", "PUSH", "SMS", "WHATSAPP", "SLACK", "TEAMS", "WEBHOOK"]),
-  category: z.union([z.enum(NOTIFICATION_CATEGORY_VALUES), z.literal("none")]).optional(),
-  locale: z.string().min(1),
-  subject: z.string().optional(),
-  body: z.string().min(1, "Body is required"),
-  variables: z.string().optional(),
-});
-
-type TemplateFormValues = z.infer<typeof templateSchema>;
 
 function TemplateSheet({
   open,
@@ -514,9 +500,7 @@ export default function NotificationTemplatesPage() {
 
   const handleSetDeleteTarget = useCallback((t: NotificationTemplate) => setDeleteTarget(t), []);
 
-  function handleRetry() {
-    void refetch();
-  }
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   return (
     <PageWrapper

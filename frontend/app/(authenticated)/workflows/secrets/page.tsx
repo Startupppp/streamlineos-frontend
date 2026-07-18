@@ -5,7 +5,6 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { KeyRound } from "lucide-react";
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { motion, AnimatePresence } from "framer-motion";
@@ -45,14 +44,10 @@ import {
   useDeleteGlobalSecret,
   type WorkflowSecret,
 } from "@/hooks/api/workflows";
-
-const createSecretSchema = z.object({
-  name: z.string().min(1, "Name is required").regex(/^[A-Z0-9_]+$/, "Use uppercase letters, digits, underscores only"),
-  value: z.string().min(1, "Secret value is required"),
-  description: z.string().optional(),
-});
-
-type CreateSecretValues = z.infer<typeof createSecretSchema>;
+import {
+  createSecretSchema,
+  type CreateSecretValues,
+} from "./create-secret-schema";
 
 interface SecretCardProps {
   secret: WorkflowSecret;
@@ -297,7 +292,7 @@ export default function SecretsManagerPage() {
         />
       ) : (
         <AnimatePresence mode="popLayout">
-          <div className="space-y-3">
+          <div className="flex flex-1 min-h-0 flex-col gap-3">
             {list.map((secret, idx) => (
               <SecretCard
                 key={secret.id}

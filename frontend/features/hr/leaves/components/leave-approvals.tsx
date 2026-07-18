@@ -171,7 +171,7 @@ function LeaveApprovalsList({ requests, currentUserId }: { requests: LeaveReques
         { leaveId: requestId },
         {
           onSuccess: () => toast.success("Request approved successfully"),
-          onError: (err) => toast.error(err.message || "Failed to approve"),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     } else {
@@ -179,7 +179,7 @@ function LeaveApprovalsList({ requests, currentUserId }: { requests: LeaveReques
         { leaveId: requestId, reason: "" },
         {
           onSuccess: () => toast.success("Request rejected successfully"),
-          onError: (err) => toast.error(err.message || "Failed to reject"),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     }

@@ -98,7 +98,7 @@ export function InterviewerAvailabilityGrid({
             })}
             {proposedBlock && (
               <div
-                className="absolute top-0 h-full border-2 border-blue rounded-sm bg-blue/20"
+                className="absolute top-0 h-full border-2 border-primary rounded-sm bg-primary/20"
                 style={{
                   left: `${proposedBlock.left}%`,
                   width: `${proposedBlock.width}%`,
@@ -120,7 +120,7 @@ export function InterviewerAvailabilityGrid({
         </div>
         {proposedBlock && (
           <div className="flex items-center gap-1">
-            <div className="w-3 h-2 rounded-sm border-2 border-blue bg-blue/20" />
+            <div className="w-3 h-2 rounded-sm border-2 border-primary bg-primary/20" />
             Proposed
           </div>
         )}

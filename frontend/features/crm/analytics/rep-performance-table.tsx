@@ -46,7 +46,7 @@ const columns: DataTableColumn<RankedRepEntry>[] = [
     headerClassName: "text-right",
     className: "text-right",
     cell: (row) => (
-      <span className="text-[11px] font-mono tabular-nums text-emerald-600">
+      <span className="text-[11px] font-mono tabular-nums text-emerald-600 dark:text-emerald-400">
         {row.leadsConverted}
       </span>
     ),

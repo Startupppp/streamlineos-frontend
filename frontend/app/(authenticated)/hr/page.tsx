@@ -115,7 +115,7 @@ export default function HRDashboardPage() {
   const terminateMutation = useTerminateEmployee();
 
   const employees = useMemo(
-    () => unwrapEmployees(employeesPage) as unknown as Employee[],
+    () => unwrapEmployees(employeesPage),
     [employeesPage],
   );
 

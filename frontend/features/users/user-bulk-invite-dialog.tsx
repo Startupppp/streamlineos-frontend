@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -79,13 +79,20 @@ export function UserBulkInviteDialog({ open, onOpenChange }: UserBulkInviteDialo
   const emailsRaw = form.watch("emailsRaw");
   const parsedEmails = useMemo(() => parseEmails(emailsRaw), [emailsRaw]);
 
-  function handleOpenChange(isOpen: boolean) {
+  const handleOpenChange = useCallback((isOpen: boolean) => {
     if (!isOpen) {
       form.reset();
       setResult(null);
     }
     onOpenChange(isOpen);
-  }
+  }, [form, onOpenChange]);
+
+  const handleCloseDialog = useCallback(() => handleOpenChange(false), [handleOpenChange]);
+
+  const handleResetResult = useCallback(() => {
+    form.reset();
+    setResult(null);
+  }, [form]);
 
   function onSubmit(values: BulkInviteFormValues) {
     const emails = parseEmails(values.emailsRaw);
@@ -144,10 +151,7 @@ export function UserBulkInviteDialog({ open, onOpenChange }: UserBulkInviteDialo
             <Button
               variant="outline"
               size="sm"
-              onClick={() => {
-                form.reset();
-                setResult(null);
-              }}
+              onClick={handleResetResult}
             >
               Invite more
             </Button>
@@ -209,7 +213,7 @@ export function UserBulkInviteDialog({ open, onOpenChange }: UserBulkInviteDialo
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => handleOpenChange(false)}
+                  onClick={handleCloseDialog}
                   disabled={isPending}
                 >
                   Cancel

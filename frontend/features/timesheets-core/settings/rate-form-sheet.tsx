@@ -3,7 +3,7 @@
 import { useCallback, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { rateFormSchema, type RateFormValues } from "./rate-form-schema";
 import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Sheet,
@@ -33,19 +33,7 @@ const BILLING_TYPE_OPTIONS: BillingType[] = ["BILLABLE", "NON_BILLABLE", "INTERN
 
 const SELECT_NONE = "__none__";
 
-const schema = z.object({
-  projectId: z.string(),
-  userId: z.string(),
-  billingType: z.enum(["BILLABLE", "NON_BILLABLE", "INTERNAL"]),
-  billRate: z.string().regex(/^\d+(\.\d+)?$/, "Enter a valid non-negative number").refine((v) => parseFloat(v) >= 0, "Must be non-negative"),
-  costRate: z.string(),
-  currency: z.string().min(1).max(10),
-  priority: z.string(),
-});
-
-type FormValues = z.infer<typeof schema>;
-
-function toInput(values: FormValues): CreateRateInput {
+function toInput(values: RateFormValues): CreateRateInput {
   return {
     billingType: values.billingType,
     billRate: parseFloat(values.billRate),
@@ -76,8 +64,8 @@ export function RateFormSheet({ open, onOpenChange, rate }: RateFormSheetProps) 
 
   const projectList = projectsData?.data ?? [];
 
-  const { control, handleSubmit, reset, register, formState: { errors } } = useForm<FormValues>({
-    resolver: zodResolver(schema),
+  const { control, handleSubmit, reset, register, formState: { errors } } = useForm<RateFormValues>({
+    resolver: zodResolver(rateFormSchema),
     defaultValues: {
       projectId: SELECT_NONE,
       userId: SELECT_NONE,
