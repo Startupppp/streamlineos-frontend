@@ -125,9 +125,10 @@ export function SoQueuePage({ status, title, actionNoun, emptyTitle, emptyDescri
   return (
     <PageWrapper
       title={title}
-      subtitle={query.data ? `${total} ${total === 1 ? "order" : "orders"} to ${actionNoun}` : undefined}
+      subtitle={emptyDescription}
       filters={filterBar}
     >
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
       <DataTable
         data={items}
         columns={columns}
@@ -148,8 +149,8 @@ export function SoQueuePage({ status, title, actionNoun, emptyTitle, emptyDescri
           )
         }
         minWidth="640px"
-        className="flex-1 min-h-0"
       />
+      </div>
     </PageWrapper>
   );
 }

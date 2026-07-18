@@ -59,8 +59,8 @@ export const onboardEmployeeInputSchema = z.object({
     .min(1, "Designation is required")
     .max(120, "Designation must be at most 120 characters")
     .refine(hasLetterOrDigit, "Designation must contain a letter or number"),
-  departmentId: z.coerce.number().int().positive({ message: "Department is required" }),
-  role: z.string().default("ENGINEERING"),
+  departmentId: z.number().int().positive({ message: "Department is required" }),
+  role: z.string().min(1),
   employeeId: z
     .string()
     .trim()
@@ -71,8 +71,8 @@ export const onboardEmployeeInputSchema = z.object({
     )
     .optional()
     .or(z.literal("")),
-  joiningDate: z.coerce.date(),
-  dateOfBirth: z.coerce
+  joiningDate: z.date(),
+  dateOfBirth: z
     .date()
     .refine((d) => d < new Date(), "Date of birth cannot be in the future")
     .refine((d) => {
@@ -88,7 +88,7 @@ export const onboardEmployeeInputSchema = z.object({
     )
     .optional()
     .or(z.literal("")),
-  monthlySalary: z.coerce
+  monthlySalary: z
     .number()
     .min(0, "Salary cannot be negative")
     .max(9_999_999, "Salary exceeds maximum allowed value")

@@ -71,7 +71,7 @@ interface ExternalEntityPickerProps {
 }
 
 function ExternalEntityPicker({ entityType, value, onChange, disabled }: ExternalEntityPickerProps) {
-  const pickerClassName = "h-8 text-xs flex-1 min-w-0";
+  const pickerClassName = "h-9 text-sm flex-1 min-w-0";
 
   switch (entityType) {
     case "project":
@@ -188,7 +188,7 @@ export function TicketExternalLinksSection({ ticketId }: TicketExternalLinksSect
           )}
           <div className="flex items-center gap-2">
             <Select value={entityType} onValueChange={handleEntityTypeChange}>
-              <SelectTrigger className="h-8 text-xs w-[130px] shrink-0">
+              <SelectTrigger className="h-9 text-sm w-[130px] shrink-0">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

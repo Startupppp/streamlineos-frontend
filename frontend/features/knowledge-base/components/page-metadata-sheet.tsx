@@ -42,8 +42,8 @@ const STATUS_OPTIONS: Array<{ value: "draft" | "in_review" | "published" | "arch
   { value: "archived", label: "Archived" },
 ];
 
-const FIELD_CLASS = "h-8 w-full text-[13px] bg-card border-input shadow-xs";
-const ACTION_BTN_BASE = "h-8 w-full text-[13px]";
+const FIELD_CLASS = "h-9 w-full text-[13px] bg-card border-input shadow-xs";
+const ACTION_BTN_BASE = "h-9 w-full text-[13px]";
 const ACTION_BTN_NEUTRAL = `${ACTION_BTN_BASE} bg-card border border-input shadow-xs hover:bg-muted/50`;
 const ACTION_BTN_DANGER = `${ACTION_BTN_BASE} text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive`;
 const ACTION_BTN_WARNING = `${ACTION_BTN_BASE} text-amber-700 border-amber-200 hover:bg-amber-50 hover:text-amber-700 dark:text-amber-300 dark:border-amber-500/30 dark:hover:bg-amber-500/10`;

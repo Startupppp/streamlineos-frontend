@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback, useRef } from "react";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useForm, type FieldPath, type DefaultValues, type Resolver } from "react-hook-form";
+import { useForm, type FieldPath, type DefaultValues } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { onboardEmployeeInputSchema } from "@/lib/validation/hr";
@@ -78,7 +78,7 @@ export function OnboardingWizard() {
   }, [departments]);
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(onboardEmployeeInputSchema) as unknown as Resolver<FormValues>,
+    resolver: zodResolver(onboardEmployeeInputSchema),
     defaultValues: {
       firstName: "", lastName: "", email: "", phone: "",
       whatsappSameAsPhone: true, whatsappNumber: "", gender: "MALE",

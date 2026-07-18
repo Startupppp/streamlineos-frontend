@@ -201,7 +201,7 @@ export default function NewSalesOrderPage() {
           render={({ field: f, fieldState }) => (
             <div>
               <Select value={f.value} onValueChange={f.onChange}>
-                <SelectTrigger className={`h-8 text-xs ${fieldState.error ? "border-destructive" : ""}`}>
+                <SelectTrigger className={`h-9 text-sm ${fieldState.error ? "border-destructive" : ""}`}>
                   <SelectValue placeholder="Select product" />
                 </SelectTrigger>
                 <SelectContent className="max-h-72">
@@ -238,7 +238,7 @@ export default function NewSalesOrderPage() {
                 type="number"
                 min="0.0001"
                 step="1"
-                className={`h-8 text-right tabular-nums text-xs ${fieldState.error ? "border-destructive" : ""}`}
+                className={`h-9 text-right tabular-nums text-sm ${fieldState.error ? "border-destructive" : ""}`}
                 {...f}
               />
               {fieldState.error && (
@@ -264,7 +264,7 @@ export default function NewSalesOrderPage() {
                 type="number"
                 min="0"
                 step="0.01"
-                className={`h-8 text-right tabular-nums text-xs ${fieldState.error ? "border-destructive" : ""}`}
+                className={`h-9 text-right tabular-nums text-sm ${fieldState.error ? "border-destructive" : ""}`}
                 {...f}
               />
               {fieldState.error && (
@@ -291,7 +291,7 @@ export default function NewSalesOrderPage() {
                 min="0"
                 max="100"
                 step="0.01"
-                className={`h-8 text-right tabular-nums text-xs ${fieldState.error ? "border-destructive" : ""}`}
+                className={`h-9 text-right tabular-nums text-sm ${fieldState.error ? "border-destructive" : ""}`}
                 {...f}
               />
               {fieldState.error && (

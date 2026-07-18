@@ -130,7 +130,7 @@ function MappingColumnRow({ form, index, columnKey }: MappingColumnRowProps) {
         {columnKey}
       </span>
       <Input
-        className="h-8 text-xs flex-1"
+        className="flex-1"
         {...form.register(`columns.${index}.header`)}
         aria-label={`Header for ${columnKey}`}
       />

@@ -18,7 +18,9 @@ export default function NotificationsLoading() {
         </div>
       }
     >
-      <NotificationListSkeleton count={12} />
+      <div className="flex flex-1 min-h-0 flex-col gap-2">
+        <NotificationListSkeleton count={12} />
+      </div>
     </PageWrapper>
   );
 }

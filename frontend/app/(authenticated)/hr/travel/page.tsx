@@ -77,7 +77,7 @@ function getStatusConfig(status: TravelRequest["status"]) {
 function TravelLoading() {
   return (
     <PageWrapper title="Travel Requests" subtitle="Plan and track your business travel" variant="display">
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         <Skeleton className="h-16 w-full rounded-lg" />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 8 }).map((_, i) => (
@@ -279,7 +279,7 @@ export default function TravelPage() {
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
-          className="space-y-4"
+          className="flex flex-1 min-h-0 flex-col gap-4"
         >
           <StatusPipeline status={requests[0].status} />
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

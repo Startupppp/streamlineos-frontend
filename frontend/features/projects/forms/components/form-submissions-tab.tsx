@@ -6,6 +6,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { DataTableSkeleton } from "@/components/ui/data-table";
@@ -154,21 +155,23 @@ export function FormSubmissionsTab({ projectId, formId }: FormSubmissionsTabProp
           <DialogHeader>
             <DialogTitle>Submission #{viewTarget?.id}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-2 max-h-96 overflow-y-auto py-1">
-            {viewTarget &&
-              Object.entries(viewTarget.values).map(([key, val]) => (
-                <div key={key} className="flex gap-3 text-sm py-1 border-b last:border-0">
-                  <span className="font-medium text-muted-foreground min-w-[130px] capitalize shrink-0">
-                    {key.replace(/_/g, " ")}
-                  </span>
-                  <span className="text-foreground break-all">
-                    {Array.isArray(val)
-                      ? (val as unknown[]).join(", ")
-                      : String(val ?? "—")}
-                  </span>
-                </div>
-              ))}
-          </div>
+          <ScrollArea className="max-h-96 py-1">
+            <div className="space-y-2">
+              {viewTarget &&
+                Object.entries(viewTarget.values).map(([key, val]) => (
+                  <div key={key} className="flex gap-3 text-sm py-1 border-b last:border-0">
+                    <span className="font-medium text-muted-foreground min-w-[130px] capitalize shrink-0">
+                      {key.replace(/_/g, " ")}
+                    </span>
+                    <span className="text-foreground break-all">
+                      {Array.isArray(val)
+                        ? (val as unknown[]).join(", ")
+                        : String(val ?? "—")}
+                    </span>
+                  </div>
+                ))}
+            </div>
+          </ScrollArea>
         </DialogContent>
       </Dialog>
     </div>

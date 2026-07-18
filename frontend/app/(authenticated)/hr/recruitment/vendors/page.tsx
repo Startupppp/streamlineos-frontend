@@ -70,8 +70,10 @@ export default function VendorsPage() {
   if (isLoading) {
     return (
       <PageWrapper title="Vendors" subtitle="Recruitment agencies and staffing partners" variant="display">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-44 rounded-xl" />)}
+        <div className="flex flex-1 min-h-0 flex-col">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-44 rounded-xl" />)}
+          </div>
         </div>
       </PageWrapper>
     );
@@ -90,6 +92,7 @@ export default function VendorsPage() {
         ) : undefined
       }
     >
+      <div className="flex flex-1 min-h-0 flex-col">
       {vendors.length === 0 ? (
         <RecruitmentEmptyState
           illustration={<EmptyTeamIllustration />}
@@ -136,6 +139,7 @@ export default function VendorsPage() {
           </AlertDialogContent>
         </AlertDialog>
       )}
+      </div>
     </PageWrapper>
   );
 }

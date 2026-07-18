@@ -227,7 +227,7 @@ export default function RecruitmentAutomationsPage() {
         </Button>
       }
     >
-      <>
+      <div className="flex flex-1 min-h-0 flex-col">
         {isLoading ? (
         <LoadingState variant="list" rows={12} />
       ) : !automations?.length ? (
@@ -238,7 +238,7 @@ export default function RecruitmentAutomationsPage() {
           action={{ label: "New Automation", onClick: handleOpenSheet }}
         />
       ) : (
-        <div className="space-y-3">
+        <div className="flex flex-1 min-h-0 flex-col gap-3">
           {automations.map((auto) => (
             <AutomationCard
               key={auto.id}
@@ -311,7 +311,7 @@ export default function RecruitmentAutomationsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      </>
+      </div>
     </PageWrapper>
   );
 }

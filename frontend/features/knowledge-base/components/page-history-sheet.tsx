@@ -207,7 +207,7 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
               <Button
                 onClick={handleRestore}
                 disabled={restoreVersion.isPending || detailLoading || !hasContent}
-                className="w-full gap-2 h-8"
+                className="w-full gap-2 h-9"
                 size="sm"
               >
                 {restoreVersion.isPending ? (

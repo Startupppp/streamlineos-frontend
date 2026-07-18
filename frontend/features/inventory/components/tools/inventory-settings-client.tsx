@@ -70,10 +70,12 @@ export function InventorySettingsClient() {
   if (!canManage) {
     return (
       <PageWrapper title="Settings" subtitle="">
-        <InventoryEmptyState
-          title="Access Denied"
-          description="You don't have permission to manage inventory settings."
-        />
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+          <InventoryEmptyState
+            title="Access Denied"
+            description="You don't have permission to manage inventory settings."
+          />
+        </div>
       </PageWrapper>
     );
   }

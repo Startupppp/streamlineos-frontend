@@ -31,7 +31,7 @@ export default function HrFormBuilderPage({ params }: PageProps) {
   if (isLoading) {
     return (
       <PageWrapper title="Form Builder" backHref="/hr/settings/forms" variant="display">
-        <div className="space-y-3 pt-2">
+        <div className="flex flex-1 min-h-0 flex-col gap-3 pt-2">
           <Skeleton className="h-8 w-64" />
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-32 w-full" />

@@ -46,11 +46,11 @@ export default function AuditPage() {
 
 function resolveTargetLabel(log: AuditLogEntry): string | null {
   const meta = log.metadata;
-  if (!meta) return log.targetId;
+  if (!meta) return log.targetType ?? null;
   if (typeof meta.roleName === "string") return meta.roleName;
   if (typeof meta.permissionKey === "string") return meta.permissionKey;
-  if (typeof meta.roleId === "number") return `Role #${meta.roleId}`;
-  return log.targetId;
+  if (typeof meta.roleId === "number") return `Role ${meta.roleId}`;
+  return log.targetType ?? null;
 }
 
 function resolveAffectedUser(log: AuditLogEntry): string | null {
@@ -58,7 +58,6 @@ function resolveAffectedUser(log: AuditLogEntry): string | null {
   if (!meta) return null;
   if (typeof meta.targetUserName === "string") return meta.targetUserName;
   if (typeof meta.targetUserEmail === "string") return meta.targetUserEmail;
-  if (typeof meta.userId === "string" && meta.userId !== log.userId) return meta.userId;
   return null;
 }
 

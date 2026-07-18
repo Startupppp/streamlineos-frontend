@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
@@ -10,7 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { useOrgAuditLog } from "@/hooks/api/users";
+import { useOrgAuditLog, useUsers } from "@/hooks/api/users";
+import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
 import { History } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -30,56 +31,61 @@ function actionVariant(action: string): "default" | "secondary" | "outline" | "d
   return "secondary";
 }
 
-const columns: DataTableColumn<AuditEntry>[] = [
-  {
-    key: "actor",
-    header: "Actor",
-    cell: (row) => (
-      <span className="font-mono text-muted-foreground max-w-[140px] truncate block">
-        {row.actorUserId ?? "system"}
-      </span>
-    ),
-  },
-  {
-    key: "action",
-    header: "Action",
-    cell: (row) => (
-      <Badge
-        variant={actionVariant(row.action)}
-        className="text-[10px] h-5 px-1.5 font-normal font-mono"
-      >
-        {row.action}
-      </Badge>
-    ),
-  },
-  {
-    key: "resource",
-    header: "Resource",
-    cell: (row) => (
-      <span className="text-muted-foreground">
-        {row.resourceType
-          ? `${row.resourceType}${row.resourceId ? ` / ${row.resourceId.slice(0, 8)}` : ""}`
-          : "???"}
-      </span>
-    ),
-  },
-  {
-    key: "ip",
-    header: "IP",
-    cell: (row) => (
-      <span className="text-muted-foreground font-mono">{row.ipAddress ?? "???"}</span>
-    ),
-  },
-  {
-    key: "when",
-    header: "When",
-    cell: (row) => (
-      <span className="text-muted-foreground whitespace-nowrap">
-        {formatDistanceToNow(new Date(row.createdAt), { addSuffix: true })}
-      </span>
-    ),
-  },
-];
+function buildColumns(userMap: Map<string, string>): DataTableColumn<AuditEntry>[] {
+  return [
+    {
+      key: "actor",
+      header: "Actor",
+      cell: (row) => {
+        const name = row.actorUserId
+          ? (userMap.get(row.actorUserId) ?? "Unknown")
+          : "System";
+        return (
+          <span className="text-sm text-foreground max-w-[160px] truncate block">
+            {name}
+          </span>
+        );
+      },
+    },
+    {
+      key: "action",
+      header: "Action",
+      cell: (row) => (
+        <Badge
+          variant={actionVariant(row.action)}
+          className="text-[10px] h-5 px-1.5 font-normal font-mono"
+        >
+          {row.action}
+        </Badge>
+      ),
+    },
+    {
+      key: "resource",
+      header: "Resource",
+      cell: (row) => (
+        <span className="text-muted-foreground capitalize">
+          {row.resourceType ?? "—"}
+        </span>
+      ),
+    },
+    {
+      key: "ip",
+      header: "IP",
+      cell: (row) => (
+        <span className="text-muted-foreground font-mono">{row.ipAddress ?? "—"}</span>
+      ),
+    },
+    {
+      key: "when",
+      header: "When",
+      cell: (row) => (
+        <span className="text-muted-foreground whitespace-nowrap">
+          {formatDistanceToNow(new Date(row.createdAt), { addSuffix: true })}
+        </span>
+      ),
+    },
+  ];
+}
 
 export function OrgAuditLogPage() {
   const [page, setPage] = useState(1);
@@ -89,6 +95,17 @@ export function OrgAuditLogPage() {
   const [to, setTo] = useState("");
 
   const handlePageChange = useCallback((p: number) => setPage(p), []);
+
+  const { data: usersData } = useUsers({ limit: 100 });
+  const userMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const u of usersData?.data ?? []) {
+      map.set(u.id, getUserDisplayName(u));
+    }
+    return map;
+  }, [usersData]);
+
+  const columns = useMemo(() => buildColumns(userMap), [userMap]);
 
   const { data, isLoading } = useOrgAuditLog({
     page,

@@ -59,7 +59,7 @@ export function UserAuditTab({ userId }: UserAuditTabProps) {
               <p className="font-medium capitalize">{friendlyAction(entry.action)}</p>
               {entry.actorUserId && entry.actorUserId !== userId && (
                 <p className="text-muted-foreground mt-0.5 truncate">
-                  by {entry.actorUserId}
+                  by an admin
                 </p>
               )}
             </div>

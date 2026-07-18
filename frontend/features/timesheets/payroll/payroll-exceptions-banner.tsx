@@ -29,7 +29,7 @@ export function PayrollExceptionsBanner({
       <Button
         variant="outline"
         size="sm"
-        className="h-7 text-xs border-amber-300 text-amber-800 hover:bg-amber-100 shrink-0 dark:border-amber-500/30 dark:text-amber-300 dark:hover:bg-amber-500/10"
+        className="border-amber-300 text-amber-800 hover:bg-amber-100 shrink-0 dark:border-amber-500/30 dark:text-amber-300 dark:hover:bg-amber-500/10"
         asChild
       >
         <Link href="/timesheets/team">Review timesheets</Link>

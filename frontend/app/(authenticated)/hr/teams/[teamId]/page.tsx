@@ -158,7 +158,7 @@ export default function TeamDetailPage({ params }: { params: Promise<{ teamId: s
   if (isLoading) {
     return (
       <PageWrapper title="Team" variant="display">
-        <div className="space-y-4">
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
           <Skeleton className="h-28 w-full rounded-xl" />
           <div className="grid gap-3 sm:grid-cols-2">
             <Skeleton className="h-36 w-full rounded-xl" />
@@ -230,7 +230,7 @@ export default function TeamDetailPage({ params }: { params: Promise<{ teamId: s
           </div>
         }
       >
-        <div className="space-y-4">
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
           <PageSection title="Team Info">
             <Card className="rounded-xl border border-border">
               <CardContent className="p-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

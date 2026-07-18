@@ -25,11 +25,11 @@ export function PositionsPageContent() {
   return (
     <Tabs value={activeTab} onValueChange={handleTabChange}>
       <TabsList>
-        <TabsTrigger value="positions" className="text-xs gap-1.5">
+        <TabsTrigger value="positions" className="gap-1.5">
           <Briefcase className="h-3.5 w-3.5" />
           Positions
         </TabsTrigger>
-        <TabsTrigger value="scenarios" className="text-xs gap-1.5">
+        <TabsTrigger value="scenarios" className="gap-1.5">
           <GitBranch className="h-3.5 w-3.5" />
           Reorg Scenarios
         </TabsTrigger>

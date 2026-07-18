@@ -80,7 +80,7 @@ export default function DocumentEditorPage() {
   if (isLoading) {
     return (
       <PageWrapper title="Document Editor" subtitle="Loading..." variant="display">
-        <div className="space-y-4">
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
           <Skeleton className="h-10 w-full" />
           <Skeleton className="h-[400px] w-full" />
         </div>

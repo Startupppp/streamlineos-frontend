@@ -796,53 +796,55 @@ export default function RequisitionsPage() {
           </div>
         }
       >
-        {isLoading ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <RequisitionCardSkeleton key={i} />
-            ))}
-          </div>
-        ) : isError ? (
-          <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
-            <p className="text-sm font-semibold text-foreground">Failed to load requisitions</p>
-            <p className="text-xs text-muted-foreground">An error occurred while fetching data.</p>
-            <Button size="sm" variant="outline" onClick={handleRetry}>Try again</Button>
-          </div>
-        ) : isEmpty ? (
-          <RecruitmentEmptyState
-            illustration={<EmptyApprovalIllustration />}
-            title={
-              activeStatus
-                ? `No ${STATUS_STYLES[activeStatus]?.label ?? activeStatus} requisitions`
-                : "No requisitions yet"
-            }
-            description={
-              activeStatus
-                ? "Try another status filter or create a new requisition."
-                : "Create your first headcount request to get started."
-            }
-            action={{ label: "New Requisition", onClick: handleOpenSheet }}
-            className={CONTENT_FILL_PANEL}
-          />
-        ) : (
-          <AnimatePresence mode="popLayout">
+        <div className="flex flex-1 min-h-0 flex-col">
+          {isLoading ? (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {requisitions?.map((req) => (
-                <RequisitionCard
-                  key={req.id}
-                  req={req}
-                  onSubmit={handleSubmit}
-                  onApprove={handleApprove}
-                  onReject={handleRejectOpen}
-                  onConvertToJob={handleConvertToJob}
-                  isSubmitting={submitRequisition.isPending}
-                  isApproving={approveRequisition.isPending}
-                  isConverting={createJobFromRequisition.isPending}
-                />
+              {Array.from({ length: 12 }).map((_, i) => (
+                <RequisitionCardSkeleton key={i} />
               ))}
             </div>
-          </AnimatePresence>
-        )}
+          ) : isError ? (
+            <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
+              <p className="text-sm font-semibold text-foreground">Failed to load requisitions</p>
+              <p className="text-xs text-muted-foreground">An error occurred while fetching data.</p>
+              <Button size="sm" variant="outline" onClick={handleRetry}>Try again</Button>
+            </div>
+          ) : isEmpty ? (
+            <RecruitmentEmptyState
+              illustration={<EmptyApprovalIllustration />}
+              title={
+                activeStatus
+                  ? `No ${STATUS_STYLES[activeStatus]?.label ?? activeStatus} requisitions`
+                  : "No requisitions yet"
+              }
+              description={
+                activeStatus
+                  ? "Try another status filter or create a new requisition."
+                  : "Create your first headcount request to get started."
+              }
+              action={{ label: "New Requisition", onClick: handleOpenSheet }}
+              className={CONTENT_FILL_PANEL}
+            />
+          ) : (
+            <AnimatePresence mode="popLayout">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {requisitions?.map((req) => (
+                  <RequisitionCard
+                    key={req.id}
+                    req={req}
+                    onSubmit={handleSubmit}
+                    onApprove={handleApprove}
+                    onReject={handleRejectOpen}
+                    onConvertToJob={handleConvertToJob}
+                    isSubmitting={submitRequisition.isPending}
+                    isApproving={approveRequisition.isPending}
+                    isConverting={createJobFromRequisition.isPending}
+                  />
+                ))}
+              </div>
+            </AnimatePresence>
+          )}
+        </div>
       </PageWrapper>
 
       <CreateRequisitionSheet open={sheetOpen} onClose={handleCloseSheet} />

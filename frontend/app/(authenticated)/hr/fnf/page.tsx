@@ -290,7 +290,7 @@ function FnfContent() {
   if (isLoading) {
     return (
       <PageWrapper title="Full & Final Settlement" subtitle="Employee separation settlements" variant="display">
-        <div className="space-y-3">
+        <div className="flex flex-1 min-h-0 flex-col gap-3">
           {Array.from({ length: 10 }).map((_, i) => (
             <Skeleton key={i} className="h-20 rounded-2xl" />
           ))}
@@ -331,7 +331,7 @@ function FnfContent() {
           compact
         />
       ) : (
-        <div className="space-y-2">
+        <div className="flex flex-1 min-h-0 flex-col gap-2">
           {items.map((item: FnfSettlement) => (
             <FnfCard key={item.id} item={item} onMarkPaid={setCompleteId} isPending={complete.isPending} />
           ))}

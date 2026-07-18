@@ -6,6 +6,7 @@ import { MicIcon, MicOffIcon, ChevronDownIcon, ChevronUpIcon, UserPlusIcon, User
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { useLeaveHuddle, useSetHuddleMute, useRaiseHand, useKickParticipant, useSetHuddleScreenShare, useSetHuddleDeafen, useInviteToHuddle } from "@/hooks/api/chat-huddles";
@@ -507,10 +508,11 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
                 excludeUserId={currentUserId}
                 className="text-[12px] mb-2"
               />
-              <Button
+              <LoadingButton
                 size="sm"
                 className="text-[11px]"
-                disabled={!inviteUserId || inviteToHuddle.isPending}
+                disabled={!inviteUserId}
+                isPending={inviteToHuddle.isPending}
                 onClick={() => {
                   if (huddle.participants.some((p) => p.userId === inviteUserId)) {
                     toast.error("Already in the huddle");
@@ -530,7 +532,7 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
                 }}
               >
                 Invite
-              </Button>
+              </LoadingButton>
             </div>
           )}
 

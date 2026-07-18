@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { Upload, FileText, FileSpreadsheet, FileImage, X, File } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { Form } from "@/components/ui/form";
 import { toast } from "sonner";
@@ -337,7 +338,8 @@ export function UploadDocumentDialog({
                   Clear all
                 </Button>
               </div>
-              <div className="max-h-[150px] overflow-y-auto space-y-1.5 pr-0.5">
+              <ScrollArea className="max-h-[150px]">
+                <div className="space-y-1.5 pr-0.5">
                 {files.map((f, i) => {
                   const config = getFileTypeConfig(f);
                   const IconComp = config.icon;
@@ -377,7 +379,8 @@ export function UploadDocumentDialog({
                     </div>
                   );
                 })}
-              </div>
+                </div>
+              </ScrollArea>
             </div>
           )}
 

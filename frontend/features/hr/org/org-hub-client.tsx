@@ -67,23 +67,23 @@ export function OrgHubClient() {
       <HeadcountStats groupBy="department" />
       <Tabs defaultValue="departments" className="flex flex-col flex-1 min-h-0">
         <TabsList className="shrink-0">
-          <TabsTrigger value="departments" className="text-xs gap-1.5">
+          <TabsTrigger value="departments" className="gap-1.5">
             <Building2 className="h-3 w-3" />
             Departments
           </TabsTrigger>
-          <TabsTrigger value="teams" className="text-xs gap-1.5">
+          <TabsTrigger value="teams" className="gap-1.5">
             <Users className="h-3 w-3" />
             Teams
           </TabsTrigger>
-          <TabsTrigger value="locations" className="text-xs gap-1.5">
+          <TabsTrigger value="locations" className="gap-1.5">
             <MapPin className="h-3 w-3" />
             Locations
           </TabsTrigger>
-          <TabsTrigger value="roles" className="text-xs gap-1.5">
+          <TabsTrigger value="roles" className="gap-1.5">
             <Briefcase className="h-3 w-3" />
             Job Roles
           </TabsTrigger>
-          <TabsTrigger value="levels" className="text-xs gap-1.5">
+          <TabsTrigger value="levels" className="gap-1.5">
             <Layers className="h-3 w-3" />
             Job Levels
           </TabsTrigger>

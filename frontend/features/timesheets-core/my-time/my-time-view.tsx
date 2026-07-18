@@ -159,7 +159,7 @@ export function MyTimeView() {
       badge={periodBadge}
       actions={weekNavActions}
     >
-      <motion.div {...motionProps} className="space-y-4">
+      <motion.div {...motionProps} className="flex flex-1 min-h-0 flex-col gap-4">
         {periodError && (
           <ErrorState
             title="Couldn't load period"

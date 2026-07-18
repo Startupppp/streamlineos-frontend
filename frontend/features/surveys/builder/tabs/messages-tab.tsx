@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -111,9 +111,9 @@ export function MessagesTab({ survey }: { survey: SurveyForm }) {
                 </FormItem>
               )}
             />
-            <Button type="submit" size="sm" disabled={patchSurvey.isPending}>
+            <LoadingButton type="submit" size="sm" isPending={patchSurvey.isPending}>
               Save
-            </Button>
+            </LoadingButton>
           </form>
         </Form>
       </CardContent>

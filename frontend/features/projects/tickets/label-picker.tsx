@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/popover";
 import { Tag } from "lucide-react";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { PlusIcon, XIcon } from "@animateicons/react/lucide";
 import {
   useLabels,
@@ -137,21 +138,23 @@ export function LabelPicker({
           <PopoverContent className="w-80 p-4" align="start">
             <div className="space-y-4">
               {availableLabels.length > 0 && (
-                <div className="space-y-1 max-h-32 overflow-y-auto">
-                  {availableLabels.map((label) => (
-                    <button
-                      key={label.id}
-                      onClick={handleAddLabel(label.id)}
-                      className="flex items-center gap-2 w-full p-1.5 text-sm rounded hover:bg-muted transition-colors text-left"
-                    >
-                      <span
-                        className="w-3 h-3 rounded-full shrink-0"
-                        style={{ backgroundColor: label.color || "#3b82f6" }}
-                      />
-                      {label.name}
-                    </button>
-                  ))}
-                </div>
+                <ScrollArea className="max-h-32">
+                  <div className="space-y-1">
+                    {availableLabels.map((label) => (
+                      <button
+                        key={label.id}
+                        onClick={handleAddLabel(label.id)}
+                        className="flex items-center gap-2 w-full p-1.5 text-sm rounded hover:bg-muted transition-colors text-left"
+                      >
+                        <span
+                          className="w-3 h-3 rounded-full shrink-0"
+                          style={{ backgroundColor: label.color || "#3b82f6" }}
+                        />
+                        {label.name}
+                      </button>
+                    ))}
+                  </div>
+                </ScrollArea>
               )}
               <div className="border-t pt-3">
                 <LabelCreateForm

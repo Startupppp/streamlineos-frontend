@@ -8,13 +8,13 @@ export function SettingsPageSkeleton() {
       noInternalScroll
       className="flex-none"
     >
-      <div className="space-y-4">
+      <div className="flex flex-col gap-4">
         <div className="flex gap-1">
           {[80, 60, 60].map((w, i) => (
-            <Skeleton key={i} className="h-7 rounded-md" style={{ width: w }} />
+            <Skeleton key={i} className="h-9 rounded-md" style={{ width: w }} />
           ))}
         </div>
-        <div className="space-y-4 pt-1">
+        <div className="flex flex-col gap-4 pt-1">
           {[144, 200, 96, 112, 180].map((h, i) => (
             <Skeleton key={i} className="w-full rounded-xl" style={{ height: h }} />
           ))}

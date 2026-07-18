@@ -2,6 +2,7 @@
 
 import { useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { History, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -98,7 +99,7 @@ export function TemplateVersionHistory({ versions, onRestore }: TemplateVersionH
         </div>
       </CardHeader>
       <CardContent className="p-4">
-        <div className="max-h-[260px] overflow-y-auto pr-1">
+        <ScrollArea className="max-h-[260px]">
           {versions.map((v, i) => (
             <VersionItem
               key={v.id}
@@ -108,7 +109,7 @@ export function TemplateVersionHistory({ versions, onRestore }: TemplateVersionH
               onRestore={onRestore}
             />
           ))}
-        </div>
+        </ScrollArea>
       </CardContent>
     </Card>
   );

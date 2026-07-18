@@ -248,8 +248,8 @@ export default function MovementsReportPage() {
           ))}
         </SelectContent>
       </Select>
-      <DatePicker value={dateFrom} onChange={handleDateFromChange} placeholder="From" className="w-full sm:max-w-[160px] h-8 text-xs" />
-      <DatePicker value={dateTo} onChange={handleDateToChange} placeholder="To" className="w-full sm:max-w-[160px] h-8 text-xs" />
+      <DatePicker value={dateFrom} onChange={handleDateFromChange} placeholder="From" className="w-full sm:max-w-[160px]" />
+      <DatePicker value={dateTo} onChange={handleDateToChange} placeholder="To" className="w-full sm:max-w-[160px]" />
       <AnimatedIconButton
         icon={DownloadIcon}
         iconSize={14}

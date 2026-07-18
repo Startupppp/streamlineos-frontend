@@ -157,7 +157,7 @@ export function KbPageAiActions({ pageId, onApplyImprovement }: KbPageAiActionsP
             type="button"
             variant="outline"
             size="sm"
-            className="h-8 gap-1.5 text-xs"
+            className="h-9 gap-1.5 text-sm"
             {...hoverHandlers}
           >
             <SparklesIcon ref={iconRef} className="h-3.5 w-3.5 text-primary" />
@@ -231,7 +231,7 @@ export function KbPageAiActions({ pageId, onApplyImprovement }: KbPageAiActionsP
             {panelState.status === "error" && (
               <div className="flex flex-col items-start gap-3 py-4">
                 <p className="text-sm text-muted-foreground">{panelState.message}</p>
-                <Button type="button" variant="outline" size="sm" onClick={handleRetry} className="h-8 text-xs">
+                <Button type="button" variant="outline" size="sm" onClick={handleRetry} className="h-9 text-sm">
                   Retry
                 </Button>
               </div>

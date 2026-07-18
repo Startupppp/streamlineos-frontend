@@ -336,7 +336,7 @@ export default function ExitManagementPage() {
   if (isLoading) {
     return (
       <PageWrapper title="Exit Management" subtitle="Resignations and offboarding" variant="display">
-        <div className="space-y-3">
+        <div className="flex flex-1 min-h-0 flex-col gap-3">
           {Array.from({ length: 10 }).map((_, i) => (
             <Skeleton key={i} className="h-24 rounded-2xl" />
           ))}
@@ -383,7 +383,7 @@ export default function ExitManagementPage() {
           compact
         />
       ) : (
-        <div className="space-y-2">
+        <div className="flex flex-1 min-h-0 flex-col gap-2">
           {resignations.map((r: Resignation) => (
             <ResignationCard
               key={r.id}

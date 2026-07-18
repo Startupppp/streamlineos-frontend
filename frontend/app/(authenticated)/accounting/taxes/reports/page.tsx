@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import dynamic from "next/dynamic";
 import { DownloadIcon } from "@animateicons/react/lucide";
@@ -184,47 +183,43 @@ function LiabilitySection({ from, to }: LiabilitySectionProps) {
 
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold">Monthly Breakdown</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <DataTable
-            data={rows}
-            columns={[
-              {
-                key: "month",
-                header: "Month",
-                cell: (r) => r.month,
-                sortable: true,
-                sortValue: (r) => r.month,
-              },
-              {
-                key: "outputTax",
-                header: "Output Tax",
-                cell: (r) => <Money value={parseFloat(r.outputTax)} />,
-                className: "text-right",
-                headerClassName: "text-right",
-              },
-              {
-                key: "inputTax",
-                header: "Input Tax",
-                cell: (r) => <Money value={parseFloat(r.inputTax)} />,
-                className: "text-right",
-                headerClassName: "text-right",
-              },
-              {
-                key: "netLiability",
-                header: "Net Liability",
-                cell: (r) => <Money value={parseFloat(r.netLiability)} />,
-                className: "text-right",
-                headerClassName: "text-right",
-              },
-            ]}
-            getRowKey={(r) => r.month}
-          />
-        </CardContent>
-      </Card>
+      <div>
+        <p className="text-sm font-semibold mb-2">Monthly Breakdown</p>
+        <DataTable
+          data={rows}
+          columns={[
+            {
+              key: "month",
+              header: "Month",
+              cell: (r) => r.month,
+              sortable: true,
+              sortValue: (r) => r.month,
+            },
+            {
+              key: "outputTax",
+              header: "Output Tax",
+              cell: (r) => <Money value={parseFloat(r.outputTax)} />,
+              className: "text-right",
+              headerClassName: "text-right",
+            },
+            {
+              key: "inputTax",
+              header: "Input Tax",
+              cell: (r) => <Money value={parseFloat(r.inputTax)} />,
+              className: "text-right",
+              headerClassName: "text-right",
+            },
+            {
+              key: "netLiability",
+              header: "Net Liability",
+              cell: (r) => <Money value={parseFloat(r.netLiability)} />,
+              className: "text-right",
+              headerClassName: "text-right",
+            },
+          ]}
+          getRowKey={(r) => r.month}
+        />
+      </div>
 
       <LiabilityTrendChart chartData={chartData} />
     </div>

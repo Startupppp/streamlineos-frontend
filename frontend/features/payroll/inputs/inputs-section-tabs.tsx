@@ -273,7 +273,6 @@ function buildAdjustmentColumns(
           <LoadingButton
             variant="outline"
             size="sm"
-            className="h-6 text-xs"
             isPending={approve.isPending}
             onClick={() => approve.mutate(row.id)}
           >

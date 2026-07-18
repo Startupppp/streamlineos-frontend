@@ -155,10 +155,7 @@ function LogDetailSheet({ log, onClose }: { log: AuditLogRow; onClose: () => voi
           </DetailField>
           {log.targetType && (
             <DetailField label="Target">
-              <p className="text-sm">
-                <span className="font-medium capitalize">{log.targetType}</span>
-                {log.targetId && <span className="text-muted-foreground"> #{log.targetId}</span>}
-              </p>
+              <p className="text-sm font-medium capitalize">{log.targetType}</p>
             </DetailField>
           )}
           <DetailField label="Timestamp">
@@ -224,9 +221,6 @@ const AUDIT_LOG_COLUMNS: DataTableColumn<AuditLogRow>[] = [
     cell: (log) => (
       <span className="text-[12px] text-muted-foreground capitalize whitespace-nowrap">
         {log.targetType ?? "—"}
-        {log.targetId && (
-          <span className="text-[11px] opacity-60"> #{log.targetId}</span>
-        )}
       </span>
     ),
     className: "w-[110px]",

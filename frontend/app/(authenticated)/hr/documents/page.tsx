@@ -326,7 +326,7 @@ export default function DocumentsPage() {
         />
       }
     >
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         <StatCardGrid cols={4}>
           <StatCard label="Total Documents" value={documents.length} icon={FileText} color="blue" />
           <StatCard label="Folders" value={folders.length + customFolders.length} icon={FolderOpen} color="amber" />

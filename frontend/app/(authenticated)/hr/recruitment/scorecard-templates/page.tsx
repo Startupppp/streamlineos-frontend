@@ -349,31 +349,33 @@ export default function ScorecardTemplatesPage() {
           </Button>
         }
       >
-        {isError ? (
-          <ErrorState description="Failed to load scorecard templates" onRetry={handleRetry} />
-        ) : isLoading ? (
-          <div className="grid gap-4 sm:grid-cols-2">
-            {[1, 2, 3].map((i) => <Skeleton key={i} className="h-36 w-full rounded-xl" />)}
-          </div>
-        ) : !templates?.length ? (
-          <RecruitmentEmptyState
-            illustration={<EmptyDocumentsIllustration />}
-            title="No Scorecard Templates"
-            description="Create a template to standardize how interviewers evaluate candidates."
-            action={{ label: "Create Template", onClick: handleOpenCreate }}
-          />
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2">
-            {templates.map((template) => (
-              <TemplateCard
-                key={template.id}
-                template={template}
-                onEdit={handleOpenEdit}
-                onDelete={setDeleteId}
-              />
-            ))}
-          </div>
-        )}
+        <div className="flex flex-1 min-h-0 flex-col">
+          {isError ? (
+            <ErrorState description="Failed to load scorecard templates" onRetry={handleRetry} />
+          ) : isLoading ? (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {[1, 2, 3].map((i) => <Skeleton key={i} className="h-36 w-full rounded-xl" />)}
+            </div>
+          ) : !templates?.length ? (
+            <RecruitmentEmptyState
+              illustration={<EmptyDocumentsIllustration />}
+              title="No Scorecard Templates"
+              description="Create a template to standardize how interviewers evaluate candidates."
+              action={{ label: "Create Template", onClick: handleOpenCreate }}
+            />
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {templates.map((template) => (
+                <TemplateCard
+                  key={template.id}
+                  template={template}
+                  onEdit={handleOpenEdit}
+                  onDelete={setDeleteId}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </PageWrapper>
 
       <TemplateSheet

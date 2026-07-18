@@ -83,7 +83,7 @@ export default function VersionHistoryPage() {
       title="Version History"
       subtitle="Browse version lineage and rollback policies, templates, and workflows"
  variant="display">
-      <div className="px-4 sm:px-6 py-4 space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4 px-4 sm:px-6 py-4">
         <div className={FILTER_TOOLBAR_ROW}>
           <Select value={entity} onValueChange={(v) => { setEntity(v as VersionEntity); setQueriedId(null); }}>
             <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>

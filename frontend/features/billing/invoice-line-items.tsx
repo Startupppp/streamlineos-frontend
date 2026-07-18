@@ -434,13 +434,13 @@ function EditLineItemRow({
   return (
     <div className="grid grid-cols-12 gap-2 items-center">
       <Input
-        className="col-span-5 h-8 text-sm"
+        className="col-span-5"
         placeholder="Description"
         value={item.description}
         onChange={handleDescChange}
       />
       <Input
-        className="col-span-2 h-8 text-sm text-right"
+        className="col-span-2 text-right"
         type="number"
         min={1}
         value={item.quantity || ""}
@@ -448,7 +448,7 @@ function EditLineItemRow({
         aria-label={`Quantity for item ${idx + 1}`}
       />
       <Input
-        className="col-span-2 h-8 text-sm text-right"
+        className="col-span-2 text-right"
         type="number"
         min={0}
         value={item.rate || ""}

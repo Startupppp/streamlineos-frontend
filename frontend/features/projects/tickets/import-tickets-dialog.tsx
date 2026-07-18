@@ -17,6 +17,7 @@ import { useImportTickets, type ImportTicketRow } from "@/hooks/api/projects/imp
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { TABLE_TITLE_CELL } from "@/features/projects/shared/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const CSV_COLUMNS = ["title", "type", "status", "priority", "points", "assigneeEmail", "dueDate"] as const;
 const TICKET_TYPES = ["TASK", "BUG", "STORY", "EPIC"] as const;
@@ -283,7 +284,7 @@ export function ImportTicketsDialog({ open, onOpenChange, projectId }: ImportTic
                   {capped ? ` (capped at ${MAX_ROWS})` : ""}
                 </Badge>
               </div>
-              <div className="max-h-40 overflow-y-auto">
+              <ScrollArea className="max-h-40">
                 <DataTable
                   data={previewRows}
                   columns={previewColumns}
@@ -295,7 +296,7 @@ export function ImportTicketsDialog({ open, onOpenChange, projectId }: ImportTic
                     ) : undefined
                   }
                 />
-              </div>
+              </ScrollArea>
             </div>
           )}
         </div>

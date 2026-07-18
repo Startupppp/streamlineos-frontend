@@ -22,7 +22,7 @@ import { useExpiryItems } from "@/hooks/api/inventory/traceability";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { cn } from "@/lib/utils";
-import { FILTER_SELECT_TRIGGER } from "@/lib/constants/ui";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 
 function ExpiryLotViewButton({ lotId, lotNumber }: { lotId: number; lotNumber: string }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();

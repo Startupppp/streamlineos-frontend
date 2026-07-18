@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { User } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { SearchInput } from "@/components/ui/search-input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -71,7 +72,8 @@ export function StepTeam({ draft, updateDraft }: StepSharedProps) {
           <SearchInput placeholder="Search by name or email…" value={search} onValueChange={handleSearch} />
         </div>
 
-      <div className="space-y-1 max-h-72 overflow-y-auto">
+      <ScrollArea className="max-h-72">
+      <div className="space-y-1">
         {filtered.length === 0 && (
           <p className="text-sm text-center py-6 text-muted-foreground">No members found.</p>
         )}
@@ -113,6 +115,7 @@ export function StepTeam({ draft, updateDraft }: StepSharedProps) {
           );
         })}
       </div>
+      </ScrollArea>
     </div>
   );
 }

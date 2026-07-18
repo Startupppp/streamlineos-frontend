@@ -328,7 +328,7 @@ function HandbookContent() {
   if (isLoading) {
     return (
       <PageWrapper title="Employee Handbook" subtitle="Manage and publish handbook versions" variant="display">
-        <div className="space-y-4">
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
           <div className="flex items-center gap-2">
             <Skeleton className="h-8 w-48" />
             <Skeleton className="h-4 w-16" />
@@ -374,7 +374,7 @@ function HandbookContent() {
         </Button>
       }
     >
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         <div className={FILTER_TOOLBAR_ROW}>
           <SearchInput placeholder="Search versions..." value={searchQuery} onValueChange={handleSearchChange} className="w-48" />
           <div className="flex items-center gap-1">
