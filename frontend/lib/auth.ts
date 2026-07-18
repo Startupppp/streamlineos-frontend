@@ -313,8 +313,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             token.orgId = fresh.orgId;
             token.isOrgOwner = fresh.isOrgOwner;
             token.role = fresh.role ?? undefined;
+            token.isActive = fresh.isActive;
             token.mfaEnforced = fresh.mfaEnforced;
             token.totpEnabled = fresh.totpEnabled;
+            token.orgOnboardingCompletedAt = fresh.orgOnboardingCompletedAt;
+            token.userOnboardingCompletedAt = fresh.userOnboardingCompletedAt;
           }
         }
       }

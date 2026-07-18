@@ -55,7 +55,7 @@ export function useCreateVendor() {
     mutationKey: ["inventory", "vendors", "create"],
     mutationFn: (data) => apiClient.post<InventoryVendor>("/inventory/vendors", data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.vendors() });
+      qc.invalidateQueries({ queryKey: [...queryKeys.inventory.all, "vendors"] });
     },
   });
 }
@@ -70,7 +70,7 @@ export function useUpdateVendor(vendorId?: number) {
     },
     onSuccess: (_, variables) => {
       const targetId = vendorId ?? variables.id;
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.vendors() });
+      qc.invalidateQueries({ queryKey: [...queryKeys.inventory.all, "vendors"] });
       if (targetId) qc.invalidateQueries({ queryKey: queryKeys.inventory.vendor(targetId) });
     },
   });
@@ -92,7 +92,7 @@ export function useToggleVendorActive(vendorId?: number) {
     mutationFn: ({ id, isActive }) =>
       apiClient.patch<InventoryVendor>(`/inventory/vendors/${id}`, { isActive }),
     onSuccess: (_, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.vendors() });
+      qc.invalidateQueries({ queryKey: [...queryKeys.inventory.all, "vendors"] });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.vendor(variables.id) });
     },
   });

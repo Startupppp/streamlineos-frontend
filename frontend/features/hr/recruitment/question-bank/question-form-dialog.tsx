@@ -179,11 +179,11 @@ function CreateDialog({
 interface EditDialogProps {
   question: InterviewQuestion;
   roleOptions: string[];
-  children: React.ReactNode;
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
 }
 
-function EditDialog({ question, roleOptions, children }: EditDialogProps) {
-  const [open, setOpen] = useState(false);
+function EditDialog({ question, roleOptions, open, onOpenChange }: EditDialogProps) {
   const [rolePickerOpen, setRolePickerOpen] = useState(false);
   const [form, setForm] = useState<QuestionFormState>({
     question: question.question,
@@ -207,23 +207,16 @@ function EditDialog({ question, roleOptions, children }: EditDialogProps) {
     update.mutate(parseFormPayload(form), {
       onSuccess: () => {
         toast.success("Question updated");
-        setOpen(false);
+        onOpenChange(false);
       },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
-  }, [form, update]);
+  }, [form, update, onOpenChange]);
 
-  const handleOpenTrigger = useCallback(() => {
-    setOpen(true);
-  }, []);
-
-  const handleCancelEdit = useCallback(() => setOpen(false), []);
+  const handleCancel = useCallback(() => onOpenChange(false), [onOpenChange]);
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild onClick={handleOpenTrigger}>
-        {children}
-      </SheetTrigger>
+    <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="flex flex-col p-0 gap-0">
         <SheetHeader className="shrink-0 px-4 pt-4 pb-3 border-b">
           <SheetTitle className="text-base">Edit Question</SheetTitle>
@@ -241,7 +234,7 @@ function EditDialog({ question, roleOptions, children }: EditDialogProps) {
           />
         </SheetBody>
         <SheetFooter className="shrink-0 px-4 py-3 border-t flex-row gap-2">
-          <Button variant="outline" className="flex-1" onClick={handleCancelEdit}>
+          <Button variant="outline" className="flex-1" onClick={handleCancel}>
             Cancel
           </Button>
           <Button className="flex-1" onClick={handleSave} disabled={update.isPending}>
@@ -269,9 +262,9 @@ type QuestionFormDialogProps =
       mode: "edit";
       question: InterviewQuestion;
       roleOptions: string[];
-      children: React.ReactNode;
-      open?: never;
-      onOpenChange?: never;
+      open: boolean;
+      onOpenChange: (v: boolean) => void;
+      children?: never;
       form?: never;
       setForm?: never;
       onClose?: never;
@@ -280,9 +273,12 @@ type QuestionFormDialogProps =
 export function QuestionFormDialog(props: QuestionFormDialogProps) {
   if (props.mode === "edit") {
     return (
-      <EditDialog question={props.question} roleOptions={props.roleOptions}>
-        {props.children}
-      </EditDialog>
+      <EditDialog
+        question={props.question}
+        roleOptions={props.roleOptions}
+        open={props.open}
+        onOpenChange={props.onOpenChange}
+      />
     );
   }
 

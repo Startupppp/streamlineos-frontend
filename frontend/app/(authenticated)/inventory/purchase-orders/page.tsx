@@ -94,8 +94,6 @@ const PoRowActions = memo(function PoRowActions({ po }: { po: PurchaseOrderSumma
   const canClose = po.status === "PARTIAL" || po.status === "RECEIVED";
   const canCancel = po.status === "DRAFT" || po.status === "SENT" || po.status === "PARTIAL";
 
-  if (!canApprove && !canClose && !canCancel) return null;
-
   function handleApprove(): void {
     approveMutation.mutate(undefined, {
       onSuccess: () => toast.success(`PO ${po.poNumber} approved`),
@@ -140,6 +138,10 @@ const PoRowActions = memo(function PoRowActions({ po }: { po: PurchaseOrderSumma
           <AnimatedIconButton icon={EllipsisIcon} variant="ghost" size="sm" className="h-6 w-6 p-0" disabled={isPending} aria-label="Order actions" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="text-xs">
+          <DropdownMenuItem asChild>
+            <Link href={`/inventory/purchase-orders/${po.id}`}>View details</Link>
+          </DropdownMenuItem>
+          {(canApprove || canClose || canCancel) && <DropdownMenuSeparator />}
           {canApprove && (
             <DropdownMenuItem onSelect={handleApprove} disabled={approveMutation.isPending}>
               Approve
@@ -195,12 +197,14 @@ const columns: DataTableColumn<PurchaseOrderSummary>[] = [
     key: "poNumber",
     header: "PO #",
     cell: (po) => (
-      <Link
-        href={`/inventory/purchase-orders/${po.id}`}
-        className="font-mono text-[11px] text-primary hover:underline transition-colors"
-      >
-        {po.poNumber}
-      </Link>
+      <div onClick={(e) => e.stopPropagation()}>
+        <Link
+          href={`/inventory/purchase-orders/${po.id}`}
+          className="font-mono text-[11px] text-primary hover:underline transition-colors"
+        >
+          {po.poNumber}
+        </Link>
+      </div>
     ),
     sortable: true,
     sortValue: (po) => po.poNumber,
@@ -247,7 +251,11 @@ const columns: DataTableColumn<PurchaseOrderSummary>[] = [
   {
     key: "actions",
     header: "",
-    cell: (po) => <PoRowActions po={po} />,
+    cell: (po) => (
+      <div onClick={(e) => e.stopPropagation()}>
+        <PoRowActions po={po} />
+      </div>
+    ),
     className: "w-8",
   },
 ];
@@ -343,6 +351,10 @@ export default function PurchaseOrdersListPage() {
     void query.refetch();
   }
 
+  function handleRowClick(po: PurchaseOrderSummary): void {
+    router.push(`/inventory/purchase-orders/${po.id}`);
+  }
+
   const filterBar = (
     <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide lg:gap-3 [&>*]:shrink-0">
       <div className="w-full max-w-md min-w-[200px]">
@@ -403,6 +415,7 @@ export default function PurchaseOrdersListPage() {
         data={filteredItems}
         columns={columns}
         getRowKey={(po) => po.id}
+        onRowClick={handleRowClick}
         isLoading={query.isLoading}
         emptyState={
           query.error ? (

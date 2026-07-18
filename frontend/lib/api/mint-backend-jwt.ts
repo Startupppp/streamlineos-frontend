@@ -12,6 +12,16 @@ interface LiveOrgData {
   isOrgOwner: boolean;
 }
 
+function unwrapBackend<T>(body: unknown): T {
+  if (body !== null && typeof body === "object") {
+    const record = body as Record<string, unknown>;
+    if (record.success === true && "data" in record) {
+      return record.data as T;
+    }
+  }
+  return body as T;
+}
+
 async function fetchLiveOrgData(userId: string): Promise<LiveOrgData | null> {
   if (!INTERNAL_SECRET) return null;
   try {
@@ -20,8 +30,14 @@ async function fetchLiveOrgData(userId: string): Promise<LiveOrgData | null> {
       cache: "no-store",
     });
     if (!res.ok) return null;
-    const data = (await res.json()) as { orgId?: string | null; isOrgOwner?: boolean };
-    return { orgId: data.orgId ?? null, isOrgOwner: data.isOrgOwner ?? false };
+    const data = unwrapBackend<{
+      orgId?: string | null;
+      isOrgOwner?: boolean;
+    }>(await res.json());
+    return {
+      orgId: data.orgId ?? null,
+      isOrgOwner: data.isOrgOwner === true,
+    };
   } catch {
     return null;
   }

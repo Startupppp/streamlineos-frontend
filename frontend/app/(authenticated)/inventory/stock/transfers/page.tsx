@@ -155,7 +155,6 @@ export default function TransfersPage() {
     [warehouses],
   );
 
-  const totalPages = transfersData?.totalPages ?? 1;
   const total = transfersData?.total ?? 0;
   const transfers = transfersData?.items ?? [];
 
@@ -204,9 +203,12 @@ export default function TransfersPage() {
     router.push(`/inventory/stock/transfers/${row.id}`);
   }
 
-  function handleView(id: number): void {
-    router.push(`/inventory/stock/transfers/${id}`);
-  }
+  const handleView = useCallback(
+    (id: number): void => {
+      router.push(`/inventory/stock/transfers/${id}`);
+    },
+    [router],
+  );
 
   const handleClearFilters = useCallback(() => {
     setPage(1);
@@ -216,7 +218,7 @@ export default function TransfersPage() {
   const hasActiveFilters =
     !!searchQ || statusParam !== "all" || !!fromWarehouseParam || !!toWarehouseParam || !!fromDateParam || !!toDateParam;
 
-  const columns = useMemo(() => buildTransferColumns(handleView), []);
+  const columns = useMemo(() => buildTransferColumns(handleView), [handleView]);
 
   return (
     <PageWrapper
@@ -312,6 +314,7 @@ export default function TransfersPage() {
               getRowKey={(row) => row.id}
               onRowClick={handleRowClick}
               isLoading={isLoading}
+              minWidth="700px"
               pagination={{
                 mode: "server",
                 page,

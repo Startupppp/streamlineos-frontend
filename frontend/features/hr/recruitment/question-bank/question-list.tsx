@@ -1,8 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import {
@@ -39,6 +38,16 @@ export function QuestionList({
   roleOptions,
   onDeleteRequest,
 }: QuestionListProps) {
+  const [editQuestion, setEditQuestion] = useState<InterviewQuestion | null>(null);
+
+  const handleEditRequest = useCallback((q: InterviewQuestion) => {
+    setEditQuestion(q);
+  }, []);
+
+  const handleEditOpenChange = useCallback((v: boolean) => {
+    if (!v) setEditQuestion(null);
+  }, []);
+
   const columns = useMemo<DataTableColumn<InterviewQuestion>[]>(() => [
     {
       key: "question",
@@ -128,12 +137,10 @@ export function QuestionList({
             <AnimatedIconButton icon={EllipsisIcon} iconSize={16} variant="ghost" size="icon" aria-label="Question actions" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <QuestionFormDialog mode="edit" question={q} roleOptions={roleOptions}>
-              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                <Pencil className="mr-2 h-4 w-4" />
-                Edit
-              </DropdownMenuItem>
-            </QuestionFormDialog>
+            <DropdownMenuItem onClick={() => handleEditRequest(q)}>
+              <Pencil className="mr-2 h-4 w-4" />
+              Edit
+            </DropdownMenuItem>
             <DropdownMenuItem variant="destructive" onClick={() => onDeleteRequest(q.id)}>
               <Trash2 className="mr-2 h-4 w-4" />
               Delete
@@ -142,30 +149,42 @@ export function QuestionList({
         </DropdownMenu>
       ),
     },
-  ], [roleOptions, onDeleteRequest]);
+  ], [handleEditRequest, onDeleteRequest]);
 
   function getRowKey(q: InterviewQuestion) {
     return q.id;
   }
 
   return (
-    <Card className="flex flex-1 min-h-0 flex-col overflow-hidden">
-      <CardContent className="flex flex-1 min-h-0 p-0">
-        <DataTable
-          data={questions ?? []}
-          columns={columns}
-          getRowKey={getRowKey}
-          isLoading={isLoading}
-          className="flex-1 min-h-0"
-          emptyState={
-            <RecruitmentEmptyState
-              illustration={<EmptyDocumentsIllustration />}
-              title="No questions yet"
-              description="Add questions to build your bank."
-            />
-          }
+    <>
+      <Card className="flex flex-1 min-h-0 flex-col overflow-hidden">
+        <CardContent className="flex flex-1 min-h-0 p-0">
+          <DataTable
+            data={questions ?? []}
+            columns={columns}
+            getRowKey={getRowKey}
+            isLoading={isLoading}
+            className="flex-1 min-h-0"
+            emptyState={
+              <RecruitmentEmptyState
+                illustration={<EmptyDocumentsIllustration />}
+                title="No questions yet"
+                description="Add questions to build your bank."
+              />
+            }
+          />
+        </CardContent>
+      </Card>
+
+      {editQuestion && (
+        <QuestionFormDialog
+          mode="edit"
+          question={editQuestion}
+          roleOptions={roleOptions}
+          open={editQuestion !== null}
+          onOpenChange={handleEditOpenChange}
         />
-      </CardContent>
-    </Card>
+      )}
+    </>
   );
 }

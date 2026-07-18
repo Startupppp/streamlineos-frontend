@@ -24,6 +24,9 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   useHiringFlows,
   useCreateHiringFlow,
   useUpdateHiringFlow,
@@ -35,6 +38,8 @@ import {
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { HiringFlow, HiringFlowRound } from "@/types/hr/recruitment";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 
 const ROUND_TYPES = [
   { value: "HR_SCREENING", label: "HR Screening" },
@@ -60,8 +65,17 @@ const roundSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
   roundType: z.enum(["HR_SCREENING", "TECHNICAL", "MANAGER", "CULTURAL_FIT", "FINAL", "CUSTOM"]),
   mode: z.enum(["VIDEO", "PHONE", "ONSITE"]),
-  durationMinutes: z.number().int().min(15, "Min 15 minutes").max(480, "Max 480 minutes"),
-  slaDays: z.number().int().min(1).max(30).optional(),
+  durationMinutes: z.string().refine(
+    (v) => {
+      const n = parseInt(v, 10);
+      return !isNaN(n) && n >= 15 && n <= 480;
+    },
+    { message: "Duration must be between 15 and 480 minutes" },
+  ),
+  slaDays: z.string().refine(
+    (v) => v === "" || (!isNaN(parseInt(v, 10)) && parseInt(v, 10) >= 1 && parseInt(v, 10) <= 30),
+    { message: "SLA days must be between 1 and 30" },
+  ).optional(),
 });
 
 type FlowFormValues = z.infer<typeof flowSchema>;
@@ -119,7 +133,7 @@ function RoundItem({ round, flowId, onEdit }: RoundItemProps) {
   function handleEditClick() { onEdit(round); }
 
   return (
-    <div className="flex items-center gap-3 rounded-md border bg-muted/20 px-3 py-2">
+    <div className="group flex items-center gap-3 rounded-md border bg-muted/20 px-3 py-2">
       <svg className="h-4 w-4 shrink-0 text-muted-foreground/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <circle cx="9" cy="5" r="1" /><circle cx="9" cy="12" r="1" /><circle cx="9" cy="19" r="1" />
         <circle cx="15" cy="5" r="1" /><circle cx="15" cy="12" r="1" /><circle cx="15" cy="19" r="1" />
@@ -130,29 +144,31 @@ function RoundItem({ round, flowId, onEdit }: RoundItemProps) {
         <ModeBadge mode={round.mode} />
         <span className="text-[10px] text-muted-foreground">{round.durationMinutes}m</span>
       </div>
-      <div className="flex items-center gap-1 shrink-0">
-        <button
-          type="button"
-          onClick={handleEditClick}
-          className="rounded p-1 hover:bg-muted transition-colors"
-          aria-label="Edit round"
-        >
-          <svg className="h-3.5 w-3.5 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-          </svg>
-        </button>
-        <button
-          type="button"
-          onClick={handleDelete}
-          disabled={deleteRound.isPending}
-          className="rounded p-1 hover:bg-destructive/10 transition-colors"
-          aria-label="Delete round"
-        >
-          <svg className="h-3.5 w-3.5 text-destructive" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-          </svg>
-        </button>
+      <div className="opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity shrink-0">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <AnimatedIconButton
+              icon={EllipsisIcon}
+              variant="ghost"
+              size="icon"
+              className="w-7 h-7"
+              aria-label="Round actions"
+            />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={handleEditClick}>
+              Edit round
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={handleDelete}
+              disabled={deleteRound.isPending}
+              className="text-destructive focus:text-destructive"
+            >
+              Delete round
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );
@@ -190,17 +206,29 @@ function FlowCard({ flow, onEdit, onAddRound, onEditRound, onDelete }: FlowCardP
                 <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
               </svg>
             </Button>
-            <Button variant="ghost" size="icon" className="w-7" onClick={handleEditFlow} aria-label="Edit flow">
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-              </svg>
-            </Button>
-            <Button variant="ghost" size="icon" className="w-7 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={handleDeleteFlow} aria-label="Delete flow">
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-              </svg>
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <AnimatedIconButton
+                  icon={EllipsisIcon}
+                  variant="ghost"
+                  size="icon"
+                  className="w-7"
+                  aria-label="Flow actions"
+                />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleEditFlow}>
+                  Rename flow
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={handleDeleteFlow}
+                  className="text-destructive focus:text-destructive"
+                >
+                  Delete flow
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
         <p className="text-xs text-muted-foreground">
@@ -238,7 +266,6 @@ function FlowFormSheet({
     resolver: zodResolver(flowSchema),
     defaultValues: { name: "", isDefault: false },
   });
-
 
   useEffect(() => {
     if (open) {
@@ -329,7 +356,7 @@ function RoundFormSheet({
 
   const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm<RoundFormValues>({
     resolver: zodResolver(roundSchema),
-    defaultValues: { name: "", roundType: "CUSTOM", mode: "VIDEO", durationMinutes: 60 },
+    defaultValues: { name: "", roundType: "CUSTOM", mode: "VIDEO", durationMinutes: "60", slaDays: "" },
   });
 
   const roundType = watch("roundType");
@@ -342,23 +369,25 @@ function RoundFormSheet({
           name: editRound.name,
           roundType: editRound.roundType,
           mode: editRound.mode,
-          durationMinutes: editRound.durationMinutes,
-          slaDays: editRound.slaDays ?? undefined,
+          durationMinutes: String(editRound.durationMinutes),
+          slaDays: editRound.slaDays != null ? String(editRound.slaDays) : "",
         });
       } else {
-        reset({ name: "", roundType: "CUSTOM", mode: "VIDEO", durationMinutes: 60 });
+        reset({ name: "", roundType: "CUSTOM", mode: "VIDEO", durationMinutes: "60", slaDays: "" });
       }
     }
   }, [open, editRound, reset]);
 
   const onSubmit = useCallback(
     (data: RoundFormValues) => {
+      const parsedDuration = parseInt(data.durationMinutes, 10);
+      const parsedSla = data.slaDays && data.slaDays !== "" ? parseInt(data.slaDays, 10) : undefined;
       const payload = {
         name: data.name,
         roundType: data.roundType,
         mode: data.mode,
-        durationMinutes: data.durationMinutes,
-        slaDays: data.slaDays ? Number(data.slaDays) : undefined,
+        durationMinutes: parsedDuration,
+        slaDays: parsedSla,
       };
 
       if (editRound) {
@@ -429,12 +458,13 @@ function RoundFormSheet({
             </div>
             <div>
               <Label className="text-xs font-medium">Duration (minutes) <span className="text-destructive">*</span></Label>
-              <Input className="mt-1" type="number" min={15} max={480} {...register("durationMinutes", { valueAsNumber: true })} />
+              <Input className="mt-1" type="number" min={15} max={480} {...register("durationMinutes")} />
               {errors.durationMinutes && <p className="text-xs text-destructive mt-1">{errors.durationMinutes.message}</p>}
             </div>
             <div>
               <Label className="text-xs font-medium">SLA Days</Label>
-              <Input className="mt-1" type="number" min={1} max={30} placeholder="e.g. 3" {...register("slaDays", { valueAsNumber: true, setValueAs: (v) => (v === "" || isNaN(Number(v)) ? undefined : Number(v)) })} />
+              <Input className="mt-1" type="number" min={1} max={30} placeholder="e.g. 3" {...register("slaDays")} />
+              {errors.slaDays && <p className="text-xs text-destructive mt-1">{errors.slaDays.message}</p>}
               <p className="text-[10px] text-muted-foreground mt-1">Max days to complete this round</p>
             </div>
           </SheetBody>

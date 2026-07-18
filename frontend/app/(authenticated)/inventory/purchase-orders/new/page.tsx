@@ -101,6 +101,31 @@ function PoLineVariantCell({ index, control, variants, onVariantChangeAt }: PoLi
   );
 }
 
+interface RemoveLineButtonProps {
+  index: number;
+  disabled: boolean;
+  onRemove: (index: number) => void;
+}
+
+function RemoveLineButton({ index, disabled, onRemove }: RemoveLineButtonProps) {
+  function handleClick(): void {
+    onRemove(index);
+  }
+  return (
+    <AnimatedIconButton
+      type="button"
+      icon={Trash2Icon}
+      iconSize={14}
+      variant="ghost"
+      size="icon"
+      className="w-7"
+      onClick={handleClick}
+      disabled={disabled}
+      aria-label={`Remove line ${index + 1}`}
+    />
+  );
+}
+
 export default function NewPurchaseOrderPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -198,16 +223,15 @@ export default function NewPurchaseOrderPage() {
     }
   }
 
-  if (vendorsQuery.isLoading || variantsQuery.isLoading) return <LoadingState variant="form" />;
-  if (vendorsQuery.error) return <ErrorState description={getErrorMessage(vendorsQuery.error)} onRetry={handleVendorsRetry} />;
-  if (variantsQuery.error) return <ErrorState description={getErrorMessage(variantsQuery.error)} onRetry={handleVariantsRetry} />;
-
   const vendors = vendorsQuery.data?.items ?? [];
-  const variants = variantsQuery.data ?? [];
+  const variantsData = variantsQuery.data;
+  const variants = useMemo(() => variantsData ?? [], [variantsData]);
 
   const fieldRows: FieldRow[] = fields.map((f, i) => ({ id: f.id, _index: i }));
 
-  const columns: DataTableColumn<FieldRow>[] = [
+  const canRemoveLine = fields.length > 1;
+
+  const columns = useMemo<DataTableColumn<FieldRow>[]>(() => [
     {
       key: "variant",
       header: "Product / SKU",
@@ -230,7 +254,13 @@ export default function NewPurchaseOrderPage() {
           control={form.control}
           name={`lines.${row._index}.quantity`}
           render={({ field: f }) => (
-            <Input type="number" min="0.0001" step="1" className="text-right tabular-nums text-xs" {...f} />
+            <Input
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              className="text-right tabular-nums text-xs"
+              {...f}
+            />
           )}
         />
       ),
@@ -277,26 +307,19 @@ export default function NewPurchaseOrderPage() {
       header: "",
       headerClassName: "w-[52px]",
       className: "w-[52px]",
-      cell: (row) => {
-        function handleRemove(): void {
-          handleRemoveAt(row._index);
-        }
-        return (
-          <AnimatedIconButton
-            type="button"
-            icon={Trash2Icon}
-            iconSize={14}
-            variant="ghost"
-            size="icon"
-            className="w-7"
-            onClick={handleRemove}
-            disabled={fields.length === 1}
-            aria-label={`Remove line ${row._index + 1}`}
-          />
-        );
-      },
+      cell: (row) => (
+        <RemoveLineButton
+          index={row._index}
+          disabled={!canRemoveLine}
+          onRemove={handleRemoveAt}
+        />
+      ),
     },
-  ];
+  ], [form.control, variants, handleVariantChangeAt, handleRemoveAt, canRemoveLine]);
+
+  if (vendorsQuery.isLoading || variantsQuery.isLoading) return <LoadingState variant="form" />;
+  if (vendorsQuery.error) return <ErrorState description={getErrorMessage(vendorsQuery.error)} onRetry={handleVendorsRetry} />;
+  if (variantsQuery.error) return <ErrorState description={getErrorMessage(variantsQuery.error)} onRetry={handleVariantsRetry} />;
 
   const tableFooter = (
     <div className="flex items-center justify-between">
