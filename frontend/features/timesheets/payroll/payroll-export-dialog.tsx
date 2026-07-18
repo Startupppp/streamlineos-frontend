@@ -174,7 +174,6 @@ export function PayrollExportDialog({
             <Label htmlFor="export-note" className="text-xs font-medium">Note (optional)</Label>
             <Input
               id="export-note"
-              className="h-8 text-xs"
               placeholder="e.g. June 2026 payroll"
               {...form.register("note")}
             />
@@ -198,16 +197,12 @@ export function PayrollExportDialog({
             <Button
               type="button"
               variant="outline"
-              size="sm"
-              className="h-8 text-xs"
               onClick={handleClose}
             >
               Cancel
             </Button>
             <LoadingButton
               type="submit"
-              size="sm"
-              className="h-8 text-xs"
               isPending={createExport.isPending}
               disabled={createExport.isPending || targetRows.length === 0}
               loadingText="Exporting…"

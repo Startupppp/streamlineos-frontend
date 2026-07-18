@@ -168,7 +168,7 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
                     value={form.watch("suiteId")}
                     onValueChange={(v) => form.setValue("suiteId", v)}
                   >
-                    <SelectTrigger className="text-[11px]">
+                    <SelectTrigger>
                       <SelectValue placeholder="Select suite" />
                     </SelectTrigger>
                     <SelectContent>

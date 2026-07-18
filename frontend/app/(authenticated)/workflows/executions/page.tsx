@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
+import { CONTENT_FILL_PANEL, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyActivityIllustration } from "@/components/illustrations";
@@ -139,7 +139,7 @@ export default function ExecutionsPage() {
   }
 
   const statusFilters = (
-    <div className="flex items-center gap-1 overflow-x-auto">
+    <div className={FILTER_TOOLBAR_ROW}>
       {STATUS_TABS.map((tab) => (
         <button
           key={tab.value}

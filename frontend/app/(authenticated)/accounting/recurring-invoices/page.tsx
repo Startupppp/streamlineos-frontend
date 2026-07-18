@@ -6,6 +6,7 @@ import { Plus } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -256,7 +257,7 @@ export default function RecurringInvoicesPage() {
       }
       filters={
         <Select value={activeFilter} onValueChange={handleActiveFilterChange}>
-          <SelectTrigger className="w-[140px] text-xs">
+          <SelectTrigger className={`w-[140px] ${FILTER_SELECT_TRIGGER}`}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

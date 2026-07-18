@@ -240,7 +240,7 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
               <div className="space-y-1.5">
                 <Label className="text-[11px]">Severity</Label>
                 <Select value={bugSeverity} onValueChange={setBugSeverity}>
-                  <SelectTrigger className="text-[11px]"><SelectValue /></SelectTrigger>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="blocker">Blocker</SelectItem>
                     <SelectItem value="critical">Critical</SelectItem>

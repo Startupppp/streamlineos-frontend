@@ -32,8 +32,8 @@ import {
   PmPanel,
   PmSection,
   PM_FILL_PANEL,
-  PM_TOOLBAR,
 } from "@/features/projects/shared/pm-chrome";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { TABLE_TITLE_CELL } from "@/features/projects/shared/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { BugSheet } from "./bug-sheet";
@@ -252,42 +252,40 @@ export function BugsPage({ projectId }: BugsPageProps) {
   ], [canUpdate, canDelete, handleEdit, members]);
 
   const filtersBar = (
-    <div className={cn(PM_TOOLBAR, "w-full")}>
-      <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-        <SearchInput
-          placeholder="Search bugs..."
-          value={search}
-          onValueChange={handleSearchChange}
-          className="w-44"
-        />
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-32 text-[11px]"><SelectValue placeholder="Status" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            {BUG_STATUSES.map((s) => (
-              <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={severityFilter} onValueChange={setSeverityFilter}>
-          <SelectTrigger className="w-28 text-[11px]"><SelectValue placeholder="Severity" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All severities</SelectItem>
-            {BUG_SEVERITIES.map((s) => (
-              <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
-          <SelectTrigger className="w-32 text-[11px]"><SelectValue placeholder="Assignee" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All assignees</SelectItem>
-            {members.map((m) => (
-              <SelectItem key={m.id} value={m.id}>{getUserDisplayName(m)}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+    <div className={FILTER_TOOLBAR_ROW}>
+      <SearchInput
+        placeholder="Search bugs..."
+        value={search}
+        onValueChange={handleSearchChange}
+        className="w-44"
+      />
+      <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <SelectTrigger className="w-32"><SelectValue placeholder="Status" /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All statuses</SelectItem>
+          {BUG_STATUSES.map((s) => (
+            <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select value={severityFilter} onValueChange={setSeverityFilter}>
+        <SelectTrigger className="w-28"><SelectValue placeholder="Severity" /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All severities</SelectItem>
+          {BUG_SEVERITIES.map((s) => (
+            <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
+        <SelectTrigger className="w-32"><SelectValue placeholder="Assignee" /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All assignees</SelectItem>
+          {members.map((m) => (
+            <SelectItem key={m.id} value={m.id}>{getUserDisplayName(m)}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 

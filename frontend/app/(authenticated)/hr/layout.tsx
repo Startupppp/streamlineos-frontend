@@ -18,7 +18,7 @@ export default function HrLayout({ children }: { children: ReactNode }) {
           {/* Soft brand wash — keep light, never muddy */}
           <div className="absolute -top-32 left-[-10%] h-[28rem] w-[36rem] rounded-full bg-sky-300/[0.12] blur-3xl dark:bg-sky-400/[0.05]" />
           <div className="absolute top-1/3 right-[-8%] h-72 w-96 rounded-full bg-blue-200/[0.14] blur-3xl dark:bg-blue-400/[0.04]" />
-          <div className="absolute -bottom-24 left-1/3 h-64 w-[28rem] rounded-full bg-indigo-200/[0.10] blur-3xl dark:bg-indigo-400/[0.03]" />
+          <div className="absolute -bottom-24 left-1/3 h-64 w-[28rem] rounded-full bg-blue-200/[0.10] blur-3xl dark:bg-blue-400/[0.03]" />
           {/* Subtle grid texture */}
           <div
             className="absolute inset-0 opacity-[0.35] dark:opacity-[0.15]"

@@ -103,7 +103,7 @@ export function BankImportStep2({
             value={mapping.date}
             onValueChange={(v) => onMappingChange("date", v)}
           >
-            <SelectTrigger className="text-xs">
+            <SelectTrigger>
               <SelectValue placeholder="Select column" />
             </SelectTrigger>
             <SelectContent>
@@ -117,7 +117,7 @@ export function BankImportStep2({
         <div className="space-y-1.5">
           <Label className="text-xs">Date format *</Label>
           <Select value={dateFormat} onValueChange={onDateFormatChange}>
-            <SelectTrigger className="text-xs">
+            <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -134,7 +134,7 @@ export function BankImportStep2({
             value={mapping.description}
             onValueChange={(v) => onMappingChange("description", v)}
           >
-            <SelectTrigger className="text-xs">
+            <SelectTrigger>
               <SelectValue placeholder="Select column" />
             </SelectTrigger>
             <SelectContent>
@@ -180,7 +180,7 @@ export function BankImportStep2({
             value={mapping.amount}
             onValueChange={(v) => onMappingChange("amount", v)}
           >
-            <SelectTrigger className="text-xs">
+            <SelectTrigger>
               <SelectValue placeholder="Amount column" />
             </SelectTrigger>
             <SelectContent>
@@ -195,7 +195,7 @@ export function BankImportStep2({
               value={mapping.debit}
               onValueChange={(v) => onMappingChange("debit", v)}
             >
-              <SelectTrigger className="text-xs">
+              <SelectTrigger>
                 <SelectValue placeholder="Debit column" />
               </SelectTrigger>
               <SelectContent>
@@ -208,7 +208,7 @@ export function BankImportStep2({
               value={mapping.credit}
               onValueChange={(v) => onMappingChange("credit", v)}
             >
-              <SelectTrigger className="text-xs">
+              <SelectTrigger>
                 <SelectValue placeholder="Credit column" />
               </SelectTrigger>
               <SelectContent>
@@ -228,7 +228,7 @@ export function BankImportStep2({
             value={mapping.reference}
             onValueChange={(v) => onMappingChange("reference", v)}
           >
-            <SelectTrigger className="text-xs">
+            <SelectTrigger>
               <SelectValue placeholder="None" />
             </SelectTrigger>
             <SelectContent>
@@ -245,7 +245,7 @@ export function BankImportStep2({
             value={mapping.counterparty}
             onValueChange={(v) => onMappingChange("counterparty", v)}
           >
-            <SelectTrigger className="text-xs">
+            <SelectTrigger>
               <SelectValue placeholder="None" />
             </SelectTrigger>
             <SelectContent>

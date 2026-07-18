@@ -180,8 +180,8 @@ export default function SupportDashboardPage() {
             value={supportDashboardStats.responseRate.value}
             icon={Zap}
             trend={supportDashboardStats.responseRate.trend}
-            sparkColor={sparkColors.purple}
-            tone="violet"
+            sparkColor={sparkColors.blue}
+            tone="blue"
           />
         </StatCardGrid>
       </motion.div>

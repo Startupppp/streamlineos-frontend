@@ -158,7 +158,7 @@ function PreviewPanel() {
               value={source}
               onChange={setSource}
               placeholder="Select source…"
-              className="w-full h-8 text-xs"
+              className="w-full"
             />
           </div>
           <div>
@@ -168,7 +168,7 @@ function PreviewPanel() {
               value={priority}
               onChange={setPriority}
               placeholder="Select priority…"
-              className="w-full h-8 text-xs"
+              className="w-full"
             />
           </div>
           <div>

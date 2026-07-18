@@ -28,7 +28,7 @@ export function PublishReadiness({ steps, onStepClick }: PublishReadinessProps) 
           variant="ghost"
           size="sm"
           className={cn(
-            "h-7 gap-1.5 text-[11px] font-semibold",
+            "gap-1.5 text-xs font-semibold",
             allReady ? "text-emerald-600" : hasErrors ? "text-rose-600" : "text-amber-600",
           )}
         >

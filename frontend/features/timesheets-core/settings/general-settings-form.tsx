@@ -221,7 +221,7 @@ export function GeneralSettingsForm() {
                   onValueChange={field.onChange}
                   disabled={!canManage}
                 >
-                  <SelectTrigger className="h-8 text-xs w-44">
+                  <SelectTrigger className="w-44">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -250,7 +250,7 @@ export function GeneralSettingsForm() {
               min={0}
               max={24}
               step={0.5}
-              className="h-8 text-xs w-28"
+              className="w-28"
               disabled={!canManage}
               {...register("maxHoursPerDay")}
             />
@@ -290,7 +290,7 @@ export function GeneralSettingsForm() {
               <Input
                 type="number"
                 min={0}
-                className="h-8 text-xs w-28"
+                className="w-28"
                 placeholder="No limit"
                 disabled={!canManage}
                 {...register("backdateLimitDays")}
@@ -316,7 +316,7 @@ export function GeneralSettingsForm() {
                   onValueChange={field.onChange}
                   disabled={!canManage}
                 >
-                  <SelectTrigger className="h-8 text-xs w-52">
+                  <SelectTrigger className="w-52">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -392,7 +392,7 @@ export function GeneralSettingsForm() {
                   onValueChange={field.onChange}
                   disabled={!canManage}
                 >
-                  <SelectTrigger className="h-8 text-xs w-52">
+                  <SelectTrigger className="w-52">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -455,8 +455,6 @@ export function GeneralSettingsForm() {
         <div className="flex justify-end pb-2">
           <LoadingButton
             type="submit"
-            size="sm"
-            className="h-8 text-xs"
             isPending={update.isPending}
             disabled={!isDirty || update.isPending}
             loadingText="Saving…"

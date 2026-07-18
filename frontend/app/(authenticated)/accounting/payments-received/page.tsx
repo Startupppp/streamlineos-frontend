@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -269,7 +270,7 @@ export default function PaymentsReceivedPage() {
       subtitle="All payments collected against invoices"
       filters={
         <Select value={methodFilter} onValueChange={handleMethodFilterChange}>
-          <SelectTrigger className="w-[160px] text-xs">
+          <SelectTrigger className={`w-[160px] ${FILTER_SELECT_TRIGGER}`}>
             <SelectValue placeholder="All methods" />
           </SelectTrigger>
           <SelectContent>

@@ -82,13 +82,13 @@ export default function SupportOverviewReportPage() {
               label="Avg First Response"
               value={formatMinutes(data.avgFirstResponseMinutes)}
               icon={Timer}
-              tone="violet"
+              tone="blue"
             />
             <StatCard
               label="Avg Resolution"
               value={formatMinutes(data.avgResolutionMinutes)}
               icon={Clock}
-              tone="violet"
+              tone="blue"
             />
             <StatCard
               label="SLA Compliance"

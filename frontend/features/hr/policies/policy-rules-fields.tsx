@@ -126,7 +126,7 @@ function SelectField({
             disabled={disabled}
           >
             <FormControl>
-              <SelectTrigger className="text-xs">
+              <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
             </FormControl>

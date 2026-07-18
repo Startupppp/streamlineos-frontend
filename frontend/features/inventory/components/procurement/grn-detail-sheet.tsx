@@ -24,6 +24,7 @@ import { LoadingState, ErrorState } from "@/components/shared";
 import { useGoodsReceipt, useReverseGrn } from "@/hooks/api/inventory/operations";
 import { GRN_QUALITY_BADGE, GRN_QUALITY_LABEL } from "@/features/inventory/lib";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 export interface GrnDetailSheetProps {
   grnId: number;
@@ -176,7 +177,7 @@ export function GrnDetailSheet({ grnId, open, onOpenChange }: GrnDetailSheetProp
       >
         {grnQuery.isLoading && <LoadingState variant="form" />}
         {grnQuery.error && (
-          <ErrorState description={grnQuery.error.message} onRetry={() => void grnQuery.refetch()} />
+          <ErrorState description={getErrorMessage(grnQuery.error)} onRetry={() => void grnQuery.refetch()} />
         )}
         {grn && (
           <div className="space-y-4">

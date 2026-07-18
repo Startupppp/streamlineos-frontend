@@ -23,6 +23,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { LoadingState, ErrorState } from "@/components/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   usePurchaseOrder,
   useSendPurchaseOrder,
@@ -181,14 +182,14 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
   function handleSendPO(): void {
     sendMutation.mutate(undefined, {
       onSuccess: (result) => toast.success(`PO ${result.poNumber} sent`),
-      onError: (error) => toast.error(error.message),
+      onError: (error) => toast.error(getErrorMessage(error)),
     });
   }
 
   function handleApprovePO(): void {
     approveMutation.mutate(undefined, {
       onSuccess: (result) => toast.success(`PO ${result.poNumber} approved`),
-      onError: (error) => toast.error(error.message),
+      onError: (error) => toast.error(getErrorMessage(error)),
     });
   }
 
@@ -218,7 +219,7 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
         toast.success("Purchase order cancelled");
         setConfirmAction(null);
       },
-      onError: (error) => toast.error(error.message),
+      onError: (error) => toast.error(getErrorMessage(error)),
     });
   }
 
@@ -228,7 +229,7 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
         toast.success("Purchase order closed");
         setConfirmAction(null);
       },
-      onError: (error) => toast.error(error.message),
+      onError: (error) => toast.error(getErrorMessage(error)),
     });
   }
 
@@ -243,7 +244,7 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
   const grnColumns = useMemo(() => buildGrnColumns(handleGrnRowClick), []);
 
   if (query.isLoading) return <LoadingState variant="form" />;
-  if (query.error) return <ErrorState description={query.error.message} onRetry={handleRetry} />;
+  if (query.error) return <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} />;
   if (!query.data) return <ErrorState title="Not found" description={`PO #${poId}`} />;
 
   const po = query.data;

@@ -237,7 +237,7 @@ export default function ContactsPage() {
               <Button
                 variant={view === "table" ? "default" : "ghost"}
                 size="sm"
-                className="rounded-none h-8 px-2"
+                className="rounded-none h-9 px-2"
                 onClick={handleViewTable}
                 aria-label="Table view"
               >
@@ -246,7 +246,7 @@ export default function ContactsPage() {
               <Button
                 variant={view === "card" ? "default" : "ghost"}
                 size="sm"
-                className="rounded-none h-8 px-2"
+                className="rounded-none h-9 px-2"
                 onClick={handleViewCard}
                 aria-label="Card view"
               >
@@ -262,31 +262,27 @@ export default function ContactsPage() {
           </>
         }
         filters={
-          <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 lg:gap-3">
-            <div className="min-w-0 flex-1 lg:max-w-md w-full">
-          <SearchInput placeholder="Search contacts (min 3 chars)..." value={search} onValueChange={handleSearchChange} />
-        </div>
-            <div className="hidden min-w-0 items-center gap-2 sm:flex lg:gap-3">
-              <CrmOptionSelect
-                type="source"
-                value={sourceFilter}
-                onChange={handleSourceChange}
-                placeholder="All sources"
-                allowAll
-                className="w-[140px]"
-              />
+          <div className={FILTER_TOOLBAR_ROW}>
+            <div className="min-w-0 flex-1 lg:max-w-md">
+              <SearchInput placeholder="Search contacts (min 3 chars)..." value={search} onValueChange={handleSearchChange} />
             </div>
-            <div className="ml-auto shrink-0">
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs"
-                onClick={handleExport}
-              >
-                <Download className="h-3.5 w-3.5 mr-1.5" />
-                Export
-              </Button>
-            </div>
+            <CrmOptionSelect
+              type="source"
+              value={sourceFilter}
+              onChange={handleSourceChange}
+              placeholder="All sources"
+              allowAll
+              className="w-[140px]"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              className="ml-auto text-xs"
+              onClick={handleExport}
+            >
+              <Download className="h-3.5 w-3.5 mr-1.5" />
+              Export
+            </Button>
           </div>
         }
       >

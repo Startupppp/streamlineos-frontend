@@ -14,6 +14,7 @@ import {
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { Users, Check, ChevronDown, CalendarDays } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { DownloadIcon, SlidersHorizontalIcon } from "@animateicons/react/lucide";
@@ -185,9 +186,9 @@ export function WorkLogFilterActions({
   })();
 
   return (
-    <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0 w-full sm:w-auto">
+    <div className={cn(FILTER_TOOLBAR_ROW, "w-full sm:w-auto")}>
       <Select value={filters.year.toString()} onValueChange={handleYearChange}>
-        <SelectTrigger className="h-9 w-[84px] text-xs" aria-label="Select year">
+        <SelectTrigger className="h-9 w-[84px]" aria-label="Select year">
           <SelectValue placeholder="Year" />
         </SelectTrigger>
         <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -198,7 +199,7 @@ export function WorkLogFilterActions({
       </Select>
 
       <Select value={filters.quarter.toString()} onValueChange={handleQuarterChange}>
-        <SelectTrigger className="h-9 w-[130px] text-xs" aria-label="Select quarter">
+        <SelectTrigger className="h-9 w-[130px]" aria-label="Select quarter">
           <SelectValue placeholder="Quarter" />
         </SelectTrigger>
         <SelectContent className="w-[var(--radix-select-trigger-width)]">

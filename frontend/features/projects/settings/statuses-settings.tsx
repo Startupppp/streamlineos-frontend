@@ -193,7 +193,6 @@ export function StatusesSettings({ projectId }: { projectId: number }) {
                       onChange={handleNameChange}
                       placeholder="e.g. In Review"
                       className={cn(
-                        "h-8 text-sm",
                         nameError && "border-destructive focus-visible:ring-destructive",
                       )}
                       autoFocus

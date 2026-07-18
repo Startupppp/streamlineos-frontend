@@ -208,7 +208,7 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
     <div className="flex min-h-0 flex-1 flex-col space-y-3">
       <div className="flex items-center gap-2">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-36 text-[11px]">
+          <SelectTrigger className="w-36">
             <SelectValue placeholder="All statuses" />
           </SelectTrigger>
           <SelectContent>

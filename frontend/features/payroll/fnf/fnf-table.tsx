@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
+import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { useFnfSettlements } from "@/hooks/api/payroll/fnf";
 import { formatMoney } from "@/features/payroll/shared";
 import { FnfStatusBadge } from "./fnf-status-badge";
@@ -110,9 +111,9 @@ export function FnfTable() {
 
   return (
     <>
-      <div className="flex items-center gap-2 mb-3">
+      <div className={`${FILTER_TOOLBAR_ROW} mb-3`}>
         <Select value={statusFilter} onValueChange={handleStatusChange}>
-          <SelectTrigger className="w-44 text-[12px]">
+          <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-44`}>
             <SelectValue placeholder="All statuses" />
           </SelectTrigger>
           <SelectContent>

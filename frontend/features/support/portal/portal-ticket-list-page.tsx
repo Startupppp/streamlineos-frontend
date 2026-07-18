@@ -43,7 +43,7 @@ export function PortalTicketListPage() {
       title="My Support Tickets"
       subtitle="View and manage the support tickets you've raised"
       actions={
-        <AnimatedIconButton size="sm" className="h-8 text-xs" onClick={handleOpenNewTicket} icon={PlusIcon} iconClassName="mr-1.5">
+        <AnimatedIconButton size="sm" onClick={handleOpenNewTicket} icon={PlusIcon} iconClassName="mr-1.5">
           New Ticket
         </AnimatedIconButton>
       }

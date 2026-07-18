@@ -29,11 +29,10 @@ import {
   PmPanel,
   PmSection,
   PM_FILL_PANEL,
-  PM_TOOLBAR,
 } from "@/features/projects/shared/pm-chrome";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { TABLE_TITLE_CELL } from "@/features/projects/shared/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 const CR_STATUS_LABELS: Record<ChangeRequestStatus, string> = {
@@ -210,28 +209,26 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
   ], [canManage, handleEdit, members]);
 
   const filtersBar = (
-    <div className={cn(PM_TOOLBAR, "sm:justify-start")}>
-      <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-        <SearchInput
-          placeholder="Search..."
-          value={search}
-          onValueChange={handleSearchChange}
-          className="w-44"
-        />
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-40 text-[11px]">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            {CR_STATUSES.map((s) => (
-              <SelectItem key={s} value={s}>
-                {CR_STATUS_LABELS[s]}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+    <div className={FILTER_TOOLBAR_ROW}>
+      <SearchInput
+        placeholder="Search..."
+        value={search}
+        onValueChange={handleSearchChange}
+        className="w-44"
+      />
+      <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <SelectTrigger className="w-40">
+          <SelectValue placeholder="Status" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All statuses</SelectItem>
+          {CR_STATUSES.map((s) => (
+            <SelectItem key={s} value={s}>
+              {CR_STATUS_LABELS[s]}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 

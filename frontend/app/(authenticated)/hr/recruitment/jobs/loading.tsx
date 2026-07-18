@@ -1,5 +1,6 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export default function JobsLoading() {
   return (
@@ -13,9 +14,9 @@ export default function JobsLoading() {
         </div>
       }
       filters={
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-8 w-[130px] rounded-md" />
-          <Skeleton className="h-8 w-[140px] rounded-md" />
+        <div className={FILTER_TOOLBAR_ROW}>
+          <Skeleton className="h-9 w-[130px] rounded-md" />
+          <Skeleton className="h-9 w-[140px] rounded-md" />
         </div>
       }
     >

@@ -84,7 +84,7 @@ export function ExpenseFiltersBar({
           <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search merchant or description" />
         </div>
       <Select value={status} onValueChange={handleStatusChange}>
-        <SelectTrigger className={`w-[170px] text-xs ${FILTER_SELECT_TRIGGER}`}>
+        <SelectTrigger className={`w-[170px] ${FILTER_SELECT_TRIGGER}`}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -99,13 +99,13 @@ export function ExpenseFiltersBar({
         type="date"
         value={startDate}
         onChange={handleStartDateChange}
-        className="w-[140px] text-xs"
+        className="w-[140px]"
       />
       <Input
         type="date"
         value={endDate}
         onChange={handleEndDateChange}
-        className="w-[140px] text-xs"
+        className="w-[140px]"
       />
     </div>
   );

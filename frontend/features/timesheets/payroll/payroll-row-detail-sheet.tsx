@@ -126,8 +126,7 @@ export function PayrollRowDetailSheet({
         <SheetFooter className="border-t px-6 py-4">
           <Button
             variant="outline"
-            size="sm"
-            className="w-full h-8 text-xs"
+            className="w-full"
             onClick={handleClose}
           >
             Close

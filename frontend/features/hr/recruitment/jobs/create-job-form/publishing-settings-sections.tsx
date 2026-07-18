@@ -96,7 +96,7 @@ export function Section10({ form }: SectionProps) {
                     variant={field.value === value ? "default" : "outline"}
                     size="sm"
                     className={cn(
-                      "flex-1 h-8 text-xs font-semibold transition-colors duration-200",
+                      "flex-1 font-semibold transition-colors duration-200",
                       field.value === value && activeClass
                     )}
                     onClick={() => field.onChange(value)}

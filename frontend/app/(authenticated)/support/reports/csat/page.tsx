@@ -48,7 +48,7 @@ export default function SupportCsatReportPage() {
                 label="Response Rate"
                 value={formatRatioPercent(data?.responseRate ?? null)}
                 icon={Percent}
-                tone="violet"
+                tone="blue"
                 isLoading={isLoading}
               />
               <StatCard

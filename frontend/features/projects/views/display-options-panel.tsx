@@ -310,7 +310,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
                 <div className="space-y-1.5">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Columns</p>
                   <Select value={options.columnBy} onValueChange={handleColumnByChange}>
- <SelectTrigger className="w-full bg-card text-xs">
+                  <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -323,7 +323,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
                 <div className="space-y-1.5">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Rows</p>
                   <Select value={options.rowBy} onValueChange={handleRowByChange}>
- <SelectTrigger className="w-full bg-card text-xs">
+                  <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -340,7 +340,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
                 <div className="space-y-1.5">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Group by</p>
                   <Select value={options.groupBy} onValueChange={handleGroupByChange}>
- <SelectTrigger className="w-full bg-card text-xs">
+                  <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -353,7 +353,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
                 <div className="space-y-1.5">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Sub-group</p>
                   <Select value={options.rowBy} onValueChange={handleRowByChange}>
- <SelectTrigger className="w-full bg-card text-xs">
+                  <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -374,7 +374,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
             <div className="space-y-1.5">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Ordering</p>
               <Select value={options.orderBy} onValueChange={handleOrderByChange}>
- <SelectTrigger className="w-full bg-card text-xs">
+                  <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -397,7 +397,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
         <div className="space-y-1.5">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Completed issues</p>
           <Select value={options.completedIssues} onValueChange={handleCompletedIssuesChange}>
- <SelectTrigger className="w-full bg-card text-xs">
+                  <SelectTrigger className="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

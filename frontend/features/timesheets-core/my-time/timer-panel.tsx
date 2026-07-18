@@ -258,15 +258,15 @@ export function TimerPanel({ weekStart, weekEnd }: TimerPanelProps) {
             <div className="space-y-3 py-2">
               <div className="space-y-1">
                 <Label className="text-xs">Date</Label>
-                <DatePicker value={convertDate ?? ""} onChange={handleConvertDateChange} placeholder="Pick a date" className="h-8 text-sm" />
+                <DatePicker value={convertDate ?? ""} onChange={handleConvertDateChange} placeholder="Pick a date" className="h-9 text-sm" />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Hours</Label>
-                <Input type="number" min="0.25" step="0.25" value={convertHours} onChange={handleConvertHoursChange} className="h-8 text-sm" />
+                <Input type="number" min="0.25" step="0.25" value={convertHours} onChange={handleConvertHoursChange} className="h-9 text-sm" />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Description</Label>
-                <Input value={convertDesc} onChange={handleConvertDescChange} placeholder="What did you work on?" className="h-8 text-sm" />
+                <Input value={convertDesc} onChange={handleConvertDescChange} placeholder="What did you work on?" className="h-9 text-sm" />
               </div>
               <div className="flex items-center gap-2">
                 <Switch checked={convertBillable} onCheckedChange={handleConvertBillableChange} />
@@ -303,7 +303,7 @@ export function TimerPanel({ weekStart, weekEnd }: TimerPanelProps) {
             value={startDesc}
             onChange={handleStartDescChange}
             placeholder="What are you working on?"
-            className="h-8 text-sm"
+            className="h-9 text-sm"
           />
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">

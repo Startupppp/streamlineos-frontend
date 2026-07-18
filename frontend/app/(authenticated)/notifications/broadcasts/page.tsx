@@ -75,7 +75,7 @@ const STATUS_TABS: Array<{ value: string; label: string }> = [
 const STATUS_CONFIG: Record<BroadcastStatus, { label: string; className: string }> = {
   DRAFT: { label: "Draft", className: "border-border text-muted-foreground" },
   SCHEDULED: { label: "Scheduled", className: "border-blue-300 text-blue-600" },
-  QUEUED: { label: "Queued", className: "border-indigo-300 text-indigo-600" },
+  QUEUED: { label: "Queued", className: "border-blue-300 text-blue-600 dark:border-blue-500/40 dark:text-blue-400" },
   SENDING: { label: "Sending", className: "border-amber-300 text-amber-600" },
   SENT: { label: "Sent", className: "border-emerald-300 text-emerald-600" },
   CANCELLED: { label: "Cancelled", className: "border-border text-muted-foreground" },
@@ -278,7 +278,7 @@ function BroadcastSheet({
                       <input
                         type="datetime-local"
                         {...field}
-                        className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       />
                     </FormControl>
                     <p className="text-[11px] text-muted-foreground">Leave empty to send immediately on publish.</p>

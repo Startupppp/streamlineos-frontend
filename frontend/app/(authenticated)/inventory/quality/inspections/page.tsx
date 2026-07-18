@@ -11,6 +11,7 @@ import { SearchInput } from "@/components/ui/search-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyOrdersIllustration } from "@/components/illustrations";
 import { useQualityInspections } from "@/hooks/api/inventory/quality";
@@ -177,7 +178,7 @@ function InspectionsPageInner() {
         {inspectionsQuery.error ? (
           <ErrorState
             title="Failed to load inspections"
-            description={inspectionsQuery.error.message}
+            description={getErrorMessage(inspectionsQuery.error)}
             onRetry={handleRetry}
           />
         ) : (

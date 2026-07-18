@@ -173,7 +173,7 @@ export function ChangeRequestSheet({ projectId, open, onOpenChange, editCr }: Ch
                 <div className="space-y-1.5">
                   <Label className="text-[11px]">Status</Label>
                   <Select value={form.watch("status")} onValueChange={(v) => form.setValue("status", v)}>
-                    <SelectTrigger className="text-[11px]"><SelectValue /></SelectTrigger>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {CR_STATUSES.map((s) => (
                         <SelectItem key={s} value={s}>{CR_STATUS_LABELS[s]}</SelectItem>

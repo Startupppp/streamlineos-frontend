@@ -251,7 +251,7 @@ export function SettingsProfile() {
                 onKeyDown={handleNameKeyDown}
                 placeholder="Your full name"
                 autoFocus
-                className="h-8 text-sm flex-1"
+                className="flex-1"
               />
               {isSavingName ? (
                 <Button size="icon" className="h-9 w-9 shrink-0" disabled aria-label="Saving">
@@ -283,7 +283,7 @@ export function SettingsProfile() {
               type="button"
               onClick={handleStartEditName}
               className={cn(
-                "flex h-8 w-full items-center rounded-md border border-input bg-transparent px-3 text-sm",
+                "flex h-9 w-full items-center rounded-md border border-input bg-transparent px-3 text-sm",
                 "text-left cursor-pointer hover:border-border/80 hover:bg-muted/40 transition-colors",
                 !name && "text-muted-foreground"
               )}
@@ -301,7 +301,7 @@ export function SettingsProfile() {
             type="email"
             value={email}
             disabled
-            className="h-8 text-sm bg-muted/40"
+            className="bg-muted/40"
           />
           <p className="text-[11px] text-muted-foreground">
             Contact your admin to change email.

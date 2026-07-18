@@ -30,6 +30,7 @@ import {
   EmptyReportIllustration,
   EmptySearchIllustration,
 } from "@/components/illustrations";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useStockSummary,
   type StockSummaryRow,
@@ -310,7 +311,7 @@ function StockSummaryContent() {
     >
       {query.error && (
         <ErrorState
-          description={query.error.message}
+          description={getErrorMessage(query.error)}
           onRetry={handleRetry}
           className="flex-1"
         />

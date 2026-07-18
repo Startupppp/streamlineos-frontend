@@ -105,9 +105,9 @@ const NODE_PALETTE: Array<{
     label: "Action",
     description: "Execute an operation",
     icon: <Play className="h-4 w-4" />,
-    color: "text-violet-600 dark:text-violet-400",
-    border: "border-violet-300 dark:border-violet-500/30",
-    bg: "bg-violet-50 dark:bg-violet-500/10",
+    color: "text-primary",
+    border: "border-primary/30",
+    bg: "bg-primary/10",
   },
   {
     nodeType: "delay",
@@ -132,9 +132,9 @@ const NODE_PALETTE: Array<{
     label: "AI Action",
     description: "Use AI to process data",
     icon: <Sparkles className="h-4 w-4" />,
-    color: "text-purple-600 dark:text-purple-400",
-    border: "border-purple-300 dark:border-purple-500/30",
-    bg: "bg-purple-50 dark:bg-purple-500/10",
+    color: "text-amber-600 dark:text-amber-400",
+    border: "border-amber-300 dark:border-amber-500/30",
+    bg: "bg-amber-50 dark:bg-amber-500/10",
   },
   {
     nodeType: "integration",
@@ -209,7 +209,7 @@ function WorkflowNodeComponent({
       className={cn(
         "rounded-xl border-2 bg-card shadow-md min-w-[160px] max-w-[220px] transition-all duration-150",
         selected
-          ? "border-violet-500 shadow-violet-200/60 shadow-lg ring-2 ring-violet-200 dark:shadow-violet-500/20 dark:ring-violet-500/30"
+          ? "border-primary shadow-lg ring-2 ring-primary/20"
           : palette.border,
       )}
     >

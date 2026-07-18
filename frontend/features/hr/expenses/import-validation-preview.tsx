@@ -48,7 +48,7 @@ function CategoryMappingRow({ original, mapped, onValueChange }: CategoryMapping
       <TruncatedText text={`"${original}"`} className="text-xs text-muted-foreground w-24" />
       <span className="text-xs text-muted-foreground">→</span>
       <Select value={mapped} onValueChange={handleChange}>
-        <SelectTrigger className="text-xs w-36">
+        <SelectTrigger className="w-36">
           <SelectValue />
         </SelectTrigger>
         <SelectContent className="w-[var(--radix-select-trigger-width)]">

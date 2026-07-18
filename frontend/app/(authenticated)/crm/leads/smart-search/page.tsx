@@ -247,7 +247,7 @@ export default function SmartLeadSearchPage() {
             <Button
               onClick={handleSearch}
               disabled={!inputValue.trim() || isPending}
-              className="gap-1.5 h-8 w-full sm:w-auto"
+              className="gap-1.5 w-full sm:w-auto"
             >
               {isPending ? (
                 <>

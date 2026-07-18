@@ -12,7 +12,7 @@ const STATUS_CONFIG: Record<FnfStatus, { label: string; className: string }> = {
   },
   FINANCE_REVIEW: {
     label: "Finance Review",
-    className: "bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-500/10 dark:text-violet-300 dark:border-violet-500/30",
+    className: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
   },
   APPROVED: {
     label: "Approved",

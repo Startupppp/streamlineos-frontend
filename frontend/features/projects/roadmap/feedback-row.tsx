@@ -113,7 +113,7 @@ export const FeedbackRow = memo(function FeedbackRow({
           </div>
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <Select value={post.status} onValueChange={handleStatusChange}>
-              <SelectTrigger className="w-36 text-xs">
+              <SelectTrigger className="w-36">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -128,7 +128,7 @@ export const FeedbackRow = memo(function FeedbackRow({
               value={post.linkedRoadmapItemId ? String(post.linkedRoadmapItemId) : "none"}
               onValueChange={handleLinkChange}
             >
-              <SelectTrigger className="w-48 text-xs">
+              <SelectTrigger className="w-48">
                 <SelectValue placeholder="Link roadmap item" />
               </SelectTrigger>
               <SelectContent>

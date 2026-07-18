@@ -131,7 +131,7 @@ export function OrgHolidayCalendarSection({ canEdit }: OrgHolidayCalendarSection
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-sm font-medium">Holiday name *</Label>
-                <Input {...form.register("name")} placeholder="Republic Day" className="h-8 text-sm" />
+                <Input {...form.register("name")} placeholder="Republic Day" />
                 {form.formState.errors.name && <p className="text-[11px] text-destructive">{form.formState.errors.name.message}</p>}
               </div>
               <div className="space-y-1">
@@ -140,7 +140,7 @@ export function OrgHolidayCalendarSection({ canEdit }: OrgHolidayCalendarSection
                   name="date"
                   control={form.control}
                   render={({ field }) => (
-                    <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+                    <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" />
                   )}
                 />
                 {form.formState.errors.date && <p className="text-[11px] text-destructive">{form.formState.errors.date.message}</p>}

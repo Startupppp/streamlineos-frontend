@@ -10,7 +10,7 @@ export default function ContactsLoading() {
       subtitle="People directory"
       actions={
         <div className="flex items-center gap-2">
-          <Skeleton className="h-8 w-[64px] rounded-md" />
+          <Skeleton className="h-9 w-[64px] rounded-md" />
           <Skeleton className="h-9 w-28 rounded-md" />
           <Skeleton className="h-9 w-28 rounded-md" />
         </div>

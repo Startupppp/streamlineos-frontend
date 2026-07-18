@@ -18,6 +18,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import dynamic from "next/dynamic";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { BarChart3, Star, Users } from "lucide-react";
+import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 const ScorecardCharts = dynamic(
   () => import("@/features/hr/recruitment/components/scorecard-charts").then((m) => ({ default: m.ScorecardCharts })),
@@ -99,16 +100,18 @@ export default function ScorecardAnalyticsPage() {
       title="Scorecard Analytics"
       subtitle="Interviewer bias detection and scoring patterns"
       filters={
-        <Select value={days} onValueChange={handleDaysChange}>
-          <SelectTrigger className="w-[150px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {PERIOD_OPTIONS.map((o) => (
-              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className={FILTER_TOOLBAR_ROW}>
+          <Select value={days} onValueChange={handleDaysChange}>
+            <SelectTrigger className={`w-[150px] ${FILTER_SELECT_TRIGGER}`}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {PERIOD_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       }
     >
       <StatCardGrid cols={3} className="mb-4">

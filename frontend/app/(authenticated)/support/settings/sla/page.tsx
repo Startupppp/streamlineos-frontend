@@ -28,6 +28,7 @@ import {
 } from "@/hooks/api/support/sla-policies";
 import { useBusinessHoursList } from "@/hooks/api/support/business-hours";
 import { toast } from "sonner";
+import { getApiError } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 import {
   policySchema, DEFAULT_FORM_VALUES, policyToFormValues, buildCreatePayload, buildUpdatePayload,
@@ -77,7 +78,7 @@ export default function SupportSlaPage() {
   const onCreateSubmit = useCallback((data: PolicyForm) => {
     createPolicy.mutate(buildCreatePayload(data), {
       onSuccess: () => { toast.success("SLA policy created"); setCreateOpen(false); createForm.reset(DEFAULT_FORM_VALUES); },
-      onError: (err) => toast.error(err.message),
+      onError: (err) => toast.error(getApiError(err)),
     });
   }, [createPolicy, createForm]);
 
@@ -87,7 +88,7 @@ export default function SupportSlaPage() {
       { id: editingId, ...buildUpdatePayload(data) },
       {
         onSuccess: () => { toast.success("Policy updated"); setEditingId(null); },
-        onError: (err) => toast.error(err.message),
+        onError: (err) => toast.error(getApiError(err)),
       },
     );
   }, [editingId, updatePolicy]);
@@ -104,7 +105,7 @@ export default function SupportSlaPage() {
     if (deleteTargetId === null) return;
     deletePolicy.mutate(deleteTargetId, {
       onSuccess: () => { toast.success("Policy deleted"); setDeleteTargetId(null); },
-      onError: (err) => { toast.error(err.message); setDeleteTargetId(null); },
+      onError: (err) => { toast.error(getApiError(err)); setDeleteTargetId(null); },
     });
   }, [deletePolicy, deleteTargetId]);
 

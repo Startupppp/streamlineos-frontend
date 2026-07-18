@@ -213,7 +213,7 @@ export function ShareDialog({ projectId, whiteboard, open, onOpenChange }: Share
                       }}
                       disabled={setShares.isPending || share.userId === currentUserId}
                     >
-                      <SelectTrigger className="w-24 text-xs"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="w-24"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="viewer"><Eye className="h-3 w-3 inline mr-1" />Viewer</SelectItem>
                         <SelectItem value="editor"><Pencil className="h-3 w-3 inline mr-1" />Editor</SelectItem>
@@ -254,7 +254,7 @@ export function ShareDialog({ projectId, whiteboard, open, onOpenChange }: Share
                   }}
                   disabled={updateSharing.isPending}
                 >
-                  <SelectTrigger className="w-28 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="viewer">View</SelectItem>
                     <SelectItem value="editor">Edit</SelectItem>
@@ -270,7 +270,7 @@ export function ShareDialog({ projectId, whiteboard, open, onOpenChange }: Share
                   }}
                   disabled={updateSharing.isPending}
                 >
-                  <SelectTrigger className="w-28 text-xs">
+                  <SelectTrigger className="w-28">
                     <SelectValue placeholder={sharing.linkExpiresAt ? new Date(sharing.linkExpiresAt).toLocaleDateString() : "Never"} />
                   </SelectTrigger>
                   <SelectContent>

@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { useShipSalesOrder } from "@/hooks/api/inventory/sales-orders";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const shipSchema = z.object({
   shipDate: z.string().min(1, "Ship date is required"),
@@ -52,7 +53,7 @@ export function ShipSheet({ open, onOpenChange, soId }: ShipSheetProps) {
           form.reset({ shipDate: todayIso(), trackingNumber: "", notes: "" });
           onOpenChange(false);
         },
-        onError: (err) => toast.error(err.message),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }

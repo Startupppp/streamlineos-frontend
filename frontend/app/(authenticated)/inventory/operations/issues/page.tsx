@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { useStockTransactions } from "@/hooks/api/inventory/stock";
 import type { StockTransaction } from "@/hooks/api/inventory/stock";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const TYPE_BADGE: Record<string, string> = {
   SALE: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
@@ -169,7 +170,7 @@ export default function IssuesPage() {
         isLoading={query.isLoading}
         emptyState={
           query.error ? (
-            <ErrorState description={query.error.message} onRetry={handleRetry} compact />
+            <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} compact />
           ) : (
             <InventoryEmptyState
               title="No outbound issues"

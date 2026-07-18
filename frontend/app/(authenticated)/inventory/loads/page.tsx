@@ -37,6 +37,7 @@ import {
   type Load,
 } from "@/hooks/api/inventory/shipping";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const PAGE_LIMIT = 20;
 
@@ -82,7 +83,7 @@ function LoadDetailPanel({ loadId, onClose }: LoadDetailPanelProps) {
           toast.success("Load dispatched");
           setConfirmAction(null);
         },
-        onError: (error) => toast.error(error.message),
+        onError: (error) => toast.error(getErrorMessage(error)),
       });
     } else if (confirmAction === "close") {
       closeMutation.mutate(id, {
@@ -90,7 +91,7 @@ function LoadDetailPanel({ loadId, onClose }: LoadDetailPanelProps) {
           toast.success("Load closed");
           setConfirmAction(null);
         },
-        onError: (error) => toast.error(error.message),
+        onError: (error) => toast.error(getErrorMessage(error)),
       });
     } else if (confirmAction === "cancel") {
       cancelMutation.mutate(id, {
@@ -99,7 +100,7 @@ function LoadDetailPanel({ loadId, onClose }: LoadDetailPanelProps) {
           setConfirmAction(null);
           onClose();
         },
-        onError: (error) => toast.error(error.message),
+        onError: (error) => toast.error(getErrorMessage(error)),
       });
     }
   }
@@ -322,7 +323,7 @@ function LoadsPageInner() {
         {loadsQuery.error ? (
           <ErrorState
             title="Failed to load loads"
-            description={loadsQuery.error.message}
+            description={getErrorMessage(loadsQuery.error)}
             onRetry={handleRetry}
           />
         ) : (

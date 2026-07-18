@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { CONTENT_FILL_PANEL, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { CONTENT_FILL_PANEL, FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { EmptyClientsIllustration } from "@/components/illustrations";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared";
@@ -265,12 +265,12 @@ export default function ClientsPage() {
       title="Clients"
       subtitle={isLoading ? undefined : `${totalCount} accounts`}
       filters={
-        <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+        <div className={FILTER_TOOLBAR_ROW}>
           <div className="w-[240px] max-w-[min(240px,70vw)]">
-          <SearchInput placeholder="Search clients..." value={rawSearch} onValueChange={handleSearchChange} />
-        </div>
+            <SearchInput placeholder="Search clients..." value={rawSearch} onValueChange={handleSearchChange} />
+          </div>
           <Select value={statusParam ?? "all"} onValueChange={handleStatusChange}>
-            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "text-xs w-[160px] min-w-0 shrink-0")}>
+            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "text-xs w-[160px] min-w-0")}>
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>

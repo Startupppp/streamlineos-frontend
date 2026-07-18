@@ -25,6 +25,7 @@ import {
 } from "@/hooks/api/inventory/operations";
 import { VendorReturnSheet } from "@/features/inventory/components/operations/vendor-return-sheet";
 import { CustomerReturnSheet } from "@/features/inventory/components/operations/customer-return-sheet";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 type ReturnStatus = "DRAFT" | "POSTED" | "CANCELLED";
 
@@ -76,7 +77,7 @@ export default function ReturnsPage() {
       { returnId: id },
       {
         onSuccess: () => toast.success("Vendor return posted"),
-        onError: (err) => toast.error(err.message ?? "Failed to post"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }, [postVendorMutation]);
@@ -86,7 +87,7 @@ export default function ReturnsPage() {
       { returnId: id },
       {
         onSuccess: () => toast.success("Vendor return cancelled"),
-        onError: (err) => toast.error(err.message ?? "Failed to cancel"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }, [cancelVendorMutation]);
@@ -96,7 +97,7 @@ export default function ReturnsPage() {
       { returnId: id },
       {
         onSuccess: () => toast.success("Customer return posted"),
-        onError: (err) => toast.error(err.message ?? "Failed to post"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }, [postCustomerMutation]);
@@ -106,7 +107,7 @@ export default function ReturnsPage() {
       { returnId: id },
       {
         onSuccess: () => toast.success("Customer return cancelled"),
-        onError: (err) => toast.error(err.message ?? "Failed to cancel"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }, [cancelCustomerMutation]);
@@ -281,7 +282,7 @@ export default function ReturnsPage() {
             isLoading={vendorQuery.isLoading}
             emptyState={
               vendorQuery.error ? (
-                <ErrorState description={vendorQuery.error.message} onRetry={handleVendorRetry} compact />
+                <ErrorState description={getErrorMessage(vendorQuery.error)} onRetry={handleVendorRetry} compact />
               ) : (
                 <InventoryEmptyState title="No vendor returns" description="Create a vendor return to get started." compact />
               )
@@ -303,7 +304,7 @@ export default function ReturnsPage() {
             isLoading={customerQuery.isLoading}
             emptyState={
               customerQuery.error ? (
-                <ErrorState description={customerQuery.error.message} onRetry={handleCustomerRetry} compact />
+                <ErrorState description={getErrorMessage(customerQuery.error)} onRetry={handleCustomerRetry} compact />
               ) : (
                 <InventoryEmptyState title="No customer returns" description="Create a customer return to get started." compact />
               )

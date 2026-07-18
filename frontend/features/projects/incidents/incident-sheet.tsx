@@ -258,7 +258,7 @@ export function IncidentSheet({
                   value={form.watch("severity")}
                   onValueChange={handleSeverityChange}
                 >
-                  <SelectTrigger className="text-[11px]">
+                  <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -276,7 +276,7 @@ export function IncidentSheet({
                   value={form.watch("status")}
                   onValueChange={handleStatusChange}
                 >
-                  <SelectTrigger className="text-[11px]">
+                  <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

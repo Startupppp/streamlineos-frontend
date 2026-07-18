@@ -61,7 +61,7 @@ function ColorField({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="#2563eb"
-          className="h-8 flex-1 font-mono text-sm"
+          className="flex-1 font-mono"
           maxLength={7}
         />
       </div>
@@ -229,7 +229,7 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
               <div className="space-y-1">
                 <Label className="text-sm font-medium">Logo</Label>
                 <div className="flex gap-2">
-                  <Input {...form.register("logo")} placeholder="https://cdn.example.com/logo.png" className="h-8 flex-1 text-sm" />
+                  <Input {...form.register("logo")} placeholder="https://cdn.example.com/logo.png" className="flex-1" />
                   <UploadButton uploading={logoUploading} onClick={() => logoInputRef.current?.click()} />
                   <input ref={logoInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/svg+xml" className="hidden" onChange={handleLogoUpload} />
                 </div>
@@ -239,7 +239,7 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
               <div className="space-y-1">
                 <Label className="text-sm font-medium">Favicon <span className="text-muted-foreground font-normal">(max 256 KB)</span></Label>
                 <div className="flex gap-2">
-                  <Input {...form.register("favicon")} placeholder="https://cdn.example.com/favicon.ico" className="h-8 flex-1 text-sm" />
+                  <Input {...form.register("favicon")} placeholder="https://cdn.example.com/favicon.ico" className="flex-1" />
                   <UploadButton uploading={faviconUploading} onClick={() => faviconInputRef.current?.click()} />
                   <input ref={faviconInputRef} type="file" accept="image/x-icon,image/vnd.microsoft.icon,image/png,image/jpeg" className="hidden" onChange={handleFaviconUpload} />
                 </div>
@@ -265,7 +265,7 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
 
             <div className="space-y-1">
               <Label className="text-sm font-medium">Login page background URL</Label>
-              <Input {...form.register("loginBgUrl")} placeholder="https://cdn.example.com/bg.jpg" className="h-8 text-sm" />
+              <Input {...form.register("loginBgUrl")} placeholder="https://cdn.example.com/bg.jpg" />
               {form.formState.errors.loginBgUrl && <p className="text-[11px] text-destructive">{form.formState.errors.loginBgUrl.message}</p>}
             </div>
 

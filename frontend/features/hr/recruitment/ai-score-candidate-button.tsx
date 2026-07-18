@@ -89,7 +89,7 @@ export function AIScoreCandidateButton({ candidateId, jobId, compact }: AIScoreC
                 variant="default"
                 isPending={acceptMutation.isPending}
                 onClick={handleAccept}
-                className="h-7 text-xs"
+                className="text-xs"
               >
                 Accept AI Score
               </LoadingButton>

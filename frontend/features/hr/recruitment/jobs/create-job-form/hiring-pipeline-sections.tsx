@@ -225,7 +225,7 @@ export function Section8({ form }: SectionProps) {
                   </div>
                   <div className="flex flex-wrap items-center gap-3 pl-6">
                     <Select value={q.type} onValueChange={(v) => handleUpdateQuestion(q.id, { type: v as ScreeningQuestionValues["type"] })}>
-                      <SelectTrigger className="w-[150px] h-8 text-xs">
+                      <SelectTrigger className="w-[150px]">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -244,7 +244,7 @@ export function Section8({ form }: SectionProps) {
                     </label>
                     {q.knockout && q.type === "YES_NO" && (
                       <Select value={q.knockoutAnswer ?? "Yes"} onValueChange={(v) => handleUpdateQuestion(q.id, { knockoutAnswer: v })}>
-                        <SelectTrigger className="w-[160px] h-8 text-xs">
+                        <SelectTrigger className="w-[160px]">
                           <SelectValue placeholder="Disqualifying answer" />
                         </SelectTrigger>
                         <SelectContent>

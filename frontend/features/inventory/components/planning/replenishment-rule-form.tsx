@@ -31,6 +31,8 @@ import {
   useUpdateReplenishmentRule,
   type ReplenishmentRule,
 } from "@/hooks/api/inventory/planning";
+import { isApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const SENTINEL = "__none__";
 
@@ -126,11 +128,11 @@ export function ReplenishmentRuleForm({ open, onOpenChange, editRule }: Replenis
       vendorId: values.vendorId && values.vendorId !== SENTINEL ? Number(values.vendorId) : undefined,
     };
 
-    const handleError = (err: Error): void => {
-      if (err.message?.includes("409") || err.message?.toLowerCase().includes("conflict")) {
+    const handleError = (err: unknown): void => {
+      if (isApiError(err) && err.status === 409) {
         toast.error("A rule already exists for this product/warehouse combination");
       } else {
-        toast.error(editRule ? "Failed to update rule" : "Failed to create rule");
+        toast.error(getErrorMessage(err) || (editRule ? "Failed to update rule" : "Failed to create rule"));
       }
     };
 

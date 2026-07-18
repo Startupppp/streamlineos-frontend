@@ -24,14 +24,13 @@ import { buildMeetingsColumns } from "./meetings-columns";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { generateAgenda, type AgendaSource } from "./generate-agenda";
 import type { Meeting, CreateMeetingInput } from "@/types/projects";
-import { cn } from "@/lib/utils";
 import {
   PmPageShell,
   PmPanel,
   PmSection,
   PM_FILL_PANEL,
-  PM_TOOLBAR,
 } from "@/features/projects/shared/pm-chrome";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
 
 const TYPE_OPTS = [
@@ -220,76 +219,74 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
   );
 
   const filtersBar = (
-    <div className={cn(PM_TOOLBAR, "w-full")}>
-      <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-        <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="w-36 text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {TYPE_OPTS.map((o) => (
-              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-36 text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {STATUS_OPTS.map((o) => (
-              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={dateFilter} onValueChange={setDateFilter}>
-          <SelectTrigger className="w-32 text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {DATE_OPTS.map((o) => (
-              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={actionItemFilter} onValueChange={setActionItemFilter}>
-          <SelectTrigger className="w-40 text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {ACTION_ITEM_OPTS.map((o) => (
-              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {projectMembers.length > 0 ? (
-          <Combobox
-            options={memberOptions}
-            value={hostId}
-            onChange={setHostId}
-            placeholder="Host…"
-            searchPlaceholder="Search hosts…"
-            emptyText="No members"
-            className="w-32 text-xs"
-          />
-        ) : null}
-        {projectMembers.length > 0 ? (
-          <Combobox
-            options={memberOptions}
-            value={attendeeId}
-            onChange={setAttendeeId}
-            placeholder="Attendee…"
-            searchPlaceholder="Search attendees…"
-            emptyText="No members"
-            className="w-32 text-xs"
-          />
-        ) : null}
-        {isFiltered ? (
-          <Button size="sm" variant="ghost" className="text-xs" onClick={handleClearFilters}>
-            Clear
-          </Button>
-        ) : null}
-      </div>
+    <div className={FILTER_TOOLBAR_ROW}>
+      <Select value={typeFilter} onValueChange={setTypeFilter}>
+        <SelectTrigger className="w-36">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {TYPE_OPTS.map((o) => (
+            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <SelectTrigger className="w-36">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {STATUS_OPTS.map((o) => (
+            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select value={dateFilter} onValueChange={setDateFilter}>
+        <SelectTrigger className="w-32">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {DATE_OPTS.map((o) => (
+            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select value={actionItemFilter} onValueChange={setActionItemFilter}>
+        <SelectTrigger className="w-40">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {ACTION_ITEM_OPTS.map((o) => (
+            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {projectMembers.length > 0 ? (
+        <Combobox
+          options={memberOptions}
+          value={hostId}
+          onChange={setHostId}
+          placeholder="Host…"
+          searchPlaceholder="Search hosts…"
+          emptyText="No members"
+          className="w-32"
+        />
+      ) : null}
+      {projectMembers.length > 0 ? (
+        <Combobox
+          options={memberOptions}
+          value={attendeeId}
+          onChange={setAttendeeId}
+          placeholder="Attendee…"
+          searchPlaceholder="Search attendees…"
+          emptyText="No members"
+          className="w-32"
+        />
+      ) : null}
+      {isFiltered ? (
+        <Button size="sm" variant="ghost" className="text-xs" onClick={handleClearFilters}>
+          Clear
+        </Button>
+      ) : null}
     </div>
   );
 

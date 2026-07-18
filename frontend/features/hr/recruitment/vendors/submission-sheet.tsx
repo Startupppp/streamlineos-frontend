@@ -117,7 +117,7 @@ function AddSubmissionForm({ vendorId, onDone }: { vendorId: number; onDone: () 
           <Input type="number" min={0} value={payRate} onChange={handlePayRateChange} placeholder="e.g. 90" />
         </div>
       </div>
-      <Button size="sm" className="w-full h-8" onClick={handleSubmit} disabled={createSubmission.isPending}>
+      <Button size="sm" className="w-full" onClick={handleSubmit} disabled={createSubmission.isPending}>
         {createSubmission.isPending ? "Submitting…" : "Submit Candidate"}
       </Button>
     </div>
@@ -205,7 +205,7 @@ export function SubmissionSheet({ vendor, onClose }: SubmissionSheetProps) {
                     </div>
                   )}
                   {sub.placementStatus === "PLACED" && sub.invoiceStatus !== "PAID" && (
-                    <Button size="sm" variant="outline" className="text-xs h-7" disabled={updatingId === sub.id} onClick={() => handleMarkPaid(sub)}>
+                    <Button size="sm" variant="outline" className="text-xs" disabled={updatingId === sub.id} onClick={() => handleMarkPaid(sub)}>
                       Mark Invoice Paid
                     </Button>
                   )}

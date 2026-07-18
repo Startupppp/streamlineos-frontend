@@ -53,8 +53,8 @@ export function HrHero({
     <div
       className={cn(
         "relative overflow-hidden rounded-2xl border border-blue-200/60 dark:border-blue-500/20",
-        "bg-gradient-to-br from-sky-50 via-blue-50 to-indigo-50/80",
-        "dark:from-slate-900/40 dark:via-blue-950/30 dark:to-indigo-950/20",
+        "bg-gradient-to-br from-sky-50 via-blue-50 to-blue-100/80",
+        "dark:from-slate-900/40 dark:via-blue-950/30 dark:to-blue-950/20",
         "text-foreground shadow-[0_8px_28px_-18px_rgba(59,130,246,0.22)]",
         className,
       )}
@@ -123,7 +123,7 @@ export function HrQuickAction({
       "from-amber-500/15 to-amber-500/5 text-amber-600 dark:text-amber-400 group-hover:border-amber-500/30",
     rose: "from-rose-500/15 to-rose-500/5 text-rose-600 dark:text-rose-400 group-hover:border-rose-500/30",
     violet:
-      "from-violet-500/15 to-violet-500/5 text-violet-600 dark:text-violet-400 group-hover:border-violet-500/30",
+      "from-blue-500/15 to-blue-500/5 text-blue-600 dark:text-blue-400 group-hover:border-blue-500/30",
     sky: "from-sky-500/15 to-sky-500/5 text-sky-600 dark:text-sky-400 group-hover:border-sky-500/30",
   };
 
@@ -306,7 +306,7 @@ export function HrIconWell({
     emerald: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400",
     amber: "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400",
     rose: "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400",
-    violet: "bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-400",
+    violet: "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400",
     slate: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
     sky: "bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-400",
   };

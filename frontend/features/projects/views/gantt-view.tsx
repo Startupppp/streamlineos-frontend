@@ -227,24 +227,24 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
       <div className={cn(PM_TOOLBAR, "gap-2")}>
         <div className="flex min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
           <Select value={String(displayMonth)} onValueChange={handleMonthChange}>
-            <SelectTrigger className="w-[120px] shrink-0 text-xs">
+            <SelectTrigger className="w-[120px] shrink-0">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {MONTHS.map((m, i) => (
-                <SelectItem key={m} value={String(i)} className="text-xs">
+                <SelectItem key={m} value={String(i)}>
                   {m}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           <Select value={String(displayYear)} onValueChange={handleYearChange}>
-            <SelectTrigger className="w-[80px] shrink-0 text-xs">
+            <SelectTrigger className="w-[80px] shrink-0">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {yearOptions.map((y) => (
-                <SelectItem key={y} value={String(y)} className="text-xs">
+                <SelectItem key={y} value={String(y)}>
                   {y}
                 </SelectItem>
               ))}

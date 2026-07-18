@@ -205,7 +205,7 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
               <div className="space-y-1.5">
                 <Label className="text-[11px]">Severity</Label>
                 <Select value={form.watch("severity")} onValueChange={handleSeverityChange}>
-                  <SelectTrigger className="text-[11px]"><SelectValue /></SelectTrigger>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {SEVERITIES.map((s) => (
                       <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>
@@ -216,7 +216,7 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
               <div className="space-y-1.5">
                 <Label className="text-[11px]">Priority</Label>
                 <Select value={form.watch("priority")} onValueChange={handlePriorityChange}>
-                  <SelectTrigger className="text-[11px]"><SelectValue /></SelectTrigger>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {PRIORITIES.map((p) => (
                       <SelectItem key={p} value={p} className="capitalize">{p}</SelectItem>
@@ -227,7 +227,7 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
               <div className="space-y-1.5">
                 <Label className="text-[11px]">Status</Label>
                 <Select value={form.watch("status")} onValueChange={handleStatusChange}>
-                  <SelectTrigger className="text-[11px]"><SelectValue /></SelectTrigger>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {STATUSES.map((s) => (
                       <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>

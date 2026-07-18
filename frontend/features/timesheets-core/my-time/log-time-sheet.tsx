@@ -155,7 +155,7 @@ export function LogTimeSheet({
               <FormItem>
                 <FormLabel className="text-xs">Date</FormLabel>
                 <FormControl>
-                  <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+                  <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-9 text-sm" />
                 </FormControl>
                 <FormMessage className="text-xs" />
               </FormItem>
@@ -174,7 +174,7 @@ export function LogTimeSheet({
                     step="0.25"
                     placeholder="0.0"
                     {...field}
-                    className="h-8 text-sm"
+                    className="h-9 text-sm"
                   />
                 </FormControl>
                 <FormMessage className="text-xs" />
@@ -200,7 +200,7 @@ export function LogTimeSheet({
                   <Input
                     placeholder="What did you work on?"
                     {...field}
-                    className="h-8 text-sm"
+                    className="h-9 text-sm"
                   />
                 </FormControl>
                 <FormMessage className="text-xs" />

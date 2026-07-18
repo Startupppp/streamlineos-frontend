@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/tabs";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { LoadingState, ErrorState } from "@/components/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { useProduct, useStockLevels, type StockLevelRow } from "@/hooks/api/inventory";
 import { ProductEditForm } from "@/features/inventory/components/product-edit-form";
@@ -444,7 +445,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   <ErrorState
                     compact
                     title="Failed to load stock"
-                    description={stockQuery.error.message}
+                    description={getErrorMessage(stockQuery.error)}
                     onRetry={handleRetryStock}
                   />
                 </div>

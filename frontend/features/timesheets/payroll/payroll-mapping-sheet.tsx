@@ -221,7 +221,7 @@ export function PayrollMappingSheet({
             <div className="space-y-1.5">
               <Label className="text-xs font-medium">Provider</Label>
               <Select value={form.watch("provider")} onValueChange={handleProviderChange}>
-                <SelectTrigger className="h-8 text-xs" aria-label="Payroll provider">
+                <SelectTrigger className="h-9" aria-label="Payroll provider">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -253,16 +253,12 @@ export function PayrollMappingSheet({
             <Button
               type="button"
               variant="outline"
-              size="sm"
-              className="h-8 text-xs"
               onClick={handleClose}
             >
               Cancel
             </Button>
             <LoadingButton
               type="submit"
-              size="sm"
-              className="h-8 text-xs"
               isPending={updateSettings.isPending}
               loadingText="Saving…"
             >

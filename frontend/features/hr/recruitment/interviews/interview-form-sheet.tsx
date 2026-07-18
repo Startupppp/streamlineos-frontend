@@ -298,7 +298,7 @@ export function InterviewFormSheet({
                   variant="outline"
                   role="combobox"
                   aria-expanded={candidatePickerOpen}
-                  className="w-full justify-between font-normal h-8"
+                  className="w-full justify-between font-normal"
                 >
                   <span className="truncate text-sm">
                     {selectedCandidate
@@ -478,7 +478,7 @@ export function InterviewFormSheet({
                   <Button
                     type="button"
                     variant="outline"
-                    className="w-full justify-start font-normal text-muted-foreground gap-1.5 h-8"
+                    className="w-full justify-start font-normal text-muted-foreground gap-1.5"
                     size="sm"
                   >
                     <Plus className="h-3.5 w-3.5" />

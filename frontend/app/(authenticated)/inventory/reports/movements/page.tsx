@@ -8,6 +8,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { EmptyActivityIllustration } from "@/components/illustrations";
@@ -270,7 +271,7 @@ export default function MovementsReportPage() {
       filters={filterBar}
     >
       {query.error && (
-        <ErrorState description={query.error.message} onRetry={handleRetry} />
+        <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} />
       )}
 
       {!query.isLoading && !query.error && rows.length === 0 && (

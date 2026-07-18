@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyReportIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { useSlowMovingReport, type SlowMovingRow } from "@/hooks/api/inventory/reports";
@@ -194,7 +195,7 @@ function SlowMovingReportContent() {
     >
       {query.isLoading && <DataTableSkeleton rows={12} columns={6} />}
       {query.error && (
-        <ErrorState description={query.error.message} onRetry={handleRetry} className="flex-1" />
+        <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} className="flex-1" />
       )}
 
       {isEmpty && (

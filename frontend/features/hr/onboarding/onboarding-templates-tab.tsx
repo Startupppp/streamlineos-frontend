@@ -166,7 +166,7 @@ function CreateTemplateSheet({ open, onOpenChange }: { open: boolean; onOpenChan
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <Select value={step.ownerRole} onValueChange={(v) => updateStep(i, { ownerRole: v })}>
-                    <SelectTrigger className="text-xs">
+                    <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>

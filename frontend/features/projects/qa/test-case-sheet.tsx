@@ -208,7 +208,7 @@ export function TestCaseSheet({
                   value={form.watch("suiteId")}
                   onValueChange={(v) => form.setValue("suiteId", v)}
                 >
-                  <SelectTrigger className="text-[11px]">
+                  <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -227,7 +227,7 @@ export function TestCaseSheet({
                   value={form.watch("priority")}
                   onValueChange={handlePriorityChange}
                 >
-                  <SelectTrigger className="text-[11px]">
+                  <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -246,7 +246,7 @@ export function TestCaseSheet({
                   value={form.watch("automationStatus")}
                   onValueChange={handleAutomationStatusChange}
                 >
-                  <SelectTrigger className="text-[11px]">
+                  <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

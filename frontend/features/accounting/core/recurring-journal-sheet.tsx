@@ -211,7 +211,7 @@ export function RecurringJournalSheet({
           name={`lines.${row._index}.accountId`}
           render={({ field: f }) => (
             <Select value={f.value} onValueChange={f.onChange}>
-              <SelectTrigger className="text-xs">
+              <SelectTrigger>
                 <SelectValue placeholder="Account…" />
               </SelectTrigger>
               <SelectContent>

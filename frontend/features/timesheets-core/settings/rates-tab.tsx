@@ -198,7 +198,6 @@ export function RatesTab() {
       iconSize={14}
       iconClassName="mr-1.5"
       size="sm"
-      className="h-8 text-xs"
       onClick={handleAddOpen}
     >
       Add rate
@@ -249,11 +248,11 @@ export function RatesTab() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="h-8 text-xs" onClick={handleDeleteCancel}>
+            <AlertDialogCancel onClick={handleDeleteCancel}>
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
-              className="h-8 text-xs bg-destructive hover:bg-destructive/90"
+              className="bg-destructive hover:bg-destructive/90"
               onClick={handleDeleteConfirm}
             >
               Remove

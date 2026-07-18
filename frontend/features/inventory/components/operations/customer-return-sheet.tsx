@@ -19,7 +19,10 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { useCreateCustomerReturn } from "@/hooks/api/inventory/operations";
+import { useSalesOrders } from "@/hooks/api/inventory/sales-orders";
+import { useProductVariants } from "@/hooks/api/inventory/products";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 const DISPOSITIONS = [
@@ -51,6 +54,20 @@ export interface CustomerReturnSheetProps {
 
 export function CustomerReturnSheet({ open, onOpenChange }: CustomerReturnSheetProps) {
   const createMutation = useCreateCustomerReturn();
+  const salesOrdersQuery = useSalesOrders({ limit: 100 });
+  const variantsQuery = useProductVariants({ activeOnly: true });
+
+  const soOptions: ComboboxOption[] = (salesOrdersQuery.data?.items ?? []).map((so) => ({
+    value: String(so.id),
+    label: so.soNumber,
+    sublabel: so.customerName ?? undefined,
+  }));
+
+  const variantOptions: ComboboxOption[] = (variantsQuery.data ?? []).map((v) => ({
+    value: String(v.id),
+    label: v.sku,
+    sublabel: v.name ?? undefined,
+  }));
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -129,14 +146,16 @@ export function CustomerReturnSheet({ open, onOpenChange }: CustomerReturnSheetP
             name="soId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Sales Order ID (optional)</FormLabel>
+                <FormLabel>Sales Order (optional)</FormLabel>
                 <FormControl>
-                  <Input
-                    type="number"
-                    min="1"
-                    placeholder="Sales order ID"
-                    value={field.value ?? ""}
-                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                  <Combobox
+                    options={soOptions}
+                    value={field.value ? String(field.value) : ""}
+                    onChange={(val) => field.onChange(val ? Number(val) : undefined)}
+                    placeholder="Search sales orders…"
+                    searchPlaceholder="Search by order number…"
+                    emptyText="No sales orders found"
+                    disabled={salesOrdersQuery.isLoading}
                   />
                 </FormControl>
                 <FormMessage />
@@ -173,14 +192,16 @@ export function CustomerReturnSheet({ open, onOpenChange }: CustomerReturnSheetP
                     name={`lines.${index}.productVariantId`}
                     render={({ field: f }) => (
                       <FormItem>
-                        <FormLabel className="text-xs">Variant ID *</FormLabel>
+                        <FormLabel className="text-xs">Product Variant *</FormLabel>
                         <FormControl>
-                          <Input
-                            type="number"
-                            min="1"
-                            placeholder="Product variant ID"
-                            value={f.value || ""}
-                            onChange={(e) => f.onChange(Number(e.target.value))}
+                          <Combobox
+                            options={variantOptions}
+                            value={f.value ? String(f.value) : ""}
+                            onChange={(val) => f.onChange(val ? Number(val) : 0)}
+                            placeholder="Search variants…"
+                            searchPlaceholder="Search by SKU…"
+                            emptyText="No variants found"
+                            disabled={variantsQuery.isLoading}
                           />
                         </FormControl>
                         <FormMessage />
@@ -233,7 +254,7 @@ export function CustomerReturnSheet({ open, onOpenChange }: CustomerReturnSheetP
                     name={`lines.${index}.targetLocationId`}
                     render={({ field: f }) => (
                       <FormItem>
-                        <FormLabel className="text-xs">Target Location ID</FormLabel>
+                        <FormLabel className="text-xs">Target Location</FormLabel>
                         <FormControl>
                           <Input
                             type="number"

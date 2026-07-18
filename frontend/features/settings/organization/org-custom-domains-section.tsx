@@ -150,7 +150,7 @@ export function OrgCustomDomainsSection({ canEdit }: OrgCustomDomainsSectionProp
           <form onSubmit={form.handleSubmit(handleAdd)} className="border rounded-lg p-3 space-y-2 bg-muted/30">
             <div className="space-y-1">
               <Label className="text-sm font-medium">Domain *</Label>
-              <Input {...form.register("domain")} placeholder="app.yourcompany.com" className="h-8 text-sm" />
+              <Input {...form.register("domain")} placeholder="app.yourcompany.com" />
               {form.formState.errors.domain && <p className="text-[11px] text-destructive">{form.formState.errors.domain.message}</p>}
             </div>
             <div className="flex gap-2">

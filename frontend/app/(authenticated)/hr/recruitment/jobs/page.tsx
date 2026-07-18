@@ -32,7 +32,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import type { JobPostingStatus } from "@/types/hr";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
-import { CONTENT_FILL_PANEL, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { CONTENT_FILL_PANEL, FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 
@@ -227,7 +227,7 @@ export default function JobPostingsPage() {
           </div>
         }
         filters={
-          <div className="flex items-center gap-2">
+          <div className={FILTER_TOOLBAR_ROW}>
             <Select value={statusFilter ?? "ALL"} onValueChange={(v) => setFilter("status", v)}>
               <SelectTrigger className={cn("w-[130px]", FILTER_SELECT_TRIGGER)}>
                 <SelectValue />

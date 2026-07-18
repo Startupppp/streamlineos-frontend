@@ -53,8 +53,8 @@ import {
   PmPanel,
   PmSection,
   PM_FILL_PANEL,
-  PM_TOOLBAR,
 } from "@/features/projects/shared/pm-chrome";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 import { cn } from "@/lib/utils";
 
@@ -269,32 +269,30 @@ export function PortfoliosPage() {
 
   const isFiltered = statusFilter !== "all" || !!search.trim();
   const filtersBar = (
-    <div className={PM_TOOLBAR}>
-      <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-40 text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {STATUS_OPTS.map((o) => (
-              <SelectItem key={o.value} value={o.value}>
-                {o.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <SearchInput
-          className="w-52"
-          placeholder="Search portfolios…"
-          value={search}
-          onValueChange={handleSearchChange}
-        />
-        {isFiltered ? (
-          <Button size="sm" variant="ghost" className="text-xs" onClick={handleClearFilters}>
-            Clear
-          </Button>
-        ) : null}
-      </div>
+    <div className={FILTER_TOOLBAR_ROW}>
+      <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <SelectTrigger className="w-40">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {STATUS_OPTS.map((o) => (
+            <SelectItem key={o.value} value={o.value}>
+              {o.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <SearchInput
+        className="w-52"
+        placeholder="Search portfolios…"
+        value={search}
+        onValueChange={handleSearchChange}
+      />
+      {isFiltered ? (
+        <Button size="sm" variant="ghost" className="text-xs" onClick={handleClearFilters}>
+          Clear
+        </Button>
+      ) : null}
     </div>
   );
 

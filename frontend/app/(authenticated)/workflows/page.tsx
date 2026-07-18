@@ -62,7 +62,7 @@ import {
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
-import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
+import { CONTENT_FILL_PANEL, FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { EmptyProjectsIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import {
@@ -407,12 +407,12 @@ export default function WorkflowsPage() {
         </AnimatedIconButton>
       }
       filters={
-        <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-          <div className="min-w-0 flex-1 min-w-[180px] max-w-xs">
+        <div className={FILTER_TOOLBAR_ROW}>
+          <div className="min-w-[180px] max-w-xs flex-1">
             <SearchInput placeholder="Search workflows…" value={search} onValueChange={handleSearchChange} />
           </div>
           <Select value={statusFilter} onValueChange={handleStatusChange}>
-            <SelectTrigger className="w-[140px] border-input bg-card text-foreground [&_svg:not([class*='text-'])]:text-muted-foreground">
+            <SelectTrigger className={`w-[140px] ${FILTER_SELECT_TRIGGER}`}>
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>

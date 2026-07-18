@@ -31,6 +31,10 @@ export function FileUpload({
   >([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  function handleTriggerClick() {
+    fileInputRef.current?.click();
+  }
+
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -77,9 +81,9 @@ export function FileUpload({
     }
   };
 
-  const removeFile = (index: number) => {
+  function removeFile(index: number) {
     setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
-  };
+  }
 
   return (
     <div className={cn("space-y-2", className)}>
@@ -87,7 +91,7 @@ export function FileUpload({
         <Button
           type="button"
           variant="outline"
-          onClick={() => fileInputRef.current?.click()}
+          onClick={handleTriggerClick}
           disabled={uploading}
         >
           <Upload className="h-4 w-4 mr-2" />

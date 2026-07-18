@@ -197,9 +197,7 @@ export default function CertificationsPage() {
       ) : (
         <div className="space-y-3">
           <div className={FILTER_TOOLBAR_ROW}>
-            <div className="min-w-0 w-48">
-          <SearchInput placeholder="Search certifications..." value={searchQuery} onValueChange={handleSearchChange} />
-        </div>
+            <SearchInput placeholder="Search certifications..." value={searchQuery} onValueChange={handleSearchChange} className="w-48" />
             <div className="flex items-center gap-1 flex-wrap">
               <button
                 type="button"

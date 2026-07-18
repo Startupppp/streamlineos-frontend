@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EmptyPersonIllustration } from "@/components/illustrations";
+import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { useAdminLoans, type LoanAdminItem, type LoanStatus } from "@/hooks/api/payroll/loans-admin";
 import { usePayrollRuns } from "@/hooks/api/payroll/runs";
 import { useCan } from "@/hooks/api/access";
@@ -122,9 +123,9 @@ export function LoansTable() {
           No active payroll run for this period. Loan adjustments are unavailable.
         </div>
       )}
-      <div className="flex items-center gap-2 mb-3">
+      <div className={`${FILTER_TOOLBAR_ROW} mb-3`}>
         <Select value={statusFilter} onValueChange={handleStatusChange}>
-          <SelectTrigger className="w-44 text-[12px]">
+          <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-44`}>
             <SelectValue placeholder="All statuses" />
           </SelectTrigger>
           <SelectContent>

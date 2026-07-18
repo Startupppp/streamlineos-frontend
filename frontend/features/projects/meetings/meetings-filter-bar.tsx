@@ -97,17 +97,17 @@ function FilterSelects({
   stacked?: boolean;
 }) {
   const triggerClass = stacked
-    ? "w-full text-xs"
-    : "w-[7.5rem] shrink-0 text-xs";
+    ? "w-full"
+    : "w-[7.5rem] shrink-0";
   const dateTriggerClass = stacked
-    ? "w-full text-xs"
-    : "w-[6.5rem] shrink-0 text-xs";
+    ? "w-full"
+    : "w-[6.5rem] shrink-0";
   const actionTriggerClass = stacked
-    ? "w-full text-xs"
-    : "w-[8.5rem] shrink-0 text-xs";
+    ? "w-full"
+    : "w-[8.5rem] shrink-0";
   const comboboxClass = stacked
-    ? "w-full text-xs"
-    : "w-[7rem] shrink-0 text-xs";
+    ? "w-full"
+    : "w-[7rem] shrink-0";
 
   return (
     <>

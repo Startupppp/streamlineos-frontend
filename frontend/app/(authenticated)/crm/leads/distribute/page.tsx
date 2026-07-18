@@ -27,6 +27,7 @@ import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { queryKeys } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import type { Lead, PipelineStatus } from "@/types/leads";
 
 const STATUS_BADGE: Record<string, string> = {
@@ -186,12 +187,12 @@ export default function LeadDistributionPage() {
       title="Lead Distribution"
       subtitle={isLoading ? undefined : `${data?.totalCount ?? 0} leads`}
       filters={
-        <>
-          <div className="min-w-0 flex-1 lg:max-w-md w-full">
-          <SearchInput placeholder="Search leads..." value={inputValue} onValueChange={handleSearchChange} />
-        </div>
+        <div className={FILTER_TOOLBAR_ROW}>
+          <div className="min-w-0 flex-1 lg:max-w-md">
+            <SearchInput placeholder="Search leads..." value={inputValue} onValueChange={handleSearchChange} />
+          </div>
           <Select value={statusFilter} onValueChange={handleStatusChange}>
-            <SelectTrigger className="text-xs w-[140px]">
+            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[140px]")}>
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>
@@ -212,7 +213,7 @@ export default function LeadDistributionPage() {
               Clear selection
             </Button>
           )}
-        </>
+        </div>
       }
       actions={
         <>

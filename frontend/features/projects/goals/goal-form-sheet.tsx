@@ -109,7 +109,7 @@ const KeyResultRow = memo(function KeyResultRow({ kr, index, onUpdate, onRemove 
       </div>
       <div className="grid grid-cols-2 gap-2">
         <Select value={kr.metricType} onValueChange={handleMetricTypeChange}>
-          <SelectTrigger className="w-full text-xs">
+          <SelectTrigger className="w-full">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

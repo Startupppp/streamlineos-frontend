@@ -68,7 +68,7 @@ function CriterionRow({ criterion, onUpdate, onRemove, canRemove }: CriterionRow
         <circle cx="9" cy="19" r="1" fill="currentColor" /><circle cx="15" cy="19" r="1" fill="currentColor" />
       </svg>
       <Input
-        className="flex-1 h-8 text-xs"
+        className="flex-1"
         placeholder="Criterion name (e.g. Technical Skills)"
         value={criterion.name}
         onChange={handleNameChange}
@@ -77,7 +77,7 @@ function CriterionRow({ criterion, onUpdate, onRemove, canRemove }: CriterionRow
         <Label className="text-[10px] text-muted-foreground">Weight</Label>
         <Input
           type="number"
-          className="w-16 h-8 text-xs"
+          className="w-16"
           min={1}
           max={10}
           value={criterion.weight}
@@ -208,7 +208,7 @@ function TemplateSheet({ open, onClose, editTemplate }: TemplateSheetProps) {
             <Button
               variant="outline"
               size="sm"
-              className="w-full h-8 text-xs border-dashed"
+              className="w-full border-dashed"
               onClick={handleAdd}
               type="button"
             >

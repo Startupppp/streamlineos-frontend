@@ -6,6 +6,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState } from "@/components/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useVendors } from "@/hooks/api/inventory/vendors";
 import { useGoodsReceipts } from "@/hooks/api/inventory/operations";
@@ -135,7 +136,7 @@ export default function ReceiptsPage() {
         onRowClick={handleRowClick}
         emptyState={
           query.error ? (
-            <ErrorState description={query.error.message} onRetry={handleRetry} compact />
+            <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} compact />
           ) : (
             <InventoryEmptyState
               title="No receipts found"

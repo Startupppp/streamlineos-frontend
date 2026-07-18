@@ -36,8 +36,8 @@ const TONE_STYLES: Record<
     ring: "group-hover:border-rose-500/30",
   },
   violet: {
-    well: "bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-400",
-    ring: "group-hover:border-violet-500/30",
+    well: "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400",
+    ring: "group-hover:border-blue-500/30",
   },
   sky: {
     well: "bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-400",

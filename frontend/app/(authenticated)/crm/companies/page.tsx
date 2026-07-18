@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import type { CrmOrganization, DuplicateOrgPair } from "@/types/crm";
 
 const PAGE_SIZE = 20;
@@ -275,10 +276,10 @@ export default function CompaniesPage() {
           </>
         }
         filters={
-          <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 lg:gap-3">
-            <div className="min-w-0 flex-1 lg:max-w-md w-full">
-          <SearchInput placeholder="Search companies..." value={search} onValueChange={handleSearchChange} />
-        </div>
+          <div className={FILTER_TOOLBAR_ROW}>
+            <div className="min-w-0 flex-1 lg:max-w-md">
+              <SearchInput placeholder="Search companies..." value={search} onValueChange={handleSearchChange} />
+            </div>
           </div>
         }
       >

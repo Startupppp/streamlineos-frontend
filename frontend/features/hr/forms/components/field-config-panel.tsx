@@ -81,7 +81,7 @@ export function FieldConfigPanel({ field, allFields, onChange, onRemove }: Field
       <div className="space-y-1">
         <Label className="text-xs">Type</Label>
         <Select value={field.type} onValueChange={handleTypeChange}>
-          <SelectTrigger className="text-xs"><SelectValue /></SelectTrigger>
+          <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
             {Object.entries(HR_FIELD_TYPE_META).map(([t, m]) => (
               <SelectItem key={t} value={t} className="text-xs">{m.label}</SelectItem>
@@ -138,7 +138,7 @@ export function FieldConfigPanel({ field, allFields, onChange, onRemove }: Field
               value={field.conditional?.fieldKey ?? "none"}
               onValueChange={(v) => update({ conditional: v === "none" ? null : { fieldKey: v, operator: "notEmpty" } })}
             >
-              <SelectTrigger className="text-xs">
+              <SelectTrigger>
                 <SelectValue placeholder="Always show" />
               </SelectTrigger>
               <SelectContent>
@@ -155,7 +155,7 @@ export function FieldConfigPanel({ field, allFields, onChange, onRemove }: Field
                   conditional: { ...field.conditional!, operator: v as "eq" | "neq" | "contains" | "notEmpty" }
                 })}
               >
-                <SelectTrigger className="text-xs"><SelectValue /></SelectTrigger>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="notEmpty" className="text-xs">is not empty</SelectItem>
                   <SelectItem value="eq" className="text-xs">equals</SelectItem>

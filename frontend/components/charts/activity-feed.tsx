@@ -53,8 +53,8 @@ const typeConfig: Record<
   },
   proposal: {
     icon: FileText,
-    color: "text-violet-600 dark:text-violet-400",
-    bg: "bg-violet-500/10",
+    color: "text-blue-600 dark:text-blue-400",
+    bg: "bg-blue-500/10",
   },
   call: {
     icon: Phone,

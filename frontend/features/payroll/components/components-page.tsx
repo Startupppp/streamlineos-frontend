@@ -126,7 +126,7 @@ export function ComponentsPageContent() {
         className="w-48"
       />
       <Select value={typeFilter || "all"} onValueChange={handleTypeChange}>
-        <SelectTrigger className="w-44 text-xs">
+        <SelectTrigger className="w-44">
           <SelectValue placeholder="All types" />
         </SelectTrigger>
         <SelectContent>
@@ -137,7 +137,7 @@ export function ComponentsPageContent() {
         </SelectContent>
       </Select>
       <Select value={activeFilter || "all"} onValueChange={handleActiveChange}>
-        <SelectTrigger className="w-32 text-xs">
+        <SelectTrigger className="w-32">
           <SelectValue placeholder="All status" />
         </SelectTrigger>
         <SelectContent>

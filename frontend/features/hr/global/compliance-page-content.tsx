@@ -112,7 +112,7 @@ export function CompliancePageContent() {
           <div className="flex justify-end gap-2 mb-4">
             <div className="flex items-center gap-2">
               <Select value={seedCountry} onValueChange={setSeedCountry}>
-                <SelectTrigger className="w-24 text-xs">
+                <SelectTrigger className="w-24">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

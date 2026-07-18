@@ -225,15 +225,24 @@ export default function CandidateDetailPage() {
   const handleInterviewOpen = useCallback(() => setInterviewOpen(true), []);
   const handleApplyOpen = useCallback(() => setApplyOpen(true), []);
 
-  const displayAiScore =
-    latestAiScore ??
-    (candidate?.aiScore != null && candidate.aiScoreBreakdown
-      ? {
-          overall: candidate.aiScore,
-          breakdown: candidate.aiScoreBreakdown as unknown as AiScoreResult["breakdown"],
-          summary: "",
-        }
-      : null);
+  const displayAiScore: AiScoreResult | null = useMemo(() => {
+    if (latestAiScore) return latestAiScore;
+    if (candidate?.aiScore != null && candidate.aiScoreBreakdown) {
+      const b = candidate.aiScoreBreakdown;
+      return {
+        overall: candidate.aiScore,
+        breakdown: {
+          technicalSkills: Number(b["technicalSkills"] ?? 0),
+          experience: Number(b["experience"] ?? 0),
+          communication: Number(b["communication"] ?? 0),
+          cultureFit: Number(b["cultureFit"] ?? 0),
+          leadership: Number(b["leadership"] ?? 0),
+        },
+        summary: "",
+      };
+    }
+    return null;
+  }, [latestAiScore, candidate]);
 
   const hasSubmittedScorecard = false;
 

@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState, AppDialog } from "@/components/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptySearchIllustration } from "@/components/illustrations";
 import { useRecalls, useCreateRecall } from "@/hooks/api/inventory/quality";
@@ -234,7 +235,7 @@ function RecallsPageInner() {
         {recallsQuery.error ? (
           <ErrorState
             title="Failed to load recalls"
-            description={recallsQuery.error.message}
+            description={getErrorMessage(recallsQuery.error)}
             onRetry={handleRetry}
           />
         ) : (

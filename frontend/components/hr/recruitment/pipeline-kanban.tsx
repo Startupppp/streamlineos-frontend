@@ -152,7 +152,7 @@ export function PipelineKanban({
     { label: "New", color: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300", count: stageMap["NEW"]?.length ?? 0 },
     { label: "Screening", color: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300", count: stageMap["SCREENING"]?.length ?? 0 },
     { label: "Interview", color: "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300", count: stageMap["INTERVIEW"]?.length ?? 0 },
-    { label: "Offer", color: "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300", count: stageMap["OFFER"]?.length ?? 0 },
+    { label: "Offer", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300", count: stageMap["OFFER"]?.length ?? 0 },
     { label: "Hired", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300", count: stageMap["HIRED"]?.length ?? 0 },
   ];
   const rejectedCount = stageMap["REJECTED"]?.length ?? 0;

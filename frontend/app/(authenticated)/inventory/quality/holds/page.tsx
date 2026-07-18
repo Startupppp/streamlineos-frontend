@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyWarehouseIllustration } from "@/components/illustrations";
 import { useQualityHolds, useReleaseQualityHold } from "@/hooks/api/inventory/quality";
@@ -210,7 +211,7 @@ function HoldsPageInner() {
         {holdsQuery.error ? (
           <ErrorState
             title="Failed to load holds"
-            description={holdsQuery.error.message}
+            description={getErrorMessage(holdsQuery.error)}
             onRetry={handleRetry}
           />
         ) : (

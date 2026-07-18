@@ -13,6 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyReportIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { useReorderReport, type ReorderReportRow } from "@/hooks/api/inventory/reports";
@@ -209,7 +210,7 @@ function ReorderReportContent() {
       }
     >
       {query.error && (
-        <ErrorState description={query.error.message} onRetry={handleRetry} className="flex-1" />
+        <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} className="flex-1" />
       )}
 
       {noData && (

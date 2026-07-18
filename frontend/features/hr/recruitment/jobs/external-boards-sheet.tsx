@@ -109,7 +109,7 @@ export function ExternalBoardsSheet({ jobId, onClose }: ExternalBoardsSheetProps
             onChange={(e) => setUrl(e.target.value)}
             className="text-sm"
           />
-          <LoadingButton size="sm" className="w-full h-8 gap-1.5" onClick={handleAdd} isPending={createPosting.isPending} loadingText="Adding…">
+          <LoadingButton size="sm" className="w-full gap-1.5" onClick={handleAdd} isPending={createPosting.isPending} loadingText="Adding…">
             <Plus className="h-3.5 w-3.5" />
             Track posting
           </LoadingButton>

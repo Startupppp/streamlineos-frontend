@@ -14,7 +14,7 @@ export default function QuotesLoading() {
         <div className={FILTER_TOOLBAR_ROW}>
           <Skeleton className="h-9 flex-1 max-w-[240px] rounded-md" />
           <Skeleton className="h-9 w-[140px] rounded-md" />
-          <Skeleton className="h-8 w-20 rounded-md ml-auto" />
+          <Skeleton className="h-9 w-20 rounded-md ml-auto" />
         </div>
       }
     >

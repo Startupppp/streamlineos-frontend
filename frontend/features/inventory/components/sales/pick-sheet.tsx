@@ -17,6 +17,7 @@ import {
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { usePickSalesOrder, useWarehouses, useLocations } from "@/hooks/api/inventory";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const pickSchema = z.object({
   warehouseId: z.number().int().min(1, "Select a warehouse"),
@@ -79,7 +80,7 @@ export function PickSheet({ open, onOpenChange, soId, lines }: PickSheetProps) {
           toast.success("Order picked");
           onOpenChange(false);
         },
-        onError: (err) => toast.error(err.message),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }

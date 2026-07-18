@@ -14,10 +14,10 @@ import {
 export const CATEGORY_CONFIG: Record<string, { icon: React.ComponentType<{ className?: string }>; label: string; bg: string; text: string }> = {
   Travel:            { icon: Plane,           label: "Travel",    bg: "bg-blue-50 dark:bg-blue-900/20",     text: "text-blue-600 dark:text-blue-400" },
   Meals:             { icon: UtensilsCrossed, label: "Meals",     bg: "bg-orange-50 dark:bg-orange-900/20", text: "text-orange-600 dark:text-orange-400" },
-  Transport:         { icon: Car,             label: "Transport", bg: "bg-purple-50 dark:bg-purple-900/20", text: "text-purple-600 dark:text-purple-400" },
+  Transport:         { icon: Car,             label: "Transport", bg: "bg-sky-50 dark:bg-sky-900/20", text: "text-sky-600 dark:text-sky-400" },
   Software:          { icon: Monitor,         label: "Software",  bg: "bg-teal-50 dark:bg-teal-900/20",     text: "text-teal-600 dark:text-teal-400" },
   "Office Supplies": { icon: Armchair,        label: "Office",    bg: "bg-slate-100 dark:bg-slate-800/30",    text: "text-slate-600 dark:text-slate-400" },
-  Equipment:         { icon: Package,         label: "Equipment", bg: "bg-indigo-50 dark:bg-indigo-900/20", text: "text-indigo-600 dark:text-indigo-400" },
+  Equipment:         { icon: Package,         label: "Equipment", bg: "bg-blue-50 dark:bg-blue-900/20", text: "text-blue-600 dark:text-blue-400" },
   Training:          { icon: BookOpen,        label: "Training",  bg: "bg-cyan-50 dark:bg-cyan-900/20",     text: "text-cyan-600 dark:text-cyan-400" },
   Marketing:         { icon: Megaphone,       label: "Marketing", bg: "bg-pink-50 dark:bg-pink-900/20",     text: "text-pink-600 dark:text-pink-400" },
   Utilities:         { icon: Zap,             label: "Utilities", bg: "bg-amber-50 dark:bg-amber-900/20",   text: "text-amber-600 dark:text-amber-400" },

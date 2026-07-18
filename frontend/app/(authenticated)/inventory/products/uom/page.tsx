@@ -351,7 +351,7 @@ function UomPageInner() {
         {query.error ? (
           <ErrorState
             title="Failed to load units"
-            description={query.error.message}
+            description={getErrorMessage(query.error)}
             onRetry={handleRetry}
           />
         ) : (

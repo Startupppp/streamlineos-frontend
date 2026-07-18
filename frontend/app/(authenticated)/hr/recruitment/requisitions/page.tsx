@@ -49,7 +49,7 @@ import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
-import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
+import { CONTENT_FILL_PANEL, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 const STATUS_TABS = [
   { label: "All", value: undefined },
@@ -740,7 +740,7 @@ export default function RequisitionsPage() {
           </Button>
         }
         filters={
-          <div className="flex items-center gap-1">
+          <div className={FILTER_TOOLBAR_ROW}>
             {STATUS_TABS.map((tab) => (
               <button
                 key={tab.label}

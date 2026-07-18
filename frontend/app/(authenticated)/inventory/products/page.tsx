@@ -533,7 +533,7 @@ function ProductsPageInner() {
       {productsQuery.error ? (
         <ErrorState
           title="Failed to load products"
-          description={productsQuery.error.message}
+          description={getErrorMessage(productsQuery.error)}
           onRetry={handleRetry}
         />
       ) : isFirstLoad ? (

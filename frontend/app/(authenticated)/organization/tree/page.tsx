@@ -22,17 +22,17 @@ const NODE_ICONS: Record<NodeType, React.ComponentType<{ className?: string }>> 
 };
 
 const NODE_COLORS: Record<NodeType, string> = {
-  business_unit: "text-violet-600",
-  branch: "text-blue-600",
-  department: "text-emerald-600",
-  team: "text-amber-600",
+  business_unit: "text-blue-600 dark:text-blue-400",
+  branch: "text-emerald-600 dark:text-emerald-400",
+  department: "text-amber-600 dark:text-amber-400",
+  team: "text-rose-600 dark:text-rose-400",
 };
 
 const NODE_DOT_COLORS: Record<NodeType, string> = {
-  business_unit: "bg-violet-500",
-  branch: "bg-blue-500",
-  department: "bg-emerald-500",
-  team: "bg-amber-500",
+  business_unit: "bg-blue-500",
+  branch: "bg-emerald-500",
+  department: "bg-amber-500",
+  team: "bg-rose-500",
 };
 
 const NODE_LABELS: Record<NodeType, string> = {

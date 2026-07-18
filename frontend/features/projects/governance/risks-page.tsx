@@ -34,12 +34,10 @@ import {
   PmPanel,
   PmSection,
   PM_FILL_PANEL,
-  PM_TOOLBAR,
 } from "@/features/projects/shared/pm-chrome";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { TABLE_TITLE_CELL } from "@/features/projects/shared/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { cn } from "@/lib/utils";
-
 const LEVEL_LABEL: Record<"low" | "medium" | "high", string> = { low: "Low", medium: "Medium", high: "High" };
 const LEVEL_STYLE: Record<"low" | "medium" | "high", string> = {
   low: "text-muted-foreground border-border",
@@ -274,32 +272,30 @@ export function RisksPage({ projectId }: RisksPageProps) {
         ) : null}
 
         <PmSection index={2} className="shrink-0">
-          <div className={cn(PM_TOOLBAR, "sm:justify-start")}>
-            <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-40 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {STATUS_OPTS.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>
-                      {o.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <SearchInput
-                className="w-52"
-                placeholder="Search risks…"
-                value={search}
-                onValueChange={handleSearchChange}
-              />
-              {isFiltered ? (
-                <Button size="sm" variant="ghost" className="text-xs" onClick={handleClearFilters}>
-                  Clear
-                </Button>
-              ) : null}
-            </div>
+          <div className={FILTER_TOOLBAR_ROW}>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUS_OPTS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <SearchInput
+              className="w-52"
+              placeholder="Search risks…"
+              value={search}
+              onValueChange={handleSearchChange}
+            />
+            {isFiltered ? (
+              <Button size="sm" variant="ghost" className="text-xs" onClick={handleClearFilters}>
+                Clear
+              </Button>
+            ) : null}
           </div>
         </PmSection>
 

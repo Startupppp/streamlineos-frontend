@@ -3,6 +3,7 @@
 import { useState, type ChangeEvent } from "react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -217,12 +218,12 @@ export default function ForecastPage() {
   const totalOutflows = parseFloat(forecastQuery.data?.totalOutflows ?? "0");
 
   const filtersNode = (
-    <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+    <div className={FILTER_TOOLBAR_ROW}>
       <Select
         value={selectedScenarioId !== undefined ? String(selectedScenarioId) : ""}
         onValueChange={handleScenarioChange}
       >
-        <SelectTrigger className="w-[180px] text-xs">
+        <SelectTrigger className={`w-[180px] ${FILTER_SELECT_TRIGGER}`}>
           <SelectValue placeholder="Default scenario" />
         </SelectTrigger>
         <SelectContent>

@@ -8,6 +8,7 @@ import { AiReportStats } from "./ai-report-stats";
 import { useSupportAiReport } from "@/hooks/api/support/ai";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Button } from "@/components/ui/button";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 interface DateFilters {
   dateFrom?: string;
@@ -38,7 +39,7 @@ export function AiReportClient() {
       subtitle="Support AI performance metrics — acceptance, resolution, escalation, and CSAT impact"
     >
       <div className="space-y-4">
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className={FILTER_TOOLBAR_ROW}>
           <label className="text-xs text-muted-foreground shrink-0">From</label>
           <input
             type="date"

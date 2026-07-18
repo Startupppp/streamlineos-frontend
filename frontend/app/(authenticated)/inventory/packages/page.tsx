@@ -202,7 +202,7 @@ function PackagesPageInner() {
         {packagesQuery.error ? (
           <ErrorState
             title="Failed to load packages"
-            description={packagesQuery.error.message}
+            description={getErrorMessage(packagesQuery.error)}
             onRetry={handleRetry}
           />
         ) : (

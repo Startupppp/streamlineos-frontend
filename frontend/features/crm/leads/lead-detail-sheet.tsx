@@ -72,7 +72,7 @@ function StatusMoveButton({
       size="sm"
       variant="outline"
       className={cn(
-        "text-xs h-8 gap-1.5",
+        "text-xs gap-1.5",
         statusBorder,
         "hover:bg-muted/50",
       )}

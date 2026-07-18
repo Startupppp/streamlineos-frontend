@@ -113,7 +113,7 @@ export function ActivityForm({ onSubmit, isPending }: ActivityFormProps) {
             <Input
               id="duration"
               placeholder="30"
-              className="pl-9 h-8"
+              className="pl-9"
               {...form.register("duration")}
             />
           </div>
@@ -149,7 +149,7 @@ export function ActivityForm({ onSubmit, isPending }: ActivityFormProps) {
           <Input
             id="location"
             placeholder="Office / Client location"
-            className="pl-9 h-8"
+            className="pl-9"
             {...form.register("location")}
           />
         </div>
@@ -157,7 +157,7 @@ export function ActivityForm({ onSubmit, isPending }: ActivityFormProps) {
 
       <LoadingButton
         type="submit"
-        className="w-full h-10 mt-2"
+        className="w-full mt-2"
         isPending={isPending}
         loadingText="Logging..."
       >

@@ -228,7 +228,7 @@ function ShipmentsPageInner() {
         {shipmentsQuery.error ? (
           <ErrorState
             title="Failed to load shipments"
-            description={shipmentsQuery.error.message}
+            description={getErrorMessage(shipmentsQuery.error)}
             onRetry={handleRetry}
           />
         ) : (

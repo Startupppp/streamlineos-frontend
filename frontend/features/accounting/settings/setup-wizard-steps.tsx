@@ -98,7 +98,7 @@ export function StepCompanyCurrency({ onComplete, onSkip }: StepProps) {
               <Label>Base currency</Label>
               <Input
                 {...form.register("baseCurrency")}
-                className="text-xs uppercase"
+                className="uppercase"
                 placeholder="INR"
               />
               {form.formState.errors.baseCurrency && (
@@ -111,7 +111,7 @@ export function StepCompanyCurrency({ onComplete, onSkip }: StepProps) {
                 value={form.watch("fiscalYearStartMonth")}
                 onValueChange={(v) => form.setValue("fiscalYearStartMonth", v, { shouldValidate: true })}
               >
-                <SelectTrigger className="text-xs">
+                <SelectTrigger>
                   <SelectValue placeholder="Select month" />
                 </SelectTrigger>
                 <SelectContent>
@@ -127,7 +127,7 @@ export function StepCompanyCurrency({ onComplete, onSkip }: StepProps) {
                 value={form.watch("accountingBasis")}
                 onValueChange={(v) => form.setValue("accountingBasis", v as "ACCRUAL" | "CASH", { shouldValidate: true })}
               >
-                <SelectTrigger className="text-xs">
+                <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -192,15 +192,15 @@ export function StepTaxRegistration({ onComplete, onSkip }: StepProps) {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1.5">
               <Label>GSTIN</Label>
-              <Input {...form.register("gstin")} className="text-xs" placeholder="22AAAAA0000A1Z5" />
+              <Input {...form.register("gstin")} placeholder="22AAAAA0000A1Z5" />
             </div>
             <div className="space-y-1.5">
               <Label>PAN</Label>
-              <Input {...form.register("pan")} className="text-xs" placeholder="AAAAA0000A" />
+              <Input {...form.register("pan")} placeholder="AAAAA0000A" />
             </div>
             <div className="space-y-1.5">
               <Label>State code</Label>
-              <Input {...form.register("stateCode")} className="text-xs" placeholder="22" />
+              <Input {...form.register("stateCode")} placeholder="22" />
             </div>
           </div>
           <div className="flex gap-2">
@@ -382,7 +382,7 @@ export function StepPeriods({ onComplete, onSkip }: StepProps) {
               type="number"
               value={year}
               onChange={handleYearChange}
-              className="text-xs w-28"
+              className="w-28"
               min={2000}
               max={2100}
             />

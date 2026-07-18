@@ -129,7 +129,7 @@ export function TicketDetailSheet({ ticketId, isAdmin, onClose }: Props) {
                   <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Admin Actions</p>
                   <div className="flex items-center gap-3">
                     <Select value={ticket.status} onValueChange={handleStatusChange}>
-                      <SelectTrigger className="w-40 text-xs">
+                      <SelectTrigger className="w-40">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>

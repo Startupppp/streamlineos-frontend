@@ -448,7 +448,7 @@ function CategoriesPageInner() {
         {query.error ? (
           <ErrorState
             title="Failed to load categories"
-            description={query.error.message}
+            description={getErrorMessage(query.error)}
             onRetry={handleRetry}
           />
         ) : (
