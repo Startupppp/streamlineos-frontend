@@ -64,7 +64,7 @@ export function HandbookCreateForm({
           className=""
         />
         <p className="text-[11px] text-muted-foreground">
-          Min 2 chars, max 100 chars — no consecutive spaces or special characters
+          1–100 characters. Spaces and common punctuation are allowed.
         </p>
       </div>
 

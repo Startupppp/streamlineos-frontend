@@ -6,6 +6,7 @@ import {
   useCreatePIP,
   useUpdatePIP,
   useHrEmployees,
+  unwrapEmployees,
   type PIP,
 } from "@/hooks/api/hr";
 import { Button } from "@/components/ui/button";
@@ -39,7 +40,7 @@ import type { Employee } from "@/types/hr";
 
 export function PIPTab() {
   const { data: pips, isLoading } = usePIPs();
-  const { data: employeesRaw } = useHrEmployees();
+  const { data: employeesRaw } = useHrEmployees({ limit: 200 });
   const createPIP = useCreatePIP();
   const updatePIP = useUpdatePIP();
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -56,8 +57,8 @@ export function PIPTab() {
   const [objectives, setObjectives] = useState([{ objective: "", metric: "", deadline: "" }]);
 
   const employees = useMemo(
-    () => ((Array.isArray(employeesRaw) ? employeesRaw : (employeesRaw as { data?: Employee[] })?.data ?? []) as Employee[]).filter((e) => !!e.id),
-    [employeesRaw]
+    () => unwrapEmployees(employeesRaw).filter((e) => !!e.id),
+    [employeesRaw],
   );
 
   const hrEmployees = useMemo(

@@ -113,7 +113,7 @@ export default function InterviewsPage() {
 
   if (isError) {
     return (
-      <PageWrapper title="Interviews" subtitle="Schedule and track interviews">
+      <PageWrapper title="Interviews" subtitle="Schedule and track interviews" variant="display">
         <ErrorState description="Failed to load interviews" onRetry={refetch} />
       </PageWrapper>
     );
@@ -121,7 +121,7 @@ export default function InterviewsPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Interviews" subtitle="Schedule and track interviews">
+      <PageWrapper title="Interviews" subtitle="Schedule and track interviews" variant="display">
         <Card>
           <CardContent className="pt-6 space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (

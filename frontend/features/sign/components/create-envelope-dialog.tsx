@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { EntityFormDialog } from "@/components/shared/entity-form-dialog";
+import { EntityFormSheet } from "@/components/shared/entity-form-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateSignEnvelope } from "@/hooks/api/sign/envelopes";
 
@@ -58,7 +58,7 @@ export function CreateEnvelopeDialog({
   }
 
   return (
-    <EntityFormDialog<CreateEnvelopeValues>
+    <EntityFormSheet<CreateEnvelopeValues>
       open={open}
       onOpenChange={onOpenChange}
       title={dialogTitle ?? "New envelope"}
@@ -68,6 +68,7 @@ export function CreateEnvelopeDialog({
       onSubmit={handleSubmit}
       isSubmitting={createEnvelope.isPending}
       submitLabel="Create envelope"
+      className="sm:max-w-md"
       resetOnOpen
     >
       {(form) => (
@@ -100,6 +101,6 @@ export function CreateEnvelopeDialog({
           />
         </div>
       )}
-    </EntityFormDialog>
+    </EntityFormSheet>
   );
 }

@@ -50,6 +50,7 @@ import {
   useUpdateAsset,
   useAssignAsset,
   useHrEmployees,
+  unwrapEmployees,
 } from "@/hooks/api";
 import { AccessRequestsTab } from "@/features/hr/assets/access-requests-tab";
 import { useCan } from "@/hooks/api/access";
@@ -106,34 +107,22 @@ const ASSET_TYPES = [
 const assetFormSchema = z.object({
   name: z
     .string()
-    .min(2, "Asset name must be at least 2 characters")
+    .trim()
+    .min(1, "Asset name is required")
     .max(100, "Asset name is too long")
-    .refine((v) => v === v.trim(), "No leading or trailing spaces")
-    .refine((v) => !/\s{2,}/.test(v), "No consecutive spaces")
-    .refine((v) => /[a-zA-Z]/.test(v), "Must contain at least one letter")
-    .refine((v) => !/^[\d\s]+$/.test(v), "Cannot be numeric only")
-    .refine(
-      (v) => !/[!@#$%^&*()\-_=+\[\]{};:'",.<>?/\\|`~]{2,}/.test(v),
-      "Cannot contain multiple consecutive special characters",
-    ),
+    .refine((v) => /[\p{L}\p{N}]/u.test(v), "Must contain a letter or number"),
   type: z.string().min(1, "Type is required"),
   brand: z
     .string()
+    .trim()
     .min(1, "Brand is required")
-    .max(100, "Brand is too long")
-    .refine(
-      (v) => /[a-zA-Z]/.test(v.trim()),
-      "Brand must contain at least one letter",
-    ),
-  model: z.string().min(1, "Model is required").max(100, "Model is too long"),
+    .max(100, "Brand is too long"),
+  model: z.string().trim().min(1, "Model is required").max(100, "Model is too long"),
   serialNumber: z
     .string()
-    .min(3, "Serial number must be at least 3 characters")
-    .max(100, "Serial number is too long")
-    .refine(
-      (v) => /[a-zA-Z0-9]/.test(v.trim()),
-      "Must contain alphanumeric characters",
-    ),
+    .trim()
+    .min(1, "Serial number is required")
+    .max(100, "Serial number is too long"),
   purchaseDate: z.string().optional(),
   purchaseCost: z
     .number()
@@ -536,7 +525,7 @@ export default function HrAssetsPage() {
   const { data: employeesRaw } = useHrEmployees(undefined);
 
   const employees = useMemo(
-    () => (Array.isArray(employeesRaw) ? employeesRaw : []) as Employee[],
+    () => unwrapEmployees(employeesRaw),
     [employeesRaw],
   );
   const employeeOptions = buildEmployeeOptions(employees);
@@ -924,7 +913,7 @@ export default function HrAssetsPage() {
         </StatCardGrid>
 
         {isError ? (
-          <div className="flex flex-col items-center justify-center rounded-2xl border border-border bg-card shadow-sm py-16 gap-4">
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] py-16 gap-4">
             <p className="text-sm font-semibold text-foreground">Failed to load assets</p>
             <p className="text-xs text-muted-foreground">Something went wrong.</p>
             <Button variant="outline" size="sm" onClick={handleRetry}>Try Again</Button>
@@ -961,7 +950,7 @@ export default function HrAssetsPage() {
           />
         )}
 
-        <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+        <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
           <CardContent className="p-4">
             <AccessRequestsTab employees={employees} canManage={canManageAssets} />
           </CardContent>

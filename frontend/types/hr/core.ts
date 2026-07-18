@@ -31,16 +31,33 @@ export interface HrTimelineResponse {
   };
 }
 
+export interface HrSensitiveBankDetails {
+  accountNumber?: string;
+  bankName?: string;
+  branch?: string;
+  ifsc?: string;
+  swift?: string;
+  accountHolder?: string;
+  pfUanNumber?: string;
+  iban?: string;
+  routingNumber?: string;
+}
+
 export interface HrSensitiveData {
-  bankAccountNumber: string | null;
-  bankName: string | null;
-  ifscCode: string | null;
+  salaryAmountCents: number | null;
+  salaryCurrency: string | null;
+  salaryFrequency: string | null;
+  bankDetails: HrSensitiveBankDetails | null;
   taxId: string | null;
   panNumber: string | null;
-  passportNumber: string | null;
   nationalId: string | null;
-  aadharNumber: string | null;
-  ssn: string | null;
+  passportNumber: string | null;
+  passportExpiry: string | null;
+  visaType: string | null;
+  visaExpiry: string | null;
+  medicalNotes: string | null;
+  bloodGroup: string | null;
+  bgvStatus: string | null;
 }
 
 export interface HrEffectiveDatedChange {

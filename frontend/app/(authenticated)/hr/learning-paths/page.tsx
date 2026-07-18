@@ -138,7 +138,7 @@ export default function LearningPathsPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Learning Paths" subtitle="Structured learning programs">
+      <PageWrapper title="Learning Paths" subtitle="Structured learning programs" variant="display">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 10 }).map((_, i) => (
             <Skeleton key={i} className="h-44 rounded-2xl" />
@@ -150,7 +150,7 @@ export default function LearningPathsPage() {
 
   if (isError) {
     return (
-      <PageWrapper title="Learning Paths" subtitle="Structured learning programs">
+      <PageWrapper title="Learning Paths" subtitle="Structured learning programs" variant="display">
         <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
           <AlertCircle className="w-8 text-destructive" />
           <div>
@@ -177,9 +177,9 @@ export default function LearningPathsPage() {
       }
     >
       {!paths?.length ? (
-        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+        <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
           <EmptyState
-            illustration={<GraduationCap className="w-8 text-muted-foreground" />}
+            illustrationPreset="learning"
             title="No learning paths available"
             description="Create structured learning programs to support career development."
           />
@@ -193,7 +193,7 @@ export default function LearningPathsPage() {
             return (
               <Card
                 key={lp.id}
-                className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200 border-l-4 border-l-emerald-500"
+                className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden hover:shadow-md transition-shadow duration-200 border-l-4 border-l-emerald-500"
               >
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-start justify-between gap-2">

@@ -12,7 +12,6 @@ import {
 } from "@/hooks/api/hr";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -88,10 +87,14 @@ export function LeavesWfhContent() {
 
   if (contextLoading || myLoading) {
     return (
-      <PageWrapper title="Leaves & Time Off" subtitle="Manage your leave requests, work from home, and approvals.">
+      <PageWrapper
+        title="Leaves & Time Off"
+        subtitle="Manage your leave requests, work from home, and approvals."
+        variant="display"
+      >
         <div className="space-y-4">
           <StatCardGridSkeleton cols={3} count={3} />
-          <Skeleton className="h-64" />
+          <Skeleton className="h-64 rounded-2xl" />
         </div>
       </PageWrapper>
     );
@@ -102,6 +105,7 @@ export function LeavesWfhContent() {
       <PageWrapper
         title="Leaves & Time Off"
         subtitle="Manage your leave requests, work from home, and approvals."
+        variant="display"
         actions={
           <>
             <AnimatedIconButton
@@ -121,7 +125,7 @@ export function LeavesWfhContent() {
               iconClassName="mr-1.5"
               size="sm"
               onClick={handleOpenLeaveSheet}
-              className="gap-1.5 h-8"
+              className="gap-1.5 h-8 shadow-sm"
             >
               Request Leave
             </AnimatedIconButton>

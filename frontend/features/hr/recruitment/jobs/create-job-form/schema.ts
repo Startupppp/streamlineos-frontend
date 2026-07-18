@@ -39,12 +39,10 @@ export const createJobFormSchema = z
   .object({
     title: z
       .string()
-      .min(2, "Job Title must be at least 2 characters")
-      .max(100, "Job Title must be at most 100 characters")
-      .refine((v) => /^[a-zA-Z]/.test(v.trim()), "Must start with a letter")
-      .refine((v) => !/[^a-zA-Z0-9\s\-',]/.test(v.trim()), "Invalid characters in title")
-      .refine((v) => !/(.)\1{3,}/.test(v.trim()), "Too many consecutive identical characters")
-      .refine((v) => !/\s{2,}/.test(v), "Multiple consecutive spaces not allowed"),
+      .trim()
+      .min(1, "Job Title is required")
+      .max(120, "Job Title must be at most 120 characters")
+      .refine((v) => /[\p{L}\p{N}]/u.test(v), "Job Title must contain a letter or number"),
     departmentId: z.string().min(1, "Department is required"),
     role: z
       .string()

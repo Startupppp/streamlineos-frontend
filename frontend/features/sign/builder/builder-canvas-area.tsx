@@ -3,9 +3,9 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import { toast } from "sonner";
-import { FileText, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@animateicons/react/lucide";
-import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAddSignField } from "@/hooks/api/sign/fields";
@@ -82,13 +82,14 @@ export function BuilderCanvasArea({ envelopeId, document, documentUrl, recipient
 
   if (!document || !documentUrl) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center p-8">
-        <FileText className="size-10 text-muted-foreground/40" />
-        <div>
-          <p className="font-medium text-foreground">No document selected</p>
-          <p className="text-sm text-muted-foreground mt-1">Upload a PDF from the Documents tab to start placing fields.</p>
-        </div>
-      </div>
+      <EmptyState
+        illustrationPreset="documents"
+        illustrationSize="md"
+        title="No document selected"
+        description="Upload a PDF from the Documents tab to start placing fields."
+        compact
+        className="flex-1 min-h-0 border-0 bg-transparent"
+      />
     );
   }
 

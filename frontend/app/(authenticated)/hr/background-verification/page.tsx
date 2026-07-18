@@ -5,7 +5,7 @@ import {
   useBackgroundVerifications,
   useUpdateBackgroundVerification,
   type BackgroundVerification,
-} from "@/hooks/api/hr";
+  unwrapEmployees} from "@/hooks/api/hr";
 import { useHrEmployees } from "@/hooks/api/hr";
 import { useBgvComplianceDashboard, type BgvComplianceRow } from "@/hooks/api/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -91,7 +91,7 @@ function ComplianceDashboard() {
 
   if (!rows?.length) {
     return (
-      <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+      <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
         <EmptyState
           illustrationPreset="chart"
           title="No candidate BgV data yet"
@@ -106,7 +106,7 @@ function ComplianceDashboard() {
       {rows.map((row: BgvComplianceRow) => (
         <Card
           key={row.jobPostingId}
-          className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden"
+          className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden"
         >
           <CardHeader className="pb-2 pt-4 px-4">
             <CardTitle className="text-sm font-semibold text-foreground">{row.jobTitle}</CardTitle>
@@ -285,13 +285,11 @@ function BGVContent() {
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
-  const { data: employeesRaw } = useHrEmployees();
+  const { data: employeesRaw } = useHrEmployees({ limit: 200 });
   const update = useUpdateBackgroundVerification();
 
   const employees = useMemo<Employee[]>(() => {
-    if (Array.isArray(employeesRaw)) return employeesRaw;
-    if (employeesRaw && "data" in employeesRaw) return employeesRaw.data;
-    return [];
+    return unwrapEmployees(employeesRaw);
   }, [employeesRaw]);
 
   const employeeOptions = useMemo<ComboboxOption[]>(
@@ -338,7 +336,7 @@ function BGVContent() {
       <PageWrapper
         title="Background Verification"
         subtitle="Initiate, track employee background checks, and view candidate compliance"
-      >
+ variant="display">
         <EmptyState
           illustrationPreset="alert"
           title="Failed to load verifications"

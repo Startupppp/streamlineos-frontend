@@ -240,7 +240,7 @@ export function OnboardingTemplatesTab() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {templates.map((template) => (
-            <Card key={template.id} className="rounded-lg border border-border bg-card shadow-sm">
+            <Card key={template.id} className="rounded-2xl border border-border/70 bg-card/90 shadow-sm">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between gap-2">
                   <TruncatedText text={template.name} className="text-sm font-semibold text-foreground" />

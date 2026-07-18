@@ -98,7 +98,7 @@ function PersonCard({ emp, size = "md" }: { emp: OrgChartNode; size?: "sm" | "md
   const accent = ROLE_ACCENT[emp.role] ?? "border-l-border";
   return (
     <div className={cn(
-      "flex items-center gap-2.5 rounded-xl border border-border bg-card shadow-sm overflow-hidden",
+      "flex items-center gap-2.5 rounded-2xl border border-border/70 bg-card/90 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_10px_28px_-14px_rgba(15,23,42,0.12)] overflow-hidden",
       "border-l-4 transition-shadow duration-200 hover:shadow-md",
       isSm ? "min-w-[152px] p-2" : "min-w-[192px] p-2.5",
       accent,
@@ -246,7 +246,7 @@ export default function OrgChartPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Organization" subtitle="Team structure and departments">
+      <PageWrapper title="Organization" subtitle="Team structure and departments" variant="display">
         <div className="space-y-3">
           {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-2xl" />)}
         </div>
@@ -295,7 +295,7 @@ export default function OrgChartPage() {
       }
     >
       {view === "tree" && (
-        <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+        <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <p className="text-xs text-muted-foreground">Reporting hierarchy with direct reports.</p>
@@ -347,7 +347,7 @@ export default function OrgChartPage() {
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 items-start">
             {deptGroups.map(([name, members]) => (
-              <Card key={name} className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 border-l-primary">
+              <Card key={name} className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden border-l-4 border-l-primary">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">

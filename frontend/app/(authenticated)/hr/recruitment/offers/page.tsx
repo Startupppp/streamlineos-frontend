@@ -57,7 +57,7 @@ export default function OffersPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Offers" subtitle="Track every offer across all candidates.">
+      <PageWrapper title="Offers" subtitle="Track every offer across all candidates." variant="display">
         <div className="space-y-3">
           {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
         </div>
@@ -69,7 +69,7 @@ export default function OffersPage() {
     <PageWrapper
       title="Offers"
       subtitle="Track every offer across all candidates — status, terms, and approvals."
-    >
+ variant="display">
       {!offers?.length ? (
         <RecruitmentEmptyState
           illustration={<EmptyDocumentsIllustration />}

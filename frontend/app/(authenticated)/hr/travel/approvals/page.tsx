@@ -30,7 +30,7 @@ import {
 
 function ApprovalsLoading() {
   return (
-    <PageWrapper title="Travel Approvals" subtitle="Review pending travel requests">
+    <PageWrapper title="Travel Approvals" subtitle="Review pending travel requests" variant="display">
       <div className="space-y-6">
         {Array.from({ length: 8 }).map((_, si) => (
           <div key={si} className="space-y-3">
@@ -306,7 +306,7 @@ export default function TravelApprovalsPage() {
       title="Travel Approvals"
       subtitle="Review pending travel requests"
       badge={undefined}
-    >
+ variant="display">
       {isEmpty ? (
         <EmptyState
           illustrationPreset="travel"

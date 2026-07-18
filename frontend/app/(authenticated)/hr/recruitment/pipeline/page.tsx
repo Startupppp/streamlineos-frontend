@@ -59,7 +59,7 @@ export default function PipelinePage() {
       <PageWrapper
         title="Recruitment Pipeline"
         subtitle="Drag candidates between stages to update their status"
-      >
+ variant="display">
         <ErrorState description="Failed to load pipeline" onRetry={refetch} />
       </PageWrapper>
     );

@@ -24,7 +24,7 @@ export default function HrFormSubmissionsPage({ params }: PageProps) {
       title={form ? `${form.name} — Submissions` : "Submissions"}
       subtitle={`${subs?.total ?? 0} total submissions`}
       backHref={`/hr/settings/forms/${formId}`}
-    >
+ variant="display">
       {isLoading ? (
         <div className="space-y-2 pt-2">
           {[...Array(5)].map((_, i) => (

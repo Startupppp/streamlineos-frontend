@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback, useTransition } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { format, eachDayOfInterval, parse, isValid } from "date-fns";
 import { useGetWorkLogs, useUpsertWorkLog, useHrMyLeaveRequests } from "@/hooks/api/hr";
-import { useHrEmployees, useHrDepartments } from "@/hooks/api/hr";
+import { useHrEmployees, useHrDepartments, unwrapEmployees } from "@/hooks/api/hr";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -105,17 +105,11 @@ export default function WorkLogsPage() {
 
   const isAdminOrCeo = useCan("hr:employees:manage");
 
-  const { data: employeesRaw } = useHrEmployees();
+  const { data: employeesRaw } = useHrEmployees({ limit: 200 });
   const { data: departments } = useHrDepartments();
 
   const allEmployees = useMemo(
-    () =>
-      isAdminOrCeo
-        ? ((Array.isArray(employeesRaw)
-            ? employeesRaw
-            : ((employeesRaw as { data?: Employee[] })?.data ??
-              [])) as Employee[])
-        : [],
+    () => (isAdminOrCeo ? unwrapEmployees(employeesRaw) : []),
     [employeesRaw, isAdminOrCeo],
   );
 
@@ -433,6 +427,7 @@ export default function WorkLogsPage() {
             })()
           : "Track your daily tasks and activities."
       }
+      variant="display"
       actions={
         <WorkLogFilterActions
           {...sharedFilterProps}
@@ -449,7 +444,7 @@ export default function WorkLogsPage() {
     >
       <div className="space-y-4">
         {filters.departmentId && !filters.selectedUserId ? (
-          <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+          <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
             <CardContent className="py-12">
               <div className="flex flex-col items-center justify-center text-center gap-2">
                 <div className="w-8 rounded-full bg-muted flex items-center justify-center">
@@ -463,7 +458,7 @@ export default function WorkLogsPage() {
             </CardContent>
           </Card>
         ) : isLoading ? (
-          <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+          <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
             <CardContent className="py-12">
               <div
                 className="flex flex-col items-center justify-center gap-3"
@@ -481,7 +476,7 @@ export default function WorkLogsPage() {
             </CardContent>
           </Card>
         ) : isError ? (
-          <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+          <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
             <CardContent className="py-12">
               <div className="flex flex-col items-center justify-center text-center gap-3">
                 <p className="text-sm font-semibold text-foreground">
@@ -502,7 +497,7 @@ export default function WorkLogsPage() {
             </CardContent>
           </Card>
         ) : !hasSearchResults ? (
-          <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+          <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
             <CardContent className="py-12">
               <div className="flex flex-col items-center justify-center text-center gap-3">
                 <EmptyTimeIllustration className="mb-2 h-40 w-40 opacity-95" />
@@ -527,7 +522,7 @@ export default function WorkLogsPage() {
         ) : (
           <div className="space-y-3">
             {!isLoading && logs && totalHours > 0 && (
-              <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 border-l-emerald-500">
+              <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden border-l-4 border-l-emerald-500">
                 <CardContent className="py-3 px-4">
                   <div className="flex items-center gap-6">
                     <div>

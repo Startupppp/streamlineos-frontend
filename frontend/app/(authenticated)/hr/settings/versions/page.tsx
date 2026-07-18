@@ -68,7 +68,7 @@ export default function VersionHistoryPage() {
 
   if (!canView) {
     return (
-      <PageWrapper title="Version History" subtitle="Browse version lineage and rollback policies, templates, and workflows">
+      <PageWrapper title="Version History" subtitle="Browse version lineage and rollback policies, templates, and workflows" variant="display">
         <NoPermissionState
           permission="hr:policies:view"
           title="Access Restricted"
@@ -82,7 +82,7 @@ export default function VersionHistoryPage() {
     <PageWrapper
       title="Version History"
       subtitle="Browse version lineage and rollback policies, templates, and workflows"
-    >
+ variant="display">
       <div className="px-4 sm:px-6 py-4 space-y-4">
         <div className={FILTER_TOOLBAR_ROW}>
           <Select value={entity} onValueChange={(v) => { setEntity(v as VersionEntity); setQueriedId(null); }}>

@@ -67,6 +67,15 @@ export function useUpdateSignEnvelope(id: number) {
   });
 }
 
+export function useDeleteSignEnvelope() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["signEnvelopes", "delete"],
+    mutationFn: (id: number) => apiClient.delete<{ success: true }>(`/sign/envelopes/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.signEnvelopes.all }),
+  });
+}
+
 export function useValidateSignEnvelope(id: number) {
   return useMutation({
     mutationKey: ["signEnvelopes", "validate", id],

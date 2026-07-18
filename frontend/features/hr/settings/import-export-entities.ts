@@ -8,7 +8,7 @@ export const HR_IMPORT_EXPORT_ENTITIES: ImportEntity[] = [
     icon: Users,
     description:
       "Export employee directory with roles, departments, and contact info.",
-    exportEndpoint: "/hr/employees/export",
+    exportEndpoint: "/hr/export/employees",
     accent: "text-violet-600 bg-violet-500/10",
     supported: { import: false, export: true },
   },
@@ -28,7 +28,7 @@ export const HR_IMPORT_EXPORT_ENTITIES: ImportEntity[] = [
     icon: Package,
     description:
       "Export asset inventory with assigned employees and status.",
-    exportEndpoint: "/hr/assets/export",
+    exportEndpoint: "/hr/export/assets",
     accent: "text-slate-600 bg-slate-500/10",
     supported: { import: false, export: true },
   },

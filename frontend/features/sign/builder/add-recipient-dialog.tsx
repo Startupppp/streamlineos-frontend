@@ -6,15 +6,31 @@ import { toast } from "sonner";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { EntityFormDialog } from "@/components/shared/entity-form-dialog";
+import { EntityFormSheet } from "@/components/shared/entity-form-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { PERSON_NAME_REGEX } from "@/lib/location/address-options";
 import { useAddSignRecipient } from "@/hooks/api/sign/recipients";
 import type { SignAuthMethod, SignRecipientType } from "@/types/sign";
 
 const recipientSchema = z.object({
-  name: z.string().trim().min(1, "Name is required").max(200),
-  email: z.string().trim().email("Enter a valid email").optional().or(z.literal("")),
-  roleName: z.string().trim().min(1, "Role is required").max(100),
+  name: z
+    .string()
+    .trim()
+    .min(2, "Name must be at least 2 characters")
+    .max(80, "Name must be at most 80 characters")
+    .regex(PERSON_NAME_REGEX, "Enter a valid name (letters, spaces, and ' . - only)"),
+  email: z
+    .string()
+    .trim()
+    .refine((v) => v === "" || z.string().email().safeParse(v).success, "Enter a valid email"),
+  roleName: z
+    .string()
+    .trim()
+    .min(1, "Role is required")
+    .max(100, "Role must be at most 100 characters")
+    .refine((v) => /[a-zA-Z0-9]/.test(v), "Role must contain at least one letter or number")
+    .refine((v) => !/^[\W_]+$/.test(v), "Role cannot consist of only special characters")
+    .refine((v) => !/\s{2,}/.test(v), "Role cannot have multiple consecutive spaces"),
   recipientType: z.enum(["signer", "approver", "cc", "viewer", "in_person_host", "internal_reviewer"]),
   routingOrder: z.number().int().min(1).max(50),
   authMethod: z.enum(["email_link", "access_code", "otp_email"]),
@@ -48,7 +64,7 @@ export function AddRecipientDialog({ envelopeId, open, onOpenChange, nextRouting
   }
 
   return (
-    <EntityFormDialog<RecipientValues>
+    <EntityFormSheet<RecipientValues>
       open={open}
       onOpenChange={onOpenChange}
       title="Add recipient"
@@ -64,6 +80,7 @@ export function AddRecipientDialog({ envelopeId, open, onOpenChange, nextRouting
       onSubmit={handleSubmit}
       isSubmitting={addRecipient.isPending}
       submitLabel="Add recipient"
+      className="sm:max-w-md"
       resetOnOpen
     >
       {(form) => (
@@ -177,6 +194,6 @@ export function AddRecipientDialog({ envelopeId, open, onOpenChange, nextRouting
           />
         </div>
       )}
-    </EntityFormDialog>
+    </EntityFormSheet>
   );
 }

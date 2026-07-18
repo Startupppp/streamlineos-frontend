@@ -260,7 +260,7 @@ export default function InboxPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Candidate Inbox" subtitle="Messages with candidates" noInternalScroll>
+      <PageWrapper title="Candidate Inbox" subtitle="Messages with candidates" noInternalScroll variant="display">
         <div className="flex gap-4 h-full">
           <div className="w-72 space-y-2">
             {Array.from({ length: 12 }).map((_, i) => (
@@ -278,7 +278,7 @@ export default function InboxPage() {
       title="Candidate Inbox"
       subtitle="Manage candidate conversations across channels"
       noInternalScroll
-    >
+ variant="display">
       {threads.length === 0 ? (
         <RecruitmentEmptyState
           illustration={<EmptyInboxIllustration />}

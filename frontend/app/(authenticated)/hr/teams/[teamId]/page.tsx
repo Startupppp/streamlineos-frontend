@@ -157,7 +157,7 @@ export default function TeamDetailPage({ params }: { params: Promise<{ teamId: s
 
   if (isLoading) {
     return (
-      <PageWrapper title="Team">
+      <PageWrapper title="Team" variant="display">
         <div className="space-y-4">
           <Skeleton className="h-28 w-full rounded-xl" />
           <div className="grid gap-3 sm:grid-cols-2">
@@ -172,8 +172,9 @@ export default function TeamDetailPage({ params }: { params: Promise<{ teamId: s
 
   if (teamsError) {
     return (
-      <PageWrapper title="Team">
+      <PageWrapper title="Team" variant="display">
         <EmptyState
+          illustrationPreset="alert"
           title="Failed to load team"
           description="Something went wrong while fetching team data."
           action={{ label: "Retry", onClick: handleRetry }}

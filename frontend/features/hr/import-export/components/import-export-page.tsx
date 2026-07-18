@@ -79,7 +79,7 @@ function ImportCard({ config, onImport }: ImportCardProps) {
   }, [config.id, onImport]);
 
   return (
-    <div className="rounded-xl border border-border bg-card shadow-sm p-4 flex flex-col gap-3 hover:shadow-md transition-shadow">
+    <div className="rounded-2xl border border-border/70 bg-card/90 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_10px_28px_-14px_rgba(15,23,42,0.12)] p-4 flex flex-col gap-3 hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <span

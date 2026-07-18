@@ -94,12 +94,21 @@ export interface StatCardGridSkeletonProps {
   className?: string;
 }
 
-export function StatCardGrid({ children, cols: _cols = 4, className }: StatCardGridProps) {
+const STAT_GRID_COLS: Record<NonNullable<StatCardGridProps["cols"]>, string> = {
+  2: "grid-cols-1 sm:grid-cols-2",
+  3: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
+  4: "grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
+  5: "grid-cols-1 min-[420px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-5",
+  6: "grid-cols-1 min-[420px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-6",
+};
+
+export function StatCardGrid({ children, cols = 4, className }: StatCardGridProps) {
   return (
     <div
       className={cn(
-        "flex flex-nowrap gap-2 overflow-x-auto scrollbar-hide snap-x snap-mandatory -mx-1 px-1 py-1",
-        "[&>*]:min-w-[148px] [&>*]:max-w-[220px] [&>*]:flex-1 [&>*]:shrink-0 [&>*]:snap-start [&>*]:basis-[148px]",
+        "grid gap-3",
+        STAT_GRID_COLS[cols],
+        "[&>*]:min-w-0 [&>*]:h-full",
         className,
       )}
     >
@@ -169,7 +178,7 @@ export const StatCard = memo(function StatCard({
   const body = (
     <div
       className={cn(
-        "flex h-full items-center gap-2.5 rounded-lg border border-border bg-card px-3 py-2.5 shadow-sm transition-colors",
+        "flex h-full min-h-[84px] items-start gap-3 rounded-xl border border-border/80 bg-card px-3.5 py-3 shadow-sm transition-colors",
         featured && "border-primary bg-primary text-primary-foreground",
         href && "hover:bg-muted/30 cursor-pointer",
         featured && href && "hover:bg-primary/90",
@@ -179,28 +188,28 @@ export const StatCard = memo(function StatCard({
       {Icon && (
         <div
           className={cn(
-            "h-8 w-8 rounded-md flex items-center justify-center shrink-0",
+            "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
             featured ? "bg-primary-foreground/15" : t.bg,
           )}
         >
           <Icon className={cn("h-4 w-4", featured ? "text-primary-foreground" : t.text)} />
         </div>
       )}
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 space-y-0.5">
         <p
           className={cn(
-            "text-[11px] font-medium truncate",
+            "text-[11px] font-medium leading-tight truncate",
             featured ? "text-primary-foreground/70" : "text-muted-foreground",
           )}
         >
           {label}
         </p>
         {isLoading ? (
-          <Skeleton className={cn("h-5 w-14 mt-0.5", featured && "bg-primary-foreground/20")} />
+          <Skeleton className={cn("h-5 w-14", featured && "bg-primary-foreground/20")} />
         ) : (
           <p
             className={cn(
-              "text-lg font-semibold tabular-nums leading-tight",
+              "text-xl font-semibold tabular-nums leading-none tracking-tight",
               featured ? "text-primary-foreground" : "text-foreground",
             )}
           >
@@ -210,7 +219,7 @@ export const StatCard = memo(function StatCard({
         {!isLoading && effectiveDelta && (
           <p
             className={cn(
-              "text-[10px] font-medium",
+              "text-[11px] font-medium",
               effectiveDelta.direction === "up"
                 ? "text-emerald-600 dark:text-emerald-400"
                 : "text-red-600 dark:text-red-400",
@@ -220,7 +229,7 @@ export const StatCard = memo(function StatCard({
           </p>
         )}
         {!isLoading && !effectiveDelta && effectiveHint && (
-          <p className={cn("text-[10px] truncate", featured ? "text-primary-foreground/70" : "text-muted-foreground")}>
+          <p className={cn("text-[11px] leading-snug truncate", featured ? "text-primary-foreground/70" : "text-muted-foreground")}>
             {effectiveHint}
           </p>
         )}

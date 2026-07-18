@@ -64,8 +64,8 @@ function QueueSection({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-      <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/60">
+    <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/50 bg-gradient-to-r from-blue-500/[0.03] to-transparent">
         <div className="flex items-center gap-2">
           <h2 className="text-sm font-semibold text-foreground">{title}</h2>
           {count > 0 && (
@@ -265,7 +265,7 @@ export default function RecruitmentCommandCenterPage() {
               </div>
 
               <div className="space-y-4">
-                <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+                <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
                   <div className="px-5 py-3.5 border-b border-border/60">
                     <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
                       <AlertTriangle className="h-4 w-4 text-amber-600" />
@@ -290,7 +290,7 @@ export default function RecruitmentCommandCenterPage() {
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+                <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
                   <div className="px-5 py-3.5 border-b border-border/60">
                     <h2 className="text-sm font-semibold text-foreground">Source quality this week</h2>
                   </div>

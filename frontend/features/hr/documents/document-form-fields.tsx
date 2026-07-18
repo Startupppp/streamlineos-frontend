@@ -22,14 +22,12 @@ import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 
 export const formSchema = z.object({
-  name: z.string()
-    .min(2, "Name must be at least 2 characters")
+  name: z
+    .string()
+    .trim()
+    .min(1, "Name is required")
     .max(200, "Name must be at most 200 characters")
-    .refine((v) => /[a-zA-Z]/.test(v), "Name must contain at least one letter")
-    .refine((v) => !/^[^a-zA-Z0-9]+$/.test(v.trim()), "Name cannot consist of only special characters")
-    .refine((v) => !/\s{2,}/.test(v), "Name cannot have multiple consecutive spaces")
-    .refine((v) => v === v.trim(), "Name cannot have leading or trailing spaces")
-    .refine((v) => !/[<>{}[\]\\|^~`]/.test(v), "Name contains invalid special characters"),
+    .refine((v) => /[\p{L}\p{N}]/u.test(v), "Name must contain a letter or number"),
   description: z.string().optional(),
   type: z.enum(["CONTRACT", "CERTIFICATE", "ID_PROOF", "PAYSLIP", "POLICY", "OFFER_LETTER", "RESUME", "OTHER"] as const, {
     error: "Please select a document type",

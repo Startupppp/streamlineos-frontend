@@ -107,7 +107,7 @@ export default function FindExpertPage() {
     <PageWrapper
       title="Find Expert"
       subtitle="Search across the org to find colleagues with specific skills"
-    >
+ variant="display">
       <div className="space-y-3">
         <form onSubmit={handleSearch} className="flex gap-2 max-w-lg">
           <SearchInput

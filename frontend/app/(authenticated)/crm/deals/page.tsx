@@ -19,7 +19,7 @@ import { DragDropContext, type DropResult } from "@hello-pangea/dnd";
 import { useDeals, useUpdateDealStage, useDeleteDeal, useCrmPipelines } from "@/hooks/api/crm";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import type { Deal, DealStage } from "@/types/crm";
-import { useHrEmployees } from "@/hooks/api/hr";
+import { useHrEmployees, unwrapEmployees } from "@/hooks/api/hr";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { DealSidePanel } from "@/features/crm/deals/deal-side-panel";

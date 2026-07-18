@@ -9,7 +9,7 @@ import {
   useExpensePageData,
   useUpdateExpenseStatus,
   useHrEmployees,
-} from "@/hooks/api/hr";
+  unwrapEmployees} from "@/hooks/api/hr";
 import type { Employee, PaginatedEmployees } from "@/types/hr";
 import { CreateExpenseDialog } from "@/features/hr/expenses/components/create-expense-dialog";
 import { ImportExpenseSheet } from "@/features/hr/expenses/components/import-expense-sheet";
@@ -103,9 +103,7 @@ export default function ExpensesPage() {
   const { data: employeesRaw } = useHrEmployees({ limit: 200 });
   const employees = useMemo(() => {
     const raw = employeesRaw
-      ? Array.isArray(employeesRaw)
-        ? (employeesRaw as Employee[])
-        : ((employeesRaw as PaginatedEmployees).data ?? [])
+      ? unwrapEmployees(employeesRaw)
       : [];
     return (raw as Employee[])
       .filter((e) => e.isActive)
@@ -218,7 +216,7 @@ export default function ExpensesPage() {
 
   if (isError && !pageData) {
     return (
-      <PageWrapper title="Expenses" subtitle="Manage your expense claims">
+      <PageWrapper title="Expenses" subtitle="Manage your expense claims" variant="display">
         <div className="flex flex-col items-center justify-center py-20 gap-4">
           <div className="text-center">
             <p className="text-sm font-semibold text-foreground">

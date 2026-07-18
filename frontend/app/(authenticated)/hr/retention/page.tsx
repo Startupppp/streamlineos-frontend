@@ -9,7 +9,7 @@ export default async function HrRetentionPage() {
     <PageWrapper
       title="Data Retention"
       subtitle="Configure retention policies and handle data subject requests."
-    >
+ variant="display">
       <RetentionPageContent />
     </PageWrapper>
   );

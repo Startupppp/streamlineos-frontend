@@ -50,7 +50,7 @@ export function EmployeesLoadingSkeleton() {
           {Array.from({ length: 12 }).map((_, i) => (
             <Card
               key={`widget-a-${i}`}
-              className="rounded-2xl border border-border bg-card shadow-sm"
+              className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)]"
             >
               <CardContent className="p-4 space-y-3">
                 <div className="flex items-center justify-between">
@@ -68,7 +68,7 @@ export function EmployeesLoadingSkeleton() {
         </div>
       </div>
 
-      <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden mt-4">
+      <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden mt-4">
         <CardContent className="p-0">
           <div className="border-b px-4 py-3 flex items-center gap-8 bg-muted/40">
             <Skeleton className="h-4 w-28" />

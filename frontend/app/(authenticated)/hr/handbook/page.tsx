@@ -31,7 +31,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const VERSION_FORMAT_REGEX = /^\d+\.\d+$/;
-const CONSECUTIVE_SPECIAL_CHARS_REGEX = /[^a-zA-Z0-9 ]{2,}/;
+
 const URL_HTTPS_REGEX = /^https:\/\/.+/;
 
 type DocumentInputMode = "url" | "file";
@@ -99,15 +99,9 @@ function HandbookContent() {
       return;
     }
 
-    const trimmedTitle = title.trim();
+    const trimmedTitle = title.trim().replace(/\s+/g, " ");
     if (!trimmedTitle) { toast.error("Title is required"); return; }
-    if (trimmedTitle.length < 2) { toast.error("Title must be at least 2 characters"); return; }
     if (trimmedTitle.length > 100) { toast.error("Title must be at most 100 characters"); return; }
-    if (/  /.test(trimmedTitle)) { toast.error("Title must not contain consecutive spaces"); return; }
-    if (CONSECUTIVE_SPECIAL_CHARS_REGEX.test(trimmedTitle)) {
-      toast.error("Title must not contain consecutive special characters");
-      return;
-    }
 
     if (changelog.length > 2000) { toast.error("Notes must be at most 2000 characters"); return; }
 
@@ -333,7 +327,7 @@ function HandbookContent() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Employee Handbook" subtitle="Manage and publish handbook versions">
+      <PageWrapper title="Employee Handbook" subtitle="Manage and publish handbook versions" variant="display">
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <Skeleton className="h-8 w-48" />
@@ -353,7 +347,7 @@ function HandbookContent() {
 
   if (isError) {
     return (
-      <PageWrapper title="Employee Handbook" subtitle="Manage and publish handbook versions">
+      <PageWrapper title="Employee Handbook" subtitle="Manage and publish handbook versions" variant="display">
         <div className="flex-1 flex flex-col items-center justify-center gap-4 py-20">
           <AlertTriangle className="h-10 w-10 text-muted-foreground" />
           <div className="text-center space-y-1">
@@ -405,7 +399,7 @@ function HandbookContent() {
         </div>
 
         {!filteredVersions.length ? (
-          <div className="flex-1 rounded-lg border border-border bg-card shadow-sm overflow-hidden">
+          <div className="flex-1 rounded-2xl border border-border/70 bg-card/90 shadow-sm overflow-hidden">
             <div className="py-14 flex flex-col items-center justify-center gap-3">
               <EmptyDocumentsIllustration className="h-36 w-36 opacity-95" />
               <div className="text-center space-y-1">

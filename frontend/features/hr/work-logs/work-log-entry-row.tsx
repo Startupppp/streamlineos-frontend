@@ -115,7 +115,7 @@ export function WorkLogEntryRow({
     <div
       title={statusLabel}
       className={cn(
-        "flex flex-col sm:flex-row rounded-2xl border border-border bg-card shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200",
+        "flex flex-col sm:flex-row rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden hover:shadow-md transition-shadow duration-200",
         isWeekendDay ? "bg-blue-500/[0.02] dark:bg-blue-500/[0.04]" : "bg-card",
         hasUnsavedChanges
           ? "border-l-4 border-l-amber-500"

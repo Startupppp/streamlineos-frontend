@@ -12,6 +12,7 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { resolveImageUrl } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { useCan } from "@/hooks/api/access";
 import {
   canDeleteEmployee,
   getDisplayName,
@@ -27,7 +28,6 @@ interface HrEmployeeTableProps {
   totalPages: number;
   showFrom: number;
   showTo: number;
-  currentUserRole: string | undefined;
   currentUserId: string | undefined;
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
@@ -65,9 +65,9 @@ export function HrEmployeeTable({
   onPageChange,
   onPageSizeChange,
   onRequestDelete,
-  currentUserRole,
   currentUserId,
 }: HrEmployeeTableProps) {
+  const canManageEmployees = useCan("hr:employees:update");
   const columns = useMemo<DataTableColumn<Employee>[]>(() => [
     {
       key: "name",
@@ -157,8 +157,8 @@ export function HrEmployeeTable({
           user.role,
           user.id,
           user.isActive,
-          currentUserRole,
           currentUserId,
+          canManageEmployees,
         );
 
         function handleTerminateClick() {
@@ -186,10 +186,10 @@ export function HrEmployeeTable({
         );
       },
     },
-  ], [currentUserRole, currentUserId, onRequestDelete]);
+  ], [currentUserId, canManageEmployees, onRequestDelete]);
 
   return (
-    <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden flex flex-col flex-1 min-h-0">
+    <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden flex flex-col flex-1 min-h-0">
       <CardContent className="p-0 flex flex-col flex-1 min-h-0">
         <DataTable
           data={employees}

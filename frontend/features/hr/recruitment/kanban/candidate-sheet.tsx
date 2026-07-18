@@ -158,7 +158,7 @@ export const CandidateSheet = memo(function CandidateSheet({
               </div>
             </div>
 
-            <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 border-l-blue-400">
+            <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden border-l-4 border-l-blue-400">
               <div className="px-4 py-3">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-7 rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 flex items-center justify-center shrink-0">
@@ -182,7 +182,7 @@ export const CandidateSheet = memo(function CandidateSheet({
             </div>
 
             {candidate.rating !== null && candidate.rating !== undefined && (
-              <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 border-l-amber-400">
+              <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden border-l-4 border-l-amber-400">
                 <div className="px-4 py-3">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-7 rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 flex items-center justify-center shrink-0">
@@ -211,7 +211,7 @@ export const CandidateSheet = memo(function CandidateSheet({
             )}
 
             {candidate.slaStatus && (
-              <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 border-l-slate-400">
+              <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden border-l-4 border-l-slate-400">
                 <div className="px-4 py-3">
                   <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
                     SLA Compliance
@@ -236,7 +236,7 @@ export const CandidateSheet = memo(function CandidateSheet({
             )}
 
             {candidate.notes && (
-              <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 border-l-border">
+              <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden border-l-4 border-l-border">
                 <div className="px-4 py-3">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-7 rounded-lg bg-muted text-muted-foreground dark:bg-slate-800/60 dark:text-slate-400 flex items-center justify-center shrink-0">

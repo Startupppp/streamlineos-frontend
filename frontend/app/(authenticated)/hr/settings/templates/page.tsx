@@ -162,7 +162,7 @@ export default function HrTemplatesPage() {
 
   if (!canView) {
     return (
-      <PageWrapper title="HR Templates" subtitle="Unified template library for checklists, letters, reviews, surveys, and more.">
+      <PageWrapper title="HR Templates" subtitle="Unified template library for checklists, letters, reviews, surveys, and more." variant="display">
         <NoPermissionState
           permission="hr:templates:view"
           title="Access Restricted"

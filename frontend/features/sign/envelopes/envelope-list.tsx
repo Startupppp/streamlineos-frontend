@@ -2,53 +2,30 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ExternalLinkIcon, PlusIcon } from "@animateicons/react/lucide";
+import { toast } from "sonner";
+import { Plus, ExternalLink, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ErrorState } from "@/components/shared/error-state";
 import { IllustrationImage } from "@/components/illustrations/illustration-image";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { useSignEnvelopes } from "@/hooks/api/sign/envelopes";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { useDeleteSignEnvelope, useSignEnvelopes } from "@/hooks/api/sign/envelopes";
 import { EnvelopeStatusBadge } from "../components/envelope-status-badge";
 import { CreateEnvelopeDialog } from "../components/create-envelope-dialog";
+import { EditEnvelopeSheet } from "../components/edit-envelope-sheet";
 import type { SignEnvelope } from "@/types/sign";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
-
-function EnvelopeOpenButton({ id, onNavigate }: { id: number; onNavigate: (id: number) => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-
-  function handleClick(e: React.MouseEvent) {
-    e.stopPropagation();
-    onNavigate(id);
-  }
-
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="size-8"
-      aria-label="Open envelope"
-      onClick={handleClick}
-      {...hoverHandlers}
-    >
-      <ExternalLinkIcon ref={iconRef} className="size-4" />
-    </Button>
-  );
-}
-
-function NewEnvelopeButton({ onClick }: { onClick: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button onClick={onClick} {...hoverHandlers}>
-      <PlusIcon ref={iconRef} className="size-4" />
-      New envelope
-    </Button>
-  );
-}
 
 const STATUS_FILTERS = [
   { value: "all", label: "All" },
@@ -60,13 +37,18 @@ const STATUS_FILTERS = [
   { value: "expired", label: "Expired" },
 ] as const;
 
+const EDITABLE_STATUSES = new Set(["draft", "ready_to_send"]);
+
 export function EnvelopeList() {
   const router = useRouter();
   const [status, setStatus] = useState<string>("all");
   const [createOpen, setCreateOpen] = useState(false);
+  const [editEnvelope, setEditEnvelope] = useState<SignEnvelope | null>(null);
+  const [deleteEnvelope, setDeleteEnvelope] = useState<SignEnvelope | null>(null);
   const { data: envelopes, isLoading, isError, refetch } = useSignEnvelopes(
     status === "all" ? undefined : { status },
   );
+  const deleteMutation = useDeleteSignEnvelope();
 
   function handleCreateOpen() {
     setCreateOpen(true);
@@ -80,8 +62,41 @@ export function EnvelopeList() {
     router.push(`/sign/envelopes/${envelope.id}`);
   }
 
-  function handleRowNavigate(id: number) {
-    router.push(`/sign/envelopes/${id}`);
+  function makeOpenHandler(id: number) {
+    return function handleOpenClick() {
+      router.push(`/sign/envelopes/${id}`);
+    };
+  }
+
+  function makeEditHandler(envelope: SignEnvelope) {
+    return function handleEditClick() {
+      setEditEnvelope(envelope);
+    };
+  }
+
+  function makeDeleteHandler(envelope: SignEnvelope) {
+    return function handleDeleteClick() {
+      setDeleteEnvelope(envelope);
+    };
+  }
+
+  function handleEditOpenChange(open: boolean) {
+    if (!open) setEditEnvelope(null);
+  }
+
+  function handleDeleteOpenChange(open: boolean) {
+    if (!open) setDeleteEnvelope(null);
+  }
+
+  async function handleConfirmDelete() {
+    if (!deleteEnvelope) return;
+    try {
+      await deleteMutation.mutateAsync(deleteEnvelope.id);
+      toast.success("Envelope deleted");
+      setDeleteEnvelope(null);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
   }
 
   const emptyState = (
@@ -93,7 +108,10 @@ export function EnvelopeList() {
           Upload a PDF and send it for signature to get started.
         </p>
       </div>
-      <NewEnvelopeButton onClick={handleCreateOpen} />
+      <Button onClick={handleCreateOpen}>
+        <Plus className="size-4" />
+        New envelope
+      </Button>
     </div>
   );
 
@@ -132,10 +150,47 @@ export function EnvelopeList() {
     {
       key: "actions",
       header: "",
-      headerClassName: "w-10",
-      cell: (envelope) => (
-        <EnvelopeOpenButton id={envelope.id} onNavigate={handleRowNavigate} />
-      ),
+      headerClassName: "w-12",
+      cell: (envelope) => {
+        const canEdit = EDITABLE_STATUSES.has(envelope.status);
+        return (
+          <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-8"
+                  aria-label={`Actions for ${envelope.title}`}
+                >
+                  <MoreHorizontal className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={makeOpenHandler(envelope.id)}>
+                  <ExternalLink className="size-4" />
+                  Open
+                </DropdownMenuItem>
+                {canEdit && (
+                  <DropdownMenuItem onClick={makeEditHandler(envelope)}>
+                    <Pencil className="size-4" />
+                    Edit
+                  </DropdownMenuItem>
+                )}
+                {canEdit && (
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onClick={makeDeleteHandler(envelope)}
+                  >
+                    <Trash2 className="size-4" />
+                    Delete
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        );
+      },
     },
   ];
 
@@ -143,7 +198,12 @@ export function EnvelopeList() {
     <PageWrapper
       title="Envelopes"
       subtitle="Every signing request you've sent, organized by status"
-      actions={<NewEnvelopeButton onClick={handleCreateOpen} />}
+      actions={
+        <Button onClick={handleCreateOpen}>
+          <Plus className="size-4" />
+          New envelope
+        </Button>
+      }
     >
       <div className="flex min-h-0 flex-1 flex-col gap-4">
         <Tabs value={status} onValueChange={setStatus}>
@@ -172,6 +232,23 @@ export function EnvelopeList() {
       </div>
 
       <CreateEnvelopeDialog open={createOpen} onOpenChange={setCreateOpen} />
+      {editEnvelope && (
+        <EditEnvelopeSheet
+          envelope={editEnvelope}
+          open
+          onOpenChange={handleEditOpenChange}
+        />
+      )}
+      <ConfirmDialog
+        open={!!deleteEnvelope}
+        onOpenChange={handleDeleteOpenChange}
+        title="Delete envelope?"
+        description={`This will permanently delete “${deleteEnvelope?.title ?? "this envelope"}”. This can’t be undone.`}
+        confirmLabel="Delete"
+        destructive
+        isPending={deleteMutation.isPending}
+        onConfirm={handleConfirmDelete}
+      />
     </PageWrapper>
   );
 }

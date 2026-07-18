@@ -38,7 +38,7 @@ import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { ExpenseFilters } from "@/types/hr/expenses";
-import { useHrEmployees } from "@/hooks/api/hr";
+import { useHrEmployees, unwrapEmployees } from "@/hooks/api/hr";
 import type { Employee, PaginatedEmployees } from "@/types/hr";
 import { usePdfRenderer, type PdfData } from "./pdf-renderer";
 import { downloadCSV, downloadXLSX, type XlsxData } from "./xlsx-renderer";
