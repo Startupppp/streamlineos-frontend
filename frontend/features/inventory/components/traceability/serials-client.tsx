@@ -32,6 +32,8 @@ import {
 } from "@/features/inventory/lib";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { cn } from "@/lib/utils";
+import { FILTER_SELECT_TRIGGER } from "@/lib/constants/ui";
 
 function SerialViewButton({ id, serialNumber }: { id: number; serialNumber: string }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -145,7 +147,7 @@ export function SerialsClient() {
     void refetch();
   }
 
-  function handleSearchChange(value: string) {
+  function handleSearchChange(value: string): void {
     setSearch(value);
     setPage(1);
   }
@@ -185,7 +187,7 @@ export function SerialsClient() {
             onValueChange={handleSearchChange}
           />
           <Select value={status} onValueChange={handleStatusChange}>
-            <SelectTrigger className="text-xs w-[140px]">
+            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "text-xs w-[140px]")}>
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>

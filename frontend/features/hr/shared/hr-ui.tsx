@@ -84,7 +84,7 @@ export function HrHero({
                 {eyebrow}
               </p>
             )}
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-balance leading-tight text-slate-900">
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-balance leading-tight text-foreground">
               {title}
             </h2>
             {description && (
@@ -210,7 +210,7 @@ const STATUS_STYLES: Record<
   inactive: {
     bg: "bg-muted",
     text: "text-muted-foreground",
-    dot: "bg-slate-400",
+    dot: "bg-muted-foreground/40",
     border: "border-border",
   },
   pending: {

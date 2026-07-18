@@ -24,6 +24,77 @@ interface InterviewKitDraftButtonProps {
   jobTitle: string;
 }
 
+interface RoundKit {
+  round: string;
+  questions: InterviewKitResult["roundKits"][number]["questions"];
+  rubric: InterviewKitResult["roundKits"][number]["rubric"];
+}
+
+interface RoundAccordionItemProps {
+  rk: RoundKit;
+  idx: number;
+  isExpanded: boolean;
+  onToggle: (idx: number) => void;
+}
+
+function RoundAccordionItem({ rk, idx, isExpanded, onToggle }: RoundAccordionItemProps) {
+  function handleToggle() { onToggle(idx); }
+  return (
+    <div className="rounded-md border border-border bg-muted/20">
+      <button
+        onClick={handleToggle}
+        className="w-full flex items-center justify-between px-3 py-2.5 text-left"
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium">{rk.round}</span>
+          <Badge variant="secondary" className="text-[10px] h-4 px-1">
+            {rk.questions.length}Q
+          </Badge>
+        </div>
+        {isExpanded ? (
+          <ChevronUp className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+        ) : (
+          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+        )}
+      </button>
+
+      {isExpanded && (
+        <div className="border-t border-border px-3 pb-3 pt-2 space-y-3">
+          <div>
+            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">Questions</p>
+            <div className="space-y-2">
+              {rk.questions.map((q, qi) => (
+                <div key={qi} className="rounded border border-border bg-card p-2">
+                  <p className="text-[11px] font-medium">{qi + 1}. {q.question}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Category: {q.category}</p>
+                  <p className="text-[10px] text-muted-foreground leading-snug mt-0.5">Expected: {q.expectedAnswer}</p>
+                  {q.redFlags.length > 0 && (
+                    <p className="text-[10px] text-red-500 dark:text-red-400 mt-0.5">⚑ {q.redFlags.join(" · ")}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {rk.rubric.length > 0 && (
+            <div>
+              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">Rubric</p>
+              <div className="space-y-1">
+                {rk.rubric.map((r, ri) => (
+                  <div key={ri} className="flex items-start gap-2 text-[11px]">
+                    <Badge variant="outline" className="text-[9px] h-4 px-1 shrink-0">{r.weight}x</Badge>
+                    <span><span className="font-medium">{r.criterion}:</span> {r.description}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function InterviewKitDraftButton({ jobPostingId, jobTitle }: InterviewKitDraftButtonProps) {
   const [open, setOpen] = useState(false);
   const [expandedRound, setExpandedRound] = useState<number | null>(0);
@@ -57,9 +128,9 @@ export function InterviewKitDraftButton({ jobPostingId, jobTitle }: InterviewKit
     toast.success("Interview kit copied to clipboard");
   }
 
-  function toggleRound(idx: number) {
-    setExpandedRound(expandedRound === idx ? null : idx);
-  }
+  const toggleRound = useCallback((idx: number) => {
+    setExpandedRound((prev) => prev === idx ? null : idx);
+  }, []);
 
   function handleOpen() {
     setOpen(true);
@@ -117,58 +188,13 @@ export function InterviewKitDraftButton({ jobPostingId, jobTitle }: InterviewKit
 
                   <div className="space-y-2">
                     {result.roundKits.map((rk, idx) => (
-                      <div key={idx} className="rounded-md border border-border bg-muted/20">
-                        <button
-                          onClick={() => toggleRound(idx)}
-                          className="w-full flex items-center justify-between px-3 py-2.5 text-left"
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-medium">{rk.round}</span>
-                            <Badge variant="secondary" className="text-[10px] h-4 px-1">
-                              {rk.questions.length}Q
-                            </Badge>
-                          </div>
-                          {expandedRound === idx ? (
-                            <ChevronUp className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                          ) : (
-                            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                          )}
-                        </button>
-
-                        {expandedRound === idx && (
-                          <div className="border-t border-border px-3 pb-3 pt-2 space-y-3">
-                            <div>
-                              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">Questions</p>
-                              <div className="space-y-2">
-                                {rk.questions.map((q, qi) => (
-                                  <div key={qi} className="rounded border border-border bg-card p-2">
-                                    <p className="text-[11px] font-medium">{qi + 1}. {q.question}</p>
-                                    <p className="text-[10px] text-muted-foreground mt-0.5">Category: {q.category}</p>
-                                    <p className="text-[10px] text-muted-foreground leading-snug mt-0.5">Expected: {q.expectedAnswer}</p>
-                                    {q.redFlags.length > 0 && (
-                                      <p className="text-[10px] text-red-500 dark:text-red-400 mt-0.5">⚑ {q.redFlags.join(" · ")}</p>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-
-                            {rk.rubric.length > 0 && (
-                              <div>
-                                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">Rubric</p>
-                                <div className="space-y-1">
-                                  {rk.rubric.map((r, ri) => (
-                                    <div key={ri} className="flex items-start gap-2 text-[11px]">
-                                      <Badge variant="outline" className="text-[9px] h-4 px-1 shrink-0">{r.weight}x</Badge>
-                                      <span><span className="font-medium">{r.criterion}:</span> {r.description}</span>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
+                      <RoundAccordionItem
+                        key={idx}
+                        rk={rk}
+                        idx={idx}
+                        isExpanded={expandedRound === idx}
+                        onToggle={toggleRound}
+                      />
                     ))}
                   </div>
 

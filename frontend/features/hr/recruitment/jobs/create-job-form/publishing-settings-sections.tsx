@@ -13,6 +13,32 @@ import { SectionTitle, Field, FieldError, ToggleRow, type SectionProps } from ".
 import { cn } from "@/lib/utils";
 import { Eye, Zap } from "lucide-react";
 
+interface PriorityButtonProps {
+  value: string;
+  label: string;
+  activeClass: string;
+  isActive: boolean;
+  onChange: (value: string) => void;
+}
+
+function PriorityButton({ value, label, activeClass, isActive, onChange }: PriorityButtonProps) {
+  function handleClick() { onChange(value); }
+  return (
+    <Button
+      type="button"
+      variant={isActive ? "default" : "outline"}
+      size="sm"
+      className={cn(
+        "flex-1 font-semibold transition-colors duration-200",
+        isActive && activeClass
+      )}
+      onClick={handleClick}
+    >
+      {label}
+    </Button>
+  );
+}
+
 export function Section9({ form }: SectionProps) {
   const { register, control, formState: { errors } } = form;
   return (
@@ -90,19 +116,14 @@ export function Section10({ form }: SectionProps) {
             render={({ field }) => (
               <div className="flex gap-2">
                 {priorityOptions.map(({ value, label, activeClass }) => (
-                  <Button
+                  <PriorityButton
                     key={value}
-                    type="button"
-                    variant={field.value === value ? "default" : "outline"}
-                    size="sm"
-                    className={cn(
-                      "flex-1 font-semibold transition-colors duration-200",
-                      field.value === value && activeClass
-                    )}
-                    onClick={() => field.onChange(value)}
-                  >
-                    {label}
-                  </Button>
+                    value={value}
+                    label={label}
+                    activeClass={activeClass}
+                    isActive={field.value === value}
+                    onChange={field.onChange}
+                  />
                 ))}
               </div>
             )}

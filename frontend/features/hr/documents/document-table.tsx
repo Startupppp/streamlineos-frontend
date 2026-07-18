@@ -14,12 +14,12 @@ import {
   FileImage,
   Upload,
   Pencil,
-  Loader2,
   FileSignature,
 } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -463,20 +463,17 @@ export function DocumentTable({
   const footer =
     totalFiltered > 0 && filesWithUrl.length > 0 ? (
       <div className="flex items-center gap-2.5">
-        <Button
+        <LoadingButton
           variant="outline"
           size="sm"
           className="text-xs gap-1.5"
           onClick={handleDownloadZip}
-          disabled={isZipping}
+          isPending={isZipping}
+          loadingText="Zipping..."
         >
-          {isZipping ? (
-            <Loader2 className="h-3 w-3 animate-spin" />
-          ) : (
-            <Download className="h-3 w-3" />
-          )}
+          <Download className="h-3 w-3" />
           ZIP ({filesWithUrl.length})
-        </Button>
+        </LoadingButton>
       </div>
     ) : undefined;
 

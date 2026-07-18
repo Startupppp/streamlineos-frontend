@@ -9,6 +9,7 @@ import {
   useDeleteReferenceCheck,
 } from "@/hooks/api/hr/recruitment";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { Textarea } from "@/components/ui/textarea";
@@ -187,9 +188,9 @@ export function ReferenceChecksTab({ candidateId }: Props) {
             </SheetBody>
             <SheetFooter className="shrink-0 px-4 py-3 border-t flex-row gap-2">
               <Button variant="outline" className="flex-1 h-9" onClick={handleCancel}>Cancel</Button>
-              <Button className="flex-1 h-9" onClick={handleCreate} disabled={createCheck.isPending}>
-                {createCheck.isPending ? "Adding..." : "Add Reference"}
-              </Button>
+              <LoadingButton className="flex-1 h-9" onClick={handleCreate} isPending={createCheck.isPending} loadingText="Adding...">
+                Add Reference
+              </LoadingButton>
             </SheetFooter>
           </SheetContent>
         </Sheet>

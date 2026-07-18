@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { apiClient } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -267,9 +268,9 @@ function SequenceSheet({ open, onOpenChange, sequence }: SequenceSheetProps) {
         </SheetBody>
         <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
           <Button variant="outline" onClick={handleCancelSheet} disabled={isPending}>Cancel</Button>
-          <Button onClick={handleSubmit} disabled={isPending}>
-            {isPending ? "Saving..." : isEdit ? "Save Changes" : "Create Sequence"}
-          </Button>
+          <LoadingButton onClick={handleSubmit} isPending={isPending} loadingText="Saving...">
+            {isEdit ? "Save Changes" : "Create Sequence"}
+          </LoadingButton>
         </SheetFooter>
       </SheetContent>
     </Sheet>

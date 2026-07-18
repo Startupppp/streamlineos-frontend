@@ -5,7 +5,8 @@ import { format, isWeekend, isToday as isDateToday } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, Save, Link2, ExternalLink, Ticket, Plus, X } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { Save, Link2, ExternalLink, Ticket, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
@@ -389,19 +390,16 @@ export function WorkLogEntryRow({
               <div className="flex items-center gap-2">
                 {hasUnsavedChanges && !readOnly && (
                   <>
-                    <Button
+                    <LoadingButton
                       size="sm"
                       className="h-7 gap-1.5 text-xs"
                       onClick={handleSave}
-                      disabled={isSaving}
+                      isPending={isSaving}
+                      loadingText="Saving..."
                     >
-                      {isSaving ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                      ) : (
-                        <Save className="h-3 w-3" />
-                      )}
+                      <Save className="h-3 w-3" />
                       Save
-                    </Button>
+                    </LoadingButton>
                     <Button
                       size="sm"
                       variant="ghost"

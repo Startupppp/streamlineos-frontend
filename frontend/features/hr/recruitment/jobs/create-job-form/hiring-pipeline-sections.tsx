@@ -84,21 +84,13 @@ export function Section7({ form }: SectionProps) {
           <p className="text-[10px] text-muted-foreground">Select at least one round</p>
           <div className="grid sm:grid-cols-2 gap-2 mt-1">
             {INTERVIEW_ROUND_OPTIONS.map(({ value, label }) => (
-              <label
+              <InterviewRoundOption
                 key={value}
-                className={cn(
-                  "flex items-center gap-3 rounded-xl border px-3 py-2.5 cursor-pointer transition-colors duration-200",
-                  selectedRounds.includes(value)
-                    ? "border-primary/40 bg-primary/5"
-                    : "border-border hover:bg-muted/40"
-                )}
-              >
-                <Checkbox
-                  checked={selectedRounds.includes(value)}
-                  onCheckedChange={(checked) => handleRoundToggle(value, !!checked)}
-                />
-                <span className="text-sm font-medium">{label}</span>
-              </label>
+                value={value}
+                label={label}
+                isSelected={selectedRounds.includes(value)}
+                onToggle={handleRoundToggle}
+              />
             ))}
           </div>
           <FieldError message={errors.interviewRounds?.message} />
@@ -107,6 +99,102 @@ export function Section7({ form }: SectionProps) {
         <Field label="Question Bank Mapping" required error={errors.questionBankMapping?.message}>
           <Input placeholder="e.g. React JS Questions, HR Screening Questions" {...register("questionBankMapping")} />
         </Field>
+      </div>
+    </div>
+  );
+}
+
+interface InterviewRoundOptionProps {
+  value: string;
+  label: string;
+  isSelected: boolean;
+  onToggle: (round: string, checked: boolean) => void;
+}
+
+function InterviewRoundOption({ value, label, isSelected, onToggle }: InterviewRoundOptionProps) {
+  function handleCheckedChange(checked: boolean | "indeterminate") {
+    onToggle(value, !!checked);
+  }
+  return (
+    <label
+      className={cn(
+        "flex items-center gap-3 rounded-xl border px-3 py-2.5 cursor-pointer transition-colors duration-200",
+        isSelected ? "border-primary/40 bg-primary/5" : "border-border hover:bg-muted/40"
+      )}
+    >
+      <Checkbox checked={isSelected} onCheckedChange={handleCheckedChange} />
+      <span className="text-sm font-medium">{label}</span>
+    </label>
+  );
+}
+
+interface ScreeningQuestionRowProps {
+  question: ScreeningQuestionValues;
+  idx: number;
+  onUpdate: (id: string, patch: Partial<ScreeningQuestionValues>) => void;
+  onRemove: (id: string) => void;
+}
+
+function ScreeningQuestionRow({ question: q, idx, onUpdate, onRemove }: ScreeningQuestionRowProps) {
+  function handleQuestionChange(e: React.ChangeEvent<HTMLInputElement>) {
+    onUpdate(q.id, { question: e.target.value });
+  }
+  function handleRemove() { onRemove(q.id); }
+  function handleTypeChange(v: string) {
+    onUpdate(q.id, { type: v as ScreeningQuestionValues["type"] });
+  }
+  function handleRequiredChange(c: boolean | "indeterminate") {
+    onUpdate(q.id, { required: !!c });
+  }
+  function handleKnockoutChange(c: boolean | "indeterminate") {
+    onUpdate(q.id, { knockout: !!c });
+  }
+  function handleKnockoutAnswerChange(v: string) {
+    onUpdate(q.id, { knockoutAnswer: v });
+  }
+
+  return (
+    <div className="rounded-xl border border-border p-3 space-y-2">
+      <div className="flex items-start gap-2">
+        <span className="text-[11px] font-semibold text-muted-foreground mt-2 shrink-0">{idx + 1}.</span>
+        <Input
+          placeholder="e.g. Do you have a valid work visa?"
+          value={q.question}
+          onChange={handleQuestionChange}
+          className="flex-1"
+        />
+        <RemoveQuestionButton onClick={handleRemove} />
+      </div>
+      <div className="flex flex-wrap items-center gap-3 pl-6">
+        <Select value={q.type} onValueChange={handleTypeChange}>
+          <SelectTrigger className="w-[150px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {SCREENING_QUESTION_TYPES.map((t) => (
+              <SelectItem key={t} value={t}>{SCREENING_QUESTION_TYPE_LABELS[t]}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <label className="flex items-center gap-1.5 text-xs cursor-pointer">
+          <Checkbox checked={q.required} onCheckedChange={handleRequiredChange} />
+          Required
+        </label>
+        <label className="flex items-center gap-1.5 text-xs cursor-pointer">
+          <Checkbox checked={q.knockout} onCheckedChange={handleKnockoutChange} />
+          Knockout question
+        </label>
+        {q.knockout && q.type === "YES_NO" && (
+          <Select value={q.knockoutAnswer ?? "Yes"} onValueChange={handleKnockoutAnswerChange}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Disqualifying answer" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Yes">Disqualify if &ldquo;Yes&rdquo;</SelectItem>
+              <SelectItem value="No">Disqualify if &ldquo;No&rdquo;</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
       </div>
     </div>
   );
@@ -212,49 +300,7 @@ export function Section8({ form }: SectionProps) {
           ) : (
             <div className="space-y-2 mt-2">
               {questions.map((q, idx) => (
-                <div key={q.id} className="rounded-xl border border-border p-3 space-y-2">
-                  <div className="flex items-start gap-2">
-                    <span className="text-[11px] font-semibold text-muted-foreground mt-2 shrink-0">{idx + 1}.</span>
-                    <Input
-                      placeholder="e.g. Do you have a valid work visa?"
-                      value={q.question}
-                      onChange={(e) => handleUpdateQuestion(q.id, { question: e.target.value })}
-                      className="flex-1"
-                    />
-                    <RemoveQuestionButton onClick={() => handleRemoveQuestion(q.id)} />
-                  </div>
-                  <div className="flex flex-wrap items-center gap-3 pl-6">
-                    <Select value={q.type} onValueChange={(v) => handleUpdateQuestion(q.id, { type: v as ScreeningQuestionValues["type"] })}>
-                      <SelectTrigger className="w-[150px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {SCREENING_QUESTION_TYPES.map((t) => (
-                          <SelectItem key={t} value={t}>{SCREENING_QUESTION_TYPE_LABELS[t]}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <label className="flex items-center gap-1.5 text-xs cursor-pointer">
-                      <Checkbox checked={q.required} onCheckedChange={(c) => handleUpdateQuestion(q.id, { required: !!c })} />
-                      Required
-                    </label>
-                    <label className="flex items-center gap-1.5 text-xs cursor-pointer">
-                      <Checkbox checked={q.knockout} onCheckedChange={(c) => handleUpdateQuestion(q.id, { knockout: !!c })} />
-                      Knockout question
-                    </label>
-                    {q.knockout && q.type === "YES_NO" && (
-                      <Select value={q.knockoutAnswer ?? "Yes"} onValueChange={(v) => handleUpdateQuestion(q.id, { knockoutAnswer: v })}>
-                        <SelectTrigger className="w-[160px]">
-                          <SelectValue placeholder="Disqualifying answer" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Yes">Disqualify if &ldquo;Yes&rdquo;</SelectItem>
-                          <SelectItem value="No">Disqualify if &ldquo;No&rdquo;</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    )}
-                  </div>
-                </div>
+                <ScreeningQuestionRow key={q.id} question={q} idx={idx} onUpdate={handleUpdateQuestion} onRemove={handleRemoveQuestion} />
               ))}
             </div>
           )}

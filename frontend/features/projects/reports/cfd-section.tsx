@@ -28,6 +28,7 @@ import { Layers, Camera } from "lucide-react";
 import { useCfdReport, useCaptureSnapshot } from "@/hooks/api/projects/reports";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { ChartCard, TOOLTIP_STYLE, AXIS_TICK, numberFormatter } from "./chart-card";
 
 const CFD_GROUPS = [
@@ -53,7 +54,7 @@ export function CfdSection({ projectId }: { projectId: number }) {
     capture.mutate(undefined, {
       onSuccess: (result) =>
         toast.success(`Snapshot captured (${result.captured} states)`),
-      onError: () => toast.error("Failed to capture snapshot"),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
 

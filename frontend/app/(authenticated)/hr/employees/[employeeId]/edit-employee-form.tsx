@@ -5,11 +5,12 @@ import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useUpdateProfile } from "@/hooks/api/hr";
-import { Loader2, Save } from "lucide-react";
+import { Save } from "lucide-react";
 import { useRoles } from "@/hooks/api/roles";
 import { PersonalInfoSection } from "@/features/hr/employees/detail/personal-info-section";
 import { ProfessionalInfoSection } from "@/features/hr/employees/detail/professional-info-section";
@@ -224,19 +225,16 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
             >
               Cancel
             </Button>
-            <Button
+            <LoadingButton
               size="sm"
               type="submit"
               className="gap-1.5"
-              disabled={updateProfileMutation.isPending}
+              isPending={updateProfileMutation.isPending}
+              loadingText="Saving..."
             >
-              {updateProfileMutation.isPending ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Save className="h-3.5 w-3.5" />
-              )}
+              <Save className="h-3.5 w-3.5" />
               Save Changes
-            </Button>
+            </LoadingButton>
           </div>
         </div>
       </form>

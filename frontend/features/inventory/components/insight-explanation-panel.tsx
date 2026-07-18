@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AiGeneratedLabel } from "@/components/ai/ai-generated-label";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useExplainInsight, type ExplainFactor, type InsightNarration } from "@/hooks/api/inv-ai-explain";
 import type { AiInsight } from "@/hooks/api/inventory/reports";
 
@@ -130,7 +131,7 @@ export const InsightExplanationPanel = memo(function InsightExplanationPanel({
       {explainMutation.isError && (
         <CardContent className="px-3 pb-3">
           <p className="text-[11px] text-destructive">
-            {explainMutation.error?.message ?? "Failed to generate explanation. Try again."}
+            {explainMutation.error != null ? getErrorMessage(explainMutation.error) : "Failed to generate explanation. Try again."}
           </p>
         </CardContent>
       )}

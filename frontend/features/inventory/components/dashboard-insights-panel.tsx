@@ -5,6 +5,7 @@ import { Sparkles } from "lucide-react";
 import { CheckCheckIcon, XIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent, CardAction } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -165,15 +166,16 @@ export function DashboardInsightsPanel() {
           AI Insights
         </CardTitle>
         <CardAction>
-          <Button
+          <LoadingButton
             variant="outline"
             size="sm"
             className="text-xs"
             onClick={handleGenerate}
-            disabled={generateInsights.isPending}
+            isPending={generateInsights.isPending}
+            loadingText="Generating…"
           >
-            {generateInsights.isPending ? "Generating…" : "Generate Insights"}
-          </Button>
+            Generate Insights
+          </LoadingButton>
         </CardAction>
       </CardHeader>
       <CardContent className="pt-3">

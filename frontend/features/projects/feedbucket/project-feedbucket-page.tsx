@@ -139,8 +139,12 @@ function CreateWidgetSheet({ open, projectId, onClose }: CreateWidgetSheetProps)
     setName(e.target.value);
   }
 
+  function handleOpenChange(v: boolean) {
+    if (!v) onClose();
+  }
+
   return (
-    <Sheet open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+    <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent className="w-full sm:max-w-md p-0 flex flex-col gap-0">
         <SheetHeader className="px-6 py-4 border-b shrink-0">
           <SheetTitle>Create Feedback Widget</SheetTitle>
@@ -325,6 +329,10 @@ export function ProjectFeedbucketPage({ projectId }: ProjectFeedbucketPageProps)
     toast.success("Embed snippet copied");
   }
 
+  function handleRetryWidgets() {
+    void refetchWidgets();
+  }
+
   function handleOpenCreate() {
     setCreateOpen(true);
   }
@@ -371,7 +379,7 @@ export function ProjectFeedbucketPage({ projectId }: ProjectFeedbucketPageProps)
             <Skeleton className="h-48 w-full rounded-xl" />
           </div>
         ) : widgetsError ? (
-          <ErrorState description="Failed to load widget." onRetry={refetchWidgets} />
+          <ErrorState description="Failed to load widget." onRetry={handleRetryWidgets} />
         ) : !projectWidget ? (
           <EmptyState
               className={PM_FILL_PANEL}

@@ -245,7 +245,7 @@ export function KpiLibraryTab() {
               </div>
               <div className="flex flex-wrap gap-1.5">
                 <Badge className={`text-xs ${getCategoryColor(kpi.category)}`}>{kpi.category}</Badge>
-                <Badge className={`text-xs ${kpi.isActive ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground"}`}>
+                <Badge className={`text-xs ${kpi.isActive ? "bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-300" : "bg-muted text-muted-foreground"}`}>
                   {kpi.isActive ? "Active" : "Inactive"}
                 </Badge>
               </div>

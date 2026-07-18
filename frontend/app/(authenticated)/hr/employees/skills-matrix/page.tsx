@@ -14,7 +14,7 @@ import { LayoutGrid, Table2, AlertCircle } from "lucide-react";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 const LEVEL_COLORS: Record<number, string> = {
-  1: "bg-muted text-slate-700",
+  1: "bg-muted text-muted-foreground",
   2: "bg-primary/10 text-primary",
   3: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
   4: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-300",

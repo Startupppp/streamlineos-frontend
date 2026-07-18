@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useCreateRichDocument } from "@/hooks/api/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import {
   Card,
@@ -28,7 +29,6 @@ import {
   FileCheck,
   FileClock,
   FileKey,
-  Loader2,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -414,24 +414,16 @@ export default function NewDocumentPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <Button
+              <LoadingButton
                 onClick={handleCreate}
-                disabled={createDoc.isPending}
+                isPending={createDoc.isPending}
+                loadingText="Creating..."
                 className="w-full"
                 size="lg"
               >
-                {createDoc.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating...
-                  </>
-                ) : (
-                  <>
-                    <FileText className="mr-2 h-4 w-4" />
-                    Create & Open Editor
-                  </>
-                )}
-              </Button>
+                <FileText className="mr-2 h-4 w-4" />
+                Create &amp; Open Editor
+              </LoadingButton>
             </CardContent>
           </Card>
         </div>

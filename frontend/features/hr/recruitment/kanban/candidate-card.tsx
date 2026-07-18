@@ -37,6 +37,8 @@ export const CandidateCard = memo(function CandidateCard({
     onClick(candidate);
   }, [onClick, candidate]);
 
+  function handleDragHandleClick(e: React.MouseEvent) { e.stopPropagation(); }
+
   const initials = getInitials(candidate.name);
   const hasRating = candidate.rating !== null && candidate.rating !== undefined;
 
@@ -56,7 +58,7 @@ export const CandidateCard = memo(function CandidateCard({
           <div
             {...provided.dragHandleProps}
             className="absolute top-2.5 right-2 opacity-0 group-hover:opacity-60 transition-opacity cursor-grab active:cursor-grabbing"
-            onClick={(e) => e.stopPropagation()}
+            onClick={handleDragHandleClick}
           >
             <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
           </div>

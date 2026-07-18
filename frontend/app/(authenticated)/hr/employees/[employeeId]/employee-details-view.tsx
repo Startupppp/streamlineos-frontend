@@ -53,7 +53,6 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { resolveImageUrl, cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { format } from "date-fns";
-import type { Employee } from "@/types/hr";
 import { canDeleteEmployee } from "@/features/hr/employees/hr-types";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { AiActionsMenu } from "@/components/ai";
@@ -84,16 +83,16 @@ function profileCompletenessScore(employee: EmployeeData): {
     { label: "Designation", filled: !!employee.designation },
     {
       label: "Profile photo",
-      filled: !!(employee as Record<string, unknown>).image,
+      filled: !!employee.image,
     },
-    { label: "Bio", filled: !!(employee as Record<string, unknown>).bio },
+    { label: "Bio", filled: !!employee.bio },
     {
       label: "Skills",
       filled: (employee.skills ?? []).length > 0,
     },
     {
       label: "LinkedIn",
-      filled: !!(employee as Record<string, unknown>).linkedinUrl,
+      filled: !!employee.linkedinUrl,
     },
   ];
   const filled = fields.filter((f) => f.filled).length;
@@ -554,9 +553,9 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                   <AvailabilityBadge userId={employee.id} />
                 </div>
 
-                {(employeeAsEmployee as Employee).bio && (
+                {typeof employee.bio === "string" && employee.bio && (
                   <TruncatedText
-                    text={(employeeAsEmployee as Employee).bio ?? ""}
+                    text={employee.bio}
                     lines={2}
                     className="text-sm text-muted-foreground"
                   />
@@ -784,7 +783,18 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
             >
               <div className="pb-4">
                 <SelfEditProfileForm
-                  employee={employeeAsEmployee}
+                  employee={{
+                    id: employee.id,
+                    firstName: employee.firstName,
+                    lastName: employee.lastName,
+                    image: typeof employee.image === "string" ? employee.image : null,
+                    bio: typeof employee.bio === "string" ? employee.bio : null,
+                    linkedinUrl: typeof employee.linkedinUrl === "string" ? employee.linkedinUrl : null,
+                    twitterUrl: typeof employee.twitterUrl === "string" ? employee.twitterUrl : null,
+                    githubUrl: typeof employee.githubUrl === "string" ? employee.githubUrl : null,
+                    websiteUrl: typeof employee.websiteUrl === "string" ? employee.websiteUrl : null,
+                    skills: employee.skills,
+                  }}
                   onSaved={() => router.refresh()}
                 />
               </div>

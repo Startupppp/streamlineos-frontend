@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { useShipSalesOrder } from "@/hooks/api/inventory/sales-orders";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { LoadingButton } from "@/components/ui/loading-button";
 
 const shipSchema = z.object({
   shipDate: z.string().min(1, "Ship date is required"),
@@ -63,25 +64,34 @@ export function ShipSheet({ open, onOpenChange, soId }: ShipSheetProps) {
     onOpenChange(next);
   }
 
+  function handleClose(): void {
+    handleOpenChange(false);
+  }
+
+  function handlePreventDefault(e: React.FormEvent<HTMLFormElement>): void {
+    e.preventDefault();
+  }
+
   const footer = (
     <>
-      <Button variant="outline" size="sm" type="button" onClick={() => handleOpenChange(false)}>
+      <Button variant="outline" size="sm" type="button" onClick={handleClose}>
         Cancel
       </Button>
-      <Button
+      <LoadingButton
         size="sm"
         type="button"
-        disabled={shipMutation.isPending}
+        isPending={shipMutation.isPending}
+        loadingText="Shipping…"
         onClick={form.handleSubmit(handleSubmit)}
       >
-        {shipMutation.isPending ? "Shipping…" : "Ship Order"}
-      </Button>
+        Ship Order
+      </LoadingButton>
     </>
   );
 
   return (
     <AppSheet open={open} onOpenChange={handleOpenChange} title="Ship Order" footer={footer}>
-      <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+      <form className="space-y-4" onSubmit={handlePreventDefault}>
         <div className="space-y-1.5">
           <Label htmlFor="shipDate">Ship Date *</Label>
           <Controller

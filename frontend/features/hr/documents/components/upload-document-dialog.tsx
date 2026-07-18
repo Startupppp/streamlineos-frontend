@@ -39,7 +39,7 @@ function getFileTypeConfig(file: File): { icon: React.ComponentType<{ className?
   if (file.type.startsWith("image/")) {
     return { icon: FileImage, bg: "bg-amber-100 dark:bg-amber-500/10", text: "text-amber-600 dark:text-amber-300", badge: "IMG" };
   }
-  return { icon: File, bg: "bg-muted", text: "text-slate-500", badge: "FILE" };
+  return { icon: File, bg: "bg-muted", text: "text-muted-foreground", badge: "FILE" };
 }
 
 function formatBytes(bytes: number): string {

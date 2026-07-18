@@ -281,7 +281,7 @@ export function CompetencyFrameworksTab() {
                         <Badge className="text-xs bg-muted text-muted-foreground">
                           {framework.levels.length} levels
                         </Badge>
-                        <Badge className={`text-xs ${framework.isActive ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground"}`}>
+                        <Badge className={`text-xs ${framework.isActive ? "bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-300" : "bg-muted text-muted-foreground"}`}>
                           {framework.isActive ? "Active" : "Inactive"}
                         </Badge>
                       </div>

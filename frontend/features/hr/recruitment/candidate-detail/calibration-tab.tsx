@@ -8,6 +8,7 @@ import {
 } from "@/hooks/api/hr/recruitment";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -61,6 +62,88 @@ function DecisionBadge({ decision }: { decision: string | null }) {
     <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border", found.badgeClass)}>
       {found.label}
     </span>
+  );
+}
+
+type CalibrationSession = NonNullable<ReturnType<typeof useCalibrationSessions>["data"]>[number];
+
+interface CalibrationSessionCardProps {
+  session: CalibrationSession;
+  onEdit: (session: CalibrationSession) => void;
+  onMarkComplete: (id: number) => void;
+}
+
+function CalibrationSessionCard({ session, onEdit, onMarkComplete }: CalibrationSessionCardProps) {
+  const cfg = getStatusConfig(session.status);
+
+  function handleEdit() { onEdit(session); }
+  function handleMarkComplete() { onMarkComplete(session.id); }
+
+  return (
+    <div
+      className={cn(
+        "rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden border-l-4 transition-colors duration-200",
+        cfg.accentClass
+      )}
+    >
+      <div className="p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <div className="w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center shrink-0">
+              <TrendingUp className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground">
+                Calibration #{session.id}
+              </p>
+              {session.scheduledAt && (
+                <p className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
+                  <Calendar className="h-3 w-3" />
+                  {format(new Date(session.scheduledAt), "PPp")}
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {session.decision && <DecisionBadge decision={session.decision} />}
+            <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border", cfg.badgeClass)}>
+              {cfg.label}
+            </span>
+          </div>
+        </div>
+
+        {session.participantIds.length > 0 && (
+          <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 mt-2">
+            <Users className="h-3 w-3" />
+            {session.participantIds.length} participant{session.participantIds.length !== 1 ? "s" : ""}
+          </p>
+        )}
+
+        {session.notes && (
+          <div className="mt-3 rounded-lg bg-muted/40 px-3 py-2.5 text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed">
+            {session.notes}
+          </div>
+        )}
+
+        <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-border">
+          <Button variant="ghost" size="sm" className="gap-1.5 text-xs" onClick={handleEdit}>
+            <Pencil className="h-3 w-3" />
+            Edit
+          </Button>
+          {session.status !== "completed" && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+              onClick={handleMarkComplete}
+            >
+              <CheckCircle className="h-3 w-3" />
+              Mark Complete
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -195,81 +278,14 @@ export function CalibrationTab({ candidateId }: CalibrationTabProps) {
         />
       ) : (
         <div className="space-y-3">
-          {sessions.map((session) => {
-            const cfg = getStatusConfig(session.status);
-            return (
-              <div
-                key={session.id}
-                className={cn(
-                  "rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden border-l-4 transition-colors duration-200",
-                  cfg.accentClass
-                )}
-              >
-                <div className="p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center shrink-0">
-                        <TrendingUp className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">
-                          Calibration #{session.id}
-                        </p>
-                        {session.scheduledAt && (
-                          <p className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
-                            <Calendar className="h-3 w-3" />
-                            {format(new Date(session.scheduledAt), "PPp")}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {session.decision && <DecisionBadge decision={session.decision} />}
-                      <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border", cfg.badgeClass)}>
-                        {cfg.label}
-                      </span>
-                    </div>
-                  </div>
-
-                  {session.participantIds.length > 0 && (
-                    <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 mt-2">
-                      <Users className="h-3 w-3" />
-                      {session.participantIds.length} participant{session.participantIds.length !== 1 ? "s" : ""}
-                    </p>
-                  )}
-
-                  {session.notes && (
-                    <div className="mt-3 rounded-lg bg-muted/40 px-3 py-2.5 text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed">
-                      {session.notes}
-                    </div>
-                  )}
-
-                  <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-border">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="gap-1.5 text-xs"
-                      onClick={() => openEdit(session)}
-                    >
-                      <Pencil className="h-3 w-3" />
-                      Edit
-                    </Button>
-                    {session.status !== "completed" && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="gap-1.5 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
-                        onClick={() => handleMarkComplete(session.id)}
-                      >
-                        <CheckCircle className="h-3 w-3" />
-                        Mark Complete
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+          {sessions.map((session) => (
+            <CalibrationSessionCard
+              key={session.id}
+              session={session}
+              onEdit={openEdit}
+              onMarkComplete={handleMarkComplete}
+            />
+          ))}
         </div>
       )}
 
@@ -335,13 +351,14 @@ export function CalibrationTab({ candidateId }: CalibrationTabProps) {
             <Button variant="outline" className="flex-1 h-9" onClick={handleCancelSheet}>
               Cancel
             </Button>
-            <Button
+            <LoadingButton
               className="flex-1 h-9"
               onClick={editingId ? handleUpdate : handleCreate}
-              disabled={createCalibration.isPending || updateCalibration.isPending}
+              isPending={createCalibration.isPending || updateCalibration.isPending}
+              loadingText="Saving…"
             >
               {editingId ? "Save Changes" : "Create Session"}
-            </Button>
+            </LoadingButton>
           </SheetFooter>
         </SheetContent>
       </Sheet>

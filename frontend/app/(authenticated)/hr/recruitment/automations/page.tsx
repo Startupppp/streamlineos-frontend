@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -286,9 +287,9 @@ export default function RecruitmentAutomationsPage() {
           </SheetBody>
           <SheetFooter className="shrink-0 px-4 py-3 border-t flex-row gap-2">
             <Button variant="outline" className="flex-1" onClick={handleCancelSheet}>Cancel</Button>
-            <Button className="flex-1" onClick={handleCreate} disabled={create.isPending}>
-              {create.isPending ? "Creating…" : "Create"}
-            </Button>
+            <LoadingButton className="flex-1" onClick={handleCreate} isPending={create.isPending} loadingText="Creating…">
+              Create
+            </LoadingButton>
           </SheetFooter>
         </SheetContent>
       </Sheet>

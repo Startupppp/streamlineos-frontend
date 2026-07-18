@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -118,7 +119,6 @@ function TemplateSheet({ open, onClose, editTemplate }: TemplateSheetProps) {
   useEffect(() => {
     if (open) {
       if (editTemplate) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setName(editTemplate.name);
         setCriteria(
           editTemplate.criteria.map((c) => ({ ...c, _key: nextKey() }))
@@ -221,9 +221,9 @@ function TemplateSheet({ open, onClose, editTemplate }: TemplateSheetProps) {
         </SheetBody>
         <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
           <Button variant="outline" onClick={onClose} disabled={isPending} type="button">Cancel</Button>
-          <Button onClick={handleSubmit} disabled={isPending} type="button">
-            {isPending ? "Saving…" : editTemplate ? "Save Changes" : "Create Template"}
-          </Button>
+          <LoadingButton onClick={handleSubmit} isPending={isPending} loadingText="Saving…" type="button">
+            {editTemplate ? "Save Changes" : "Create Template"}
+          </LoadingButton>
         </SheetFooter>
       </SheetContent>
     </Sheet>

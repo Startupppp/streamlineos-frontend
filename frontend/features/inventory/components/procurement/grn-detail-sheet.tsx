@@ -25,6 +25,7 @@ import { useGoodsReceipt, useReverseGrn } from "@/hooks/api/inventory/operations
 import { GRN_QUALITY_BADGE, GRN_QUALITY_LABEL } from "@/features/inventory/lib";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { LoadingButton } from "@/components/ui/loading-button";
 
 export interface GrnDetailSheetProps {
   grnId: number;
@@ -133,6 +134,10 @@ export function GrnDetailSheet({ grnId, open, onOpenChange }: GrnDetailSheetProp
     setReverseReason(e.target.value);
   }
 
+  function handleRefetchGrn(): void {
+    void grnQuery.refetch();
+  }
+
   function handleConfirmReverse(): void {
     if (!reverseReason.trim()) {
       toast.error("Reversal reason is required");
@@ -163,21 +168,22 @@ export function GrnDetailSheet({ grnId, open, onOpenChange }: GrnDetailSheetProp
         footer={
           grn ? (
             <div className="w-full">
-              <Button
+              <LoadingButton
                 variant="destructive"
                 size="sm"
                 onClick={handleOpenReverseDialog}
-                disabled={reverseMutation.isPending}
+                isPending={reverseMutation.isPending}
+                loadingText="Reversing…"
               >
                 Reverse GRN
-              </Button>
+              </LoadingButton>
             </div>
           ) : undefined
         }
       >
         {grnQuery.isLoading && <LoadingState variant="form" />}
         {grnQuery.error && (
-          <ErrorState description={getErrorMessage(grnQuery.error)} onRetry={() => void grnQuery.refetch()} />
+          <ErrorState description={getErrorMessage(grnQuery.error)} onRetry={handleRefetchGrn} />
         )}
         {grn && (
           <div className="space-y-4">
@@ -229,12 +235,16 @@ export function GrnDetailSheet({ grnId, open, onOpenChange }: GrnDetailSheetProp
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={handleCloseReverseDialog}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmReverse}
-              disabled={reverseMutation.isPending || !reverseReason.trim()}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {reverseMutation.isPending ? "Reversing…" : "Reverse GRN"}
+            <AlertDialogAction asChild>
+              <LoadingButton
+                isPending={reverseMutation.isPending}
+                loadingText="Reversing…"
+                onClick={handleConfirmReverse}
+                disabled={reverseMutation.isPending || !reverseReason.trim()}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Reverse GRN
+              </LoadingButton>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

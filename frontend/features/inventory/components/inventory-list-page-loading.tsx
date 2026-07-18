@@ -41,7 +41,7 @@ export function InventoryListPageLoading({
       actions={resolvedActions}
       filters={resolvedFilters}
     >
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         {(showStats || statCount !== undefined) && (
           <StatCardGridSkeleton cols={statCols} count={statCount} />
         )}

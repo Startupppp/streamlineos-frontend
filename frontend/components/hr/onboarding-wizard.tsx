@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { onboardEmployeeInputSchema } from "@/lib/validation/hr";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Form } from "@/components/ui/form";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
@@ -226,13 +227,9 @@ export function OnboardingWizard() {
                 {isCheckingEmail ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Checking...</> : <>Next<ChevronRight className="h-3.5 w-3.5" /></>}
               </Button>
             ) : (
-              <Button type="submit" size="sm" disabled={onboardEmployee.isPending} className="gap-1 min-w-[100px]">
-                {onboardEmployee.isPending ? (
-                  <><Loader2 className="h-3.5 w-3.5 animate-spin" />Saving...</>
-                ) : (
-                  <><Check className="h-3.5 w-3.5" />Submit</>
-                )}
-              </Button>
+              <LoadingButton type="submit" size="sm" isPending={onboardEmployee.isPending} loadingText="Saving..." className="gap-1 min-w-[100px]">
+                <Check className="h-3.5 w-3.5" />Submit
+              </LoadingButton>
             )}
           </div>
         </form>

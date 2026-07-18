@@ -81,9 +81,9 @@ export function HoldDetailSheet({ open, onOpenChange, holdId }: Props) {
 
   const footer =
     hold && hold.status === "ACTIVE" && canRelease ? (
-      <Button size="sm" onClick={handleOpenConfirm} disabled={releaseMut.isPending}>
+      <LoadingButton size="sm" onClick={handleOpenConfirm} isPending={releaseMut.isPending} loadingText="Releasing…">
         Release Hold
-      </Button>
+      </LoadingButton>
     ) : undefined;
 
   return (

@@ -16,6 +16,7 @@ import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { downloadXlsx } from "@/lib/export/xlsx-utils";
@@ -728,25 +729,18 @@ export function BulkOnboardPanel() {
               <Button type="button" variant="outline" size="sm" className="h-8" onClick={reset}>
                 Back
               </Button>
-              <Button
+              <LoadingButton
                 type="button"
                 size="sm"
                 className="h-8 gap-1.5 min-w-[140px]"
-                disabled={payloads.length === 0 || bulkOnboard.isPending}
+                disabled={payloads.length === 0}
+                isPending={bulkOnboard.isPending}
+                loadingText="Onboarding…"
                 onClick={handleImport}
               >
-                {bulkOnboard.isPending ? (
-                  <>
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    Onboarding…
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="h-3.5 w-3.5" />
-                    Onboard {payloads.length} employee{payloads.length === 1 ? "" : "s"}
-                  </>
-                )}
-              </Button>
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                Onboard {payloads.length} employee{payloads.length === 1 ? "" : "s"}
+              </LoadingButton>
             </div>
           </CardContent>
         </Card>

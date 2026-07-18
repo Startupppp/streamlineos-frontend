@@ -7,6 +7,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -330,9 +331,9 @@ function FlowFormSheet({
           </SheetBody>
           <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
             <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>Cancel</Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? "Saving…" : editFlow ? "Update" : "Create"}
-            </Button>
+            <LoadingButton type="submit" isPending={isPending} loadingText="Saving…">
+              {editFlow ? "Update" : "Create"}
+            </LoadingButton>
           </SheetFooter>
         </form>
       </SheetContent>
@@ -470,9 +471,9 @@ function RoundFormSheet({
           </SheetBody>
           <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
             <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>Cancel</Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? "Saving…" : editRound ? "Update" : "Add Round"}
-            </Button>
+            <LoadingButton type="submit" isPending={isPending} loadingText="Saving…">
+              {editRound ? "Update" : "Add Round"}
+            </LoadingButton>
           </SheetFooter>
         </form>
       </SheetContent>

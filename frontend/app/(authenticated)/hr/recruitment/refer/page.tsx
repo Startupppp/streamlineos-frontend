@@ -6,6 +6,7 @@ import { z } from "zod";
 import { useAllReferrals, useSubmitReferral } from "@/hooks/api/hr/recruitment/referrals";
 import { useJobPostings } from "@/hooks/api/hr/recruitment";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -147,9 +148,9 @@ export default function ReferPage() {
                 <Textarea id="notes" {...register("notes")} placeholder="Brief note about this candidate..." rows={3} />
               </div>
 
-              <Button type="submit" className="w-full" disabled={createMutation.isPending}>
-                {createMutation.isPending ? "Submitting..." : "Submit Referral"}
-              </Button>
+              <LoadingButton type="submit" className="w-full" isPending={createMutation.isPending} loadingText="Submitting...">
+                Submit Referral
+              </LoadingButton>
             </form>
           </CardContent>
         </Card>

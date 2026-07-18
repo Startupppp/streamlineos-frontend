@@ -306,6 +306,10 @@ export function OpeningStockSheet({ open, onOpenChange }: OpeningStockSheetProps
     onOpenChange(v);
   }
 
+  function handleCancel(): void {
+    handleOpenChange(false);
+  }
+
   function handleSubmit(values: FormValues): void {
     const payload = {
       lines: values.lines.map((l) => ({
@@ -340,7 +344,7 @@ export function OpeningStockSheet({ open, onOpenChange }: OpeningStockSheetProps
       className="sm:max-w-2xl"
       footer={
         <div className="flex w-full gap-2">
-          <Button type="button" variant="outline" size="sm" className="flex-1" onClick={() => handleOpenChange(false)}>
+          <Button type="button" variant="outline" size="sm" className="flex-1" onClick={handleCancel}>
             Cancel
           </Button>
           <LoadingButton
