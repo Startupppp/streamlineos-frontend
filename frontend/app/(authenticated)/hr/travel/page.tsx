@@ -24,17 +24,87 @@ import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { format } from "date-fns";
 
-const travelSchema = z.object({
-  purpose: z.string().min(1, "Purpose is required"),
-  destination: z.string().min(1, "Destination is required"),
-  departureDate: z.string().min(1, "Departure date is required"),
-  returnDate: z.string().min(1, "Return date is required"),
-  flightRequired: z.boolean(),
-  hotelRequired: z.boolean(),
-  advanceRequired: z.boolean(),
-  estimatedCost: z.string().optional(),
-  perDiem: z.string().optional(),
+const MONEY_RE = /^\d+(\.\d{1,2})?$/;
+const MAX_MONEY = 999_999_999.99;
+/** Purpose/destination: require real text, not symbol-only junk like (*^*( */
+const TEXT_CHARS_RE = /^[\p{L}\p{N}\s'.,&\-()/:;#+]+$/u;
+const CONSECUTIVE_SPECIAL_RE = /[^\p{L}\p{N}\s]{2,}/u;
+
+function hasLetterOrDigit(value: string): boolean {
+  return /[\p{L}\p{N}]/u.test(value);
+}
+
+function isMeaningfulTravelText(value: string): boolean {
+  const trimmed = value.trim().replace(/\s+/g, " ");
+  return (
+    trimmed.length >= 2 &&
+    hasLetterOrDigit(trimmed) &&
+    TEXT_CHARS_RE.test(trimmed) &&
+    !CONSECUTIVE_SPECIAL_RE.test(trimmed)
+  );
+}
+
+const optionalMoneySchema = z.string().optional().superRefine((v, ctx) => {
+  const t = v?.trim();
+  if (!t) return;
+  if (!MONEY_RE.test(t)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Enter a valid amount (e.g. 100 or 100.50)",
+    });
+    return;
+  }
+  if (Number(t) > MAX_MONEY) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Amount cannot exceed ₹99,99,99,999.99",
+    });
+  }
 });
+
+const travelSchema = z
+  .object({
+    purpose: z
+      .string()
+      .trim()
+      .min(1, "Purpose is required")
+      .max(500, "Purpose must be at most 500 characters")
+      .refine(isMeaningfulTravelText, {
+        message:
+          "Purpose must include letters or numbers and cannot be only special characters",
+      }),
+    destination: z
+      .string()
+      .trim()
+      .min(1, "Destination is required")
+      .max(255, "Destination must be at most 255 characters")
+      .refine(isMeaningfulTravelText, {
+        message:
+          "Destination must include letters or numbers and cannot be only special characters",
+      }),
+    departureDate: z
+      .string()
+      .min(1, "Departure date is required")
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid departure date"),
+    returnDate: z
+      .string()
+      .min(1, "Return date is required")
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid return date"),
+    flightRequired: z.boolean(),
+    hotelRequired: z.boolean(),
+    advanceRequired: z.boolean(),
+    estimatedCost: optionalMoneySchema,
+    perDiem: optionalMoneySchema,
+  })
+  .superRefine((data, ctx) => {
+    if (data.departureDate && data.returnDate && data.returnDate < data.departureDate) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Return date must be on or after departure date",
+        path: ["returnDate"],
+      });
+    }
+  });
 
 type TravelFormValues = z.infer<typeof travelSchema>;
 
@@ -226,30 +296,41 @@ export default function TravelPage() {
   );
 
   const handleSubmit = useCallback(() => {
-    void form.handleSubmit((values) => {
-      toast.promise(
-        createRequest.mutateAsync({
-          purpose: values.purpose,
-          destination: values.destination,
-          departureDate: values.departureDate,
-          returnDate: values.returnDate,
-          flightRequired: values.flightRequired,
-          hotelRequired: values.hotelRequired,
-          advanceRequired: values.advanceRequired,
-          estimatedCost: values.estimatedCost || undefined,
-          perDiem: values.perDiem || undefined,
-        }),
-        {
-          loading: "Submitting travel request...",
-          success: () => {
-            setSheetOpen(false);
-            form.reset();
-            return "Travel request submitted";
-          },
-          error: (e: unknown) => getErrorMessage(e),
-        },
-      );
-    })();
+    void form.handleSubmit(
+      async (values) => {
+        const estimatedCost = values.estimatedCost?.trim() || undefined;
+        const perDiem = values.perDiem?.trim() || undefined;
+        const loadingToastId = toast.loading("Submitting travel request...");
+        try {
+          await createRequest.mutateAsync({
+            purpose: values.purpose.trim(),
+            destination: values.destination.trim(),
+            departureDate: values.departureDate,
+            returnDate: values.returnDate,
+            flightRequired: values.flightRequired,
+            hotelRequired: values.hotelRequired,
+            advanceRequired: values.advanceRequired,
+            estimatedCost,
+            perDiem,
+          });
+          toast.success("Travel request submitted successfully", { id: loadingToastId });
+          setSheetOpen(false);
+          form.reset();
+        } catch (error) {
+          toast.error(getErrorMessage(error), { id: loadingToastId });
+        }
+      },
+      (errors) => {
+        const firstMessage = Object.values(errors).find(
+          (err) => typeof err?.message === "string" && err.message.length > 0,
+        )?.message;
+        toast.error(
+          typeof firstMessage === "string"
+            ? firstMessage
+            : "Please fix the highlighted fields and try again",
+        );
+      },
+    )();
   }, [form, createRequest]);
 
   if (isLoading) return <TravelLoading />;
@@ -334,7 +415,20 @@ export default function TravelPage() {
               name="departureDate"
               control={form.control}
               render={({ field }) => (
-                <DatePicker id="departureDate" value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
+                <DatePicker
+                  id="departureDate"
+                  value={field.value ?? ""}
+                  onChange={(value) => {
+                    field.onChange(value);
+                    const currentReturn = form.getValues("returnDate");
+                    if (currentReturn && value && currentReturn < value) {
+                      form.setValue("returnDate", value, { shouldValidate: true });
+                    }
+                    void form.trigger(["departureDate", "returnDate"]);
+                  }}
+                  placeholder="Pick a date"
+                  className="text-sm"
+                />
               )}
             />
             {form.formState.errors.departureDate && (
@@ -348,9 +442,23 @@ export default function TravelPage() {
             <Controller
               name="returnDate"
               control={form.control}
-              render={({ field }) => (
-                <DatePicker id="returnDate" value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
-              )}
+              render={({ field }) => {
+                const departure = form.watch("departureDate");
+                const fromDate =
+                  departure && /^\d{4}-\d{2}-\d{2}$/.test(departure)
+                    ? new Date(`${departure}T00:00:00`)
+                    : undefined;
+                return (
+                  <DatePicker
+                    id="returnDate"
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    placeholder="Pick a date"
+                    className="text-sm"
+                    fromDate={fromDate}
+                  />
+                );
+              }}
             />
             {form.formState.errors.returnDate && (
               <p className="text-xs text-destructive">{form.formState.errors.returnDate.message}</p>
@@ -396,9 +504,13 @@ export default function TravelPage() {
             type="number"
             min="0"
             step="0.01"
+            inputMode="decimal"
             placeholder="0.00"
             {...form.register("estimatedCost")}
           />
+          {form.formState.errors.estimatedCost && (
+            <p className="text-xs text-destructive">{form.formState.errors.estimatedCost.message}</p>
+          )}
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="perDiem">Per Diem (₹/day)</Label>
@@ -407,9 +519,13 @@ export default function TravelPage() {
             type="number"
             min="0"
             step="0.01"
+            inputMode="decimal"
             placeholder="0.00"
             {...form.register("perDiem")}
           />
+          {form.formState.errors.perDiem && (
+            <p className="text-xs text-destructive">{form.formState.errors.perDiem.message}</p>
+          )}
         </div>
       </HrSheet>
     </PageWrapper>
