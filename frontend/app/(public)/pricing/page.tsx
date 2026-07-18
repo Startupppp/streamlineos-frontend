@@ -16,7 +16,7 @@ import {
 
 export const metadata: Metadata = {
   title: `Pricing — ${BRAND_NAME}`,
-  description: `From ${cheapestAnnualLabel()}/seat/month annual. Free forever for 3 seats. All apps in one plan.`,
+  description: `From ${cheapestAnnualLabel()}/seat/month annual. Free forever for ${PRICING.freeSeatLimit} seats. All apps in one plan.`,
   alternates: { canonical: "/pricing" },
   openGraph: {
     type: "website",

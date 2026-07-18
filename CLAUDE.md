@@ -294,7 +294,7 @@ Architecture · Database · API · Cache · Backend · Frontend · UI · UX · S
 Permissions are resolved from the DB on **every request** via `AccessService`. **CASL is fully removed from the backend.** The frontend keeps `lib/abilities.ts` only as a lightweight (NON-CASL) server-side SSR helper.
 
 > **Verified against repo (2026-07-03):** decorator import is `../access/require-permission.decorator`; `ROLE_DEFAULT_PERMISSIONS` lives in `permissions.constants.ts` (not role-templates); scope helper is `applyScope(scope: DataScope, userId: string, cols: ScopeColumns): SQL` in `modules/access/apply-scope.ts`; `bumpPermissionsVersion(tx, orgId)` is a standalone helper in `common/rbac/access-invalidate.ts`; permission resolution is `AccessService.resolveUserPermissions(orgId, userId)`.
-> ⚠ **Known systemic gap:** `PermissionGuard` returns `true` when a method has no `@RequirePermission` (fail-open). Until it is flipped to deny-by-default, every endpoint on a guarded controller MUST carry an explicit `@RequirePermission`.
+> **Verified against repo (2026-07-18):** `PermissionGuard` denies guarded handlers without `@RequirePermission`, honors explicit `@Public` metadata before authorization, and reaches the org-owner/platform-admin bypass only after permission metadata is present. JWT-only routes do not apply `PermissionGuard`; a controller-wide metadata audit verifies every guarded non-public route has a cataloged permission.
 
 ### Permission key format
 `"module:resource:action"`, three lowercase colon-separated segments (`"hr:employees:view"`). `action` ∈ {view, create, update, delete, manage, assign, export, approve, reject, import}. Resolved via `GET /me/access` — **never** in JWT claims.

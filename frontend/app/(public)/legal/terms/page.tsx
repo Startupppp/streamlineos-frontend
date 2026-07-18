@@ -145,10 +145,10 @@ export default function TermsPage() {
 
       <LegalSection id="free-trial" title="Free tier & trials">
         <p>
-          The Startup plan is free for the first {PRICING.freeSeatLimit} seats — forever, no
-          credit card. The Scaleup tier includes a 14-day free trial of all features. If you
+          The Free plan is free for the first {PRICING.freeSeatLimit} seats — forever, no
+          credit card. Paid plans include a 14-day free trial of all features. If you
           haven&apos;t entered payment details by trial end, the workspace automatically
-          downgrades to the Startup plan. Nothing is auto-charged.
+          downgrades to the Free plan. Nothing is auto-charged.
         </p>
       </LegalSection>
 

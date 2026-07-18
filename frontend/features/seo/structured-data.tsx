@@ -5,6 +5,7 @@ import {
   BRAND_URL,
   BRAND_SUPPORT_EMAIL,
 } from "@/lib/branding";
+import { PRICING } from "@/lib/pricing";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Structured data (Schema.org / JSON-LD) — helps Google understand the brand,
@@ -93,14 +94,15 @@ export function SoftwareApplicationJsonLd() {
             name: "Free",
             price: "0",
             priceCurrency: "INR",
-            description: "Free forever for up to 3 seats.",
+            description: `Free forever for up to ${PRICING.freeSeatLimit} seats.`,
           },
           {
             "@type": "Offer",
             name: "Startup",
             price: "399",
             priceCurrency: "INR",
-            description: "Per seat per month, billed annually. All apps included.",
+            description:
+              "Per seat per month, billed annually. All apps included.",
           },
           {
             "@type": "Offer",
@@ -155,10 +157,7 @@ export function FAQJsonLd({
         mainEntity: faqs.map((f) => ({
           "@type": "Question",
           name: f.question,
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: f.answer,
-          },
+          acceptedAnswer: { "@type": "Answer", text: f.answer },
         })),
       }}
     />

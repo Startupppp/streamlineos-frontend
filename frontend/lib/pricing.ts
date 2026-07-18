@@ -1,9 +1,9 @@
 export const PRICING = {
   currency: "₹",
-  starterSeatLimit: 3,
-  annualDiscountPct: 20,
-  freeSeatLimit: 3,
+  freeSeatLimit: 5,
+  starterSeatLimit: 5,
   scaleupPriceInr: 499,
+  annualDiscountPct: 20,
 } as const;
 
 export type BillingPeriod = "monthly" | "annual";
@@ -36,7 +36,10 @@ export const PRICING_TIERS: PricingTier[] = [
     description: "Try StreamlineOS with a small team. No card required.",
     monthly: 0,
     annual: 0,
-    priceLabel: { monthly: `${PRICING.currency}0`, annual: `${PRICING.currency}0` },
+    priceLabel: {
+      monthly: `${PRICING.currency}0`,
+      annual: `${PRICING.currency}0`,
+    },
     price: `${PRICING.currency}0`,
     period: `up to ${PRICING.starterSeatLimit} seats`,
     bestFor: "Solo founders, evaluating",
@@ -55,7 +58,8 @@ export const PRICING_TIERS: PricingTier[] = [
     id: "startup",
     name: "Startup",
     tagline: "Built for growing teams",
-    description: "Unlimited seats with everything an early-stage team needs to operate.",
+    description:
+      "Unlimited seats with everything an early-stage team needs to operate.",
     monthly: 499,
     annual: 399,
     priceLabel: { monthly: fmt(499), annual: fmt(399) },
@@ -80,7 +84,8 @@ export const PRICING_TIERS: PricingTier[] = [
     id: "growth",
     name: "Growth",
     tagline: "For scaling teams",
-    description: "AI assistance, multi-org, SSO, and the controls scaling teams need.",
+    description:
+      "AI assistance, multi-org, SSO, and the controls scaling teams need.",
     monthly: 799,
     annual: 639,
     priceLabel: { monthly: fmt(799), annual: fmt(639) },
@@ -152,8 +157,8 @@ export function calculateSavingsVsAllInOne(
   const competitorAnnual = COMPETITOR_PRICES.allInOneErp * seats * 12;
   const streamlinePerSeat =
     billingPeriod === "annual"
-      ? PRICING_TIERS[1].annual ?? 0
-      : PRICING_TIERS[1].monthly ?? 0;
+      ? (PRICING_TIERS[1].annual ?? 0)
+      : (PRICING_TIERS[1].monthly ?? 0);
   const streamlineAnnual = streamlinePerSeat * seats * 12;
   return {
     competitorAnnual,
@@ -178,7 +183,9 @@ export function calculateSavingsVsStack(seats: number) {
     stackPerSeat,
     streamlineAnnual,
     savings: stackAnnual - streamlineAnnual,
-    savingsPct: Math.round(((stackAnnual - streamlineAnnual) / stackAnnual) * 100),
+    savingsPct: Math.round(
+      ((stackAnnual - streamlineAnnual) / stackAnnual) * 100,
+    ),
   };
 }
 

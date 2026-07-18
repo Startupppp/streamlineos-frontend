@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Magnetic } from "./motion/magnetic";
 import { Marquee } from "./motion/marquee";
 import { HERO_APP_CHIPS } from "../data/apps";
-import { cheapestAnnualLabel } from "@/lib/pricing";
+import { cheapestAnnualLabel, PRICING } from "@/lib/pricing";
 
 const EASE_OUT_QUART = [0.22, 1, 0.36, 1] as const;
 
@@ -91,10 +91,13 @@ export function LandingHero() {
             variants={fadeUp}
             className="font-sans mx-auto lg:mx-0 mb-6 max-w-xl text-[15px] sm:text-base text-slate-600 leading-relaxed"
           >
-            <span className="font-semibold text-blue-600">{cheapestAnnualLabel()}</span> per
-            seat / month (annual) for{" "}
-            <span className="font-semibold text-slate-900">all apps</span> — HR, projects, CRM,
-            chat, accounting, and more. Sub-100ms realtime. AI-assisted everywhere.
+            <span className="font-semibold text-blue-600">
+              {cheapestAnnualLabel()}
+            </span>{" "}
+            per seat / month (annual) for{" "}
+            <span className="font-semibold text-slate-900">all apps</span> — HR,
+            projects, CRM, chat, accounting, and more. Sub-100ms realtime.
+            AI-assisted everywhere.
           </motion.p>
 
           <motion.div
@@ -113,7 +116,11 @@ export function LandingHero() {
               </Link>
             </Magnetic>
             <a href="#apps">
-              <Button size="lg" variant="outline" className="h-12 px-7 text-[15px]">
+              <Button
+                size="lg"
+                variant="outline"
+                className="h-12 px-7 text-[15px]"
+              >
                 View all apps
                 <ChevronRight className="ml-1.5 h-4 w-4" />
               </Button>
@@ -131,7 +138,7 @@ export function LandingHero() {
             <span className="h-1 w-1 rounded-full bg-slate-300" />
             <span>Instant access</span>
             <span className="h-1 w-1 rounded-full bg-slate-300" />
-            <span>Free up to 3 seats</span>
+            <span>Free up to {PRICING.freeSeatLimit} seats</span>
           </motion.div>
 
           <motion.div
@@ -212,7 +219,9 @@ function HeroPreview() {
                 {t.done && <CheckCircle2 className="h-2.5 w-2.5 text-white" />}
               </span>
               <span
-                className={t.done ? "text-slate-400 line-through" : "text-slate-700"}
+                className={
+                  t.done ? "text-slate-400 line-through" : "text-slate-700"
+                }
               >
                 {t.label}
               </span>
@@ -239,10 +248,30 @@ function HeroPreview() {
         </div>
         <div className="space-y-3.5">
           {[
-            { label: "New", count: 142, pct: 100, color: "from-blue-500 to-blue-600" },
-            { label: "Qualified", count: 86, pct: 70, color: "from-blue-500 to-cyan-500" },
-            { label: "Proposal", count: 41, pct: 48, color: "from-cyan-500 to-teal-400" },
-            { label: "Closed Won", count: 18, pct: 28, color: "from-teal-400 to-emerald-400" },
+            {
+              label: "New",
+              count: 142,
+              pct: 100,
+              color: "from-blue-500 to-blue-600",
+            },
+            {
+              label: "Qualified",
+              count: 86,
+              pct: 70,
+              color: "from-blue-500 to-cyan-500",
+            },
+            {
+              label: "Proposal",
+              count: 41,
+              pct: 48,
+              color: "from-cyan-500 to-teal-400",
+            },
+            {
+              label: "Closed Won",
+              count: 18,
+              pct: 28,
+              color: "from-teal-400 to-emerald-400",
+            },
           ].map((s, i) => (
             <motion.div
               key={s.label}
@@ -258,7 +287,11 @@ function HeroPreview() {
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${s.pct}%` }}
-                  transition={{ duration: 1.2, delay: 0.6 + i * 0.08, ease: EASE_OUT_QUART }}
+                  transition={{
+                    duration: 1.2,
+                    delay: 0.6 + i * 0.08,
+                    ease: EASE_OUT_QUART,
+                  }}
                   className={`h-full rounded-full bg-gradient-to-r ${s.color}`}
                 />
               </div>
@@ -266,10 +299,10 @@ function HeroPreview() {
           ))}
         </div>
         <div className="mt-5 pt-4 border-t border-slate-200/70 flex items-center justify-between text-[11px]">
-          <span className="text-slate-500 font-medium">
-            Forecast
+          <span className="text-slate-500 font-medium">Forecast</span>
+          <span className="font-mono text-slate-900 font-semibold">
+            $2.4M ARR
           </span>
-          <span className="font-mono text-slate-900 font-semibold">$2.4M ARR</span>
         </div>
       </motion.div>
 

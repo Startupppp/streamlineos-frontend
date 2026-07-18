@@ -209,6 +209,8 @@ const PUBLIC_AUTH_PATHS = new Set([
   "/auth/magic-link",
   "/auth/magic-link/verify",
   "/auth/verify-email",
+  "/auth/email-otp",
+  "/auth/email-otp/verify",
 ]);
 
 function isMigrated(path: string): boolean {
