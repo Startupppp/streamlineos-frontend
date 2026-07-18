@@ -30,6 +30,8 @@ const MONTH_LABELS = [
   "Dec",
 ];
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const WEEK_COUNT = 53;
+const CELL = "h-3 w-3 rounded-[2px]";
 
 const intensityClasses: Record<number, string> = {
   0: "bg-muted/40 dark:bg-muted/20",
@@ -39,10 +41,68 @@ const intensityClasses: Record<number, string> = {
   4: "bg-blue-800 dark:bg-blue-300",
 };
 
+function HeatmapSkeleton() {
+  return (
+    <div className="overflow-x-auto rounded-xl bg-muted/10 p-3" aria-hidden>
+      <div className="inline-block min-w-max">
+        <div className="relative mb-1 ml-8 h-4">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <Skeleton
+              key={i}
+              className="absolute h-2.5 w-6"
+              style={{ left: `${i * ((WEEK_COUNT * 14) / 12)}px` }}
+            />
+          ))}
+        </div>
+        <div className="mt-1 flex gap-0.5">
+          <div className="mr-1.5 flex flex-col gap-0.5">
+            {DAY_LABELS.map((d, i) => (
+              <div
+                key={d}
+                className={`h-3 text-[10px] leading-3 text-muted-foreground ${i % 2 === 0 ? "invisible" : ""}`}
+              >
+                {d}
+              </div>
+            ))}
+          </div>
+          {Array.from({ length: WEEK_COUNT }).map((_, col) => (
+            <div key={col} className="flex flex-col gap-0.5">
+              {Array.from({ length: 7 }).map((__, row) => (
+                <Skeleton key={row} className={CELL} />
+              ))}
+            </div>
+          ))}
+        </div>
+        <div className="mt-3 flex items-center gap-1.5 pl-8">
+          <Skeleton className="h-2.5 w-8" />
+          {[0, 1, 2, 3, 4].map((level) => (
+            <Skeleton key={level} className={CELL} />
+          ))}
+          <Skeleton className="h-2.5 w-8" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SummarySkeleton() {
+  return (
+    <div className="mt-3 grid grid-cols-2 gap-3 rounded-xl bg-muted/30 p-3 md:grid-cols-4">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div key={i} className="flex flex-col items-center gap-1.5 py-0.5">
+          <Skeleton className="h-4 w-10" />
+          <Skeleton className="h-2.5 w-12" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function AttendanceHeatmap({ userId }: { userId: string }) {
   const [year, setYear] = useState(new Date().getFullYear());
 
-  const { data, isLoading } = useAttendanceHeatmap({ userId, year });
+  const { data, isLoading, isFetching } = useAttendanceHeatmap({ userId, year });
+  const showSkeleton = isLoading || (isFetching && !data);
 
   const handlePrevYear = useCallback(() => setYear((y) => y - 1), []);
   const handleNextYear = useCallback(() => setYear((y) => y + 1), []);
@@ -126,13 +186,15 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
             />
           </div>
         </div>
-        {data?.summary && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 mt-3 rounded-xl bg-muted/30">
+        {showSkeleton ? (
+          <SummarySkeleton />
+        ) : data?.summary ? (
+          <div className="mt-3 grid grid-cols-2 gap-3 rounded-xl bg-muted/30 p-3 md:grid-cols-4">
             <div className="flex flex-col items-center gap-0.5">
               <span className="text-sm font-bold text-foreground tabular-nums">
                 {data.summary.totalDays}
               </span>
-              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Days
               </span>
             </div>
@@ -140,7 +202,7 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
               <span className="text-sm font-bold text-foreground tabular-nums">
                 {data.summary.totalHours}h
               </span>
-              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Hours
               </span>
             </div>
@@ -148,7 +210,7 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
               <span className="text-sm font-bold text-foreground tabular-nums">
                 {data.summary.avgHoursPerDay}h
               </span>
-              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Avg/Day
               </span>
             </div>
@@ -156,91 +218,77 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
               <span className="text-sm font-bold text-foreground tabular-nums">
                 {data.summary.longestStreak}d
               </span>
-              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Streak
               </span>
             </div>
           </div>
-        )}
+        ) : null}
       </CardHeader>
       <CardContent className="pb-5">
-        {isLoading ? (
-          <div className="rounded-xl bg-muted/20 p-4 space-y-1.5">
-            {Array.from({ length: 7 }).map((_, i) => (
-              <div key={i} className="flex gap-1">
-                {Array.from({ length: 53 }).map((__, j) => (
-                  <Skeleton key={j} className="h-3 w-3 rounded-[2px]" />
-                ))}
-              </div>
-            ))}
-          </div>
+        {showSkeleton ? (
+          <HeatmapSkeleton />
         ) : (
           <div className="overflow-x-auto rounded-xl bg-muted/10 p-3">
             <div className="inline-block min-w-max">
-              <div className="flex mb-1 ml-8">
+              <div className="relative mb-1 ml-8 h-4">
                 {monthPositions.map(({ month, col }) => (
                   <div
-                    key={month}
-                    className="text-[10px] text-muted-foreground"
-                    style={{
-                      position: "absolute",
-                      marginLeft: `${col * 14 + 32}px`,
-                    }}
+                    key={`${month}-${col}`}
+                    className="absolute text-[10px] text-muted-foreground"
+                    style={{ left: `${col * 14}px` }}
                   >
                     {MONTH_LABELS[month]}
                   </div>
                 ))}
               </div>
-              <div className="relative mt-4">
-                <div className="flex gap-0.5">
-                  <div className="flex flex-col gap-0.5 mr-1.5">
-                    {DAY_LABELS.map((d, i) => (
-                      <div
-                        key={d}
-                        className={`text-[10px] text-muted-foreground h-3 leading-3 ${i % 2 === 0 ? "invisible" : ""}`}
-                      >
-                        {d}
-                      </div>
-                    ))}
-                  </div>
-                  {weeks.map((week, colIdx) => (
-                    <div key={colIdx} className="flex flex-col gap-0.5">
-                      {week.map((day, rowIdx) => {
-                        if (!day) {
-                          return <div key={rowIdx} className="h-3 w-3" />;
-                        }
-                        const cls =
-                          intensityClasses[day.intensity] ??
-                          intensityClasses[0];
-                        const title =
-                          day.hours > 0
-                            ? `${format(day.date, "MMM d, yyyy")} — ${day.hours}h`
-                            : format(day.date, "MMM d, yyyy");
-                        return (
-                          <div
-                            key={rowIdx}
-                            className={`h-3 w-3 rounded-[2px] cursor-default transition-opacity duration-200 hover:opacity-70 ${cls}`}
-                            title={title}
-                            role="gridcell"
-                            aria-label={title}
-                          />
-                        );
-                      })}
+              <div className="mt-1 flex gap-0.5">
+                <div className="mr-1.5 flex flex-col gap-0.5">
+                  {DAY_LABELS.map((d, i) => (
+                    <div
+                      key={d}
+                      className={`h-3 text-[10px] leading-3 text-muted-foreground ${i % 2 === 0 ? "invisible" : ""}`}
+                    >
+                      {d}
                     </div>
                   ))}
                 </div>
+                {weeks.map((week, colIdx) => (
+                  <div key={colIdx} className="flex flex-col gap-0.5">
+                    {week.map((day, rowIdx) => {
+                      if (!day) {
+                        return <div key={rowIdx} className="h-3 w-3" />;
+                      }
+                      const cls =
+                        intensityClasses[day.intensity] ?? intensityClasses[0];
+                      const title =
+                        day.hours > 0
+                          ? `${format(day.date, "MMM d, yyyy")} — ${day.hours}h`
+                          : format(day.date, "MMM d, yyyy");
+                      return (
+                        <div
+                          key={rowIdx}
+                          className={`${CELL} cursor-default transition-opacity duration-200 hover:opacity-70 ${cls}`}
+                          title={title}
+                          role="gridcell"
+                          aria-label={title}
+                        />
+                      );
+                    })}
+                  </div>
+                ))}
               </div>
-              <div className="flex items-center gap-1.5 mt-3 pl-8">
-                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+              <div className="mt-3 flex items-center gap-1.5 pl-8">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Less
                 </span>
                 {[0, 1, 2, 3, 4].map((level) => (
                   <div
                     key={level}
-                    className={`h-3 w-3 rounded-[2px] ${intensityClasses[level]}`}
+                    className={`${CELL} ${intensityClasses[level]}`}
                   />
                 ))}
-                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   More
                 </span>
               </div>
