@@ -5,7 +5,14 @@ import { memo, type ComponentType, type ReactNode } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
-export type StatTone = "default" | "accent" | "emerald" | "amber" | "red" | "blue" | "violet";
+export type StatTone =
+  | "default"
+  | "accent"
+  | "emerald"
+  | "amber"
+  | "red"
+  | "blue"
+  | "violet";
 
 export type StatColor = StatTone | "cyan" | "green" | "gold" | "purple";
 
@@ -14,9 +21,18 @@ const TONE_MAP: Record<StatTone, { bg: string; text: string }> = {
   accent: { bg: "bg-primary/10", text: "text-primary" },
   blue: { bg: "bg-primary/10", text: "text-primary" },
   violet: { bg: "bg-primary/10", text: "text-primary" },
-  emerald: { bg: "bg-emerald-50 dark:bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-400" },
-  amber: { bg: "bg-amber-50 dark:bg-amber-500/10", text: "text-amber-600 dark:text-amber-400" },
-  red: { bg: "bg-red-50 dark:bg-red-500/10", text: "text-red-600 dark:text-red-400" },
+  emerald: {
+    bg: "bg-emerald-50 dark:bg-emerald-500/10",
+    text: "text-emerald-600 dark:text-emerald-400",
+  },
+  amber: {
+    bg: "bg-amber-50 dark:bg-amber-500/10",
+    text: "text-amber-600 dark:text-amber-400",
+  },
+  red: {
+    bg: "bg-red-50 dark:bg-red-500/10",
+    text: "text-red-600 dark:text-red-400",
+  },
 };
 
 const COLOR_TONE: Partial<Record<StatColor, StatTone>> = {
@@ -49,7 +65,12 @@ function StatSparkLine({ data, color }: { data: number[]; color: string }) {
     .join(" ");
 
   return (
-    <svg width={w} height={h} className="shrink-0 text-primary" aria-hidden="true">
+    <svg
+      width={w}
+      height={h}
+      className="shrink-0 text-primary"
+      aria-hidden="true"
+    >
       <polyline
         points={points}
         fill="none"
@@ -102,7 +123,11 @@ const STAT_GRID_COLS: Record<NonNullable<StatCardGridProps["cols"]>, string> = {
   6: "grid-cols-1 min-[420px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-6",
 };
 
-export function StatCardGrid({ children, cols = 4, className }: StatCardGridProps) {
+export function StatCardGrid({
+  children,
+  cols = 4,
+  className,
+}: StatCardGridProps) {
   return (
     <div
       className={cn(
@@ -134,7 +159,11 @@ export function StatCardSkeleton({ className }: { className?: string }) {
   );
 }
 
-export function StatCardGridSkeleton({ cols = 4, count, className }: StatCardGridSkeletonProps) {
+export function StatCardGridSkeleton({
+  cols = 4,
+  count,
+  className,
+}: StatCardGridSkeletonProps) {
   const itemCount = count ?? cols;
   return (
     <StatCardGrid cols={cols} className={className}>
@@ -166,7 +195,9 @@ export const StatCard = memo(function StatCard({
   const t = TONE_MAP[resolveTone(tone, color)];
   const effectiveHint = hint ?? subtitle;
 
-  const effectiveDelta: { value: string; direction: "up" | "down" } | undefined =
+  const effectiveDelta:
+    | { value: string; direction: "up" | "down" }
+    | undefined =
     delta ??
     (trend
       ? {
@@ -178,7 +209,7 @@ export const StatCard = memo(function StatCard({
   const body = (
     <div
       className={cn(
-        "flex h-full min-h-[84px] items-start gap-3 rounded-xl border border-border/80 bg-card px-3.5 py-3 shadow-sm transition-colors",
+        "flex h-full items-start gap-3 rounded-xl border border-border/80 bg-card px-3.5 py-3 shadow-sm transition-colors",
         featured && "border-primary bg-primary text-primary-foreground",
         href && "hover:bg-muted/30 cursor-pointer",
         featured && href && "hover:bg-primary/90",
@@ -192,7 +223,12 @@ export const StatCard = memo(function StatCard({
             featured ? "bg-primary-foreground/15" : t.bg,
           )}
         >
-          <Icon className={cn("h-4 w-4", featured ? "text-primary-foreground" : t.text)} />
+          <Icon
+            className={cn(
+              "h-4 w-4",
+              featured ? "text-primary-foreground" : t.text,
+            )}
+          />
         </div>
       )}
       <div className="min-w-0 flex-1 space-y-0.5">
@@ -205,7 +241,9 @@ export const StatCard = memo(function StatCard({
           {label}
         </p>
         {isLoading ? (
-          <Skeleton className={cn("h-5 w-14", featured && "bg-primary-foreground/20")} />
+          <Skeleton
+            className={cn("h-5 w-14", featured && "bg-primary-foreground/20")}
+          />
         ) : (
           <p
             className={cn(
@@ -225,11 +263,17 @@ export const StatCard = memo(function StatCard({
                 : "text-red-600 dark:text-red-400",
             )}
           >
-            {effectiveDelta.direction === "up" ? "↑" : "↓"} {effectiveDelta.value}
+            {effectiveDelta.direction === "up" ? "↑" : "↓"}{" "}
+            {effectiveDelta.value}
           </p>
         )}
         {!isLoading && !effectiveDelta && effectiveHint && (
-          <p className={cn("text-[11px] leading-snug truncate", featured ? "text-primary-foreground/70" : "text-muted-foreground")}>
+          <p
+            className={cn(
+              "text-[11px] leading-snug truncate",
+              featured ? "text-primary-foreground/70" : "text-muted-foreground",
+            )}
+          >
             {effectiveHint}
           </p>
         )}
