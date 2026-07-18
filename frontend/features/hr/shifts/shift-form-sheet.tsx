@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { getErrorMessage } from "@/lib/api-client";
 import {
   useCreateShift,
@@ -286,7 +286,7 @@ export function ShiftFormSheet({ open, onOpenChange, shift }: Props) {
         </Form>
       </HrSheet>
 
-      <ConfirmDialog
+      <ConfirmSheet
         open={confirmOpen}
         onOpenChange={(next) => {
           setConfirmOpen(next);

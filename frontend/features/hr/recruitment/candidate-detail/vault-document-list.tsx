@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import {
   useCandidateVault,
   useDeleteVaultDocument,
@@ -275,7 +275,7 @@ export function VaultDocumentList({ candidateId }: VaultDocumentListProps) {
         })}
       </div>
 
-      <ConfirmDialog
+      <ConfirmSheet
         open={pendingDelete !== null}
         onOpenChange={handleCancelDelete}
         title="Delete Document"

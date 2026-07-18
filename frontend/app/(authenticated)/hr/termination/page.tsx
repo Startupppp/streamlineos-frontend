@@ -12,7 +12,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { TerminationList } from "@/features/hr/termination/termination-list";
 import { TerminationFormSheet } from "@/features/hr/termination/termination-form-sheet";
 import { TerminationDetailSheet } from "@/features/hr/termination/termination-detail-sheet";
@@ -390,7 +390,7 @@ export default function TerminationPage() {
         onInternalNotesChange={handleInternalNotesChange}
       />
 
-      <ConfirmDialog
+      <ConfirmSheet
         open={submitId !== null}
         onOpenChange={handleSubmitConfirmClose}
         title="Submit for CEO Approval"
@@ -418,7 +418,7 @@ export default function TerminationPage() {
         isViewOnly
       />
 
-      <ConfirmDialog
+      <ConfirmSheet
         open={emailRecord !== null}
         onOpenChange={handleEmailRecordClose}
         title="Send Termination Email"
@@ -428,7 +428,7 @@ export default function TerminationPage() {
         isPending={sendEmail.isPending}
       />
 
-      <ConfirmDialog
+      <ConfirmSheet
         open={completeId !== null}
         onOpenChange={handleCompleteIdClose}
         title="Complete Termination"

@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { format, addDays } from "date-fns";
@@ -558,7 +558,7 @@ export default function ExitManagementPage() {
         </div>
       </HrSheet>
 
-      <ConfirmDialog
+      <ConfirmSheet
         open={hrApproveId !== null}
         onOpenChange={handleHrApproveClose}
         title="Approve Resignation (HR)"
@@ -568,7 +568,7 @@ export default function ExitManagementPage() {
         isPending={hrReview.isPending}
       />
 
-      <ConfirmDialog
+      <ConfirmSheet
         open={ceoApproveId !== null}
         onOpenChange={handleCeoApproveClose}
         title="Approve Resignation (CEO)"
@@ -609,7 +609,7 @@ export default function ExitManagementPage() {
         </div>
       </HrSheet>
 
-      <ConfirmDialog
+      <ConfirmSheet
         open={withdrawId !== null}
         onOpenChange={handleWithdrawClose}
         title="Withdraw Resignation"

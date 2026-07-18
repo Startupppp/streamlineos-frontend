@@ -10,7 +10,7 @@ import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api-client";
 import { useHrShifts, useDeleteShift, type ShiftTemplate } from "@/hooks/api/hr/shifts";
@@ -123,7 +123,7 @@ export function ShiftTemplatesTab({ canManage, onEdit }: Props) {
         ))}
       </div>
 
-      <ConfirmDialog
+      <ConfirmSheet
         open={pendingDelete != null}
         onOpenChange={(open) => {
           if (!open) setPendingDelete(null);

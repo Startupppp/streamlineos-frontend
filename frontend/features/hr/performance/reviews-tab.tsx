@@ -24,7 +24,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { AIGenerateReviewButton } from "@/features/hr/performance/ai-generate-review-button";
 import { toast } from "sonner";
 import { resolveImageUrl, cn } from "@/lib/utils";
@@ -372,7 +372,7 @@ export function ReviewsTab() {
         )}
       </HrSheet>
 
-      <ConfirmDialog
+      <ConfirmSheet
         open={deleteId !== null}
         onOpenChange={(open) => { if (!open) setDeleteId(null); }}
         title="Delete Review"

@@ -11,7 +11,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTablePagination } from "@/components/shared/data-table-pagination";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { DocumentTypeList } from "@/features/hr/document-types/document-type-list";
 import {
   DocumentTypeFormDialog,
@@ -321,7 +321,7 @@ export default function DocumentTypesPage() {
         onSubmit={handleFormSubmit}
       />
 
-      <ConfirmDialog
+      <ConfirmSheet
         open={deactivateTarget !== null}
         onOpenChange={handleDeactivateDialogChange}
         title="Deactivate Document Type"
@@ -332,7 +332,7 @@ export default function DocumentTypesPage() {
         isPending={deleteMutation.isPending}
       />
 
-      <ConfirmDialog
+      <ConfirmSheet
         open={reactivateTarget !== null}
         onOpenChange={handleReactivateDialogChange}
         title="Reactivate Document Type"
