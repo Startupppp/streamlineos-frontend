@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { Pencil, PartyPopper } from "lucide-react";
 import { PlusIcon, Trash2Icon, CheckIcon, XIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface EditState {
   id: number;
@@ -81,11 +82,15 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
   const handleAdd = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
-      const trimmedName = name.trim();
+      const trimmedName = name.trim().replace(/\s+/g, " ");
       if (!trimmedName) { toast.error("Holiday name is required"); return; }
       if (trimmedName.length < 2) { toast.error("Holiday name must be at least 2 characters"); return; }
       if (trimmedName.length > 100) { toast.error("Holiday name must be at most 100 characters"); return; }
       if (!/[a-zA-Z]/.test(trimmedName)) { toast.error("Holiday name must contain at least one letter"); return; }
+      if (!/^[\p{L}\p{N}\s'.-]+$/u.test(trimmedName)) {
+        toast.error("Holiday name can only use letters, numbers, spaces, apostrophes, periods, and hyphens");
+        return;
+      }
       if (!date) { toast.error("Holiday date is required"); return; }
       const duplicate = (holidaysList ?? []).find(
         (h) => h.date === date || h.name.trim().toLowerCase() === trimmedName.toLowerCase()
@@ -143,11 +148,15 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
 
   const handleEditSave = useCallback(() => {
     if (!editState) return;
-    const trimmedName = editState.name.trim();
+    const trimmedName = editState.name.trim().replace(/\s+/g, " ");
     if (!trimmedName) { toast.error("Holiday name is required"); return; }
     if (trimmedName.length < 2) { toast.error("Holiday name must be at least 2 characters"); return; }
     if (trimmedName.length > 100) { toast.error("Holiday name must be at most 100 characters"); return; }
     if (!/[a-zA-Z]/.test(trimmedName)) { toast.error("Holiday name must contain at least one letter"); return; }
+    if (!/^[\p{L}\p{N}\s'.-]+$/u.test(trimmedName)) {
+      toast.error("Holiday name can only use letters, numbers, spaces, apostrophes, periods, and hyphens");
+      return;
+    }
     if (!editState.date) { toast.error("Holiday date is required"); return; }
     const duplicate = (holidaysList ?? []).find(
       (h) =>
@@ -329,12 +338,12 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
               ))}
             </ul>
           ) : (
-            <div className="flex flex-col items-center justify-center py-8 rounded-xl border border-dashed border-border gap-3">
-              <div className="w-8 rounded-full bg-muted flex items-center justify-center">
-                <PartyPopper className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <p className="text-sm text-muted-foreground">No holidays added yet. Add one above.</p>
-            </div>
+            <EmptyState
+              illustrationPreset="calendar"
+              title="No holidays yet"
+              description="Add one above to show it on the team calendar."
+              compact
+            />
           )}
         </div>
         <p className="text-xs text-muted-foreground">
