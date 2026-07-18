@@ -168,7 +168,7 @@ export function LeadTableView({
       illustration={<EmptyLeadsIllustration />}
       title="No leads found"
       description="No leads match your current filters."
-      className="border-0 bg-transparent min-h-[40vh]"
+      className="border-0 bg-transparent min-h-[40dvh]"
     />
   );
 

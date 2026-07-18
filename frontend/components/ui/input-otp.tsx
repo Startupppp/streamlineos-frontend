@@ -1,13 +1,19 @@
 ﻿"use client";
 
 import * as React from "react";
-import { OTPInput, OTPInputContext } from "input-otp";
+import { OTPInput, OTPInputContext, REGEXP_ONLY_DIGITS } from "input-otp";
 import { Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+function defaultPasteTransformer(pasted: string): string {
+  return pasted.replace(/\D/g, "");
+}
 
 function InputOTP({
   className,
   containerClassName,
+  pasteTransformer = defaultPasteTransformer,
+  pattern = REGEXP_ONLY_DIGITS,
   ...props
 }: React.ComponentProps<typeof OTPInput> & { containerClassName?: string }) {
   return (
@@ -18,6 +24,8 @@ function InputOTP({
       )}
       className={cn("disabled:cursor-not-allowed", className)}
       {...props}
+      pasteTransformer={pasteTransformer}
+      pattern={pattern}
     />
   );
 }
@@ -41,7 +49,7 @@ function InputOTPSlot({
   return (
     <div
       className={cn(
-        "relative flex h-10 w-10 items-center justify-center border-y border-r border-input text-sm shadow-xs transition-all first:rounded-l-md first:border-l last:rounded-r-md",
+        "relative flex h-10 w-10 items-center justify-center border-y border-r border-input bg-card text-sm shadow-xs transition-all first:rounded-l-md first:border-l last:rounded-r-md",
         isActive && "z-10 ring-2 ring-ring ring-offset-background",
         className,
       )}

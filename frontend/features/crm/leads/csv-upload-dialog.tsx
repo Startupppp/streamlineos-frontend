@@ -401,7 +401,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
           Import Leads
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-2xl max-h-[85dvh] overflow-y-auto">
         <DialogHeader className="mb-1">
           <DialogTitle>Import Leads</DialogTitle>
           <p className="text-xs text-muted-foreground">{stepLabel}</p>

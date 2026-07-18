@@ -12,7 +12,7 @@ export default async function OwnerLayout({
   const session = await requirePlatformOwner();
 
   return (
-    <div className="flex min-h-screen bg-[#f6f8fc]">
+    <div className="flex min-h-dvh bg-[#f6f8fc]">
       <OwnerSidebar
         ownerName={session.user?.name ?? "Owner"}
         ownerEmail={session.user?.email ?? ""}

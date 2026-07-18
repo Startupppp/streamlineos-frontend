@@ -54,7 +54,7 @@ export default function TicketFeedbackPage() {
   }
 
   return (
-    <main className="min-h-screen surface-soft flex items-start justify-center pt-8 sm:pt-12 px-4">
+    <main className="min-h-dvh surface-soft flex items-start justify-center pt-8 sm:pt-12 px-4">
       <div className="w-full max-w-lg">
         <div className="gradient-brand text-white rounded-t-2xl px-6 py-8 text-center shadow-noir">
           <h1 className="text-2xl font-bold tracking-tight">

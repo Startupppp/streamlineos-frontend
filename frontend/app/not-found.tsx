@@ -10,7 +10,7 @@ import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 
 export default function GlobalNotFound() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background px-6">
+    <div className="min-h-dvh flex flex-col items-center justify-center bg-background px-6">
       <motion.div
         className="flex flex-col items-center text-center"
         variants={staggerContainer}

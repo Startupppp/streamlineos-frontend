@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { RotateCcw } from "lucide-react";
 import { SparklesIcon, CopyIcon, CheckIcon } from "@animateicons/react/lucide";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -24,6 +24,13 @@ export function ClientUpdateCard({ projectId, featureEnabled, requiredPlan }: Cl
   const [copied, setCopied] = useState(false);
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   const { iconRef: copyIconRef, hoverHandlers: copyHoverHandlers } = useAnimatedIcon();
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current !== null) clearTimeout(copyTimerRef.current);
+    };
+  }, []);
 
   const handleRun = useCallback(() => {
     mutation.mutate(undefined);
@@ -40,7 +47,11 @@ export function ClientUpdateCard({ projectId, featureEnabled, requiredPlan }: Cl
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      if (copyTimerRef.current !== null) clearTimeout(copyTimerRef.current);
+      copyTimerRef.current = setTimeout(() => {
+        copyTimerRef.current = null;
+        setCopied(false);
+      }, 2000);
     } catch {
       toast.error("Could not copy to clipboard.");
     }

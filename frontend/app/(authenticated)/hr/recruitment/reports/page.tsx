@@ -382,7 +382,7 @@ function ResultTable({ result }: { result: GenerateReportResult }) {
     ) : undefined;
 
   return (
-    <div className="mt-4 max-h-[50vh] overflow-auto">
+    <div className="mt-4 max-h-[50dvh] overflow-auto">
       <DataTable
         data={indexedRows}
         columns={columns}

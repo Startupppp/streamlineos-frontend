@@ -1,9 +1,9 @@
 export interface DashboardStats {
   orgName: string;
-  totalEmployees: number;
-  activeProjects: number;
-  presentToday: number;
   orgSlug: string;
+  totalEmployees: number | null;
+  activeProjects: number | null;
+  presentToday: number | null;
 }
 
 export interface RecentProject {

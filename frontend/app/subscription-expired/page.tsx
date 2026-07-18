@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 
 export default function SubscriptionExpiredPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-dvh items-center justify-center bg-background px-4">
       <div className="mx-auto max-w-md text-center">
         <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
           <AlertTriangle className="w-8 text-amber-600 dark:text-amber-400" />

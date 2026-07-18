@@ -258,7 +258,7 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
           title="No test cases"
           description="Create a test case to get started."
           action={canManage ? { label: "New Test Case", onClick: handleNewCase } : undefined}
-          className="min-h-[32vh] flex-1"
+          className="min-h-[32dvh] flex-1"
         />
       ) : (
         <DataTable<TestCase>

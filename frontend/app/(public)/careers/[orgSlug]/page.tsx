@@ -63,7 +63,7 @@ export default async function CareersPage({ params }: Props) {
   const { org, jobs } = data;
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-dvh bg-background">
       <div className="border-b bg-white dark:bg-card">
         <div className="max-w-3xl mx-auto px-4 py-10">
           <div className="flex items-center gap-4 mb-4">

@@ -203,7 +203,7 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
         subtitle="Connect Git repositories to link commits and pull requests to tickets"
         actions={<AddConnectionButton onClick={handleOpenDialog} />}
       >
-        <PmPageShell>
+        <PmPageShell className="flex-none overflow-visible">
           <PmSection index={0}>
             {isLoading ? (
               <div className="space-y-3">
@@ -228,7 +228,7 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
                   onRetry={handleRetry}
                 />
             ) : !connections || connections.length === 0 ? (
-              <div className="flex min-h-0 flex-1 flex-col gap-4">
+              <div className="flex min-h-full flex-col gap-4">
                 <EmptyState
                     className={PM_FILL_PANEL}
                     illustration={<EmptyDevicesIllustration />}

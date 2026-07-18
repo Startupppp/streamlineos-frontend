@@ -101,7 +101,8 @@ export function DepartmentCombobox({
   useEffect(() => {
     if (open) {
       setSearch("");
-      setTimeout(() => inputRef.current?.focus(), 0);
+      const id = setTimeout(() => inputRef.current?.focus(), 0);
+      return () => clearTimeout(id);
     }
   }, [open]);
 

@@ -50,7 +50,7 @@ export function TemplatePreviewDialog({ template }: TemplatePreviewDialogProps) 
           Preview
         </AnimatedIconButton>
       </DialogTrigger>
-      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[80dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-sm">{template.name} — Preview</DialogTitle>
         </DialogHeader>

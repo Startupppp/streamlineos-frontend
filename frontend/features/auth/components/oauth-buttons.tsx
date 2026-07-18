@@ -24,17 +24,6 @@ export function OAuthButtons({
 }: OAuthButtonsProps) {
   return (
     <>
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-border" />
-        </div>
-        <div className="relative flex justify-center">
-          <span className="bg-card px-2 text-[11px] text-muted-foreground/60">
-            or continue with
-          </span>
-        </div>
-      </div>
-
       <div className="flex flex-col gap-2">
         {hasGoogleProvider && (
           <Button
@@ -90,6 +79,17 @@ export function OAuthButtons({
             Continue with Microsoft
           </Button>
         )}
+      </div>
+
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-border" />
+        </div>
+        <div className="relative flex justify-center">
+          <span className="bg-card px-2 text-[11px] text-muted-foreground/60">
+            or continue with email
+          </span>
+        </div>
       </div>
     </>
   );

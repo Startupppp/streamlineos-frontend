@@ -89,6 +89,12 @@ export default function PageDocument({ pageId }: PageDocumentProps) {
     recordVisit.mutate(pageId);
   }, [pageId, recordVisit]);
 
+  useEffect(() => {
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
+  }, []);
+
   const handleNavigateToPage = useCallback(
     (targetPageId: number) => {
       router.push(pageHref(targetPageId));

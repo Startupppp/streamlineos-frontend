@@ -16,7 +16,7 @@ export function PublicSessionView({ token }: { token: string }) {
 
   if (isLoading || !session) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-dvh flex items-center justify-center bg-background">
         <Loader2 className="size-6 animate-spin text-muted-foreground" />
       </div>
     );
@@ -24,7 +24,7 @@ export function PublicSessionView({ token }: { token: string }) {
 
   if (isError) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-6">
+      <div className="min-h-dvh flex items-center justify-center bg-background p-6">
         <ErrorState title="This signing link is invalid" onRetry={() => void refetch()} />
       </div>
     );

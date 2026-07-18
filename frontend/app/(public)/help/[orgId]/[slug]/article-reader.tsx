@@ -161,7 +161,7 @@ export function ArticleReader({ orgId, slug }: ArticleReaderProps) {
   const hasToc = tocItems.length > 0;
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-dvh bg-background">
       <div
         className={cn(
           "mx-auto px-4 py-8 sm:py-12",

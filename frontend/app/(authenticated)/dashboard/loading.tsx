@@ -13,7 +13,7 @@ export default function DashboardLoading() {
         <StatCardGridSkeleton cols={4} count={4} />
 
         <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-5">
-          {Array.from({ length: 10 }).map((_, i) => (
+          {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="rounded-xl border border-border bg-card p-4">
               <div className="flex flex-col items-center gap-2">
                 <Skeleton className="h-10 w-10 rounded-lg" />

@@ -174,7 +174,7 @@ export function GeneralSettingsForm() {
       <ErrorState
         title="Failed to load settings"
         onRetry={handleRetry}
-        className="flex-1 min-h-[30vh]"
+        className="flex-1 min-h-[30dvh]"
       />
     );
   }

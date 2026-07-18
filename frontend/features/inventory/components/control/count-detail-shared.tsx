@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useMemo, memo } from "react";
+import { useState, useRef, useMemo, memo, useEffect } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -65,6 +65,14 @@ const DebouncedQtyInput = memo(function DebouncedQtyInput({
 }) {
   const [value, setValue] = useState(initial !== null ? String(initial) : "");
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(function clearPendingTimerOnUnmount() {
+    return function cleanup() {
+      if (timerRef.current !== null) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, []);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>): void {
     const raw = e.target.value;
@@ -226,7 +234,7 @@ export function CountDetailShared({
           title={`Failed to load ${entityNoun.toLowerCase()}`}
           description={getErrorMessage(error)}
           onRetry={onRetry}
-          className="min-h-[40vh]"
+          className="min-h-[40dvh]"
         />
       </PageWrapper>
     );
@@ -259,7 +267,7 @@ export function CountDetailShared({
               compact
               title="No lines"
               description={`No inventory lines are assigned to this ${shortNoun.toLowerCase()}.`}
-              className="border-0 bg-transparent min-h-[30vh]"
+              className="border-0 bg-transparent min-h-[30dvh]"
             />
           }
           minWidth="600px"

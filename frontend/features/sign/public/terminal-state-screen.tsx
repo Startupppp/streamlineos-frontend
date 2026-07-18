@@ -59,7 +59,7 @@ export function TerminalStateScreen({ state, envelopeTitle }: { state: SignPubli
   const Icon = copy.icon;
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-6 text-center bg-background">
+    <div className="min-h-dvh flex flex-col items-center justify-center gap-4 p-6 text-center bg-background">
       <div className="rounded-full bg-muted p-4">
         <Icon className="size-8 text-muted-foreground" />
       </div>

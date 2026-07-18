@@ -229,7 +229,7 @@ export default function TimesheetPayrollPage() {
                 title="Couldn't load the payroll queue"
                 description="Something went wrong while loading payable hours for this period."
                 onRetry={handleSummaryRetry}
-                className="flex-1 min-h-[40vh]"
+                className="flex-1 min-h-[40dvh]"
               />
             ) : (
               <Card>

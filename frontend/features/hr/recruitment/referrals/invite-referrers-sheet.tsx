@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,8 +15,17 @@ export function InviteReferrersSheet() {
   const { data: session } = useSession();
   const orgId = session?.orgId as string | null | undefined;
   const [copied, setCopied] = useState(false);
+  const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { iconRef: shareIconRef, hoverHandlers: shareHoverHandlers } = useAnimatedIcon();
   const { iconRef: copyIconRef, hoverHandlers: copyHoverHandlers } = useAnimatedIcon();
+
+  useEffect(() => {
+    return () => {
+      if (copiedTimerRef.current !== null) {
+        clearTimeout(copiedTimerRef.current);
+      }
+    };
+  }, []);
 
   const link = typeof window !== "undefined" && orgId ? `${window.location.origin}/refer/${orgId}` : "";
 
@@ -25,7 +34,11 @@ export function InviteReferrersSheet() {
     await navigator.clipboard.writeText(link);
     setCopied(true);
     toast.success("Link copied");
-    setTimeout(() => setCopied(false), 2000);
+    if (copiedTimerRef.current !== null) clearTimeout(copiedTimerRef.current);
+    copiedTimerRef.current = setTimeout(() => {
+      copiedTimerRef.current = null;
+      setCopied(false);
+    }, 2000);
   }
 
   return (

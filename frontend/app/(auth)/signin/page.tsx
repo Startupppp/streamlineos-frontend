@@ -84,10 +84,10 @@ export default function SignInPage() {
     <div className="w-full max-w-sm animate-fade-up overflow-auto">
       <div className="mb-4 sm:mb-6 text-center">
         <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
-          Sign in to your account
+          Sign in or create an account
         </h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
-          Enter your email to receive a one-time code
+          Use Google or your email for a one-time code
         </p>
       </div>
 
@@ -102,8 +102,6 @@ export default function SignInPage() {
       )}
 
       <div className="rounded-xl p-4 space-y-3">
-        <PasswordlessSigninForm getCallbackUrl={getCallbackUrl} />
-
         {hasOAuthProviders && (
           <OAuthButtons
             hasGoogleProvider={hasGoogleProvider}
@@ -115,6 +113,8 @@ export default function SignInPage() {
             onMicrosoftSignIn={handleMicrosoftSignIn}
           />
         )}
+
+        <PasswordlessSigninForm getCallbackUrl={getCallbackUrl} />
 
         <p className="text-[11px] text-muted-foreground/50 text-center leading-relaxed">
           Encrypted in transit over TLS. Sessions are signed and rotated.

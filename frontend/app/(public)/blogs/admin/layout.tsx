@@ -20,7 +20,7 @@ export default async function BlogAdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <BlogAdminNav userName={session.user.name ?? session.user.email ?? "Editor"} />
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">{children}</div>
     </div>

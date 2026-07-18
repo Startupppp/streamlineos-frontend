@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Sparkles, Copy, Check, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -51,6 +51,13 @@ export function AIEmailDialog({
   const [tone, setTone] = useState<EmailTone>("friendly");
   const [context, setContext] = useState("");
   const [copied, setCopied] = useState<"subject" | "body" | null>(null);
+  const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
+    };
+  }, []);
 
   const generateMutation = useGenerateEmail();
   const email = generateMutation.data;
@@ -102,7 +109,8 @@ export function AIEmailDialog({
       await navigator.clipboard.writeText(text);
       setCopied(type);
       toast.success(`${type === "subject" ? "Subject" : "Body"} copied`);
-      setTimeout(() => setCopied(null), 2000);
+      if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
+      copiedTimerRef.current = setTimeout(() => setCopied(null), 2000);
     },
     [email],
   );

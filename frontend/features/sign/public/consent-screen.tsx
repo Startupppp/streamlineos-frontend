@@ -23,7 +23,7 @@ export function ConsentScreen({ token, envelopeTitle, senderName }: { token: str
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-6 p-6 bg-background">
+    <div className="min-h-dvh flex flex-col items-center justify-center gap-6 p-6 bg-background">
       <div className="rounded-full bg-primary/10 p-4">
         <FileSignature className="size-8 text-primary" />
       </div>

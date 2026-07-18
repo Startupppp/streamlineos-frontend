@@ -56,29 +56,15 @@ export const useDashboardStats = (
 
 export const useMyIssues = (
   userId: string,
-  options?: Omit<UseQueryOptions<MyIssue[], Error>, "queryKey" | "queryFn" | "enabled">
+  options?: Omit<UseQueryOptions<MyIssue[], Error>, "queryKey" | "queryFn">
 ) => {
   return useQuery<MyIssue[], Error>({
     queryKey: queryKeys.dashboard.myIssues(userId),
     queryFn: () =>
       apiClient.get<MyIssue[]>("/dashboard/my-issues", { userId, limit: "20" }),
-    enabled: !!userId,
     staleTime: 5 * 60 * 1000,
     ...options,
-  });
-};
-
-export const useRoleStats = (
-  options?: Omit<UseQueryOptions<Record<string, number>, Error>, "queryKey" | "queryFn">
-) => {
-  const { data: session } = useSession();
-  const orgId = session?.orgId ?? "";
-  return useQuery<Record<string, number>, Error>({
-    queryKey: [...queryKeys.dashboard.all, "roleStats", orgId] as const,
-    queryFn: () => apiClient.get<Record<string, number>>("/dashboard/role-stats"),
-    staleTime: 5 * 60 * 1000,
-    ...options,
-    enabled: !!orgId,
+    enabled: !!userId && (options?.enabled ?? true),
   });
 };
 
@@ -97,7 +83,7 @@ export const useTodayActivities = (
     queryFn: () => apiClient.get<ScheduledActivity[]>("/dashboard/today-activities"),
     staleTime: 5 * 60 * 1000,
     ...options,
-    enabled: !!orgId,
+    enabled: !!orgId && (options?.enabled ?? true),
   });
 };
 
@@ -114,7 +100,7 @@ export const useRecentProjects = (
     queryFn: () => apiClient.get<RecentProject[]>("/dashboard/recent-projects"),
     staleTime: 5 * 60 * 1000,
     ...options,
-    enabled: !!orgId,
+    enabled: !!orgId && (options?.enabled ?? true),
   });
 };
 
@@ -130,7 +116,7 @@ export const useTeamAvailability = (
     staleTime: 65_000,
     refetchIntervalInBackground: false,
     ...options,
-    enabled: !!orgId,
+    enabled: !!orgId && (options?.enabled ?? true),
   });
 };
 
@@ -148,7 +134,7 @@ export const useActiveSprintSummary = (
       apiClient.get<SprintSummary | null>("/dashboard/active-sprint"),
     staleTime: 5 * 60 * 1000,
     ...options,
-    enabled: !!orgId,
+    enabled: !!orgId && (options?.enabled ?? true),
   });
 };
 
@@ -166,7 +152,7 @@ export const useRecentActivity = (
       apiClient.get<RecentActivity[]>("/dashboard/recent-activity"),
     staleTime: 5 * 60 * 1000,
     ...options,
-    enabled: !!orgId,
+    enabled: !!orgId && (options?.enabled ?? true),
   });
 };
 

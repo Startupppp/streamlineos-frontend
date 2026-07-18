@@ -317,7 +317,7 @@ export default function PublicRoadmapPage() {
   const handleFeedbackVote = useCallback((id: number) => handleVote("feedback", id), [handleVote]);
 
   return (
-    <main className="min-h-screen surface-soft">
+    <main className="min-h-dvh surface-soft">
       <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:py-12">
         <header className="mb-8 text-center">
           <div className="inline-flex items-center gap-2 text-primary mb-2">

@@ -46,10 +46,10 @@ export function MobileBottomNav({ onOpenMobileMenu }: MobileBottomNavProps) {
 
   return (
     <nav
-      className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-background/95 backdrop-blur-md border-t border-border z-50"
+      className="md:hidden fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-md border-t border-border z-50 pb-[env(safe-area-inset-bottom)]"
       aria-label="Mobile navigation"
     >
-      <div className="flex items-center justify-around h-full px-2 pb-safe">
+      <div className="flex items-center justify-around h-16 px-2">
         <button
           type="button"
           onClick={onOpenMobileMenu}

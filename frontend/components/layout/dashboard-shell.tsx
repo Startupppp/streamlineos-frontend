@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import dynamic from "next/dynamic"
 import Link from "next/link"
 import { AppSidebar } from "./app-sidebar"
@@ -60,6 +60,16 @@ export function DashboardShell({
   const [workspaceSwitcherOpen, setWorkspaceSwitcherOpen] = useState(false)
   const { hideSidebar } = useProductSidebarVisibility()
   usePushSubscription(userId)
+  const rafIdRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (rafIdRef.current !== null) {
+        cancelAnimationFrame(rafIdRef.current)
+        rafIdRef.current = null
+      }
+    }
+  }, [])
 
   const handleToggleSidebar = useCallback(() => {
     setIsSidebarCollapsed((prev) => {
@@ -79,7 +89,9 @@ export function DashboardShell({
   const handleCloseMobileMenu = useCallback(() => setMobileMenuOpen(false), [])
 
   const deferCloseMobileMenu = useCallback(() => {
-    requestAnimationFrame(() => {
+    if (rafIdRef.current !== null) cancelAnimationFrame(rafIdRef.current)
+    rafIdRef.current = requestAnimationFrame(() => {
+      rafIdRef.current = null
       setMobileMenuOpen(false)
     })
   }, [])
@@ -133,7 +145,7 @@ export function DashboardShell({
                 id="dashboard-content"
                 className="flex-1 min-w-0 flex flex-col overflow-hidden md:pb-6"
               >
-                <div className="flex-1 min-h-0 overflow-auto flex flex-col pb-16 md:pb-0">
+                <div className="flex-1 min-h-0 overflow-auto flex flex-col pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
                   {children}
                   <SuccessChecklist />
                 </div>

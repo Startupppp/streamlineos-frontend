@@ -321,7 +321,7 @@ function ImproveDescDialog({
       open={open}
       onOpenChange={handleOpenChange}
     >
-      <DialogContent className="flex max-h-[min(80dvh,calc(100vh-100px))] max-w-2xl flex-col gap-0 overflow-hidden p-0 pb-0 md:!flex md:grid-cols-none md:max-w-2xl md:overflow-hidden md:pb-0 md:sm:max-w-2xl">
+      <DialogContent className="flex max-h-[min(80dvh,calc(100dvh-100px))] max-w-2xl flex-col gap-0 overflow-hidden p-0 pb-0 md:!flex md:grid-cols-none md:max-w-2xl md:overflow-hidden md:pb-0 md:sm:max-w-2xl">
         <DialogHeader className="shrink-0 gap-1 border-b border-border px-5 pb-2 pt-4 text-left">
           <DialogTitle className="text-sm font-semibold">
             Improved Description

@@ -314,7 +314,7 @@ export function BillingView() {
             title="Couldn't load billing data"
             description="Something went wrong loading uninvoiced hours for this period."
             onRetry={handleRetry}
-            className="flex-1 min-h-[40vh]"
+            className="flex-1 min-h-[40dvh]"
           />
         ) : (
           <Card>

@@ -68,7 +68,7 @@ function TicketPickerBody({
           className="w-full h-8 pl-8 pr-3 text-sm border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-ring/30"
         />
       </div>
-      <div className="overflow-y-auto space-y-0.5 max-h-[min(40vh,20rem)]">
+      <div className="overflow-y-auto space-y-0.5 max-h-[min(40dvh,20rem)]">
         {isLoading ? (
           <div className="flex items-center gap-2 py-2 text-xs text-muted-foreground">
             <Loader2 className="h-3.5 w-3.5 animate-spin" />

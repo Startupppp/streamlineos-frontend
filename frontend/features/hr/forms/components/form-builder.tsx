@@ -437,7 +437,7 @@ export function FormBuilder({ form, onSave, isPending }: FormBuilderProps) {
       </form>
 
       <Sheet open={paletteOpen} onOpenChange={setPaletteOpen}>
-        <SheetContent side="bottom" className="h-[60vh] overflow-y-auto">
+        <SheetContent side="bottom" className="h-[60dvh] overflow-y-auto">
           <SheetHeader className="pb-3 border-b">
             <SheetTitle className="text-sm">Add Field</SheetTitle>
           </SheetHeader>

@@ -223,7 +223,7 @@ export function ContactCardView({
               ? undefined
               : { label: "New Contact", onClick: onOpenCreate }
           }
-          className="min-h-[50vh]"
+          className="min-h-[50dvh]"
         />
       )}
 

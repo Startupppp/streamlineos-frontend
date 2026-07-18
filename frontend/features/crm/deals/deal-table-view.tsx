@@ -229,7 +229,7 @@ export function DealTableView({
   ];
 
   const emptyState = (
-    <div className="flex flex-col items-center justify-center min-h-[40vh] text-center py-12 px-6">
+    <div className="flex flex-col items-center justify-center min-h-[40dvh] text-center py-12 px-6">
       <p className="text-sm font-semibold text-foreground">No deals found</p>
       <p className="text-xs text-muted-foreground mt-1">Try adjusting your filters or create a new deal.</p>
     </div>

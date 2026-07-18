@@ -99,7 +99,7 @@ export default function OfferAcceptancePage({ params }: Props) {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-background flex items-center justify-center">
+      <main className="min-h-dvh bg-background flex items-center justify-center">
         <div className="text-center text-muted-foreground">
           <svg className="w-8 mx-auto mb-3 animate-spin opacity-60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M21 12a9 9 0 1 1-6.219-8.56" />
@@ -112,7 +112,7 @@ export default function OfferAcceptancePage({ params }: Props) {
 
   if (error || !offer) {
     return (
-      <main className="min-h-screen bg-background flex items-center justify-center px-4">
+      <main className="min-h-dvh bg-background flex items-center justify-center px-4">
         <Card className="w-full max-w-md text-center">
           <CardContent className="py-10">
             <svg className="h-10 w-10 mx-auto mb-4 text-destructive opacity-60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -132,7 +132,7 @@ export default function OfferAcceptancePage({ params }: Props) {
     const countered = (responded && finalStatus === "COUNTERED") || offer.offerStatus === "COUNTERED";
 
     return (
-      <main className="min-h-screen bg-background flex items-center justify-center px-4">
+      <main className="min-h-dvh bg-background flex items-center justify-center px-4">
         <Card className="w-full max-w-md text-center">
           <CardContent className="py-10">
             <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 ${accepted ? "bg-green-100 dark:bg-green-900/30" : declined ? "bg-red-100 dark:bg-red-900/30" : countered ? "bg-blue-100 dark:bg-blue-900/30" : "bg-muted"}`}>
@@ -165,7 +165,7 @@ export default function OfferAcceptancePage({ params }: Props) {
   }
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-dvh bg-background">
       <div className="max-w-lg mx-auto px-4 py-12">
         <Card>
           <CardHeader className="pb-3">

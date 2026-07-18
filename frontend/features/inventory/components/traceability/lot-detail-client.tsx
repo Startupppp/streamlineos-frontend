@@ -78,7 +78,7 @@ export function LotDetailClient({ lotId }: LotDetailClientProps) {
           title="Failed to load lot"
           description="Could not retrieve lot details. Please try again."
           onRetry={handleRetry}
-          className="flex-1 min-h-[40vh]"
+          className="flex-1 min-h-[40dvh]"
         />
       </PageWrapper>
     );

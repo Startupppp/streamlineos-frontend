@@ -15,7 +15,7 @@ export function ReportsError({ onRetry }: ReportsErrorProps) {
         title="Failed to load report data"
         description="Check your connection and try again."
         onRetry={onRetry}
-        className="flex-1 min-h-[50vh]"
+        className="flex-1 min-h-[50dvh]"
       />
     </PageWrapper>
   );

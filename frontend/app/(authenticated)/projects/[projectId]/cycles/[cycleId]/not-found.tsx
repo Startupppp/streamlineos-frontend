@@ -11,7 +11,7 @@ export default function CycleNotFound() {
   const cyclesHref = projectId ? `/projects/${projectId}/cycles` : "/projects";
 
   return (
-    <div className="flex flex-1 flex-col items-center justify-center py-16 px-6 text-center min-h-[40vh] gap-4">
+    <div className="flex flex-1 flex-col items-center justify-center py-16 px-6 text-center min-h-[40dvh] gap-4">
       <p className="text-4xl font-bold text-foreground tracking-tight">Cycle not found</p>
       <p className="text-muted-foreground text-base max-w-sm">
         This cycle may have been deleted or the link is invalid.

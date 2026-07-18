@@ -256,7 +256,7 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
                 title="No comments yet"
                 description="Be the first to add a comment."
                 compact
-                className="flex-1 min-h-[40vh]"
+                className="flex-1 min-h-[40dvh]"
               />
             )}
             <div className="space-y-5">

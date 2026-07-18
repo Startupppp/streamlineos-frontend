@@ -129,7 +129,7 @@ export function AuditTab() {
         title="Access restricted"
         description="You don't have permission to view the audit trail."
         compact
-        className="min-h-[20vh]"
+        className="min-h-[20dvh]"
       />
     );
   }
@@ -139,7 +139,7 @@ export function AuditTab() {
       <ErrorState
         title="Failed to load audit events"
         onRetry={handleRetry}
-        className="flex-1 min-h-[30vh]"
+        className="flex-1 min-h-[30dvh]"
       />
     );
   }

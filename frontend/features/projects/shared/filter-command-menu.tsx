@@ -337,7 +337,7 @@ export function FilterCommandMenu({
       </PopoverTrigger>
       <PopoverContent
         align="start"
-        className="w-auto max-w-[min(520px,var(--radix-popover-content-available-width))] overflow-hidden p-0"
+        className="w-auto max-w-[min(520px,var(--radix-popover-content-available-width))] overflow-hidden p-0 data-[state=open]:animate-none data-[state=closed]:animate-none"
         onInteractOutside={handleInteractOutside}
       >
         {isSearching ? (

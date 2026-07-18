@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function InvitationLoading() {
   return (
-    <div className="flex min-h-screen items-center justify-center p-6">
+    <div className="flex min-h-dvh items-center justify-center p-6">
       <div className="w-full max-w-md space-y-6">
         <div className="flex flex-col items-center space-y-4">
           <Skeleton className="h-16 w-16 rounded-xl" />

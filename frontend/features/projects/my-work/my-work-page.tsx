@@ -139,7 +139,6 @@ export function MyWorkPage() {
                   value={totalOpen}
                   icon={CheckCircle2}
                   tone="default"
-                  className="border-border/60 bg-card/50 shadow-sm backdrop-blur-md transition-shadow duration-150 hover:shadow-md supports-[backdrop-filter]:bg-card/40"
                 />
               </motion.div>
               <motion.div
@@ -152,7 +151,6 @@ export function MyWorkPage() {
                   value={bucketCounts.overdue}
                   icon={AlertCircle}
                   tone={bucketCounts.overdue > 0 ? "red" : "default"}
-                  className="border-border/60 bg-card/50 shadow-sm backdrop-blur-md transition-shadow duration-150 hover:shadow-md supports-[backdrop-filter]:bg-card/40"
                 />
               </motion.div>
               <motion.div
@@ -165,7 +163,6 @@ export function MyWorkPage() {
                   value={bucketCounts.today}
                   icon={CalendarClock}
                   tone="amber"
-                  className="border-border/60 bg-card/50 shadow-sm backdrop-blur-md transition-shadow duration-150 hover:shadow-md supports-[backdrop-filter]:bg-card/40"
                 />
               </motion.div>
               <motion.div
@@ -178,7 +175,6 @@ export function MyWorkPage() {
                   value={bucketCounts.upcoming}
                   icon={Clock}
                   tone="emerald"
-                  className="border-border/60 bg-card/50 shadow-sm backdrop-blur-md transition-shadow duration-150 hover:shadow-md supports-[backdrop-filter]:bg-card/40"
                 />
               </motion.div>
             </StatCardGrid>

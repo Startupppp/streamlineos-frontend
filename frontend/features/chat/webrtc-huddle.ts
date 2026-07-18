@@ -388,7 +388,14 @@ export function useWebRTCHuddle(
       peerConnections.current.forEach((pc) => {
         stream.getTracks().forEach((t) => pc.addTrack(t, stream));
       });
-      stream.getVideoTracks()[0]?.addEventListener("ended", () => stopScreenShare());
+      const videoTrack = stream.getVideoTracks()[0];
+      if (videoTrack) {
+        const handleTrackEnded = () => {
+          videoTrack.removeEventListener("ended", handleTrackEnded);
+          stopScreenShare();
+        };
+        videoTrack.addEventListener("ended", handleTrackEnded);
+      }
     } catch {}
   }, [stopScreenShare]);
 

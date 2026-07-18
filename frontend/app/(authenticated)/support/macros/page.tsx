@@ -181,7 +181,7 @@ function MacroDialog({
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-lg max-h-[85dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEdit ? "Edit Canned Response" : "New Canned Response"}</DialogTitle>
         </DialogHeader>

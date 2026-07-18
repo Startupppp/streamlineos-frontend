@@ -60,7 +60,7 @@ export default function ApplyPage({ params }: Props) {
 
   if (submitted) {
     return (
-      <main className="min-h-screen bg-background flex items-center justify-center px-4">
+      <main className="min-h-dvh bg-background flex items-center justify-center px-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center pb-3">
             <div className="w-14 h-14 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-3">
@@ -100,7 +100,7 @@ export default function ApplyPage({ params }: Props) {
   }
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-dvh bg-background">
       <div className="max-w-xl mx-auto px-4 py-8">
         <div className="mb-6">
           <Link href={`/careers/${orgSlug}`} className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">

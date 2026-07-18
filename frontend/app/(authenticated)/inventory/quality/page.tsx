@@ -139,7 +139,7 @@ function QualityHubInner() {
                 illustration={<EmptyOrdersIllustration />}
                 title="No inspections yet"
                 description="Quality inspections will appear here once created."
-                className="border-0 bg-transparent min-h-[20vh]"
+                className="border-0 bg-transparent min-h-[20dvh]"
               />
             }
             minWidth="480px"

@@ -82,7 +82,7 @@ export function AutomationRunsDialog({ ruleId, ruleName, onClose }: AutomationRu
             description="This automation hasn't executed yet."
           />
         ) : (
-          <ScrollArea className="max-h-[60vh]">
+          <ScrollArea className="max-h-[60dvh]">
             <div className="space-y-2 pr-3">
               {runs.map((run) => (
                 <div

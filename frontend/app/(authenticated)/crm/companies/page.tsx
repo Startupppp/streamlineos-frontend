@@ -342,7 +342,7 @@ export default function CompaniesPage() {
                       ? undefined
                       : { label: "New Company", onClick: handleOpenCreate }
                   }
-                  className="border-0 bg-transparent min-h-[40vh]"
+                  className="border-0 bg-transparent min-h-[40dvh]"
                 />
               }
               minWidth="640px"

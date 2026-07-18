@@ -172,7 +172,7 @@ function ApprovalsTable({
         title="Couldn't load approvals"
         description="Something went wrong loading timesheet approvals."
         onRetry={onRetry}
-        className="min-h-[30vh]"
+        className="min-h-[30dvh]"
       />
     );
   }

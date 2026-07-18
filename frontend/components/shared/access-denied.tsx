@@ -14,7 +14,7 @@ export function AccessDenied({ currentRole, requiredRoles, message }: AccessDeni
   const router = useRouter();
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
+    <div className="flex flex-col items-center justify-center min-h-[60dvh] px-6 text-center">
       <div className="h-16 w-16 rounded-2xl bg-red-500/10 flex items-center justify-center mb-5">
         <ShieldAlert className="w-8 text-red-500 dark:text-red-400" />
       </div>

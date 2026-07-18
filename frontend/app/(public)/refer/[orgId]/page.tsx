@@ -54,7 +54,7 @@ export default function ExternalReferrerRegisterPage({ params }: Props) {
   function handlePhoneChange(e: React.ChangeEvent<HTMLInputElement>) { setPhone(e.target.value); }
 
   return (
-    <main className="min-h-screen bg-background flex items-center justify-center px-4">
+    <main className="min-h-dvh bg-background flex items-center justify-center px-4">
       <div className="w-full max-w-md py-12">
         <Card>
           <CardHeader className="pb-3 text-center">

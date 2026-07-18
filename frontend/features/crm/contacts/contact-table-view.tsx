@@ -182,7 +182,7 @@ export function ContactTableView({
                 ? undefined
                 : { label: "New Contact", onClick: onOpenCreate }
             }
-            className="border-0 bg-transparent min-h-[40vh]"
+            className="border-0 bg-transparent min-h-[40dvh]"
           />
         }
         minWidth="580px"

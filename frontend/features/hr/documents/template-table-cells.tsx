@@ -74,7 +74,7 @@ export function PreviewDialog({ template }: { template: DocumentTemplate }) {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <div
-              className="max-h-[60vh] overflow-y-auto rounded-xl border bg-card p-4 text-sm prose prose-sm dark:prose-invert max-w-none"
+              className="max-h-[60dvh] overflow-y-auto rounded-xl border bg-card p-4 text-sm prose prose-sm dark:prose-invert max-w-none"
               dangerouslySetInnerHTML={{
                 __html: DOMPurify.sanitize(template.htmlContent),
               }}

@@ -14,7 +14,7 @@ interface RequireModuleProps {
 function ModuleDisabledState({ module }: { module: string }) {
   const label = module.charAt(0).toUpperCase() + module.slice(1).toLowerCase();
   return (
-    <div className="flex flex-col items-center justify-center flex-1 h-full min-h-[40vh] gap-4 py-16">
+    <div className="flex flex-col items-center justify-center flex-1 h-full min-h-[40dvh] gap-4 py-16">
       <Building2 className="h-10 w-10 text-muted-foreground/40" />
       <div className="text-center">
         <p className="font-semibold text-foreground">{label} module not enabled</p>

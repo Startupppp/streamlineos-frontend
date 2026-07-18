@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Edit2, Check, X } from "lucide-react";
 import { CopyIcon, CheckCheckIcon } from "@animateicons/react/lucide";
 import { Textarea } from "@/components/ui/textarea";
@@ -74,11 +74,19 @@ export function DraftComposer({
   const [editing, setEditing] = useState(false);
   const [editedDraft, setEditedDraft] = useState(draft);
   const [copied, setCopied] = useState(false);
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    };
+  }, []);
 
   const handleCopy = useCallback(() => {
     void navigator.clipboard.writeText(editedDraft).then(() => {
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+      copyTimerRef.current = setTimeout(() => setCopied(false), 2000);
     });
   }, [editedDraft]);
 

@@ -3,7 +3,7 @@ import { ConnectionLostIllustration } from "@/components/illustrations";
 
 export function BackendUnavailableView() {
   return (
-    <div className="flex min-h-[60vh] w-full items-center justify-center p-8">
+    <div className="flex min-h-[60dvh] w-full items-center justify-center p-8">
       <div className="max-w-md text-center">
         <ConnectionLostIllustration className="mx-auto mb-6 h-48 w-48" />
         <h2 className="mb-2 text-xl font-bold text-foreground">Backend unavailable</h2>

@@ -389,7 +389,7 @@ export function CreateTicketDialog({
         ))}
 
       <Dialog open={resolvedOpen} onOpenChange={handleOpenChange}>
-        <DialogContent className="flex h-auto max-h-[min(720px,calc(100vh-100px))] flex-col gap-0 overflow-hidden p-0 md:flex md:h-auto md:max-h-[min(720px,calc(100vh-100px))] md:max-w-2xl md:overflow-hidden md:sm:max-w-2xl">
+        <DialogContent className="flex h-auto max-h-[min(720px,calc(100dvh-100px))] flex-col gap-0 overflow-hidden p-0 md:flex md:h-auto md:max-h-[min(720px,calc(100dvh-100px))] md:max-w-2xl md:overflow-hidden md:sm:max-w-2xl">
           <DialogHeader className="shrink-0 border-b border-border/60 px-5 pb-3 pt-4">
             <div className="flex items-center gap-2">
               <Select

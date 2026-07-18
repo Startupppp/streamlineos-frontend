@@ -71,7 +71,7 @@ const KanbanColumn = memo(function KanbanColumn({
               snapshot.isDraggingOver && "ring-2 ring-primary/20 border-primary/30 bg-primary/5"
             )}
           >
-            <div className="overflow-y-auto space-y-2" style={{ maxHeight: "calc(100vh - 300px)" }}>
+            <div className="overflow-y-auto space-y-2" style={{ maxHeight: "calc(100dvh - 300px)" }}>
               {items.map((candidate, index) => (
                 <CandidateCard
                   key={candidate.id}

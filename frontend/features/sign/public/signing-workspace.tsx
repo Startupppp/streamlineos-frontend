@@ -62,7 +62,7 @@ export function SigningWorkspace({
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-muted/30">
+    <div className="min-h-dvh flex flex-col bg-muted/30">
       <div className="sticky top-0 z-10 bg-background border-b border-border p-3 space-y-2">
         <div className="flex items-center justify-between text-sm">
           <TruncatedText text={session.envelope?.title ?? ""} className="font-medium" />

@@ -316,7 +316,7 @@ function EntityRulesTab({ entityType, onNewRule }: EntityRulesTabProps) {
       title="No rules for this entity"
       description="Add validation rules to enforce data quality on this entity type."
       action={{ label: "New Rule", onClick: onNewRule }}
-      className="min-h-[20vh] border-0 bg-transparent"
+      className="min-h-[20dvh] border-0 bg-transparent"
     />
   );
 
@@ -356,7 +356,7 @@ function EntityRulesTab({ entityType, onNewRule }: EntityRulesTabProps) {
             title="Failed to load rules"
             description="Something went wrong loading validation rules."
             action={{ label: "Retry", onClick: handleRetry }}
-            className="min-h-[20vh] border-0 bg-transparent"
+            className="min-h-[20dvh] border-0 bg-transparent"
           />
         ) : (
           <Card className="bg-card rounded-lg border border-border shadow-sm">

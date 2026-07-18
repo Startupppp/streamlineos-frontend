@@ -226,7 +226,7 @@ export default function DealAgingPage() {
                 illustration={<EmptyDealsIllustration />}
                 title="All deals are moving smoothly"
                 description="No deals are currently stuck in any pipeline stage."
-                className="border-0 bg-transparent min-h-[40vh]"
+                className="border-0 bg-transparent min-h-[40dvh]"
               />
             }
             minWidth="780px"

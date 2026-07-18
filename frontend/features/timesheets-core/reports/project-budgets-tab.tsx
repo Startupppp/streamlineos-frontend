@@ -213,7 +213,7 @@ export function ProjectBudgetsTab() {
           title="No budgets yet"
           description="Set a project budget to track hours or spend against a target."
           action={canManage ? { label: "Add budget", onClick: handleAdd } : undefined}
-          className="min-h-[40vh]"
+          className="min-h-[40dvh]"
         />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

@@ -130,7 +130,7 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
                     title="No versions yet"
                     description="Content changes will be saved as versions automatically."
                     compact
-                    className="flex-1 min-h-[40vh]"
+                    className="flex-1 min-h-[40dvh]"
                   />
                 )}
                 <div className="space-y-2">
@@ -199,7 +199,7 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
                   title="Empty version"
                   description="No content was saved in this version."
                   compact
-                  className="flex-1 min-h-[40vh]"
+                  className="flex-1 min-h-[40dvh]"
                 />
               )}
             </SheetBody>

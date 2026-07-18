@@ -9,6 +9,12 @@ type TurnstileApi = {
   remove: (widgetId: string) => void;
 };
 
+declare global {
+  interface Window {
+    turnstile?: TurnstileApi;
+  }
+}
+
 type Props = {
   onToken: (token: string | null) => void;
   theme?: "light" | "dark" | "auto";
@@ -24,7 +30,7 @@ export function TurnstileWidget({ onToken, theme = "light", className }: Props) 
   const render = useCallback(() => {
     if (!siteKey || !containerRef.current) return;
     if (widgetIdRef.current) return;
-    const w = window as unknown as { turnstile?: TurnstileApi };
+    const w = window;
     if (!w.turnstile) return;
     widgetIdRef.current = w.turnstile.render(containerRef.current, {
       sitekey: siteKey,
@@ -38,7 +44,7 @@ export function TurnstileWidget({ onToken, theme = "light", className }: Props) 
   useEffect(() => {
     render();
     return () => {
-      const w = window as unknown as { turnstile?: TurnstileApi };
+      const w = window;
       if (widgetIdRef.current && w.turnstile) {
         try {
           w.turnstile.remove(widgetIdRef.current);

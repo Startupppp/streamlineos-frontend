@@ -72,13 +72,13 @@ export default function LiveChatWidgetPage() {
   );
 
   if (!hydrated) {
-    return <main className="min-h-screen surface-soft" />;
+    return <main className="min-h-dvh surface-soft" />;
   }
 
   const messages = sessionQuery.data?.messages ?? [];
 
   return (
-    <main className="min-h-screen surface-soft flex items-start justify-center pt-8 sm:pt-12 px-4">
+    <main className="min-h-dvh surface-soft flex items-start justify-center pt-8 sm:pt-12 px-4">
       <div className="w-full max-w-md">
         <div className="gradient-brand text-white rounded-t-2xl px-6 py-6 text-center shadow-noir">
           <MessageCircle className="h-6 w-6 mx-auto mb-1" />

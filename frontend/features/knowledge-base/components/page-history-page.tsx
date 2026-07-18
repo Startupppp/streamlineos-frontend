@@ -151,7 +151,7 @@ export default function PageHistoryPage({ pageId }: PageHistoryPageProps) {
   if (pageError || !currentPage) {
     return (
       <PageWrapper title="Page history" backHref={backHref}>
-        <div className="flex flex-col items-center justify-center flex-1 min-h-[40vh] gap-3">
+        <div className="flex flex-col items-center justify-center flex-1 min-h-[40dvh] gap-3">
           <p className="text-sm text-muted-foreground">Failed to load page.</p>
           <Button variant="outline" size="sm" onClick={() => router.refresh()}>
             Retry

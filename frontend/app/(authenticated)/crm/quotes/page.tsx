@@ -368,7 +368,7 @@ export default function QuotesPage() {
                       ? { label: "Clear filters", onClick: handleClearFilters }
                       : undefined
                   }
-                  className="border-0 bg-transparent min-h-[40vh]"
+                  className="border-0 bg-transparent min-h-[40dvh]"
                 />
               }
               pagination={{

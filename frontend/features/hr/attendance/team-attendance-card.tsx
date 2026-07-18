@@ -155,7 +155,7 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
     });
   }, [data, search, statusFilter, departmentFilter]);
 
-  const listMaxClass = expanded ? "max-h-[min(70vh,36rem)]" : "max-h-72";
+  const listMaxClass = expanded ? "max-h-[min(70dvh,36rem)]" : "max-h-72";
 
   return (
     <Card className="overflow-hidden rounded-2xl border border-border/70 bg-card/90 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)]">

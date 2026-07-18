@@ -10,7 +10,6 @@ import {
   useTeamAvailability,
   useActiveSprintSummary,
   useRecentActivity,
-  useRoleStats,
   useTodayActivities,
   useMyIssues,
 } from "@/hooks/api/dashboard";
@@ -23,7 +22,6 @@ import { Button } from "@/components/ui/button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ClockInWidget } from "@/components/attendance/clock-in-widget";
 import { DashboardStatsSkeleton } from "@/components/ui/dashboard-skeleton";
-import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -33,10 +31,7 @@ import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { fadeUp } from "@/lib/motion-variants";
 import { getGreeting, getFirstName } from "@/lib/format-utils";
-import {
-  QuickActions,
-  getQuickActionsForRole,
-} from "@/features/dashboard/quick-actions";
+import { QuickActions } from "@/features/dashboard/quick-actions";
 import { SprintCard } from "@/features/dashboard/sprint-card";
 import { TeamCard } from "@/features/dashboard/team-card";
 import {
@@ -46,75 +41,56 @@ import {
 import { RecentProjectsCard } from "@/features/dashboard/recent-projects-card";
 import { RecentActivityCard } from "@/features/dashboard/recent-activity-card";
 import { WidgetSkeleton } from "@/components/dashboard/widget-skeleton";
-import { useCan } from "@/hooks/api/access";
 import { ModuleSetupBanners } from "@/features/dashboard/module-setup-banners";
+import { useDashboardAccess } from "@/features/dashboard/use-dashboard-access";
 import { useDashboardStatCards } from "@/features/dashboard/use-dashboard-stat-cards";
+import {
+  LeavesTodayWidget,
+  TeamAttendanceWidget,
+  PendingApprovalsWidget,
+  BirthdaysWidget,
+  LeaveBalanceWidget,
+  UpcomingHolidaysWidget,
+} from "@/features/dashboard/hr-widgets";
+import { PublicDocumentsCard } from "@/features/dashboard/public-documents-card";
+import { MyTasksWidget } from "@/components/dashboard/my-tasks-widget";
+import { TimesheetWidget } from "@/components/dashboard/timesheet-widget";
+import { AnnouncementsWidget } from "@/components/dashboard/announcements-widget";
+import { UpcomingEventsWidget } from "@/components/dashboard/upcoming-events-widget";
 
-const CeoDashboard = dynamic(
+const ExecutiveKpiWidget = dynamic(
   () =>
-    import("@/features/dashboard/ceo-dashboard").then((m) => ({
-      default: m.CeoDashboard,
+    import("@/components/dashboard/executive-kpi-widget").then((m) => ({
+      default: m.ExecutiveKpiWidget,
     })),
-  { loading: () => <WidgetSkeleton rows={5} /> },
+  { loading: () => <WidgetSkeleton rows={2} /> },
 );
 
-const HrDashboard = dynamic(
+const BusinessPulseWidget = dynamic(
   () =>
-    import("@/features/dashboard/hr-dashboard").then((m) => ({
-      default: m.HrDashboard,
+    import("@/components/dashboard/project-health-widget").then((m) => ({
+      default: m.BusinessPulseWidget,
     })),
-  { loading: () => <WidgetSkeleton rows={5} /> },
+  { loading: () => <WidgetSkeleton rows={2} /> },
 );
-
-const SalesDashboard = dynamic(
-  () =>
-    import("@/features/dashboard/sales-dashboard").then((m) => ({
-      default: m.SalesDashboard,
-    })),
-  { loading: () => <WidgetSkeleton rows={5} /> },
-);
-
-const EmployeeDashboard = dynamic(
-  () =>
-    import("@/features/dashboard/employee-dashboard").then((m) => ({
-      default: m.EmployeeDashboard,
-    })),
-  { loading: () => <WidgetSkeleton rows={5} /> },
-);
-
-const SALES_ROLES = ["SALES"] as const;
-const HR_ROLES = ["HR", "BRANCH_HR"] as const;
-const PROJECT_ROLES = [
-  "ENGINEERING",
-  "DESIGN",
-  "VIDEO_EDITOR",
-  "DIGITAL_MARKETING",
-  "CUSTOMER_SUPPORT",
-] as const;
-
-type SalesRole = (typeof SALES_ROLES)[number];
-type HrRole = (typeof HR_ROLES)[number];
-type ProjectRole = (typeof PROJECT_ROLES)[number];
-
-function isSalesRole(r: string | undefined): r is SalesRole {
-  return r !== undefined && (SALES_ROLES as readonly string[]).includes(r);
-}
-
-function isHrRole(r: string | undefined): r is HrRole {
-  return r !== undefined && (HR_ROLES as readonly string[]).includes(r);
-}
-
-function isProjectRole(r: string | undefined): r is ProjectRole {
-  return r !== undefined && (PROJECT_ROLES as readonly string[]).includes(r);
-}
 
 export function DashboardClient() {
   const router = useRouter();
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
   const firstName = getFirstName(session);
-  const role = session?.user?.role;
-  const isAdmin = useCan("hr:employees:manage");
+  const access = useDashboardAccess();
+  const {
+    hrEnabled,
+    crmEnabled,
+    projectsEnabled,
+    canViewAttendance,
+    canViewLeaves,
+    canApproveLeaves,
+    canViewExecutive,
+    canViewCrmLeads,
+    canViewTickets,
+  } = access;
 
   const {
     data: stats,
@@ -127,26 +103,27 @@ export function DashboardClient() {
     data: recentProjects,
     isLoading: projectsLoading,
     error: projectsError,
-  } = useRecentProjects();
+  } = useRecentProjects({ enabled: projectsEnabled && canViewTickets });
   const { data: teamAvailability, isLoading: teamLoading } =
-    useTeamAvailability();
+    useTeamAvailability({ enabled: hrEnabled && canViewAttendance });
   const {
     data: recentActivity,
     isLoading: activityLoading,
     error: activityError,
-  } = useRecentActivity();
+  } = useRecentActivity({ enabled: projectsEnabled && canViewTickets });
 
   const {
     data: myIssuesData,
     isLoading: ticketsLoading,
     error: ticketsError,
-  } = useMyIssues(currentUserId ?? "");
+  } = useMyIssues(currentUserId ?? "", { enabled: projectsEnabled });
 
   const { data: sprintSummary, isLoading: sprintLoading } =
-    useActiveSprintSummary();
+    useActiveSprintSummary({ enabled: projectsEnabled });
 
-  const { data: roleStats } = useRoleStats();
-  const { data: todayActivities } = useTodayActivities();
+  const { data: todayActivities } = useTodayActivities({
+    enabled: crmEnabled && canViewCrmLeads,
+  });
 
   const prevUnreadRef = useRef<number | null>(null);
   const { data: unreadData } = useUnreadNotificationCount();
@@ -182,12 +159,12 @@ export function DashboardClient() {
       if (todayActivities.length === 1) {
         const a = todayActivities[0];
         toast.info(
-          `You have a scheduled ${a.type} today: ${a.subject || "No subject"}`,
+          `Scheduled ${a.type} today: ${a.subject || "No subject"}`,
           { duration: 6000 },
         );
       } else {
         toast.info(
-          `You have ${todayActivities.length} scheduled meetings/calls today`,
+          `${todayActivities.length} meetings/calls scheduled today`,
           { duration: 6000 },
         );
       }
@@ -205,8 +182,6 @@ export function DashboardClient() {
     () => router.push("/projects/all"),
     [router],
   );
-
-  const statCards = useDashboardStatCards(stats, role, roleStats);
 
   const sortedMyTickets = useMemo((): DashboardTicket[] => {
     const raw = myIssuesData ?? [];
@@ -231,22 +206,17 @@ export function DashboardClient() {
     return [...inProgress, ...todo].map(toDashboardTicket);
   }, [myIssuesData]);
 
-  if (isLoading) {
-    const quickActionsList = getQuickActionsForRole(role);
-    const quickActionsGridClass = `grid grid-cols-2 gap-3 sm:grid-cols-3 ${
-      quickActionsList.length >= 5
-        ? "md:grid-cols-5"
-        : quickActionsList.length >= 4
-          ? "md:grid-cols-4"
-          : "md:grid-cols-3"
-    }`;
+  const statCards = useDashboardStatCards(stats, access, sortedMyTickets.length);
 
+  const showHrTeamRow =
+    hrEnabled && (canViewLeaves || canViewAttendance || canApproveLeaves);
+  const showProjectsRow = projectsEnabled;
+  const showBottomRow =
+    (projectsEnabled && canViewTickets) || (hrEnabled && canViewAttendance);
+
+  if (isLoading || access.accessLoading) {
     return (
-      <PageWrapper
-        title="Dashboard"
-        subtitle="Loading your workspace…"
-        actions={<Skeleton className="h-9 w-32 rounded-md" />}
-      >
+      <PageWrapper title="Dashboard" subtitle="Loading your workspace…">
         <div
           className="space-y-4"
           role="status"
@@ -254,21 +224,6 @@ export function DashboardClient() {
           aria-label="Loading dashboard"
         >
           <DashboardStatsSkeleton />
-          {quickActionsList.length > 0 && (
-            <div className={quickActionsGridClass}>
-              {quickActionsList.map((a) => (
-                <div
-                  key={a.label}
-                  className="rounded-xl border border-border/70 bg-card p-4 shadow-noir"
-                >
-                  <div className="flex flex-col items-center gap-2">
-                    <Skeleton className="h-10 w-10 rounded-lg" />
-                    <Skeleton className="h-3 w-20" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
           <div className="grid gap-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
             <WidgetSkeleton rows={4} />
             <WidgetSkeleton rows={3} />
@@ -320,20 +275,14 @@ export function DashboardClient() {
     <PageWrapper
       title={`${greeting}, ${firstName}`}
       subtitle={`${todayFormatted} · ${stats.orgName}`}
-      actions={<ClockInWidget />}
+      actions={hrEnabled ? <ClockInWidget /> : undefined}
     >
       <div className="space-y-4">
         {statCards.length > 0 && (
           <motion.div variants={fadeUp} initial="hidden" animate="visible">
             <StatCardGrid
               cols={
-                statCards.length >= 5
-                  ? 5
-                  : statCards.length >= 4
-                    ? 4
-                    : statCards.length >= 3
-                      ? 3
-                      : 2
+                statCards.length >= 4 ? 4 : statCards.length >= 3 ? 3 : 2
               }
             >
               {statCards.map((stat) => (
@@ -355,17 +304,58 @@ export function DashboardClient() {
 
         <ModuleSetupBanners />
 
-        {isAdmin ? (
-          <CeoDashboard />
-        ) : isSalesRole(role) ? (
-          <SalesDashboard />
-        ) : isHrRole(role) ? (
-          <HrDashboard />
-        ) : (
-          <EmployeeDashboard />
+        {canViewExecutive && (
+          <motion.div variants={fadeUp} initial="hidden" animate="visible">
+            <ExecutiveKpiWidget />
+          </motion.div>
         )}
 
-        {(isAdmin || isProjectRole(role)) && (
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          animate="visible"
+          className="grid gap-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
+        >
+          {projectsEnabled && <MyTasksWidget />}
+          {projectsEnabled && <TimesheetWidget />}
+          {hrEnabled && <LeaveBalanceWidget />}
+          <AnnouncementsWidget />
+          <UpcomingEventsWidget />
+          {canViewExecutive && <BusinessPulseWidget />}
+        </motion.div>
+
+        {showHrTeamRow && (
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            animate="visible"
+            className="grid gap-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
+          >
+            {canViewLeaves && <LeavesTodayWidget />}
+            {canViewAttendance && <TeamAttendanceWidget />}
+            {canApproveLeaves && <PendingApprovalsWidget />}
+          </motion.div>
+        )}
+
+        {hrEnabled && (
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            animate="visible"
+            className="grid gap-3 grid-cols-1 md:grid-cols-2"
+          >
+            <BirthdaysWidget />
+            <UpcomingHolidaysWidget />
+          </motion.div>
+        )}
+
+        {hrEnabled && (
+          <motion.div variants={fadeUp} initial="hidden" animate="visible">
+            <PublicDocumentsCard />
+          </motion.div>
+        )}
+
+        {showProjectsRow && (
           <motion.div
             variants={fadeUp}
             initial="hidden"
@@ -388,40 +378,42 @@ export function DashboardClient() {
           </motion.div>
         )}
 
-        <motion.div
-          variants={fadeUp}
-          initial="hidden"
-          animate="visible"
-          className={`grid gap-3 grid-cols-1 ${
-            isAdmin ? "sm:grid-cols-2 lg:grid-cols-3" : "sm:grid-cols-2"
-          } md:auto-rows-[22rem]`}
-        >
-          {(isAdmin || isProjectRole(role)) && (
-            <div className="sm:col-span-1 min-h-0">
-              <RecentProjectsCard
-                projects={recentProjects?.map((p) => ({
-                  ...p,
-                  key: p.key ?? "",
-                }))}
-                isLoading={projectsLoading}
-                error={projectsError}
-                onCreateProject={handleGoToProjects}
-              />
-            </div>
-          )}
-          <div className="sm:col-span-1 min-h-0">
-            <RecentActivityCard
-              items={recentActivity}
-              isLoading={activityLoading}
-              error={activityError}
-            />
-          </div>
-          {isAdmin && (
-            <div className="sm:col-span-2 lg:col-span-1 min-h-0">
-              <TeamCard members={teamAvailability} isLoading={teamLoading} />
-            </div>
-          )}
-        </motion.div>
+        {showBottomRow && (
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            animate="visible"
+            className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 md:auto-rows-[22rem]"
+          >
+            {projectsEnabled && canViewTickets && (
+              <div className="min-h-0">
+                <RecentProjectsCard
+                  projects={recentProjects?.map((p) => ({
+                    ...p,
+                    key: p.key ?? "",
+                  }))}
+                  isLoading={projectsLoading}
+                  error={projectsError}
+                  onCreateProject={handleGoToProjects}
+                />
+              </div>
+            )}
+            {projectsEnabled && canViewTickets && (
+              <div className="min-h-0">
+                <RecentActivityCard
+                  items={recentActivity}
+                  isLoading={activityLoading}
+                  error={activityError}
+                />
+              </div>
+            )}
+            {hrEnabled && canViewAttendance && (
+              <div className="min-h-0">
+                <TeamCard members={teamAvailability} isLoading={teamLoading} />
+              </div>
+            )}
+          </motion.div>
+        )}
       </div>
     </PageWrapper>
   );

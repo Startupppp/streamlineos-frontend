@@ -220,7 +220,7 @@ export function CandidateComparisonDialog({ candidates, onClose }: Props) {
             {sharedSkills.size > 0 && ` ${sharedSkills.size} shared skill${sharedSkills.size !== 1 ? "s" : ""} highlighted.`}
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="max-h-[75vh]">
+        <ScrollArea className="max-h-[75dvh]">
           <div className="flex divide-x px-4 py-4">
             {candidates.map((c) => (
               <CandidateColumn key={c.id} candidate={c} allSkills={sharedSkills} />

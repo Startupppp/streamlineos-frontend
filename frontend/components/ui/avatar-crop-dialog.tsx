@@ -102,7 +102,7 @@ export function AvatarCropDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto p-0">
+      <DialogContent className="sm:max-w-md max-h-[90dvh] overflow-y-auto p-0">
         <div className="px-6 pt-6">
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
@@ -110,7 +110,7 @@ export function AvatarCropDialog({
           </DialogHeader>
         </div>
 
-        <div className="relative w-full aspect-square max-h-[50vh] bg-muted overflow-hidden">
+        <div className="relative w-full aspect-square max-h-[50dvh] bg-muted overflow-hidden">
           <Cropper
             image={imageSrc}
             crop={crop}

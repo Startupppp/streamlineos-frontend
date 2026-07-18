@@ -221,7 +221,7 @@ export function ReservationsPanel() {
           <InventoryEmptyState
             title="No active reservations"
             description="Reservations will appear here when stock is reserved for sales orders or other sources."
-            className="flex-1 min-h-[30vh]"
+            className="flex-1 min-h-[30dvh]"
           />
         }
         pagination={{

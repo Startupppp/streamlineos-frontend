@@ -134,7 +134,7 @@ export default async function RootLayout({
         <WebsiteJsonLd />
         <GoogleTagManagerHead nonce={nonce} />
       </head>
-      <body className="font-sans min-h-screen bg-background text-foreground antialiased selection:bg-blue-500/20 selection:text-blue-950 dark:selection:bg-blue-400/30 dark:selection:text-blue-50">
+      <body className="font-sans min-h-dvh bg-background text-foreground antialiased selection:bg-blue-500/20 selection:text-blue-950 dark:selection:bg-blue-400/30 dark:selection:text-blue-50">
         <GoogleTagManagerNoscript />
         <SessionProvider session={session}>
           <QueryProvider>

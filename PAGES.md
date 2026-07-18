@@ -49,7 +49,7 @@ Ordered money-path first. Check off each page after fixing.
 ---
 
 ## Dashboard
-- [x] `/dashboard` — Removed type cast, duplicate import, dead widget exports, useEffect data fetch; added TanStack Query hook for public docs; named all event handlers; fixed empty states, grid orphan, loading skeleton alignment, quick-actions deduplication, comments removed
+- [x] `/dashboard` — Access-driven rebuild: legacy `session.user.role` branching (CEO/HR/Sales/Employee dashboards) replaced by capability-driven composition (`useDashboardAccess`: module enablement + RBAC permissions gate every widget/stat-card/quick-action; queries `enabled`-gated so non-permitted endpoints are never called); backend `/dashboard/*` endpoints hardened with `ModuleGuard`/`PermissionGuard` (+`stats` permission-masked per user), zombie endpoints (`role-stats`, `manager`, `branch-overview`, `pending-requests`, `upcoming-leaves`) and dead role-dashboard files deleted
 
 ---
 
@@ -103,7 +103,7 @@ Ordered money-path first. Check off each page after fixing.
 - [x] `/billing/invoices/new` — New invoice creation
 - [x] `/billing/invoices/[invoiceId]` — Invoice detail: line items table, totals, payments history, record-payment dialog, send/mark-paid/delete actions
 - [x] `/billing/checkout` — Multi-step checkout wizard: plan selector → billing cycle → coupon → review & pay with Razorpay; 20% annual discount; coupon validation
-- [x] `/billing/ai-credits` — AI Credits wallet: balance stats, auto top-up toggle, credit pack cards, usage history table with transaction types
+- [x] `/billing/ai-credits` — AI Credits wallet: balance stats, auto top-up toggle, credit pack cards, usage history table with server-paginated transactions (page/limit via `useAiCreditTransactions`; page-size selector 10/20/50; `GET /billing/ai-credits/transactions` caps at 100/page)
 - [x] `/billing/analytics` — Revenue Analytics (platform admin): MRR/ARR/ARPU/churn KPI cards, MRR trend BarChart, period selector (3m/6m/12m)
 - [x] `/billing/affiliate` — Affiliate Dashboard: register CTA, referral link copy, send invite email, commission history table; empty state when not registered
 - [x] `/billing/enterprise-quotes` — Enterprise Quotes list: status filter, table (ref/subject/status/seats/value/valid-until/deal), New Quote Sheet (seat negotiation + custom pricing + contract terms + Zod validation + live total preview), skeleton + empty + error states
@@ -314,7 +314,7 @@ Ordered money-path first. Check off each page after fixing.
 - [x] `/projects/command-center` — Command Center: eyebrow on all states, StatCardGrid + PageSection pattern (reference-aligned); **2026-07-13 quick-nav 404 fix** — pinned links repointed to real workspace routes (my-work/all-work/approvals/roadmap/portfolios), workspace-level "Create Sprint" removed (project-scoped), project-card "New Task" now opens the board create dialog via `?create=1` (wired through `CreateTicketDialog` `externalOpen`)
 - [x] `/projects/my-work` — My Work: PmPageShell + glass StatCards, denser tabs, due-bucket PmPanels, WorkItemRow TEXT_ONE_LINE/PM_ROW (Linear-grade polish 2026-07-14)
 - [x] `/projects/all-work` — All Work: PmPageShell + PM_TOOLBAR filters, theme-token Me scope, glass list/board/table sections, overflow-safe titles, polished empty/error/loading + pagination chrome (Linear-grade polish 2026-07-14)
-- [x] `/projects/settings/integrations` — Git connections + AI Agent Access (MCP tokens); glass PmPageShell chrome (2026-07-14); backed by `/agent-tokens` + `/agent/v1/*` + `mcp-server.mjs`
+- [x] `/projects/settings/integrations` — Git connections + AI Agent Access (MCP tokens); glass PmPageShell chrome (2026-07-14); PageWrapper ScrollArea scrolls full page (removed fill height-lock + PmPageShell overflow clip, 2026-07-18); backed by `/agent-tokens` + `/agent/v1/*` + `mcp-server.mjs`
 - [x] `/projects/portfolio` — Portfolio health view: eyebrow, subtitle, StatCardGrid, filters in PageWrapper, rounded-xl table shell
 - [x] `/projects/[projectId]/releases` — Releases: PmPageShell + glass table panel, overflow-safe names, animated create/delete, getErrorMessage; create/edit Sheet w/ TipTap notes + status badges (Linear-grade polish 2026-07-14)
 - [x] `/projects/[projectId]/workload` — Workload (dedicated route exposing existing `WorkloadView`; was only a hidden view-switcher tab)
@@ -356,7 +356,7 @@ Ordered money-path first. Check off each page after fixing.
 
 - [x] `/projects/[projectId]/incidents` (+`/[incidentId]`) — Incidents & SLA: severity/status, SLA response+resolution timers with breach chips, timeline updates, owner
 - [x] `/projects/[projectId]/forms` (+`/[formId]`) — Forms builder: 11 field types, dynamic renderer, actions (create_task/bug on submit), submissions + process
-- [x] `/projects/portfolios` (+`/[portfolioId]`) — Portfolios: PmPageShell/PmPanel table + PM_TOOLBAR filters, dark-mode status/health badges, glass detail + PM_ROW linked projects, router.push on delete (2026-07-14 Linear polish)
+- [x] `/projects/portfolios` (+`/[portfolioId]`) — Portfolios: PmPageShell/PmPanel table + PM_TOOLBAR filters, dark-mode status/health badges, glass detail + PM_ROW linked projects, router.push on delete (2026-07-14 Linear polish); **2026-07-18 fix** — list always 400 because `GET /projects/:projectId` (ParseIntPipe) registered before static `/projects/portfolios` (ProjectsModule pulled early via ProjectsExecutionModule). Leaf get/patch/delete moved to late `ProjectsByIdModule` so static portfolio/program routes win.
 - [x] `/projects/programs` (+`/[programId]`) — HARD-DELETED frontend surface (2026-07-14); portfolios kept
 - [x] `/projects/[projectId]/workflow` — Workflow builder: per-status WIP limits + configurable from→to transition rules (requiredFields/allowedRoles/requiresApproval, "Any status")
 - [x] `/projects/[projectId]/chat` — Project Chat tab (wires existing entity-channel) + "Convert message → task/bug" action in chat message toolbar
@@ -546,7 +546,7 @@ All reconciled (hook URLs↔routes, chat signatures, PermissionKeys). Build not 
 - [x] ~~`/settings/integrations/calendar`~~ — REMOVED 2026-07-05: superseded by the in-calendar accounts sheet on `/calendar` (Composio-managed connections)
 - [x] ~~`/settings/data-hub`~~ — DELETED 2026-07-05: module-owned import/export moved to `/crm/settings/import-export`, `/hr/settings/import-export`, `/payroll/settings/import-export`
 - [x] ~~`/settings/ai`~~ — REDIRECT 2026-07-05 → `/crm/settings/ai`
-- [x] `/projects/settings/integrations` — Integrations: PmPageShell glass connection cards + setup panel, agent tokens glass section, getErrorMessage (2026-07-14 Linear polish)
+- [x] `/projects/settings/integrations` — Integrations: PmPageShell glass connection cards + setup panel, agent tokens glass section, getErrorMessage; page body scrolls via PageWrapper ScrollArea (2026-07-18)
 - [x] `/support/settings/automations` — Support ticket automation rules
 - [x] `/accounting/settings/automations` — Finance automation rules
 - [x] `/settings/api-tokens` — API tokens
@@ -600,6 +600,7 @@ All reconciled (hook URLs↔routes, chat signatures, PermissionKeys). Build not 
 - [x] Auth platform hardening wave 2 (2026-07-02) — Typed error contract: `{ code, message, details? }` envelope (`AUTH_ACCOUNT_LOCKED` + retryAfterSeconds, `AUTH_MFA_REQUIRED`, `AUTH_TOKEN_INVALID/EXPIRED`, `AUTH_RATE_LIMITED`, …); frontend branches via `lib/parse-auth-error.ts`, zero string matching. One password policy 8–128 + complexity (`lib/password-utils.ts` constants; backend `passwordSchema`). Register anti-enumeration (`{success:true}` always; silent verification resend for unverified existing). New `POST /auth/force-change-password` wired to forced-change UI mode. All tokens hashed at rest (verification + invitation + magic-link); auto-login tokens ≤10min; invite validate/accept rate-limited. Email reliability: DB outbox (`email_outbox`) + cron retries w/ exponential backoff + DEAD status DLQ + error alerts. `getSessionData` now Redis-cached 60s (12 existing invalidation sites finally effective). Invitation lifecycle consolidated from 3 duplicate implementations into one `invitations.service.ts` (11 routes preserved); `auth.service` split (`auth-tokens.service.ts`); `organization/users` services split under the 500-line cap; 10 zombie `/auth/*` endpoints deleted (superseded by `/me/*`, `/hr/sessions`). Double audit logging removed (`userActivity` table dropped; `audit_logs` gained actorUserId/resourceType/resourceId). Schema: 5 FK indexes added; ranked normalization plan produced for 9 remaining JSONB-array violations (interview panels, booking interviewers, calibration participants, roles.permissions dual-source, users.skills dual-write, enabledModules dual-source, announcement targets, deal meeting attendees). Verified: backend tsc ✓ build ✓ boot+/health 200 ✓ frontend tsc ✓ lint 0 errors ✓; dev-DB migration applied.
 - [x] Production passwordless login redirect loop fixed (2026-07-18) — Middleware checks the HTTPS `__Secure-authjs.session-token` first in production (explicit `salt` + `secureCookie` matching the cookie name), retains the unprefixed fallback, and keeps development on the unprefixed cookie. Session `update()` now refreshes onboarding/active flags from `/auth/session-data`; server JWT minting unwraps the Nest `{success,data}` envelope so live org context is not wiped to null.
 - [x] Feedbucket snapDOM R2 CSP compatibility fixed (2026-07-18) — Both static (`next.config`) and nonce-based (`middleware`) CSP policies allow HTTPS `img-src`/`connect-src` reads from `*.r2.dev` (and `*.r2.cloudflarestorage.com` on connect), plus `worker-src 'self' blob:` on both so dual CSP headers do not block snapDOM workers; bucket CORS remains an infrastructure requirement.
+- [x] Feedbucket snapDOM R2 avatar CORS noise fixed (2026-07-18) — Root cause: public R2 avatar URLs lack `Access-Control-Allow-Origin`, so snapDOM's fetch→dataURL step logged `[snapDOM] Network/CORS…`. In-app captures now use snapDOM `useProxy` via same-origin `/_next/image` (existing `remotePatterns` allowlist); third-party embeds skip the proxy and rely on bucket CORS. `backend` `setup:r2` applies public GET/HEAD CORS (`*`) so direct embeds work after re-run.
 
 ---
 

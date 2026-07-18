@@ -228,7 +228,7 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
           title="No test runs"
           description="Create a test run to start executing tests."
           action={canManage ? { label: "New Test Run", onClick: handleNewRun } : undefined}
-          className="min-h-[32vh] flex-1"
+          className="min-h-[32dvh] flex-1"
         />
       ) : (
         <DataTable<TestRun>

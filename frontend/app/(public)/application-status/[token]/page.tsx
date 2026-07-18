@@ -50,7 +50,7 @@ export default function ApplicationStatusPage({ params }: Props) {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-background flex items-center justify-center">
+      <main className="min-h-dvh bg-background flex items-center justify-center">
         <div className="text-center text-muted-foreground">
           <svg className="w-8 mx-auto mb-3 animate-spin opacity-60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M21 12a9 9 0 1 1-6.219-8.56" />
@@ -63,7 +63,7 @@ export default function ApplicationStatusPage({ params }: Props) {
 
   if (error || !data) {
     return (
-      <main className="min-h-screen bg-background flex items-center justify-center px-4">
+      <main className="min-h-dvh bg-background flex items-center justify-center px-4">
         <Card className="w-full max-w-md text-center">
           <CardContent className="py-10">
             <svg className="h-10 w-10 mx-auto mb-4 text-destructive opacity-60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -80,7 +80,7 @@ export default function ApplicationStatusPage({ params }: Props) {
   const config = STATUS_CONFIG[data.status] ?? { label: data.status, variant: "secondary" as const, description: "" };
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-dvh bg-background">
       <div className="max-w-xl mx-auto px-4 py-12">
         <Card>
           <CardHeader className="pb-3">

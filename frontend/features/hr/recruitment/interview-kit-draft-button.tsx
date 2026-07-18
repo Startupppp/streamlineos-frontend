@@ -151,7 +151,7 @@ export function InterviewKitDraftButton({ jobPostingId, jobTitle }: InterviewKit
       </AnimatedIconButton>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-2xl flex flex-col p-0 gap-0 max-h-[85vh]">
+        <DialogContent className="max-w-2xl flex flex-col p-0 gap-0 max-h-[85dvh]">
           <DialogHeader className="shrink-0 px-5 pt-5 pb-3 border-b">
             <DialogTitle className="text-base flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-primary" />

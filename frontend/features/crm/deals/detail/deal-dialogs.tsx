@@ -76,7 +76,7 @@ export function MeetingDialog({ open, onOpenChange, onSubmit, isPending }: Meeti
             <Calendar className="h-5 w-5 text-primary" /> Log Meeting
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-3 mt-2 max-h-[60vh] overflow-y-auto pr-1">
+        <div className="space-y-3 mt-2 max-h-[60dvh] overflow-y-auto pr-1">
           <div className="space-y-1.5">
             <Label>Title *</Label>
             <Input placeholder="Meeting title..." value={title} onChange={handleTitleChange} />

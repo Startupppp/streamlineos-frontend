@@ -252,7 +252,7 @@ export function PermissionMatrix({
         </div>
       ) : (
         <ScrollArea
-          className="max-h-[65vh] lg:max-h-none lg:flex-1 lg:min-h-0"
+          className="max-h-[65dvh] lg:max-h-none lg:flex-1 lg:min-h-0"
           type="auto"
         >
           <div className="divide-y divide-border/30">

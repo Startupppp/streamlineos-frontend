@@ -72,7 +72,7 @@ function actionSummary(actions: AutomationRule["actions"]) {
 
 function ModuleDisabledCard({ name }: { name: string }) {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[24vh] gap-4 py-12">
+    <div className="flex flex-col items-center justify-center min-h-[24dvh] gap-4 py-12">
       <Building2 className="h-9 w-9 text-muted-foreground/40" />
       <div className="text-center">
         <p className="font-semibold text-sm text-foreground">{name} module not enabled</p>
@@ -295,7 +295,7 @@ export function ModuleAutomationsSettings({ config }: { config: ModuleAutomation
             </AnimatedIconButton>
           </div>
           {moduleRules.length === 0 ? (
-            <div className="flex min-h-[20vh]">
+            <div className="flex min-h-[20dvh]">
               <EmptyState
                 illustration={<EmptyActivityIllustration />}
                 title={`No ${moduleLabel} automation rules yet`}

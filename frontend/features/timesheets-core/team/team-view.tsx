@@ -273,7 +273,7 @@ export function TeamView() {
             title="Couldn't load team timesheets"
             description="Something went wrong while fetching team data."
             onRetry={handleRetry}
-            className="min-h-[30vh]"
+            className="min-h-[30dvh]"
           />
         ) : (
           <Card>

@@ -41,7 +41,7 @@ export function RouteErrorBoundary({
 
   if (layout === "fullscreen")
     return (
-      <div className="min-h-screen w-full noir-mesh flex items-center justify-center p-4">
+      <div className="min-h-dvh w-full noir-mesh flex items-center justify-center p-4">
         <div className="max-w-md">{content}</div>
       </div>
     );

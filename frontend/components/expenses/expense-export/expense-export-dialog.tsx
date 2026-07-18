@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import {
   Download,
   FileSpreadsheet,
@@ -132,6 +132,13 @@ export function ExpenseExportDialog({
   paymentMethods = DEFAULT_PAYMENT_METHODS,
 }: ExpenseExportDialogProps) {
   const [open, setOpen] = useState(false);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    };
+  }, []);
 
   const [format, setFormat] = useState<ExportFormat>("xlsx");
   const [includeHeader, setIncludeHeader] = useState(true);
@@ -253,7 +260,8 @@ export function ExpenseExportDialog({
 
       setExportComplete(true);
       toast.success("Export downloaded successfully!");
-      setTimeout(() => {
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = setTimeout(() => {
         setOpen(false);
         setExportComplete(false);
       }, 1500);

@@ -77,9 +77,9 @@ export function useChatScroll({
   // Stick to bottom for new messages only when already near bottom.
   useEffect(() => {
     if (isLoading) return;
-    if (isAtBottomRef.current) {
-      requestAnimationFrame(() => scrollToBottom("auto"));
-    }
+    if (!isAtBottomRef.current) return;
+    const raf = requestAnimationFrame(() => scrollToBottom("auto"));
+    return () => cancelAnimationFrame(raf);
   }, [messageCount, isLoading, scrollToBottom]);
 
   // Preserve scroll position when older messages are prepended.

@@ -16,6 +16,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { ArrowRight, Briefcase, CheckSquare, AlertCircle } from "lucide-react";
 import { useCan } from "@/hooks/api/access";
 import { useProjects } from "@/hooks/api/projects/projects";
@@ -152,7 +153,7 @@ function PanelHeader({
   actions?: ReactNode;
 }) {
   return (
-    <div className="flex min-w-0 items-center justify-between gap-2 border-b border-border/50 px-3 py-2">
+    <div className="flex shrink-0 min-w-0 items-center justify-between gap-2 border-b border-border/50 px-3 py-2">
       <h2 className="min-w-0 truncate text-xs font-semibold tracking-wide text-foreground">
         {title}
       </h2>
@@ -253,7 +254,7 @@ export function CommandCenterPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Home">
+      <PageWrapper title="Home" noInternalScroll contentClassName="pb-0 sm:pb-0">
         <PmPageShell>
           <StatCardGridSkeleton cols={3} />
           <Skeleton className={cn("h-14 w-full max-w-xl rounded-xl", PM_PANEL)} />
@@ -271,7 +272,7 @@ export function CommandCenterPage() {
 
   if (isError) {
     return (
-      <PageWrapper title="Home">
+      <PageWrapper title="Home" noInternalScroll contentClassName="pb-0 sm:pb-0">
         <PmPageShell withGlow={false}>
           <ErrorState
             title="Failed to load home"
@@ -288,6 +289,8 @@ export function CommandCenterPage() {
       <PageWrapper
         title="Home"
         subtitle="Your issues, projects, and shortcuts"
+        noInternalScroll
+        contentClassName="pb-0 sm:pb-0"
         actions={
           <QuickCreateMenu
             projects={projects}
@@ -298,7 +301,7 @@ export function CommandCenterPage() {
         }
       >
         <PmPageShell>
-          <PmSection index={0}>
+          <PmSection index={0} className="shrink-0">
             <StatCardGrid cols={3}>
               <motion.div
                 whileHover={shouldReduceMotion ? undefined : { y: -2 }}
@@ -347,7 +350,7 @@ export function CommandCenterPage() {
             </StatCardGrid>
           </PmSection>
 
-          <PmSection index={1}>
+          <PmSection index={1} className="shrink-0">
             <PmPanel className="p-2.5">
               <p className="mb-1.5 px-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
                 Jump to
@@ -356,9 +359,12 @@ export function CommandCenterPage() {
             </PmPanel>
           </PmSection>
 
-          <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-5">
-            <PmSection index={2} className="flex min-h-0 flex-col lg:col-span-3">
-              <PmPanel className="flex min-h-0 flex-1 flex-col">
+          <div className="grid min-h-0 flex-1 grid-rows-1 gap-4 overflow-hidden lg:grid-cols-5">
+            <PmSection
+              index={2}
+              className="flex min-h-0 flex-col overflow-hidden lg:col-span-3"
+            >
+              <PmPanel className="flex min-h-0 flex-1 flex-col overflow-hidden">
                 <PanelHeader
                   title="My issues"
                   actions={
@@ -381,7 +387,7 @@ export function CommandCenterPage() {
                     </>
                   }
                 />
-                <div className="min-h-0 flex-1">
+                <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
                   {topWork.length === 0 ? (
                     <EmptyState
                       illustrationPreset="projects"
@@ -402,12 +408,15 @@ export function CommandCenterPage() {
                       ))}
                     </PmStaggerList>
                   )}
-                </div>
+                </ScrollArea>
               </PmPanel>
             </PmSection>
 
-            <PmSection index={3} className="flex min-h-0 flex-col lg:col-span-2">
-              <PmPanel className="flex min-h-0 flex-1 flex-col">
+            <PmSection
+              index={3}
+              className="flex min-h-0 flex-col overflow-hidden lg:col-span-2"
+            >
+              <PmPanel className="flex min-h-0 flex-1 flex-col overflow-hidden">
                 <PanelHeader
                   title="Projects"
                   actions={
@@ -435,39 +444,41 @@ export function CommandCenterPage() {
                     </>
                   }
                 />
-                <div className="min-h-0 flex-1 p-1.5">
-                  {projects.length === 0 ? (
-                    <EmptyState
-                      illustrationPreset="projects"
-                      title="No projects yet"
-                      description="Create a project to start shipping."
-                      className="min-h-[12rem]"
-                      action={
-                        canCreateProject
-                          ? { label: "New project", onClick: handleOpenWizard }
-                          : { label: "All projects", href: "/projects/all" }
-                      }
-                    />
-                  ) : (
-                    <PmStaggerList className="flex flex-col gap-1">
-                      {projects.slice(0, 8).map((project) => (
-                        <ProjectCard
-                          key={project.id}
-                          project={project}
-                          onCreateIssue={
-                            canCreateIssue ? handleCreateForProject : undefined
-                          }
-                        />
-                      ))}
-                    </PmStaggerList>
-                  )}
-                </div>
+                <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
+                  <div className="p-1.5">
+                    {projects.length === 0 ? (
+                      <EmptyState
+                        illustrationPreset="projects"
+                        title="No projects yet"
+                        description="Create a project to start shipping."
+                        className="min-h-[12rem]"
+                        action={
+                          canCreateProject
+                            ? { label: "New project", onClick: handleOpenWizard }
+                            : { label: "All projects", href: "/projects/all" }
+                        }
+                      />
+                    ) : (
+                      <PmStaggerList className="flex flex-col gap-1">
+                        {projects.slice(0, 8).map((project) => (
+                          <ProjectCard
+                            key={project.id}
+                            project={project}
+                            onCreateIssue={
+                              canCreateIssue ? handleCreateForProject : undefined
+                            }
+                          />
+                        ))}
+                      </PmStaggerList>
+                    )}
+                  </div>
+                </ScrollArea>
               </PmPanel>
             </PmSection>
           </div>
 
           <motion.p
-            className="text-center text-[10px] text-muted-foreground/70"
+            className="shrink-0 text-center text-[10px] text-muted-foreground/70"
             initial={shouldReduceMotion ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ ...pmSnappy, delay: 0.28 }}

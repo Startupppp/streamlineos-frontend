@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { type UseFormReturn } from "react-hook-form";
 import {
   Mail,
@@ -76,6 +76,13 @@ function CopyChip({
   href?: string;
 }) {
   const [copied, setCopied] = useState(false);
+  const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
+    };
+  }, []);
 
   const handleCopy = useCallback(
     async (e: React.MouseEvent) => {
@@ -85,7 +92,8 @@ function CopyChip({
         await navigator.clipboard.writeText(value);
         setCopied(true);
         toast.success(`${label} copied`);
-        setTimeout(() => setCopied(false), 2000);
+        if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
+        copiedTimerRef.current = setTimeout(() => setCopied(false), 2000);
       } catch {
         toast.error("Failed to copy");
       }

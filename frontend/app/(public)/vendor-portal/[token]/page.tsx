@@ -50,7 +50,7 @@ export default function VendorPortalPage({ params }: Props) {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-background flex items-center justify-center">
+      <main className="min-h-dvh bg-background flex items-center justify-center">
         <p className="text-sm text-muted-foreground">Loading…</p>
       </main>
     );
@@ -58,7 +58,7 @@ export default function VendorPortalPage({ params }: Props) {
 
   if (error || !data) {
     return (
-      <main className="min-h-screen bg-background flex items-center justify-center px-4">
+      <main className="min-h-dvh bg-background flex items-center justify-center px-4">
         <Card className="w-full max-w-md text-center">
           <CardContent className="py-10">
             <p className="font-medium">{error || "Portal link not found"}</p>
@@ -69,7 +69,7 @@ export default function VendorPortalPage({ params }: Props) {
   }
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-dvh bg-background">
       <div className="max-w-2xl mx-auto px-4 py-12">
         <Card>
           <CardHeader className="pb-3">

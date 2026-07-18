@@ -62,7 +62,7 @@ export function SerialDetailClient({ serialId }: SerialDetailClientProps) {
           title="Failed to load serial"
           description="Could not retrieve serial number details. Please try again."
           onRetry={handleRetry}
-          className="flex-1 min-h-[40vh]"
+          className="flex-1 min-h-[40dvh]"
         />
       </PageWrapper>
     );

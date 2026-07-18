@@ -22,7 +22,7 @@ export function PublicSurveyShell({
   return (
     <main
       className={cn(
-        "flex min-h-screen items-center justify-center surface-soft px-4 py-6 sm:py-10",
+        "flex min-h-dvh items-center justify-center surface-soft px-4 py-6 sm:py-10",
         isForm && "items-start sm:items-center",
       )}
     >

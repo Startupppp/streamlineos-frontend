@@ -65,7 +65,7 @@ export function AIEnrichLeadButton({
           Enrich
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-lg flex flex-col p-0 gap-0 max-h-[80vh]">
+      <DialogContent className="max-w-lg flex flex-col p-0 gap-0 max-h-[80dvh]">
         <DialogHeader className="shrink-0 px-5 pt-5 pb-3 border-b">
           <DialogTitle className="text-base flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />

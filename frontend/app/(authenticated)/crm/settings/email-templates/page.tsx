@@ -274,7 +274,7 @@ export default function EmailTemplatesPage() {
             <DialogTrigger asChild>
               <AnimatedIconButton icon={PlusIcon} iconSize={16}>New Template</AnimatedIconButton>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogContent className="sm:max-w-2xl max-h-[80dvh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Create Email Template</DialogTitle>
               </DialogHeader>

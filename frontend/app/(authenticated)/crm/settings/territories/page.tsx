@@ -286,7 +286,7 @@ export default function TerritoriesPage() {
       title="No territories"
       description="Define geographic or segment-based territories to automatically route leads to the right reps."
       action={{ label: "New Territory", onClick: handleOpenNew }}
-      className="flex-1 min-h-[40vh] border-0 bg-transparent"
+      className="flex-1 min-h-[40dvh] border-0 bg-transparent"
     />
   );
 

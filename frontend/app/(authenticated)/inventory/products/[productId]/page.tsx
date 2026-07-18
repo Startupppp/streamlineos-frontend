@@ -192,7 +192,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                 ? getErrorMessage(productQuery.error)
                 : "This product does not exist or you do not have access."
             }
-            className="min-h-[40vh]"
+            className="min-h-[40dvh]"
           />
         </div>
       </PageWrapper>

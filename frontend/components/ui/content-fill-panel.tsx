@@ -8,8 +8,8 @@ export const CONTENT_FILL_PANEL = "flex min-h-full w-full flex-1 flex-col";
 /** Horizontal page inset used by PageWrapper headers, filters, and content. */
 export const PAGE_CHROME_X = "px-4 sm:px-6 lg:px-8";
 
-/** Bottom breathing room so content never sits flush on the viewport edge. */
-export const PAGE_CHROME_BOTTOM = "pb-6 sm:pb-8";
+/** Minimal bottom breathing room; the shell already reserves the Ask OS bar height (md:pb-6), so content sits just above the bar. */
+export const PAGE_CHROME_BOTTOM = "pb-2";
 
 export const FILTER_SELECT_TRIGGER =
   "border-input bg-card text-foreground [&_svg:not([class*='text-'])]:text-muted-foreground";

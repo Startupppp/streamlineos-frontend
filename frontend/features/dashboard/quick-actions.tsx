@@ -1,12 +1,10 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import { fadeUp } from "@/lib/motion-variants";
 import {
-  Plus,
   UserPlus,
   BarChart3,
   CalendarDays,
@@ -15,8 +13,8 @@ import {
   Briefcase,
   CheckSquare,
   Network,
-  Ticket,
 } from "lucide-react";
+import { useDashboardAccess } from "@/features/dashboard/use-dashboard-access";
 
 interface QuickAction {
   label: string;
@@ -24,51 +22,43 @@ interface QuickAction {
   href: string;
 }
 
-export function getQuickActionsForRole(role: string | undefined): QuickAction[] {
-  switch (role) {
-    case "CEO":
-      return [
-        { label: "New Project", icon: Plus, href: "/projects/all" },
-        { label: "Add Employee", icon: UserPlus, href: "/hr/onboarding" },
-        { label: "View Reports", icon: BarChart3, href: "/crm/reports" },
-        { label: "Team Schedule", icon: CalendarDays, href: "/hr/attendance" },
-      ];
-    case "HR":
-      return [
-        { label: "Add Employee", icon: UserPlus, href: "/hr/onboarding" },
-        { label: "View Reports", icon: BarChart3, href: "/crm/reports" },
-        { label: "Team Schedule", icon: CalendarDays, href: "/hr/attendance" },
-        { label: "Org Chart", icon: Network, href: "/hr/org-chart" },
-      ];
-    case "SALES":
-      return [
-        { label: "View My Leads", icon: Contact2, href: "/crm/leads" },
-        { label: "Check In", icon: Clock, href: "/hr/attendance" },
-      ];
-    case "CUSTOMER_SUPPORT":
-      return [
-        { label: "View My Tickets", icon: Ticket, href: "/support" },
-        { label: "Check In", icon: Clock, href: "/hr/attendance" },
-      ];
-    case "ENGINEERING":
-    case "DESIGN":
-    case "VIDEO_EDITOR":
-    case "DIGITAL_MARKETING":
-      return [
-        { label: "My Projects", icon: Briefcase, href: "/projects/all" },
-        { label: "My Tasks", icon: CheckSquare, href: "/projects/my-work" },
-        { label: "Check In", icon: Clock, href: "/hr/attendance" },
-      ];
-    default:
-      return [
-        { label: "Check In", icon: Clock, href: "/hr/attendance" },
-      ];
-  }
+const MAX_QUICK_ACTIONS = 5;
+
+export function useQuickActions(): QuickAction[] {
+  const access = useDashboardAccess();
+
+  return useMemo(() => {
+    const actions: QuickAction[] = [];
+    if (access.projectsEnabled && access.canViewTickets) {
+      actions.push({ label: "Projects", icon: Briefcase, href: "/projects/all" });
+    }
+    if (access.hrEnabled && access.canCreateEmployees) {
+      actions.push({ label: "Add Employee", icon: UserPlus, href: "/hr/onboarding" });
+    }
+    if (access.crmEnabled && access.canViewCrmLeads) {
+      actions.push({ label: "My Leads", icon: Contact2, href: "/crm/leads" });
+    }
+    if (access.crmEnabled && access.canViewCrmReports) {
+      actions.push({ label: "CRM Reports", icon: BarChart3, href: "/crm/reports" });
+    }
+    if (access.hrEnabled && access.canViewAttendance) {
+      actions.push({ label: "Team Schedule", icon: CalendarDays, href: "/hr/attendance" });
+    }
+    if (access.hrEnabled && access.canViewEmployees) {
+      actions.push({ label: "Org Chart", icon: Network, href: "/hr/org-chart" });
+    }
+    if (access.projectsEnabled) {
+      actions.push({ label: "My Tasks", icon: CheckSquare, href: "/projects/my-work" });
+    }
+    if (access.hrEnabled && !access.canViewAttendance) {
+      actions.push({ label: "Check In", icon: Clock, href: "/hr/attendance" });
+    }
+    return actions.slice(0, MAX_QUICK_ACTIONS);
+  }, [access]);
 }
 
 export const QuickActions = memo(function QuickActions() {
-  const { data: session } = useSession();
-  const actions = getQuickActionsForRole(session?.user?.role);
+  const actions = useQuickActions();
 
   if (actions.length === 0) return null;
 

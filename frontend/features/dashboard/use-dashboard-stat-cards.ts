@@ -1,35 +1,10 @@
 "use client";
 
 import { useMemo } from "react";
-import {
-  Users,
-  Briefcase,
-  Contact2,
-  Ticket,
-  Target,
-  TrendingUp,
-  CheckCircle2,
-  ListChecks,
-  Zap,
-} from "lucide-react";
+import { Users, UserCheck, Briefcase, ListChecks } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-
-interface DashboardStats {
-  totalEmployees: number;
-  activeProjects: number;
-  orgName: string;
-}
-
-interface RoleStats {
-  myLeads?: number;
-  myConverted?: number;
-  myDeals?: number;
-  targetProgress?: number;
-  myProjects?: number;
-  myTickets?: number;
-  myTicketsDone?: number;
-  myTicketsInProgress?: number;
-}
+import type { DashboardStats } from "@/types/dashboard";
+import type { DashboardAccess } from "@/features/dashboard/use-dashboard-access";
 
 interface StatCardConfig {
   id: string;
@@ -41,124 +16,50 @@ interface StatCardConfig {
 
 export function useDashboardStatCards(
   stats: DashboardStats | undefined,
-  role: string | undefined,
-  roleStats: RoleStats | undefined
+  access: DashboardAccess,
+  openIssueCount: number
 ): StatCardConfig[] {
   return useMemo(() => {
     if (!stats) return [];
-    const rs = roleStats;
+    const cards: StatCardConfig[] = [];
 
-    switch (role) {
-      case "CEO":
-      case "HR":
-        return [
-          {
-            id: "employees",
-            label: "Total Employees",
-            value: stats.totalEmployees,
-            icon: Users,
-            href: "/hr",
-          },
-          {
-            id: "projects",
-            label: "Active Projects",
-            value: stats.activeProjects,
-            icon: Briefcase,
-            href: "/projects/all",
-          },
-        ];
-      case "SALES":
-        return [
-          {
-            id: "leads",
-            label: "My Leads",
-            value: rs?.myLeads ?? 0,
-            icon: Contact2,
-            href: "/crm/leads",
-          },
-          {
-            id: "converted",
-            label: "Converted",
-            value: rs?.myConverted ?? 0,
-            icon: TrendingUp,
-            href: "/crm/leads",
-          },
-          {
-            id: "deals",
-            label: "My Deals",
-            value: rs?.myDeals ?? 0,
-            icon: Zap,
-            href: "/crm/deals",
-          },
-          {
-            id: "target",
-            label: "Target Progress",
-            value: `${rs?.targetProgress ?? 0}%`,
-            icon: Target,
-            href: "/crm/reports",
-          },
-        ];
-      case "CUSTOMER_SUPPORT":
-        return [
-          {
-            id: "projects",
-            label: "My Projects",
-            value: rs?.myProjects ?? 0,
-            icon: Briefcase,
-            href: "/projects/all",
-          },
-          {
-            id: "tickets",
-            label: "My Tickets",
-            value: rs?.myTickets ?? 0,
-            icon: Ticket,
-          },
-          {
-            id: "done",
-            label: "Completed",
-            value: rs?.myTicketsDone ?? 0,
-            icon: CheckCircle2,
-          },
-          {
-            id: "inprogress",
-            label: "In Progress",
-            value: rs?.myTicketsInProgress ?? 0,
-            icon: ListChecks,
-          },
-        ];
-      case "ENGINEERING":
-      case "DESIGN":
-      case "VIDEO_EDITOR":
-      case "DIGITAL_MARKETING":
-        return [
-          {
-            id: "projects",
-            label: "My Projects",
-            value: rs?.myProjects ?? 0,
-            icon: Briefcase,
-            href: "/projects/all",
-          },
-          {
-            id: "tickets",
-            label: "My Tasks",
-            value: rs?.myTickets ?? 0,
-            icon: ListChecks,
-          },
-          {
-            id: "done",
-            label: "Completed",
-            value: rs?.myTicketsDone ?? 0,
-            icon: CheckCircle2,
-          },
-          {
-            id: "inprogress",
-            label: "In Progress",
-            value: rs?.myTicketsInProgress ?? 0,
-            icon: Zap,
-          },
-        ];
-      default:
-        return [];
+    if (access.hrEnabled && access.canViewEmployees) {
+      cards.push({
+        id: "employees",
+        label: "Total Employees",
+        value: stats.totalEmployees ?? 0,
+        icon: Users,
+        href: "/hr",
+      });
     }
-  }, [stats, role, roleStats]);
+    if (access.hrEnabled && access.canViewAttendance) {
+      cards.push({
+        id: "present",
+        label: "Present Today",
+        value: stats.presentToday ?? 0,
+        icon: UserCheck,
+        href: "/hr/attendance",
+      });
+    }
+    if (access.projectsEnabled && access.canViewTickets) {
+      cards.push({
+        id: "projects",
+        label: "Active Projects",
+        value: stats.activeProjects ?? 0,
+        icon: Briefcase,
+        href: "/projects/all",
+      });
+    }
+    if (access.projectsEnabled) {
+      cards.push({
+        id: "my-tasks",
+        label: "My Open Tasks",
+        value: openIssueCount,
+        icon: ListChecks,
+        href: "/projects/my-work",
+      });
+    }
+
+    return cards;
+  }, [stats, access, openIssueCount]);
 }

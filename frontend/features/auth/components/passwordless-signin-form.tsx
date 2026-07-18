@@ -32,7 +32,6 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
   const [submittedEmail, setSubmittedEmail] = useState("");
   const [otpValue, setOtpValue] = useState("");
   const [resendCooldown, setResendCooldown] = useState(0);
-  const [showMagicLinkOption, setShowMagicLinkOption] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const cooldownRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -68,7 +67,6 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
       setSubmittedEmail(email);
       setStage("code");
       setOtpValue("");
-      setShowMagicLinkOption(false);
       setMagicLinkSent(false);
       startCooldown();
     },
@@ -123,9 +121,10 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
 
   const handleOtpChange = useCallback(
     (value: string) => {
-      setOtpValue(value);
-      if (value.length === 6 && !verifyOtpMutation.isPending) {
-        verifyOtpMutation.mutate({ email: submittedEmail, code: value });
+      const digits = value.replace(/\D/g, "").slice(0, 6);
+      setOtpValue(digits);
+      if (digits.length === 6 && !verifyOtpMutation.isPending) {
+        verifyOtpMutation.mutate({ email: submittedEmail, code: digits });
       }
     },
     [submittedEmail, verifyOtpMutation],
@@ -146,19 +145,15 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
     setStage("email");
     setSubmittedEmail("");
     setOtpValue("");
-    setShowMagicLinkOption(false);
     setMagicLinkSent(false);
     if (cooldownRef.current) clearInterval(cooldownRef.current);
     setResendCooldown(0);
   }, []);
 
-  const handleShowMagicLink = useCallback(() => {
-    setShowMagicLinkOption(true);
-  }, []);
-
   const handleSendMagicLink = useCallback(() => {
+    if (magicLinkMutation.isPending || magicLinkSent) return;
     magicLinkMutation.mutate(submittedEmail);
-  }, [magicLinkMutation, submittedEmail]);
+  }, [magicLinkMutation, magicLinkSent, submittedEmail]);
 
   if (stage === "code") {
     return (
@@ -227,30 +222,16 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
             <p className="text-[12px] text-emerald-600">
               Check your inbox — a sign-in link is on its way.
             </p>
-          ) : showMagicLinkOption ? (
-            <div className="space-y-2">
-              <p className="text-[12px] text-muted-foreground">
-                Send a sign-in link to{" "}
-                <span className="font-medium text-foreground">{submittedEmail}</span>
-              </p>
-              <LoadingButton
-                size="sm"
-                variant="outline"
-                className="w-full h-8 text-xs"
-                onClick={handleSendMagicLink}
-                isPending={magicLinkMutation.isPending}
-                loadingText="Sending..."
-              >
-                Send sign-in link
-              </LoadingButton>
-            </div>
           ) : (
             <button
               type="button"
-              onClick={handleShowMagicLink}
-              className="text-[12px] text-muted-foreground hover:text-foreground transition-colors underline-offset-2 hover:underline"
+              onClick={handleSendMagicLink}
+              disabled={magicLinkMutation.isPending}
+              className="text-[12px] text-muted-foreground hover:text-foreground transition-colors underline-offset-2 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Email me a sign-in link instead
+              {magicLinkMutation.isPending
+                ? "Sending sign-in link..."
+                : "Email me a sign-in link instead"}
             </button>
           )}
         </div>

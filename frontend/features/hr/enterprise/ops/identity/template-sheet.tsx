@@ -28,8 +28,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { useCreateProvisioningTemplate } from "@/hooks/api/hr/enterprise-ops-identity";
@@ -172,9 +172,7 @@ export function TemplateSheet({ open, onOpenChange }: Props) {
                     <SelectItem value="review">Review</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button type="button" size="icon" variant="outline" onClick={addSystem}>
-                  <PlusIcon size={16} />
-                </Button>
+                <AnimatedIconButton type="button" size="icon" variant="outline" icon={PlusIcon} iconSize={16} onClick={addSystem} />
               </div>
               {systemsError && (
                 <p className="text-sm font-medium text-destructive">{systemsError}</p>
@@ -184,9 +182,7 @@ export function TemplateSheet({ open, onOpenChange }: Props) {
                   <span className="text-sm text-foreground">{s.systemName}</span>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground capitalize">{s.action}</span>
-                    <Button type="button" size="icon" variant="ghost" className="h-6 w-6 text-red-500" onClick={() => removeSystem(i)}>
-                      <Trash2Icon size={12} />
-                    </Button>
+                    <AnimatedIconButton type="button" size="icon" variant="ghost" className="h-6 w-6 text-red-500" icon={Trash2Icon} iconSize={12} onClick={() => removeSystem(i)} />
                   </div>
                 </div>
               ))}

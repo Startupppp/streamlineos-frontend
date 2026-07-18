@@ -58,7 +58,7 @@ export function HelpCenterClient({ orgId }: HelpCenterClientProps) {
   }
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-dvh bg-background">
       <section className="gradient-brand text-white">
         <div className="mx-auto max-w-4xl px-4 py-12 sm:py-16 text-center">
           <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 mb-4">
@@ -127,7 +127,7 @@ export function HelpCenterClient({ orgId }: HelpCenterClientProps) {
                     ? "Try a different search term."
                     : "There are no published articles yet."
                 }
-                className="min-h-[40vh]"
+                className="min-h-[40dvh]"
               />
             ) : (
               <div className="space-y-3">
