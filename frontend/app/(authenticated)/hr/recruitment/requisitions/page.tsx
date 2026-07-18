@@ -23,9 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetBody, SheetFooter,
 } from "@/components/ui/sheet";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
-} from "@/components/ui/dialog";
+import { ConfirmWithReasonSheet } from "@/components/ui/confirm-with-reason-sheet";
 import {
   Form, FormField, FormItem, FormLabel, FormControl, FormMessage,
 } from "@/components/ui/form";
@@ -119,48 +117,6 @@ function RequisitionCardSkeleton() {
         </div>
       </div>
     </div>
-  );
-}
-
-interface RejectDialogProps {
-  open: boolean;
-  onClose: () => void;
-  onConfirm: (reason: string) => void;
-  isPending: boolean;
-}
-
-function RejectDialog({ open, onClose, onConfirm, isPending }: RejectDialogProps) {
-  const [reason, setReason] = useState("");
-
-  function handleReasonChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    setReason(e.target.value);
-  }
-
-  function handleConfirm() {
-    onConfirm(reason);
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Reject Requisition</DialogTitle>
-          <DialogDescription>Provide a reason for rejecting this requisition.</DialogDescription>
-        </DialogHeader>
-        <Textarea
-          placeholder="Rejection reason..."
-          className="min-h-[100px]"
-          value={reason}
-          onChange={handleReasonChange}
-        />
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button variant="destructive" onClick={handleConfirm} disabled={!reason.trim() || isPending}>
-            {isPending ? "Rejecting…" : "Reject"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   );
 }
 
@@ -809,9 +765,15 @@ export default function RequisitionsPage() {
 
       <CreateRequisitionSheet open={sheetOpen} onClose={handleCloseSheet} />
 
-      <RejectDialog
+      <ConfirmWithReasonSheet
         open={rejectTarget !== null}
-        onClose={handleRejectClose}
+        onOpenChange={(open) => { if (!open) handleRejectClose(); }}
+        title="Reject Requisition"
+        description="Provide a reason for rejecting this requisition."
+        reasonLabel="Rejection reason"
+        reasonPlaceholder="Rejection reason..."
+        reasonRequired
+        confirmLabel="Reject"
         onConfirm={handleRejectConfirm}
         isPending={rejectRequisition.isPending}
       />
