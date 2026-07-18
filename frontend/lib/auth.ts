@@ -283,7 +283,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return true;
     },
 
-    async jwt({ token, user, account, trigger, session }) {
+    async jwt({ token, user, account, trigger }) {
       // The cookie carries only identity, auth-flow flags, and the small advisory claims middleware reads; everything else (permissions, modules, plan, branch, image) is resolved live in the session callback.
       if (user) {
         token.id = user.id;

@@ -51,8 +51,6 @@ export async function mintBackendJwt(session: Session): Promise<string | null> {
   const sessionId = session.sessionId?.trim();
   if (!sessionId) return null;
 
-  // Prefer live DB membership over the NextAuth cookie — the cookie can lag or
-  // hold a stale orgId after a failed/partial setup attempt.
   const live = await fetchLiveOrgData(session.user.id);
   const orgId = live ? live.orgId : (session.orgId ?? null);
   const isOrgOwner = live ? live.isOrgOwner : session.user.isOrgOwner === true;

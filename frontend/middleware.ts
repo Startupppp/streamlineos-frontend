@@ -2,7 +2,6 @@ import { NextResponse, NextRequest } from "next/server";
 import { getToken, type JWT } from "next-auth/jwt";
 import { PLATFORM_OWNER_ROLE, OWNER_HOME } from "@/lib/platform/role";
 import { ROLES } from "@/lib/constants/roles";
-import { getAuthSessionCookieNames } from "@/lib/auth-session-cookies";
 
 function buildCsp(nonce: string, apiUrl?: string): string {
   const isDev = process.env.NODE_ENV === "development";
@@ -62,6 +61,12 @@ function isLoopbackHostname(hostname: string): boolean {
     h === "::1" ||
     h.endsWith(".localhost")
   );
+}
+
+function sessionCookieNames(): string[] {
+  if (process.env.NODE_ENV !== "production") return ["authjs.session-token"];
+
+  return ["__Secure-authjs.session-token", "authjs.session-token"];
 }
 
 const PROTECTED_ROUTES = [
@@ -209,7 +214,7 @@ export default async function middleware(req: NextRequest) {
 
   const secret = process.env.NEXTAUTH_SECRET;
   let token: JWT | null = null;
-  for (const cookieName of getAuthSessionCookieNames(process.env.NODE_ENV)) {
+  for (const cookieName of sessionCookieNames()) {
     token = await getToken({
       req,
       secret,
