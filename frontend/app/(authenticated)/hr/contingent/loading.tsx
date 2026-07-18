@@ -6,7 +6,7 @@ export default function ContingentLoading() {
     <PageWrapper
       title="Contingent Workforce"
       subtitle="Manage contractor, intern, temporary, and agency engagements."
-      actions={<Skeleton className="h-8 w-36 rounded-md" />}
+      actions={<Skeleton className="h-9 w-36 rounded-md" />}
     >
       <div className="flex flex-col flex-1 min-h-0 space-y-2">
         {Array.from({ length: 10 }).map((_, i) => (

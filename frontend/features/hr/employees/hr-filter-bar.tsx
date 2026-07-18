@@ -56,9 +56,7 @@ export function HrFilterBar({
 
   return (
     <>
-      <div className="min-w-0 w-[200px]">
-          <SearchInput placeholder="Search employees..." value={searchTerm} onValueChange={handleSearchChange} aria-label="Search employees" />
-        </div>
+      <SearchInput placeholder="Search employees..." value={searchTerm} onValueChange={handleSearchChange} aria-label="Search employees" className="w-[200px]" />
 
       <Select value={deptFilter} onValueChange={onDeptChange}>
         <SelectTrigger className={cn("w-[130px]", FILTER_SELECT_TRIGGER)}>

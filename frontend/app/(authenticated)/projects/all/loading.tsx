@@ -1,10 +1,7 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import {
-  PmPageShell,
-  PmPanel,
-  PM_TOOLBAR,
-} from "@/features/projects/shared/pm-chrome";
+import { PmPageShell, PmPanel } from "@/features/projects/shared/pm-chrome";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export default function ProjectsLoading() {
   return (
@@ -14,14 +11,12 @@ export default function ProjectsLoading() {
       actions={<Skeleton className="h-9 w-28 rounded-md" />}
     >
       <PmPageShell>
-        <div className={PM_TOOLBAR}>
-          <div className="flex w-full min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
-            <Skeleton className="h-9 w-full max-w-[240px] rounded-md" />
-            <Skeleton className="h-9 w-[132px] rounded-md" />
-            <div className="ml-auto flex items-center gap-0.5">
-              <Skeleton className="h-9 w-9 rounded-md" />
-              <Skeleton className="h-9 w-9 rounded-md" />
-            </div>
+        <div className={FILTER_TOOLBAR_ROW}>
+          <Skeleton className="h-9 w-full max-w-[240px] rounded-md" />
+          <Skeleton className="h-9 w-[132px] rounded-md" />
+          <div className="ml-auto flex items-center gap-0.5">
+            <Skeleton className="h-9 w-9 rounded-md" />
+            <Skeleton className="h-9 w-9 rounded-md" />
           </div>
         </div>
 

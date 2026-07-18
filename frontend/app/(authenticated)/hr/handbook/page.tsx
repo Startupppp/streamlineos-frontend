@@ -376,9 +376,7 @@ function HandbookContent() {
     >
       <div className="space-y-4">
         <div className={FILTER_TOOLBAR_ROW}>
-          <div className="min-w-0 w-48">
-          <SearchInput placeholder="Search versions..." value={searchQuery} onValueChange={handleSearchChange} />
-        </div>
+          <SearchInput placeholder="Search versions..." value={searchQuery} onValueChange={handleSearchChange} className="w-48" />
           <div className="flex items-center gap-1">
             {STATUS_FILTERS.map((f) => (
               <button

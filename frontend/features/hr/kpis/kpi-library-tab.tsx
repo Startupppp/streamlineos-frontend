@@ -11,6 +11,7 @@ import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { Label } from "@/components/ui/label";
 import {
   Sheet,
@@ -144,8 +145,8 @@ export function KpiLibraryTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex min-w-0 flex-nowrap items-center justify-between gap-3 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-        <div className="flex min-w-0 flex-nowrap items-center gap-3 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+      <div className="flex items-center gap-2 justify-between">
+        <div className={FILTER_TOOLBAR_ROW}>
           <SearchInput
             className="w-60"
             placeholder="Search KPIs…"

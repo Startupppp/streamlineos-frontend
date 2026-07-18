@@ -16,7 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { CONTENT_FILL_PANEL, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { CONTENT_FILL_PANEL, FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -82,9 +82,9 @@ export function TrainingList({ canManage, onSelectProgram, selectedProgramId }: 
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="flex gap-2">
-          {Array.from({ length: 9 }).map((_, i) => (
-            <Skeleton key={i} className="h-8 w-28 rounded-md" />
+        <div className={FILTER_TOOLBAR_ROW}>
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-9 w-36 rounded-md" />
           ))}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -105,7 +105,7 @@ export function TrainingList({ canManage, onSelectProgram, selectedProgramId }: 
 
   return (
     <div className="space-y-4">
-      <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+      <div className={FILTER_TOOLBAR_ROW}>
         <Select value={typeFilter} onValueChange={setTypeFilter}>
           <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
             <SelectValue placeholder="Type" />

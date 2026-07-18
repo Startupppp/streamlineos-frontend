@@ -269,7 +269,7 @@ export function DocumentFormFields({
             value={tagInput}
             onChange={onTagInputChange}
             onKeyDown={onTagKeyDown}
-            className="flex-1 h-8"
+            className="flex-1"
           />
           <AnimatedIconButton
             icon={PlusIcon}

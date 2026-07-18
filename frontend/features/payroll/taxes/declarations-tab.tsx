@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
+import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { useTaxDeclarationsAdmin, useExportTaxReport } from "@/hooks/api/payroll/tax-admin";
 import { useCan } from "@/hooks/api/access";
 import type { TaxDeclarationAdmin, TaxDeclarationStatus } from "@/types/payroll/reports";
@@ -193,9 +194,9 @@ export function DeclarationsTab() {
         isLoading={isLoading}
         minWidth="860px"
         toolbar={
-          <div className="flex items-center gap-2">
+          <div className={FILTER_TOOLBAR_ROW}>
             <Select value={fyParam} onValueChange={handleFYChange}>
-              <SelectTrigger className="text-xs w-28">
+              <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-28`}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -208,7 +209,7 @@ export function DeclarationsTab() {
               </SelectContent>
             </Select>
             <Select value={statusParam} onValueChange={handleStatusChange}>
-              <SelectTrigger className="text-xs w-28">
+              <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-28`}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
@@ -140,7 +141,7 @@ export default function VendorPaymentsPage() {
       }
       filters={
         <Select value={vendorFilter} onValueChange={handleVendorFilterChange}>
-          <SelectTrigger className="h-9 w-[180px] text-xs">
+          <SelectTrigger className={`w-[180px] ${FILTER_SELECT_TRIGGER}`}>
             <SelectValue placeholder="All vendors" />
           </SelectTrigger>
           <SelectContent>

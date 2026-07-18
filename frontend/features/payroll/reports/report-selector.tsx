@@ -82,7 +82,7 @@ export function ReportSelector({ activeReport, onSelect }: ReportSelectorProps) 
 
       <div className="lg:hidden">
         <Select value={activeReport} onValueChange={handleSelectChange}>
-          <SelectTrigger className="w-full text-xs">
+          <SelectTrigger className="w-full">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

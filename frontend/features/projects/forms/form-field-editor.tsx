@@ -139,7 +139,7 @@ const FieldRow = memo(function FieldRow({
           className="text-sm flex-1 min-w-0"
         />
         <Select value={field.type} onValueChange={handleTypeChange}>
-          <SelectTrigger className="w-36 text-xs shrink-0">
+          <SelectTrigger className="w-36 shrink-0">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

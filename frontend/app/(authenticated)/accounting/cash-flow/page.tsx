@@ -3,6 +3,7 @@
 import { useState, memo } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DatePicker } from "@/components/ui/date-picker";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -141,7 +142,7 @@ export default function CashFlowPage() {
       title="Cash Flow Statement"
       subtitle="Cash generated and used across operating, investing, and financing activities."
       filters={
-        <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+        <div className={FILTER_TOOLBAR_ROW}>
           <div className="flex flex-col gap-1">
             <label
               htmlFor="cash-flow-from"
@@ -149,7 +150,7 @@ export default function CashFlowPage() {
             >
               From
             </label>
-            <DatePicker id="cash-flow-from" value={from ?? ""} onChange={handleFromChange} placeholder="Pick a date" className="w-[160px] h-8 text-sm" />
+            <DatePicker id="cash-flow-from" value={from ?? ""} onChange={handleFromChange} placeholder="Pick a date" className="w-[160px]" />
           </div>
           <div className="flex flex-col gap-1">
             <label
@@ -158,7 +159,7 @@ export default function CashFlowPage() {
             >
               To
             </label>
-            <DatePicker id="cash-flow-to" value={to ?? ""} onChange={handleToChange} placeholder="Pick a date" className="w-[160px] h-8 text-sm" />
+            <DatePicker id="cash-flow-to" value={to ?? ""} onChange={handleToChange} placeholder="Pick a date" className="w-[160px]" />
           </div>
           {report && !report.reconciled && (
             <div className="ml-auto self-end text-xs text-amber-600 dark:text-amber-400">

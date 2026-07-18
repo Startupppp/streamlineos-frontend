@@ -59,7 +59,7 @@ export function RecurrencePicker({ value, onChange }: RecurrencePickerProps) {
             <Label className="text-xs text-muted-foreground w-14 shrink-0">Repeat</Label>
             <Input type="number" min={1} max={99} value={value.interval} onChange={handleInterval} className="w-16 text-xs text-center" />
             <Select value={value.frequency} onValueChange={handleFrequency}>
-              <SelectTrigger className="text-xs w-28"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="daily" className="text-xs">day(s)</SelectItem>
                 <SelectItem value="weekly" className="text-xs">week(s)</SelectItem>

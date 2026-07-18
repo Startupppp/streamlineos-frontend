@@ -66,7 +66,7 @@ export function CustomerReturnSheet({ open, onOpenChange }: CustomerReturnSheetP
   const variantOptions: ComboboxOption[] = (variantsQuery.data ?? []).map((v) => ({
     value: String(v.id),
     label: v.sku,
-    sublabel: v.name ?? undefined,
+    sublabel: `${v.productName} — ${v.name}`,
   }));
 
   const form = useForm<FormValues>({

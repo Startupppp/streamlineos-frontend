@@ -584,6 +584,10 @@ export function WorkflowBuilderGate({ workflowId }: { workflowId: string }) {
   const { data: workflow, isLoading, isError } = useWorkflow(workflowId);
   const router = useRouter();
 
+  function handleBackToWorkflows() {
+    router.push("/workflows");
+  }
+
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center bg-background h-full">
@@ -600,7 +604,7 @@ export function WorkflowBuilderGate({ workflowId }: { workflowId: string }) {
       <div className="flex-1 flex items-center justify-center bg-background h-full">
         <div className="text-center space-y-3">
           <p className="text-sm font-medium text-foreground">Workflow not found</p>
-          <Button variant="outline" size="sm" onClick={() => router.push("/workflows")}>
+          <Button variant="outline" size="sm" onClick={handleBackToWorkflows}>
             Back to Workflows
           </Button>
         </div>

@@ -133,7 +133,7 @@ export function EssPayslipsSection() {
         </h2>
         {years.length > 0 && (
           <Select value={yearFilter} onValueChange={setYearFilter}>
-            <SelectTrigger className="text-xs w-28">
+            <SelectTrigger className="w-28">
               <SelectValue placeholder="All years" />
             </SelectTrigger>
             <SelectContent>

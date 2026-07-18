@@ -51,6 +51,14 @@ function MethodEditor({ methodType, label, existing }: { methodType: ManualMetho
     );
   }
 
+  function handleDisable() {
+    if (!existing) return;
+    disable.mutate(existing.id, {
+      onSuccess: () => toast.success(`${label} disabled`),
+      onError: (err) => toast.error(getErrorMessage(err)),
+    });
+  }
+
   const isEnabled = existing?.status === "enabled";
 
   return (
@@ -135,12 +143,7 @@ function MethodEditor({ methodType, label, existing }: { methodType: ManualMetho
             size="sm"
             variant="ghost"
             className="text-xs text-muted-foreground"
-            onClick={() =>
-              disable.mutate(existing.id, {
-                onSuccess: () => toast.success(`${label} disabled`),
-                onError: (err) => toast.error(getErrorMessage(err)),
-              })
-            }
+            onClick={handleDisable}
           >
             Disable
           </Button>

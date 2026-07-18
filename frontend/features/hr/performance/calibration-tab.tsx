@@ -81,7 +81,7 @@ export function CalibrationTab() {
             min="1"
             max="5"
             step="0.5"
-            className="w-20 h-8 text-sm"
+            className="w-20 text-sm"
             value={editing.preRating}
             onChange={(e) => handleChange(row.employeeId, "preRating", e.target.value)}
           />
@@ -103,7 +103,7 @@ export function CalibrationTab() {
             min="1"
             max="5"
             step="0.5"
-            className="w-20 h-8 text-sm"
+            className="w-20 text-sm"
             value={editing.postRating}
             onChange={(e) => handleChange(row.employeeId, "postRating", e.target.value)}
           />

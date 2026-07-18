@@ -2,8 +2,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { DataTableSkeleton } from "@/components/ui/data-table";
-import { PM_TOOLBAR, PmPageShell, PmSection } from "@/features/projects/shared/pm-chrome";
-import { cn } from "@/lib/utils";
+import { PmPageShell, PmSection } from "@/features/projects/shared/pm-chrome";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export default function ProjectRisksLoading() {
   return (
@@ -17,11 +17,9 @@ export default function ProjectRisksLoading() {
           <StatCardGridSkeleton cols={3} className="mb-4" />
         </PmSection>
         <PmSection index={1}>
-          <div className={cn(PM_TOOLBAR, "mb-3")}>
-            <div className="flex items-center gap-2">
-              <Skeleton className="h-9 w-40 rounded-md" />
-              <Skeleton className="h-9 w-52 rounded-md" />
-            </div>
+          <div className={FILTER_TOOLBAR_ROW}>
+            <Skeleton className="h-9 w-40 rounded-md" />
+            <Skeleton className="h-9 w-52 rounded-md" />
           </div>
           <DataTableSkeleton rows={12} columns={8} />
         </PmSection>

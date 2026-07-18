@@ -203,8 +203,8 @@ export function ReportsPageSkeleton() {
       title="Reports"
       filters={
         <div className="flex items-center gap-2">
-          <Skeleton className="h-8 w-48 rounded-md" />
-          <Skeleton className="h-8 w-36 rounded-md" />
+          <Skeleton className="h-9 w-48 rounded-md" />
+          <Skeleton className="h-9 w-36 rounded-md" />
         </div>
       }
     >

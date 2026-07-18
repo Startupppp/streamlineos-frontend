@@ -1,8 +1,8 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PM_TOOLBAR, PmPageShell, PmPanel } from "@/features/projects/shared/pm-chrome";
-import { cn } from "@/lib/utils";
+import { PmPageShell, PmPanel } from "@/features/projects/shared/pm-chrome";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export default function ProjectDecisionsLoading() {
   return (
@@ -10,11 +10,9 @@ export default function ProjectDecisionsLoading() {
       title="Decisions Log"
       actions={<Skeleton className="h-9 w-36 rounded-md" />}
       filters={
-        <div className={cn(PM_TOOLBAR)}>
-          <div className="flex items-center gap-2">
-            <Skeleton className="h-9 w-40 rounded-md" />
-            <Skeleton className="h-9 w-52 rounded-md" />
-          </div>
+        <div className={FILTER_TOOLBAR_ROW}>
+          <Skeleton className="h-9 w-40 rounded-md" />
+          <Skeleton className="h-9 w-52 rounded-md" />
         </div>
       }
     >

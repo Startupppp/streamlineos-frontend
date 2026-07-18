@@ -257,7 +257,7 @@ export function AdminExpenseItem({
               placeholder="Reason for rejection (required)..."
               value={rejectionReason}
               onChange={handleRejectionReasonChange}
-              className="text-xs h-8"
+              className="text-xs"
             />
             <div className="flex justify-end gap-1.5">
               <Button

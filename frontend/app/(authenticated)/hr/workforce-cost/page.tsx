@@ -63,7 +63,7 @@ export default function WorkforceCostPage() {
           {/* Period selector */}
           <div className="flex items-center gap-3">
             <Input
-              className="w-36 h-8 text-sm"
+              className="w-36 text-sm"
               placeholder="YYYY-MM"
               value={periodInput}
               onChange={(e) => setPeriodInput(e.target.value)}

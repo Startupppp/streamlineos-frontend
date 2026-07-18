@@ -1,8 +1,8 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTableSkeleton } from "@/components/ui/data-table";
-import { PM_TOOLBAR, PmPageShell, PmSection } from "@/features/projects/shared/pm-chrome";
-import { cn } from "@/lib/utils";
+import { PmPageShell, PmSection } from "@/features/projects/shared/pm-chrome";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export default function ChangeRequestsLoading() {
   return (
@@ -10,11 +10,9 @@ export default function ChangeRequestsLoading() {
       title="Change Requests"
       actions={<Skeleton className="h-9 w-40 rounded-md" />}
       filters={
-        <div className={cn(PM_TOOLBAR)}>
-          <div className="flex items-center gap-2">
-            <Skeleton className="h-9 w-44 rounded-md" />
-            <Skeleton className="h-9 w-40 rounded-md" />
-          </div>
+        <div className={FILTER_TOOLBAR_ROW}>
+          <Skeleton className="h-9 w-44 rounded-md" />
+          <Skeleton className="h-9 w-40 rounded-md" />
         </div>
       }
     >

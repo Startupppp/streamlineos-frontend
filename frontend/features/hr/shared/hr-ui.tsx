@@ -196,27 +196,6 @@ export function HrSectionHeader({
   );
 }
 
-/** Unified filter toolbar shell — put search/selects inside */
-export function HrFilterToolbar({
-  children,
-  className,
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
-  return (
-    <div
-      className={cn(
-        "flex flex-wrap items-center gap-2 rounded-2xl border border-border/70",
-        "bg-muted/25 backdrop-blur-sm p-2 sm:p-2.5",
-        "shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] dark:shadow-none",
-        className,
-      )}
-    >
-      {children}
-    </div>
-  );
-}
 
 const STATUS_STYLES: Record<
   string,

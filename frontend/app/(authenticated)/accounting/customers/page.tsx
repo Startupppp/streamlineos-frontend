@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { SearchInput } from "@/components/ui/search-input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";

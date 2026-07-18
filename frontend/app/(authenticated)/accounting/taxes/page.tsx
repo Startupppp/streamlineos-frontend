@@ -165,7 +165,7 @@ export default function TaxPage() {
               value={from}
               onChange={handleFromChange}
               placeholder="Pick a date"
-              className="w-full sm:w-[160px] h-8 text-sm"
+              className="w-full sm:w-[160px]"
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -180,7 +180,7 @@ export default function TaxPage() {
               value={to}
               onChange={handleToChange}
               placeholder="Pick a date"
-              className="w-full sm:w-[160px] h-8 text-sm"
+              className="w-full sm:w-[160px]"
             />
           </div>
         </div>

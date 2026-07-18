@@ -16,7 +16,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { StateIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
-import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { useCan } from "@/hooks/api/access";
 import { useSafetyIncidents } from "@/hooks/api/hr/safety";
 import type { SafetyIncident, IncidentStatus, IncidentType, IncidentSeverity } from "@/hooks/api/hr/safety";
@@ -121,10 +121,8 @@ export function SafetyPageContent() {
   ];
 
   const filters = (
-    <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-      <div className="min-w-0 w-44">
-          <SearchInput placeholder="Search..." value={search} onValueChange={handleSearchChange} />
-        </div>
+    <div className={FILTER_TOOLBAR_ROW}>
+      <SearchInput placeholder="Search..." value={search} onValueChange={handleSearchChange} className="w-44" />
       <Select
         value={status || SENTINEL}
         onValueChange={(v) => { setStatus(v === SENTINEL ? "" : (v as IncidentStatus)); setPage(1); }}

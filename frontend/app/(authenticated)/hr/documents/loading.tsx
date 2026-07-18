@@ -10,7 +10,7 @@ export default function DocumentsLoading() {
       subtitle="Manage and access all employee documents"
       actions={
         <div className="flex items-center gap-2">
-          <Skeleton className="h-8 w-[66px] rounded-md" />
+          <Skeleton className="h-9 w-[66px] rounded-md" />
           <Skeleton className="h-9 w-[130px] rounded-md" />
           <Skeleton className="h-9 w-[88px] rounded-md" />
           <Skeleton className="h-9 w-[88px] rounded-md" />

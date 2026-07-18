@@ -17,9 +17,9 @@ function EditTemplateSkeleton() {
       title="Edit Template"
       actions={
         <div className="flex items-center gap-2">
-          <Skeleton className="h-8 w-16 rounded-md" />
-          <Skeleton className="h-8 w-28 rounded-md" />
-          <Skeleton className="h-8 w-28 rounded-md" />
+          <Skeleton className="h-9 w-16 rounded-md" />
+          <Skeleton className="h-9 w-28 rounded-md" />
+          <Skeleton className="h-9 w-28 rounded-md" />
         </div>
       }
     >

@@ -8,8 +8,8 @@ export default function HolidaysLoading() {
       subtitle="Manage organization holidays across the year"
       actions={
         <div className="flex gap-2 items-center flex-nowrap">
-          <Skeleton className="h-8 w-[120px] rounded-md" />
-          <Skeleton className="h-8 w-24 rounded-md" />
+          <Skeleton className="h-9 w-[120px] rounded-md" />
+          <Skeleton className="h-9 w-24 rounded-md" />
         </div>
       }
     >

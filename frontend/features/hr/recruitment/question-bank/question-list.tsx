@@ -11,19 +11,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { Trash2, BookOpen, Pencil } from "lucide-react";
+import { Trash2, BookOpen, Pencil, Eye } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import type { InterviewQuestion } from "@/hooks/api/hr/recruitment";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { QuestionFormDialog } from "./question-form-dialog";
+import { QuestionViewSheet, DIFFICULTY_VARIANT } from "./question-view-sheet";
 
-const DIFFICULTY_VARIANT: Record<string, "default" | "secondary" | "destructive"> = {
-  EASY: "secondary",
-  MEDIUM: "default",
-  HARD: "destructive",
-};
+function stopRowClick(e: React.MouseEvent) {
+  e.stopPropagation();
+}
 
 interface QuestionListProps {
   questions: InterviewQuestion[] | undefined;
@@ -39,6 +38,7 @@ export function QuestionList({
   onDeleteRequest,
 }: QuestionListProps) {
   const [editQuestion, setEditQuestion] = useState<InterviewQuestion | null>(null);
+  const [viewQuestion, setViewQuestion] = useState<InterviewQuestion | null>(null);
 
   const handleEditRequest = useCallback((q: InterviewQuestion) => {
     setEditQuestion(q);
@@ -46,6 +46,19 @@ export function QuestionList({
 
   const handleEditOpenChange = useCallback((v: boolean) => {
     if (!v) setEditQuestion(null);
+  }, []);
+
+  const handleViewRequest = useCallback((q: InterviewQuestion) => {
+    setViewQuestion(q);
+  }, []);
+
+  const handleViewOpenChange = useCallback((v: boolean) => {
+    if (!v) setViewQuestion(null);
+  }, []);
+
+  const handleEditFromView = useCallback((q: InterviewQuestion) => {
+    setViewQuestion(null);
+    setEditQuestion(q);
   }, []);
 
   const columns = useMemo<DataTableColumn<InterviewQuestion>[]>(() => [
@@ -132,24 +145,30 @@ export function QuestionList({
       header: "",
       className: "w-[50px]",
       cell: (q) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <AnimatedIconButton icon={EllipsisIcon} iconSize={16} variant="ghost" size="icon" aria-label="Question actions" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => handleEditRequest(q)}>
-              <Pencil className="mr-2 h-4 w-4" />
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem variant="destructive" onClick={() => onDeleteRequest(q.id)}>
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div onClick={stopRowClick}>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <AnimatedIconButton icon={EllipsisIcon} iconSize={16} variant="ghost" size="icon" aria-label="Question actions" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleViewRequest(q)}>
+                <Eye className="mr-2 h-4 w-4" />
+                View details
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleEditRequest(q)}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem variant="destructive" onClick={() => onDeleteRequest(q.id)}>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       ),
     },
-  ], [handleEditRequest, onDeleteRequest]);
+  ], [handleViewRequest, handleEditRequest, onDeleteRequest]);
 
   function getRowKey(q: InterviewQuestion) {
     return q.id;
@@ -163,6 +182,7 @@ export function QuestionList({
             data={questions ?? []}
             columns={columns}
             getRowKey={getRowKey}
+            onRowClick={handleViewRequest}
             isLoading={isLoading}
             className="flex-1 min-h-0"
             emptyState={
@@ -175,6 +195,15 @@ export function QuestionList({
           />
         </CardContent>
       </Card>
+
+      {viewQuestion && (
+        <QuestionViewSheet
+          question={viewQuestion}
+          open={viewQuestion !== null}
+          onOpenChange={handleViewOpenChange}
+          onEdit={handleEditFromView}
+        />
+      )}
 
       {editQuestion && (
         <QuestionFormDialog

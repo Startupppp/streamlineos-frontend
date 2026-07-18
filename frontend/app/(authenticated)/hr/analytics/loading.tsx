@@ -18,9 +18,7 @@ export default function HrAnalyticsLoading() {
               <Skeleton key={i} className="h-7 w-24 rounded-md" />
             ))}
           </div>
-          <div className={`ml-auto ${FILTER_TOOLBAR_ROW}`}>
-            <Skeleton className="h-9 w-36 rounded-md" />
-          </div>
+          <Skeleton className="ml-auto h-9 w-36 rounded-md" />
         </div>
 
         <div className="rounded-xl border border-border bg-card shadow-sm flex min-h-0 flex-1 flex-col">

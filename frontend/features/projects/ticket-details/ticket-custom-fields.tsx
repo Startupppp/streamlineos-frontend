@@ -74,7 +74,7 @@ const FieldValueInput = memo(function FieldValueInput({ field, currentValue, onS
         value={currentValue ?? ""}
         onValueChange={(v) => onSave(field.id, v)}
       >
-        <SelectTrigger className="text-xs border-0 bg-muted hover:bg-accent w-auto min-w-[120px]">
+        <SelectTrigger className="border-0 bg-muted hover:bg-accent w-auto min-w-[120px]">
           <SelectValue placeholder="Select..." />
         </SelectTrigger>
         <SelectContent>

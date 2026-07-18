@@ -2,11 +2,8 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
-import {
-  PmPageShell,
-  PmSection,
-  PM_TOOLBAR,
-} from "@/features/projects/shared/pm-chrome";
+import { PmPageShell, PmSection } from "@/features/projects/shared/pm-chrome";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export default function IncidentsLoading() {
   return (
@@ -14,12 +11,10 @@ export default function IncidentsLoading() {
       title="Incidents"
       subtitle="Track incidents and SLA compliance"
       filters={
-        <div className={PM_TOOLBAR}>
-          <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-            <Skeleton className="h-9 w-44 rounded-md" />
-            <Skeleton className="h-9 w-36 rounded-md" />
-            <Skeleton className="h-9 w-28 rounded-md" />
-          </div>
+        <div className={FILTER_TOOLBAR_ROW}>
+          <Skeleton className="h-9 w-44 rounded-md" />
+          <Skeleton className="h-9 w-36 rounded-md" />
+          <Skeleton className="h-9 w-28 rounded-md" />
         </div>
       }
       actions={<Skeleton className="h-9 w-28 rounded-md" />}

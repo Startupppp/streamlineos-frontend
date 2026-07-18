@@ -146,7 +146,7 @@ export function GrnDetailSheet({ grnId, open, onOpenChange }: GrnDetailSheetProp
           setReverseOpen(false);
           onOpenChange(false);
         },
-        onError: (error) => toast.error(error.message),
+        onError: (error) => toast.error(getErrorMessage(error)),
       },
     );
   }

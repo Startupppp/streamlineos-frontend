@@ -228,7 +228,7 @@ export default function Gstr1Page() {
             >
               From
             </label>
-            <DatePicker id="gstr1-from" value={from ?? ""} onChange={handleFromChange} placeholder="Pick a date" className="w-full sm:w-[160px] h-8 text-sm" />
+            <DatePicker id="gstr1-from" value={from ?? ""} onChange={handleFromChange} placeholder="Pick a date" className="w-full sm:w-[160px]" />
           </div>
           <div className="flex flex-col gap-1">
             <label
@@ -237,7 +237,7 @@ export default function Gstr1Page() {
             >
               To
             </label>
-            <DatePicker id="gstr1-to" value={to ?? ""} onChange={handleToChange} placeholder="Pick a date" className="w-full sm:w-[160px] h-8 text-sm" />
+            <DatePicker id="gstr1-to" value={to ?? ""} onChange={handleToChange} placeholder="Pick a date" className="w-full sm:w-[160px]" />
           </div>
         </div>
       }

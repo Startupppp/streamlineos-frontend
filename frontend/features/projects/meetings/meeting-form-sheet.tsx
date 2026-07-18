@@ -488,7 +488,7 @@ export function MeetingFormSheet({
                           <FormLabel className="text-xs">Repeat</FormLabel>
                           <Select value={field.value} onValueChange={field.onChange}>
                             <FormControl>
-                              <SelectTrigger className="text-xs"><SelectValue /></SelectTrigger>
+                              <SelectTrigger><SelectValue /></SelectTrigger>
                             </FormControl>
                             <SelectContent>
                               <SelectItem value="daily">Daily</SelectItem>

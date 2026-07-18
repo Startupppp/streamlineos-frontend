@@ -35,7 +35,7 @@ export function FileUpload({
     fileInputRef.current?.click();
   }
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
@@ -79,7 +79,7 @@ export function FileUpload({
         fileInputRef.current.value = "";
       }
     }
-  };
+  }
 
   function removeFile(index: number) {
     setUploadedFiles((prev) => prev.filter((_, i) => i !== index));

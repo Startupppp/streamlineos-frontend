@@ -10,8 +10,8 @@ export default function WorkflowSettingsLoading() {
       actions={<Skeleton className="h-9 w-[130px] rounded-md" />}
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
-          <Skeleton className="h-8 w-48 rounded-md" />
-          <Skeleton className="h-8 w-36 rounded-md" />
+          <Skeleton className="h-9 w-48 rounded-md" />
+          <Skeleton className="h-9 w-36 rounded-md" />
         </div>
       }
     >

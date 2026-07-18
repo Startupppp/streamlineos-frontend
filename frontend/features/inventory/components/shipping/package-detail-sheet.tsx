@@ -40,6 +40,8 @@ import {
   useClosePackage,
   useReopenPackage,
 } from "@/hooks/api/inventory/shipping";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-client";
 
 interface EditableLine {
   variantId: string;
@@ -226,7 +228,7 @@ export function PackageDetailSheet({ open, onOpenChange, packageId }: PackageDet
       { packageId, lines },
       {
         onSuccess: () => toast.success("Lines updated"),
-        onError: (error) => toast.error(error.message),
+        onError: (error) => toast.error(getErrorMessage(error)),
       },
     );
   }
@@ -247,10 +249,10 @@ export function PackageDetailSheet({ open, onOpenChange, packageId }: PackageDet
         setCloseConfirmOpen(false);
       },
       onError: (error) => {
-        if (error.message.includes("PACKAGE_CONTENT_MISMATCH")) {
+        if (isApiError(error) && error.status === 422) {
           toast.error("Package content exceeds picked quantity");
         } else {
-          toast.error(error.message);
+          toast.error(getErrorMessage(error));
         }
         setCloseConfirmOpen(false);
       },
@@ -273,7 +275,7 @@ export function PackageDetailSheet({ open, onOpenChange, packageId }: PackageDet
         setReopenConfirmOpen(false);
       },
       onError: (error) => {
-        toast.error(error.message);
+        toast.error(getErrorMessage(error));
         setReopenConfirmOpen(false);
       },
     });

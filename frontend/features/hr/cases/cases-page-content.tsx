@@ -23,7 +23,7 @@ import type { HrCase, CaseCategory, CaseStatus, CaseSeverity } from "@/hooks/api
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
-import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { CaseStatusBadge, CaseSeverityBadge, CaseCategoryLabel } from "./case-badges";
 import { CaseDetailSheet } from "./case-detail-sheet";
@@ -134,10 +134,8 @@ export function CasesPageContent() {
   ];
 
   const filters = (
-    <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-      <div className="min-w-0 w-48">
-          <SearchInput placeholder="Search cases..." value={search} onValueChange={handleSearchChange} />
-        </div>
+    <div className={FILTER_TOOLBAR_ROW}>
+      <SearchInput placeholder="Search cases..." value={search} onValueChange={handleSearchChange} className="w-48" />
       <Select
         value={status || SENTINEL}
         onValueChange={(v) => { setStatus(v === SENTINEL ? "" : (v as CaseStatus)); setPage(1); }}

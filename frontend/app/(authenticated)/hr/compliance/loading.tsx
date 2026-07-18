@@ -6,7 +6,7 @@ export default function ComplianceLoading() {
     <PageWrapper
       title="Compliance"
       subtitle="Manage labor law requirements, work authorizations, and compliance calendars."
-      actions={<Skeleton className="h-8 w-36 rounded-md" />}
+      actions={<Skeleton className="h-9 w-36 rounded-md" />}
     >
       <div className="flex flex-col flex-1 min-h-0 gap-4">
         <Skeleton className="h-9 w-72 rounded-md" />

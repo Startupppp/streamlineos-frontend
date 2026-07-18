@@ -8,7 +8,8 @@ import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { PM_TOOLBAR, PM_CONTROL } from "@/features/projects/shared/pm-chrome";
+import { PM_CONTROL } from "@/features/projects/shared/pm-chrome";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 const TYPE_OPTS = [
   { value: "all", label: "All types" },
@@ -223,8 +224,7 @@ export function MeetingsFilterBar({
   };
 
   return (
-    <div className={cn(PM_TOOLBAR, "w-full")}>
-      <div className="flex w-full min-w-0 items-center gap-2">
+    <div className={cn(FILTER_TOOLBAR_ROW)}>
         <div className="min-w-0 flex-1 sm:max-w-[11rem] sm:flex-none sm:shrink-0">
           <SearchInput
             value={search}

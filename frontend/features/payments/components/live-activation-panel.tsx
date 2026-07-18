@@ -29,6 +29,10 @@ export function LiveActivationPanel({ providerKey }: { providerKey: string }) {
 
   if (!readiness) return null;
 
+  function handleCancelActivation() {
+    setConfirmText("");
+  }
+
   function handleActivate() {
     activate.mutate(undefined, {
       onSuccess: () => {
@@ -75,7 +79,7 @@ export function LiveActivationPanel({ providerKey }: { providerKey: string }) {
             />
           </div>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setConfirmText("")}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={handleCancelActivation}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               disabled={confirmText !== CONFIRM_PHRASE || activate.isPending}
               onClick={handleActivate}
