@@ -104,6 +104,7 @@ export default function WorkLogsPage() {
   const selectedUserId = filters.selectedUserId;
 
   const isAdminOrCeo = useCan("hr:employees:manage");
+  const canEditSavedWorkLogs = useCan("hr:attendance:manage");
 
   const { data: employeesRaw } = useHrEmployees({ limit: 200 });
   const { data: departments } = useHrDepartments();
@@ -567,6 +568,7 @@ export default function WorkLogsPage() {
                   readOnly={
                     !!selectedUserId && selectedUserId !== session?.user?.id
                   }
+                  canEditSaved={canEditSavedWorkLogs}
                   approvedLeaveDates={approvedLeaveDates}
                   onSave={handleSaveLog}
                   isSaving={upsertLog.isPending}
