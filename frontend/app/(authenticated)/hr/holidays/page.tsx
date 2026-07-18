@@ -47,6 +47,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -71,8 +72,8 @@ const holidaySchema = z.object({
         .max(100, "Holiday name must be at most 100 characters")
         .refine((v) => /[a-zA-Z]/.test(v), "Holiday name must contain at least one letter")
         .refine(
-          (v) => !/[^\p{L}\p{N}\s]{2,}/u.test(v),
-          "Holiday name cannot have consecutive special characters",
+          (v) => /^[\p{L}\p{N}\s'.-]+$/u.test(v),
+          "Holiday name can only use letters, numbers, spaces, apostrophes, periods, and hyphens",
         ),
     ),
   date: z.string().min(1, "Date is required"),
@@ -312,17 +313,14 @@ function ListView({
         </Button>
       </div>
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center bg-muted/20 rounded-lg border border-border">
-          <List className="w-8 text-muted-foreground/40 mb-2" />
-          <p className="text-muted-foreground text-sm font-medium">
-            {search ? "No holidays match your search" : "No holidays for this period"}
-          </p>
-          {canManage && !search && (
-            <AnimatedIconButton icon={PlusIcon} iconSize={16} size="sm" className="mt-3" onClick={onAdd}>
-              {" Add Holiday"}
-            </AnimatedIconButton>
-          )}
-        </div>
+        <EmptyState
+          illustrationPreset="calendar"
+          illustrationSize="md"
+          title={search ? "No holidays match your search" : "No holidays for this period"}
+          action={canManage && !search ? { label: "Add Holiday", onClick: onAdd } : undefined}
+          compact
+          className="rounded-lg border border-border bg-muted/20 py-10"
+        />
       ) : (
         <div className="space-y-2">
           {filtered.map((h) => (
@@ -406,15 +404,14 @@ function UpcomingView({
 
   if (upcoming.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center bg-muted/20 rounded-lg border border-border">
-        <Clock className="w-8 text-muted-foreground/40 mb-2" />
-        <p className="text-muted-foreground text-sm font-medium">No upcoming holidays</p>
-        {canManage && (
-          <AnimatedIconButton icon={PlusIcon} iconSize={16} size="sm" className="mt-3" onClick={onAdd}>
-            {" Add Holiday"}
-          </AnimatedIconButton>
-        )}
-      </div>
+      <EmptyState
+        illustrationPreset="calendar"
+        illustrationSize="md"
+        title="No upcoming holidays"
+        action={canManage ? { label: "Add Holiday", onClick: onAdd } : undefined}
+        compact
+        className="rounded-lg border border-border bg-muted/20 py-10"
+      />
     );
   }
 
@@ -575,28 +572,24 @@ export default function HolidaysPage() {
               </SelectContent>
             </Select>
           )}
-          <div className="flex items-center border border-border rounded-md overflow-hidden h-8">
-            {VIEW_OPTIONS.map((opt) => {
-              const Icon = opt.icon;
-              const active = viewMode === opt.value;
-              return (
-                <button
-                  key={opt.value}
-                  type="button"
-                  title={opt.label}
-                  onClick={() => setViewMode(opt.value)}
-                  className={`flex items-center gap-1 px-2.5 h-full text-xs font-medium transition-colors border-r last:border-r-0 border-border ${
-                    active
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground"
-                  }`}
-                >
-                  <Icon className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">{opt.label}</span>
-                </button>
-              );
-            })}
-          </div>
+          <Tabs value={viewMode} onValueChange={handleViewChange}>
+            <TabsList className="grid h-9 min-h-9 w-auto grid-cols-5 gap-1 p-1">
+              {VIEW_OPTIONS.map((opt) => {
+                const Icon = opt.icon;
+                return (
+                  <TabsTrigger
+                    key={opt.value}
+                    value={opt.value}
+                    title={opt.label}
+                    className="h-7 min-h-7 w-full justify-center gap-1.5 px-3 text-sm"
+                  >
+                    <Icon className="size-4" />
+                    <span className="hidden sm:inline">{opt.label}</span>
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
+          </Tabs>
           {canManage && (
             <AnimatedIconButton icon={PlusIcon} iconSize={14} onClick={handleCreateClick} size="sm">
               {" Add Holiday"}
