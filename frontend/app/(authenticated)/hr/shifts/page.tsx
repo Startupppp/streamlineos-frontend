@@ -50,20 +50,21 @@ export default function ShiftsPage() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.22, ease: "easeOut" }}
+        className="flex flex-1 min-h-0 flex-col"
       >
-        <Tabs defaultValue="templates">
+        <Tabs defaultValue="templates" className="flex flex-1 min-h-0 flex-col gap-4">
           <TabsList>
             <TabsTrigger value="templates">Shift Templates</TabsTrigger>
             <TabsTrigger value="assignments">Assignments</TabsTrigger>
             <TabsTrigger value="swaps">Swap Requests</TabsTrigger>
           </TabsList>
-          <TabsContent value="templates">
+          <TabsContent value="templates" className="mt-0 flex flex-1 min-h-0 flex-col">
             <ShiftTemplatesTab canManage={canManage} onEdit={handleEdit} />
           </TabsContent>
-          <TabsContent value="assignments">
+          <TabsContent value="assignments" className="mt-0 flex flex-1 min-h-0 flex-col">
             <ShiftAssignmentsTab canManage={canManage} />
           </TabsContent>
-          <TabsContent value="swaps">
+          <TabsContent value="swaps" className="mt-0 flex flex-1 min-h-0 flex-col">
             <ShiftSwapsTab canManage={canManage} />
           </TabsContent>
         </Tabs>

@@ -529,45 +529,47 @@ export default function NotificationTemplatesPage() {
         </Button>
       }
     >
-      {isLoading ? (
-        <div className="rounded-lg border border-border overflow-hidden divide-y divide-border flex-1">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex items-start gap-3 px-3 py-2.5">
-              <div className="flex-1 space-y-1.5">
-                <Skeleton className="h-3.5 w-40" />
-                <Skeleton className="h-3 w-24" />
+      <div className="flex flex-1 min-h-0 flex-col">
+        {isLoading ? (
+          <div className="rounded-lg border border-border overflow-hidden divide-y divide-border flex-1">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-start gap-3 px-3 py-2.5">
+                <div className="flex-1 space-y-1.5">
+                  <Skeleton className="h-3.5 w-40" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      ) : isError ? (
-        <ErrorState
-          title="Failed to load templates"
-          description="Could not load notification templates."
-          onRetry={handleRetry}
-        />
-      ) : !templates?.length ? (
-        <EmptyState
-          illustrationPreset="mail"
-          title="No templates yet"
-          description="Create reusable notification templates to standardize messages sent to your team."
-          action={{ label: "Create Template", onClick: handleCreate }}
-          className={CONTENT_FILL_PANEL}
-        />
-      ) : (
-        <div className="rounded-lg border border-border overflow-hidden divide-y divide-border">
-          {templates.map((t, idx) => (
-            <TemplateRow
-              key={t.id}
-              template={t}
-              idx={idx}
-              onPreview={setPreviewTarget}
-              onEdit={handleEdit}
-              onDelete={handleSetDeleteTarget}
-            />
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        ) : isError ? (
+          <ErrorState
+            title="Failed to load templates"
+            description="Could not load notification templates."
+            onRetry={handleRetry}
+          />
+        ) : !templates?.length ? (
+          <EmptyState
+            illustrationPreset="mail"
+            title="No templates yet"
+            description="Create reusable notification templates to standardize messages sent to your team."
+            action={{ label: "Create Template", onClick: handleCreate }}
+            className={CONTENT_FILL_PANEL}
+          />
+        ) : (
+          <div className="rounded-lg border border-border overflow-hidden divide-y divide-border">
+            {templates.map((t, idx) => (
+              <TemplateRow
+                key={t.id}
+                template={t}
+                idx={idx}
+                onPreview={setPreviewTarget}
+                onEdit={handleEdit}
+                onDelete={handleSetDeleteTarget}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
       <TemplateSheet open={sheetOpen} template={editTarget} onClose={handleSheetClose} />
 

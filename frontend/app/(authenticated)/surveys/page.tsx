@@ -58,29 +58,31 @@ export default function SurveysPage() {
             ) : undefined
           }
         >
-          {isLoading ? (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {Array.from({ length: 12 }).map((_, i) => (
-                <Skeleton key={i} className="h-24 rounded-xl" />
-              ))}
-            </div>
-          ) : isError ? (
-            <ErrorState description="Failed to load surveys." onRetry={refetch} />
-          ) : surveys && surveys.length > 0 ? (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {surveys.map((survey) => (
-                <SurveyCard key={survey.id} survey={survey} />
-              ))}
-            </div>
-          ) : (
-            <EmptyState
-              illustration={<EmptyReportIllustration className="h-28 w-28" />}
-              title="No Survey Found"
-              description="Create a survey, assessment, live session, or lead qualification form to get started."
-              action={{ label: "New Survey", href: "/surveys/new" }}
-              className="flex-1"
-            />
-          )}
+          <div className="flex flex-1 min-h-0 flex-col">
+            {isLoading ? (
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 12 }).map((_, i) => (
+                  <Skeleton key={i} className="h-24 rounded-xl" />
+                ))}
+              </div>
+            ) : isError ? (
+              <ErrorState description="Failed to load surveys." onRetry={refetch} />
+            ) : surveys && surveys.length > 0 ? (
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {surveys.map((survey) => (
+                  <SurveyCard key={survey.id} survey={survey} />
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                illustration={<EmptyReportIllustration className="h-28 w-28" />}
+                title="No Survey Found"
+                description="Create a survey, assessment, live session, or lead qualification form to get started."
+                action={{ label: "New Survey", href: "/surveys/new" }}
+                className="flex-1"
+              />
+            )}
+          </div>
         </PageWrapper>
       </RequireModule>
     </DashboardGate>

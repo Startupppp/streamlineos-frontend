@@ -145,7 +145,7 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
   if (isLoading) {
     return (
       <PageWrapper title="Cycles">
-        <div className="space-y-6">
+        <div className="flex flex-1 min-h-0 flex-col gap-6">
           <div className="space-y-2">
             <Skeleton className="h-3 w-12" />
             <div className="bg-card border border-border rounded-lg p-4 space-y-3">
@@ -251,7 +251,7 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
       }
     >
       {hasCycles && (
-        <div className="space-y-6">
+        <div className="flex flex-1 min-h-0 flex-col gap-6">
           {activeCycles.length > 0 && (
             <section>
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Active</p>

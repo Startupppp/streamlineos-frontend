@@ -182,7 +182,7 @@ function RolesContent() {
                 </Button>
               </div>
             ) : (
-              <ScrollArea className="max-h-[45vh] lg:max-h-none lg:h-full" type="auto">
+              <ScrollArea className="lg:h-full" type="auto">
                 <div className="divide-y divide-border/60">
                   {(roles ?? []).map((role) => (
                     <RoleListItem

@@ -362,7 +362,7 @@ export function ProjectFeedbucketPage({ projectId }: ProjectFeedbucketPageProps)
       >
         <PmPageShell>
         {widgetsLoading ? (
-          <div className="space-y-3">
+          <div className="flex flex-1 min-h-0 flex-col gap-3">
             <Skeleton className="h-24 w-full rounded-xl" />
             <Skeleton className="h-48 w-full rounded-xl" />
           </div>
@@ -377,7 +377,7 @@ export function ProjectFeedbucketPage({ projectId }: ProjectFeedbucketPageProps)
               action={{ label: "Create feedback widget", onClick: handleOpenCreate }}
             />
         ) : (
-          <div className="space-y-4">
+          <div className="flex flex-1 min-h-0 flex-col gap-4">
             <PmSection index={0}>
               <PmPanel className="space-y-3 p-4" solid>
                 <div className="flex flex-wrap items-start justify-between gap-3">

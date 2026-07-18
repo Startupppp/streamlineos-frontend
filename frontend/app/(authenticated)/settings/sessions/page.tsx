@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
 import { SearchInput } from "@/components/ui/search-input";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -188,8 +189,10 @@ export default function SessionsPage() {
         </AnimatedIconButton>
       }
       filters={
-        <div className="min-w-0 max-w-[240px]">
-          <SearchInput placeholder="Search by device or IP…" value={search} onValueChange={handleSearchChange} />
+        <div className={FILTER_TOOLBAR_ROW}>
+          <div className="min-w-[180px] max-w-[240px]">
+            <SearchInput placeholder="Search by device or IP…" value={search} onValueChange={handleSearchChange} />
+          </div>
         </div>
       }
     >
@@ -198,6 +201,7 @@ export default function SessionsPage() {
           title="Couldn't load sessions"
           description="Something went wrong while fetching your active sessions."
           onRetry={handleRetry}
+          className="flex-1"
         />
       ) : (
         <DataTable

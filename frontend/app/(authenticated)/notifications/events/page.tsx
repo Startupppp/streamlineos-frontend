@@ -625,7 +625,7 @@ export default function NotificationEventsPage() {
           className={CONTENT_FILL_PANEL}
         />
       ) : (
-        <div className="space-y-4 flex flex-1 min-h-0 flex-col">
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
           {grouped.map(([module, moduleEvents], groupIdx) => (
             <motion.div
               key={module}

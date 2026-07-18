@@ -263,7 +263,7 @@ export default function SupportSlaPage() {
             className={CONTENT_FILL_PANEL}
           />
         ) : (
-          <div className="space-y-6">
+          <div className="flex flex-1 min-h-0 flex-col gap-6">
             <StatCardGrid cols={2}>
               <StatCard label="Total Policies" value={count} icon={Shield} tone="blue" />
               <StatCard label="Enabled" value={enabledCount} icon={Shield} tone="emerald" />

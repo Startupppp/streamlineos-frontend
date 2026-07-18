@@ -9,7 +9,9 @@ export function LoansPageContent() {
       title="Loans & Advances"
       subtitle="Manage employee salary advances and loan EMI recovery"
     >
-      <LoansTable />
+      <div className="flex flex-1 min-h-0 flex-col gap-3">
+        <LoansTable />
+      </div>
     </PageWrapper>
   );
 }

@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import {
   useSettingsAuditLog,
   type SettingsAuditEntityType,
@@ -117,7 +118,7 @@ export default function SupportSettingsAuditLogPage() {
       subtitle="Every change to SLA policies, business hours, automations, channels, and custom fields."
       filters={
         <Select value={entityType} onValueChange={handleEntityTypeChange}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-[180px]`}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

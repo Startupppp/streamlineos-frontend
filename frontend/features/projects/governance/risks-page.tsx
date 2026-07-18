@@ -248,10 +248,39 @@ export function RisksPage({ projectId }: RisksPageProps) {
 
   const isFiltered = statusFilter !== "all" || !!search.trim() || !!matrixCell;
 
+  const filtersBar = (
+    <div className={FILTER_TOOLBAR_ROW}>
+      <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <SelectTrigger className="w-40">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {STATUS_OPTS.map((o) => (
+            <SelectItem key={o.value} value={o.value}>
+              {o.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <SearchInput
+        className="w-52"
+        placeholder="Search risks…"
+        value={search}
+        onValueChange={handleSearchChange}
+      />
+      {isFiltered ? (
+        <Button size="sm" variant="ghost" className="text-xs" onClick={handleClearFilters}>
+          Clear
+        </Button>
+      ) : null}
+    </div>
+  );
+
   return (
     <PageWrapper
       title="Risk Register"
       subtitle="Identify, assess, and mitigate project risks"
+      filters={filtersBar}
       actions={canManage ? <NewRiskButton onClick={handleNewRisk} /> : undefined}
     >
       <PmPageShell>
@@ -271,35 +300,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
           </PmSection>
         ) : null}
 
-        <PmSection index={2} className="shrink-0">
-          <div className={FILTER_TOOLBAR_ROW}>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-40">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {STATUS_OPTS.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>
-                    {o.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <SearchInput
-              className="w-52"
-              placeholder="Search risks…"
-              value={search}
-              onValueChange={handleSearchChange}
-            />
-            {isFiltered ? (
-              <Button size="sm" variant="ghost" className="text-xs" onClick={handleClearFilters}>
-                Clear
-              </Button>
-            ) : null}
-          </div>
-        </PmSection>
-
-        <PmSection index={3} className="flex min-h-0 flex-1 flex-col">
+        <PmSection index={2} className="flex min-h-0 flex-1 flex-col">
           {isLoading ? (
             <DataTableSkeleton rows={12} columns={8} className="flex-1" />
           ) : isError ? (

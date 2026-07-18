@@ -26,7 +26,6 @@ import {
   PmPanel,
   PmSection,
   PM_FILL_PANEL,
-  PM_PANEL,
 } from "@/features/projects/shared/pm-chrome";
 import { TABLE_TITLE_CELL } from "@/features/projects/shared/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -187,7 +186,7 @@ export function ApprovalsInboxPage() {
       <PageWrapper title="Approvals" subtitle="Approvals waiting for your decision across all projects">
         <PmPageShell>
           <StatCardGridSkeleton cols={2} />
-          <Skeleton className={cn("h-48 rounded-xl", PM_PANEL)} />
+          <Skeleton className="h-48 w-full rounded-xl" />
         </PmPageShell>
       </PageWrapper>
     );

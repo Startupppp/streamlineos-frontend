@@ -368,7 +368,7 @@ export default function PaymentRemindersPage() {
           <TabsTrigger value="policies">Policies</TabsTrigger>
           <TabsTrigger value="log">Log</TabsTrigger>
         </TabsList>
-        <TabsContent value="policies">
+        <TabsContent value="policies" className="flex flex-1 min-h-0 flex-col mt-0">
           <PoliciesTab
             canManage={canManage}
             dialogOpen={dialogOpen}
@@ -378,7 +378,7 @@ export default function PaymentRemindersPage() {
             onNew={handleNewPolicy}
           />
         </TabsContent>
-        <TabsContent value="log">
+        <TabsContent value="log" className="flex flex-1 min-h-0 flex-col mt-0">
           <LogTab />
         </TabsContent>
       </Tabs>

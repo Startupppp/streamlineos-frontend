@@ -105,8 +105,8 @@ export const NOTIFICATION_CATEGORY_CONFIG: Record<
   HRMS: {
     label: "HRMS",
     icon: Users,
-    color: "text-violet-600",
-    bg: "bg-violet-500/10",
+    color: "text-blue-600",
+    bg: "bg-blue-500/10",
   },
   BILLING: {
     label: "Billing",
@@ -117,14 +117,14 @@ export const NOTIFICATION_CATEGORY_CONFIG: Record<
   AI: {
     label: "AI",
     icon: Brain,
-    color: "text-purple-600",
-    bg: "bg-purple-500/10",
+    color: "text-blue-600",
+    bg: "bg-blue-500/10",
   },
   PROJECTS: {
     label: "Projects",
     icon: FolderOpen,
-    color: "text-indigo-600",
-    bg: "bg-indigo-500/10",
+    color: "text-blue-600",
+    bg: "bg-blue-500/10",
   },
   WORKFLOW: {
     label: "Workflow",

@@ -149,7 +149,7 @@ export default function NotificationPolicyPage() {
         title="Notification Policy"
         subtitle="Configure organization-wide notification delivery defaults"
       >
-        <div className="space-y-4">
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="rounded-xl border border-border p-4 space-y-3">
               <Skeleton className="h-4 w-40" />
@@ -192,7 +192,7 @@ export default function NotificationPolicyPage() {
         ) : undefined
       }
     >
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         <Card className="bg-card border border-border rounded-xl shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold">Default channels</CardTitle>

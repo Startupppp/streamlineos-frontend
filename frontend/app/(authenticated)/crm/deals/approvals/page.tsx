@@ -306,7 +306,7 @@ export default function DealApprovalsPage() {
               title="No approvals found"
               description="There are no deal approvals matching the current filter."
               action={{ label: "Clear filter", onClick: handleClearFilter }}
-              className="border-0 bg-transparent min-h-[40vh]"
+              className="border-0 bg-transparent flex-1"
             />
           }
           minWidth="720px"

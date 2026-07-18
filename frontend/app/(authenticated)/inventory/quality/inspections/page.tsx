@@ -180,6 +180,7 @@ function InspectionsPageInner() {
             title="Failed to load inspections"
             description={getErrorMessage(inspectionsQuery.error)}
             onRetry={handleRetry}
+            className="flex-1"
           />
         ) : (
           <DataTable

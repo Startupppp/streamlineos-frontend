@@ -217,7 +217,7 @@ function ActivitiesContent() {
             title="Failed to load activities"
             description="Could not load activities. Please try again."
             onRetry={handleRetry}
-            className="flex-1 min-h-[300px]"
+            className="flex-1"
           />
         )}
 

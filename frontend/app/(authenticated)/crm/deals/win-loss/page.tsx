@@ -88,7 +88,7 @@ export default function WinLossAnalysisPage() {
           title="Failed to load win/loss data"
           description="An error occurred while loading the analysis."
           onRetry={handleRetry}
-          className="flex-1 min-h-[40vh]"
+          className="flex-1"
         />
       </PageWrapper>
     );
@@ -113,7 +113,7 @@ export default function WinLossAnalysisPage() {
           illustration={<EmptyDealsIllustration />}
           title="No closed deals yet"
           description="Win/loss data will appear once deals are marked as won or lost."
-          className="flex-1 min-h-[50vh]"
+          className="flex-1"
         />
       </PageWrapper>
     );

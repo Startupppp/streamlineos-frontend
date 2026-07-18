@@ -87,7 +87,7 @@ export default function SupportAgentRoutingPage() {
 
   return (
     <PageWrapper title="Agents & VIP Clients" subtitle="Skills, availability, and priority routing inputs">
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium">Agent Skills & Availability</CardTitle>

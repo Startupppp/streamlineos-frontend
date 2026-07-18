@@ -26,7 +26,6 @@ import {
   PM_PANEL,
   PM_ROW,
 } from "@/features/projects/shared/pm-chrome";
-import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -136,7 +135,7 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
 
         <PmSection index={1}>
           {isLoading ? (
-            <div className={cn(PM_PANEL, "space-y-2 p-3")}>
+            <div className="flex flex-col gap-2">
               {Array.from({ length: 6 }).map((_, i) => (
                 <Skeleton key={i} className="h-10 w-full rounded-md" />
               ))}

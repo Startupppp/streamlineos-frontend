@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { SearchInput } from "@/components/ui/search-input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -107,10 +108,8 @@ export default function VendorsListPage() {
       title="Vendor ledgers"
       subtitle="Outstanding payables by vendor."
       filters={
-        <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-          <div className="min-w-0 flex-1 max-w-[240px] w-full">
-          <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search vendors..." />
-        </div>
+        <div className={FILTER_TOOLBAR_ROW}>
+          <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search vendors..." className="w-[220px]" />
           <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer select-none">
             <Checkbox
               checked={onlyOutstanding}

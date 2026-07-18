@@ -92,7 +92,13 @@ function SessionsSection() {
   const handleRevokeAll = useCallback(() => {
     revokeAll.mutate(undefined, {
       onSuccess: (data) => {
-        const count = (data as { revokedCount?: number }).revokedCount ?? 0;
+        const count =
+          data !== null &&
+          typeof data === "object" &&
+          "revokedCount" in data &&
+          typeof (data as Record<string, unknown>).revokedCount === "number"
+            ? (data as Record<string, unknown>).revokedCount as number
+            : 0;
         toast.success(`Signed out ${count} other session${count !== 1 ? "s" : ""}`);
       },
       onError: () => toast.error("Failed to revoke sessions"),

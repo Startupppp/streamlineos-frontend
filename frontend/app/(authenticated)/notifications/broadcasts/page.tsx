@@ -530,7 +530,7 @@ export default function BroadcastsPage() {
             className={CONTENT_FILL_PANEL}
           />
         ) : (
-          <div className="rounded-lg border border-border overflow-hidden divide-y divide-border">
+          <div className="rounded-lg border border-border overflow-hidden divide-y divide-border flex-1 min-h-0">
             {items.map((b, idx) => (
               <BroadcastRow
                 key={b.id}

@@ -323,7 +323,7 @@ export default function SmartLeadSearchPage() {
             />
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
+          <div className="flex flex-1 flex-col items-center justify-center text-center gap-4">
             <div className="rounded-full bg-muted p-5">
               <Sparkles className="h-10 w-10 text-muted-foreground" />
             </div>

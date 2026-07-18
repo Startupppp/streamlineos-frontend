@@ -302,7 +302,7 @@ export default function DealsPage() {
           title="Failed to load deals"
           description="We couldn't load your deals. Please try again."
           onRetry={() => void refetch()}
-          className="flex-1 min-h-[60vh]"
+          className="flex-1"
         />
       </PageWrapper>
     );

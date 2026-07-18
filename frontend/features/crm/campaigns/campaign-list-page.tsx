@@ -169,8 +169,8 @@ export function CampaignListPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Campaigns" subtitle="Track lead sources and ROI">
-        <div className="space-y-3">
+      <PageWrapper title="Campaigns" subtitle="Track lead sources and ROI" noInternalScroll>
+        <div className="flex flex-col flex-1 min-h-0 space-y-3">
           {Array.from({ length: 9 }).map((_, i) => (
             <Skeleton key={i} className="h-10 w-full" />
           ))}

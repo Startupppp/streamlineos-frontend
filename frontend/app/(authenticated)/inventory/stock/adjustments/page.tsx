@@ -9,6 +9,7 @@ import { EmptyActivityIllustration, EmptySearchIllustration } from "@/components
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { fadeUp, staggerContainer } from "@/lib/motion-variants";
 import {
   useAdjustments,
@@ -188,9 +189,9 @@ export default function AdjustmentsPage() {
         </AnimatedIconButton>
       }
       filters={
-        <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
+        <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
           <Select value={reasonFilter} onValueChange={handleReasonChange}>
-            <SelectTrigger className="w-[160px] text-xs">
+            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[160px] text-xs")}>
               <SelectValue placeholder="All reasons" />
             </SelectTrigger>
             <SelectContent>
@@ -201,7 +202,7 @@ export default function AdjustmentsPage() {
             </SelectContent>
           </Select>
           <Select value={statusFilter} onValueChange={handleStatusChange}>
-            <SelectTrigger className="w-[160px] text-xs">
+            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[160px] text-xs")}>
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>

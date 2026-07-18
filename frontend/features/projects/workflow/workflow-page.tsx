@@ -55,7 +55,7 @@ export function WorkflowPage({ projectId }: WorkflowPageProps) {
               action={{ label: "Go to Settings", href: `/projects/${projectId}/settings` }}
             />
         ) : (
-          <div className="space-y-4">
+          <div className="flex flex-1 min-h-0 flex-col gap-4">
             <PmSection index={0}>
               <h2 className={`mb-1 text-sm font-semibold ${TEXT_ONE_LINE}`}>
                 Statuses & WIP Limits

@@ -310,7 +310,7 @@ export function HrIconWell({
   );
 }
 
-/** Subtle page content container for denser HR list pages */
+/** Page content container — threads the fill-chain from PageWrapper to the primary data region */
 export function HrPageContent({
   children,
   className,
@@ -319,7 +319,7 @@ export function HrPageContent({
   className?: string;
 }) {
   return (
-    <div className={cn("space-y-4 sm:space-y-5 lg:space-y-6", className)}>
+    <div className={cn("flex flex-1 min-h-0 flex-col gap-4 sm:gap-5", className)}>
       {children}
     </div>
   );

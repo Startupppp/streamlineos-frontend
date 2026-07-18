@@ -473,7 +473,7 @@ export function UsersPage() {
           </div>
         }
       >
-        <div className="flex flex-1 min-h-0 flex-col space-y-3">
+        <div className="flex flex-1 min-h-0 flex-col gap-3">
           <UserStatsCards />
 
           {someSelected && (

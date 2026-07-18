@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -296,24 +295,21 @@ export function ReimbursementsPageContent() {
             <span className="font-medium">{formatMonth(month)}</span> payroll run automatically.
             Approved reimbursements are included as payroll inputs.
           </div>
-          <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
-            <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
-              <DataTable
-                data={filtered}
-                columns={columns}
-                getRowKey={(row) => row.id}
-                isLoading={isLoading}
-                minWidth="820px"
-                emptyState={
-                  <EmptyState
-                    illustration={<EmptyExpensesIllustration />}
-                    title="No claims found"
-                    description="No reimbursement claims match the current filters."
-                  />
-                }
+          <DataTable
+            className="flex-1 min-h-0"
+            data={filtered}
+            columns={columns}
+            getRowKey={(row) => row.id}
+            isLoading={isLoading}
+            minWidth="820px"
+            emptyState={
+              <EmptyState
+                illustration={<EmptyExpensesIllustration />}
+                title="No claims found"
+                description="No reimbursement claims match the current filters."
               />
-            </CardContent>
-          </Card>
+            }
+          />
         </div>
       </PageWrapper>
 

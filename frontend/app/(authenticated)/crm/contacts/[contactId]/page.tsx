@@ -95,7 +95,7 @@ export default function ContactDetailPage({
           title="Contact not found"
           description="This contact may have been deleted or you don't have access."
           action={{ label: "Back to Contacts", href: "/crm/contacts" }}
-          className="min-h-[50vh]"
+          className="flex-1"
         />
       </PageWrapper>
     );

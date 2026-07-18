@@ -102,7 +102,7 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
         </div>
       }
     >
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         {isLocked && (
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-muted/30 text-[11px] text-muted-foreground">
             <span>🔒</span>

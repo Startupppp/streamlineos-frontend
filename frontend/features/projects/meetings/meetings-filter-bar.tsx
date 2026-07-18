@@ -280,7 +280,6 @@ export function MeetingsFilterBar({
             </Button>
           ) : null}
         </div>
-      </div>
     </div>
   );
 }

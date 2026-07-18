@@ -237,6 +237,7 @@ function RecallsPageInner() {
             title="Failed to load recalls"
             description={getErrorMessage(recallsQuery.error)}
             onRetry={handleRetry}
+            className="flex-1"
           />
         ) : (
           <DataTable

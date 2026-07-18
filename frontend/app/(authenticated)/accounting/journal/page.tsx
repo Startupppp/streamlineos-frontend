@@ -210,7 +210,7 @@ function EntriesTab() {
   );
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-1 min-h-0 flex-col gap-4">
       <div className={FILTER_TOOLBAR_ROW}>
         <div className="flex items-center gap-1.5">
           <label
@@ -287,6 +287,7 @@ function EntriesTab() {
           isLoading={query.isLoading}
           emptyState={emptyStateNode}
           minWidth="580px"
+          className="flex-1 min-h-0"
         />
       )}
     </div>

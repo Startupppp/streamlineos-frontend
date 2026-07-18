@@ -56,10 +56,11 @@ export default function LiveSessionHostPage() {
     <DashboardGate permission="surveys:live:host">
       <RequireModule module="SURVEYS">
         <PageWrapper title="Live session" backHref={`/surveys/${session?.surveyId ?? ""}`}>
-          {isLoading || !session ? (
-            <Skeleton className="h-64 w-full" />
-          ) : (
-            <div className="space-y-4">
+          <div className="flex flex-1 min-h-0 flex-col">
+            {isLoading || !session ? (
+              <Skeleton className="h-64 w-full" />
+            ) : (
+              <div className="flex flex-col gap-4">
               <Card>
                 <CardContent className="flex flex-wrap items-center gap-4 pt-6">
                   <div>
@@ -102,7 +103,8 @@ export default function LiveSessionHostPage() {
                 </CardContent>
               </Card>
             </div>
-          )}
+            )}
+          </div>
         </PageWrapper>
       </RequireModule>
     </DashboardGate>

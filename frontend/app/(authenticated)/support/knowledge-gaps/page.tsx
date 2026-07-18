@@ -131,7 +131,7 @@ export default function KnowledgeGapsPage() {
       )}
 
       {!isLoading && !isError && data && data.gaps.length > 0 && (
-        <div className="space-y-3">
+        <div className="flex flex-1 min-h-0 flex-col gap-3">
           {data.gaps.map((gap) => (
             <KnowledgeGapCard
               key={gap.id}

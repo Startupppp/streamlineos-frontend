@@ -213,6 +213,7 @@ function HoldsPageInner() {
             title="Failed to load holds"
             description={getErrorMessage(holdsQuery.error)}
             onRetry={handleRetry}
+            className="flex-1"
           />
         ) : (
           <DataTable

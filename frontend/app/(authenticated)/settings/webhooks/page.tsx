@@ -206,6 +206,7 @@ export default function WebhooksPage() {
           title="Couldn't load webhooks"
           description="Failed to fetch webhooks. Please try again."
           onRetry={handleRetry}
+          className="flex-1"
         />
       ) : (
         <motion.div className="space-y-4" variants={staggerContainer} initial="hidden" animate="visible">

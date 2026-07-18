@@ -110,7 +110,7 @@ export function FormDetailPage({ projectId, formId }: FormDetailPageProps) {
         title="Form"
         backHref={`/projects/${projectId}/forms`}
       >
-        <div className="space-y-4 pt-2">
+        <div className="flex flex-1 min-h-0 flex-col gap-4 pt-2">
           <Skeleton className="h-8 w-64 rounded-md" />
           <FormBuilderTabSkeleton />
         </div>

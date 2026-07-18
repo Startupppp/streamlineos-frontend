@@ -3,7 +3,6 @@
 import { useState, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AlertTriangle } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
@@ -138,25 +137,22 @@ export function LoansTable() {
           </SelectContent>
         </Select>
       </div>
-      <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
-        <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
-          <DataTable
-            data={filtered}
-            columns={columns}
-            getRowKey={(row) => row.id}
-            isLoading={isLoading}
-            minWidth="780px"
-            pagination={{ pageSize: 20 }}
-            emptyState={
-              <EmptyState
-                illustration={<EmptyPersonIllustration />}
-                title="No active loans"
-                description="Employee salary loans and advances will appear here"
-              />
-            }
+      <DataTable
+        className="flex-1 min-h-0"
+        data={filtered}
+        columns={columns}
+        getRowKey={(row) => row.id}
+        isLoading={isLoading}
+        minWidth="780px"
+        pagination={{ pageSize: 20 }}
+        emptyState={
+          <EmptyState
+            illustration={<EmptyPersonIllustration />}
+            title="No active loans"
+            description="Employee salary loans and advances will appear here"
           />
-        </CardContent>
-      </Card>
+        }
+      />
       <LoanAdjustmentDialog
         loanId={adjustState?.loanId ?? 0}
         loanEmployeeName={adjustState?.employeeName ?? ""}

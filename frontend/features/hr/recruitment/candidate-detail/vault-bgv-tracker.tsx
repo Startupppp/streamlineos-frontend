@@ -138,7 +138,7 @@ export function BgvTracker({
               <div className="space-y-1">
                 <Label className="text-xs">Status</Label>
                 <Select value={status} onValueChange={(v) => setStatus(v as BgvStatus)}>
-                  <SelectTrigger className="text-xs">
+                  <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -153,7 +153,6 @@ export function BgvTracker({
               <div className="space-y-1">
                 <Label className="text-xs">Agency</Label>
                 <Input
-                  className="text-xs"
                   placeholder="e.g. AuthBridge"
                   value={agency}
                   onChange={(e) => setAgency(e.target.value)}

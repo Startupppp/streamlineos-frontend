@@ -285,28 +285,30 @@ export default function PaymentsReceivedPage() {
         </Select>
       }
     >
-      {data?.items.length === 0 && !isLoading ? (
-        <EmptyState
-          illustrationPreset="expenses"
-          title="No payments received"
-          description="Record payments on invoices to see them here"
-        />
-      ) : (
-        <DataTable
-          data={data?.items ?? []}
-          columns={columns}
-          getRowKey={(row) => String(row.id)}
-          isLoading={isLoading}
-          onRowClick={handleViewPayment}
-          className="flex-1 min-h-0"
-          pagination={{
-            pageSize: 50,
-            page,
-            total: data?.total ?? 0,
-            onPageChange: setPage,
-          }}
-        />
-      )}
+      <div className="flex flex-1 min-h-0 flex-col">
+        {data?.items.length === 0 && !isLoading ? (
+          <EmptyState
+            illustrationPreset="expenses"
+            title="No payments received"
+            description="Record payments on invoices to see them here"
+          />
+        ) : (
+          <DataTable
+            data={data?.items ?? []}
+            columns={columns}
+            getRowKey={(row) => String(row.id)}
+            isLoading={isLoading}
+            onRowClick={handleViewPayment}
+            className="flex-1 min-h-0"
+            pagination={{
+              pageSize: 50,
+              page,
+              total: data?.total ?? 0,
+              onPageChange: setPage,
+            }}
+          />
+        )}
+      </div>
 
       <PaymentDetailSheet payment={selectedPayment} onClose={handleCloseDetail} />
     </PageWrapper>

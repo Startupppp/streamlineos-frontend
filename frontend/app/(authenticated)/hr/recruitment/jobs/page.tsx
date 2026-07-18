@@ -251,12 +251,13 @@ export default function JobPostingsPage() {
           </div>
         }
       >
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
         {isLoading ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 12 }).map((_, i) => <JobCardSkeleton key={i} />)}
           </div>
         ) : isError ? (
-          <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
+          <div className="flex flex-col items-center justify-center flex-1 gap-4 text-center">
             <p className="text-sm font-semibold text-foreground">Failed to load job postings</p>
             <p className="text-xs text-muted-foreground">An error occurred while fetching data.</p>
             <Button size="sm" variant="outline" onClick={() => void refetch()}>Try again</Button>
@@ -396,6 +397,7 @@ export default function JobPostingsPage() {
             })}
           </div>
         )}
+        </div>
       </PageWrapper>
 
       {shareJobId !== null && (

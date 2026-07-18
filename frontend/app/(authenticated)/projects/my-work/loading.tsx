@@ -12,10 +12,10 @@ export default function MyWorkLoading() {
         </PmSection>
         <PmSection index={1}>
           <div className="flex gap-1">
-            <Skeleton className="h-7 w-20 rounded-md" />
-            <Skeleton className="h-7 w-20 rounded-md" />
-            <Skeleton className="h-7 w-24 rounded-md" />
-            <Skeleton className="h-7 w-20 rounded-md" />
+            <Skeleton className="h-9 w-20 rounded-md" />
+            <Skeleton className="h-9 w-20 rounded-md" />
+            <Skeleton className="h-9 w-24 rounded-md" />
+            <Skeleton className="h-9 w-20 rounded-md" />
           </div>
           <PmPanel className="p-2">
             <div className="space-y-1.5">

@@ -334,12 +334,13 @@ export default function EmployeesPage() {
             ))}
           </div>
         ) : (
-          <HrPanel padded={false} className="overflow-hidden">
+          <HrPanel padded={false} className="overflow-hidden flex-1 min-h-0 flex flex-col">
             <DataTable<Employee>
               data={employees}
               columns={buildEmployeeListColumns(getDept)}
               getRowKey={(emp) => emp.id}
               onRowClick={(emp) => router.push(`/hr/employees/${emp.id}`)}
+              className="flex-1 min-h-0"
               pagination={{
                 mode: "server",
                 page,

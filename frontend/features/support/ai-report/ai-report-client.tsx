@@ -38,7 +38,7 @@ export function AiReportClient() {
       title="AI Report"
       subtitle="Support AI performance metrics — acceptance, resolution, escalation, and CSAT impact"
     >
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         <div className={FILTER_TOOLBAR_ROW}>
           <label className="text-xs text-muted-foreground shrink-0">From</label>
           <input
