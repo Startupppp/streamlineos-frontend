@@ -129,6 +129,7 @@ export function OrgHubClient() {
                 onCreate={createTeam as CatalogMutation<HrTeam>}
                 onUpdate={updateTeam as CatalogUpdateMutation<HrTeam>}
                 onDelete={deleteTeam as DeleteMutation<{ success: boolean }>}
+                illustrationPreset="team"
               />
             </div>
           </ScrollArea>
@@ -148,6 +149,7 @@ export function OrgHubClient() {
                 onCreate={createLocation as CatalogMutation<HrLocation>}
                 onUpdate={updateLocation as CatalogUpdateMutation<HrLocation>}
                 onDelete={deleteLocation as DeleteMutation<{ success: boolean }>}
+                illustrationPreset="travel"
                 extraColumns={[
                   {
                     label: "Type",
@@ -178,6 +180,7 @@ export function OrgHubClient() {
                 onCreate={createRole as CatalogMutation<HrJobRole>}
                 onUpdate={updateRole as CatalogUpdateMutation<HrJobRole>}
                 onDelete={deleteRole as DeleteMutation<{ success: boolean }>}
+                illustrationPreset="person"
               />
             </div>
           </ScrollArea>
@@ -197,6 +200,7 @@ export function OrgHubClient() {
                 onCreate={createLevel as CatalogMutation<HrJobLevel>}
                 onUpdate={updateLevel as CatalogUpdateMutation<HrJobLevel>}
                 onDelete={deleteLevel as DeleteMutation<{ success: boolean }>}
+                illustrationPreset="chart"
               />
             </div>
           </ScrollArea>

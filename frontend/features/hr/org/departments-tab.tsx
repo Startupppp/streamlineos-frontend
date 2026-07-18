@@ -1,26 +1,26 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useHrDepartments, useCreateDepartment } from "@/hooks/api/hr/employees";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
 import { Card, CardContent } from "@/components/ui/card";
-import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Building2 } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EntityFormSheet } from "@/components/shared/entity-form-sheet";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
@@ -28,42 +28,43 @@ interface Props {
   canManage: boolean;
 }
 
+const departmentFormSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(2, "Name must be at least 2 characters")
+    .max(100, "Name must be at most 100 characters")
+    .refine((v) => !/\s{2,}/.test(v), "Name cannot have consecutive spaces")
+    .refine((v) => /[a-zA-Z]/.test(v), "Name must contain at least one letter")
+    .refine(
+      (v) => !/[^\p{L}\p{N}\s]{2,}/u.test(v),
+      "Name cannot have consecutive special characters",
+    ),
+});
+
+type DepartmentFormValues = z.infer<typeof departmentFormSchema>;
+
 export function DepartmentsTab({ canManage }: Props) {
   const { data: departments, isLoading } = useHrDepartments();
   const createMutation = useCreateDepartment();
   const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
-  const [name, setName] = useState("");
 
-  const handleSearch = useCallback(
-    (value: string) => setSearch(value),
-    [],
-  );
-  const handleNameChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value),
-    [],
-  );
-  const handleCreate = useCallback(() => {
-    setName("");
-    setCreateOpen(true);
-  }, []);
+  const handleSearch = useCallback((value: string) => setSearch(value), []);
+  const handleCreate = useCallback(() => setCreateOpen(true), []);
+  const defaultValues = useMemo(() => ({ name: "" }), []);
 
-  const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-      createMutation.mutate(
-        { name: name.trim() },
-        {
-          onSuccess: () => {
-            toast.success("Department created");
-            setCreateOpen(false);
-          },
-          onError: (err) => toast.error(getErrorMessage(err)),
-        },
-      );
-    },
-    [name, createMutation],
-  );
+  async function handleSubmit(values: DepartmentFormValues) {
+    try {
+      await createMutation.mutateAsync({
+        name: values.name.replace(/\s+/g, " ").trim(),
+      });
+      toast.success("Department created");
+      setCreateOpen(false);
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    }
+  }
 
   const filtered = (departments ?? []).filter((d) =>
     d.name.toLowerCase().includes(search.toLowerCase()),
@@ -83,10 +84,21 @@ export function DepartmentsTab({ canManage }: Props) {
     <>
       <div className="flex items-center gap-2 mb-3">
         <div className="min-w-0 flex-1 max-w-xs">
-          <SearchInput value={search} onValueChange={handleSearch} placeholder="Search departments..." />
+          <SearchInput
+            value={search}
+            onValueChange={handleSearch}
+            placeholder="Search departments..."
+          />
         </div>
         {canManage && (
-          <AnimatedIconButton size="sm" className="gap-1.5" onClick={handleCreate} icon={PlusIcon} iconSize={14} iconClassName="mr-1.5">
+          <AnimatedIconButton
+            size="sm"
+            className="gap-1.5"
+            onClick={handleCreate}
+            icon={PlusIcon}
+            iconSize={14}
+            iconClassName="mr-1.5"
+          >
             Add Department
           </AnimatedIconButton>
         )}
@@ -128,42 +140,35 @@ export function DepartmentsTab({ canManage }: Props) {
         </Card>
       )}
 
-      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="text-sm">New Department</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-3 pt-1">
-            <div className="space-y-1.5">
-              <Label className="text-xs">Name</Label>
-              <Input
-                value={name}
-                onChange={handleNameChange}
-                placeholder="Department name"
-                className="text-sm"
-                autoFocus
-              />
-            </div>
-            <DialogFooter className="pt-1">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setCreateOpen(false)}
-              >
-                Cancel
-              </Button>
-              <LoadingButton
-                type="submit"
-                size="sm"
-                isPending={createMutation.isPending}
-              >
-                Create
-              </LoadingButton>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <EntityFormSheet<DepartmentFormValues>
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        title="New Department"
+        description="Add a department to structure your organisation."
+        resolver={zodResolver(departmentFormSchema)}
+        defaultValues={defaultValues}
+        onSubmit={handleSubmit}
+        isSubmitting={createMutation.isPending}
+        submitLabel="Create"
+        className="sm:max-w-md"
+        resetOnOpen
+      >
+        {(form) => (
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Department name" autoFocus {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+      </EntityFormSheet>
     </>
   );
 }

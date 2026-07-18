@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
 import { Card, CardContent } from "@/components/ui/card";
-import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Pencil, Trash2, Plus } from "lucide-react";
@@ -18,15 +19,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { EmptyState } from "@/components/ui/empty-state";
+import { EntityFormSheet } from "@/components/shared/entity-form-sheet";
+import type { StateIllustrationPreset } from "@/components/illustrations/state-illustration";
 import type { OrgCatalogInput } from "@/types/hr/core";
 import type { UseMutationResult } from "@tanstack/react-query";
 
@@ -46,9 +49,35 @@ interface OrgCatalogTableProps<T extends CatalogItem> {
   onUpdate: UseMutationResult<unknown, Error, OrgCatalogInput & { id: number }>;
   onDelete: UseMutationResult<unknown, Error, number>;
   extraColumns?: Array<{ label: string; render: (item: T) => React.ReactNode }>;
+  illustrationPreset?: StateIllustrationPreset;
 }
 
-function UpsertDialog({
+const catalogFormSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(2, "Name must be at least 2 characters")
+    .max(100, "Name must be at most 100 characters")
+    .refine((v) => !/\s{2,}/.test(v), "Name cannot have consecutive spaces")
+    .refine((v) => /[a-zA-Z]/.test(v), "Name must contain at least one letter")
+    .refine(
+      (v) => !/[^\p{L}\p{N}\s]{2,}/u.test(v),
+      "Name cannot have consecutive special characters",
+    ),
+  code: z
+    .string()
+    .trim()
+    .refine(
+      (v) =>
+        v === "" ||
+        (/^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(v) && v.length <= 20),
+      "Code can only use letters, numbers, hyphens, and underscores (max 20)",
+    ),
+});
+
+type CatalogFormValues = z.infer<typeof catalogFormSchema>;
+
+function UpsertSheet({
   open,
   onOpenChange,
   title,
@@ -63,100 +92,96 @@ function UpsertDialog({
   onCreate: UseMutationResult<unknown, Error, OrgCatalogInput>;
   onUpdate: UseMutationResult<unknown, Error, OrgCatalogInput & { id: number }>;
 }) {
-  const [name, setName] = useState(initial?.name ?? "");
-  const [code, setCode] = useState(initial?.code ?? "");
-
-  const handleNameChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value),
-    [],
-  );
-  const handleCodeChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setCode(e.target.value),
-    [],
+  const isEdit = initial?.id !== undefined;
+  const defaultValues = useMemo(
+    () => ({
+      name: initial?.name ?? "",
+      code: initial?.code ?? "",
+    }),
+    [initial?.name, initial?.code],
   );
 
-  const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-      const payload: OrgCatalogInput = {
-        name: name.trim(),
-        code: code.trim() || undefined,
-      };
-      if (initial?.id !== undefined) {
-        onUpdate.mutate(
-          { ...payload, id: initial.id },
-          {
-            onSuccess: () => {
-              toast.success(`${title} updated`);
-              onOpenChange(false);
-            },
-            onError: (err) => toast.error(getErrorMessage(err)),
-          },
-        );
+  async function handleSubmit(values: CatalogFormValues) {
+    const payload: OrgCatalogInput = {
+      name: values.name.replace(/\s+/g, " ").trim(),
+      code: values.code.trim() ? values.code.trim().toUpperCase() : undefined,
+    };
+    try {
+      if (isEdit && initial) {
+        await onUpdate.mutateAsync({ ...payload, id: initial.id });
+        toast.success(`${title} updated`);
       } else {
-        onCreate.mutate(payload, {
-          onSuccess: () => {
-            toast.success(`${title} created`);
-            onOpenChange(false);
-          },
-          onError: (err) => toast.error(getErrorMessage(err)),
-        });
+        await onCreate.mutateAsync(payload);
+        toast.success(`${title} created`);
       }
-    },
-    [name, code, initial, onCreate, onUpdate, title, onOpenChange],
-  );
-
-  const isPending = initial ? onUpdate.isPending : onCreate.isPending;
+      onOpenChange(false);
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    }
+  }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-sm">
-        <DialogHeader>
-          <DialogTitle className="text-sm">
-            {initial ? `Edit ${title}` : `New ${title}`}
-          </DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-3 pt-1">
-          <div className="space-y-1.5">
-            <Label className="text-xs">Name</Label>
-            <Input
-              value={name}
-              onChange={handleNameChange}
-              placeholder={`${title} name`}
-              className="text-sm"
-              autoFocus
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">
-              Code{" "}
-              <span className="text-muted-foreground font-normal">
-                (optional)
-              </span>
-            </Label>
-            <Input
-              value={code}
-              onChange={handleCodeChange}
-              placeholder="Short code"
-              className="text-sm font-mono"
-            />
-          </div>
-          <DialogFooter className="pt-1">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancel
-            </Button>
-            <LoadingButton type="submit" size="sm" isPending={isPending}>
-              {initial ? "Save" : "Create"}
-            </LoadingButton>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+    <EntityFormSheet<CatalogFormValues>
+      open={open}
+      onOpenChange={onOpenChange}
+      title={isEdit ? `Edit ${title}` : `New ${title}`}
+      description={
+        isEdit
+          ? `Update this ${title.toLowerCase()}.`
+          : `Add a ${title.toLowerCase()} to your organisation catalog.`
+      }
+      resolver={zodResolver(catalogFormSchema)}
+      defaultValues={defaultValues}
+      onSubmit={handleSubmit}
+      isSubmitting={isEdit ? onUpdate.isPending : onCreate.isPending}
+      submitLabel={isEdit ? "Save" : "Create"}
+      className="sm:max-w-md"
+      resetOnOpen
+    >
+      {(form) => (
+        <div className="space-y-4">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Name</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder={`${title} name`}
+                    autoFocus
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="code"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Code{" "}
+                  <span className="text-muted-foreground font-normal">
+                    (optional)
+                  </span>
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="e.g. ENG"
+                    className="font-mono uppercase"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+      )}
+    </EntityFormSheet>
   );
 }
 
@@ -169,6 +194,7 @@ export function OrgCatalogTable<T extends CatalogItem>({
   onUpdate,
   onDelete,
   extraColumns = [],
+  illustrationPreset = "default",
 }: OrgCatalogTableProps<T>) {
   const [search, setSearch] = useState("");
   const [upsertOpen, setUpsertOpen] = useState(false);
@@ -230,22 +256,21 @@ export function OrgCatalogTable<T extends CatalogItem>({
       </div>
 
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <p className="text-sm font-medium text-foreground">
-            No {title.toLowerCase()}s found
-          </p>
-          {canManage && (
-            <Button
-              size="sm"
-              variant="outline"
-              className="mt-3 h-8 gap-1.5"
-              onClick={handleCreate}
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Add first {title.toLowerCase()}
-            </Button>
-          )}
-        </div>
+        <EmptyState
+          illustrationPreset={illustrationPreset}
+          title={`No ${title.toLowerCase()}s found`}
+          description={
+            search
+              ? "Try a different search term."
+              : `Create your first ${title.toLowerCase()} to get started.`
+          }
+          action={
+            canManage
+              ? { label: `Add first ${title.toLowerCase()}`, onClick: handleCreate }
+              : undefined
+          }
+          compact
+        />
       ) : (
         <Card className="rounded-2xl border border-border/70 bg-card/90 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_10px_28px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
           <CardContent className="p-0">
@@ -305,7 +330,7 @@ export function OrgCatalogTable<T extends CatalogItem>({
         </Card>
       )}
 
-      <UpsertDialog
+      <UpsertSheet
         open={upsertOpen}
         onOpenChange={handleUpsertOpenChange}
         title={title}
