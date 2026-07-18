@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { getToken, type JWT } from "next-auth/jwt";
 import { PLATFORM_OWNER_ROLE, OWNER_HOME } from "@/lib/platform/role";
 import { ROLES } from "@/lib/constants/roles";
 
@@ -62,13 +62,10 @@ function isLoopbackHostname(hostname: string): boolean {
   );
 }
 
-function authJsSessionCookieName(req: NextRequest): string {
-  if (process.env.NODE_ENV !== "production") {
-    return "authjs.session-token";
-  }
-  const forwarded = req.headers.get("x-forwarded-proto");
-  const isHttps = forwarded === "https" || req.nextUrl.protocol === "https:";
-  return isHttps ? "__Secure-authjs.session-token" : "authjs.session-token";
+function sessionCookieNames(): string[] {
+  if (process.env.NODE_ENV !== "production") return ["authjs.session-token"];
+
+  return ["__Secure-authjs.session-token", "authjs.session-token"];
 }
 
 const PROTECTED_ROUTES = [
@@ -95,14 +92,9 @@ const PROTECTED_ROUTES = [
   "/surveys",
 ];
 
-const AUTH_ROUTES = [
-  "/signin",
-  "/verify-email",
-];
+const AUTH_ROUTES = ["/signin", "/verify-email"];
 
-const ALLOW_AUTHENTICATED = [
-  "/invitation",
-];
+const ALLOW_AUTHENTICATED = ["/invitation"];
 
 const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/hr": ["hr:employees:view"],
@@ -219,11 +211,12 @@ export default async function middleware(req: NextRequest) {
   crypto.getRandomValues(nonceBytes);
   const nonce = btoa(String.fromCharCode(...nonceBytes));
 
-  const token = await getToken({
-    req,
-    secret: process.env.NEXTAUTH_SECRET,
-    cookieName: authJsSessionCookieName(req),
-  });
+  const secret = process.env.NEXTAUTH_SECRET;
+  let token: JWT | null = null;
+  for (const cookieName of sessionCookieNames()) {
+    token = await getToken({ req, secret, cookieName });
+    if (token) break;
+  }
 
   const isAuthenticated = !!token;
   if (
@@ -308,7 +301,10 @@ export default async function middleware(req: NextRequest) {
   }
 
   if (isAuthenticated && pathname.startsWith("/onboarding")) {
-    if (token?.isPlatformAdmin === true || token?.role === PLATFORM_OWNER_ROLE) {
+    if (
+      token?.isPlatformAdmin === true ||
+      token?.role === PLATFORM_OWNER_ROLE
+    ) {
       const url = req.nextUrl.clone();
       url.pathname = OWNER_HOME;
       url.search = "";
@@ -363,13 +359,17 @@ export default async function middleware(req: NextRequest) {
     isAuthenticated &&
     (startsWithAny(pathname, PROTECTED_ROUTES) || isBlogAdminPath(pathname))
   ) {
-    const isPlatformAdmin = (token?.isPlatformAdmin as boolean | undefined) === true;
+    const isPlatformAdmin =
+      (token?.isPlatformAdmin as boolean | undefined) === true;
     const isOrgOwner = (token?.isOrgOwner as boolean | undefined) === true;
     // Permissions are no longer stored in the cookie; without the claim, defer gating to the server-side requirePermission.
     const userPermissions = Array.isArray(token?.permissions)
       ? (token.permissions as string[])
       : null;
-    if (userPermissions !== null && !canAccessRoute(pathname, isPlatformAdmin, isOrgOwner, userPermissions)) {
+    if (
+      userPermissions !== null &&
+      !canAccessRoute(pathname, isPlatformAdmin, isOrgOwner, userPermissions)
+    ) {
       const url = req.nextUrl.clone();
       url.pathname = isBlogAdminPath(pathname) ? "/blogs" : "/dashboard";
       url.search = "";
@@ -382,7 +382,10 @@ export default async function middleware(req: NextRequest) {
   const response = NextResponse.next({
     request: { headers: requestHeaders },
   });
-  response.headers.set("Content-Security-Policy", buildCsp(nonce, process.env.NEXT_PUBLIC_API_URL));
+  response.headers.set(
+    "Content-Security-Policy",
+    buildCsp(nonce, process.env.NEXT_PUBLIC_API_URL),
+  );
   return response;
 }
 

@@ -366,6 +366,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.daysUntilExpiry = token.daysUntilExpiry as number;
       session.authProvider =
         (token.authProvider as string | undefined) ?? "credentials";
+      session.orgOnboardingCompletedAt =
+        fresh?.orgOnboardingCompletedAt ?? token.orgOnboardingCompletedAt ?? null;
+      session.userOnboardingCompletedAt =
+        fresh?.userOnboardingCompletedAt ?? token.userOnboardingCompletedAt ?? null;
 
       const jwtSecret = process.env.BACKEND_JWT_SECRET;
       const sessionId = (token.sessionId as string | undefined)?.trim();
