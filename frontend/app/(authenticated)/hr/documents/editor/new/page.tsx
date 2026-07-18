@@ -325,10 +325,6 @@ export default function NewDocumentPage() {
       toast.error("Title cannot consist of only special characters");
       return;
     }
-    if (/\s{2,}/.test(title)) {
-      toast.error("Title cannot have multiple consecutive spaces");
-      return;
-    }
     if (trimmedTitle && /[<>{}[\]\\|^~`]/.test(trimmedTitle)) {
       toast.error("Title contains invalid special characters");
       return;

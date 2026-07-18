@@ -333,7 +333,7 @@ export default function OfferTemplatesPage() {
         title="Offer Templates"
         subtitle="Reusable offer letter templates with placeholders."
         actions={pageActions}
-      >
+ variant="display">
         <div className="space-y-3">
           {Array.from({ length: 12 }).map((_, i) => (
             <Skeleton key={i} className="h-20 rounded-xl" />
@@ -348,7 +348,7 @@ export default function OfferTemplatesPage() {
       title="Offer Templates"
       subtitle="Create and manage reusable offer letter templates with dynamic placeholders."
       actions={pageActions}
-    >
+ variant="display">
       {templates.length === 0 ? (
         <RecruitmentEmptyState
           illustration={<EmptyDocumentsIllustration />}

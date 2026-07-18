@@ -9,7 +9,7 @@ export default async function HrLegalHoldsPage() {
     <PageWrapper
       title="Legal Holds"
       subtitle="Manage investigation locks and data preservation orders."
-    >
+ variant="display">
       <LegalHoldsTable />
     </PageWrapper>
   );

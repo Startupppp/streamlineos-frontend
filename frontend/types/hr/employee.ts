@@ -364,3 +364,47 @@ export interface OnboardEmployeeInput {
     pfUanNumber?: string;
   };
 }
+
+/** Spreadsheet row for bulk onboard — department name or numeric id. */
+export interface BulkOnboardEmployeeRow {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  whatsappSameAsPhone?: boolean;
+  whatsappNumber?: string;
+  gender?: "MALE" | "FEMALE" | "OTHER";
+  password?: string;
+  designation: string;
+  departmentId?: number;
+  department?: string;
+  role?: string;
+  employeeId?: string;
+  joiningDate?: string;
+  dateOfBirth?: string;
+  taxId?: string;
+  monthlySalary?: number;
+  bankDetails?: {
+    accountNumber?: string;
+    bankName?: string;
+    branch?: string;
+    ifsc?: string;
+    accountHolder?: string;
+    pfUanNumber?: string;
+  };
+}
+
+export interface BulkOnboardResultRow {
+  row: number;
+  email: string;
+  success: boolean;
+  userId?: string;
+  error?: string;
+}
+
+export interface BulkOnboardResult {
+  total: number;
+  created: number;
+  failed: number;
+  results: BulkOnboardResultRow[];
+}

@@ -80,7 +80,7 @@ export function EmployeeTimelineTab({ userId }: Props) {
             <div className={cn("relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-background", colorClass)}>
               <Icon className="h-4 w-4" />
             </div>
-            <Card className="flex-1 rounded-xl border border-border bg-card shadow-sm">
+            <Card className="flex-1 rounded-2xl border border-border/70 bg-card/90 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_10px_28px_-14px_rgba(15,23,42,0.12)]">
               <CardContent className="p-3">
                 <div className="flex items-start justify-between gap-2 min-w-0">
                   <TruncatedText text={entry.action} className="text-sm font-medium text-foreground leading-snug min-w-0 flex-1" />

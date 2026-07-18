@@ -105,7 +105,7 @@ export function TerminationDetailSheet({
         <>
           <div
             className={cn(
-              "rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 p-4 flex items-center gap-3",
+              "rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden border-l-4 p-4 flex items-center gap-3",
               reviewRecord.status === "APPROVED" ||
                 reviewRecord.status === "COMPLETED"
                 ? "border-l-emerald-500"

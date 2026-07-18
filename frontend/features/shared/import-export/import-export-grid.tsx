@@ -82,7 +82,7 @@ export function ImportExportGrid({ entities }: ImportExportGridProps) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${entity.id}-export-${new Date().toISOString().split("T")[0]}.xlsx`;
+      a.download = `${entity.id}-export-${new Date().toISOString().split("T")[0]}.csv`;
       a.click();
       URL.revokeObjectURL(url);
       toast.success(`${entity.label} export downloaded`);

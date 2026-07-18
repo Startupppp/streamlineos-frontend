@@ -6,7 +6,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import {
   Users,
   TrendingDown,
@@ -73,7 +72,7 @@ function DrillableStatCard({ label, value, hint, icon, tone = "default", onClick
       hint={hint}
       icon={icon}
       tone={tone}
-      className={onClick ? "hover:bg-muted/30 cursor-pointer" : undefined}
+      className={onClick ? "cursor-pointer hover:border-primary/30 hover:bg-muted/30" : undefined}
     />
   );
 
@@ -90,7 +89,7 @@ function DrillableStatCard({ label, value, hint, icon, tone = "default", onClick
           onClick();
         }
       }}
-      className="cursor-pointer"
+      className="h-full cursor-pointer rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
     >
       {card}
     </div>

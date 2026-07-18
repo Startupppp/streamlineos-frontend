@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { Form } from "@/components/ui/form";
 import { toast } from "sonner";
-import { useCreateDocument, useHrEmployees } from "@/hooks/api/hr";
+import { useCreateDocument, useHrEmployeeOptions } from "@/hooks/api/hr";
 import { useUploadFile } from "@/hooks/api/use-upload-file";
 import {
   formSchema, type DocumentFormData, DocumentFormFields,
@@ -64,7 +64,7 @@ export function UploadDocumentDialog({
   const [isDragOver, setIsDragOver] = useState(false);
   const titleAutoPopulated = useRef(false);
 
-  const { data: employees } = useHrEmployees(undefined);
+  const { employees } = useHrEmployeeOptions({ limit: 200 });
   const createDocumentMutation = useCreateDocument();
   const uploadFileMutation = useUploadFile();
 
@@ -80,12 +80,10 @@ export function UploadDocumentDialog({
     [documentTypes],
   );
 
-  const filteredEmployees = useMemo(() => {
-    if (!employees || !Array.isArray(employees)) return [];
-    return (employees as { id: string; firstName: string | null; lastName: string | null }[]).filter(
-      (emp) => emp.id && emp.id.trim() !== "",
-    );
-  }, [employees]);
+  const filteredEmployees = useMemo(
+    () => employees.filter((emp) => emp.id && emp.id.trim() !== ""),
+    [employees],
+  );
 
   const form = useForm<DocumentFormData>({
     resolver: zodResolver(formSchema),

@@ -75,7 +75,7 @@ function TemplateCard({ template, onCopy, onEdit, onDelete }: TemplateCardProps)
   const varCount = template.variables?.length ?? 0;
 
   return (
-    <Card className="rounded-lg border border-border bg-card shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
+    <Card className="rounded-2xl border border-border/70 bg-card/90 shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
       <CardContent className="p-3 space-y-2">
         <div className="flex items-center justify-between">
           <span className={cn("inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border", categoryClass)}>
@@ -186,7 +186,6 @@ function EmailTemplatesContent() {
     if (!trimmedName) { toast.error("Template Name is required"); return; }
     if (trimmedName.length < 2) { toast.error("Template Name must be at least 2 characters"); return; }
     if (trimmedName.length > 100) { toast.error("Template Name must be at most 100 characters"); return; }
-    if (/\s{2,}/.test(trimmedName)) { toast.error("Template Name cannot have multiple consecutive spaces"); return; }
     const trimmedSubject = subject.trim();
     if (!trimmedSubject) { toast.error("Subject Line is required"); return; }
     if (trimmedSubject.length < 2) { toast.error("Subject must be at least 2 characters"); return; }
@@ -263,7 +262,7 @@ function EmailTemplatesContent() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Email Templates" subtitle="Manage HR email templates">
+      <PageWrapper title="Email Templates" subtitle="Manage HR email templates" variant="display">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-36 rounded-xl" />)}
         </div>
@@ -273,7 +272,7 @@ function EmailTemplatesContent() {
 
   if (isError) {
     return (
-      <PageWrapper title="Email Templates" subtitle="Manage HR email templates">
+      <PageWrapper title="Email Templates" subtitle="Manage HR email templates" variant="display">
         <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
           <AlertCircle className="w-8 text-destructive" />
           <div>

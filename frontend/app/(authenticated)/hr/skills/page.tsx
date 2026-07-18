@@ -28,19 +28,15 @@ const LEVELS = [
   { value: "5", label: "Expert" },
 ];
 
-const SKILL_NAME_RE = /[a-zA-Z]/;
-const CONSECUTIVE_SPACES_RE = /  +/;
-
 function normalizeSkillName(name: string): string {
   return name.trim().replace(/\s+/g, " ").toLowerCase();
 }
 
 function validateSkillName(name: string): string | null {
-  const trimmed = name.trim();
-  if (trimmed.length < 2) return "Skill name must be at least 2 characters.";
-  if (trimmed.length > 50) return "Skill name must be at most 50 characters.";
-  if (!SKILL_NAME_RE.test(trimmed)) return "Skill name must contain at least one letter.";
-  if (CONSECUTIVE_SPACES_RE.test(trimmed)) return "Skill name must not contain consecutive spaces.";
+  const trimmed = name.trim().replace(/\s+/g, " ");
+  if (trimmed.length < 1) return "Skill name is required.";
+  if (trimmed.length > 80) return "Skill name must be at most 80 characters.";
+  if (!/[\p{L}\p{N}]/u.test(trimmed)) return "Skill name must contain a letter or number.";
   return null;
 }
 
@@ -136,7 +132,7 @@ export default function SkillsPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Skills Matrix" subtitle="Track team competencies">
+      <PageWrapper title="Skills Matrix" subtitle="Track team competencies" variant="display">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-40 rounded-2xl" />)}
         </div>
@@ -146,7 +142,7 @@ export default function SkillsPage() {
 
   if (isError) {
     return (
-      <PageWrapper title="Skills Matrix" subtitle="Track team competencies">
+      <PageWrapper title="Skills Matrix" subtitle="Track team competencies" variant="display">
         <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
           <AlertCircle className="w-8 text-destructive" />
           <div>
@@ -179,7 +175,7 @@ export default function SkillsPage() {
     >
       {!skills?.length ? (
         <EmptyState
-          illustration={<BookOpen className="w-8 text-muted-foreground" />}
+          illustrationPreset="learning"
           title="No skills recorded yet"
           description="Add your skills to build the organization's competency map."
           action={{ label: "Add Skill", onClick: handleOpenSheet }}
@@ -201,7 +197,7 @@ export default function SkillsPage() {
               <Card
                 key={name}
                 className={cn(
-                  "rounded-2xl border border-border bg-card shadow-sm overflow-hidden",
+                  "rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden",
                   "border-l-4 transition-shadow duration-200 hover:shadow-md",
                   accent,
                 )}

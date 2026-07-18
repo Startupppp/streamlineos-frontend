@@ -9,7 +9,7 @@ import { ResultsTab } from "@/features/hr/feedback/results-tab";
 
 export default function FeedbackPage() {
   return (
-    <PageWrapper title="360° Feedback" subtitle="Manage feedback cycles and review submissions">
+    <PageWrapper title="360° Feedback" subtitle="Manage feedback cycles and review submissions" variant="display">
       <Tabs defaultValue="cycles">
         <TabsList className="bg-card/80 border border-border/80">
           <TabsTrigger value="cycles">Cycles</TabsTrigger>

@@ -14,7 +14,7 @@ export default function HrHelpdeskPage() {
     <PageWrapper
       title="HR Helpdesk"
       subtitle="Submit and track HR support requests"
-    >
+ variant="display">
       <Tabs defaultValue="my-tickets" className="space-y-4">
         <TabsList>
           <TabsTrigger value="my-tickets" className="text-xs">My Tickets</TabsTrigger>

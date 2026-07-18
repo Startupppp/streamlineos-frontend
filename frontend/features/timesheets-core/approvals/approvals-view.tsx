@@ -19,7 +19,7 @@ import {
   useBulkApprove,
   useBulkReject,
 } from "@/hooks/api/timesheets-core/approvals";
-import { useHrEmployees } from "@/hooks/api/hr";
+import { useHrEmployees, unwrapEmployees } from "@/hooks/api/hr";
 import type { TimesheetPeriod } from "@/features/timesheets-core/types";
 import type { Employee } from "@/types/hr";
 import { cn } from "@/lib/utils";
@@ -60,9 +60,7 @@ export function ApprovalsView() {
   );
 
   const { data: employeesRaw } = useHrEmployees({ limit: 100 });
-  const employees: Employee[] = Array.isArray(employeesRaw)
-    ? employeesRaw
-    : employeesRaw?.data ?? [];
+  const employees: Employee[] = unwrapEmployees(employeesRaw);
 
   const bulkApproveMutation = useBulkApprove();
   const bulkRejectMutation = useBulkReject();

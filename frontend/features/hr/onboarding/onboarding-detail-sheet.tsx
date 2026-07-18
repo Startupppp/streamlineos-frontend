@@ -363,7 +363,7 @@ export function EmployeeDocumentsTab({ onBack, onContinue }: EmployeeDocumentsTa
 
   return (
     <>
-      <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden mb-4">
+      <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden mb-4">
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
@@ -397,7 +397,7 @@ export function EmployeeDocumentsTab({ onBack, onContinue }: EmployeeDocumentsTa
             <Card
               key={docType.id}
               className={cn(
-                "rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 transition-colors duration-200",
+                "rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden border-l-4 transition-colors duration-200",
                 isApproved
                   ? "border-l-emerald-500"
                   : status === "SUBMITTED"

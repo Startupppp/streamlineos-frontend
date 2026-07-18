@@ -359,7 +359,7 @@ export default function HeadcountPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Headcount Planning" subtitle="Manage hiring requests">
+      <PageWrapper title="Headcount Planning" subtitle="Manage hiring requests" variant="display">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-40 rounded-xl" />)}
         </div>

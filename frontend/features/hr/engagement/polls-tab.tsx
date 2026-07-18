@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Form,
   FormControl,
@@ -270,10 +271,12 @@ export function PollsTab() {
       )}
 
       {(!polls || polls.length === 0) ? (
-        <div className="flex flex-col items-center justify-center py-16 rounded-lg border border-dashed border-border bg-muted/20">
-          <BarChart3 className="w-8 text-muted-foreground mb-3" />
-          <p className="text-sm font-medium text-foreground">No polls yet</p>
-        </div>
+        <EmptyState
+          illustrationPreset="chart"
+          title="No polls yet"
+          description="Create a poll to gather quick feedback from the team"
+          compact
+        />
       ) : (
         <div className="space-y-3">
           {polls.map((poll) => (

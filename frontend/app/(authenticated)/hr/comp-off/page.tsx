@@ -14,7 +14,7 @@ export default function CompOffPage() {
   const earnedDays = records?.[0] ? parseFloat(records[0].earnedDays) : 0;
 
   return (
-    <PageWrapper title="Compensatory Off" subtitle="Track earned comp-off from overtime work">
+    <PageWrapper title="Compensatory Off" subtitle="Track earned comp-off from overtime work" variant="display">
       <div className="space-y-6">
         {isLoading ? (
           <Skeleton className="h-40 rounded-2xl" />

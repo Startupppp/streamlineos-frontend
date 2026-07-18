@@ -7,7 +7,6 @@ import { EditEmployeeForm, type EmployeeData } from "./edit-employee-form";
 import { EmployeeAttendanceHistory } from "@/components/hr/employee-attendance-history";
 import { SelfEditProfileForm } from "@/components/hr/self-edit-profile-form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   useHrEmployeeStats,
   useHrEmployeeProjects,
@@ -187,7 +186,7 @@ function DirectReportsSection({ employeeId }: { employeeId: string }) {
 
   if (isLoading) {
     return (
-      <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+      <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-3">
             <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -209,7 +208,7 @@ function DirectReportsSection({ employeeId }: { employeeId: string }) {
   if (!reports || reports.length === 0) return null;
 
   return (
-    <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+    <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
       <CardContent className="p-4">
         <div className="flex items-center gap-2 mb-3">
           <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -262,7 +261,7 @@ function ManagerScorecardSection({ employeeId }: { employeeId: string }) {
   if (!scorecard || scorecard.teamSize === 0) return null;
 
   return (
-    <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+    <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
       <CardContent className="p-4">
         <div className="flex items-center gap-2 mb-4">
           <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -323,6 +322,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
   const router = useRouter();
   const { data: session } = useSession();
   const canManageEmployees = useCan("hr:employees:manage");
+  const canUpdateEmployee = useCan("hr:employees:update");
   const canViewSensitive = useCan("hr:sensitive:view");
   const [terminateOpen, setTerminateOpen] = useState(false);
   const searchParams = useSearchParams();
@@ -405,8 +405,8 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
       employeeAsEmployee.role ?? "",
       employee.id,
       true,
-      session?.user?.role,
       session?.user?.id,
+      canUpdateEmployee,
     );
 
   return (
@@ -458,12 +458,11 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
             )}
           </div>
         }
-        noInternalScroll
         contentClassName="flex flex-col gap-3"
       >
         <Card
           className={cn(
-            "rounded-2xl border border-border bg-card shadow-sm overflow-hidden shrink-0 border-l-4",
+            "rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden shrink-0 border-l-4",
             isAlreadyTerminated ? "border-l-rose-500" : "border-l-emerald-500",
           )}
         >
@@ -620,7 +619,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
 
         <Tabs
           defaultValue={defaultTab}
-          className="flex flex-col flex-1 min-h-0"
+          className="flex flex-col gap-3"
         >
           <div className="overflow-x-auto shrink-0">
           <TabsList className="rounded-lg border p-1 w-max min-w-full">
@@ -673,12 +672,11 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
 
           <TabsContent
             value="overview"
-            className="flex-1 min-h-0 mt-3 flex flex-col overflow-hidden"
+            className="mt-0 flex-none"
           >
-            <ScrollArea hideScrollbar className="min-h-0 flex-1">
-              <div className="overscroll-contain space-y-3 pb-4">
+            <div className="space-y-3 pb-4">
               {skillsList.length > 0 && (
-                <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+                <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-2 mb-3">
                       <div className="w-7 rounded-lg bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center">
@@ -707,7 +705,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
               <DirectReportsSection employeeId={employee.id} />
 
               <div className="grid gap-3 lg:grid-cols-2">
-                <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+                <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-2 mb-3">
                       <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -726,7 +724,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                     />
                   </CardContent>
                 </Card>
-                <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+                <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-2 mb-3">
                       <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -746,58 +744,49 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                   </CardContent>
                 </Card>
               </div>
-              </div>
-            </ScrollArea>
+            </div>
           </TabsContent>
 
           <TabsContent
             value="attendance"
-            className="flex-1 min-h-0 mt-3 flex flex-col overflow-hidden"
+            className="mt-0 flex-none"
           >
-            <ScrollArea hideScrollbar className="min-h-0 flex-1">
-              <div className="overscroll-contain pb-6">
-                <EmployeeAttendanceHistory userId={employee.id} />
-              </div>
-            </ScrollArea>
+            <div className="pb-6">
+              <EmployeeAttendanceHistory userId={employee.id} />
+            </div>
           </TabsContent>
 
-          <TabsContent value="timeline" className="flex-1 min-h-0 mt-3 flex flex-col overflow-hidden">
-            <ScrollArea hideScrollbar className="min-h-0 flex-1">
-              <div className="overscroll-contain pb-4">
-                <EmployeeTimelineTab userId={employee.id} />
-              </div>
-            </ScrollArea>
+          <TabsContent value="timeline" className="mt-0 flex-none">
+            <div className="pb-4">
+              <EmployeeTimelineTab userId={employee.id} />
+            </div>
           </TabsContent>
 
           {showSensitiveTab && (
-            <TabsContent value="sensitive" className="flex-1 min-h-0 mt-3 flex flex-col overflow-hidden">
-              <ScrollArea hideScrollbar className="min-h-0 flex-1">
-                <div className="overscroll-contain pb-4">
-                  <EmployeeSensitiveTab userId={employee.id} />
-                </div>
-              </ScrollArea>
+            <TabsContent value="sensitive" className="mt-0 flex-none">
+              <div className="pb-4">
+                <EmployeeSensitiveTab userId={employee.id} />
+              </div>
             </TabsContent>
           )}
 
           {isSelf && (
             <TabsContent
               value="my-profile"
-              className="flex-1 min-h-0 mt-3 flex flex-col overflow-hidden"
+              className="mt-0 flex-none"
             >
-              <ScrollArea hideScrollbar className="min-h-0 flex-1">
-                <div className="overscroll-contain pb-4">
-                  <SelfEditProfileForm
-                    employee={employeeAsEmployee}
-                    onSaved={() => router.refresh()}
-                  />
-                </div>
-              </ScrollArea>
+              <div className="pb-4">
+                <SelfEditProfileForm
+                  employee={employeeAsEmployee}
+                  onSaved={() => router.refresh()}
+                />
+              </div>
             </TabsContent>
           )}
 
           <TabsContent
             value="profile"
-            className="flex-1 min-h-0 flex flex-col mt-3"
+            className="mt-0 flex-none pb-4"
           >
             <EditEmployeeForm employee={employee} />
           </TabsContent>

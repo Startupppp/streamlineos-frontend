@@ -5,7 +5,8 @@ import { useState, useCallback, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { useHrEmployees } from "@/hooks/api/hr";
+import { useHrEmployees,
+  unwrapEmployees} from "@/hooks/api/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -78,7 +79,7 @@ function FnfCard({ item, onMarkPaid, isPending }: FnfCardProps) {
   return (
     <Card
       className={cn(
-        "rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 transition-colors duration-200",
+        "rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden border-l-4 transition-colors duration-200",
         fnfBorderClass(item.status)
       )}
     >
@@ -196,11 +197,9 @@ function FnfContent() {
     onSuccess: () => qc.invalidateQueries({ queryKey: fnfKeys.list() }),
   });
 
-  const { data: employeesRaw } = useHrEmployees();
+  const { data: employeesRaw } = useHrEmployees({ limit: 200 });
   const employees = useMemo<Employee[]>(() => {
-    if (Array.isArray(employeesRaw)) return employeesRaw;
-    if (employeesRaw && "data" in employeesRaw) return employeesRaw.data;
-    return [];
+    return unwrapEmployees(employeesRaw);
   }, [employeesRaw]);
 
   const employeeOptions = useMemo<ComboboxOption[]>(() =>
@@ -290,7 +289,7 @@ function FnfContent() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Full & Final Settlement" subtitle="Employee separation settlements">
+      <PageWrapper title="Full & Final Settlement" subtitle="Employee separation settlements" variant="display">
         <div className="space-y-3">
           {Array.from({ length: 10 }).map((_, i) => (
             <Skeleton key={i} className="h-20 rounded-2xl" />
@@ -302,7 +301,7 @@ function FnfContent() {
 
   if (isError) {
     return (
-      <PageWrapper title="Full & Final Settlement" subtitle="Employee separation settlements">
+      <PageWrapper title="Full & Final Settlement" subtitle="Employee separation settlements" variant="display">
         <EmptyState
           illustrationPreset="alert"
           title="Failed to load settlements"

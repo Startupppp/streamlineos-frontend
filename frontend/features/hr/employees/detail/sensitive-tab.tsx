@@ -49,41 +49,34 @@ const sensitiveSchema = z.object({
     z.string().regex(/^[A-Za-z0-9]{6,9}$/, "Must be 6–9 alphanumeric characters")
   ),
   nationalId: emptyOrValid(z.string().min(1).max(100)),
-  aadharNumber: emptyOrValid(
-    z.string().regex(/^\d{12}$/, "Must be exactly 12 digits")
-  ),
-  ssn: emptyOrValid(
-    z.string().regex(/^(\d{3}-\d{2}-\d{4}|\d{9})$/, "Invalid SSN format")
-  ),
 });
 
 type FormValues = z.infer<typeof sensitiveSchema>;
 
 function sensitiveToForm(data: HrSensitiveData | undefined): FormValues {
   return {
-    bankAccountNumber: data?.bankAccountNumber ?? "",
-    bankName: data?.bankName ?? "",
-    ifscCode: data?.ifscCode ?? "",
+    bankAccountNumber: data?.bankDetails?.accountNumber ?? "",
+    bankName: data?.bankDetails?.bankName ?? "",
+    ifscCode: data?.bankDetails?.ifsc ?? "",
     taxId: data?.taxId ?? "",
     panNumber: data?.panNumber ?? "",
     passportNumber: data?.passportNumber ?? "",
     nationalId: data?.nationalId ?? "",
-    aadharNumber: data?.aadharNumber ?? "",
-    ssn: data?.ssn ?? "",
   };
 }
 
-function formToSensitive(values: FormValues): HrSensitiveData {
+function formToSensitive(values: FormValues, existing: HrSensitiveData | undefined): Partial<HrSensitiveData> {
   return {
-    bankAccountNumber: values.bankAccountNumber === "" ? null : values.bankAccountNumber,
-    bankName: values.bankName === "" ? null : values.bankName,
-    ifscCode: values.ifscCode === "" ? null : values.ifscCode,
+    bankDetails: {
+      ...existing?.bankDetails,
+      accountNumber: values.bankAccountNumber || undefined,
+      bankName: values.bankName || undefined,
+      ifsc: values.ifscCode || undefined,
+    },
     taxId: values.taxId === "" ? null : values.taxId,
     panNumber: values.panNumber === "" ? null : values.panNumber,
     passportNumber: values.passportNumber === "" ? null : values.passportNumber,
     nationalId: values.nationalId === "" ? null : values.nationalId,
-    aadharNumber: values.aadharNumber === "" ? null : values.aadharNumber,
-    ssn: values.ssn === "" ? null : values.ssn,
   };
 }
 
@@ -174,7 +167,7 @@ export function EmployeeSensitiveTab({ userId }: Props) {
   };
 
   const onSubmit = form.handleSubmit((values) => {
-    updateMutation.mutate(formToSensitive(values), {
+    updateMutation.mutate(formToSensitive(values, sensitive), {
       onSuccess: () => {
         toast.success("Sensitive data updated");
         setEditMode(false);
@@ -212,6 +205,8 @@ export function EmployeeSensitiveTab({ userId }: Props) {
     );
   }
 
+  const displayValues = sensitiveToForm(sensitive);
+
   const fields: Array<{ label: string; key: keyof FormValues }> = [
     { label: "Bank Account Number", key: "bankAccountNumber" },
     { label: "Bank Name", key: "bankName" },
@@ -219,9 +214,7 @@ export function EmployeeSensitiveTab({ userId }: Props) {
     { label: "Tax ID", key: "taxId" },
     { label: "PAN Number", key: "panNumber" },
     { label: "Passport Number", key: "passportNumber" },
-    { label: "National ID", key: "nationalId" },
-    { label: "Aadhaar Number", key: "aadharNumber" },
-    { label: "SSN", key: "ssn" },
+    { label: "National ID (Aadhaar / SSN)", key: "nationalId" },
   ];
 
   return (
@@ -257,7 +250,7 @@ export function EmployeeSensitiveTab({ userId }: Props) {
                 <MaskedField
                   key={key}
                   label={label}
-                  value={sensitive?.[key]}
+                  value={displayValues[key]}
                   editMode={editMode}
                   fieldName={key}
                   control={form.control}

@@ -10,6 +10,7 @@ import {
   useUpdateGoal,
   useDeleteGoal,
   useHrEmployees,
+  unwrapEmployees,
   type HrGoal,
 } from "@/hooks/api/hr";
 import { Button } from "@/components/ui/button";
@@ -107,7 +108,7 @@ type GoalFormValues = z.infer<typeof goalSchema>;
 
 export function GoalsTab() {
   const { data: goals, isLoading } = useHrGoals();
-  const { data: employeesRaw } = useHrEmployees();
+  const { data: employeesRaw } = useHrEmployees({ limit: 200 });
   const createGoal = useCreateGoal();
   const updateGoal = useUpdateGoal();
   const deleteGoal = useDeleteGoal();
@@ -129,12 +130,7 @@ export function GoalsTab() {
   });
 
   const employees = useMemo(
-    () =>
-      (
-        (Array.isArray(employeesRaw)
-          ? employeesRaw
-          : ((employeesRaw as { data?: Employee[] })?.data ?? [])) as Employee[]
-      ).filter((e) => !!e.id),
+    () => unwrapEmployees(employeesRaw).filter((e) => !!e.id),
     [employeesRaw],
   );
 
@@ -322,7 +318,7 @@ export function GoalsTab() {
             return (
               <Card
                 key={goal.id}
-                className={`rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 transition-shadow duration-200 hover:shadow-md ${accentClass}`}
+                className={`rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden border-l-4 transition-shadow duration-200 hover:shadow-md ${accentClass}`}
               >
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-start justify-between gap-2">

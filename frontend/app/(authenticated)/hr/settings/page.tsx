@@ -29,15 +29,16 @@ export default function HrSettingsHubPage() {
     <PageWrapper
       title="HR Configuration"
       subtitle="Configure policies, workflows, automations, and org settings"
+      variant="display"
       actions={
-        <div className="bg-muted rounded-lg p-0.5 flex">
+        <div className="bg-muted/40 border border-border/70 rounded-xl p-0.5 flex backdrop-blur-sm">
           <button
             type="button"
             onClick={() => handleToggle(false)}
             className={
               !isAdvanced
-                ? "rounded-md px-3 py-1 text-xs font-medium transition-colors bg-background shadow-sm text-foreground"
-                : "rounded-md px-3 py-1 text-xs font-medium transition-colors text-muted-foreground hover:text-foreground"
+                ? "rounded-lg px-3 py-1.5 text-xs font-medium transition-colors bg-background shadow-sm text-foreground"
+                : "rounded-lg px-3 py-1.5 text-xs font-medium transition-colors text-muted-foreground hover:text-foreground"
             }
           >
             Simple
@@ -47,8 +48,8 @@ export default function HrSettingsHubPage() {
             onClick={() => handleToggle(true)}
             className={
               isAdvanced
-                ? "rounded-md px-3 py-1 text-xs font-medium transition-colors bg-background shadow-sm text-foreground"
-                : "rounded-md px-3 py-1 text-xs font-medium transition-colors text-muted-foreground hover:text-foreground"
+                ? "rounded-lg px-3 py-1.5 text-xs font-medium transition-colors bg-background shadow-sm text-foreground"
+                : "rounded-lg px-3 py-1.5 text-xs font-medium transition-colors text-muted-foreground hover:text-foreground"
             }
           >
             Advanced

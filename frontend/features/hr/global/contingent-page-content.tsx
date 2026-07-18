@@ -15,8 +15,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, FileText } from "lucide-react";
+import { FileText } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import {
   useContracts,
@@ -112,11 +113,15 @@ export function ContingentPageContent() {
       {isLoading ? (
         <div className="space-y-2">{Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-lg" />)}</div>
       ) : (data?.data ?? []).length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-          <Users className="h-12 w-12 mb-3 opacity-30" />
-          <p className="text-sm">No contingent contracts yet.</p>
-          <Button variant="link" size="sm" onClick={() => setSheetOpen(true)} className="mt-2">Add the first contract</Button>
-        </div>
+        <EmptyState
+          illustrationPreset="team"
+          title="No contingent contracts yet"
+          description="Track contractors, interns, temporary, and agency engagements."
+          action={{
+            label: "Add the first contract",
+            onClick: () => setSheetOpen(true),
+          }}
+        />
       ) : (
         <div className="space-y-2">
           {(data?.data ?? []).map((contract) => (

@@ -400,7 +400,7 @@ export default function EmailSequencesPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Email Sequences" subtitle="Automated drip campaigns for candidates." actions={pageActions}>
+      <PageWrapper title="Email Sequences" subtitle="Automated drip campaigns for candidates." actions={pageActions} variant="display">
         <div className="space-y-3">
           {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
         </div>
@@ -409,7 +409,7 @@ export default function EmailSequencesPage() {
   }
 
   return (
-    <PageWrapper title="Email Sequences" subtitle="Automated drip campaigns to nurture candidates at each pipeline stage." actions={pageActions}>
+    <PageWrapper title="Email Sequences" subtitle="Automated drip campaigns to nurture candidates at each pipeline stage." actions={pageActions} variant="display">
       {sequences.length === 0 ? (
         <RecruitmentEmptyState
           illustration={<EmptyMailIllustration />}

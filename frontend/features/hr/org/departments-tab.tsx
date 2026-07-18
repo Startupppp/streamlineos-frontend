@@ -12,6 +12,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { Building2 } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Dialog,
   DialogContent,
@@ -92,25 +93,23 @@ export function DepartmentsTab({ canManage }: Props) {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <Building2 className="w-8 text-muted-foreground mb-3" />
-          <p className="text-sm font-medium text-foreground">
-            No departments found
-          </p>
-          {canManage && (
-            <Button
-              size="sm"
-              variant="outline"
-              className="mt-3 h-8 gap-1.5"
-              onClick={handleCreate}
-            >
-              <PlusIcon size={14} />
-              Add first department
-            </Button>
-          )}
-        </div>
+        <EmptyState
+          illustrationPreset="companies"
+          title="No departments found"
+          description={
+            search
+              ? "Try a different search term."
+              : "Create your first department to structure the organization."
+          }
+          action={
+            canManage
+              ? { label: "Add department", onClick: handleCreate }
+              : undefined
+          }
+          compact
+        />
       ) : (
-        <Card className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+        <Card className="rounded-2xl border border-border/70 bg-card/90 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_10px_28px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
           <CardContent className="p-0">
             <div className="divide-y divide-border">
               {filtered.map((dept) => (

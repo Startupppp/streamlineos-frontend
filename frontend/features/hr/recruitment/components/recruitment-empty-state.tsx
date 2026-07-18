@@ -9,6 +9,8 @@ export type RecruitmentEmptyStateProps = ComponentProps<typeof EmptyState>;
 
 /** Uniform empty-state illustrations across the recruitment hub. */
 export function RecruitmentEmptyState({
+  illustration,
+  illustrationPreset = "person",
   illustrationSize,
   className,
   compact,
@@ -17,6 +19,8 @@ export function RecruitmentEmptyState({
   const size = illustrationSize ?? (compact ? "sm" : "md");
   return (
     <EmptyState
+      illustration={illustration}
+      illustrationPreset={illustration ? undefined : illustrationPreset}
       illustrationSize={size}
       compact={compact}
       className={cn(!compact && CONTENT_FILL_PANEL, className)}

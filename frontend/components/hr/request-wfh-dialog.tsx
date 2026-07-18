@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Home } from "lucide-react";
 import { format, addDays } from "date-fns";
-import { useHrEmployees, useCreateWfhRequest } from "@/hooks/api/hr";
+import { useHrEmployees, useCreateWfhRequest, unwrapEmployees } from "@/hooks/api/hr";
 import { Button } from "@/components/ui/button";
 import { EntityFormSheet } from "@/components/shared";
 import {
@@ -43,13 +43,10 @@ interface RequestWfhDialogProps {
 export function RequestWfhDialog({ trigger }: RequestWfhDialogProps = {}) {
   const [open, setOpen] = useState(false);
   const createWfhRequest = useCreateWfhRequest();
-  const { data: employeesRaw } = useHrEmployees();
+  const { data: employeesRaw } = useHrEmployees({ limit: 200 });
 
-  const employees = useMemo<Employee[]>(
-    () =>
-      (Array.isArray(employeesRaw)
-        ? employeesRaw
-        : ((employeesRaw as { data?: Employee[] })?.data ?? [])) as Employee[],
+  const employees = useMemo(
+    () => unwrapEmployees(employeesRaw),
     [employeesRaw],
   );
 

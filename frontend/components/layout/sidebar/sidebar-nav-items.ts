@@ -883,7 +883,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Salary Structures",
         icon: IndianRupee,
         href: "/payroll/salary-structures",
-        requiredPermission: "payroll:salaries:view",
+        requiredPermission: "hr:salary:view",
       },
       {
         label: "Templates",

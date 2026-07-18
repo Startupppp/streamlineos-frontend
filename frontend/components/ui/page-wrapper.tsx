@@ -7,7 +7,7 @@ import Link from "next/link";
 import { ArrowLeft, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
+import { PAGE_CHROME_BOTTOM, PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface PageWrapperProps {
@@ -63,7 +63,7 @@ export function PageWrapper({
         className={cn(
           "shrink-0",
           PAGE_CHROME_X,
-          actionsInline ? "pt-3 pb-1.5" : "pt-4 pb-2",
+          actionsInline ? "pt-3.5 pb-2" : "pt-5 pb-3 sm:pt-6 sm:pb-3",
         )}
       >
         <div
@@ -128,7 +128,7 @@ export function PageWrapper({
       {filters && (
         <div className="shrink-0">
           {!mobileFiltersInline && (
-            <div className={cn(PAGE_CHROME_X, "pb-2", mobileFiltersClass, filtersClassName)}>
+            <div className={cn(PAGE_CHROME_X, "pb-2.5", mobileFiltersClass, filtersClassName)}>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="text-xs gap-1.5">
@@ -146,7 +146,7 @@ export function PageWrapper({
           )}
           <div
             className={cn(
-              "w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0 pb-2 sm:gap-3",
+              "w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0 pb-3 sm:gap-3",
               PAGE_CHROME_X,
               mobileFiltersInline ? "flex" : desktopFiltersClass,
               filtersClassName,
@@ -160,8 +160,11 @@ export function PageWrapper({
       {noInternalScroll ? (
         <div
           className={cn(
+            // Always keep horizontal + bottom chrome; never let contentClassName strip it
             "flex min-h-0 flex-1 flex-col overflow-hidden",
-            contentClassName ?? PAGE_CHROME_X,
+            PAGE_CHROME_X,
+            PAGE_CHROME_BOTTOM,
+            contentClassName,
           )}
         >
           {children}
@@ -176,6 +179,7 @@ export function PageWrapper({
             className={cn(
               "flex min-h-0 flex-1 flex-col overscroll-contain",
               PAGE_CHROME_X,
+              PAGE_CHROME_BOTTOM,
             )}
           >
             {children}

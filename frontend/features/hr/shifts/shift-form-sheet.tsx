@@ -44,8 +44,7 @@ const schema = z.object({
         .min(3, "Name must be at least 3 characters")
         .max(100, "Name must be at most 100 characters")
         .refine((v) => /[a-zA-Z]/.test(v), "Name must contain at least one letter")
-        .refine((v) => MEANINGFUL_RE.test(v), "Name must contain at least 3 letters")
-        .refine((v) => !/\s{2,}/.test(v), "Name cannot have consecutive spaces"),
+        .refine((v) => MEANINGFUL_RE.test(v), "Name must contain at least 3 letters"),
     ),
   type: z.enum(SHIFT_TYPES),
   startTime: z.string().min(1, "Start time is required"),

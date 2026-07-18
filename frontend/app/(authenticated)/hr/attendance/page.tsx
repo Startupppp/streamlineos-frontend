@@ -15,7 +15,7 @@ export default function AttendancePage() {
       <PageWrapper
         title="Attendance"
         subtitle="Track your work hours and manage check-ins"
-      >
+ variant="display">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
           <div className="lg:col-span-4 space-y-3">
             <Skeleton className="h-64 rounded-xl" />
@@ -39,7 +39,7 @@ export default function AttendancePage() {
       subtitle="Track your work hours and manage check-ins"
       noInternalScroll
       contentClassName="flex flex-col"
-    >
+ variant="display">
       <AttendanceContent userId={userId} isAdmin={isAdmin} />
     </PageWrapper>
   );

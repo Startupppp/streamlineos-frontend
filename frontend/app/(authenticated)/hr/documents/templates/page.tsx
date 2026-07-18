@@ -334,7 +334,7 @@ export default function DocumentTemplatesPage() {
       <PageWrapper
         title="Document Templates"
         subtitle="Manage reusable HTML templates for offer letters, NDAs, and policies."
-      >
+ variant="display">
         <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
           <AlertCircle className="w-8 text-destructive" />
           <div>

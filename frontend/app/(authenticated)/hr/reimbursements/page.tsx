@@ -184,7 +184,7 @@ export default function ReimbursementsPage() {
 
   if (isError) {
     return (
-      <PageWrapper title="Reimbursements" subtitle="Submit and track expense reimbursements">
+      <PageWrapper title="Reimbursements" subtitle="Submit and track expense reimbursements" variant="display">
         <div className="flex flex-col items-center justify-center py-20 gap-4">
           <div className="text-center">
             <p className="text-sm font-semibold text-foreground">Failed to load reimbursements</p>
@@ -293,7 +293,7 @@ export default function ReimbursementsPage() {
         className="flex-1 min-h-0"
         emptyState={
           <EmptyState
-            illustration={<Receipt className="w-8 text-muted-foreground" />}
+            illustrationPreset="expenses"
             title="No reimbursement requests"
             description="Submit expense reimbursement requests for approval."
           />

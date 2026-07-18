@@ -71,7 +71,7 @@ export function WorkLogMonthGroup({
   };
 
   return (
-    <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+    <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
       <CardHeader
         className={cn(
           "cursor-pointer select-none sticky top-0 z-10 bg-card/95 backdrop-blur-sm border-b border-border/60 py-3 px-4",
