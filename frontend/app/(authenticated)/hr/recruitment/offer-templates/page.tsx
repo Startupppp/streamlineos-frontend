@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { useOfferTemplates, useCreateOfferTemplate, useUpdateOfferTemplate, useDeleteOfferTemplate, useGenerateOfferPdf } from "@/hooks/api/hr/recruitment/offer-templates";
 import type { OfferLetterTemplate } from "@/hooks/api/hr/recruitment/offer-templates";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -188,13 +189,9 @@ function TemplateSheet({ open, onOpenChange, template }: TemplateSheetProps) {
           >
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={isPending}>
-            {isPending
-              ? "Saving..."
-              : isEdit
-                ? "Save Changes"
-                : "Create Template"}
-          </Button>
+          <LoadingButton onClick={handleSubmit} isPending={isPending} loadingText="Saving...">
+            {isEdit ? "Save Changes" : "Create Template"}
+          </LoadingButton>
         </SheetFooter>
       </SheetContent>
     </Sheet>
@@ -261,7 +258,7 @@ function PreviewSheet({ template, onClose }: PreviewSheetProps) {
           <Button variant="outline" onClick={onClose}>
             Close
           </Button>
-          <Button onClick={handleDownloadPdf} disabled={generatePdf.isPending}>
+          <LoadingButton onClick={handleDownloadPdf} isPending={generatePdf.isPending} loadingText="Generating...">
             <svg
               className="h-4 w-4 mr-1.5"
               fill="none"
@@ -275,8 +272,8 @@ function PreviewSheet({ template, onClose }: PreviewSheetProps) {
                 d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
               />
             </svg>
-            {generatePdf.isPending ? "Generating..." : "Download Sample PDF"}
-          </Button>
+            Download Sample PDF
+          </LoadingButton>
         </SheetFooter>
       </SheetContent>
     </Sheet>

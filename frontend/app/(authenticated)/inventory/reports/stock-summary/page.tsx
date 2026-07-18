@@ -15,6 +15,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
 import { SearchInput } from "@/components/ui/search-input";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -221,7 +222,7 @@ function StockSummaryContent() {
     void query.refetch();
   }
 
-  function handleSearchChange(value: string) {
+  function handleSearchChange(value: string): void {
     setSearch(value);
   }
 
@@ -271,16 +272,12 @@ function StockSummaryContent() {
   return (
     <PageWrapper
       title="Stock Summary"
-      subtitle={
-        query.data !== undefined
-          ? `${query.data.total} stock record${query.data.total !== 1 ? "s" : ""}`
-          : "Current stock levels across all products"
-      }
+      subtitle="Current stock levels across all products"
       filters={
         <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0 lg:gap-3">
           <SearchInput className="min-w-0 flex-1 lg:max-w-md" value={search} onValueChange={handleSearchChange} placeholder="Search products, SKU…" />
           <Select value={warehouseParam} onValueChange={handleWarehouseChange}>
-            <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-[160px] min-w-0 text-xs shrink-0`}>
+            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[160px] min-w-0 text-xs shrink-0")}>
               <SelectValue placeholder="All warehouses" />
             </SelectTrigger>
             <SelectContent>
@@ -308,48 +305,48 @@ function StockSummaryContent() {
         </div>
       }
     >
-      {query.error && (
-        <ErrorState
-          description={getErrorMessage(query.error)}
-          onRetry={handleRetry}
-          className="flex-1"
-        />
-      )}
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
+        {query.error && (
+          <ErrorState
+            description={getErrorMessage(query.error)}
+            onRetry={handleRetry}
+          />
+        )}
 
-      {noData && (
-        <InventoryEmptyState
-          illustration={<EmptyReportIllustration />}
-          title="No stock data"
-          description="No products have stock levels recorded yet."
-        />
-      )}
+        {noData && (
+          <InventoryEmptyState
+            illustration={<EmptyReportIllustration />}
+            title="No stock data"
+            description="No products have stock levels recorded yet."
+          />
+        )}
 
-      {noResults && (
-        <InventoryEmptyState
-          illustration={<EmptySearchIllustration />}
-          title="No results"
-          description="No stock records match your search."
-          action={{ label: "Clear search", onClick: handleClearSearch }}
-        />
-      )}
+        {noResults && (
+          <InventoryEmptyState
+            illustration={<EmptySearchIllustration />}
+            title="No results"
+            description="No stock records match your search."
+            action={{ label: "Clear search", onClick: handleClearSearch }}
+          />
+        )}
 
-      {!query.error && !noData && !noResults && (
-        <DataTable
-          data={filtered}
-          columns={STOCK_SUMMARY_COLUMNS}
-          className="flex-1 min-h-0"
-          getRowKey={(row) => `${row.productId}-${row.warehouseName}`}
-          isLoading={query.isLoading}
-          minWidth="920px"
-          pagination={{
-            mode: "server",
-            page: currentPage,
-            pageSize: 50,
-            total: query.data?.total ?? 0,
-            onPageChange: handlePageChange,
-          }}
-        />
-      )}
+        {!query.error && !noData && !noResults && (
+          <DataTable
+            data={filtered}
+            columns={STOCK_SUMMARY_COLUMNS}
+            getRowKey={(row) => `${row.productId}-${row.warehouseName}`}
+            isLoading={query.isLoading}
+            minWidth="920px"
+            pagination={{
+              mode: "server",
+              page: currentPage,
+              pageSize: 50,
+              total: query.data?.total ?? 0,
+              onPageChange: handlePageChange,
+            }}
+          />
+        )}
+      </div>
     </PageWrapper>
   );
 }

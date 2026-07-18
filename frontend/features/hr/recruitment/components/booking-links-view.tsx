@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
@@ -49,23 +50,24 @@ function CopyButton({ text }: { text: string }) {
 function RevokeButton({
   linkId,
   onRevoke,
-  disabled,
+  isPending,
 }: {
   linkId: number;
   onRevoke: (id: number) => void;
-  disabled: boolean;
+  isPending: boolean;
 }) {
   function handleClick() { onRevoke(linkId); }
   return (
-    <Button
+    <LoadingButton
       variant="ghost"
       size="sm"
       className="text-xs text-destructive hover:text-destructive"
       onClick={handleClick}
-      disabled={disabled}
+      isPending={isPending}
+      loadingText="Revoking…"
     >
       Revoke
-    </Button>
+    </LoadingButton>
   );
 }
 
@@ -168,7 +170,7 @@ export function BookingLinksView({ baseUrl }: { baseUrl: string }) {
           <RevokeButton
             linkId={link.id}
             onRevoke={handleRevoke}
-            disabled={revoke.isPending}
+            isPending={revoke.isPending}
           />
         );
       },

@@ -12,6 +12,7 @@ import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recr
 import { EmptyTeamIllustration } from "@/components/illustrations";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
@@ -183,9 +184,9 @@ function RequestSheet({ initial, onClose }: RequestSheetProps) {
           <Button variant="secondary" onClick={handleSaveDraft} disabled={isPending}>
             Save Draft
           </Button>
-          <Button onClick={handleSubmitForApproval} disabled={isPending}>
-            {isPending ? "Saving..." : "Submit for Approval"}
-          </Button>
+          <LoadingButton onClick={handleSubmitForApproval} isPending={isPending} loadingText="Saving...">
+            Submit for Approval
+          </LoadingButton>
         </SheetFooter>
       </SheetContent>
     </Sheet>
@@ -232,7 +233,7 @@ function RejectDialog({ requestId, onClose }: RejectDialogProps) {
         <AlertDialogFooter>
           <AlertDialogCancel onClick={onClose}>Cancel</AlertDialogCancel>
           <AlertDialogAction onClick={handleRejectClick} disabled={reject.isPending}>
-            {reject.isPending ? "Rejecting..." : "Reject"}
+            Reject
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

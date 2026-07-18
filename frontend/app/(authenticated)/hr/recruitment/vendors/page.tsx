@@ -130,7 +130,7 @@ export default function VendorsPage() {
                 disabled={deleteVendor.isPending}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
-                {deleteVendor.isPending ? "Deleting..." : "Delete"}
+                Delete
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

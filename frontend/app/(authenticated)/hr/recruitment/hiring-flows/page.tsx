@@ -609,7 +609,7 @@ export default function HiringFlowsPage() {
               disabled={deleteFlow.isPending}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deleteFlow.isPending ? "Deleting…" : "Delete"}
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -53,6 +53,10 @@ function CreateRecallDialog({
     defaultValues: { title: "", reason: "", severity: "", lotIdsRaw: "", serialIdsRaw: "" },
   });
 
+  function handleCancel(): void {
+    onOpenChange(false);
+  }
+
   function handleSubmit(values: CreateFormValues): void {
     const lotIds = values.lotIdsRaw
       ? values.lotIdsRaw.split(",").map((s) => Number(s.trim())).filter((n) => !isNaN(n) && n > 0)
@@ -75,14 +79,14 @@ function CreateRecallDialog({
           form.reset();
           onOpenChange(false);
         },
-        onError: (e) => toast.error(e.message),
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }
 
   const footer = (
     <>
-      <Button size="sm" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+      <Button size="sm" variant="outline" onClick={handleCancel}>Cancel</Button>
       <Button size="sm" onClick={form.handleSubmit(handleSubmit)} disabled={createMut.isPending}>
         {createMut.isPending ? "Creating…" : "Create Recall"}
       </Button>
@@ -225,47 +229,47 @@ function RecallsPageInner() {
     <>
       <PageWrapper
         title="Recalls"
-        subtitle={total > 0 ? `${total} ${total === 1 ? "recall" : "recalls"}` : "Manage product recalls"}
+        subtitle="Manage product recalls"
         actions={
           <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1.5" size="sm" onClick={handleOpenCreate}>
             New Recall
           </AnimatedIconButton>
         }
       >
-        {recallsQuery.error ? (
-          <ErrorState
-            title="Failed to load recalls"
-            description={getErrorMessage(recallsQuery.error)}
-            onRetry={handleRetry}
-            className="flex-1"
-          />
-        ) : (
-          <DataTable
-            className="flex-1 min-h-0"
-            data={items}
-            columns={columns}
-            getRowKey={(r) => r.id}
-            onRowClick={handleRowClick}
-            isLoading={recallsQuery.isLoading}
-            emptyState={
-              <InventoryEmptyState
-                illustration={<EmptySearchIllustration />}
-                title="No recalls yet"
-                description="Product recalls will appear here once created."
-                action={{ label: "New Recall", onClick: handleOpenCreate }}
-                className="border-0 bg-transparent"
-              />
-            }
-            pagination={{
-              mode: "server",
-              page,
-              pageSize: PAGE_LIMIT,
-              total,
-              onPageChange: handlePageChange,
-            }}
-            minWidth="560px"
-          />
-        )}
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+          {recallsQuery.error ? (
+            <ErrorState
+              title="Failed to load recalls"
+              description={getErrorMessage(recallsQuery.error)}
+              onRetry={handleRetry}
+            />
+          ) : (
+            <DataTable
+              data={items}
+              columns={columns}
+              getRowKey={(r) => r.id}
+              onRowClick={handleRowClick}
+              isLoading={recallsQuery.isLoading}
+              emptyState={
+                <InventoryEmptyState
+                  illustration={<EmptySearchIllustration />}
+                  title="No recalls yet"
+                  description="Product recalls will appear here once created."
+                  action={{ label: "New Recall", onClick: handleOpenCreate }}
+                  className="border-0 bg-transparent"
+                />
+              }
+              pagination={{
+                mode: "server",
+                page,
+                pageSize: PAGE_LIMIT,
+                total,
+                onPageChange: handlePageChange,
+              }}
+              minWidth="560px"
+            />
+          )}
+        </div>
       </PageWrapper>
 
       <RecallDetailSheet

@@ -64,11 +64,13 @@ export default function NewProductPage() {
       subtitle="Add a new product to your catalogue."
       actions={<BackToProductsButton />}
     >
-      <NewProductForm
-        onSubmit={onSubmit}
-        onCancel={handleCancel}
-        isPending={createMutation.isPending}
-      />
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
+        <NewProductForm
+          onSubmit={onSubmit}
+          onCancel={handleCancel}
+          isPending={createMutation.isPending}
+        />
+      </div>
     </PageWrapper>
   );
 }

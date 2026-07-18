@@ -105,6 +105,10 @@ export function VaultUploadArea({ candidateId }: VaultUploadAreaProps) {
     setDocType(v as VaultDocumentType);
   }
 
+  function handleDropZoneKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Enter" || e.key === " ") handleDropZoneClick();
+  }
+
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
@@ -153,9 +157,7 @@ export function VaultUploadArea({ candidateId }: VaultUploadAreaProps) {
         role="button"
         tabIndex={0}
         aria-label="Drop zone for document upload"
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") handleDropZoneClick();
-        }}
+        onKeyDown={handleDropZoneKeyDown}
       >
         {addDoc.isPending ? (
           <Loader2

@@ -22,6 +22,7 @@ import {
   type Channel,
   type ChannelType,
 } from "@/hooks/api/inventory/channels";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { ChannelSheet } from "@/features/inventory/components/channels/channel-sheet";
@@ -156,16 +157,17 @@ const ChannelCard = memo(function ChannelCard({ channel, onEdit, onViewPublicati
           </div>
 
           <div className="flex flex-wrap gap-1.5 pt-1">
-            <Button
+            <LoadingButton
               size="sm"
               variant="outline"
               className="text-xs gap-1.5"
               onClick={handleSync}
-              disabled={syncMutation.isPending}
+              isPending={syncMutation.isPending}
+              loadingText="Syncing…"
             >
               <RefreshCw className="h-3 w-3" />
-              {syncMutation.isPending ? "Syncing…" : "Sync stock"}
-            </Button>
+              Sync stock
+            </LoadingButton>
             <Button
               size="sm"
               variant="outline"
@@ -239,10 +241,12 @@ function ChannelsContent() {
   if (isLoading) {
     return (
       <PageWrapper title="Channels" actions={actions}>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <ChannelCardSkeleton key={i} />
-          ))}
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <ChannelCardSkeleton key={i} />
+            ))}
+          </div>
         </div>
       </PageWrapper>
     );
@@ -251,11 +255,13 @@ function ChannelsContent() {
   if (isError) {
     return (
       <PageWrapper title="Channels" actions={actions}>
-        <ErrorState
-          title="Failed to load channels"
-          description="An error occurred while fetching channel data."
-          onRetry={handleRetry}
-        />
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+          <ErrorState
+            title="Failed to load channels"
+            description="An error occurred while fetching channel data."
+            onRetry={handleRetry}
+          />
+        </div>
       </PageWrapper>
     );
   }
@@ -265,7 +271,6 @@ function ChannelsContent() {
       <PageWrapper
         title="Channels"
         subtitle="Manage sales and fulfilment channels"
-        badge={channels.length > 0 ? String(channels.length) : undefined}
         actions={actions}
       >
         {channels.length > 0 ? (

@@ -32,6 +32,7 @@ import {
   useUpdateJobBoardPosting,
   useDeleteJobBoardPosting,
   type JobBoardPostingStatus,
+  type JobBoardPosting,
 } from "@/hooks/api/hr/recruitment";
 
 const STATUS_OPTIONS: JobBoardPostingStatus[] = [
@@ -53,6 +54,63 @@ const STATUS_BADGE: Record<JobBoardPostingStatus, string> = {
 interface ExternalBoardsSheetProps {
   jobId: number;
   onClose: () => void;
+}
+
+interface PostingStatusItemProps {
+  status: JobBoardPostingStatus;
+  postingId: number;
+  onStatusChange: (id: number, status: JobBoardPostingStatus) => void;
+}
+
+function PostingStatusItem({ status, postingId, onStatusChange }: PostingStatusItemProps) {
+  function handleClick() { onStatusChange(postingId, status); }
+  return (
+    <DropdownMenuItem onClick={handleClick}>
+      Mark as {status}
+    </DropdownMenuItem>
+  );
+}
+
+interface PostingDeleteItemProps {
+  postingId: number;
+  onDelete: (id: number) => void;
+}
+
+function PostingDeleteItem({ postingId, onDelete }: PostingDeleteItemProps) {
+  function handleClick() { onDelete(postingId); }
+  return (
+    <DropdownMenuItem variant="destructive" onClick={handleClick}>
+      <Trash2 className="mr-2 h-3.5 w-3.5" /> Remove
+    </DropdownMenuItem>
+  );
+}
+
+interface PostingActionsMenuProps {
+  posting: JobBoardPosting;
+  onStatusChange: (id: number, status: JobBoardPostingStatus) => void;
+  onDelete: (id: number) => void;
+}
+
+function PostingActionsMenu({ posting, onStatusChange, onDelete }: PostingActionsMenuProps) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <AnimatedIconButton
+          icon={EllipsisIcon}
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6"
+          aria-label="Posting actions"
+        />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {STATUS_OPTIONS.filter((s) => s !== posting.status).map((s) => (
+          <PostingStatusItem key={s} status={s} postingId={posting.id} onStatusChange={onStatusChange} />
+        ))}
+        <PostingDeleteItem postingId={posting.id} onDelete={onDelete} />
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 }
 
 export function ExternalBoardsSheet({
@@ -206,35 +264,11 @@ export function ExternalBoardsSheet({
                         </Button>
                       </a>
                     )}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <AnimatedIconButton
-                          icon={EllipsisIcon}
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          aria-label="Posting actions"
-                        />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {STATUS_OPTIONS.filter((s) => s !== posting.status).map(
-                          (s) => (
-                            <DropdownMenuItem
-                              key={s}
-                              onClick={() => handleStatusChange(posting.id, s)}
-                            >
-                              Mark as {s}
-                            </DropdownMenuItem>
-                          ),
-                        )}
-                        <DropdownMenuItem
-                          variant="destructive"
-                          onClick={() => handleDelete(posting.id)}
-                        >
-                          <Trash2 className="mr-2 h-3.5 w-3.5" /> Remove
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <PostingActionsMenu
+                      posting={posting}
+                      onStatusChange={handleStatusChange}
+                      onDelete={handleDelete}
+                    />
                   </div>
                 </div>
                 <div className="flex items-center gap-3 text-[11px] text-muted-foreground">

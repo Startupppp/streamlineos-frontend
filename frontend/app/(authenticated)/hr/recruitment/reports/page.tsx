@@ -7,6 +7,7 @@ import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recr
 import { EmptyLeaderboardIllustration } from "@/components/illustrations";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
@@ -232,13 +233,14 @@ function ScheduleReportSheet({
           >
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             onClick={handleSubmit}
-            disabled={create.isPending}
+            isPending={create.isPending}
+            loadingText="Saving..."
             className="flex-1"
           >
-            {create.isPending ? "Saving..." : "Schedule Report"}
-          </Button>
+            Schedule Report
+          </LoadingButton>
         </SheetFooter>
       </SheetContent>
     </Sheet>
@@ -334,7 +336,7 @@ function ScheduledReportsList() {
                 disabled={deleteReport.isPending}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
-                {deleteReport.isPending ? "Deleting..." : "Delete"}
+                Delete
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -392,6 +394,28 @@ function ResultTable({ result }: { result: GenerateReportResult }) {
           </p>
         }
       />
+    </div>
+  );
+}
+
+interface FieldCheckItemProps {
+  field: { value: string; label: string };
+  isChecked: boolean;
+  onToggle: (value: string) => void;
+}
+
+function FieldCheckItem({ field: f, isChecked, onToggle }: FieldCheckItemProps) {
+  function handleCheckedChange() { onToggle(f.value); }
+  return (
+    <div className="flex items-center gap-2">
+      <Checkbox
+        id={f.value}
+        checked={isChecked}
+        onCheckedChange={handleCheckedChange}
+      />
+      <label htmlFor={f.value} className="text-xs cursor-pointer">
+        {f.label}
+      </label>
     </div>
   );
 }
@@ -534,19 +558,12 @@ export default function ReportsPage() {
                 <Label className="text-xs">Fields (all if none selected)</Label>
                 <div className="max-h-40 overflow-y-auto space-y-1.5 rounded border p-2">
                   {availableFields.map((f) => (
-                    <div key={f.value} className="flex items-center gap-2">
-                      <Checkbox
-                        id={f.value}
-                        checked={selectedFields.includes(f.value)}
-                        onCheckedChange={() => toggleField(f.value)}
-                      />
-                      <label
-                        htmlFor={f.value}
-                        className="text-xs cursor-pointer"
-                      >
-                        {f.label}
-                      </label>
-                    </div>
+                    <FieldCheckItem
+                      key={f.value}
+                      field={f}
+                      isChecked={selectedFields.includes(f.value)}
+                      onToggle={toggleField}
+                    />
                   ))}
                 </div>
               </div>
@@ -562,14 +579,15 @@ export default function ReportsPage() {
                 </div>
               </div>
 
-              <Button
+              <LoadingButton
                 size="sm"
                 className="w-full"
                 onClick={handleGenerate}
-                disabled={generate.isPending}
+                isPending={generate.isPending}
+                loadingText="Generating..."
               >
-                {generate.isPending ? "Generating..." : "Generate Report"}
-              </Button>
+                Generate Report
+              </LoadingButton>
             </CardContent>
           </Card>
 

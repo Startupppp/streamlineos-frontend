@@ -6,6 +6,7 @@ import { useBulkRescheduleInterviews } from "@/hooks/api/hr/recruitment";
 import { InterviewFeedbackForm } from "@/features/hr/recruitment/interview-feedback-form";
 import type { Interview } from "@/types/hr";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -83,6 +84,23 @@ function TypeBadge({ type, panelCount }: { type: string | null; panelCount?: num
         </span>
       )}
     </div>
+  );
+}
+
+function FeedbackButton({ interview, onFeedback }: { interview: Interview; onFeedback: (i: Interview) => void }) {
+  function handleClick() {
+    onFeedback(interview);
+  }
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="text-xs gap-1.5 text-muted-foreground hover:text-foreground"
+      onClick={handleClick}
+    >
+      <MessageSquare className="h-3 w-3" />
+      Feedback
+    </Button>
   );
 }
 
@@ -195,15 +213,7 @@ export function InterviewList() {
       header: "",
       className: "w-[90px]",
       cell: (interview) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-xs gap-1.5 text-muted-foreground hover:text-foreground"
-          onClick={() => setFeedbackInterview(interview)}
-        >
-          <MessageSquare className="h-3 w-3" />
-          Feedback
-        </Button>
+        <FeedbackButton interview={interview} onFeedback={setFeedbackInterview} />
       ),
     },
   ], []);
@@ -234,14 +244,16 @@ export function InterviewList() {
                 onChange={handleBulkDateChange}
               />
             </div>
-            <Button
+            <LoadingButton
               size="sm"
               className="text-xs gap-1.5"
               onClick={handleBulkReschedule}
-              disabled={bulkReschedule.isPending || !bulkNewDate}
+              disabled={!bulkNewDate}
+              isPending={bulkReschedule.isPending}
+              loadingText="Rescheduling…"
             >
-              {bulkReschedule.isPending ? "Rescheduling…" : "Reschedule"}
-            </Button>
+              Reschedule
+            </LoadingButton>
             <AnimatedIconButton icon={XIcon} iconSize={14} variant="ghost" size="icon" className="w-8" onClick={handleClearSelection} />
           </div>
         </div>

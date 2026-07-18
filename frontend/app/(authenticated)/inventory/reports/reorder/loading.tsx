@@ -17,7 +17,7 @@ export default function ReorderReportLoading() {
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
         <StatCardGridSkeleton cols={3} count={3} />
-        <DataTableSkeleton rows={10} columns={9} className="flex-1 min-h-0" />
+        <DataTableSkeleton rows={10} columns={9} />
       </div>
     </PageWrapper>
   );

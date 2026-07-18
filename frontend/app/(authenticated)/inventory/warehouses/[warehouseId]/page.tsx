@@ -111,7 +111,7 @@ export default function WarehouseDetailPage({
 
   const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
 
-  function handleRetry() {
+  function handleRetry(): void {
     void refetchWarehouse();
     void refetchLocations();
   }
@@ -136,11 +136,13 @@ export default function WarehouseDetailPage({
         title="Warehouse"
         backHref="/inventory/warehouses"
       >
-        <ErrorState
-          title="Failed to load warehouse"
-          description="An error occurred while fetching warehouse data. Please try again."
-          onRetry={handleRetry}
-        />
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+          <ErrorState
+            title="Failed to load warehouse"
+            description="An error occurred while fetching warehouse data. Please try again."
+            onRetry={handleRetry}
+          />
+        </div>
       </PageWrapper>
     );
   }
@@ -151,12 +153,14 @@ export default function WarehouseDetailPage({
         title="Warehouse not found"
         backHref="/inventory/warehouses"
       >
-        <InventoryEmptyState
-          illustration={<EmptyWarehouseIllustration />}
-          title="Warehouse not found"
-          description="This warehouse does not exist or you do not have access."
-          action={{ label: "Back to Warehouses", href: "/inventory/warehouses" }}
-        />
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+          <InventoryEmptyState
+            illustration={<EmptyWarehouseIllustration />}
+            title="Warehouse not found"
+            description="This warehouse does not exist or you do not have access."
+            action={{ label: "Back to Warehouses", href: "/inventory/warehouses" }}
+          />
+        </div>
       </PageWrapper>
     );
   }
@@ -196,13 +200,13 @@ export default function WarehouseDetailPage({
           )}
         </span>
       }
-      badge={`${locations.length} location${locations.length !== 1 ? "s" : ""}`}
       actions={
         <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1" size="sm" className="text-xs" onClick={handleOpenSheet}>
           Add Location
         </AnimatedIconButton>
       }
     >
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
       <Tabs defaultValue="locations">
         <TabsList>
           <TabsTrigger value="locations">Locations</TabsTrigger>
@@ -270,6 +274,7 @@ export default function WarehouseDetailPage({
         warehouseName={warehouse.name}
         locations={locations}
       />
+      </div>
     </PageWrapper>
   );
 }

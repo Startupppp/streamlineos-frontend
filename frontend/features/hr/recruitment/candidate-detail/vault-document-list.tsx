@@ -293,7 +293,7 @@ export function VaultDocumentList({ candidateId }: VaultDocumentListProps) {
         onOpenChange={handleCancelDelete}
         title="Delete Document"
         description="This will permanently delete the document from the vault. This action cannot be undone."
-        confirmLabel={deleteDoc.isPending ? "Deleting..." : "Delete"}
+        confirmLabel="Delete"
         destructive
         onConfirm={handleConfirmDelete}
       />

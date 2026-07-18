@@ -146,7 +146,7 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
       defaultValues={DEFAULT_VALUES}
       onSubmit={handleSubmit}
       isSubmitting={createCandidate.isPending}
-      submitLabel={createCandidate.isPending ? "Adding..." : "Add Candidate"}
+      submitLabel="Add Candidate"
       resetOnOpen
     >
       {(form) => (

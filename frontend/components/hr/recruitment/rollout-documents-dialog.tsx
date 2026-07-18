@@ -52,6 +52,31 @@ const rolloutFormSchema = z.object({
 
 type RolloutFormValues = z.infer<typeof rolloutFormSchema>;
 
+interface TemplateCheckItemProps {
+  id: number;
+  title: string;
+  type: string;
+  checked: boolean;
+  onToggle: (id: number, checked: boolean) => void;
+}
+
+function TemplateCheckItem({ id, title, type, checked, onToggle }: TemplateCheckItemProps) {
+  function handleCheckedChange(v: boolean | "indeterminate") {
+    onToggle(id, v === true);
+  }
+  return (
+    <label className="flex items-center gap-3 rounded-lg border p-3 cursor-pointer hover:bg-accent transition-colors">
+      <Checkbox
+        checked={checked}
+        onCheckedChange={handleCheckedChange}
+        aria-label={`Select ${title}`}
+      />
+      <span className="flex-1 text-sm font-medium">{title}</span>
+      <Badge variant="secondary" className="text-xs">{type}</Badge>
+    </label>
+  );
+}
+
 export function RolloutDocumentsDialog({
   candidateId,
   candidateName,
@@ -182,24 +207,14 @@ export function RolloutDocumentsDialog({
                   <ScrollArea className="w-full" type="auto">
                     <div className="space-y-2 max-h-40 pr-1">
                       {templates.map((tpl) => (
-                        <label
+                        <TemplateCheckItem
                           key={tpl.id}
-                          className="flex items-center gap-3 rounded-lg border p-3 cursor-pointer hover:bg-accent transition-colors"
-                        >
-                          <Checkbox
-                            checked={selectedIds.includes(tpl.id)}
-                            onCheckedChange={(checked) =>
-                              toggleTemplate(tpl.id, checked === true)
-                            }
-                            aria-label={`Select ${tpl.title}`}
-                          />
-                          <span className="flex-1 text-sm font-medium">
-                            {tpl.title}
-                          </span>
-                          <Badge variant="secondary" className="text-xs">
-                            {tpl.type}
-                          </Badge>
-                        </label>
+                          id={tpl.id}
+                          title={tpl.title}
+                          type={tpl.type}
+                          checked={selectedIds.includes(tpl.id)}
+                          onToggle={toggleTemplate}
+                        />
                       ))}
                     </div>
                   </ScrollArea>

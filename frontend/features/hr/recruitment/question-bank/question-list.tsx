@@ -24,6 +24,42 @@ function stopRowClick(e: React.MouseEvent) {
   e.stopPropagation();
 }
 
+interface QuestionActionsCellProps {
+  question: InterviewQuestion;
+  onView: (q: InterviewQuestion) => void;
+  onEdit: (q: InterviewQuestion) => void;
+  onDelete: (id: number) => void;
+}
+
+function QuestionActionsCell({ question, onView, onEdit, onDelete }: QuestionActionsCellProps) {
+  function handleViewClick() { onView(question); }
+  function handleEditClick() { onEdit(question); }
+  function handleDeleteClick() { onDelete(question.id); }
+  return (
+    <div onClick={stopRowClick}>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <AnimatedIconButton icon={EllipsisIcon} iconSize={16} variant="ghost" size="icon" aria-label="Question actions" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={handleViewClick}>
+            <Eye className="mr-2 h-4 w-4" />
+            View details
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={handleEditClick}>
+            <Pencil className="mr-2 h-4 w-4" />
+            Edit
+          </DropdownMenuItem>
+          <DropdownMenuItem variant="destructive" onClick={handleDeleteClick}>
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}
+
 interface QuestionListProps {
   questions: InterviewQuestion[] | undefined;
   isLoading: boolean;
@@ -145,27 +181,12 @@ export function QuestionList({
       header: "",
       className: "w-[50px]",
       cell: (q) => (
-        <div onClick={stopRowClick}>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <AnimatedIconButton icon={EllipsisIcon} iconSize={16} variant="ghost" size="icon" aria-label="Question actions" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleViewRequest(q)}>
-                <Eye className="mr-2 h-4 w-4" />
-                View details
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleEditRequest(q)}>
-                <Pencil className="mr-2 h-4 w-4" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem variant="destructive" onClick={() => onDeleteRequest(q.id)}>
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+        <QuestionActionsCell
+          question={q}
+          onView={handleViewRequest}
+          onEdit={handleEditRequest}
+          onDelete={onDeleteRequest}
+        />
       ),
     },
   ], [handleViewRequest, handleEditRequest, onDeleteRequest]);

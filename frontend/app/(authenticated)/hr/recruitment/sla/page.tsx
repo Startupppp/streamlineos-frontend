@@ -5,6 +5,7 @@ import { useInterviewSlas, useUpsertInterviewSla } from "@/hooks/api/hr";
 import type { InterviewSla } from "@/hooks/api/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
@@ -59,6 +60,30 @@ interface SlaRow {
   existing: InterviewSla | undefined;
 }
 
+function SlaEditButton({ sla, onEdit }: { sla: InterviewSla; onEdit: (sla: InterviewSla) => void }) {
+  function handleClick(e: React.MouseEvent) {
+    e.stopPropagation();
+    onEdit(sla);
+  }
+  return (
+    <Button variant="ghost" size="sm" className="w-7 p-0" aria-label={`Edit SLA for ${sla.stage}`} onClick={handleClick}>
+      <Pencil className="h-3.5 w-3.5" />
+    </Button>
+  );
+}
+
+function SlaConfigureButton({ stage, onNew }: { stage: CandidateStage; onNew: (stage: CandidateStage) => void }) {
+  function handleClick(e: React.MouseEvent) {
+    e.stopPropagation();
+    onNew(stage);
+  }
+  return (
+    <Button variant="ghost" size="sm" className="w-7 p-0" aria-label={`Configure SLA for ${stage}`} onClick={handleClick}>
+      <Plus className="h-3.5 w-3.5" />
+    </Button>
+  );
+}
+
 function buildSlaColumns(
   onEdit: (sla: InterviewSla) => void,
   onNew: (stage: CandidateStage) => void,
@@ -111,25 +136,9 @@ function buildSlaColumns(
       className: "text-right",
       cell: (row) =>
         row.existing ? (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-7 p-0"
-            aria-label={`Edit SLA for ${row.stage}`}
-            onClick={(e) => { e.stopPropagation(); onEdit(row.existing!); }}
-          >
-            <Pencil className="h-3.5 w-3.5" />
-          </Button>
+          <SlaEditButton sla={row.existing} onEdit={onEdit} />
         ) : (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-7 p-0"
-            aria-label={`Configure SLA for ${row.stage}`}
-            onClick={(e) => { e.stopPropagation(); onNew(row.stage); }}
-          >
-            <Plus className="h-3.5 w-3.5" />
-          </Button>
+          <SlaConfigureButton stage={row.stage} onNew={onNew} />
         ),
     },
   ];
@@ -330,13 +339,14 @@ export default function SlaConfigPage() {
             <Button variant="outline" className="flex-1" onClick={handleDialogClose}>
               Cancel
             </Button>
-            <Button
+            <LoadingButton
               className="flex-1"
               onClick={handleSave}
-              disabled={upsertSla.isPending}
+              isPending={upsertSla.isPending}
+              loadingText="Saving..."
             >
-              {upsertSla.isPending ? "Saving..." : "Save SLA"}
-            </Button>
+              Save SLA
+            </LoadingButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

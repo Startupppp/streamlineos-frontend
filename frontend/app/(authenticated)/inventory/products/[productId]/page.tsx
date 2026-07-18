@@ -171,7 +171,9 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
         title="Product"
         actions={<BackLink />}
       >
-        <LoadingState variant="page" />
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+          <LoadingState variant="page" />
+        </div>
       </PageWrapper>
     );
   }
@@ -182,14 +184,17 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
         title="Product"
         actions={<BackLink />}
       >
-        <ErrorState
-          title="Product not found"
-          description={
-            productQuery.error?.message ??
-            "This product does not exist or you do not have access."
-          }
-          className="min-h-[40vh]"
-        />
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+          <ErrorState
+            title="Product not found"
+            description={
+              productQuery.error != null
+                ? getErrorMessage(productQuery.error)
+                : "This product does not exist or you do not have access."
+            }
+            className="min-h-[40vh]"
+          />
+        </div>
       </PageWrapper>
     );
   }
@@ -291,6 +296,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
         </div>
       }
     >
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
       <Tabs defaultValue="info" className="space-y-4">
         <TabsList>
           <TabsTrigger value="info">Info</TabsTrigger>
@@ -482,6 +488,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
         open={editingVariant !== null}
         onOpenChange={handleEditVariantOpenChange}
       />
+      </div>
     </PageWrapper>
   );
 }

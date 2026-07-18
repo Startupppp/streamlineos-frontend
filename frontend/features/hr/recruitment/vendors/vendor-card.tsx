@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -92,10 +93,10 @@ export function VendorCard({ vendor, isHr, onEdit, onViewSubmissions, onDelete }
           {isHr && (
             <>
               <Button size="sm" variant="outline" onClick={handleEditClick}>Edit</Button>
-              <Button size="sm" variant="outline" className="gap-1" onClick={handleGenerateLink} disabled={generateLink.isPending} {...(portalLink ? copyHoverHandlers : {})}>
+              <LoadingButton size="sm" variant="outline" className="gap-1" onClick={handleGenerateLink} isPending={generateLink.isPending} loadingText="Generating…" {...(portalLink ? copyHoverHandlers : {})}>
                 {portalLink ? <CopyIcon ref={copyIconRef} size={12} /> : <Link2 className="h-3 w-3" />}
-                {generateLink.isPending ? "Generating…" : "Portal Link"}
-              </Button>
+                Portal Link
+              </LoadingButton>
               <Button size="sm" variant="ghost" onClick={handleDeleteClick} className="text-destructive hover:text-destructive hover:bg-destructive/10">
                 Delete
               </Button>

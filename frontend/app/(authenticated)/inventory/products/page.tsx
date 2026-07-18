@@ -285,7 +285,7 @@ function ProductsPageInner() {
     }
   }, [debouncedSearch]);
 
-  function handleSearchChange(value: string) {
+  function handleSearchChange(value: string): void {
     setSearch(value);
   }
 
@@ -513,11 +513,7 @@ function ProductsPageInner() {
   return (
     <PageWrapper
       title="Products"
-      subtitle={
-        total > 0
-          ? `${total} ${total === 1 ? "product" : "products"}`
-          : "Manage your product catalogue"
-      }
+      subtitle="Manage your product catalogue"
       actions={
         !isFirstLoad ? (
           <Button size="sm" asChild {...plusHover}>
@@ -530,50 +526,51 @@ function ProductsPageInner() {
       }
       filters={filtersRow}
     >
-      {productsQuery.error ? (
-        <ErrorState
-          title="Failed to load products"
-          description={getErrorMessage(productsQuery.error)}
-          onRetry={handleRetry}
-        />
-      ) : isFirstLoad ? (
-        <InventoryEmptyState
-          illustration={<EmptyProductsIllustration />}
-          title="Add your first product"
-          description="Start building your product catalogue. Define SKUs, set pricing, configure stock tracking, and manage variants all in one place."
-          action={{ label: "Add Product", href: "/inventory/products/new" }}
-          secondaryAction={{
-            label: "Import Products",
-            href: "/inventory/import",
-          }}
-          className={CONTENT_FILL_PANEL}
-        />
-      ) : (
-        <DataTable
-          data={items}
-          columns={columns}
-          getRowKey={(p) => p.id}
-          isLoading={productsQuery.isLoading}
-          emptyState={
-            <InventoryEmptyState
-              illustration={<EmptySearchIllustration />}
-              title="No products found"
-              description="Try adjusting your search or filters."
-              action={{ label: "Clear filters", onClick: handleClearFilters }}
-              className="border-0 bg-transparent"
-            />
-          }
-          pagination={{
-            mode: "server",
-            page,
-            pageSize: PAGE_LIMIT,
-            total,
-            onPageChange: handlePageChange,
-          }}
-          minWidth="640px"
-          className="flex-1 min-h-0"
-        />
-      )}
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
+        {productsQuery.error ? (
+          <ErrorState
+            title="Failed to load products"
+            description={getErrorMessage(productsQuery.error)}
+            onRetry={handleRetry}
+          />
+        ) : isFirstLoad ? (
+          <InventoryEmptyState
+            illustration={<EmptyProductsIllustration />}
+            title="Add your first product"
+            description="Start building your product catalogue. Define SKUs, set pricing, configure stock tracking, and manage variants all in one place."
+            action={{ label: "Add Product", href: "/inventory/products/new" }}
+            secondaryAction={{
+              label: "Import Products",
+              href: "/inventory/import",
+            }}
+            className={CONTENT_FILL_PANEL}
+          />
+        ) : (
+          <DataTable
+            data={items}
+            columns={columns}
+            getRowKey={(p) => p.id}
+            isLoading={productsQuery.isLoading}
+            emptyState={
+              <InventoryEmptyState
+                illustration={<EmptySearchIllustration />}
+                title="No products found"
+                description="Try adjusting your search or filters."
+                action={{ label: "Clear filters", onClick: handleClearFilters }}
+                className="border-0 bg-transparent"
+              />
+            }
+            pagination={{
+              mode: "server",
+              page,
+              pageSize: PAGE_LIMIT,
+              total,
+              onPageChange: handlePageChange,
+            }}
+            minWidth="640px"
+          />
+        )}
+      </div>
     </PageWrapper>
   );
 }

@@ -14,7 +14,7 @@ export default function ReturnsLoading() {
         <div className={FILTER_TOOLBAR_ROW}>
           <Skeleton className="h-9 w-[240px]" />
         </div>
-        <DataTableSkeleton rows={8} columns={5} className="flex-1 min-h-0" />
+        <DataTableSkeleton rows={8} columns={5} />
       </div>
     </PageWrapper>
   );

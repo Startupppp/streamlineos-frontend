@@ -143,7 +143,7 @@ function ReorderReportContent() {
     void query.refetch();
   }
 
-  function handleSearchChange(value: string) {
+  function handleSearchChange(value: string): void {
     setSearch(value);
   }
 
@@ -185,11 +185,7 @@ function ReorderReportContent() {
   return (
     <PageWrapper
       title="Reorder Report"
-      subtitle={
-        query.data !== undefined
-          ? `${query.data.total} product${query.data.total !== 1 ? "s" : ""} need reordering`
-          : "Products below their reorder points"
-      }
+      subtitle="Products below their reorder points"
       filters={
         <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0 lg:gap-3">
           <SearchInput className="min-w-0 flex-1 lg:max-w-md" value={search} onValueChange={handleSearchChange} placeholder="Search products, SKU, category…" />
@@ -209,8 +205,9 @@ function ReorderReportContent() {
         </div>
       }
     >
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
       {query.error && (
-        <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} className="flex-1" />
+        <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} />
       )}
 
       {noData && (
@@ -260,6 +257,7 @@ function ReorderReportContent() {
           )}
         </div>
       )}
+      </div>
     </PageWrapper>
   );
 }

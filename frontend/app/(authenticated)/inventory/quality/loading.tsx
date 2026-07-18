@@ -17,7 +17,7 @@ export default function QualityHubLoading() {
           <Skeleton className="h-9 w-[130px]" />
           <Skeleton className="h-9 w-[130px]" />
         </div>
-        <DataTableSkeleton rows={5} columns={4} className="flex-1 min-h-0" />
+        <DataTableSkeleton rows={5} columns={4} />
       </div>
     </PageWrapper>
   );

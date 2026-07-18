@@ -206,8 +206,12 @@ export function CandidateComparisonDialog({ candidates, onClose }: Props) {
     return new Set([...intersection].filter((s) => set.has(s)));
   }, new Set<string>());
 
+  function handleOpenChange(v: boolean) {
+    if (!v) onClose();
+  }
+
   return (
-    <Dialog open onOpenChange={(v) => { if (!v) onClose(); }}>
+    <Dialog open onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-5xl w-full p-0">
         <DialogHeader className="px-6 pt-5 pb-3 border-b">
           <DialogTitle className="text-base">Compare Candidates</DialogTitle>

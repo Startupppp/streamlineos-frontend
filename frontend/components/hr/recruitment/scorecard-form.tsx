@@ -76,6 +76,35 @@ const RECOMMENDATION_OPTIONS: RecommendationOption[] = [
   },
 ];
 
+interface RecommendationButtonProps {
+  option: RecommendationOption;
+  selected: boolean;
+  onSelect: (value: Recommendation) => void;
+}
+
+function RecommendationButton({ option, selected, onSelect }: RecommendationButtonProps) {
+  const { value, label, Icon, badgeClass, activeClass } = option;
+  function handleClick() { onSelect(value); }
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      aria-pressed={selected}
+      className={cn(
+        "flex flex-1 items-center justify-center gap-2 rounded-md border-2 px-4 py-2.5 text-sm font-medium transition-colors",
+        selected
+          ? activeClass + " border-current"
+          : "border-border bg-background hover:bg-muted",
+      )}
+    >
+      <Badge className={cn("gap-1 pointer-events-none", badgeClass)}>
+        <Icon className="h-3.5 w-3.5" />
+        {label}
+      </Badge>
+    </button>
+  );
+}
+
 interface StarRatingProps {
   value: number;
   onChange?: (rating: number) => void;
@@ -83,10 +112,50 @@ interface StarRatingProps {
   label: string;
 }
 
+interface StarButtonProps {
+  star: number;
+  display: number;
+  readOnly?: boolean;
+  onChange?: (rating: number) => void;
+  onHover: (star: number) => void;
+  onLeave: () => void;
+}
+
+function StarButton({ star, display, readOnly, onChange, onHover, onLeave }: StarButtonProps) {
+  function handleClick() { onChange?.(star); }
+  function handleMouseEnter() { if (!readOnly) onHover(star); }
+  function handleMouseLeave() { if (!readOnly) onLeave(); }
+  return (
+    <button
+      type="button"
+      disabled={readOnly}
+      onClick={handleClick}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      aria-label={`Rate ${star} out of 5`}
+      className={cn(
+        "transition-colors",
+        readOnly ? "cursor-default" : "cursor-pointer hover:scale-110",
+      )}
+    >
+      <Star
+        className={cn(
+          "h-5 w-5 transition-colors",
+          star <= display
+            ? "fill-yellow-400 text-yellow-400"
+            : "fill-transparent text-muted-foreground",
+        )}
+      />
+    </button>
+  );
+}
+
 function StarRating({ value, onChange, readOnly, label }: StarRatingProps) {
   const [hovered, setHovered] = useState(0);
 
   const display = hovered > 0 ? hovered : value;
+
+  function handleLeave() { setHovered(0); }
 
   return (
     <div
@@ -95,28 +164,15 @@ function StarRating({ value, onChange, readOnly, label }: StarRatingProps) {
       aria-label={`${label} rating: ${value} out of 5`}
     >
       {[1, 2, 3, 4, 5].map((star) => (
-        <button
+        <StarButton
           key={star}
-          type="button"
-          disabled={readOnly}
-          onClick={() => onChange?.(star)}
-          onMouseEnter={() => !readOnly && setHovered(star)}
-          onMouseLeave={() => !readOnly && setHovered(0)}
-          aria-label={`Rate ${star} out of 5`}
-          className={cn(
-            "transition-colors",
-            readOnly ? "cursor-default" : "cursor-pointer hover:scale-110",
-          )}
-        >
-          <Star
-            className={cn(
-              "h-5 w-5 transition-colors",
-              star <= display
-                ? "fill-yellow-400 text-yellow-400"
-                : "fill-transparent text-muted-foreground",
-            )}
-          />
-        </button>
+          star={star}
+          display={display}
+          readOnly={readOnly}
+          onChange={onChange}
+          onHover={setHovered}
+          onLeave={handleLeave}
+        />
       ))}
     </div>
   );
@@ -309,35 +365,14 @@ export function ScorecardForm({
                   role="group"
                   aria-label="Hiring recommendation"
                 >
-                  {RECOMMENDATION_OPTIONS.map(
-                    ({ value, label, Icon, badgeClass, activeClass }) => {
-                      const selected = field.value === value;
-                      return (
-                        <button
-                          key={value}
-                          type="button"
-                          onClick={() => field.onChange(value)}
-                          aria-pressed={selected}
-                          className={cn(
-                            "flex flex-1 items-center justify-center gap-2 rounded-md border-2 px-4 py-2.5 text-sm font-medium transition-colors",
-                            selected
-                              ? activeClass + " border-current"
-                              : "border-border bg-background hover:bg-muted",
-                          )}
-                        >
-                          <Badge
-                            className={cn(
-                              "gap-1 pointer-events-none",
-                              badgeClass,
-                            )}
-                          >
-                            <Icon className="h-3.5 w-3.5" />
-                            {label}
-                          </Badge>
-                        </button>
-                      );
-                    },
-                  )}
+                  {RECOMMENDATION_OPTIONS.map((option) => (
+                    <RecommendationButton
+                      key={option.value}
+                      option={option}
+                      selected={field.value === option.value}
+                      onSelect={field.onChange}
+                    />
+                  ))}
                 </div>
               </FormControl>
               <FormMessage />

@@ -26,6 +26,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 
 const PAGE_LIMIT = 20;
 
@@ -86,7 +87,7 @@ function HoldsPageInner() {
   function handleRelease(holdId: number): void {
     releaseMut.mutate(holdId, {
       onSuccess: () => toast.success("Hold released"),
-      onError: (e) => toast.error(e.message),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
 
@@ -183,7 +184,7 @@ function HoldsPageInner() {
   const filtersRow = (
     <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
       <Select value={statusParam || "all"} onValueChange={handleStatusChange}>
-        <SelectTrigger className="text-xs w-44">
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "text-xs w-44")}>
           <SelectValue placeholder="All statuses" />
         </SelectTrigger>
         <SelectContent>
@@ -200,7 +201,7 @@ function HoldsPageInner() {
     <>
       <PageWrapper
         title="Quality Holds"
-        subtitle={total > 0 ? `${total} ${total === 1 ? "hold" : "holds"}` : "Manage inventory quality holds"}
+        subtitle="Manage inventory quality holds"
         actions={
           <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1.5" size="sm" onClick={handleOpenCreate}>
             Create Hold
@@ -208,44 +209,44 @@ function HoldsPageInner() {
         }
         filters={filtersRow}
       >
-        {holdsQuery.error ? (
-          <ErrorState
-            title="Failed to load holds"
-            description={getErrorMessage(holdsQuery.error)}
-            onRetry={handleRetry}
-            className="flex-1"
-          />
-        ) : (
-          <DataTable
-            className="flex-1 min-h-0"
-            data={items}
-            columns={columns}
-            getRowKey={(r) => r.id}
-            onRowClick={handleRowClick}
-            isLoading={holdsQuery.isLoading}
-            emptyState={
-              <InventoryEmptyState
-                illustration={<EmptyWarehouseIllustration />}
-                title={hasFilters ? "No holds found" : "No holds yet"}
-                description={hasFilters ? "Try adjusting your filters." : "Create a quality hold to quarantine inventory."}
-                action={
-                  hasFilters
-                    ? { label: "Clear filters", onClick: handleClearFilters }
-                    : { label: "Create Hold", onClick: handleOpenCreate }
-                }
-                className="border-0 bg-transparent"
-              />
-            }
-            pagination={{
-              mode: "server",
-              page,
-              pageSize: PAGE_LIMIT,
-              total,
-              onPageChange: handlePageChange,
-            }}
-            minWidth="640px"
-          />
-        )}
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+          {holdsQuery.error ? (
+            <ErrorState
+              title="Failed to load holds"
+              description={getErrorMessage(holdsQuery.error)}
+              onRetry={handleRetry}
+            />
+          ) : (
+            <DataTable
+              data={items}
+              columns={columns}
+              getRowKey={(r) => r.id}
+              onRowClick={handleRowClick}
+              isLoading={holdsQuery.isLoading}
+              emptyState={
+                <InventoryEmptyState
+                  illustration={<EmptyWarehouseIllustration />}
+                  title={hasFilters ? "No holds found" : "No holds yet"}
+                  description={hasFilters ? "Try adjusting your filters." : "Create a quality hold to quarantine inventory."}
+                  action={
+                    hasFilters
+                      ? { label: "Clear filters", onClick: handleClearFilters }
+                      : { label: "Create Hold", onClick: handleOpenCreate }
+                  }
+                  className="border-0 bg-transparent"
+                />
+              }
+              pagination={{
+                mode: "server",
+                page,
+                pageSize: PAGE_LIMIT,
+                total,
+                onPageChange: handlePageChange,
+              }}
+              minWidth="640px"
+            />
+          )}
+        </div>
       </PageWrapper>
 
       <HoldCreateSheet open={createOpen} onOpenChange={handleCreateOpenChange} />

@@ -52,6 +52,8 @@ import { Badge } from "@/components/ui/badge";
 import { ErrorState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { cn } from "@/lib/utils";
 import {
   useCategories,
   useCreateCategory,
@@ -338,7 +340,7 @@ function CategoriesPageInner() {
 
   const categoryNameById = new Map(categories.map((cat) => [cat.id, cat.name]));
 
-  function updateParams(updates: Record<string, string | null>) {
+  function updateParams(updates: Record<string, string | null>): void {
     const params = new URLSearchParams(searchParams.toString());
     for (const [key, value] of Object.entries(updates)) {
       if (!value || value === "all") {
@@ -350,7 +352,7 @@ function CategoriesPageInner() {
     router.replace(`?${params.toString()}`, { scroll: false });
   }
 
-  function handleSearchChange(value: string) {
+  function handleSearchChange(value: string): void {
     setSearchInput(value);
   }
 
@@ -406,7 +408,7 @@ function CategoriesPageInner() {
         </div>
       <div className="hidden min-w-0 items-center gap-2 sm:flex">
         <Select value={statusParam} onValueChange={handleStatusChange}>
-          <SelectTrigger className="w-[140px] text-xs">
+          <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[140px] text-xs")}>
             <SelectValue placeholder="All" />
           </SelectTrigger>
           <SelectContent>
@@ -422,14 +424,10 @@ function CategoriesPageInner() {
   return (
     <PageWrapper
       title="Categories"
-      subtitle={
-        categories.length > 0
-          ? `${categories.length} ${categories.length === 1 ? "category" : "categories"}`
-          : "Organise products into categories and sub-categories."
-      }
+      subtitle="Organise products into categories and sub-categories."
       filters={filtersRow}
     >
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         <Card>
           <CardHeader>
             <CardTitle className="text-sm font-semibold">

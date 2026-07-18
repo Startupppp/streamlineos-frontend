@@ -18,6 +18,7 @@ import {
 import type { JobRequisition } from "@/hooks/api/hr/requisitions";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -140,8 +141,12 @@ function RejectDialog({ open, onClose, onConfirm, isPending }: RejectDialogProps
     onConfirm(reason);
   }
 
+  function handleOpenChange(v: boolean) {
+    if (!v) onClose();
+  }
+
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Reject Requisition</DialogTitle>
@@ -155,9 +160,9 @@ function RejectDialog({ open, onClose, onConfirm, isPending }: RejectDialogProps
         />
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button variant="destructive" onClick={handleConfirm} disabled={!reason.trim() || isPending}>
-            {isPending ? "Rejecting…" : "Reject"}
-          </Button>
+          <LoadingButton variant="destructive" onClick={handleConfirm} disabled={!reason.trim()} isPending={isPending} loadingText="Rejecting…">
+            Reject
+          </LoadingButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -246,8 +251,12 @@ function CreateRequisitionSheet({ open, onClose }: CreateRequisitionSheetProps) 
 
   const isPending = createRequisition.isPending || submitRequisition.isPending;
 
+  function handleSheetOpenChange(v: boolean) {
+    if (!v) onClose();
+  }
+
   return (
-    <Sheet open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+    <Sheet open={open} onOpenChange={handleSheetOpenChange}>
       <SheetContent className="w-full sm:max-w-xl flex flex-col p-0 gap-0">
         <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle>New Job Requisition</SheetTitle>
@@ -432,17 +441,18 @@ function CreateRequisitionSheet({ open, onClose }: CreateRequisitionSheetProps) 
         </Form>
 
         <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
-          <Button variant="outline" onClick={form.handleSubmit(handleSaveDraft)} disabled={isPending} className="flex-1">
+          <LoadingButton variant="outline" onClick={form.handleSubmit(handleSaveDraft)} isPending={createRequisition.isPending && !submitRequisition.isPending} loadingText="Saving…" className="flex-1">
             Save Draft
-          </Button>
-          <Button
+          </LoadingButton>
+          <LoadingButton
             onClick={form.handleSubmit(handleSubmitForApproval)}
-            disabled={isPending}
+            isPending={submitRequisition.isPending || (createRequisition.isPending && submitRequisition.isPending)}
+            loadingText="Submitting…"
             className="flex-1"
           >
             <Send className="mr-1.5 h-3.5 w-3.5" />
-            {isPending ? "Submitting…" : "Submit for Approval"}
-          </Button>
+            Submit for Approval
+          </LoadingButton>
         </SheetFooter>
       </SheetContent>
     </Sheet>
@@ -607,29 +617,31 @@ function RequisitionCard({
 
           <div className="flex items-center gap-1.5 shrink-0">
             {req.status === "DRAFT" && (
-              <Button
+              <LoadingButton
                 size="sm"
                 variant="outline"
                 className="text-xs"
                 onClick={handleSubmitClick}
-                disabled={isSubmitting}
+                isPending={isSubmitting}
+                loadingText="Submitting…"
               >
                 <Send className="mr-1 h-3 w-3" />
                 Submit
-              </Button>
+              </LoadingButton>
             )}
             {req.status === "PENDING_APPROVAL" && (
               <>
-                <Button
+                <LoadingButton
                   size="sm"
                   variant="outline"
                   className="text-xs border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-500/30 dark:text-emerald-300 dark:hover:bg-emerald-500/10"
                   onClick={handleApproveClick}
-                  disabled={isApproving}
+                  isPending={isApproving}
+                  loadingText="Approving…"
                 >
                   <CheckCircle2 className="mr-1 h-3 w-3" />
                   Approve
-                </Button>
+                </LoadingButton>
                 <Button
                   size="sm"
                   variant="outline"
@@ -642,20 +654,49 @@ function RequisitionCard({
               </>
             )}
             {req.status === "APPROVED" && (
-              <Button
+              <LoadingButton
                 size="sm"
                 className="text-xs"
                 onClick={handleConvertToJob}
-                disabled={isConverting || alreadyConverted}
+                disabled={alreadyConverted}
+                isPending={isConverting}
+                loadingText="Creating…"
               >
                 <ChevronRight className="mr-1 h-3 w-3" />
-                {alreadyConverted ? "Job created" : isConverting ? "Creating…" : "Create Job"}
-              </Button>
+                {alreadyConverted ? "Job created" : "Create Job"}
+              </LoadingButton>
             )}
           </div>
         </div>
       </div>
     </motion.div>
+  );
+}
+
+interface StatusTabButtonProps {
+  label: string;
+  value: string | undefined;
+  activeStatus: string | undefined;
+  onSelect: (value: string | undefined) => void;
+}
+
+function StatusTabButton({ label, value, activeStatus, onSelect }: StatusTabButtonProps) {
+  function handleClick() {
+    onSelect(value);
+  }
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className={cn(
+        "px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
+        activeStatus === value
+          ? "bg-primary text-primary-foreground"
+          : "text-muted-foreground hover:text-foreground hover:bg-muted"
+      )}
+    >
+      {label}
+    </button>
   );
 }
 
@@ -729,6 +770,8 @@ export default function RequisitionsPage() {
 
   const isEmpty = !isLoading && !isError && (!requisitions || requisitions.length === 0);
 
+  function handleRetry() { void refetch(); }
+
   return (
     <>
       <PageWrapper
@@ -742,18 +785,13 @@ export default function RequisitionsPage() {
         filters={
           <div className={FILTER_TOOLBAR_ROW}>
             {STATUS_TABS.map((tab) => (
-              <button
+              <StatusTabButton
                 key={tab.label}
-                onClick={() => setActiveStatus(tab.value)}
-                className={cn(
-                  "px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
-                  activeStatus === tab.value
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                )}
-              >
-                {tab.label}
-              </button>
+                label={tab.label}
+                value={tab.value}
+                activeStatus={activeStatus}
+                onSelect={setActiveStatus}
+              />
             ))}
           </div>
         }
@@ -768,7 +806,7 @@ export default function RequisitionsPage() {
           <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
             <p className="text-sm font-semibold text-foreground">Failed to load requisitions</p>
             <p className="text-xs text-muted-foreground">An error occurred while fetching data.</p>
-            <Button size="sm" variant="outline" onClick={() => void refetch()}>Try again</Button>
+            <Button size="sm" variant="outline" onClick={handleRetry}>Try again</Button>
           </div>
         ) : isEmpty ? (
           <RecruitmentEmptyState

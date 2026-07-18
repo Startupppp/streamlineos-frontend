@@ -241,6 +241,18 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
     if (!open) setSelectedGrnId(null);
   }
 
+  function handleCancelDialogOpenChange(open: boolean): void {
+    if (!open) handleDismissConfirm();
+  }
+
+  function handleCloseDialogOpenChange(open: boolean): void {
+    if (!open) handleDismissConfirm();
+  }
+
+  function handleGrnTableRowClick(row: GrnRow): void {
+    handleGrnRowClick(row.id);
+  }
+
   const grnColumns = useMemo(() => buildGrnColumns(handleGrnRowClick), []);
 
   if (query.isLoading) return <LoadingState variant="form" />;
@@ -320,7 +332,7 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
         ) : undefined
       }
     >
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         <Card className="p-4">
           <dl className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
             <dt className="text-muted-foreground">Status</dt>
@@ -396,7 +408,7 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
               data={grnRows}
               columns={grnColumns}
               getRowKey={(row) => row.id}
-              onRowClick={(row) => handleGrnRowClick(row.id)}
+              onRowClick={handleGrnTableRowClick}
               minWidth="520px"
             />
           </div>
@@ -421,7 +433,7 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
 
       <AlertDialog
         open={confirmAction === "cancel"}
-        onOpenChange={(open) => { if (!open) handleDismissConfirm(); }}
+        onOpenChange={handleCancelDialogOpenChange}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -445,7 +457,7 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
 
       <AlertDialog
         open={confirmAction === "close"}
-        onOpenChange={(open) => { if (!open) handleDismissConfirm(); }}
+        onOpenChange={handleCloseDialogOpenChange}
       >
         <AlertDialogContent>
           <AlertDialogHeader>

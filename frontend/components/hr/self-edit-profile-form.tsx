@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { X, Plus, Linkedin, Twitter, Github, Globe, User } from "lucide-react";
 import { useUpdateProfile } from "@/hooks/api/hr";
 import { resolveImageUrl } from "@/lib/utils";
@@ -181,7 +182,7 @@ export function SelfEditProfileForm({
           toast.success("Profile updated successfully");
           onSaved?.();
         },
-        onError: () => toast.error("Failed to update profile"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   };

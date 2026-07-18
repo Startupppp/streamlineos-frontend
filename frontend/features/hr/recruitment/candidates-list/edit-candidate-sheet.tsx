@@ -164,7 +164,7 @@ export function EditCandidateSheet({
       defaultValues={defaultValues}
       onSubmit={handleSubmit}
       isSubmitting={updateCandidate.isPending}
-      submitLabel={updateCandidate.isPending ? "Saving..." : "Save Changes"}
+      submitLabel="Save Changes"
       resetOnOpen
     >
       {(form) => (

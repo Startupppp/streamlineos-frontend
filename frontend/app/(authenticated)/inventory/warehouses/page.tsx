@@ -263,8 +263,21 @@ export default function WarehousesPage() {
     [form],
   );
 
-  function handleRetry() {
+  function handleRetry(): void {
     void refetch();
+  }
+
+  function handleToggleFilters(): void {
+    setShowFilters((prev) => !prev);
+  }
+
+  function handleClearSearch(): void {
+    setLocalSearch("");
+    setParam("q", undefined);
+  }
+
+  function handleCancelSheet(): void {
+    handleSheetOpenChange(false);
   }
 
   const onSubmit = useCallback(
@@ -300,10 +313,7 @@ export default function WarehousesPage() {
         placeholder="Search by name, code, city, country…"
         value={localSearch}
         onValueChange={handleSearchChange}
-        onClear={() => {
-          setLocalSearch("");
-          setParam("q", undefined);
-        }}
+        onClear={handleClearSearch}
         onKeyDown={handleSearchKeyDown}
         aria-label="Search warehouses"
       />
@@ -322,7 +332,7 @@ export default function WarehousesPage() {
           variant="outline"
           size="sm"
           className="gap-1.5 text-xs"
-          onClick={() => setShowFilters((prev) => !prev)}
+          onClick={handleToggleFilters}
           aria-expanded={showFilters}
         >
           <Filter className="h-3 w-3" aria-hidden="true" />
@@ -345,11 +355,13 @@ export default function WarehousesPage() {
         title="Warehouses"
         filters={filterBar}
       >
-        <ErrorState
-          title="Failed to load warehouses"
-          description="An error occurred while fetching warehouse data. Please try again."
-          onRetry={handleRetry}
-        />
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+          <ErrorState
+            title="Failed to load warehouses"
+            description="An error occurred while fetching warehouse data. Please try again."
+            onRetry={handleRetry}
+          />
+        </div>
       </PageWrapper>
     );
   }
@@ -550,7 +562,7 @@ export default function WarehousesPage() {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => handleSheetOpenChange(false)}
+                    onClick={handleCancelSheet}
                     disabled={createMutation.isPending}
                   >
                     Cancel

@@ -310,7 +310,7 @@ export default function PurchaseOrdersListPage() {
     updateParams({ vendor: value, page: "1" });
   }
 
-  function handleSearchChange(value: string) {
+  function handleSearchChange(value: string): void {
     setSearch(value);
   }
 
@@ -397,65 +397,66 @@ export default function PurchaseOrdersListPage() {
       actions={<NewPoButton disabled={hasNoVendors} />}
       filters={filterBar}
     >
-      {hasNoVendors && (
-        <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
-          <Store className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
-          <div>
-            <p className="font-medium">No vendors configured</p>
-            <p className="text-amber-700 dark:text-amber-400">
-              You need at least one vendor before creating a purchase order.{" "}
-              <Link href="/inventory/vendors/new" className="underline underline-offset-2 font-medium">
-                Create a vendor
-              </Link>
-            </p>
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
+        {hasNoVendors && (
+          <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+            <Store className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+            <div>
+              <p className="font-medium">No vendors configured</p>
+              <p className="text-amber-700 dark:text-amber-400">
+                You need at least one vendor before creating a purchase order.{" "}
+                <Link href="/inventory/vendors/new" className="underline underline-offset-2 font-medium">
+                  Create a vendor
+                </Link>
+              </p>
+            </div>
           </div>
-        </div>
-      )}
-      <DataTable
-        data={filteredItems}
-        columns={columns}
-        getRowKey={(po) => po.id}
-        onRowClick={handleRowClick}
-        isLoading={query.isLoading}
-        emptyState={
-          query.error ? (
-            <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} compact />
-          ) : (
-            <InventoryEmptyState
-              illustration={
-                hasFilters ? <EmptySearchIllustration /> : <EmptyOrdersIllustration />
-              }
-              title={hasFilters ? "No orders found" : "No purchase orders yet"}
-              description={
-                hasFilters
-                  ? "No results match your current filters."
-                  : "Create your first purchase order to start ordering from suppliers. Workflow: Create Vendor → New PO → Receive Stock."
-              }
-              action={
-                hasFilters
-                  ? { label: "Clear filters", onClick: handleClearFilters }
-                  : hasNoVendors
-                    ? { label: "Create a vendor first", href: "/inventory/vendors/new" }
-                    : { label: "New PO", href: "/inventory/purchase-orders/new" }
-              }
-              compact
-            />
-          )
-        }
-        pagination={
-          totalPages > 1
-            ? {
-                mode: "server",
-                page,
-                pageSize: 50,
-                total,
-                onPageChange: handlePageChange,
-              }
-            : undefined
-        }
-        minWidth="640px"
-        className="flex-1 min-h-0"
-      />
+        )}
+        <DataTable
+          data={filteredItems}
+          columns={columns}
+          getRowKey={(po) => po.id}
+          onRowClick={handleRowClick}
+          isLoading={query.isLoading}
+          emptyState={
+            query.error ? (
+              <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} compact />
+            ) : (
+              <InventoryEmptyState
+                illustration={
+                  hasFilters ? <EmptySearchIllustration /> : <EmptyOrdersIllustration />
+                }
+                title={hasFilters ? "No orders found" : "No purchase orders yet"}
+                description={
+                  hasFilters
+                    ? "No results match your current filters."
+                    : "Create your first purchase order to start ordering from suppliers. Workflow: Create Vendor → New PO → Receive Stock."
+                }
+                action={
+                  hasFilters
+                    ? { label: "Clear filters", onClick: handleClearFilters }
+                    : hasNoVendors
+                      ? { label: "Create a vendor first", href: "/inventory/vendors/new" }
+                      : { label: "New PO", href: "/inventory/purchase-orders/new" }
+                }
+                compact
+              />
+            )
+          }
+          pagination={
+            totalPages > 1
+              ? {
+                  mode: "server",
+                  page,
+                  pageSize: 50,
+                  total,
+                  onPageChange: handlePageChange,
+                }
+              : undefined
+          }
+          minWidth="640px"
+        />
+      </div>
     </PageWrapper>
   );
 }

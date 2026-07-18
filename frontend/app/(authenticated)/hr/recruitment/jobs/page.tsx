@@ -59,15 +59,48 @@ const PLATFORM_ICONS: Record<string, string> = {
   TWITTER: "𝕏",
 };
 
+interface ShareLinkRowProps {
+  link: JobShareLinks["shareLinks"][number];
+  onCopy: (url: string) => void;
+}
+
+function ShareLinkRow({ link, onCopy }: ShareLinkRowProps) {
+  function handleCopyUtm() {
+    onCopy(link.utmUrl);
+  }
+  return (
+    <div className="flex items-center gap-2 rounded-xl border px-3 py-2.5 hover:bg-muted/30 transition-colors">
+      <span className="w-6 text-center text-xs font-bold text-muted-foreground">{PLATFORM_ICONS[link.platform] ?? link.platform[0]}</span>
+      <span className="flex-1 text-sm font-medium">{link.name}</span>
+      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleCopyUtm}>
+        <Copy className="h-3 w-3" />
+      </Button>
+      <a href={link.url} target="_blank" rel="noopener noreferrer">
+        <Button variant="ghost" size="icon" className="h-6 w-6">
+          <ExternalLink className="h-3 w-3" />
+        </Button>
+      </a>
+    </div>
+  );
+}
+
 function ShareJobDialog({ jobId, onClose }: { jobId: number; onClose: () => void }) {
   const { data, isLoading } = useJobShareLinks(jobId);
+
+  function handleOpenChange(v: boolean) {
+    if (!v) onClose();
+  }
 
   function handleCopyLink(url: string) {
     navigator.clipboard.writeText(url).then(() => toast.success("Copied to clipboard"));
   }
 
+  function handleCopyDirectLink() {
+    if (data) handleCopyLink(data.directLink);
+  }
+
   return (
-    <Dialog open onOpenChange={(v) => { if (!v) onClose(); }}>
+    <Dialog open onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="text-base">Share Job Posting</DialogTitle>
@@ -83,25 +116,14 @@ function ShareJobDialog({ jobId, onClose }: { jobId: number; onClose: () => void
           <div className="space-y-3">
             <div className="flex items-center gap-2 rounded-xl border px-3 py-2.5 bg-muted/40">
               <span className="flex-1 text-xs text-muted-foreground truncate">{data.directLink}</span>
-              <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => handleCopyLink(data.directLink)}>
+              <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={handleCopyDirectLink}>
                 <Copy className="h-3 w-3" />
               </Button>
             </div>
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Share on</p>
             <div className="space-y-2">
               {data.shareLinks.map((link: JobShareLinks["shareLinks"][number]) => (
-                <div key={link.platform} className="flex items-center gap-2 rounded-xl border px-3 py-2.5 hover:bg-muted/30 transition-colors">
-                  <span className="w-6 text-center text-xs font-bold text-muted-foreground">{PLATFORM_ICONS[link.platform] ?? link.platform[0]}</span>
-                  <span className="flex-1 text-sm font-medium">{link.name}</span>
-                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleCopyLink(link.utmUrl)}>
-                    <Copy className="h-3 w-3" />
-                  </Button>
-                  <a href={link.url} target="_blank" rel="noopener noreferrer">
-                    <Button variant="ghost" size="icon" className="h-6 w-6">
-                      <ExternalLink className="h-3 w-3" />
-                    </Button>
-                  </a>
-                </div>
+                <ShareLinkRow key={link.platform} link={link} onCopy={handleCopyLink} />
               ))}
             </div>
           </div>
@@ -110,6 +132,156 @@ function ShareJobDialog({ jobId, onClose }: { jobId: number; onClose: () => void
         )}
       </DialogContent>
     </Dialog>
+  );
+}
+
+interface JobCardProps {
+  job: NonNullable<ReturnType<typeof useJobPostings>["data"]>[number];
+  deptName: string | undefined;
+  isPublishPending: boolean;
+  onStatusChange: (id: number, status: JobPostingStatus) => void;
+  onPublish: (id: number) => void;
+  onShare: (id: number) => void;
+  onTrackBoards: (id: number) => void;
+  onDelete: (id: number) => void;
+}
+
+function JobCard({
+  job,
+  deptName,
+  isPublishPending,
+  onStatusChange,
+  onPublish,
+  onShare,
+  onTrackBoards,
+  onDelete,
+}: JobCardProps) {
+  const statusStyle = (job.status && STATUS_STYLES[job.status]) || STATUS_STYLES.DRAFT;
+  const externalPlatforms = job.externalPostingIds ? Object.keys(job.externalPostingIds) : [];
+
+  function handlePublishOpen() { onStatusChange(job.id, "OPEN"); }
+  function handlePublishToBoards() { onPublish(job.id); }
+  function handleShare() { onShare(job.id); }
+  function handleTrackBoards() { onTrackBoards(job.id); }
+  function handlePause() { onStatusChange(job.id, "PAUSED"); }
+  function handleResume() { onStatusChange(job.id, "OPEN"); }
+  function handleDelete() { onDelete(job.id); }
+
+  return (
+    <div
+      className="group relative rounded-lg border border-border bg-card overflow-hidden transition-shadow hover:shadow-md"
+    >
+      <div className="p-3">
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <div className={cn("h-2 w-2 rounded-full shrink-0", statusStyle.dot)} />
+              <TruncatedText text={job.title} className="text-sm font-semibold text-foreground" />
+            </div>
+            {deptName && (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Building2 className="h-3 w-3 shrink-0" />
+                <TruncatedText text={deptName} />
+              </div>
+            )}
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <AnimatedIconButton
+                icon={EllipsisIcon}
+                iconSize={16}
+                variant="ghost"
+                size="icon"
+                className="w-7 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                aria-label="Job actions"
+              />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuItem asChild>
+                <Link href={`/hr/recruitment/jobs/${job.id}/edit`}>
+                  <Pencil className="mr-2 h-3.5 w-3.5" /> Edit
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              {job.status === "DRAFT" && (
+                <DropdownMenuItem onClick={handlePublishOpen}>
+                  <Play className="mr-2 h-3.5 w-3.5" /> Publish
+                </DropdownMenuItem>
+              )}
+              {job.status === "OPEN" && (
+                <>
+                  <DropdownMenuItem onClick={handlePublishToBoards} disabled={isPublishPending}>
+                    <Share2 className="mr-2 h-3.5 w-3.5" /> Post to Job Boards
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleShare}>
+                    <ExternalLink className="mr-2 h-3.5 w-3.5" /> Share Job Link
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleTrackBoards}>
+                    <ListChecks className="mr-2 h-3.5 w-3.5" /> Track External Postings
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handlePause}>
+                    <Pause className="mr-2 h-3.5 w-3.5" /> Pause
+                  </DropdownMenuItem>
+                </>
+              )}
+              {job.status === "PAUSED" && (
+                <DropdownMenuItem onClick={handleResume}>
+                  <Play className="mr-2 h-3.5 w-3.5" /> Resume
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem variant="destructive" onClick={handleDelete}>
+                <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          <span className={cn("inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full", statusStyle.badge)}>
+            {statusStyle.label}
+          </span>
+          {job.location && (
+            <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+              <MapPin className="h-2.5 w-2.5" />
+              {job.location}
+            </span>
+          )}
+          {job.type && (
+            <span className="inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+              {job.type.replace(/_/g, " ")}
+            </span>
+          )}
+          {job.isInternal && (
+            <span className="inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary/10 text-foreground">
+              Internal
+            </span>
+          )}
+          {externalPlatforms.map((platform) => (
+            <Badge key={platform} variant="secondary" className="text-[9px] px-1 py-0 h-4 uppercase">{platform}</Badge>
+          ))}
+        </div>
+
+        <div className="flex items-center justify-between pt-3 border-t border-border/50">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Users className="h-3.5 w-3.5" />
+            <span className="font-semibold text-foreground">{job.openings}</span>
+            <span>opening{job.openings !== 1 ? "s" : ""}</span>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs gap-1.5"
+            asChild
+          >
+            <Link href={`/hr/recruitment/jobs/${job.id}/edit`}>
+              <Briefcase className="h-3 w-3" />
+              View
+            </Link>
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -209,6 +381,13 @@ export default function JobPostingsPage() {
     [publishToBoards]
   );
 
+  function handleStatusFilterChange(v: string) { setFilter("status", v); }
+  function handleVisibilityFilterChange(v: string) { setFilter("visibility", v); }
+  function handleRetry() { void refetch(); }
+  function handleCloseShareDialog() { setShareJobId(null); }
+  function handleCloseBoardsSheet() { setBoardsJobId(null); }
+  function handleConfirmDialogOpenChange(open: boolean) { if (!open) setDeleteJobId(null); }
+
   return (
     <>
       <PageWrapper
@@ -228,7 +407,7 @@ export default function JobPostingsPage() {
         }
         filters={
           <div className={FILTER_TOOLBAR_ROW}>
-            <Select value={statusFilter ?? "ALL"} onValueChange={(v) => setFilter("status", v)}>
+            <Select value={statusFilter ?? "ALL"} onValueChange={handleStatusFilterChange}>
               <SelectTrigger className={cn("w-[130px]", FILTER_SELECT_TRIGGER)}>
                 <SelectValue />
               </SelectTrigger>
@@ -238,7 +417,7 @@ export default function JobPostingsPage() {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={visibilityFilter ?? "ALL"} onValueChange={(v) => setFilter("visibility", v)}>
+            <Select value={visibilityFilter ?? "ALL"} onValueChange={handleVisibilityFilterChange}>
               <SelectTrigger className={cn("w-[140px]", FILTER_SELECT_TRIGGER)}>
                 <SelectValue />
               </SelectTrigger>
@@ -260,7 +439,7 @@ export default function JobPostingsPage() {
           <div className="flex flex-col items-center justify-center flex-1 gap-4 text-center">
             <p className="text-sm font-semibold text-foreground">Failed to load job postings</p>
             <p className="text-xs text-muted-foreground">An error occurred while fetching data.</p>
-            <Button size="sm" variant="outline" onClick={() => void refetch()}>Try again</Button>
+            <Button size="sm" variant="outline" onClick={handleRetry}>Try again</Button>
           </div>
         ) : !jobs?.length ? (
           <RecruitmentEmptyState
@@ -273,126 +452,19 @@ export default function JobPostingsPage() {
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {jobs.map((job) => {
-              const statusStyle = (job.status && STATUS_STYLES[job.status]) || STATUS_STYLES.DRAFT;
               const deptName = departments?.find((d) => d.id === job.departmentId)?.name;
-              const externalPlatforms = job.externalPostingIds ? Object.keys(job.externalPostingIds) : [];
-
               return (
-                <div
+                <JobCard
                   key={job.id}
-                  className="group relative rounded-lg border border-border bg-card overflow-hidden transition-shadow hover:shadow-md"
-                >
-                  <div className="p-3">
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <div className={cn("h-2 w-2 rounded-full shrink-0", statusStyle.dot)} />
-                          <TruncatedText text={job.title} className="text-sm font-semibold text-foreground" />
-                        </div>
-                        {deptName && (
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <Building2 className="h-3 w-3 shrink-0" />
-                            <TruncatedText text={deptName} />
-                          </div>
-                        )}
-                      </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <AnimatedIconButton
-                            icon={EllipsisIcon}
-                            iconSize={16}
-                            variant="ghost"
-                            size="icon"
-                            className="w-7 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                            aria-label="Job actions"
-                          />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-44">
-                          <DropdownMenuItem onClick={() => router.push(`/hr/recruitment/jobs/${job.id}/edit`)}>
-                            <Pencil className="mr-2 h-3.5 w-3.5" /> Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          {job.status === "DRAFT" && (
-                            <DropdownMenuItem onClick={() => handleStatusChange(job.id, "OPEN")}>
-                              <Play className="mr-2 h-3.5 w-3.5" /> Publish
-                            </DropdownMenuItem>
-                          )}
-                          {job.status === "OPEN" && (
-                            <>
-                              <DropdownMenuItem onClick={() => handlePublish(job.id)} disabled={publishToBoards.isPending}>
-                                <Share2 className="mr-2 h-3.5 w-3.5" /> Post to Job Boards
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => setShareJobId(job.id)}>
-                                <ExternalLink className="mr-2 h-3.5 w-3.5" /> Share Job Link
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => setBoardsJobId(job.id)}>
-                                <ListChecks className="mr-2 h-3.5 w-3.5" /> Track External Postings
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleStatusChange(job.id, "PAUSED")}>
-                                <Pause className="mr-2 h-3.5 w-3.5" /> Pause
-                              </DropdownMenuItem>
-                            </>
-                          )}
-                          {job.status === "PAUSED" && (
-                            <DropdownMenuItem onClick={() => handleStatusChange(job.id, "OPEN")}>
-                              <Play className="mr-2 h-3.5 w-3.5" /> Resume
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem variant="destructive"
-                            onClick={() => setDeleteJobId(job.id)}
-                          >
-                            <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-
-                    <div className="flex flex-wrap gap-1.5 mb-3">
-                      <span className={cn("inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full", statusStyle.badge)}>
-                        {statusStyle.label}
-                      </span>
-                      {job.location && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                          <MapPin className="h-2.5 w-2.5" />
-                          {job.location}
-                        </span>
-                      )}
-                      {job.type && (
-                        <span className="inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                          {job.type.replace(/_/g, " ")}
-                        </span>
-                      )}
-                      {job.isInternal && (
-                        <span className="inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary/10 text-foreground">
-                          Internal
-                        </span>
-                      )}
-                      {externalPlatforms.map((platform) => (
-                        <Badge key={platform} variant="secondary" className="text-[9px] px-1 py-0 h-4 uppercase">{platform}</Badge>
-                      ))}
-                    </div>
-
-                    <div className="flex items-center justify-between pt-3 border-t border-border/50">
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Users className="h-3.5 w-3.5" />
-                        <span className="font-semibold text-foreground">{job.openings}</span>
-                        <span>opening{job.openings !== 1 ? "s" : ""}</span>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-xs gap-1.5"
-                        asChild
-                      >
-                        <Link href={`/hr/recruitment/jobs/${job.id}/edit`}>
-                          <Briefcase className="h-3 w-3" />
-                          View
-                        </Link>
-                      </Button>
-                    </div>
-                  </div>
-                </div>
+                  job={job}
+                  deptName={deptName}
+                  isPublishPending={publishToBoards.isPending}
+                  onStatusChange={handleStatusChange}
+                  onPublish={handlePublish}
+                  onShare={setShareJobId}
+                  onTrackBoards={setBoardsJobId}
+                  onDelete={setDeleteJobId}
+                />
               );
             })}
           </div>
@@ -401,17 +473,17 @@ export default function JobPostingsPage() {
       </PageWrapper>
 
       {shareJobId !== null && (
-        <ShareJobDialog jobId={shareJobId} onClose={() => setShareJobId(null)} />
+        <ShareJobDialog jobId={shareJobId} onClose={handleCloseShareDialog} />
       )}
       {boardsJobId !== null && (
-        <ExternalBoardsSheet jobId={boardsJobId} onClose={() => setBoardsJobId(null)} />
+        <ExternalBoardsSheet jobId={boardsJobId} onClose={handleCloseBoardsSheet} />
       )}
       <ConfirmDialog
         open={deleteJobId !== null}
-        onOpenChange={(open) => { if (!open) setDeleteJobId(null); }}
+        onOpenChange={handleConfirmDialogOpenChange}
         title="Delete job posting?"
         description="This will permanently delete this job posting and all related data. This cannot be undone."
-        confirmLabel={deleteJob.isPending ? "Deleting…" : "Delete Job Posting"}
+        confirmLabel="Delete Job Posting"
         destructive
         onConfirm={handleDelete}
       />

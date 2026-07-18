@@ -335,7 +335,7 @@ export default function TalentPoolsPage() {
         onOpenChange={handleCloseDeleteDialog}
         title="Delete this talent pool?"
         description="Candidates in this pool won't be deleted, only the pool grouping."
-        confirmLabel={deletePool.isPending ? "Deleting…" : "Delete Pool"}
+        confirmLabel="Delete Pool"
         destructive
         onConfirm={handleDelete}
       />

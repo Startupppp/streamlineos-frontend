@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -88,9 +89,9 @@ function ApplySheet({ job, onClose, onSuccess }: ApplySheetProps) {
         </SheetBody>
         <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
           <Button variant="outline" onClick={onClose} disabled={mutation.isPending}>Cancel</Button>
-          <Button onClick={handleSubmitApplication} disabled={mutation.isPending}>
-            {mutation.isPending ? "Submitting..." : "Submit Application"}
-          </Button>
+          <LoadingButton onClick={handleSubmitApplication} isPending={mutation.isPending} loadingText="Submitting...">
+            Submit Application
+          </LoadingButton>
         </SheetFooter>
       </SheetContent>
     </Sheet>

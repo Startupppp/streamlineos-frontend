@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { getErrorMessage } from "@/lib/get-error-message";
 import Link from "next/link";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -170,7 +171,7 @@ export default function HRDashboardPage() {
         setDeleteDialogOpen(false);
         setEmployeeToDelete(null);
       },
-      onError: () => toast.error("Failed to terminate employee"),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [employeeToDelete, terminateMutation]);
 

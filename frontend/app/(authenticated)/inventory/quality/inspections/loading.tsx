@@ -16,7 +16,9 @@ export default function InspectionsLoading() {
         </div>
       }
     >
-      <DataTableSkeleton rows={10} className="flex-1 min-h-0" />
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
+        <DataTableSkeleton rows={10} />
+      </div>
     </PageWrapper>
   );
 }
