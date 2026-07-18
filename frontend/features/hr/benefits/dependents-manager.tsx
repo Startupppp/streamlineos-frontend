@@ -28,6 +28,7 @@ import {
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 
 const depSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -138,7 +139,14 @@ export function DependentsManager() {
               <Skeleton className="h-10 w-full" />
             </div>
           ) : !dependents?.length ? (
-            <p className="text-sm text-muted-foreground text-center py-4">No dependents added yet</p>
+            <EmptyState
+              illustrationPreset="team"
+              illustrationSize="sm"
+              title="No dependents added yet"
+              description="Add family members who should be covered under your benefits."
+              compact
+              className="py-6 border-0 bg-transparent rounded-none"
+            />
           ) : (
             <div>
               {dependents.map((dep) => (

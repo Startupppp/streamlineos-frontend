@@ -34,10 +34,16 @@ interface WorkLogMonthGroupProps {
   searchTerm: string;
   logs: WorkLog[] | undefined;
   readOnly: boolean;
+  /** Managers/HR can edit already-saved entries for today */
+  canEditSaved: boolean;
   approvedLeaveDates?: Set<string>;
   currentUserId?: string;
   onSave: (date: string, content: string, workLink: string) => void;
   isSaving: boolean;
+}
+
+function hasSavedContent(log: WorkLog | undefined): boolean {
+  return Boolean(log?.description?.trim() || log?.workLink?.trim());
 }
 
 export function WorkLogMonthGroup({
@@ -51,6 +57,7 @@ export function WorkLogMonthGroup({
   searchTerm,
   logs,
   readOnly,
+  canEditSaved,
   approvedLeaveDates,
   currentUserId,
   onSave,
@@ -59,6 +66,7 @@ export function WorkLogMonthGroup({
   const weekdays = allDays.filter((d) => !isWeekend(d)).length;
   const regionId = `month-content-${monthKey}`;
   const totalHours = filled * 8;
+  const progress = weekdays > 0 ? Math.min(100, Math.round((filled / weekdays) * 100)) : 0;
   const { iconRef: chevronRef, hoverHandlers: chevronHoverHandlers } = useAnimatedIcon();
 
   const handleToggle = () => onToggle(monthKey);
@@ -71,10 +79,10 @@ export function WorkLogMonthGroup({
   };
 
   return (
-    <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
+    <Card className="overflow-hidden rounded-2xl border border-border/70 bg-card/90 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)]">
       <CardHeader
         className={cn(
-          "cursor-pointer select-none sticky top-0 z-10 bg-card/95 backdrop-blur-sm border-b border-border/60 py-3 px-4",
+          "sticky top-0 z-10 cursor-pointer select-none border-b border-border/60 bg-card/95 px-4 py-3 backdrop-blur-sm",
           !isCollapsed && "shadow-sm",
         )}
         onClick={handleToggle}
@@ -85,24 +93,44 @@ export function WorkLogMonthGroup({
         onKeyDown={handleKeyDown}
         {...chevronHoverHandlers}
       >
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="w-7 rounded-lg bg-muted/60 flex items-center justify-center shrink-0">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-muted/70">
               {isCollapsed ? (
                 <ChevronRightIcon ref={chevronRef} size={16} className="text-muted-foreground" aria-hidden="true" />
               ) : (
                 <ChevronDownIcon ref={chevronRef} size={16} className="text-muted-foreground" aria-hidden="true" />
               )}
             </div>
-            <CardTitle className="text-sm font-semibold text-foreground min-w-0"><TruncatedText text={label} /></CardTitle>
+            <div className="min-w-0">
+              <CardTitle className="text-sm font-semibold text-foreground">
+                <TruncatedText text={label} />
+              </CardTitle>
+              {!searchTerm.trim() && weekdays > 0 && (
+                <div className="mt-1.5 flex items-center gap-2">
+                  <div className="h-1.5 w-28 overflow-hidden rounded-full bg-muted">
+                    <div
+                      className={cn(
+                        "h-full rounded-full transition-[width] duration-300",
+                        progress === 100 ? "bg-emerald-500" : progress > 0 ? "bg-primary" : "bg-muted-foreground/30",
+                      )}
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] font-medium tabular-nums text-muted-foreground">
+                    {progress}%
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex shrink-0 items-center gap-2">
             {!searchTerm.trim() && filled > 0 && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-700 font-mono tabular-nums">
+              <span className="rounded-md border border-border bg-muted/50 px-2 py-0.5 font-mono text-[10px] font-semibold tabular-nums text-muted-foreground">
                 {totalHours}h
               </span>
             )}
-            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">
+            <span className="rounded-md bg-muted/60 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
               {searchTerm.trim()
                 ? `${displayDays.length} match${displayDays.length !== 1 ? "es" : ""}`
                 : `${filled}/${weekdays} logged`}
@@ -115,14 +143,19 @@ export function WorkLogMonthGroup({
           id={regionId}
           role="region"
           aria-label={`Work logs for ${label}`}
-          className="px-3 sm:px-4 py-3 sm:py-4"
+          className="px-3 py-3 sm:px-4"
         >
-          <div className="space-y-2 sm:space-y-3">
+          <div className="space-y-1.5">
             {displayDays.map((date) => {
               const dateStr = format(date, "yyyy-MM-dd");
               const log = logs?.find((l) => l.date === dateStr);
               const isOwnLog = !log?.userId || !currentUserId || log.userId === currentUserId;
               const isLeaveDay = approvedLeaveDates?.has(dateStr) ?? false;
+              const saved = hasSavedContent(log);
+              const baseBlocked = readOnly || !isOwnLog || !isToday(date) || isLeaveDay;
+              // Empty today → editable. Saved → only managers/HR can edit.
+              const rowReadOnly = baseBlocked || (saved && !canEditSaved);
+
               return (
                 <WorkLogEntryRow
                   key={dateStr}
@@ -133,7 +166,8 @@ export function WorkLogMonthGroup({
                   onSave={(content, workLink) => onSave(dateStr, content, workLink)}
                   isSaving={isSaving}
                   searchTerm={searchTerm}
-                  readOnly={readOnly || !isOwnLog || !isToday(date) || isLeaveDay}
+                  readOnly={rowReadOnly}
+                  lockedSaved={saved && rowReadOnly && !baseBlocked}
                   status={log?.status ?? undefined}
                 />
               );

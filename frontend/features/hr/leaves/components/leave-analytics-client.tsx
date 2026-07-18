@@ -3,9 +3,10 @@
 import { motion } from "framer-motion";
 import { TrendingUp, Users, Clock } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
-import Link from "next/link";
+import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyLeaveIllustration } from "@/components/illustrations/illustration-image";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { useHrAnalytics } from "@/hooks/api/hr/analytics";
 
 export function LeaveAnalyticsClient() {
@@ -64,7 +65,7 @@ export function LeaveAnalyticsClient() {
         >
           <h3 className="text-sm font-semibold text-foreground mb-4">Monthly Trend</h3>
           <div className="space-y-2">
-            {leavesByMonth.map((item, i) => (
+            {leavesByMonth.map((item) => (
               <div key={item.month} className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">{item.month}</span>
                 <span className="font-medium tabular-nums">{item.count}</span>
@@ -75,12 +76,14 @@ export function LeaveAnalyticsClient() {
       )}
 
       {!isLoading && totalLeaves === 0 && (
-        <div className="text-center py-8">
-          <p className="text-sm text-muted-foreground mb-3">No leave data available yet.</p>
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/hr/leaves">Go to Leaves</Link>
-          </Button>
-        </div>
+        <EmptyState
+          illustration={<EmptyLeaveIllustration className="h-full w-full" />}
+          illustrationSize="md"
+          title="No leave data available yet"
+          description="Leave requests will show up here once employees start submitting them."
+          action={{ label: "Go to Leaves", href: "/hr/leaves" }}
+          className={CONTENT_FILL_PANEL}
+        />
       )}
     </div>
   );

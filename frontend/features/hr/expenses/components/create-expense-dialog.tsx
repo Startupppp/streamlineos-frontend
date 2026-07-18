@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, type ChangeEvent } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -35,8 +35,67 @@ import { useCreateExpense, useUpdateExpense } from "@/hooks/api/hr";
 import { useUploadFile } from "@/hooks/api/use-upload-file";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import {
+  MAX_EXPENSE_RECEIPTS,
+  MAX_EXPENSE_RECEIPT_BYTES,
+  parseExpenseReceipts,
+  serializeExpenseReceipts,
+  getReceiptFileKind,
+  receiptKindEmoji,
+  receiptKindLabel,
+  type ExpenseReceipt,
+} from "../expense-constants";
 
-const CONTAINS_LETTER_OR_DIGIT_REGEX = /[\p{L}\p{N}]/u;
+const LABEL_CHARS_RE = /^[\p{L}\p{N}\s'.-]+$/u;
+const CONSECUTIVE_SPECIAL_RE = /[^\p{L}\p{N}\s]{2,}/u;
+
+function validateExpenseLabel(
+  value: string,
+  field: "customCategory" | "customPaymentMethod",
+  label: string,
+  ctx: z.RefinementCtx,
+) {
+  const trimmed = value.trim().replace(/\s+/g, " ");
+  if (trimmed.length < 2) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: `${label} must be at least 2 characters`,
+      path: [field],
+    });
+    return;
+  }
+  if (trimmed.length > 100) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: `${label} must be at most 100 characters`,
+      path: [field],
+    });
+    return;
+  }
+  if (!/[a-zA-Z]/.test(trimmed)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: `${label} must contain at least one letter`,
+      path: [field],
+    });
+    return;
+  }
+  if (!LABEL_CHARS_RE.test(trimmed)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: `${label} can only use letters, numbers, spaces, apostrophes, periods, and hyphens`,
+      path: [field],
+    });
+    return;
+  }
+  if (CONSECUTIVE_SPECIAL_RE.test(trimmed)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: `${label} cannot have consecutive special characters`,
+      path: [field],
+    });
+  }
+}
 
 const formSchema = z.object({
   category: z.string().min(1, "Category is required"),
@@ -48,7 +107,6 @@ const formSchema = z.object({
   description: z
     .string()
     .max(1000, "Description must be at most 1000 characters")
-    .refine((v) => !v || CONTAINS_LETTER_OR_DIGIT_REGEX.test(v), "Description looks empty")
     .optional(),
   merchant: z
     .string()
@@ -66,23 +124,58 @@ const formSchema = z.object({
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Expense date cannot be in the future", path: ["expenseDate"] });
     }
   }
-  if (data.category === "Other" && !data.customCategory?.trim()) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Please specify the category", path: ["customCategory"] });
+  if (data.category === "Other") {
+    if (!data.customCategory?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Please describe what the other category is",
+        path: ["customCategory"],
+      });
+    } else {
+      validateExpenseLabel(data.customCategory, "customCategory", "Category", ctx);
+    }
   }
-  if (data.customCategory) {
-    const ct = data.customCategory.trim();
-    if (ct.length > 100) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Category must be at most 100 characters", path: ["customCategory"] });
+  if (data.paymentMethod === "Other") {
+    if (!data.customPaymentMethod?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Please describe what the other payment method is",
+        path: ["customPaymentMethod"],
+      });
+    } else {
+      validateExpenseLabel(data.customPaymentMethod, "customPaymentMethod", "Payment method", ctx);
+    }
   }
-  if (data.paymentMethod === "Other" && !data.customPaymentMethod?.trim()) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Please specify the payment method", path: ["customPaymentMethod"] });
-  }
-  if (data.customPaymentMethod) {
-    const pm = data.customPaymentMethod.trim();
-    if (pm.length > 100) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Payment method must be at most 100 characters", path: ["customPaymentMethod"] });
+  if (data.merchant?.trim()) {
+    const merchant = data.merchant.trim();
+    if (!LABEL_CHARS_RE.test(merchant)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Merchant can only use letters, numbers, spaces, apostrophes, periods, and hyphens",
+        path: ["merchant"],
+      });
+    } else if (CONSECUTIVE_SPECIAL_RE.test(merchant)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Merchant cannot have consecutive special characters",
+        path: ["merchant"],
+      });
+    }
   }
 });
 
 type FormData = z.infer<typeof formSchema>;
+
+function resolveSelectableLabel(
+  value: string | null | undefined,
+  options: string[],
+): { selected: string; custom: string } {
+  const trimmed = value?.trim() ?? "";
+  if (!trimmed) return { selected: "", custom: "" };
+  if (trimmed === "Other") return { selected: "Other", custom: "" };
+  if (options.includes(trimmed)) return { selected: trimmed, custom: "" };
+  return { selected: "Other", custom: trimmed };
+}
 
 export interface ExpenseToEdit {
   id: number;
@@ -140,6 +233,12 @@ function AmountInput({ value, onChange }: { value: number; onChange: (v: number)
   );
 }
 
+type PendingReceipt = {
+  id: string;
+  file: File;
+  preview: string | null;
+};
+
 export function CreateExpenseDialog({
   open,
   onOpenChange,
@@ -149,114 +248,166 @@ export function CreateExpenseDialog({
   editExpense,
 }: CreateExpenseDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [receiptFile, setReceiptFile] = useState<File | null>(null);
-  const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
+  const [existingReceipts, setExistingReceipts] = useState<ExpenseReceipt[]>([]);
+  const [pendingReceipts, setPendingReceipts] = useState<PendingReceipt[]>([]);
   const [uploading, setUploading] = useState(false);
 
   const createExpenseMutation = useCreateExpense();
   const updateExpenseMutation = useUpdateExpense();
   const uploadFileMutation = useUploadFile();
   const isEditMode = !!editExpense;
+  const totalReceipts = existingReceipts.length + pendingReceipts.length;
+  const canAddMore = totalReceipts < MAX_EXPENSE_RECEIPTS;
+
+  const initialCategory = resolveSelectableLabel(editExpense?.category, categories);
+  const initialPayment = resolveSelectableLabel(editExpense?.paymentMethod, paymentMethods);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      category: editExpense?.category || "",
-      customCategory: "",
+      category: initialCategory.selected,
+      customCategory: initialCategory.custom,
       amount: editExpense ? Number(editExpense.amount) : 0,
       description: editExpense?.description || "",
       merchant: editExpense?.merchant || "",
-      paymentMethod: editExpense?.paymentMethod || "",
-      customPaymentMethod: "",
+      paymentMethod: initialPayment.selected,
+      customPaymentMethod: initialPayment.custom,
       expenseDate: editExpense?.expenseDate
         ? format(new Date(editExpense.expenseDate), "yyyy-MM-dd")
         : format(new Date(), "yyyy-MM-dd"),
     },
   });
 
+  const clearPendingReceipts = useCallback(() => {
+    setPendingReceipts((prev) => {
+      const toRevoke = prev
+        .map((r) => r.preview)
+        .filter((p): p is string => !!p?.startsWith("blob:"));
+      if (toRevoke.length > 0) {
+        queueMicrotask(() => {
+          toRevoke.forEach((url) => URL.revokeObjectURL(url));
+        });
+      }
+      return [];
+    });
+  }, []);
+
   useEffect(() => {
     if (open) {
+      const cat = resolveSelectableLabel(editExpense?.category, categories);
+      const pay = resolveSelectableLabel(editExpense?.paymentMethod, paymentMethods);
       form.reset({
-        category: editExpense?.category || "",
-        customCategory: "",
+        category: cat.selected,
+        customCategory: cat.custom,
         amount: editExpense ? Number(editExpense.amount) : 0,
         description: editExpense?.description || "",
         merchant: editExpense?.merchant || "",
-        paymentMethod: editExpense?.paymentMethod || "",
-        customPaymentMethod: "",
+        paymentMethod: pay.selected,
+        customPaymentMethod: pay.custom,
         expenseDate: editExpense?.expenseDate
           ? format(new Date(editExpense.expenseDate), "yyyy-MM-dd")
           : format(new Date(), "yyyy-MM-dd"),
       });
-      if (editExpense?.receiptUrl) {
-        setReceiptPreview(editExpense.receiptUrl);
-      } else {
-        setReceiptPreview(null);
-      }
-      setReceiptFile(null);
+      setExistingReceipts(
+        parseExpenseReceipts(editExpense?.receiptUrl, editExpense?.receiptFileName),
+      );
+      clearPendingReceipts();
     }
-  }, [open, editExpense, form]);
+  }, [open, editExpense, form, clearPendingReceipts, categories, paymentMethods]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setReceiptFile(file);
-      if (file.type.startsWith("image/")) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setReceiptPreview(reader.result as string);
-        };
-        reader.readAsDataURL(file);
-      } else {
-        setReceiptPreview(null);
-      }
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const selected = Array.from(e.target.files ?? []);
+    e.target.value = "";
+    if (selected.length === 0) return;
+
+    const room = MAX_EXPENSE_RECEIPTS - (existingReceipts.length + pendingReceipts.length);
+    if (room <= 0) {
+      toast.error(`You can upload up to ${MAX_EXPENSE_RECEIPTS} receipts`);
+      return;
     }
+
+    const accepted = selected.slice(0, room);
+    if (selected.length > room) {
+      toast.error(`Only ${room} more receipt${room === 1 ? "" : "s"} can be added`);
+    }
+
+    const oversized = accepted.find((f) => f.size > MAX_EXPENSE_RECEIPT_BYTES);
+    if (oversized) {
+      toast.error(`${oversized.name} exceeds the 10MB limit`);
+      return;
+    }
+
+    const next: PendingReceipt[] = accepted.map((file) => ({
+      id: `${file.name}-${file.size}-${file.lastModified}-${Math.random().toString(36).slice(2)}`,
+      file,
+      preview: file.type.startsWith("image/") ? URL.createObjectURL(file) : null,
+    }));
+    setPendingReceipts((prev) => [...prev, ...next]);
   };
 
-  const removeFile = () => {
-    setReceiptFile(null);
-    setReceiptPreview(null);
+  const removeExistingReceipt = (index: number) => {
+    setExistingReceipts((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const removePendingReceipt = (id: string) => {
+    setPendingReceipts((prev) => {
+      const target = prev.find((r) => r.id === id);
+      const preview = target?.preview;
+      if (preview?.startsWith("blob:")) {
+        queueMicrotask(() => URL.revokeObjectURL(preview));
+      }
+      return prev.filter((r) => r.id !== id);
+    });
   };
 
   const uploadFile = useCallback(async (file: File): Promise<string | null> => {
     try {
-      setUploading(true);
       const result = await uploadFileMutation.mutateAsync({ file, folder: "receipts" });
       return result.url;
     } catch (error) {
       toast.error(getErrorMessage(error));
       return null;
-    } finally {
-      setUploading(false);
     }
   }, [uploadFileMutation]);
 
   const onSubmit = useCallback(async (data: FormData) => {
     setIsLoading(true);
     try {
-      let receiptUrl: string | undefined;
-      let receiptFileName: string | undefined;
-
-      if (receiptFile) {
-        const url = await uploadFile(receiptFile);
-        if (url) {
-          receiptUrl = url;
-          receiptFileName = receiptFile.name;
+      setUploading(true);
+      const uploaded: ExpenseReceipt[] = [];
+      for (const pending of pendingReceipts) {
+        const url = await uploadFile(pending.file);
+        if (!url) {
+          toast.error(`Failed to upload ${pending.file.name}`);
+          return;
         }
+        uploaded.push({ url, fileName: pending.file.name });
       }
 
       const capitalize = (s?: string) =>
         s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 
+      const serialized = serializeExpenseReceipts([...existingReceipts, ...uploaded]);
+
+      const paymentMethodRaw =
+        data.paymentMethod === "Other" && data.customPaymentMethod?.trim()
+          ? data.customPaymentMethod.trim().replace(/\s+/g, " ")
+          : data.paymentMethod?.trim();
+      const categoryRaw =
+        data.category === "Other" && data.customCategory?.trim()
+          ? data.customCategory.trim().replace(/\s+/g, " ")
+          : data.category.trim();
+      const merchantRaw = data.merchant?.trim().replace(/\s+/g, " ") || undefined;
+
       const expenseData = {
-        category: data.category === "Other" && data.customCategory?.trim() ? data.customCategory.trim() : data.category,
+        category: categoryRaw,
         amount: data.amount,
-        description: capitalize(data.description),
-        merchant: capitalize(data.merchant),
-        paymentMethod: data.paymentMethod === "Other" && data.customPaymentMethod?.trim() ? data.customPaymentMethod.trim() : data.paymentMethod,
+        description: capitalize(data.description?.trim() || undefined),
+        merchant: capitalize(merchantRaw),
+        paymentMethod: paymentMethodRaw || undefined,
         expenseDate: formatDateOnly(new Date(data.expenseDate)),
-        receiptUrl,
-        receiptFileName,
+        receiptUrl: serialized.receiptUrl ?? (isEditMode ? "" : undefined),
+        receiptFileName: serialized.receiptFileName ?? (isEditMode ? "" : undefined),
       };
 
       if (isEditMode && editExpense) {
@@ -266,15 +417,27 @@ export function CreateExpenseDialog({
       }
       toast.success(isEditMode ? "Expense updated successfully" : "Expense submitted successfully");
       form.reset();
-      removeFile();
+      setExistingReceipts([]);
+      clearPendingReceipts();
       onSuccess();
     } catch (error) {
       toast.error(getErrorMessage(error));
     } finally {
+      setUploading(false);
       setIsLoading(false);
     }
-  }, [receiptFile, isEditMode, editExpense, form, onSuccess, createExpenseMutation, updateExpenseMutation, uploadFile]);
-
+  }, [
+    pendingReceipts,
+    existingReceipts,
+    isEditMode,
+    editExpense,
+    form,
+    onSuccess,
+    createExpenseMutation,
+    updateExpenseMutation,
+    uploadFile,
+    clearPendingReceipts,
+  ]);
   return (
     <HrSheet
       open={open}
@@ -294,7 +457,16 @@ export function CreateExpenseDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-xs font-medium">Category <span className="text-destructive">*</span></FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      if (value !== "Other") {
+                        form.setValue("customCategory", "");
+                        form.clearErrors("customCategory");
+                      }
+                    }}
+                    value={field.value}
+                  >
                     <FormControl>
                       <SelectTrigger className="text-sm">
                         <SelectValue placeholder="Select" />
@@ -332,10 +504,19 @@ export function CreateExpenseDialog({
               name="customCategory"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs font-medium">Specify Category <span className="text-destructive">*</span></FormLabel>
+                  <FormLabel className="text-xs font-medium">
+                    What is the other category? <span className="text-destructive">*</span>
+                  </FormLabel>
                   <FormControl>
-                    <Input className="text-sm" placeholder="Enter custom category" {...field} />
+                    <Input
+                      className="text-sm"
+                      placeholder="e.g. Client entertainment, Team offsite"
+                      {...field}
+                    />
                   </FormControl>
+                  <p className="text-[11px] text-muted-foreground">
+                    Letters, numbers, spaces, apostrophes, periods, and hyphens only.
+                  </p>
                   <FormMessage />
                 </FormItem>
               )}
@@ -368,7 +549,16 @@ export function CreateExpenseDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-xs font-medium">Payment Method</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      if (value !== "Other") {
+                        form.setValue("customPaymentMethod", "");
+                        form.clearErrors("customPaymentMethod");
+                      }
+                    }}
+                    value={field.value}
+                  >
                     <FormControl>
                       <SelectTrigger className="text-sm">
                         <SelectValue placeholder="Select" />
@@ -392,10 +582,19 @@ export function CreateExpenseDialog({
               name="customPaymentMethod"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs font-medium">Specify Payment Method <span className="text-destructive">*</span></FormLabel>
+                  <FormLabel className="text-xs font-medium">
+                    What is the other payment method? <span className="text-destructive">*</span>
+                  </FormLabel>
                   <FormControl>
-                    <Input className="text-sm" placeholder="Enter custom payment method" {...field} />
+                    <Input
+                      className="text-sm"
+                      placeholder="e.g. Petty cash, Wire transfer"
+                      {...field}
+                    />
                   </FormControl>
+                  <p className="text-[11px] text-muted-foreground">
+                    Letters, numbers, spaces, apostrophes, periods, and hyphens only.
+                  </p>
                   <FormMessage />
                 </FormItem>
               )}
@@ -436,58 +635,135 @@ export function CreateExpenseDialog({
           />
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium">Receipt</label>
-            {!receiptFile && !receiptPreview ? (
+            <div className="flex items-center justify-between gap-2">
+              <label className="text-xs font-medium">
+                Receipts
+                {totalReceipts > 0 && (
+                  <span className="ml-1 text-muted-foreground font-normal">
+                    ({totalReceipts}/{MAX_EXPENSE_RECEIPTS})
+                  </span>
+                )}
+              </label>
+            </div>
+
+            {totalReceipts === 0 ? (
               <label className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg p-6 cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors">
                 <Upload className="w-7 text-muted-foreground/50 mb-1.5" />
                 <span className="text-sm font-medium text-foreground/70">
-                  Upload receipt
+                  Upload receipts
                 </span>
                 <span className="text-[11px] text-muted-foreground mt-0.5">
-                  PDF, PNG, JPG up to 10MB
+                  PDF, PNG, JPG up to 10MB · max {MAX_EXPENSE_RECEIPTS} files
                 </span>
                 <input
                   type="file"
                   className="hidden"
                   accept="image/*,.pdf"
+                  multiple
                   onChange={handleFileChange}
-                  aria-label="Upload receipt"
+                  aria-label="Upload receipts"
                 />
               </label>
             ) : (
-              <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg border">
-                {receiptPreview ? (
-                  <Image
-                    src={receiptPreview}
-                    alt="Receipt preview"
-                    width={56}
-                    height={56}
-                    unoptimized
-                    className="h-14 w-14 object-cover rounded"
-                  />
-                ) : (
-                  <div className="h-14 w-14 flex items-center justify-center bg-primary/10 rounded">
-                    <Receipt className="h-5 w-5 text-primary" />
+              <div className="space-y-2">
+                {existingReceipts.map((receipt, index) => {
+                  const kind = getReceiptFileKind(receipt.url, receipt.fileName);
+                  return (
+                  <div
+                    key={`existing-${receipt.url}-${index}`}
+                    className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg border"
+                  >
+                    <div className="h-14 w-14 flex items-center justify-center bg-primary/10 rounded shrink-0 overflow-hidden">
+                      {kind === "image" ? (
+                        <Image
+                          src={receipt.url}
+                          alt={receipt.fileName}
+                          width={56}
+                          height={56}
+                          unoptimized
+                          className="h-14 w-14 object-cover rounded"
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center gap-0.5">
+                          <span className="text-lg leading-none" aria-hidden>
+                            {receiptKindEmoji(kind)}
+                          </span>
+                          <span className="text-[9px] font-semibold uppercase text-primary">
+                            {receiptKindLabel(kind)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <TruncatedText text={receipt.fileName} className="text-sm font-medium text-foreground" />
+                      <p className="text-[11px] text-muted-foreground">Attached</p>
+                    </div>
+                    <AnimatedIconButton
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeExistingReceipt(index)}
+                      className="shrink-0 h-7 w-7"
+                      aria-label={`Remove ${receipt.fileName}`}
+                      icon={XIcon}
+                      iconSize={14}
+                    />
                   </div>
+                  );
+                })}
+
+                {pendingReceipts.map((receipt) => (
+                  <div
+                    key={receipt.id}
+                    className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg border"
+                  >
+                    {receipt.preview ? (
+                      <Image
+                        src={receipt.preview}
+                        alt={receipt.file.name}
+                        width={56}
+                        height={56}
+                        unoptimized
+                        className="h-14 w-14 object-cover rounded shrink-0"
+                      />
+                    ) : (
+                      <div className="h-14 w-14 flex items-center justify-center bg-primary/10 rounded shrink-0">
+                        <Receipt className="h-5 w-5 text-primary" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <TruncatedText text={receipt.file.name} className="text-sm font-medium text-foreground" />
+                      <p className="text-[11px] text-muted-foreground">
+                        {(receipt.file.size / 1024).toFixed(1)} KB
+                      </p>
+                    </div>
+                    <AnimatedIconButton
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removePendingReceipt(receipt.id)}
+                      className="shrink-0 h-7 w-7"
+                      aria-label={`Remove ${receipt.file.name}`}
+                      icon={XIcon}
+                      iconSize={14}
+                    />
+                  </div>
+                ))}
+
+                {canAddMore && (
+                  <label className="flex items-center justify-center gap-2 rounded-lg border border-dashed border-border px-3 py-2.5 text-xs font-medium text-muted-foreground cursor-pointer hover:border-primary/50 hover:bg-primary/5 hover:text-foreground transition-colors">
+                    <Upload className="h-3.5 w-3.5" />
+                    Add another receipt
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/*,.pdf"
+                      multiple
+                      onChange={handleFileChange}
+                      aria-label="Add another receipt"
+                    />
+                  </label>
                 )}
-                <div className="flex-1 min-w-0">
-                  <TruncatedText text={receiptFile?.name ?? "Existing receipt"} className="text-sm font-medium text-foreground" />
-                  {receiptFile && (
-                    <p className="text-[11px] text-muted-foreground">
-                      {(receiptFile.size / 1024).toFixed(1)} KB
-                    </p>
-                  )}
-                </div>
-                <AnimatedIconButton
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={removeFile}
-                  className="shrink-0 h-7 w-7"
-                  aria-label="Remove receipt"
-                  icon={XIcon}
-                  iconSize={14}
-                />
               </div>
             )}
           </div>

@@ -1,10 +1,12 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Clock, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { IllustrationImage } from "@/components/illustrations/illustration-image";
 import Link from "next/link";
 import { useCompOff } from "@/hooks/api/hr/comp-off";
 
@@ -31,8 +33,8 @@ export default function CompOffPage() {
                 <p className="text-5xl font-bold mt-1">{earnedDays.toFixed(1)}</p>
                 <p className="text-primary-foreground/70 text-sm mt-1">days earned</p>
               </div>
-              <div className="bg-white/20 rounded-2xl p-4">
-                <Clock className="h-10 w-10 text-primary-foreground" />
+              <div className="flex size-[4.5rem] shrink-0 items-center justify-center rounded-2xl bg-white/90 p-2 shadow-sm">
+                <IllustrationImage name="empty-leave" className="size-full" alt="" />
               </div>
             </div>
             {earnedDays > 0 && (
@@ -48,20 +50,13 @@ export default function CompOffPage() {
         )}
 
         {!isLoading && earnedDays === 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.22, ease: "easeOut", delay: 0.08 }}
-            className="flex flex-col items-center justify-center py-20 text-center"
-          >
-            <div className="bg-muted rounded-2xl p-5 mb-4">
-              <Clock className="h-10 w-10 text-muted-foreground" />
-            </div>
-            <h3 className="text-lg font-semibold text-foreground">No comp-off balance</h3>
-            <p className="text-muted-foreground text-sm mt-1 max-w-xs">
-              Work overtime on a holiday or weekend to earn compensatory off days.
-            </p>
-          </motion.div>
+          <EmptyState
+            illustrationPreset="calendar"
+            illustrationSize="md"
+            title="No comp-off balance"
+            description="Work overtime on a holiday or weekend to earn compensatory off days."
+            className="py-12"
+          />
         )}
       </div>
     </PageWrapper>

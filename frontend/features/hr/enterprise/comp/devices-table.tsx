@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -63,7 +64,7 @@ export function DevicesTable({ canManage, onAdd, onEdit }: Props) {
         title="No time clock devices"
         description="Register biometric, RFID, or mobile devices to start tracking clock-ins"
         action={canManage ? { label: "Add Device", onClick: onAdd } : undefined}
-        className="h-64"
+        className={CONTENT_FILL_PANEL}
         compact
       />
     );

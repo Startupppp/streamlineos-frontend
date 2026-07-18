@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { HrSheet } from "@/features/hr/hr-sheet";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getErrorMessage } from "@/lib/api-client";
 import {
   useCreateShift,
@@ -32,19 +33,27 @@ import { Switch } from "@/components/ui/switch";
 
 const SHIFT_TYPES = ["FIXED", "ROTATIONAL", "NIGHT", "FLEXIBLE"] as const;
 
-const MEANINGFUL_RE = /[a-zA-Z]{3}/;
-
 const schema = z.object({
   name: z
     .string()
-    .transform((v) => v.trim())
+    .transform((v) => v.trim().replace(/\s+/g, " "))
     .pipe(
       z
         .string()
         .min(3, "Name must be at least 3 characters")
         .max(100, "Name must be at most 100 characters")
-        .refine((v) => /[a-zA-Z]/.test(v), "Name must contain at least one letter")
-        .refine((v) => MEANINGFUL_RE.test(v), "Name must contain at least 3 letters"),
+        .refine(
+          (v) => /^[\p{L}\p{N}\s'.-]+$/u.test(v),
+          "Name can only use letters, numbers, spaces, apostrophes, periods, and hyphens",
+        )
+        .refine(
+          (v) => !/[^\p{L}\p{N}\s]{2,}/u.test(v),
+          "Name cannot have consecutive special characters",
+        )
+        .refine(
+          (v) => (v.match(/[a-zA-Z]/g) ?? []).length >= 3,
+          "Name must contain at least 3 letters",
+        ),
     ),
   type: z.enum(SHIFT_TYPES),
   startTime: z.string().min(1, "Start time is required"),
@@ -76,6 +85,8 @@ export function ShiftFormSheet({ open, onOpenChange, shift }: Props) {
   const isEdit = Boolean(shift);
   const createShift = useCreateShift();
   const updateShift = useUpdateShift();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingValues, setPendingValues] = useState<FormValues | null>(null);
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: EMPTY_VALUES,
@@ -98,171 +109,199 @@ export function ShiftFormSheet({ open, onOpenChange, shift }: Props) {
           }
         : EMPTY_VALUES,
     );
+    setConfirmOpen(false);
+    setPendingValues(null);
   }, [open, shift, form]);
 
-  const onSubmit = useCallback(
-    (data: FormValues) => {
-      const handlers = {
-        onSuccess: () => {
-          toast.success(isEdit ? "Shift updated" : "Shift created");
-          form.reset(EMPTY_VALUES);
-          onOpenChange(false);
-        },
-        onError: (err: unknown) => toast.error(getErrorMessage(err)),
-      };
-      if (shift) updateShift.mutate({ id: shift.id, ...data }, handlers);
-      else createShift.mutate(data, handlers);
-    },
-    [shift, isEdit, createShift, updateShift, form, onOpenChange],
-  );
+  const requestConfirm = useCallback((data: FormValues) => {
+    setPendingValues(data);
+    setConfirmOpen(true);
+  }, []);
+
+  const handleConfirm = useCallback(() => {
+    if (!pendingValues) return;
+    const handlers = {
+      onSuccess: () => {
+        toast.success(isEdit ? "Shift updated" : "Shift created");
+        form.reset(EMPTY_VALUES);
+        setConfirmOpen(false);
+        setPendingValues(null);
+        onOpenChange(false);
+      },
+      onError: (err: unknown) => toast.error(getErrorMessage(err)),
+    };
+    if (shift) updateShift.mutate({ id: shift.id, ...pendingValues }, handlers);
+    else createShift.mutate(pendingValues, handlers);
+  }, [pendingValues, shift, isEdit, createShift, updateShift, form, onOpenChange]);
+
+  const isPending = createShift.isPending || updateShift.isPending;
 
   return (
-    <HrSheet
-      open={open}
-      onOpenChange={onOpenChange}
-      title={isEdit ? "Edit Shift Template" : "Create Shift Template"}
-      description="Define a shift schedule for your organization"
-      onSubmit={form.handleSubmit(onSubmit)}
-      submitLabel={isEdit ? "Save Changes" : "Create Shift"}
-      isPending={createShift.isPending || updateShift.isPending}
-    >
-      <Form {...form}>
-        <div className="space-y-5">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
-                  Shift Name
-                </FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g. Morning Shift" className="text-sm" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="type"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
-                  Type
-                </FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger className="text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {SHIFT_TYPES.map((t) => (
-                      <SelectItem key={t} value={t}>{t}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <div className="grid grid-cols-2 gap-4">
+    <>
+      <HrSheet
+        open={open}
+        onOpenChange={onOpenChange}
+        title={isEdit ? "Edit Shift Template" : "Create Shift Template"}
+        description="Define a shift schedule for your organization"
+        onSubmit={form.handleSubmit(requestConfirm)}
+        submitLabel={isEdit ? "Save Changes" : "Create Shift"}
+        isPending={isPending}
+      >
+        <Form {...form}>
+          <div className="space-y-5">
             <FormField
               control={form.control}
-              name="startTime"
+              name="name"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
-                    Start Time
+                    Shift Name
                   </FormLabel>
                   <FormControl>
-                    <Input type="time" className="text-sm" {...field} />
+                    <Input placeholder="e.g. Morning Shift" className="text-sm" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
-              name="endTime"
+              name="type"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
-                    End Time
+                    Type
                   </FormLabel>
-                  <FormControl>
-                    <Input type="time" className="text-sm" {...field} />
-                  </FormControl>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {SHIFT_TYPES.map((t) => (
+                        <SelectItem key={t} value={t}>{t}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="startTime"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+                      Start Time
+                    </FormLabel>
+                    <FormControl>
+                      <Input type="time" className="text-sm" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="endTime"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+                      End Time
+                    </FormLabel>
+                    <FormControl>
+                      <Input type="time" className="text-sm" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="breakMinutes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+                      Break (min)
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={480}
+                        className="text-sm"
+                        {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="gracePeriodMinutes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+                      Grace (min)
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={120}
+                        className="text-sm"
+                        {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="isNightShift"
+              render={({ field }) => (
+                <FormItem className="flex items-center justify-between rounded-lg border p-3">
+                  <FormLabel className="text-sm font-medium cursor-pointer">Night Shift</FormLabel>
+                  <FormControl>
+                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                  </FormControl>
                 </FormItem>
               )}
             />
           </div>
+        </Form>
+      </HrSheet>
 
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="breakMinutes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
-                    Break (min)
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min={0}
-                      max={480}
-                      className="text-sm"
-                      {...field}
-                      onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="gracePeriodMinutes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
-                    Grace (min)
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min={0}
-                      max={120}
-                      className="text-sm"
-                      {...field}
-                      onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <FormField
-            control={form.control}
-            name="isNightShift"
-            render={({ field }) => (
-              <FormItem className="flex items-center justify-between rounded-lg border p-3">
-                <FormLabel className="text-sm font-medium cursor-pointer">Night Shift</FormLabel>
-                <FormControl>
-                  <Switch checked={field.value} onCheckedChange={field.onChange} />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-        </div>
-      </Form>
-    </HrSheet>
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={(next) => {
+          setConfirmOpen(next);
+          if (!next) setPendingValues(null);
+        }}
+        title={isEdit ? "Save shift changes?" : "Create this shift?"}
+        description={
+          isEdit
+            ? `Update “${pendingValues?.name ?? shift?.name ?? "this shift"}”? Existing assignments keep using this template.`
+            : `Create shift template “${pendingValues?.name ?? "this shift"}” (${pendingValues?.startTime ?? "—"} – ${pendingValues?.endTime ?? "—"})?`
+        }
+        confirmLabel={isEdit ? "Save Changes" : "Create Shift"}
+        isPending={isPending}
+        onConfirm={handleConfirm}
+      />
+    </>
   );
 }
