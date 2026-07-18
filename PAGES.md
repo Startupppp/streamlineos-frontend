@@ -1,5 +1,7 @@
 # Pages
 
+> **Environment configuration hygiene (2026-07-18)**: Removed zero-reference declarations, stale contact-recipient aliases, frontend copies of backend-only service secrets, and obsolete frontend CI secret injection while preserving active optional integration contracts.
+>
 > **Launch blockers (2026-07-18)**: Public pricing and legal copy now match the backend Free-plan limit of five members, and `POST /public/contact` provides validated, rate-limited delivery to the required `CONTACT_NOTIFICATION_EMAIL`.
 >
 > **PermissionGuard (2026-07-18)**: Guarded handlers now deny missing permission metadata, metadata-free `@Public` routes remain exempt, and explicit permissions are evaluated before privileged bypasses. The controller audit and focused unit/e2e tests cover this contract.

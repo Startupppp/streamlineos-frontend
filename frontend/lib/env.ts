@@ -22,8 +22,6 @@ const serverSchema = z.object({
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   GOOGLE_SITE_VERIFICATION: z.string().optional(),
-
-  RAZORPAY_KEY_ID: z.string().optional(),
 });
 
 const clientSchema = z.object({

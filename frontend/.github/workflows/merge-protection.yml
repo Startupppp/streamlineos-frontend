@@ -35,15 +35,8 @@ jobs:
         id: build
         run: pnpm build
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://user:pass@localhost:5432/db' }}
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'ci-build-only-placeholder-not-a-real-secret-abc123' }}
           NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL || 'http://localhost:3000' }}
-          GOOGLE_GENERATIVE_AI_API_KEY: ${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY || 'dummy_key' }}
-          R2_REGION: ${{ secrets.R2_REGION || 'auto' }}
-          R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME || '' }}
-          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID || '' }}
-          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY || '' }}
-          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT || '' }}
 
       - name: Comment PR status
         if: always()

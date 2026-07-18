@@ -111,7 +111,7 @@ Minimum required:
 | `BACKEND_JWT_SECRET` | Must match the backend `.env` |
 | `INTERNAL_API_SECRET` | Must match the backend `.env` |
 
-Optional: Google OAuth (sign-in), Resend or SendGrid (owner-console email status), Turnstile site key (landing captcha), analytics IDs. All business-side secrets (database, Redis, R2, Ably, Razorpay, VAPID) live in the backend `.env` — see `.env.example` for the complete frontend list.
+Optional: Google OAuth (sign-in), Turnstile site key (landing captcha), and analytics IDs. All business-side secrets (database, Redis, email, R2, Ably, Razorpay, and VAPID) live in the backend `.env` — see `.env.example` for the complete frontend list.
 
 ### 3. Provision the database
 
@@ -211,7 +211,6 @@ The seeder is idempotent — re-running it refreshes the OWNER password and tops
 - **Permissions** — add new permissions in `lib/rbac/permissions.ts`; map them to routes in `middleware.ts` (`ROUTE_PERMISSION_MAP`) and to nav items in `components/layout/sidebar/sidebar-nav-items.ts` (`requiredPermission`).
 - **Schema** — extend a domain file under `lib/db/schema/`, run `pnpm db:generate` to produce a migration, then `pnpm db:migrate`.
 - **Default org roles** — edit `lib/rbac/default-org-roles.ts`. Used by both signup and the demo seeder.
-- **Email provider** — switch via `EMAIL_PROVIDER` (`resend` / `sendgrid`) in `.env`.
 - **Storage provider** — R2 is the default but any S3-compatible bucket works through the same client.
 
 ---
