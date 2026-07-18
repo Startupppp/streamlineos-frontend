@@ -183,7 +183,6 @@ export function BookingLinksView({ baseUrl }: { baseUrl: string }) {
     <PageWrapper
       title="Interview Booking Links"
       subtitle="Manage self-scheduling links sent to candidates"
-      badge={`${links?.length ?? 0} links`}
     >
       <Card>
         <CardContent className="p-0">

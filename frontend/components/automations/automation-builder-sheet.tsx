@@ -11,6 +11,7 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -555,9 +556,9 @@ export function AutomationBuilderSheet({
             <Button type="button" variant="ghost" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="button" onClick={handleSave} disabled={isSaving}>
-              {isSaving ? "Saving…" : isEdit ? "Save changes" : "Create"}
-            </Button>
+            <LoadingButton type="button" onClick={handleSave} isPending={isSaving} loadingText="Saving…">
+              {isEdit ? "Save changes" : "Create"}
+            </LoadingButton>
           </div>
         </SheetFooter>
       </SheetContent>

@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Sheet,
   SheetBody,
@@ -167,9 +168,9 @@ function CreateDialog({
           <Button variant="outline" className="flex-1" onClick={onClose}>
             Cancel
           </Button>
-          <Button className="flex-1" onClick={handleCreate} disabled={createQuestion.isPending}>
-            {createQuestion.isPending ? "Adding..." : "Add Question"}
-          </Button>
+          <LoadingButton className="flex-1" onClick={handleCreate} isPending={createQuestion.isPending} loadingText="Adding...">
+            Add Question
+          </LoadingButton>
         </SheetFooter>
       </SheetContent>
     </Sheet>
@@ -237,9 +238,9 @@ function EditDialog({ question, roleOptions, open, onOpenChange }: EditDialogPro
           <Button variant="outline" className="flex-1" onClick={handleCancel}>
             Cancel
           </Button>
-          <Button className="flex-1" onClick={handleSave} disabled={update.isPending}>
-            {update.isPending ? "Saving..." : "Save Changes"}
-          </Button>
+          <LoadingButton className="flex-1" onClick={handleSave} isPending={update.isPending} loadingText="Saving...">
+            Save Changes
+          </LoadingButton>
         </SheetFooter>
       </SheetContent>
     </Sheet>

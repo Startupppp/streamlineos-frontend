@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ShoppingCartIcon } from "@animateicons/react/lucide";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   Dialog,
   DialogContent,
@@ -52,9 +53,48 @@ function groupByVendor(suggestions: ReplenishmentSuggestion[]): VendorGroup[] {
   return Array.from(map.values());
 }
 
+interface VendorGroupRowProps {
+  group: VendorGroup;
+  isPending: boolean;
+  onGenerate: (group: VendorGroup) => void;
+}
+
+function VendorGroupRow({ group, isPending, onGenerate }: VendorGroupRowProps) {
+  function handleClick(): void {
+    onGenerate(group);
+  }
+
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3">
+      <div className="min-w-0">
+        <TruncatedText text={group.vendorName} className="text-sm font-medium" />
+        <p className="text-xs text-muted-foreground">
+          {group.items.length} item{group.items.length !== 1 ? "s" : ""} ·{" "}
+          {group.totalQty} units total
+        </p>
+      </div>
+      <AnimatedIconButton
+        icon={ShoppingCartIcon}
+        iconSize={14}
+        iconClassName="mr-1.5"
+        size="sm"
+        variant="outline"
+        onClick={handleClick}
+        disabled={isPending}
+      >
+        Generate PO
+      </AnimatedIconButton>
+    </div>
+  );
+}
+
 export function GeneratePODialog({ suggestions, open, onClose }: GeneratePODialogProps) {
   const generatePO = useGeneratePO();
   const groups = groupByVendor(suggestions);
+
+  function handleOpenChange(v: boolean): void {
+    if (!v) onClose();
+  }
 
   function handleGenerate(group: VendorGroup): void {
     generatePO.mutate(
@@ -85,17 +125,15 @@ export function GeneratePODialog({ suggestions, open, onClose }: GeneratePODialo
           });
           onClose();
         },
-        onError: () => {
-          toast.error("Failed to create PO", {
-            description: `Could not generate PO for ${group.vendorName}.`,
-          });
+        onError: (err) => {
+          toast.error(getErrorMessage(err));
         },
       },
     );
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Generate Purchase Orders</DialogTitle>
@@ -108,29 +146,12 @@ export function GeneratePODialog({ suggestions, open, onClose }: GeneratePODialo
           </p>
           <Separator />
           {groups.map((group) => (
-            <div
+            <VendorGroupRow
               key={group.vendorId}
-              className="flex items-center justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3"
-            >
-              <div className="min-w-0">
-                <TruncatedText text={group.vendorName} className="text-sm font-medium" />
-                <p className="text-xs text-muted-foreground">
-                  {group.items.length} item{group.items.length !== 1 ? "s" : ""} ·{" "}
-                  {group.totalQty} units total
-                </p>
-              </div>
-              <AnimatedIconButton
-                icon={ShoppingCartIcon}
-                iconSize={14}
-                iconClassName="mr-1.5"
-                size="sm"
-                variant="outline"
-                onClick={() => handleGenerate(group)}
-                disabled={generatePO.isPending}
-              >
-                Generate PO
-              </AnimatedIconButton>
-            </div>
+              group={group}
+              isPending={generatePO.isPending}
+              onGenerate={handleGenerate}
+            />
           ))}
           {groups.length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-4">

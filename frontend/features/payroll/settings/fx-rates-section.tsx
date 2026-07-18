@@ -148,7 +148,7 @@ export function FxRatesSection({ policy, activeVersion }: FxRatesSectionProps) {
                   value={watch(`rates.${idx}.currency`)}
                   onValueChange={(val) => handleCurrencyChange(idx, val)}
                 >
-                  <SelectTrigger className="text-sm">
+                  <SelectTrigger className="h-9 text-sm">
                     <SelectValue placeholder="Select currency" />
                   </SelectTrigger>
                   <SelectContent>

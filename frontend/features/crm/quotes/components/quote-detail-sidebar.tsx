@@ -43,7 +43,7 @@ function buildTimeline(quote: Quote): TimelineEvent[] {
       label: "Approval Rejected",
       date: quote.approvedAt,
       icon: <XCircle className="h-3.5 w-3.5" />,
-      className: "text-red-600",
+      className: "text-red-600 dark:text-red-400",
     });
   }
 
@@ -61,7 +61,7 @@ function buildTimeline(quote: Quote): TimelineEvent[] {
       label: "Rejected",
       date: quote.rejectedAt,
       icon: <XCircle className="h-3.5 w-3.5" />,
-      className: "text-red-600",
+      className: "text-red-600 dark:text-red-400",
     });
   }
 

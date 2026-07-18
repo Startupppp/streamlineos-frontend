@@ -134,21 +134,18 @@ function DelegationsContent() {
     void queryClient.invalidateQueries({ queryKey: ["delegations"] });
   }, [queryClient]);
 
-  const now = new Date();
   const activeGiven = useMemo(
     () =>
       (given ?? []).filter(
-        (d) => d.status === "ACTIVE" && new Date(d.endsAt) > now,
+        (d) => d.status === "ACTIVE" && new Date(d.endsAt) > new Date(),
       ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [given],
   );
   const inactiveGiven = useMemo(
     () =>
       (given ?? []).filter(
-        (d) => d.status !== "ACTIVE" || new Date(d.endsAt) <= now,
+        (d) => d.status !== "ACTIVE" || new Date(d.endsAt) <= new Date(),
       ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [given],
   );
 
@@ -163,7 +160,7 @@ function DelegationsContent() {
           iconSize={14}
           iconClassName="mr-1"
           className="bg-primary hover:bg-primary/90 text-primary-foreground"
-          onClick={() => setSheetOpen(true)}
+          onClick={handleOpenSheet}
         >
           Delegate
         </AnimatedIconButton>
@@ -459,6 +456,8 @@ function GrantDelegationSheet({
     [reset, onOpenChange],
   );
 
+  const handleCloseSheet = useCallback(() => handleOpenChange(false), [handleOpenChange]);
+
   const onSubmit = useCallback(
     (values: DelegationFormValues) => mutation.mutate(values),
     [mutation],
@@ -619,22 +618,20 @@ function GrantDelegationSheet({
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => handleOpenChange(false)}
+                onClick={handleCloseSheet}
                 disabled={mutation.isPending}
               >
                 Cancel
               </Button>
-              <Button
+              <LoadingButton
                 type="submit"
                 size="sm"
-                disabled={mutation.isPending}
+                isPending={mutation.isPending}
+                loadingText="Delegating…"
                 className="bg-primary hover:bg-primary/90 text-primary-foreground"
               >
-                {mutation.isPending && (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
-                )}
                 Delegate
-              </Button>
+              </LoadingButton>
             </div>
           </div>
         </form>

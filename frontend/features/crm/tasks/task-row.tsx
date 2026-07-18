@@ -53,8 +53,8 @@ function getDueDateClass(dueDate: string | null, status: string): string {
   if (!dueDate) return "text-muted-foreground";
   if (status === "completed") return "text-muted-foreground";
   const date = new Date(dueDate);
-  if (isPast(date) && !isToday(date)) return "text-red-500";
-  if (isToday(date)) return "text-amber-600";
+  if (isPast(date) && !isToday(date)) return "text-red-500 dark:text-red-400";
+  if (isToday(date)) return "text-amber-600 dark:text-amber-400";
   return "text-muted-foreground";
 }
 

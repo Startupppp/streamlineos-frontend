@@ -197,7 +197,7 @@ export function GeneralSettingsForm() {
                   onValueChange={field.onChange}
                   disabled={!canManage}
                 >
-                  <SelectTrigger className="w-44">
+                  <SelectTrigger className="h-9 w-44">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -292,7 +292,7 @@ export function GeneralSettingsForm() {
                   onValueChange={field.onChange}
                   disabled={!canManage}
                 >
-                  <SelectTrigger className="w-52">
+                  <SelectTrigger className="h-9 w-52">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -368,7 +368,7 @@ export function GeneralSettingsForm() {
                   onValueChange={field.onChange}
                   disabled={!canManage}
                 >
-                  <SelectTrigger className="w-52">
+                  <SelectTrigger className="h-9 w-52">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

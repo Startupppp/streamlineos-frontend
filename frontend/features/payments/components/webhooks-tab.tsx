@@ -19,9 +19,26 @@ import {
   type PaymentWebhookEvent,
 } from "@/hooks/api/payments";
 
-function buildWebhookColumns(
-  retry: { isPending: boolean; mutate: (id: number, opts: { onError: (err: unknown) => void }) => void },
-): DataTableColumn<PaymentWebhookEvent>[] {
+type RetryMutation = {
+  isPending: boolean;
+  mutate: (id: number, opts: { onError: (err: unknown) => void }) => void;
+};
+
+function RetryEventButton({ eventId, retry }: { eventId: number; retry: RetryMutation }) {
+  function handleRetry() {
+    retry.mutate(eventId, {
+      onError: (err) => toast.error(getErrorMessage(err)),
+    });
+  }
+
+  return (
+    <Button size="sm" variant="ghost" className="h-6 text-xs gap-1" onClick={handleRetry}>
+      <RefreshCw className="h-3 w-3" /> Retry
+    </Button>
+  );
+}
+
+function buildWebhookColumns(retry: RetryMutation): DataTableColumn<PaymentWebhookEvent>[] {
   return [
     {
       key: "eventType",
@@ -56,18 +73,7 @@ function buildWebhookColumns(
       className: "text-right",
       cell: (row) =>
         row.processingStatus === "failed" ? (
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-6 text-xs gap-1"
-            onClick={() =>
-              retry.mutate(row.id, {
-                onError: (err) => toast.error(getErrorMessage(err)),
-              })
-            }
-          >
-            <RefreshCw className="h-3 w-3" /> Retry
-          </Button>
+          <RetryEventButton eventId={row.id} retry={retry} />
         ) : null,
     },
   ];

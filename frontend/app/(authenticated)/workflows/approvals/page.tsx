@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -226,9 +227,9 @@ export default function ApprovalsPage() {
             <Button variant="outline" onClick={handleCloseDialog}>
               Cancel
             </Button>
-            <Button
+            <LoadingButton
               onClick={handleSubmitAction}
-              disabled={handleApproval.isPending}
+              isPending={handleApproval.isPending}
               className={
                 dialogAction === "approve"
                   ? "bg-emerald-600 hover:bg-emerald-700 text-white"
@@ -236,7 +237,7 @@ export default function ApprovalsPage() {
               }
             >
               {dialogAction === "approve" ? "Approve" : "Reject"}
-            </Button>
+            </LoadingButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -283,47 +283,49 @@ export function ReplenishmentClient() {
         </div>
       }
     >
-      {isLoading ? null : error ? (
-        <ErrorState onRetry={handleRetry} />
-      ) : suggestions.length === 0 ? (
-        <InventoryEmptyState
-          illustrationPreset="inventory"
-          title="No replenishment needed"
-          description="All stock levels are above minimum thresholds."
-          className="flex-1 h-full"
-        />
-      ) : null}
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
+        {isLoading ? null : error ? (
+          <ErrorState onRetry={handleRetry} />
+        ) : suggestions.length === 0 ? (
+          <InventoryEmptyState
+            illustrationPreset="inventory"
+            title="No replenishment needed"
+            description="All stock levels are above minimum thresholds."
+            className="flex-1 h-full"
+          />
+        ) : null}
 
-      {!error && (isLoading || suggestions.length > 0) && (
-        <DataTable
-          data={suggestions}
-          columns={columns}
-          className="flex-1 min-h-0"
-          getRowKey={(row) => row.id}
-          isLoading={isLoading}
-          minWidth="900px"
-          toolbar={selectAllToolbar}
-          pagination={{
-            mode: "server",
-            page,
-            pageSize: 50,
-            total: data?.total ?? 0,
-            onPageChange: setPage,
-          }}
-        />
-      )}
+        {!error && (isLoading || suggestions.length > 0) && (
+          <DataTable
+            data={suggestions}
+            columns={columns}
+            className="flex-1 min-h-0"
+            getRowKey={(row) => row.id}
+            isLoading={isLoading}
+            minWidth="900px"
+            toolbar={selectAllToolbar}
+            pagination={{
+              mode: "server",
+              page,
+              pageSize: 50,
+              total: data?.total ?? 0,
+              onPageChange: setPage,
+            }}
+          />
+        )}
 
-      {expandedSuggestion && (
-        <ReorderProposalPanel
-          variantId={String(expandedSuggestion.variantId)}
-          variantName={expandedSuggestion.productName}
-          warehouseId={expandedSuggestion.warehouseId !== null ? String(expandedSuggestion.warehouseId) : undefined}
-        />
-      )}
+        {expandedSuggestion && (
+          <ReorderProposalPanel
+            variantId={String(expandedSuggestion.variantId)}
+            variantName={expandedSuggestion.productName}
+            warehouseId={expandedSuggestion.warehouseId !== null ? String(expandedSuggestion.warehouseId) : undefined}
+          />
+        )}
 
-      {hasVendorDelayInsights && (
-        <SupplierDelayBriefing />
-      )}
+        {hasVendorDelayInsights && (
+          <SupplierDelayBriefing />
+        )}
+      </div>
 
       <GeneratePODialog
         suggestions={selectedSuggestions}

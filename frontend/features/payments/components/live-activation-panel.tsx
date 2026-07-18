@@ -29,6 +29,10 @@ export function LiveActivationPanel({ providerKey }: { providerKey: string }) {
 
   if (!readiness) return null;
 
+  function handleConfirmTextChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setConfirmText(e.target.value);
+  }
+
   function handleCancelActivation() {
     setConfirmText("");
   }
@@ -73,7 +77,7 @@ export function LiveActivationPanel({ providerKey }: { providerKey: string }) {
             <Input
               id="confirm-activate"
               value={confirmText}
-              onChange={(e) => setConfirmText(e.target.value)}
+              onChange={handleConfirmTextChange}
               placeholder={CONFIRM_PHRASE}
               className="text-sm font-mono"
             />

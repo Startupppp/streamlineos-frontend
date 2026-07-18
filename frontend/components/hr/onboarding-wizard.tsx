@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback, useRef } from "react";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useForm, type FieldPath, type DefaultValues, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -134,13 +135,13 @@ export function OnboardingWizard() {
           lastName: toTitleCase(data.lastName),
           designation: formatDesignation(data.designation),
           password: data.password ?? "",
-        } as import("@/types/hr").OnboardEmployeeInput,
+        },
         {
           onSuccess: (result) => {
             toast.success("Employee created successfully");
             router.push(result.userId ? `/hr/employees/${result.userId}` : "/hr/employees");
           },
-          onError: (err) => toast.error(err.message || "Failed to onboard employee"),
+          onError: (err) => toast.error(getErrorMessage(err)),
         }
       );
     },

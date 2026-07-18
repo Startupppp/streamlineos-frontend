@@ -47,7 +47,7 @@ export function ReportFilters({
       />
 
       <Select value={department} onValueChange={onDepartmentChange}>
-        <SelectTrigger className="w-40 text-sm">
+        <SelectTrigger className="h-9 w-40 text-sm">
           <SelectValue placeholder="All Departments" />
         </SelectTrigger>
         <SelectContent>
@@ -56,7 +56,7 @@ export function ReportFilters({
       </Select>
 
       <Select value={costCenter} onValueChange={onCostCenterChange}>
-        <SelectTrigger className="w-36 text-sm">
+        <SelectTrigger className="h-9 w-36 text-sm">
           <SelectValue placeholder="All Cost Centers" />
         </SelectTrigger>
         <SelectContent>
@@ -65,7 +65,7 @@ export function ReportFilters({
       </Select>
 
       <Select value={workerType} onValueChange={onWorkerTypeChange}>
-        <SelectTrigger className="w-36 text-sm">
+        <SelectTrigger className="h-9 w-36 text-sm">
           <SelectValue placeholder="All Types" />
         </SelectTrigger>
         <SelectContent>

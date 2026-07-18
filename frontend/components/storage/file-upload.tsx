@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Upload, X, File } from "lucide-react";
 import { toast } from "sonner";
-import { cn } from "../../lib/utils";
-import { apiClient, getApiError } from "../../lib/api-client";
+import { cn } from "@/lib/utils";
+import { apiClient, getApiError } from "@/lib/api-client";
 
 interface FileUploadProps {
   onUploadComplete: (url: string, key: string) => void;
@@ -15,6 +15,36 @@ interface FileUploadProps {
   accept?: string;
   className?: string;
   multiple?: boolean;
+}
+
+interface UploadedFileRowProps {
+  file: { url: string; key: string; name: string };
+  index: number;
+  onRemove: (index: number) => void;
+}
+
+function UploadedFileRow({ file, index, onRemove }: UploadedFileRowProps) {
+  function handleRemove() {
+    onRemove(index);
+  }
+
+  return (
+    <div className="flex items-center justify-between p-2 border rounded-lg">
+      <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+        <File className="h-4 w-4 shrink-0" />
+        <span className="text-sm truncate">{file.name}</span>
+      </div>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        onClick={handleRemove}
+        aria-label="Remove file"
+      >
+        <X className="h-4 w-4" />
+      </Button>
+    </div>
+  );
 }
 
 export function FileUpload({
@@ -110,24 +140,12 @@ export function FileUpload({
       {uploadedFiles.length > 0 && (
         <div className="space-y-2">
           {uploadedFiles.map((file, index) => (
-            <div
+            <UploadedFileRow
               key={index}
-              className="flex items-center justify-between p-2 border rounded-lg"
-            >
-              <div className="flex items-center gap-2 min-w-0 overflow-hidden">
-                <File className="h-4 w-4 shrink-0" />
-                <span className="text-sm truncate">{file.name}</span>
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => removeFile(index)}
-                aria-label="Remove file"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
+              file={file}
+              index={index}
+              onRemove={removeFile}
+            />
           ))}
         </div>
       )}

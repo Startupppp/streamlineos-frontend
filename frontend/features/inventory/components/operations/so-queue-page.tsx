@@ -108,7 +108,7 @@ export function SoQueuePage({ status, title, actionNoun, emptyTitle, emptyDescri
       )
     : allItems;
 
-  function handleSearchChange(value: string) {
+  function handleSearchChange(value: string): void {
     setSearch(value);
   }
 

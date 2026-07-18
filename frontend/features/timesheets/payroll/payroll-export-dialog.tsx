@@ -3,8 +3,8 @@
 import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "sonner";
+import { exportSchema, type ExportFormValues } from "./payroll-export-schema";
 import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Dialog,
@@ -26,14 +26,6 @@ import {
   summaryRowToExportRow,
 } from "./lib/build-payroll-file";
 import type { PayrollSummaryRow, PayrollMapping, ExportFormat } from "./types";
-
-const exportSchema = z.object({
-  format: z.enum(["CSV", "XLSX"]),
-  includeExported: z.boolean(),
-  note: z.string().max(500),
-});
-
-type ExportFormValues = z.infer<typeof exportSchema>;
 
 interface PayrollExportDialogProps {
   open: boolean;

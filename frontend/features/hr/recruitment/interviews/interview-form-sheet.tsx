@@ -6,6 +6,7 @@ import { useInterviewerAvailability } from "@/hooks/api/hr/recruitment";
 import { InterviewerAvailabilityGrid } from "@/components/hr/recruitment/interviewer-availability-grid";
 import { useCalendarOrgMembers } from "@/hooks/api/calendar";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -257,13 +258,15 @@ export function InterviewFormSheet({
     setCandidatePickerOpen(false);
   }
 
+  function handleSheetOpenChange(v: boolean) {
+    onOpenChange(v);
+    if (!v) resetForm();
+  }
+
   return (
     <Sheet
       open={open}
-      onOpenChange={(v) => {
-        onOpenChange(v);
-        if (!v) resetForm();
-      }}
+      onOpenChange={handleSheetOpenChange}
     >
       <SheetTrigger asChild>
         <Button size="sm" className="gap-1.5">
@@ -578,15 +581,14 @@ export function InterviewFormSheet({
           >
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             className="flex-1 h-9"
             onClick={handleCreate}
-            disabled={scheduleInterview.isPending}
+            isPending={scheduleInterview.isPending}
+            loadingText="Scheduling..."
           >
-            {scheduleInterview.isPending
-              ? "Scheduling..."
-              : "Schedule Interview"}
-          </Button>
+            Schedule Interview
+          </LoadingButton>
         </SheetFooter>
       </SheetContent>
     </Sheet>

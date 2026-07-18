@@ -9,7 +9,7 @@ const NETWORK_ERROR_PATTERN =
   /ECONNREFUSED|ENOTFOUND|ETIMEDOUT|EHOSTUNREACH|ECONNRESET|socket hang up|Network Error|fetch failed/i;
 
 function backendUnreachableMessage(): string {
-  return `Backend API is unreachable at ${BACKEND}. Start the NestJS server (pnpm -C backend dev) and confirm NEXT_PUBLIC_API_URL / BACKEND_INTERNAL_URL.`;
+  return `Backend API is unreachable at ${BACKEND}. Start the NestJS server (pnpm -C backend dev) and confirm NEXT_PUBLIC_API_URL.`;
 }
 
 function extractNestedErrorMessage(error: unknown): string {

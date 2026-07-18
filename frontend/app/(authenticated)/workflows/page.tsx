@@ -22,6 +22,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
@@ -298,13 +299,14 @@ function CreateWorkflowDialog({ open, onClose }: CreateWorkflowDialogProps) {
               >
                 Cancel
               </Button>
-              <Button
+              <LoadingButton
                 type="submit"
-                disabled={create.isPending}
+                isPending={create.isPending}
+                loadingText="Creating…"
                 className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition-all duration-200"
               >
-                {create.isPending ? "Creating…" : "Create & Open Builder"}
-              </Button>
+                {"Create & Open Builder"}
+              </LoadingButton>
             </DialogFooter>
           </form>
         </Form>

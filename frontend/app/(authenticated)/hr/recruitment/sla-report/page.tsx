@@ -168,7 +168,7 @@ export default function SlaReportPage() {
           className={CONTENT_FILL_PANEL}
         />
       ) : (
-        <div className="space-y-6">
+        <div className="flex flex-1 min-h-0 flex-col gap-6">
           <div>
             <h2 className="text-sm font-semibold mb-3 flex items-center gap-1.5">
               <TrendingUp className="h-4 w-4 text-muted-foreground" />

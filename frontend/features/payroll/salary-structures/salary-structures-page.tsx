@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { getErrorMessage } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   useSalaryStructureTemplates,

@@ -14,6 +14,7 @@ import {
 import { useCandidates } from "@/hooks/api/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +35,10 @@ function CreatePoolSheet() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const createPool = useCreateTalentPool();
+
+  function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) { setName(e.target.value); }
+  function handleDescriptionChange(e: React.ChangeEvent<HTMLTextAreaElement>) { setDescription(e.target.value); }
+  function handleCancel() { setOpen(false); }
 
   const handleCreate = useCallback(() => {
     if (!name.trim()) {
@@ -72,18 +77,18 @@ function CreatePoolSheet() {
             <label className="text-xs font-semibold text-foreground/80">
               Name<span className="text-rose-500 ml-0.5">*</span>
             </label>
-            <Input placeholder="e.g. Future Engineers" value={name} onChange={(e) => setName(e.target.value)} />
+            <Input placeholder="e.g. Future Engineers" value={name} onChange={handleNameChange} />
           </div>
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-foreground/80">Description</label>
-            <Textarea placeholder="What's this pool for?" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+            <Textarea placeholder="What's this pool for?" value={description} onChange={handleDescriptionChange} rows={3} />
           </div>
         </SheetBody>
         <SheetFooter className="shrink-0 px-4 py-3 border-t flex-row gap-2">
-          <Button variant="outline" className="flex-1 h-9" onClick={() => setOpen(false)}>Cancel</Button>
-          <Button className="flex-1 h-9" onClick={handleCreate} disabled={createPool.isPending}>
-            {createPool.isPending ? "Creating…" : "Create Pool"}
-          </Button>
+          <Button variant="outline" className="flex-1 h-9" onClick={handleCancel}>Cancel</Button>
+          <LoadingButton className="flex-1 h-9" onClick={handleCreate} isPending={createPool.isPending} loadingText="Creating…">
+            Create Pool
+          </LoadingButton>
         </SheetFooter>
       </SheetContent>
     </Sheet>
@@ -114,6 +119,9 @@ function AddMemberSheet({ poolId }: { poolId: number }) {
     );
   }, [candidateId, addMember]);
 
+  function handleCancel() { setOpen(false); }
+  function handleCandidateChange(v: string) { setCandidateId(v); }
+
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
@@ -127,7 +135,7 @@ function AddMemberSheet({ poolId }: { poolId: number }) {
           <SheetTitle className="text-base font-semibold">Add Candidate to Pool</SheetTitle>
         </SheetHeader>
         <SheetBody className="px-4 py-4 space-y-4">
-          <Select value={candidateId} onValueChange={setCandidateId}>
+          <Select value={candidateId} onValueChange={handleCandidateChange}>
             <SelectTrigger>
               <SelectValue placeholder="Select a candidate" />
             </SelectTrigger>
@@ -139,13 +147,66 @@ function AddMemberSheet({ poolId }: { poolId: number }) {
           </Select>
         </SheetBody>
         <SheetFooter className="shrink-0 px-4 py-3 border-t flex-row gap-2">
-          <Button variant="outline" className="flex-1 h-9" onClick={() => setOpen(false)}>Cancel</Button>
-          <Button className="flex-1 h-9" onClick={handleAdd} disabled={addMember.isPending}>
-            {addMember.isPending ? "Adding…" : "Add"}
-          </Button>
+          <Button variant="outline" className="flex-1 h-9" onClick={handleCancel}>Cancel</Button>
+          <LoadingButton className="flex-1 h-9" onClick={handleAdd} isPending={addMember.isPending} loadingText="Adding…">
+            Add
+          </LoadingButton>
         </SheetFooter>
       </SheetContent>
     </Sheet>
+  );
+}
+
+interface PoolButtonProps {
+  pool: { id: number; name: string; memberCount: number; description?: string | null };
+  isSelected: boolean;
+  onSelect: (id: number) => void;
+}
+
+function PoolButton({ pool, isSelected, onSelect }: PoolButtonProps) {
+  function handleClick() { onSelect(pool.id); }
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className={cn(
+        "w-full text-left rounded-2xl border p-4 transition-colors",
+        isSelected ? "border-primary bg-primary/5" : "border-border hover:bg-muted/40",
+      )}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-sm font-semibold text-foreground">{pool.name}</p>
+        <Badge variant="secondary" className="text-[10px] shrink-0">{pool.memberCount}</Badge>
+      </div>
+      {pool.description && (
+        <TruncatedText text={pool.description} lines={2} className="text-xs text-muted-foreground mt-1" />
+      )}
+    </button>
+  );
+}
+
+interface PoolMemberRowProps {
+  member: { membershipId: number; candidateId: number; firstName: string; lastName: string; currentRole?: string | null; email?: string | null };
+  onRemove: (candidateId: number) => void;
+}
+
+function PoolMemberRow({ member: m, onRemove }: PoolMemberRowProps) {
+  function handleRemoveClick() { onRemove(m.candidateId); }
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-xl border border-border px-3 py-2.5">
+      <div className="min-w-0">
+        <TruncatedText text={`${m.firstName} ${m.lastName}`} className="text-sm font-medium text-foreground" />
+        <TruncatedText text={m.currentRole ?? m.email ?? ""} className="text-[11px] text-muted-foreground" />
+      </div>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="w-7 shrink-0 text-muted-foreground hover:text-destructive"
+        onClick={handleRemoveClick}
+      >
+        <X className="h-3.5 w-3.5" />
+      </Button>
+    </div>
   );
 }
 
@@ -174,20 +235,7 @@ function PoolMembersList({ poolId }: { poolId: number }) {
   return (
     <div className="space-y-2">
       {members.map((m) => (
-        <div key={m.membershipId} className="flex items-center justify-between gap-3 rounded-xl border border-border px-3 py-2.5">
-          <div className="min-w-0">
-            <TruncatedText text={`${m.firstName} ${m.lastName}`} className="text-sm font-medium text-foreground" />
-            <TruncatedText text={m.currentRole ?? m.email ?? ""} className="text-[11px] text-muted-foreground" />
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="w-7 shrink-0 text-muted-foreground hover:text-destructive"
-            onClick={() => handleRemove(m.candidateId)}
-          >
-            <X className="h-3.5 w-3.5" />
-          </Button>
-        </div>
+        <PoolMemberRow key={m.membershipId} member={m} onRemove={handleRemove} />
       ))}
     </div>
   );
@@ -213,6 +261,10 @@ export default function TalentPoolsPage() {
 
   const isEmpty = !isLoading && (!pools || pools.length === 0);
 
+  function handleSelectPool(poolId: number) { setSelectedPoolId(poolId); }
+  function handleDeleteSelectedPool() { if (selectedPoolId !== null) setDeleteTarget(selectedPoolId); }
+  function handleCloseDeleteDialog(open: boolean) { if (!open) setDeleteTarget(null); }
+
   return (
     <>
       <PageWrapper
@@ -221,8 +273,10 @@ export default function TalentPoolsPage() {
         actions={<CreatePoolSheet />}
       >
         {isLoading ? (
-          <div className="grid gap-4 md:grid-cols-3">
-            {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-32 w-full rounded-2xl" />)}
+          <div className="flex flex-1 min-h-0 flex-col gap-4">
+            <div className="grid gap-4 md:grid-cols-3">
+              {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-32 w-full rounded-2xl" />)}
+            </div>
           </div>
         ) : isEmpty ? (
           <RecruitmentEmptyState
@@ -231,26 +285,16 @@ export default function TalentPoolsPage() {
             description="Create a pool to group candidates for future roles, campus hiring, or ongoing sourcing."
           />
         ) : (
+          <div className="flex flex-1 min-h-0 flex-col gap-4">
           <div className="grid gap-4 lg:grid-cols-3">
             <div className="space-y-2">
               {pools?.map((pool) => (
-                <button
+                <PoolButton
                   key={pool.id}
-                  type="button"
-                  onClick={() => setSelectedPoolId(pool.id)}
-                  className={cn(
-                    "w-full text-left rounded-2xl border p-4 transition-colors",
-                    selectedPoolId === pool.id ? "border-primary bg-primary/5" : "border-border hover:bg-muted/40",
-                  )}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-semibold text-foreground">{pool.name}</p>
-                    <Badge variant="secondary" className="text-[10px] shrink-0">{pool.memberCount}</Badge>
-                  </div>
-                  {pool.description && (
-                    <TruncatedText text={pool.description} lines={2} className="text-xs text-muted-foreground mt-1" />
-                  )}
-                </button>
+                  pool={pool}
+                  isSelected={selectedPoolId === pool.id}
+                  onSelect={handleSelectPool}
+                />
               ))}
             </div>
 
@@ -267,7 +311,7 @@ export default function TalentPoolsPage() {
                         variant="ghost"
                         size="icon"
                         className="w-8 text-muted-foreground hover:text-destructive"
-                        onClick={() => setDeleteTarget(selectedPoolId)}
+                        onClick={handleDeleteSelectedPool}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
@@ -282,12 +326,13 @@ export default function TalentPoolsPage() {
               )}
             </div>
           </div>
+          </div>
         )}
       </PageWrapper>
 
       <ConfirmDialog
         open={deleteTarget !== null}
-        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        onOpenChange={handleCloseDeleteDialog}
         title="Delete this talent pool?"
         description="Candidates in this pool won't be deleted, only the pool grouping."
         confirmLabel={deletePool.isPending ? "Deleting…" : "Delete Pool"}

@@ -45,6 +45,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useCancelLeave, useApproveLeaveDedicated, useRejectLeaveDedicated, useRevertLeave } from "@/hooks/api/hr";
 import { cn, resolveImageUrl } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -332,7 +333,7 @@ export function LeavesTabContent({
         { leaveId: id },
         {
           onSuccess: () => toast.success("Leave request approved"),
-          onError: (err) => toast.error(err.message || "Failed to approve"),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -345,7 +346,7 @@ export function LeavesTabContent({
         { leaveId: id, reason: reason ?? "" },
         {
           onSuccess: () => toast.success("Leave request rejected"),
-          onError: (err) => toast.error(err.message || "Failed to reject"),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -356,7 +357,7 @@ export function LeavesTabContent({
     (id: number) => {
       revertMutation.mutate(id, {
         onSuccess: () => toast.success("Leave request reverted to pending"),
-        onError: (err) => toast.error(err.message || "Failed to revert"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       });
     },
     [revertMutation],
@@ -366,7 +367,7 @@ export function LeavesTabContent({
     (id: number) => {
       cancelMutation.mutate(id, {
         onSuccess: () => toast.success("Leave request cancelled"),
-        onError: (err) => toast.error(err.message || "Failed to cancel"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       });
     },
     [cancelMutation],

@@ -23,6 +23,7 @@ import {
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { useVendors } from "@/hooks/api/inventory/vendors";
 import { useWarehouses, useLocations } from "@/hooks/api/inventory/warehouses";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { useCreateVendorReturn } from "@/hooks/api/inventory/operations";
 import { usePurchaseOrders } from "@/hooks/api/inventory/purchase-orders";
 import { useProductVariants } from "@/hooks/api/inventory/products";
@@ -56,6 +57,29 @@ type FormValues = z.infer<typeof formSchema>;
 export interface VendorReturnSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+}
+
+interface RemoveLineButtonProps {
+  index: number;
+  onRemove: (index: number) => void;
+}
+
+function RemoveLineButton({ index, onRemove }: RemoveLineButtonProps) {
+  function handleClick(): void {
+    onRemove(index);
+  }
+
+  return (
+    <AnimatedIconButton
+      type="button"
+      icon={Trash2Icon}
+      iconSize={12}
+      variant="ghost"
+      size="sm"
+      className="h-6 w-6 p-0 text-red-500"
+      onClick={handleClick}
+    />
+  );
 }
 
 export function VendorReturnSheet({ open, onOpenChange }: VendorReturnSheetProps) {
@@ -141,14 +165,15 @@ export function VendorReturnSheet({ open, onOpenChange }: VendorReturnSheetProps
           <Button variant="outline" size="sm" onClick={handleClose}>
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             type="submit"
             form="vendor-return-form"
             size="sm"
-            disabled={createMutation.isPending}
+            isPending={createMutation.isPending}
+            loadingText="Creating…"
           >
-            {createMutation.isPending ? "Creating…" : "Create Return"}
-          </Button>
+            Create Return
+          </LoadingButton>
         </div>
       }
     >
@@ -233,15 +258,7 @@ export function VendorReturnSheet({ open, onOpenChange }: VendorReturnSheetProps
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted-foreground">Line {index + 1}</span>
                   {fields.length > 1 && (
-                    <AnimatedIconButton
-                      type="button"
-                      icon={Trash2Icon}
-                      iconSize={12}
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 w-6 p-0 text-red-500"
-                      onClick={() => handleRemoveLine(index)}
-                    />
+                    <RemoveLineButton index={index} onRemove={handleRemoveLine} />
                   )}
                 </div>
                 <div className="grid grid-cols-2 gap-2">

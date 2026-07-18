@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Select,
   SelectContent,
@@ -116,6 +117,10 @@ export function ReplenishmentRuleForm({ open, onOpenChange, editRule }: Replenis
     onOpenChange(next);
   }
 
+  function handleCancel(): void {
+    handleOpenChange(false);
+  }
+
   async function onSubmit(values: RuleFormValues): Promise<void> {
     const payload = {
       variantId: Number(values.variantId),
@@ -168,15 +173,16 @@ export function ReplenishmentRuleForm({ open, onOpenChange, editRule }: Replenis
       description="Set min/max stock levels and reorder parameters."
       footer={
         <div className="flex items-center justify-end gap-2">
-          <Button variant="outline" onClick={() => handleOpenChange(false)} disabled={isPending}>
+          <Button variant="outline" onClick={handleCancel} disabled={isPending}>
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             onClick={form.handleSubmit(onSubmit)}
-            disabled={isPending}
+            isPending={isPending}
+            loadingText="Saving…"
           >
             {editRule ? "Save Changes" : "Create Rule"}
-          </Button>
+          </LoadingButton>
         </div>
       }
     >

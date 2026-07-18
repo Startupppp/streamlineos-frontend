@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetBody } from "@/components/ui/sheet";
+import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Form,
   FormControl,
@@ -207,13 +208,14 @@ function CreateSecretSheet({ open, onClose }: CreateSecretSheetProps) {
               <Button type="button" variant="outline" onClick={onClose} disabled={createSecret.isPending}>
                 Cancel
               </Button>
-              <Button
+              <LoadingButton
                 type="submit"
-                disabled={createSecret.isPending}
+                isPending={createSecret.isPending}
+                loadingText="Saving…"
                 className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition-all duration-200"
               >
-                {createSecret.isPending ? "Saving…" : "Save Secret"}
-              </Button>
+                Save Secret
+              </LoadingButton>
             </SheetFooter>
           </form>
         </Form>

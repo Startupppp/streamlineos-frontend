@@ -95,7 +95,7 @@ export function TaxReportTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <Select value={fy} onValueChange={handleFYChange}>
-          <SelectTrigger className="w-32">
+          <SelectTrigger className="h-9 w-32">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

@@ -8,6 +8,7 @@ import { Banknote, Settings2 } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { useCan } from "@/hooks/api/access";
@@ -217,7 +218,7 @@ export default function TimesheetPayrollPage() {
           </TabsList>
 
           {pageFilters ? (
-            <div className="flex min-w-0 flex-nowrap items-center gap-3 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+            <div className={FILTER_TOOLBAR_ROW}>
               {pageFilters}
             </div>
           ) : null}

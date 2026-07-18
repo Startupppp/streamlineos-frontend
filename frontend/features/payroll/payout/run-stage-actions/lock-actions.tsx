@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useCan } from "@/hooks/api/access";
 import { useLockRun, useReopenRun, useCloseRun } from "@/hooks/api/payroll";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 interface Props {
   runId: number;
@@ -40,7 +41,7 @@ function LockButton({ runId, onChanged }: { runId: number; onChanged?: () => voi
       { runId },
       {
         onSuccess: () => { setOpen(false); toast.success("Payroll locked"); onChanged?.(); },
-        onError: (err) => { toast.error(err.message); },
+        onError: (err) => { toast.error(getErrorMessage(err)); },
       },
     );
   }
@@ -88,7 +89,7 @@ function ReopenButton({ runId, onChanged }: { runId: number; onChanged?: () => v
       { runId, reason: reason.trim() },
       {
         onSuccess: () => { setOpen(false); setReason(""); toast.success("Run reopened"); onChanged?.(); },
-        onError: (err) => { toast.error(err.message); },
+        onError: (err) => { toast.error(getErrorMessage(err)); },
       },
     );
   }
@@ -143,7 +144,7 @@ function CloseButton({ runId, onChanged }: { runId: number; onChanged?: () => vo
       { runId },
       {
         onSuccess: () => { setOpen(false); toast.success("Run closed"); onChanged?.(); },
-        onError: (err) => { toast.error(err.message); },
+        onError: (err) => { toast.error(getErrorMessage(err)); },
       },
     );
   }

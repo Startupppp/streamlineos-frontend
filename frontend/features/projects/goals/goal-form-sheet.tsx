@@ -36,6 +36,7 @@ import {
   type KeyResultInput,
 } from "@/hooks/api/goals";
 import { useChatOrgUsers } from "@/hooks/api/chat";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { LEVEL_OPTIONS, STATUS_OPTIONS, METRIC_OPTIONS } from "./constants";
 
 interface GoalFormSheetProps {
@@ -239,7 +240,7 @@ export function GoalFormSheet({
             toast.success("Goal updated");
             onOpenChange(false);
           },
-          onError: () => toast.error("Failed to update goal"),
+          onError: (e) => toast.error(getErrorMessage(e)),
         },
       );
       return;
@@ -261,7 +262,7 @@ export function GoalFormSheet({
           toast.success("Goal created");
           onOpenChange(false);
         },
-        onError: () => toast.error("Failed to create goal"),
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }

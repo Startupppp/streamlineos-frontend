@@ -90,6 +90,10 @@ export function ApprovalsInboxPage() {
     void refetch();
   }, [refetch]);
 
+  const handleDecideDialogChange = useCallback((open: boolean) => {
+    if (!open) setDecideTarget(null);
+  }, []);
+
   const columns = useMemo<DataTableColumn<ApprovalInboxItem>[]>(() => [
     {
       key: "project",
@@ -242,7 +246,7 @@ export function ApprovalsInboxPage() {
 
       <DecideDialog
         open={!!decideTarget}
-        onOpenChange={(open) => { if (!open) setDecideTarget(null); }}
+        onOpenChange={handleDecideDialogChange}
         onConfirm={handleDecideConfirm}
         isPending={decideApproval.isPending}
         approvalTitle={decideTarget?.title}

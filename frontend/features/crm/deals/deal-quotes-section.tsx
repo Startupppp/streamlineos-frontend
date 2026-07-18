@@ -58,17 +58,17 @@ const STATUS_CONFIG: Record<
   },
   ACCEPTED: {
     label: "Accepted",
-    className: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20",
+    className: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20",
     icon: CheckCircle,
   },
   REJECTED: {
     label: "Rejected",
-    className: "bg-red-500/10 text-red-700 border-red-500/20",
+    className: "bg-red-500/10 text-red-700 dark:text-red-300 border-red-500/20",
     icon: XCircle,
   },
   EXPIRED: {
     label: "Expired",
-    className: "bg-amber-500/10 text-amber-700 border-amber-500/20",
+    className: "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20",
     icon: Clock,
   },
 };

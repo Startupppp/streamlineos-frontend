@@ -12,8 +12,10 @@ export const dynamic = "force-dynamic";
 export default function MagicLinkPage() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
-  const [status, setStatus] = useState<"loading" | "error">("loading");
-  const [errorMessage, setErrorMessage] = useState("");
+  const [status, setStatus] = useState<"loading" | "error">(token ? "loading" : "error");
+  const [errorMessage, setErrorMessage] = useState(
+    token ? "" : "This link is missing its sign-in token. Please request a new one.",
+  );
   const attempted = useRef(false);
 
   useEffect(() => {
@@ -21,17 +23,19 @@ export default function MagicLinkPage() {
     attempted.current = true;
 
     async function verify() {
-      const result = await signIn("credentials", {
-        magicToken: token,
-        redirect: false,
-      });
-
-      if (result?.ok) {
-        window.location.replace("/post-signin");
-      } else {
-        setErrorMessage("This link is invalid, expired, or has already been used. Please request a new one.");
-        setStatus("error");
+      try {
+        const result = await signIn("credentials", {
+          magicToken: token,
+          redirect: false,
+        });
+        if (result?.ok && !result.error) {
+          window.location.replace("/post-signin");
+          return;
+        }
+      } catch {
       }
+      setErrorMessage("This link is invalid, expired, or has already been used. Please request a new one.");
+      setStatus("error");
     }
 
     verify();

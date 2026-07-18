@@ -8,7 +8,7 @@ export function SalaryStructuresSkeleton() {
       subtitle="Reusable compensation templates applied to employee profiles."
       actions={<Skeleton className="h-9 w-32 rounded-md" />}
     >
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         <Skeleton className="h-16 w-full rounded-xl" />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (

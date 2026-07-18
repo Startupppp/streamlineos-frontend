@@ -58,10 +58,10 @@ export function AIScoreButton({
   );
 
   const scoreColor = (score: number) => {
-    if (score >= 80) return "text-emerald-500";
-    if (score >= 60) return "text-amber-500";
-    if (score >= 40) return "text-orange-500";
-    return "text-red-500";
+    if (score >= 80) return "text-emerald-500 dark:text-emerald-400";
+    if (score >= 60) return "text-amber-500 dark:text-amber-400";
+    if (score >= 40) return "text-orange-500 dark:text-orange-400";
+    return "text-red-500 dark:text-red-400";
   };
 
   if (compact) {
@@ -146,12 +146,12 @@ function AIScoreDetails({
 }) {
   const scoreColor =
     result.score >= 80
-      ? "text-emerald-500"
+      ? "text-emerald-500 dark:text-emerald-400"
       : result.score >= 60
-        ? "text-amber-500"
+        ? "text-amber-500 dark:text-amber-400"
         : result.score >= 40
-          ? "text-orange-500"
-          : "text-red-500";
+          ? "text-orange-500 dark:text-orange-400"
+          : "text-red-500 dark:text-red-400";
   const scoreBg =
     result.score >= 80
       ? "bg-emerald-500/10"
@@ -200,7 +200,7 @@ function AIScoreDetails({
           </p>
           {result.strengths.map((s, i) => (
             <div key={i} className="flex items-start gap-1.5 text-[11px]">
-              <TrendingUp className="h-3 w-3 text-emerald-500 mt-0.5 shrink-0" />
+              <TrendingUp className="h-3 w-3 text-emerald-500 dark:text-emerald-400 mt-0.5 shrink-0" />
               <span>{s}</span>
             </div>
           ))}
