@@ -37,7 +37,7 @@ export const onboardEmployeeInputSchema = z.object({
     const digits = val.replace(/\D/g, "");
     return digits.length >= 7 && digits.length <= 15;
   }, "Please enter a valid phone number (7–15 digits)"),
-  whatsappSameAsPhone: z.boolean().default(true),
+  whatsappSameAsPhone: z.boolean(),
   whatsappNumber: z
     .string()
     .refine((val) => {
