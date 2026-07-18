@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Briefcase } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useCan } from "@/hooks/api/access";
 import { usePositions, useDeletePosition, type Position } from "../hooks/use-positions";
 import { format } from "date-fns";
@@ -146,10 +146,13 @@ export function PositionsTable() {
         data={data?.data ?? []}
         getRowKey={(row) => row.id}
         emptyState={
-          <div className="flex flex-col items-center py-12">
-            <Briefcase className="w-8 text-muted-foreground mb-2" />
-            <p className="text-sm text-muted-foreground">No positions found.</p>
-          </div>
+          <EmptyState
+            illustrationPreset="person"
+            illustrationSize="md"
+            title="No positions found"
+            description="Create positions to track roles, incumbents, and org structure."
+            compact
+          />
         }
         pagination={{ mode: "server", page, pageSize: 20, total: data?.total ?? 0, onPageChange: setPage }}
       />

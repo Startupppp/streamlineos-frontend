@@ -5,7 +5,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { GitBranch } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { EyeIcon } from "@animateicons/react/lucide";
 import { useCan } from "@/hooks/api/access";
 import {
@@ -116,10 +116,12 @@ export function ReorgScenariosTab() {
         data={data?.data ?? []}
         getRowKey={(row) => row.id}
         emptyState={
-          <div className="flex flex-col items-center py-12">
-            <GitBranch className="w-8 text-muted-foreground mb-2" />
-            <p className="text-sm text-muted-foreground">No reorg scenarios created yet.</p>
-          </div>
+          <EmptyState
+            illustrationPreset="projects"
+            title="No reorg scenarios yet"
+            description="Create a scenario to model org changes without affecting live positions."
+            compact
+          />
         }
         pagination={{ mode: "server", page, pageSize: 20, total: data?.total ?? 0, onPageChange: setPage }}
       />
