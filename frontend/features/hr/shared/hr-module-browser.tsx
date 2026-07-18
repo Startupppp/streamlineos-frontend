@@ -20,31 +20,31 @@ const TONE_STYLES: Record<
   { well: string; ring: string }
 > = {
   blue: {
-    well: "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400",
+    well: "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300",
     ring: "group-hover:border-blue-500/30",
   },
   emerald: {
-    well: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400",
+    well: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300",
     ring: "group-hover:border-emerald-500/30",
   },
   amber: {
-    well: "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400",
+    well: "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300",
     ring: "group-hover:border-amber-500/30",
   },
   rose: {
-    well: "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400",
+    well: "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-300",
     ring: "group-hover:border-rose-500/30",
   },
   violet: {
-    well: "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400",
+    well: "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300",
     ring: "group-hover:border-blue-500/30",
   },
   sky: {
-    well: "bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-400",
+    well: "bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-300",
     ring: "group-hover:border-sky-500/30",
   },
   slate: {
-    well: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
+    well: "bg-muted text-muted-foreground",
     ring: "group-hover:border-slate-400/30",
   },
 };

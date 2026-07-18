@@ -8,6 +8,8 @@ import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { AppSheet } from "@/components/shared";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCreateInspection } from "@/hooks/api/inventory/quality";
@@ -64,9 +66,13 @@ export function CreateInspectionSheet({ open, onOpenChange }: Props) {
           form.reset();
           onOpenChange(false);
         },
-        onError: (e) => toast.error(e.message),
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
+  }
+
+  function handleClose(): void {
+    onOpenChange(false);
   }
 
   function handleAddLine(): void {
@@ -79,10 +85,10 @@ export function CreateInspectionSheet({ open, onOpenChange }: Props) {
 
   const footer = (
     <>
-      <Button size="sm" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-      <Button size="sm" onClick={form.handleSubmit(handleSubmit)} disabled={createMut.isPending}>
-        {createMut.isPending ? "Creating…" : "Create Inspection"}
-      </Button>
+      <Button size="sm" variant="outline" onClick={handleClose}>Cancel</Button>
+      <LoadingButton size="sm" onClick={form.handleSubmit(handleSubmit)} isPending={createMut.isPending} loadingText="Creating…">
+        Create Inspection
+      </LoadingButton>
     </>
   );
 

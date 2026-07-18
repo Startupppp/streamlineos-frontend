@@ -35,7 +35,7 @@ const CELL = "h-3 w-3 rounded-[2px]";
 
 const intensityClasses: Record<number, string> = {
   0: "bg-muted/40 dark:bg-muted/20",
-  1: "bg-blue-200 dark:bg-blue-900/60",
+  1: "bg-blue-200 dark:bg-blue-500/10",
   2: "bg-blue-400 dark:bg-blue-700",
   3: "bg-blue-600 dark:bg-blue-500",
   4: "bg-blue-800 dark:bg-blue-300",

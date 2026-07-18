@@ -82,7 +82,7 @@ export function QuoteRowActions({
               Accept
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleReject}>
-              <XCircle className="h-3.5 w-3.5 mr-2 text-red-600" />
+              <XCircle className="h-3.5 w-3.5 mr-2 text-red-600 dark:text-red-400" />
               Reject
             </DropdownMenuItem>
           </>

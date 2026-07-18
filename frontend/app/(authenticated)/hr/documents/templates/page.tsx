@@ -61,25 +61,25 @@ const TYPE_CONFIG: Record<
   OFFER_LETTER: {
     label: "Offer Letter",
     badgeClass:
-      "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-700",
+      "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-700",
     icon: FileCheck,
   },
   NDA: {
     label: "NDA",
     badgeClass:
-      "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/40 dark:text-rose-300 dark:border-rose-700",
+      "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-700",
     icon: FileLock,
   },
   POLICY: {
     label: "Policy",
     badgeClass:
-      "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-700",
+      "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-700",
     icon: FileKey,
   },
   WELCOME: {
     label: "Welcome",
     badgeClass:
-      "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-700",
+      "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-700",
     icon: Smile,
   },
   OTHER: {
@@ -186,7 +186,7 @@ function buildTemplateColumns(
             <TypeIcon className="h-4 w-4 text-muted-foreground shrink-0" />
             <TruncatedText text={template.title} className="font-medium text-sm" />
             {template.isDefault && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-700 shrink-0">
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-700 shrink-0">
                 Default
               </span>
             )}
@@ -234,7 +234,7 @@ function buildTemplateColumns(
           className={cn(
             "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
             template.isActive
-              ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-700"
+              ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-700"
               : "bg-muted text-muted-foreground border-border",
           )}
         >

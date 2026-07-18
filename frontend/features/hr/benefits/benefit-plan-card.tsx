@@ -12,12 +12,12 @@ const CATEGORY_META: Record<
   BenefitPlan["category"],
   { label: string; icon: React.ReactNode; className: string }
 > = {
-  health: { label: "Health", icon: <Heart className="h-4 w-4" />, className: "text-rose-600 bg-rose-50 border-rose-100 dark:text-rose-400 dark:bg-rose-500/10 dark:border-rose-500/30" },
-  life: { label: "Life", icon: <Shield className="h-4 w-4" />, className: "text-blue-600 bg-blue-50 border-blue-100 dark:text-blue-400 dark:bg-blue-500/10 dark:border-blue-500/30" },
-  accident: { label: "Accident", icon: <Umbrella className="h-4 w-4" />, className: "text-orange-600 bg-orange-50 border-orange-100 dark:text-orange-400 dark:bg-orange-500/10 dark:border-orange-500/30" },
-  retirement: { label: "Retirement", icon: <PiggyBank className="h-4 w-4" />, className: "text-emerald-600 bg-emerald-50 border-emerald-100 dark:text-emerald-400 dark:bg-emerald-500/10 dark:border-emerald-500/30" },
-  wellness: { label: "Wellness", icon: <Smile className="h-4 w-4" />, className: "text-blue-600 bg-blue-50 border-blue-100 dark:text-blue-400 dark:bg-blue-500/10 dark:border-blue-500/30" },
-  perk: { label: "Perk", icon: <Star className="h-4 w-4" />, className: "text-amber-600 bg-amber-50 border-amber-100 dark:text-amber-400 dark:bg-amber-500/10 dark:border-amber-500/30" },
+  health: { label: "Health", icon: <Heart className="h-4 w-4" />, className: "text-rose-600 bg-rose-50 border-rose-100 dark:text-rose-300 dark:bg-rose-500/10 dark:border-rose-500/30" },
+  life: { label: "Life", icon: <Shield className="h-4 w-4" />, className: "text-blue-600 bg-blue-50 border-blue-100 dark:text-blue-300 dark:bg-blue-500/10 dark:border-blue-500/30" },
+  accident: { label: "Accident", icon: <Umbrella className="h-4 w-4" />, className: "text-orange-600 bg-orange-50 border-orange-100 dark:text-orange-300 dark:bg-orange-500/10 dark:border-orange-500/30" },
+  retirement: { label: "Retirement", icon: <PiggyBank className="h-4 w-4" />, className: "text-emerald-600 bg-emerald-50 border-emerald-100 dark:text-emerald-300 dark:bg-emerald-500/10 dark:border-emerald-500/30" },
+  wellness: { label: "Wellness", icon: <Smile className="h-4 w-4" />, className: "text-blue-600 bg-blue-50 border-blue-100 dark:text-blue-300 dark:bg-blue-500/10 dark:border-blue-500/30" },
+  perk: { label: "Perk", icon: <Star className="h-4 w-4" />, className: "text-amber-600 bg-amber-50 border-amber-100 dark:text-amber-300 dark:bg-amber-500/10 dark:border-amber-500/30" },
   other: { label: "Other", icon: <Package className="h-4 w-4" />, className: "text-muted-foreground bg-muted border-border" },
 };
 
@@ -63,7 +63,7 @@ export function BenefitPlanCard({ plan, enrolled, onEnroll, onWaive, onEdit, isA
             <span>₹{(plan.premiumCents / 100).toLocaleString("en-IN")}/mo</span>
           )}
           {plan.employerContributionPct > 0 && (
-            <span className="text-emerald-600 dark:text-emerald-400">{plan.employerContributionPct}% employer</span>
+            <span className="text-emerald-600 dark:text-emerald-300">{plan.employerContributionPct}% employer</span>
           )}
           <span>From {plan.effectiveFrom}</span>
         </div>

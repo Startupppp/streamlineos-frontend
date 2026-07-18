@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Textarea } from "@/components/ui/textarea";
@@ -60,7 +61,7 @@ function AddUpdateForm({ projectId, incidentId }: AddUpdateFormProps) {
       },
       {
         onSuccess: () => { toast.success("Update posted"); form.reset({ message: "", newStatus: "none" }); },
-        onError: () => toast.error("Failed to post update"),
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }

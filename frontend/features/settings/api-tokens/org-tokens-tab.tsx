@@ -23,6 +23,52 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { TokenCreatedDialog } from "./token-created-dialog";
 import { CreateOrgTokenSheet } from "./create-org-token-sheet";
 
+function RevokeTokenButton({
+  token,
+  onRevoke,
+}: {
+  token: ApiToken;
+  onRevoke: (t: ApiToken) => void;
+}) {
+  function handleClick() {
+    onRevoke(token);
+  }
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="h-7 w-7"
+      onClick={handleClick}
+      aria-label="Revoke token"
+    >
+      <ShieldOff className="h-4 w-4 text-amber-600" />
+    </Button>
+  );
+}
+
+function DeleteTokenButton({
+  token,
+  onDelete,
+}: {
+  token: ApiToken;
+  onDelete: (t: ApiToken) => void;
+}) {
+  function handleClick() {
+    onDelete(token);
+  }
+  return (
+    <AnimatedIconButton
+      icon={Trash2Icon}
+      iconSize={16}
+      variant="ghost"
+      size="icon"
+      className="h-7 w-7 text-destructive hover:text-destructive"
+      onClick={handleClick}
+      aria-label="Delete token"
+    />
+  );
+}
+
 function formatDate(iso: string | null) {
   if (!iso) return "—";
   return new Date(iso).toLocaleDateString(undefined, { dateStyle: "medium" });
@@ -177,25 +223,9 @@ export function OrgTokensTab({ showCreate, onShowCreateChange }: OrgTokensTabPro
       cell: (t) => (
         <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
           {!t.isRevoked && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              onClick={() => setRevoking(t)}
-              aria-label="Revoke token"
-            >
-              <ShieldOff className="h-4 w-4 text-amber-600" />
-            </Button>
+            <RevokeTokenButton token={t} onRevoke={setRevoking} />
           )}
-          <AnimatedIconButton
-            icon={Trash2Icon}
-            iconSize={16}
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 text-destructive hover:text-destructive"
-            onClick={() => setDeleting(t)}
-            aria-label="Delete token"
-          />
+          <DeleteTokenButton token={t} onDelete={setDeleting} />
         </div>
       ),
     },

@@ -142,11 +142,11 @@ export function DocumentTypeList({
         header: "Mandatory",
         cell: (dt) =>
           dt.isMandatory ? (
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-700">
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-700">
               Required
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-700">
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border">
               Optional
             </span>
           ),
@@ -157,11 +157,11 @@ export function DocumentTypeList({
         cell: (dt) => {
           const isActive = dt.isActive !== false;
           return isActive ? (
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-700">
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-700">
               Active
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-700">
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border">
               Inactive
             </span>
           );
@@ -185,7 +185,7 @@ export function DocumentTypeList({
               (dt.applicableRoles ?? []).map((r) => (
                 <span
                   key={r}
-                  className="inline-flex items-center text-[9px] font-semibold px-1.5 py-0.5 rounded-full border bg-muted text-muted-foreground border-border dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-700"
+                  className="inline-flex items-center text-[9px] font-semibold px-1.5 py-0.5 rounded-full border bg-muted text-muted-foreground border-border"
                 >
                   {r}
                 </span>

@@ -23,14 +23,14 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 
 function terminationStatusBadgeClass(status: string | null): string {
   if (status === "APPROVED" || status === "COMPLETED")
-    return "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800";
+    return "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800";
   if (status === "PENDING_CEO")
-    return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800";
+    return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800";
   if (status === "REJECTED")
-    return "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800";
+    return "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-800";
   if (status === "SENT")
-    return "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800";
-  return "bg-muted text-muted-foreground border-border dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700";
+    return "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-800";
+  return "bg-muted text-muted-foreground border-border";
 }
 
 function terminationStatusLabel(status: string | null): string {
@@ -117,7 +117,7 @@ export function TerminationDetailSheet({
             )}
           >
             <Avatar className="h-10 w-10 shrink-0">
-              <AvatarFallback className="text-xs font-bold bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400">
+              <AvatarFallback className="text-xs font-bold bg-rose-100 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300">
                 {getInitials(reviewRecord.employee?.name ?? null)}
               </AvatarFallback>
             </Avatar>
@@ -190,14 +190,14 @@ export function TerminationDetailSheet({
               )}
 
             {reviewRecord.noticePeriodWaived && (
-              <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900 p-3 space-y-1">
+              <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-500/10 dark:border-amber-900 p-3 space-y-1">
                 <div className="flex items-center gap-1.5">
-                  <AlertTriangle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-                  <p className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+                  <AlertTriangle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300" />
+                  <p className="text-[11px] font-semibold text-amber-700 dark:text-amber-300 uppercase tracking-wider">
                     Notice Period
                   </p>
                 </div>
-                <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">
+                <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">
                   Waived
                 </p>
               </div>
@@ -213,7 +213,7 @@ export function TerminationDetailSheet({
                 {(reviewRecord.reasons ?? []).map((r) => (
                   <span
                     key={r}
-                    className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800"
+                    className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-800"
                   >
                     {r}
                   </span>

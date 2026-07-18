@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import NextImage from "next/image";
 import { Loader2, Globe, Image as ImageIcon, Clock, IndianRupee, CalendarRange, Users, Palette } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { UploadIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 
@@ -350,16 +351,9 @@ export function OrgConfigSection({
 
         {isEditingConfig && (
           <div className="flex gap-2 pt-1">
-            <Button onClick={onSave} disabled={isUpdating} size="sm">
-              {isUpdating ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                "Save Configuration"
-              )}
-            </Button>
+            <LoadingButton onClick={onSave} isPending={isUpdating} size="sm" loadingText="Saving…">
+              Save Configuration
+            </LoadingButton>
             <Button variant="ghost" size="sm" onClick={onCancel} disabled={isUpdating}>
               Cancel
             </Button>

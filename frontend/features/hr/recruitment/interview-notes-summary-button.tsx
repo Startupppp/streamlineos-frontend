@@ -44,6 +44,10 @@ export function InterviewNotesSummaryButton({ candidateId, jobPostingId, candida
     );
   }
 
+  function handleContentClick(e: React.MouseEvent) {
+    e.stopPropagation();
+  }
+
   const recommendationColor = result
     ? (RECOMMENDATION_COLOR[result.overallRecommendation] ?? "text-foreground")
     : "";
@@ -65,7 +69,7 @@ export function InterviewNotesSummaryButton({ candidateId, jobPostingId, candida
       </PopoverTrigger>
 
       {result && (
-        <PopoverContent className="w-80 p-3 space-y-3" align="start" onClick={(e) => e.stopPropagation()}>
+        <PopoverContent className="w-80 p-3 space-y-3" align="start" onClick={handleContentClick}>
           <div className="flex items-start gap-2">
             <div className="flex-1 min-w-0">
               <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Overall Recommendation</p>

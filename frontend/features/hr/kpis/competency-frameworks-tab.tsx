@@ -48,7 +48,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 function getCategoryColor(category: string) {
-  return CATEGORY_COLORS[category] ?? "bg-muted text-muted-foreground dark:bg-slate-800/40 dark:text-slate-400";
+  return CATEGORY_COLORS[category] ?? "bg-muted text-muted-foreground";
 }
 
 interface FrameworkLevel {
@@ -278,10 +278,10 @@ export function CompetencyFrameworksTab() {
                         <Badge className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
                           {framework.ratingScale}-point scale
                         </Badge>
-                        <Badge className="text-xs bg-muted text-muted-foreground dark:bg-slate-800/40 dark:text-slate-400">
+                        <Badge className="text-xs bg-muted text-muted-foreground">
                           {framework.levels.length} levels
                         </Badge>
-                        <Badge className={`text-xs ${framework.isActive ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground dark:bg-slate-800/40 dark:text-slate-400"}`}>
+                        <Badge className={`text-xs ${framework.isActive ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground"}`}>
                           {framework.isActive ? "Active" : "Inactive"}
                         </Badge>
                       </div>
@@ -318,7 +318,7 @@ export function CompetencyFrameworksTab() {
                       }}
                     >
                       <DialogTrigger asChild>
-                        <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1.5" size="sm" variant="outline" className="text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-500/30 dark:hover:bg-blue-500/10">
+                        <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1.5" size="sm" variant="outline" className="text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-300 dark:border-blue-500/30 dark:hover:bg-blue-500/10">
                           Add Competency
                         </AnimatedIconButton>
                       </DialogTrigger>

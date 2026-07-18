@@ -19,7 +19,7 @@ const STATUS_COLORS: Record<TrainingAttendance["status"], string> = {
   ENROLLED: "bg-blue-50 text-blue-700 border-blue-200/70 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
   ATTENDED: "bg-emerald-50 text-emerald-700 border-emerald-200/70 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
   ABSENT: "bg-red-50 text-red-700 border-red-200/70 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
-  CANCELLED: "bg-muted text-muted-foreground border-border dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700",
+  CANCELLED: "bg-muted text-muted-foreground border-border",
 };
 
 function StarRating({ rating }: { rating: number }) {
@@ -107,7 +107,7 @@ export function AttendancePanel({ programId, canManage }: Props) {
               <Button
                 size="sm"
                 variant="outline"
-                className="text-xs text-emerald-700 border-emerald-200 hover:bg-emerald-50 dark:text-emerald-400 dark:border-emerald-500/30 dark:hover:bg-emerald-500/10"
+                className="text-xs text-emerald-700 border-emerald-200 hover:bg-emerald-50 dark:text-emerald-300 dark:border-emerald-500/30 dark:hover:bg-emerald-500/10"
                 onClick={() => handleMarkAttended(attendee.userId)}
                 disabled={markAttendance.isPending}
               >
@@ -116,7 +116,7 @@ export function AttendancePanel({ programId, canManage }: Props) {
               <Button
                 size="sm"
                 variant="outline"
-                className="text-xs text-red-700 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-500/30 dark:hover:bg-red-500/10"
+                className="text-xs text-red-700 border-red-200 hover:bg-red-50 dark:text-red-300 dark:border-red-500/30 dark:hover:bg-red-500/10"
                 onClick={() => handleMarkAbsent(attendee.userId)}
                 disabled={markAttendance.isPending}
               >

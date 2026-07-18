@@ -169,11 +169,11 @@ export function TerminationFormSheet({
       isPending={isPending}
       submitDisabled={submitDisabled}
     >
-      <div className="rounded-lg border border-rose-200 bg-rose-50 dark:border-rose-800/50 dark:bg-rose-950/20 px-3 py-2.5">
-        <p className="text-[11px] font-semibold text-rose-700 dark:text-rose-400">
+      <div className="rounded-lg border border-rose-200 bg-rose-50 dark:border-rose-800/50 dark:bg-rose-500/10 px-3 py-2.5">
+        <p className="text-[11px] font-semibold text-rose-700 dark:text-rose-300">
           Sensitive Action
         </p>
-        <p className="text-[11px] text-rose-600/80 dark:text-rose-400/70 mt-0.5">
+        <p className="text-[11px] text-rose-600/80 dark:text-rose-300/70 mt-0.5">
           Termination records are permanent and will initiate the offboarding process once approved.
         </p>
       </div>
@@ -231,7 +231,7 @@ export function TerminationFormSheet({
             )}
           </Label>
           {isOtherReason && (
-            <p className="text-[11px] text-amber-600 dark:text-amber-400">
+            <p className="text-[11px] text-amber-600 dark:text-amber-300">
               Required: Describe the specific reason for selecting &apos;Other&apos; (min. 10 characters).
             </p>
           )}

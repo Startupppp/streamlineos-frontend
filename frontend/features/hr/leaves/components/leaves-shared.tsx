@@ -126,17 +126,17 @@ export const balanceCardConfig: Record<
   "Casual Leave": {
     label: "CASUAL",
     barColor: "bg-blue-500",
-    valueColor: "text-blue-700 dark:text-blue-400",
-    iconBg: "bg-blue-100 dark:bg-blue-950/40",
-    iconColor: "text-blue-600 dark:text-blue-400",
+    valueColor: "text-blue-700 dark:text-blue-300",
+    iconBg: "bg-blue-100 dark:bg-blue-500/10",
+    iconColor: "text-blue-600 dark:text-blue-300",
     icon: CalendarDays,
   },
   "Sick Leave": {
     label: "SICK",
     barColor: "bg-rose-500",
-    valueColor: "text-rose-700 dark:text-rose-400",
-    iconBg: "bg-rose-100 dark:bg-rose-950/40",
-    iconColor: "text-rose-600 dark:text-rose-400",
+    valueColor: "text-rose-700 dark:text-rose-300",
+    iconBg: "bg-rose-100 dark:bg-rose-500/10",
+    iconColor: "text-rose-600 dark:text-rose-300",
     icon: Heart,
   },
   "Unpaid Leave": {
@@ -174,17 +174,17 @@ export const priorityConfig: Record<
   HIGH: {
     label: "High",
     dotColor: "bg-rose-500",
-    textColor: "text-rose-600 dark:text-rose-400",
+    textColor: "text-rose-600 dark:text-rose-300",
   },
   MEDIUM: {
     label: "Medium",
     dotColor: "bg-amber-500",
-    textColor: "text-amber-600 dark:text-amber-400",
+    textColor: "text-amber-600 dark:text-amber-300",
   },
   LOW: {
     label: "Low",
     dotColor: "bg-emerald-500",
-    textColor: "text-emerald-600 dark:text-emerald-400",
+    textColor: "text-emerald-600 dark:text-emerald-300",
   },
 };
 
@@ -300,7 +300,7 @@ export const WfhRequestItem = React.memo(function WfhRequestItem({
         {showUser && request.user && (
           <Avatar className="w-8 shrink-0">
             <AvatarImage src={resolveImageUrl(request.user.image)} />
-            <AvatarFallback className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400">
+            <AvatarFallback className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
               {request.user.firstName?.[0]}
               {request.user.lastName?.[0]}
             </AvatarFallback>
@@ -317,7 +317,7 @@ export const WfhRequestItem = React.memo(function WfhRequestItem({
             <TruncatedText text={request.reason} className="text-xs text-muted-foreground mt-0.5" />
           )}
           {status === "REJECTED" && request.rejectionReason && (
-            <p className="text-xs text-rose-600 dark:text-rose-400 mt-0.5 truncate">
+            <p className="text-xs text-rose-600 dark:text-rose-300 mt-0.5 truncate">
               {request.rejectionReason}
             </p>
           )}
@@ -375,12 +375,12 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
 
   const statusBadgeClass =
     status === "PENDING"
-      ? "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800"
+      ? "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800"
       : status === "APPROVED"
-        ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800"
+        ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800"
         : status === "CANCELLED"
-          ? "bg-muted text-muted-foreground border-border dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700"
-          : "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800";
+          ? "bg-muted text-muted-foreground border-border"
+          : "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-800";
 
   const priority = request.priority || "MEDIUM";
   const pConfig =
@@ -476,7 +476,7 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
           )}
           {status === "REJECTED" && request.rejectionReason && (
             <span
-              className="text-[10px] text-rose-500 dark:text-rose-400 truncate max-w-[120px]"
+              className="text-[10px] text-rose-500 dark:text-rose-300 truncate max-w-[120px]"
               title={request.rejectionReason}
             >
               {request.rejectionReason}

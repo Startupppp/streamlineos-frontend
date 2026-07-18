@@ -27,18 +27,18 @@ function statusBadgeClass(status: string | null): string {
   if (!status)
     return "bg-muted text-muted-foreground border-border";
   if (status === "SUBMITTED" || status === "PENDING_HR")
-    return "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800";
+    return "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-800";
   if (status === "HR_APPROVED")
-    return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800";
+    return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800";
   if (
     status === "CEO_APPROVED" ||
     status === "IN_PROGRESS" ||
     status === "COMPLETED" ||
     status === "APPROVED"
   )
-    return "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800";
+    return "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800";
   if (status === "REJECTED" || status === "WITHDRAWN")
-    return "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800";
+    return "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-800";
   return "bg-muted text-muted-foreground border-border";
 }
 
@@ -103,7 +103,7 @@ export function ResignationCard({
       <CardContent className="p-4 flex items-center gap-4">
         <Avatar className="h-9 w-9 shrink-0">
           <AvatarImage src={resolveImageUrl(r.user?.image ?? null)} />
-          <AvatarFallback className="text-xs font-semibold bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400">
+          <AvatarFallback className="text-xs font-semibold bg-rose-100 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300">
             {r.user?.name?.[0] ?? "?"}
           </AvatarFallback>
         </Avatar>
@@ -149,7 +149,7 @@ export function ResignationCard({
               </span>
             )}
             {daysLeft !== null && daysLeft > 0 && (
-              <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400 font-medium">
+              <span className="flex items-center gap-1 text-amber-600 dark:text-amber-300 font-medium">
                 <Clock className="h-3 w-3" />
                 {daysLeft} days left
               </span>

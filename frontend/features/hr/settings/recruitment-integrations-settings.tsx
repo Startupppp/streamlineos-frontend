@@ -106,7 +106,7 @@ function PortalCard({
             variant="outline"
             className={
               connected
-                ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[11px] dark:text-emerald-400"
+                ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[11px] dark:text-emerald-300"
                 : "bg-muted text-muted-foreground border-border text-[11px]"
             }
           >

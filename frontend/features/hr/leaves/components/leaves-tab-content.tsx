@@ -96,9 +96,9 @@ function LeaveCalendarWidget({
     <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-          <div className="w-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/40 flex items-center justify-center">
+          <div className="w-7 rounded-lg bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center">
             <CalendarDays
-              className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400"
+              className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-300"
               aria-hidden="true"
             />
           </div>
@@ -530,12 +530,12 @@ export function LeavesTabContent({
           const status = row.status ?? "PENDING";
           const statusBadgeClass =
             status === "PENDING"
-              ? "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800"
+              ? "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800"
               : status === "APPROVED"
-                ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800"
+                ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800"
                 : status === "CANCELLED"
-                  ? "bg-muted text-muted-foreground border-border dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700"
-                  : "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800";
+                  ? "bg-muted text-muted-foreground border-border"
+                  : "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-800";
           return (
             <div className="flex flex-col gap-0.5">
               <span
@@ -551,7 +551,7 @@ export function LeavesTabContent({
               )}
               {status === "REJECTED" && row.rejectionReason && (
                 <span
-                  className="text-[10px] text-rose-500 dark:text-rose-400 truncate max-w-[120px]"
+                  className="text-[10px] text-rose-500 dark:text-rose-300 truncate max-w-[120px]"
                   title={row.rejectionReason}
                 >
                   {row.rejectionReason}

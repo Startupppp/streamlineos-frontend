@@ -51,18 +51,18 @@ function isValidOtherLabel(value: string): boolean {
 function getStatusConfig(s: string | null) {
   if (s === "APPROVED" || s === "PAID") {
     return {
-      badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800",
+      badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30",
       icon: <CheckCircle2 className="h-2.5 w-2.5" />,
     };
   }
   if (s === "REJECTED") {
     return {
-      badge: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 border-rose-200 dark:border-rose-800",
+      badge: "bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300 border-rose-200 dark:border-rose-500/30",
       icon: <XCircle className="h-2.5 w-2.5" />,
     };
   }
   return {
-    badge: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-amber-200 dark:border-amber-800",
+    badge: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300 border-amber-200 dark:border-amber-500/30",
     icon: <Receipt className="h-2.5 w-2.5" />,
   };
 }

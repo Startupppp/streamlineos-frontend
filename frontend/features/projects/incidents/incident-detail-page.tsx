@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Pencil } from "lucide-react";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -100,7 +101,7 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
           setDeleteOpen(false);
           if (typeof window !== "undefined") window.history.back();
         },
-        onError: () => toast.error("Failed to delete incident"),
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }, [deleteIncident, projectId, incidentId]);

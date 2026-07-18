@@ -170,7 +170,7 @@ function TravelCard({ request }: { request: TravelRequest }) {
             )}
           </div>
           {request.status === "REJECTED" && request.rejectionReason && (
-            <p className="mt-2 text-xs text-rose-600 bg-rose-50 rounded-lg px-2 py-1 border border-rose-100 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/30">
+            <p className="mt-2 text-xs text-rose-600 bg-rose-50 rounded-lg px-2 py-1 border border-rose-100 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30">
               {request.rejectionReason}
             </p>
           )}

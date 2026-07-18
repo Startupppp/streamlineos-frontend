@@ -15,6 +15,7 @@ import { Lock, Globe, Users, Link2, RefreshCw, Eye, Pencil } from "lucide-react"
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { CopyIcon, XIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useUpdateWhiteboardSharing,
   useRotateWhiteboardShareToken,
@@ -86,7 +87,7 @@ export function ShareDialog({ projectId, whiteboard, open, onOpenChange }: Share
   function handleVisibilityChange(v: WhiteboardVisibility) {
     updateSharing.mutate({ id: whiteboard.id, visibility: v }, {
       onSuccess: () => toast.success("Visibility updated"),
-      onError: () => toast.error("Failed to update visibility"),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
   function handleAddMember(userId: string) {
@@ -94,37 +95,37 @@ export function ShareDialog({ projectId, whiteboard, open, onOpenChange }: Share
     const newShares = [...shares.map((s) => ({ userId: s.userId, role: s.role })), { userId, role: defaultRole }];
     setShares.mutate({ id: whiteboard.id, shares: newShares }, {
       onSuccess: () => { toast.success("Member added"); setPickerOpen(false); setSearchInput(""); },
-      onError: () => toast.error("Failed to add member"),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
   function handleRoleChange(userId: string, role: WhiteboardShareRole) {
     const updated = shares.map((s) => ({ userId: s.userId, role: s.userId === userId ? role : s.role }));
-    setShares.mutate({ id: whiteboard.id, shares: updated }, { onError: () => toast.error("Failed to update role") });
+    setShares.mutate({ id: whiteboard.id, shares: updated }, { onError: (e) => toast.error(getErrorMessage(e)) });
   }
   function handleRemoveMember(userId: string) {
     removeShare.mutate({ id: whiteboard.id, userId }, {
       onSuccess: () => toast.success("Member removed"),
-      onError: () => toast.error("Failed to remove member"),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
   const handleCopyLink = useCallback(() => {
     if (!sharing?.shareToken) return;
     const url = `${window.location.origin}/board/${sharing.shareToken}`;
-    navigator.clipboard.writeText(url).then(() => toast.success("Link copied"), () => toast.error("Failed to copy link"));
+    navigator.clipboard.writeText(url).then(() => toast.success("Link copied"), (e) => toast.error(getErrorMessage(e)));
   }, [sharing?.shareToken]);
   function handlePublicAccessChange(role: WhiteboardShareRole) {
-    updateSharing.mutate({ id: whiteboard.id, publicAccess: role }, { onError: () => toast.error("Failed to update access") });
+    updateSharing.mutate({ id: whiteboard.id, publicAccess: role }, { onError: (e) => toast.error(getErrorMessage(e)) });
   }
   function handleExpiryChange(preset: ExpiryPreset) {
-    updateSharing.mutate({ id: whiteboard.id, linkExpiresAt: computeExpiry(preset) }, { onError: () => toast.error("Failed to update expiry") });
+    updateSharing.mutate({ id: whiteboard.id, linkExpiresAt: computeExpiry(preset) }, { onError: (e) => toast.error(getErrorMessage(e)) });
   }
   function handleAllowExportChange(checked: boolean) {
-    updateSharing.mutate({ id: whiteboard.id, allowExport: checked }, { onError: () => toast.error("Failed to update setting") });
+    updateSharing.mutate({ id: whiteboard.id, allowExport: checked }, { onError: (e) => toast.error(getErrorMessage(e)) });
   }
   function handleConfirmReset() {
     rotateToken.mutate(whiteboard.id, {
       onSuccess: () => { toast.success("Link reset — old links no longer work"); setConfirmReset(false); },
-      onError: () => toast.error("Failed to reset link"),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
   function handleCancelReset() { setConfirmReset(false); }

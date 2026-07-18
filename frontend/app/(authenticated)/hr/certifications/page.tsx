@@ -33,19 +33,19 @@ const STATUS_CONFIG: Record<CertStatus, { label: string; icon: React.ReactNode; 
   VALID: {
     label: "Valid",
     icon: <CheckCircle2 className="h-2.5 w-2.5" />,
-    badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800",
+    badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30",
     accent: "border-l-emerald-500",
   },
   EXPIRING_SOON: {
     label: "Expiring Soon",
     icon: <AlertTriangle className="h-2.5 w-2.5" />,
-    badge: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-amber-200 dark:border-amber-800",
+    badge: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300 border-amber-200 dark:border-amber-500/30",
     accent: "border-l-amber-500",
   },
   EXPIRED: {
     label: "Expired",
     icon: <XCircle className="h-2.5 w-2.5" />,
-    badge: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 border-rose-200 dark:border-rose-800",
+    badge: "bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300 border-rose-200 dark:border-rose-500/30",
     accent: "border-l-rose-500",
   },
 };
@@ -309,9 +309,9 @@ export default function CertificationsPage() {
                         <div className={cn(
                           "rounded-lg px-3 py-2 text-[11px] font-medium",
                           status === "EXPIRED"
-                            ? "bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-400"
+                            ? "bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300"
                             : status === "EXPIRING_SOON"
-                            ? "bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400"
+                            ? "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300"
                             : "bg-muted/50 text-muted-foreground",
                         )}>
                           {status === "EXPIRED"

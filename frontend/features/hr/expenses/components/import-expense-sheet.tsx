@@ -344,11 +344,11 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
             <div className={cn(
               "rounded-lg border p-4",
               importResult.success
-                ? "border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-900/20"
+                ? "border-emerald-200 bg-emerald-50 dark:border-emerald-500/30 dark:bg-emerald-500/10"
                 : "border-destructive bg-destructive/10",
             )}>
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-300" />
                 <div>
                   <p className="text-sm font-medium">Successfully imported {importResult.count} expense(s)</p>
                   {importResult.skipped > 0 && (

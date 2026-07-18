@@ -220,12 +220,12 @@ export function ReviewsTab() {
                 : "border-l-amber-400";
             const statusBadgeClass =
               review.status === "COMPLETED"
-                ? "border-emerald-200 bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800"
+                ? "border-emerald-200 bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800"
                 : review.status === "IN_PROGRESS"
-                ? "border-blue-200 bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800"
+                ? "border-blue-200 bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-800"
                 : review.status === "ARCHIVED"
-                ? "border-border bg-muted text-muted-foreground dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700"
-                : "border-amber-200 bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800";
+                ? "border-border bg-muted text-muted-foreground"
+                : "border-amber-200 bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800";
 
             return (
               <Card
@@ -239,9 +239,9 @@ export function ReviewsTab() {
                     </Badge>
                     <div className="flex items-center gap-1 shrink-0">
                       {review.overallRating && (
-                        <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800">
+                        <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-800">
                           <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
-                          <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400">
+                          <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300">
                             {Number(review.overallRating).toFixed(1)}
                           </span>
                         </div>

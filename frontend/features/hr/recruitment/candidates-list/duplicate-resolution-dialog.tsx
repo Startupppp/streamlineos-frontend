@@ -6,6 +6,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useLinkDuplicateCandidate, type DuplicateCandidateGroup } from "@/hooks/api/hr/recruitment";
@@ -17,9 +18,58 @@ interface DuplicateResolutionDialogProps {
   onClose: () => void;
 }
 
+interface CandidateOptionButtonProps {
+  candidate: DuplicateCandidateGroup["candidates"][number];
+  isKept: boolean;
+  onSelect: (id: number) => void;
+}
+
+function CandidateOptionButton({ candidate: c, isKept, onSelect }: CandidateOptionButtonProps) {
+  function handleClick() { onSelect(c.id); }
+  return (
+    <button
+      key={c.id}
+      type="button"
+      onClick={handleClick}
+      className={`text-left rounded-xl border p-4 transition-colors ${
+        isKept ? "border-brand-core bg-primary/5" : "border-border hover:bg-muted/40"
+      }`}
+    >
+      <div className="flex items-center justify-between gap-2 mb-2 min-w-0">
+        <TruncatedText
+          text={`${c.firstName} ${c.lastName}`}
+          className="text-sm font-semibold text-foreground min-w-0 flex-1"
+        />
+        {isKept && <Badge className="text-[10px] shrink-0">Keep this one</Badge>}
+        {c.duplicateOfId && (
+          <Badge variant="outline" className="text-[10px] shrink-0">
+            Already linked
+          </Badge>
+        )}
+      </div>
+      <TruncatedText
+        text={c.email ?? ""}
+        className="text-xs text-muted-foreground break-all"
+      />
+      {c.phone && (
+        <TruncatedText
+          text={c.phone}
+          className="text-xs text-muted-foreground"
+        />
+      )}
+      <p className="text-xs text-muted-foreground mt-1">Status: {c.status}</p>
+      <p className="text-[11px] text-muted-foreground/70 mt-1">
+        Added {formatDistanceToNow(new Date(c.createdAt), { addSuffix: true })}
+      </p>
+    </button>
+  );
+}
+
 export function DuplicateResolutionDialog({ group, onClose }: DuplicateResolutionDialogProps) {
   const linkDuplicate = useLinkDuplicateCandidate();
   const [keptId, setKeptId] = useState<number>(group.candidates[0]!.id);
+
+  function handleDialogOpenChange(v: boolean) { if (!v) onClose(); }
 
   const handleMerge = useCallback(() => {
     const others = group.candidates.filter((c) => c.id !== keptId && !c.duplicateOfId);
@@ -39,7 +89,7 @@ export function DuplicateResolutionDialog({ group, onClose }: DuplicateResolutio
   }, [group, keptId, linkDuplicate, onClose]);
 
   return (
-    <Dialog open onOpenChange={(v) => { if (!v) onClose(); }}>
+    <Dialog open onOpenChange={handleDialogOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="text-base">Possible duplicate candidates</DialogTitle>
@@ -50,55 +100,23 @@ export function DuplicateResolutionDialog({ group, onClose }: DuplicateResolutio
         </DialogHeader>
 
         <div className="grid gap-3 sm:grid-cols-2">
-          {group.candidates.map((c) => {
-            const isKept = c.id === keptId;
-            return (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => setKeptId(c.id)}
-                className={`text-left rounded-xl border p-4 transition-colors ${
-                  isKept ? "border-brand-core bg-primary/5" : "border-border hover:bg-muted/40"
-                }`}
-              >
-                <div className="flex items-center justify-between gap-2 mb-2 min-w-0">
-                  <TruncatedText
-                    text={`${c.firstName} ${c.lastName}`}
-                    className="text-sm font-semibold text-foreground min-w-0 flex-1"
-                  />
-                  {isKept && <Badge className="text-[10px] shrink-0">Keep this one</Badge>}
-                  {c.duplicateOfId && (
-                    <Badge variant="outline" className="text-[10px] shrink-0">
-                      Already linked
-                    </Badge>
-                  )}
-                </div>
-                <TruncatedText
-                  text={c.email ?? ""}
-                  className="text-xs text-muted-foreground break-all"
-                />
-                {c.phone && (
-                  <TruncatedText
-                    text={c.phone}
-                    className="text-xs text-muted-foreground"
-                  />
-                )}
-                <p className="text-xs text-muted-foreground mt-1">Status: {c.status}</p>
-                <p className="text-[11px] text-muted-foreground/70 mt-1">
-                  Added {formatDistanceToNow(new Date(c.createdAt), { addSuffix: true })}
-                </p>
-              </button>
-            );
-          })}
+          {group.candidates.map((c) => (
+            <CandidateOptionButton
+              key={c.id}
+              candidate={c}
+              isKept={c.id === keptId}
+              onSelect={setKeptId}
+            />
+          ))}
         </div>
 
         <DialogFooter>
           <Button variant="outline" size="sm" onClick={onClose}>
             Keep separate
           </Button>
-          <Button size="sm" onClick={handleMerge} disabled={linkDuplicate.isPending}>
-            {linkDuplicate.isPending ? "Linking…" : "Link as duplicate"}
-          </Button>
+          <LoadingButton size="sm" onClick={handleMerge} isPending={linkDuplicate.isPending} loadingText="Linking…">
+            Link as duplicate
+          </LoadingButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

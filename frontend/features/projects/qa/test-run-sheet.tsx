@@ -28,6 +28,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateTestRun, useTestCases, useTestSuites } from "@/hooks/api/projects/qa";
 import { ProjectMemberSelect } from "@/components/members/project-member-select";
 
@@ -120,7 +121,7 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
           toast.success("Test run created");
           onOpenChange(false);
         },
-        onError: () => toast.error("Failed to create test run"),
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }

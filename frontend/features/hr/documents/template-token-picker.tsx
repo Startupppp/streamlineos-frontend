@@ -85,8 +85,8 @@ export function TemplateTokenPicker({
     <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
       <CardHeader className="pb-3 border-b px-5 pt-4">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 rounded-lg bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center shrink-0">
-            <Braces className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+          <div className="w-7 rounded-lg bg-amber-100 dark:bg-amber-500/10 flex items-center justify-center shrink-0">
+            <Braces className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300" />
           </div>
           <div>
             <CardTitle className="text-sm font-semibold text-foreground">Variable Tokens</CardTitle>

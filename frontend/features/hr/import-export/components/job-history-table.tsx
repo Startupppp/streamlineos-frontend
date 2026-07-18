@@ -83,14 +83,14 @@ const COLUMNS: DataTableColumn<HrImportJob>[] = [
     key: "validRows",
     header: "Valid",
     headerClassName: "text-right",
-    className: "text-right tabular-nums text-emerald-700 dark:text-emerald-400",
+    className: "text-right tabular-nums text-emerald-700 dark:text-emerald-300",
     cell: (row) => <span className="text-xs">{row.validRows}</span>,
   },
   {
     key: "errorRows",
     header: "Errors",
     headerClassName: "text-right",
-    className: "text-right tabular-nums text-red-600 dark:text-red-400",
+    className: "text-right tabular-nums text-red-600 dark:text-red-300",
     cell: (row) => <span className="text-xs">{row.errorRows}</span>,
   },
   {

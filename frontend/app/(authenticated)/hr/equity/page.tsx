@@ -68,7 +68,7 @@ export default function EquityPage() {
       key: "board",
       header: "Board Approved",
       cell: (r: EquityGrant) => r.boardApprovedAt ? (
-        <span className="text-xs text-emerald-600 dark:text-emerald-400">✓ {format(new Date(r.boardApprovedAt), "dd MMM yyyy")}</span>
+        <span className="text-xs text-emerald-600 dark:text-emerald-300">✓ {format(new Date(r.boardApprovedAt), "dd MMM yyyy")}</span>
       ) : (
         <span className="text-xs text-muted-foreground">Pending</span>
       ),

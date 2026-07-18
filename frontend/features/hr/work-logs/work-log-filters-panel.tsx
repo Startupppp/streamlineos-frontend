@@ -118,7 +118,7 @@ export function WorkLogFiltersPanel({
           {filters.selectedUserId && employees && (
             <Badge
               variant="secondary"
-              className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-blue-200 bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-800 pr-1"
+              className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-blue-200 bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30 pr-1"
             >
               {(() => {
                 const e = employees.find(
@@ -135,7 +135,7 @@ export function WorkLogFiltersPanel({
           {filters.month !== undefined && (
             <Badge
               variant="secondary"
-              className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-amber-200 bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-800 pr-1"
+              className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-amber-200 bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30 pr-1"
             >
               {format(new Date(filters.year, filters.month, 1), "MMMM")}
               <FilterClearButton onClick={handleClearMonth} ariaLabel="Remove month filter" />
@@ -144,7 +144,7 @@ export function WorkLogFiltersPanel({
           {(filters.dateFrom || filters.dateTo) && (
             <Badge
               variant="secondary"
-              className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-border bg-muted text-muted-foreground dark:bg-slate-800/60 dark:text-slate-300 dark:border-slate-700 pr-1"
+              className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-border bg-muted text-muted-foreground pr-1"
             >
               {filters.dateFrom && filters.dateTo
                 ? `${filters.dateFrom} – ${filters.dateTo}`

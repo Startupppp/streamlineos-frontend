@@ -24,7 +24,7 @@ export function StepReview({ form, allDepartmentOptions }: StepReviewProps) {
   return (
     <div className="space-y-6">
       <div className="text-center mb-4">
-        <div className="w-14 h-14 bg-green-100 dark:bg-green-900/30 text-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
+        <div className="w-14 h-14 bg-green-100 dark:bg-green-500/10 text-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
           <Check className="w-7 h-7" />
         </div>
         <h2 className="text-xl font-bold">Ready to Onboard?</h2>
@@ -41,7 +41,7 @@ export function StepReview({ form, allDepartmentOptions }: StepReviewProps) {
         </div>
       </div>
 
-      <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 p-4 rounded-lg flex gap-3 text-sm text-amber-800 dark:text-amber-200">
+      <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 p-4 rounded-lg flex gap-3 text-sm text-amber-800 dark:text-amber-200">
         <Lightbulb className="w-5 h-5 shrink-0 mt-0.5" />
         <p>By clicking submit, the employee account will be created, and they will be added to the onboarding workflow automatically.</p>
       </div>

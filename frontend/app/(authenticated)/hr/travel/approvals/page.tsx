@@ -99,7 +99,7 @@ function RejectInline({
       <Button
         size="sm"
         variant="outline"
-        className="gap-1 text-xs border-rose-200 text-rose-600 hover:bg-rose-50 dark:border-rose-500/30 dark:text-rose-400 dark:hover:bg-rose-500/10"
+        className="gap-1 text-xs border-rose-200 text-rose-600 hover:bg-rose-50 dark:border-rose-500/30 dark:text-rose-300 dark:hover:bg-rose-500/10"
         onClick={handleExpand}
       >
         <XCircle className="h-3.5 w-3.5" />

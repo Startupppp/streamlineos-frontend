@@ -29,11 +29,11 @@ const PROFICIENCY_LABELS: Record<number, string> = {
 };
 
 const PROFICIENCY_COLORS: Record<number, string> = {
-  1: "bg-muted text-muted-foreground dark:bg-slate-900/30 dark:text-slate-400",
-  2: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-  3: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-  4: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-  5: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+  1: "bg-muted text-muted-foreground",
+  2: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
+  3: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
+  4: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-300",
+  5: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
 };
 
 const ROLES = [

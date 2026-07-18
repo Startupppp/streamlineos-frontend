@@ -29,7 +29,7 @@ const IMPORT_ENTITIES: ImportEntityConfig[] = [
     label: "Employees",
     description: "Import employee records with departments and roles",
     columns: ["email", "firstName", "lastName", "joiningDate", "departmentName", "designation", "employeeNumber"],
-    accent: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+    accent: "bg-blue-500/10 text-blue-600 dark:text-blue-300",
     Icon: Users,
   },
   {
@@ -45,7 +45,7 @@ const IMPORT_ENTITIES: ImportEntityConfig[] = [
     label: "Attendance",
     description: "Import historical attendance records",
     columns: ["employeeEmail", "date", "checkIn", "checkOut", "status"],
-    accent: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+    accent: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-300",
     Icon: Briefcase,
   },
   {
@@ -61,7 +61,7 @@ const IMPORT_ENTITIES: ImportEntityConfig[] = [
     label: "Documents",
     description: "Import document metadata with file URLs",
     columns: ["employeeEmail", "name", "type", "fileUrl", "category"],
-    accent: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+    accent: "bg-amber-500/10 text-amber-600 dark:text-amber-300",
     Icon: FileText,
   },
 ];

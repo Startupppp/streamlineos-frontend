@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { RefreshCw, Info } from "lucide-react";
 import { AppSheet } from "@/components/shared";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -131,16 +132,17 @@ function PublicationsTable({ channelId, statusFilter, showRetry }: PublicationsT
     <div className="space-y-3 mt-3">
       {showRetry && (
         <div className="flex justify-end">
-          <Button
+          <LoadingButton
             size="sm"
             variant="outline"
             className="text-xs gap-1.5"
             onClick={handleRetryAll}
-            disabled={retryMutation.isPending}
+            isPending={retryMutation.isPending}
+            loadingText="Retrying…"
           >
             <RefreshCw className="h-3 w-3" />
-            {retryMutation.isPending ? "Retrying…" : "Retry all"}
-          </Button>
+            Retry all
+          </LoadingButton>
         </div>
       )}
       <DataTable<Publication>

@@ -76,6 +76,36 @@ function useRemoveDomain() {
   });
 }
 
+function RemoveDomainButton({ domainId, onRemove, disabled }: { domainId: string; onRemove: (id: string) => void; disabled: boolean }) {
+  function handleClick() {
+    onRemove(domainId);
+  }
+  return (
+    <AnimatedIconButton
+      icon={Trash2Icon}
+      iconSize={16}
+      type="button"
+      size="icon"
+      variant="ghost"
+      className="h-7 w-7 text-muted-foreground hover:text-destructive"
+      onClick={handleClick}
+      disabled={disabled}
+      aria-label="Remove domain"
+    />
+  );
+}
+
+function VerifyDomainButton({ domainId, onVerify, isPending }: { domainId: string; onVerify: (id: string) => void; isPending: boolean }) {
+  function handleClick() {
+    onVerify(domainId);
+  }
+  return (
+    <LoadingButton size="sm" variant="outline" className="h-7 text-xs gap-1" isPending={isPending} onClick={handleClick} loadingText="Verifying…">
+      Verify now
+    </LoadingButton>
+  );
+}
+
 function CopyTokenButton({ token, copied, onCopy }: { token: string; copied: boolean; onCopy: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   if (copied) {
@@ -129,6 +159,11 @@ export function OrgCustomDomainsSection({ canEdit }: OrgCustomDomainsSectionProp
     });
   }, [addMutation, form]);
 
+  const handleOpenAdd = useCallback(() => setShowAdd(true), []);
+  const handleCancelAdd = useCallback(() => { setShowAdd(false); form.reset(); }, [form]);
+  const handleRemove = useCallback((id: string) => { removeMutation.mutate(id); }, [removeMutation]);
+  const handleVerify = useCallback((id: string) => { verifyMutation.mutate(id); }, [verifyMutation]);
+
   return (
     <Card className="rounded-lg border border-border">
       <CardHeader className="pb-2 flex flex-row items-start justify-between">
@@ -140,7 +175,7 @@ export function OrgCustomDomainsSection({ canEdit }: OrgCustomDomainsSectionProp
           <CardDescription>Verify a custom domain for your organization portal.</CardDescription>
         </div>
         {canEdit && !showAdd && (
-          <AnimatedIconButton icon={PlusIcon} iconSize={12} iconClassName="mr-1.5" variant="outline" size="sm" onClick={() => setShowAdd(true)} className="h-8 text-xs">
+          <AnimatedIconButton icon={PlusIcon} iconSize={12} iconClassName="mr-1.5" variant="outline" size="sm" onClick={handleOpenAdd} className="h-8 text-xs">
             Add domain
           </AnimatedIconButton>
         )}
@@ -157,7 +192,7 @@ export function OrgCustomDomainsSection({ canEdit }: OrgCustomDomainsSectionProp
               <LoadingButton type="submit" size="sm" isPending={addMutation.isPending} className="gap-1.5 h-8" loadingText="Adding…">
                 Add
               </LoadingButton>
-              <Button type="button" variant="ghost" size="sm" className="h-8" onClick={() => { setShowAdd(false); form.reset(); }}>
+              <Button type="button" variant="ghost" size="sm" className="h-8" onClick={handleCancelAdd}>
                 Cancel
               </Button>
             </div>
@@ -182,17 +217,7 @@ export function OrgCustomDomainsSection({ canEdit }: OrgCustomDomainsSectionProp
                     <Badge variant="secondary" className="h-5 text-[10px]">Pending verification</Badge>
                   )}
                   {canEdit && (
-                    <AnimatedIconButton
-                      icon={Trash2Icon}
-                      iconSize={16}
-                      type="button"
-                      size="icon"
-                      variant="ghost"
-                      className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                      onClick={() => removeMutation.mutate(d.id)}
-                      disabled={removeMutation.isPending}
-                      aria-label="Remove domain"
-                    />
+                    <RemoveDomainButton domainId={d.id} onRemove={handleRemove} disabled={removeMutation.isPending} />
                   )}
                 </div>
                 {!d.verifiedAt && (
@@ -210,9 +235,7 @@ export function OrgCustomDomainsSection({ canEdit }: OrgCustomDomainsSectionProp
                     </div>
                     <CopyableToken token={d.verificationToken} />
                     {canEdit && (
-                      <LoadingButton size="sm" variant="outline" className="h-7 text-xs gap-1" isPending={verifyMutation.isPending} onClick={() => verifyMutation.mutate(d.id)} loadingText="Verifying…">
-                        Verify now
-                      </LoadingButton>
+                      <VerifyDomainButton domainId={d.id} onVerify={handleVerify} isPending={verifyMutation.isPending} />
                     )}
                   </div>
                 )}

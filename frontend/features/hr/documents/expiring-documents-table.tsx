@@ -40,12 +40,12 @@ interface MergedItem {
 function urgencyBadge(expiryDate: string) {
   const days = differenceInDays(parseISO(expiryDate), new Date());
   if (days <= 7) {
-    return "bg-rose-100 border-rose-200 text-rose-700 dark:bg-rose-900/40 dark:border-rose-800 dark:text-rose-300";
+    return "bg-rose-100 border-rose-200 text-rose-700 dark:bg-rose-500/10 dark:border-rose-500/30 dark:text-rose-300";
   }
   if (days <= 14) {
-    return "bg-orange-100 border-orange-200 text-orange-700 dark:bg-orange-900/40 dark:border-orange-800 dark:text-orange-300";
+    return "bg-orange-100 border-orange-200 text-orange-700 dark:bg-orange-500/10 dark:border-orange-500/30 dark:text-orange-300";
   }
-  return "bg-amber-100 border-amber-200 text-amber-700 dark:bg-amber-900/40 dark:border-amber-800 dark:text-amber-300";
+  return "bg-amber-100 border-amber-200 text-amber-700 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-300";
 }
 
 function urgencyLabel(expiryDate: string) {

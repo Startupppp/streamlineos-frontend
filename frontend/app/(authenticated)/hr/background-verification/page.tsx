@@ -40,27 +40,27 @@ import { EditVerificationSheet } from "@/features/hr/background-verification/edi
 function getStatusConfig(s: string | null) {
   if (s === "PASSED") {
     return {
-      badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800",
+      badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30",
       icon: <CheckCircle2 className="h-2.5 w-2.5" />,
       label: "Clear",
     };
   }
   if (s === "FAILED") {
     return {
-      badge: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 border-rose-200 dark:border-rose-800",
+      badge: "bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300 border-rose-200 dark:border-rose-500/30",
       icon: <ShieldAlert className="h-2.5 w-2.5" />,
       label: "Flagged",
     };
   }
   if (s === "IN_PROGRESS") {
     return {
-      badge: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-amber-200 dark:border-amber-800",
+      badge: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300 border-amber-200 dark:border-amber-500/30",
       icon: <Clock className="h-2.5 w-2.5" />,
       label: "In Progress",
     };
   }
   return {
-    badge: "bg-muted text-muted-foreground dark:bg-slate-900/40 dark:text-slate-300 border-border dark:border-slate-800",
+    badge: "bg-muted text-muted-foreground border-border",
     icon: <ShieldCheck className="h-2.5 w-2.5" />,
     label: "Pending",
   };
@@ -114,7 +114,7 @@ function ComplianceDashboard() {
           <CardContent className="pt-0 px-4 pb-4 space-y-2">
             <div className="flex items-center gap-2">
               <Progress value={row.clearedPct} className="flex-1 h-2 bg-muted [&>div]:bg-emerald-500" />
-              <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 tabular-nums w-10 text-right">
+              <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 tabular-nums w-10 text-right">
                 {row.clearedPct}%
               </span>
             </div>
@@ -122,16 +122,16 @@ function ComplianceDashboard() {
               <span className="text-muted-foreground">
                 Total: <span className="font-medium text-foreground">{row.total}</span>
               </span>
-              <span className="text-emerald-600 dark:text-emerald-400">
+              <span className="text-emerald-600 dark:text-emerald-300">
                 Cleared: <span className="font-medium">{row.cleared}</span>
               </span>
-              <span className="text-amber-600 dark:text-amber-400">
+              <span className="text-amber-600 dark:text-amber-300">
                 Pending: <span className="font-medium">{row.pending}</span>
               </span>
-              <span className="text-blue-600 dark:text-blue-400">
+              <span className="text-blue-600 dark:text-blue-300">
                 Initiated: <span className="font-medium">{row.initiated}</span>
               </span>
-              <span className="text-rose-600 dark:text-rose-400">
+              <span className="text-rose-600 dark:text-rose-300">
                 Failed: <span className="font-medium">{row.failed}</span>
               </span>
               <span className="text-muted-foreground">
@@ -172,7 +172,7 @@ function buildBgvColumns(
       key: "type",
       header: "Type",
       cell: (bgv) => (
-        <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-foreground dark:bg-slate-900/40 dark:text-slate-300 border-border dark:border-slate-800">
+        <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-foreground border-border">
           {bgv.type}
         </span>
       ),
@@ -365,19 +365,19 @@ function BGVContent() {
     >
       {items && items.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-3">
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full border bg-muted text-muted-foreground border-border dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full border bg-muted text-muted-foreground border-border">
             <ShieldCheck className="h-3 w-3" />
             {pendingCount} Pending
           </span>
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-800">
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
             <Clock className="h-3 w-3" />
             {inProgressCount} In Progress
           </span>
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800">
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
             <CheckCircle2 className="h-3 w-3" />
             {passedCount} Cleared
           </span>
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full border bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/40 dark:text-rose-300 dark:border-rose-800">
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full border bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30">
             <ShieldAlert className="h-3 w-3" />
             {failedCount} Flagged
           </span>

@@ -68,7 +68,7 @@ export function SimulationHistory() {
       key: "simulation",
       header: "Label",
       cell: (r) => (
-        <span className="text-xs text-amber-700 dark:text-amber-400">
+        <span className="text-xs text-amber-700 dark:text-amber-300">
           {String((r.result as Record<string, unknown>)?.simulation ?? "")}
         </span>
       ),

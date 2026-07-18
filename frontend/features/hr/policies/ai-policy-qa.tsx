@@ -97,7 +97,7 @@ export function AiPolicyQa({ onCreateTicket, className }: AiPolicyQaProps) {
 
       {result?.suggestTicket && (
         <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 dark:bg-amber-500/10 dark:border-amber-500/30 px-3 py-2.5">
-          <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+          <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-300 mt-0.5 shrink-0" />
           <p className="text-xs text-amber-700 dark:text-amber-300 leading-snug">
             {result.escalationReason ?? "No confident policy source found for this question."}{" "}
             {onCreateTicket && (

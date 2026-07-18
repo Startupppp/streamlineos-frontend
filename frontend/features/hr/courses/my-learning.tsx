@@ -77,7 +77,7 @@ export function MyLearning() {
                     {enrollment.status === "COMPLETED" ? (
                       <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                     ) : (
-                      <BookOpen className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      <BookOpen className="h-4 w-4 text-blue-600 dark:text-blue-300" />
                     )}
                   </div>
                   <div className="min-w-0">

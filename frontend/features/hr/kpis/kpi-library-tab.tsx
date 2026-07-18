@@ -34,7 +34,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 function getCategoryColor(category: string) {
-  return CATEGORY_COLORS[category] ?? "bg-muted text-muted-foreground dark:bg-slate-800/40 dark:text-slate-400";
+  return CATEGORY_COLORS[category] ?? "bg-muted text-muted-foreground";
 }
 
 interface KpiFormState {
@@ -245,7 +245,7 @@ export function KpiLibraryTab() {
               </div>
               <div className="flex flex-wrap gap-1.5">
                 <Badge className={`text-xs ${getCategoryColor(kpi.category)}`}>{kpi.category}</Badge>
-                <Badge className={`text-xs ${kpi.isActive ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground dark:bg-slate-800/40 dark:text-slate-400"}`}>
+                <Badge className={`text-xs ${kpi.isActive ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground"}`}>
                   {kpi.isActive ? "Active" : "Inactive"}
                 </Badge>
               </div>
@@ -257,7 +257,7 @@ export function KpiLibraryTab() {
               <Button
                 size="sm"
                 variant="outline"
-                className={`w-full text-xs ${kpi.isActive ? "text-red-500 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-500/30 dark:hover:bg-red-500/10" : "text-green-600 border-green-200 hover:bg-green-50 dark:text-green-400 dark:border-green-500/30 dark:hover:bg-green-500/10"}`}
+                className={`w-full text-xs ${kpi.isActive ? "text-red-500 border-red-200 hover:bg-red-50 dark:text-red-300 dark:border-red-500/30 dark:hover:bg-red-500/10" : "text-green-600 border-green-200 hover:bg-green-50 dark:text-green-300 dark:border-green-500/30 dark:hover:bg-green-500/10"}`}
                 onClick={() => handleToggleActive(kpi.id, kpi.isActive)}
               >
                 {kpi.isActive ? "Deactivate" : "Activate"}

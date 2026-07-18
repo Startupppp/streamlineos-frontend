@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { Label } from "@/components/ui/label";
@@ -177,9 +178,9 @@ export function VendorSheet({ initial, onClose }: VendorSheetProps) {
         </SheetBody>
         <SheetFooter className="shrink-0 flex-row justify-end gap-2 border-t border-border bg-muted/30 px-6 py-4">
           <Button variant="outline" onClick={onClose} disabled={isPending} className="flex-1">Cancel</Button>
-          <Button onClick={handleSubmit} disabled={isPending} className="flex-1">
-            {isPending ? "Saving..." : initial ? "Save Changes" : "Add Vendor"}
-          </Button>
+          <LoadingButton onClick={handleSubmit} isPending={isPending} loadingText="Saving..." className="flex-1">
+            {initial ? "Save Changes" : "Add Vendor"}
+          </LoadingButton>
         </SheetFooter>
       </SheetContent>
     </Sheet>

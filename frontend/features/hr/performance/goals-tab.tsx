@@ -310,10 +310,10 @@ export function GoalsTab() {
                 ? "border-l-blue-500"
                 : "border-l-border";
             const statusBadgeClass = isCompleted
-              ? "border-emerald-200 bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800"
+              ? "border-emerald-200 bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800"
               : goal.status === "IN_PROGRESS"
-                ? "border-blue-200 bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800"
-                : "border-border bg-muted text-muted-foreground dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700";
+                ? "border-blue-200 bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-800"
+                : "border-border bg-muted text-muted-foreground";
 
             return (
               <Card
@@ -373,8 +373,8 @@ export function GoalsTab() {
                   />
                   {goal.endDate && (
                     <div className="flex items-center gap-1.5">
-                      <div className="h-5 w-5 rounded-md bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center shrink-0">
-                        <Calendar className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+                      <div className="h-5 w-5 rounded-md bg-amber-100 dark:bg-amber-500/10 flex items-center justify-center shrink-0">
+                        <Calendar className="h-3 w-3 text-amber-600 dark:text-amber-300" />
                       </div>
                       <p className="text-[11px] font-medium text-muted-foreground">
                         Due {format(new Date(goal.endDate), "MMM d, yyyy")}

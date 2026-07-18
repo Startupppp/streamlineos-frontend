@@ -315,14 +315,14 @@ export function SelfEditProfileForm({
           <div className="space-y-2">
             <SocialField
               id="linkedinUrl"
-              icon={<Linkedin className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />}
+              icon={<Linkedin className="h-3.5 w-3.5 text-blue-600 dark:text-blue-300" />}
               placeholder="https://linkedin.com/in/yourhandle"
               error={errors.linkedinUrl?.message}
               {...register("linkedinUrl")}
             />
             <SocialField
               id="twitterUrl"
-              icon={<Twitter className="h-3.5 w-3.5 text-sky-500 dark:text-sky-400" />}
+              icon={<Twitter className="h-3.5 w-3.5 text-sky-500 dark:text-sky-300" />}
               placeholder="https://twitter.com/yourhandle"
               error={errors.twitterUrl?.message}
               {...register("twitterUrl")}
@@ -336,7 +336,7 @@ export function SelfEditProfileForm({
             />
             <SocialField
               id="websiteUrl"
-              icon={<Globe className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />}
+              icon={<Globe className="h-3.5 w-3.5 text-green-600 dark:text-green-300" />}
               placeholder="https://yourwebsite.com"
               error={errors.websiteUrl?.message}
               {...register("websiteUrl")}

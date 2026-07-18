@@ -25,6 +25,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import dynamic from "next/dynamic";
 
 const TiptapEditor = dynamic(
@@ -184,7 +185,7 @@ export function IncidentSheet({
             toast.success("Incident updated");
             onOpenChange(false);
           },
-          onError: () => toast.error("Failed to update incident"),
+          onError: (e) => toast.error(getErrorMessage(e)),
         },
       );
     } else {
@@ -193,7 +194,7 @@ export function IncidentSheet({
           toast.success("Incident created");
           onOpenChange(false);
         },
-        onError: () => toast.error("Failed to create incident"),
+        onError: (e) => toast.error(getErrorMessage(e)),
       });
     }
   }
