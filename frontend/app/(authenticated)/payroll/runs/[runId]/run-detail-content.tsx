@@ -110,6 +110,21 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
           </div>
         )}
 
+        {data?.payoutHealth && (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-amber-200 bg-amber-50 text-[11px] text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+            <span>⚠️</span>
+            <span>
+              This run is marked {run.status.replace(/_/g, " ")}, but not everyone was actually paid:{" "}
+              {data.payoutHealth.failedCount > 0 &&
+                `${data.payoutHealth.failedCount} payment${data.payoutHealth.failedCount === 1 ? "" : "s"} failed`}
+              {data.payoutHealth.failedCount > 0 && data.payoutHealth.heldCount > 0 && ", "}
+              {data.payoutHealth.heldCount > 0 &&
+                `${data.payoutHealth.heldCount} employee${data.payoutHealth.heldCount === 1 ? "" : "s"} held`}
+              . Review the Employees tab and retry or resolve before treating this run as complete.
+            </span>
+          </div>
+        )}
+
         <div className="rounded-xl border border-border bg-card p-4">
           <RunStatusStepper status={run.status} />
         </div>
