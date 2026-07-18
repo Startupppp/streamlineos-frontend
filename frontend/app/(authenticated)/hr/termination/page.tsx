@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useCan } from "@/hooks/api/access";
 import { isToday, isFuture, parseISO } from "date-fns";
@@ -37,6 +38,8 @@ type StatusFilter = "ALL" | TerminationStatus;
 export default function TerminationPage() {
   const { data: session } = useSession();
   const canApproveExit = useCan("hr:exit:approve");
+  const searchParams = useSearchParams();
+  const employeeIdParam = searchParams.get("employeeId");
 
   const role = session?.user?.role;
   const isHR = role === "HR";
@@ -52,8 +55,8 @@ export default function TerminationPage() {
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
 
-  const [createOpen, setCreateOpen] = useState(false);
-  const [selectedUserId, setSelectedUserId] = useState("");
+  const [createOpen, setCreateOpen] = useState(() => Boolean(employeeIdParam));
+  const [selectedUserId, setSelectedUserId] = useState(() => employeeIdParam ?? "");
   const [selectedReason, setSelectedReason] = useState("");
   const [remarks, setRemarks] = useState("");
   const [effectiveDate, setEffectiveDate] = useState("");

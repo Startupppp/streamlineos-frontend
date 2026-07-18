@@ -127,16 +127,6 @@ export function useUpdateProfile() {
   });
 }
 
-export function useTerminateEmployee() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (userId: string) =>
-      apiClient.patch<{ success: boolean }>(`/hr/employees/${userId}`, { isActive: false }),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.employees() }),
-  });
-}
-
 export function useHrOrgChart() {
   return useQuery({
     queryKey: queryKeys.hr.orgChart(),
