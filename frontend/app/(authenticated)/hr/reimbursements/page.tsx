@@ -1,13 +1,14 @@
 "use client";
 
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, type ChangeEvent } from "react";
 import {
   useReimbursements,
   useCreateReimbursement,
   useProcessReimbursement,
   type Reimbursement,
 } from "@/hooks/api/hr";
+import { useUploadFile } from "@/hooks/api/use-upload-file";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,14 +24,29 @@ import {
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Plus, Receipt, CheckCircle2, XCircle } from "lucide-react";
+import { Plus, Receipt, CheckCircle2, XCircle, Upload, FileText, X } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useCan } from "@/hooks/api/access";
 import { cn } from "@/lib/utils";
 
 const CATEGORIES = ["Travel", "Meals", "Office Supplies", "Software", "Medical", "Other"];
+const LABEL_CHARS_RE = /^[\p{L}\p{N}\s'.-]+$/u;
+const CONSECUTIVE_SPECIAL_RE = /[^\p{L}\p{N}\s]{2,}/u;
+const MAX_RECEIPT_BYTES = 10 * 1024 * 1024;
+
+function isValidOtherLabel(value: string): boolean {
+  const trimmed = value.trim().replace(/\s+/g, " ");
+  return (
+    trimmed.length >= 2 &&
+    trimmed.length <= 100 &&
+    /[a-zA-Z]/.test(trimmed) &&
+    LABEL_CHARS_RE.test(trimmed) &&
+    !CONSECUTIVE_SPECIAL_RE.test(trimmed)
+  );
+}
 
 function getStatusConfig(s: string | null) {
   if (s === "APPROVED" || s === "PAID") {
@@ -94,64 +110,107 @@ export default function ReimbursementsPage() {
   const { data: items, isLoading, isError, refetch } = useReimbursements();
   const create = useCreateReimbursement();
   const process = useProcessReimbursement();
+  const uploadFile = useUploadFile();
   const isAdmin = useCan("hr:expenses:approve");
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [rejectId, setRejectId] = useState<number | null>(null);
   const [category, setCategory] = useState("Travel");
+  const [customCategory, setCustomCategory] = useState("");
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
-  const [receiptUrl, setReceiptUrl] = useState("");
+  const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
+  const [receiptFileName, setReceiptFileName] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleSheetOpenChange = useCallback((open: boolean) => {
-    if (!open) {
-      setCategory("Travel");
-      setAmount("");
-      setDescription("");
-      setReceiptUrl("");
-    }
-    setSheetOpen(open);
+  const resetForm = useCallback(() => {
+    setCategory("Travel");
+    setCustomCategory("");
+    setAmount("");
+    setDescription("");
+    setReceiptUrl(null);
+    setReceiptFileName(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }, []);
 
-  const handleAmountChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setAmount(e.target.value), []);
-  const handleDescriptionChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value), []);
-  const handleReceiptUrlChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setReceiptUrl(e.target.value), []);
+  const handleSheetOpenChange = useCallback((open: boolean) => {
+    if (!open) resetForm();
+    setSheetOpen(open);
+  }, [resetForm]);
+
+  const handleAmountChange = useCallback((e: ChangeEvent<HTMLInputElement>) => setAmount(e.target.value), []);
+  const handleDescriptionChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value), []);
+  const handleCustomCategoryChange = useCallback((e: ChangeEvent<HTMLInputElement>) => setCustomCategory(e.target.value), []);
   const handleRejectDialogOpenChange = useCallback((open: boolean) => { if (!open) setRejectId(null); }, []);
   const handleOpenNewRequest = useCallback(() => setSheetOpen(true), []);
+  const handleCategoryChange = useCallback((value: string) => {
+    setCategory(value);
+    if (value !== "Other") setCustomCategory("");
+  }, []);
+  const handleClickUpload = useCallback(() => fileInputRef.current?.click(), []);
+  const handleRemoveReceipt = useCallback(() => {
+    setReceiptUrl(null);
+    setReceiptFileName(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }, []);
+
+  const handleReceiptChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (file.size > MAX_RECEIPT_BYTES) {
+      toast.error("Receipt must be at most 10MB");
+      return;
+    }
+    uploadFile.mutate(
+      { file, folder: "receipts" },
+      {
+        onSuccess: (result) => {
+          setReceiptUrl(result.url);
+          setReceiptFileName(file.name);
+        },
+        onError: (err) => toast.error(getErrorMessage(err)),
+      },
+    );
+  }, [uploadFile]);
 
   const handleCreate = useCallback(() => {
     const numAmount = Number(amount);
     if (!amount || numAmount <= 0) { toast.error("Valid amount is required"); return; }
     if (numAmount < 1) { toast.error("Amount must be at least ₹1"); return; }
     if (numAmount > 999999) { toast.error("Amount must be at most ₹9,99,999"); return; }
-    if (receiptUrl && !/^(https?:\/\/|www\.)\S+/.test(receiptUrl.trim())) {
-      toast.error("Enter a valid URL (e.g. https://... or www....)");
-      return;
+
+    let resolvedCategory = category;
+    if (category === "Other") {
+      const other = customCategory.trim().replace(/\s+/g, " ");
+      if (!other) {
+        toast.error("Please describe what the other category is");
+        return;
+      }
+      if (!isValidOtherLabel(other)) {
+        toast.error("Category can only use letters, numbers, spaces, apostrophes, periods, and hyphens");
+        return;
+      }
+      resolvedCategory = other;
     }
-    const normalizedUrl =
-      receiptUrl && receiptUrl.trim().startsWith("www.")
-        ? `https://${receiptUrl.trim()}`
-        : receiptUrl.trim();
+
     create.mutate(
       {
-        category,
+        category: resolvedCategory,
         amount: numAmount,
         description: description || undefined,
-        receiptUrl: normalizedUrl || undefined,
+        receiptUrl: receiptUrl || undefined,
       },
       {
         onSuccess: () => {
           toast.success("Reimbursement submitted");
           setSheetOpen(false);
-          setCategory("Travel");
-          setAmount("");
-          setDescription("");
-          setReceiptUrl("");
+          resetForm();
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [category, amount, description, receiptUrl, create]);
+  }, [category, customCategory, amount, description, receiptUrl, create, resetForm]);
 
   const handleApprove = useCallback(
     (id: number) => {
@@ -306,11 +365,11 @@ export default function ReimbursementsPage() {
         title="Submit Reimbursement"
         onSubmit={handleCreate}
         submitLabel="Submit"
-        isPending={create.isPending}
+        isPending={create.isPending || uploadFile.isPending}
       >
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Category</label>
-          <Select value={category} onValueChange={setCategory}>
+          <Select value={category} onValueChange={handleCategoryChange}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -321,6 +380,23 @@ export default function ReimbursementsPage() {
             </SelectContent>
           </Select>
         </div>
+
+        {category === "Other" && (
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">
+              What is the other category? <span className="text-destructive">*</span>
+            </label>
+            <Input
+              placeholder="e.g. Client entertainment, Team offsite"
+              value={customCategory}
+              onChange={handleCustomCategoryChange}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Letters, numbers, spaces, apostrophes, periods, and hyphens only.
+            </p>
+          </div>
+        )}
+
         <div className="space-y-1.5">
           <label className="text-sm font-medium">
             Amount (₹) <span className="text-destructive">*</span>
@@ -347,12 +423,50 @@ export default function ReimbursementsPage() {
           />
         </div>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Receipt URL</label>
-          <Input
-            type="text"
-            placeholder="https://... or www.example.com"
-            value={receiptUrl}
-            onChange={handleReceiptUrlChange}
+          <label className="text-sm font-medium">Receipt</label>
+          {!receiptUrl ? (
+            <button
+              type="button"
+              onClick={handleClickUpload}
+              disabled={uploadFile.isPending}
+              className="flex w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 p-6 transition-colors hover:border-primary/50 hover:bg-primary/5 disabled:opacity-50"
+            >
+              <Upload className="mb-2 h-7 w-7 text-muted-foreground/50" />
+              <span className="text-sm font-medium text-foreground/70">
+                {uploadFile.isPending ? "Uploading…" : "Upload receipt"}
+              </span>
+              <span className="mt-0.5 text-[11px] text-muted-foreground">
+                PDF, PNG, JPG up to 10MB
+              </span>
+            </button>
+          ) : (
+            <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded bg-primary/10">
+                <FileText className="h-5 w-5 text-primary" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <TruncatedText text={receiptFileName ?? "Receipt"} className="text-sm font-medium text-foreground" />
+                <p className="text-[11px] text-muted-foreground">Attached</p>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 shrink-0"
+                onClick={handleRemoveReceipt}
+                aria-label="Remove receipt"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            className="hidden"
+            accept="image/*,.pdf"
+            onChange={handleReceiptChange}
+            aria-label="Upload receipt"
           />
         </div>
       </HrSheet>
