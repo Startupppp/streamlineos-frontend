@@ -23,6 +23,7 @@ import {
 import { useKpis, useCreateKpi, useUpdateKpi, useDeleteKpi } from "@/hooks/api/hr";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 
 const CATEGORY_COLORS: Record<string, string> = {
   Sales: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
@@ -67,6 +68,7 @@ export function KpiLibraryTab() {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null);
   const [form, setForm] = useState<KpiFormState>({
     name: "",
     category: "",
@@ -111,11 +113,12 @@ export function KpiLibraryTab() {
     }
   }
 
-  async function handleDelete(id: number) {
-    if (!confirm("Delete this KPI?")) return;
+  async function handleDeleteConfirm() {
+    if (!deleteTarget) return;
     try {
-      await deleteKpi.mutateAsync(id);
+      await deleteKpi.mutateAsync(deleteTarget.id);
       toast.success("KPI deleted");
+      setDeleteTarget(null);
     } catch (e) {
       toast.error(getErrorMessage(e));
     }
@@ -240,7 +243,7 @@ export function KpiLibraryTab() {
                     <TruncatedText text={kpi.description} lines={2} className="text-xs text-muted-foreground mt-0.5" />
                   )}
                 </div>
-                <KpiDeleteButton onClick={() => handleDelete(kpi.id)} />
+                <KpiDeleteButton onClick={() => setDeleteTarget({ id: kpi.id, name: kpi.name })} />
               </div>
               <div className="flex flex-wrap gap-1.5">
                 <Badge className={`text-xs ${getCategoryColor(kpi.category)}`}>{kpi.category}</Badge>
@@ -265,6 +268,17 @@ export function KpiLibraryTab() {
           ))}
         </div>
       )}
+
+      <ConfirmSheet
+        open={deleteTarget !== null}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        title="Delete KPI"
+        description={`Are you sure you want to delete "${deleteTarget?.name ?? ""}"? This cannot be undone.`}
+        confirmLabel="Delete"
+        destructive
+        onConfirm={handleDeleteConfirm}
+        isPending={deleteKpi.isPending}
+      />
     </div>
   );
 }

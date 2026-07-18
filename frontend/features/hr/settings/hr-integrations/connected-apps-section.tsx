@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { CheckCircle2, XCircle, Unlink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -48,6 +49,7 @@ function AppCard({
 }) {
   const initiate = useInitiateIntegrationConnection();
   const disconnect = useDisconnectIntegration();
+  const [confirmDisconnectOpen, setConfirmDisconnectOpen] = useState(false);
 
   const handleConnect = useCallback(async () => {
     try {
@@ -58,12 +60,12 @@ function AppCard({
     }
   }, [initiate, config.toolkit]);
 
-  const handleDisconnect = useCallback(async () => {
+  const handleDisconnectConfirm = useCallback(async () => {
     if (!connection) return;
-    if (!confirm(`Disconnect ${config.label}?`)) return;
     try {
       await disconnect.mutateAsync(connection.id);
       toast.success(`${config.label} disconnected`);
+      setConfirmDisconnectOpen(false);
     } catch (e) {
       toast.error(getErrorMessage(e));
     }
@@ -105,7 +107,7 @@ function AppCard({
             variant="outline"
             size="sm"
             isPending={disconnect.isPending}
-            onClick={handleDisconnect}
+            onClick={() => setConfirmDisconnectOpen(true)}
             className="gap-1.5 text-destructive hover:text-destructive"
           >
             <Unlink className="h-3.5 w-3.5" />
@@ -122,6 +124,17 @@ function AppCard({
           </LoadingButton>
         )}
       </div>
+
+      <ConfirmSheet
+        open={confirmDisconnectOpen}
+        onOpenChange={setConfirmDisconnectOpen}
+        title="Disconnect Integration"
+        description={`Disconnect ${config.label}? Synced events and reminders will stop until you reconnect.`}
+        confirmLabel="Disconnect"
+        destructive
+        onConfirm={handleDisconnectConfirm}
+        isPending={disconnect.isPending}
+      />
     </div>
   );
 }

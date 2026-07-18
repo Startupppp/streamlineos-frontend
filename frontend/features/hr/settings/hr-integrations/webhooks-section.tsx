@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useHrWebhooks,
@@ -33,6 +34,7 @@ function WebhookRow({
   const toggle = useToggleHrWebhook();
   const remove = useDeleteHrWebhook();
   const test = useTestHrWebhook();
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   const handleToggle = useCallback(
     async (isActive: boolean) => {
@@ -45,15 +47,15 @@ function WebhookRow({
     [toggle, sub.id],
   );
 
-  const handleDelete = useCallback(async () => {
-    if (!confirm(`Delete webhook "${sub.name}"?`)) return;
+  const handleDeleteConfirm = useCallback(async () => {
     try {
       await remove.mutateAsync(sub.id);
       toast.success("Webhook deleted");
+      setConfirmDeleteOpen(false);
     } catch (e) {
       toast.error(getErrorMessage(e));
     }
-  }, [remove, sub.id, sub.name]);
+  }, [remove, sub.id]);
 
   const handleTest = useCallback(async () => {
     try {
@@ -119,11 +121,22 @@ function WebhookRow({
           className="w-7 text-destructive hover:text-destructive"
           title="Delete"
           isPending={remove.isPending}
-          onClick={handleDelete}
+          onClick={() => setConfirmDeleteOpen(true)}
         >
           <Trash2Icon size={14} />
         </LoadingButton>
       </div>
+
+      <ConfirmSheet
+        open={confirmDeleteOpen}
+        onOpenChange={setConfirmDeleteOpen}
+        title="Delete Webhook"
+        description={`Delete webhook "${sub.name}"? This cannot be undone.`}
+        confirmLabel="Delete"
+        destructive
+        onConfirm={handleDeleteConfirm}
+        isPending={remove.isPending}
+      />
     </div>
   );
 }
