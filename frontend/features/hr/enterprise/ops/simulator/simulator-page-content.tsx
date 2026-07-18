@@ -32,13 +32,13 @@ export function SimulatorPageContent() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-4 bg-transparent border-b border-border rounded-none p-0 gap-0 w-full justify-start overflow-x-auto flex-nowrap scrollbar-none shrink-0">
-          <TabsTrigger value="policy" className="text-xs px-3 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground text-muted-foreground hover:text-foreground whitespace-nowrap">Policy</TabsTrigger>
-          <TabsTrigger value="leave" className="text-xs px-3 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground text-muted-foreground hover:text-foreground whitespace-nowrap">Leave Balance</TabsTrigger>
-          <TabsTrigger value="approval" className="text-xs px-3 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground text-muted-foreground hover:text-foreground whitespace-nowrap">Approval Routing</TabsTrigger>
-          <TabsTrigger value="payroll" className="text-xs px-3 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground text-muted-foreground hover:text-foreground whitespace-nowrap">Payroll Impact</TabsTrigger>
-          <TabsTrigger value="compare" className="text-xs px-3 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground text-muted-foreground hover:text-foreground whitespace-nowrap">Compare</TabsTrigger>
-          <TabsTrigger value="history" className="text-xs px-3 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground text-muted-foreground hover:text-foreground whitespace-nowrap">History</TabsTrigger>
+        <TabsList className="mb-4 shrink-0">
+          <TabsTrigger value="policy" className="text-xs">Policy</TabsTrigger>
+          <TabsTrigger value="leave" className="text-xs">Leave Balance</TabsTrigger>
+          <TabsTrigger value="approval" className="text-xs">Approval Routing</TabsTrigger>
+          <TabsTrigger value="payroll" className="text-xs">Payroll Impact</TabsTrigger>
+          <TabsTrigger value="compare" className="text-xs">Compare</TabsTrigger>
+          <TabsTrigger value="history" className="text-xs">History</TabsTrigger>
         </TabsList>
 
         <TabsContent value="policy"><PolicySimulator /></TabsContent>
