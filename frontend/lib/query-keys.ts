@@ -1233,4 +1233,12 @@ export const queryKeys = {
     all: [...base, "ai", "meetings"] as const,
   },
 
+  mail: {
+    all: [...base, "mail"] as const,
+    accounts: () => [...base, "mail", "accounts"] as const,
+    messages: (params?: Record<string, unknown>) => [...base, "mail", "messages", params] as const,
+    thread: (accountId: number, threadId: string) => [...base, "mail", "thread", accountId, threadId] as const,
+    message: (accountId: number, messageId: string) => [...base, "mail", "message", accountId, messageId] as const,
+  },
+
 } as const;

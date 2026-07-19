@@ -54,7 +54,7 @@ export function CalendarConnectInline() {
     async (toolkit: IntegrationToolkit) => {
       setPending(toolkit);
       try {
-        const { redirectUrl } = await initiate.mutateAsync(toolkit);
+        const { redirectUrl } = await initiate.mutateAsync({ toolkit });
         window.location.assign(redirectUrl);
       } catch (error) {
         setPending(null);

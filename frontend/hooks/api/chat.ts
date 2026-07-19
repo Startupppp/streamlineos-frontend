@@ -179,7 +179,7 @@ export function useSendMessage() {
 
       if (previousData) {
         const pages = previousData.pages.map((page, i) =>
-          i === previousData.pages.length - 1
+          i === 0
             ? { ...page, messages: [...page.messages, optimisticMsg] }
             : page
         );

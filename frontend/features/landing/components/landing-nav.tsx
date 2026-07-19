@@ -109,7 +109,7 @@ export function LandingNav() {
               </Button>
             </Link>
             <Magnetic strength={0.3}>
-              <Link href="/signup">
+              <Link href="/signin">
                 <Button size="sm" className="h-9 px-3 sm:px-4 text-xs sm:text-sm">
                   <span className="sm:hidden">Start</span>
                   <span className="hidden sm:inline">Get started</span>
@@ -156,7 +156,7 @@ export function LandingNav() {
                 Sign in
               </Link>
               <Link
-                href="/signup"
+                href="/signin"
                 onClick={() => setOpen(false)}
                 className="mt-1 flex items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-3 py-3 text-sm font-semibold text-white hover:bg-blue-700"
               >

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { makeBackendToken } from "@/lib/api/make-backend-token";
-import { withAuth } from "@/lib/api/helpers";
+import { withAuth, unwrapEnvelope } from "@/lib/api/helpers";
 import { BACKEND_URL } from "@/lib/backend-url";
 
 export async function GET() {
@@ -13,6 +13,6 @@ export async function GET() {
       headers: { Authorization: `Bearer ${auth}` },
     });
     const data: unknown = await res.json();
-    return NextResponse.json(data, { status: res.status });
+    return NextResponse.json(res.ok ? unwrapEnvelope(data) : data, { status: res.status });
   });
 }

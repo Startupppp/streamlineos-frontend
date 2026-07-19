@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Badge } from "@/components/ui/badge";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { formatClientDeviceLabel } from "@/lib/format-utils";
 
 function getDeviceIcon(session: { os: string | null; platform: string | null }) {
   const label = `${session.os ?? ""} ${session.platform ?? ""}`.toLowerCase();
@@ -19,12 +20,6 @@ function getDeviceIcon(session: { os: string | null; platform: string | null }) 
     return <Smartphone className="h-4 w-4" />;
   }
   return <Monitor className="h-4 w-4" />;
-}
-
-function getSessionLabel(session: { browser: string; os: string | null; platform: string | null }): string {
-  if (session.os) return `${session.browser} · ${session.os}`;
-  if (session.platform) return `${session.browser} · ${session.platform}`;
-  return session.browser;
 }
 
 type SessionData = {
@@ -50,7 +45,7 @@ function SessionRow({ session: s, onRevoke, revokePending }: SessionRowProps) {
       <span className="text-muted-foreground flex-shrink-0">{getDeviceIcon(s)}</span>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <TruncatedText text={getSessionLabel(s)} className="text-[13px] font-medium" />
+          <TruncatedText text={formatClientDeviceLabel(s)} className="text-[13px] font-medium" />
           {s.isCurrent && (
             <Badge variant="outline" className="text-[10px] h-4 px-1.5 border-emerald-300 text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
               Current

@@ -92,6 +92,13 @@ const nextConfig: NextConfig = {
       ],
     },
   },
+  redirects: async () => [
+    {
+      source: "/signup",
+      destination: "/signin",
+      permanent: true,
+    },
+  ],
   images: {
     remotePatterns: [
       {

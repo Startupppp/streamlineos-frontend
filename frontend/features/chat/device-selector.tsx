@@ -46,17 +46,36 @@ export function useMediaDevices() {
   };
 }
 
-export function DeviceSelector({ show, onClose }: { show: boolean; onClose: () => void }) {
-  const {
-    audioInputs,
-    audioOutputs,
-    selectedAudioInput,
-    selectedAudioOutput,
-    setSelectedAudioInput,
-    setSelectedAudioOutput,
-  } = useMediaDevices();
+interface DeviceSelectorProps {
+  show: boolean;
+  onClose: () => void;
+  audioInputs: MediaDeviceOption[];
+  audioOutputs: MediaDeviceOption[];
+  selectedAudioInput: string;
+  selectedAudioOutput: string;
+  onAudioInputChange: (deviceId: string) => void;
+  onAudioOutputChange: (deviceId: string) => void;
+}
 
+export function DeviceSelector({
+  show,
+  onClose,
+  audioInputs,
+  audioOutputs,
+  selectedAudioInput,
+  selectedAudioOutput,
+  onAudioInputChange,
+  onAudioOutputChange,
+}: DeviceSelectorProps) {
   if (!show) return null;
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    onAudioInputChange(e.target.value);
+  };
+
+  const handleOutputChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    onAudioOutputChange(e.target.value);
+  };
 
   return (
     <div className="absolute bottom-full mb-2 left-0 right-0 mx-4 bg-background border border-border/60 rounded-xl shadow-xl p-4 z-50">
@@ -70,7 +89,7 @@ export function DeviceSelector({ show, onClose }: { show: boolean; onClose: () =
           </div>
           <select
             value={selectedAudioInput}
-            onChange={(e) => setSelectedAudioInput(e.target.value)}
+            onChange={handleInputChange}
             className={cn(
               "w-full text-[12px] border border-border/50 rounded-lg px-2 py-1.5 bg-background focus:outline-none focus:border-primary/40",
             )}
@@ -92,7 +111,7 @@ export function DeviceSelector({ show, onClose }: { show: boolean; onClose: () =
           </div>
           <select
             value={selectedAudioOutput}
-            onChange={(e) => setSelectedAudioOutput(e.target.value)}
+            onChange={handleOutputChange}
             className={cn(
               "w-full text-[12px] border border-border/50 rounded-lg px-2 py-1.5 bg-background focus:outline-none focus:border-primary/40",
             )}

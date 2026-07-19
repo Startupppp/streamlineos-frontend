@@ -9,30 +9,12 @@ import type { HuddleParticipant } from "@/types/chat";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
 import { useAblyConnection } from "./use-ably-connection";
-
-function getIceServers(): RTCIceServer[] {
-  const servers: RTCIceServer[] = [
-    { urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] },
-  ];
-  if (process.env.NEXT_PUBLIC_TURN_URL) {
-    servers.push({
-      urls: process.env.NEXT_PUBLIC_TURN_URL,
-      username: process.env.NEXT_PUBLIC_TURN_USERNAME ?? "",
-      credential: process.env.NEXT_PUBLIC_TURN_CREDENTIAL ?? "",
-    });
-  }
-  return servers;
-}
-
-interface IncomingSignalData {
-  fromUserId: string;
-  type: "offer" | "answer" | "ice-candidate";
-  payload: {
-    sdp?: string;
-    fromUserId?: string;
-    candidate?: RTCIceCandidateInit;
-  };
-}
+import {
+  getIceServers,
+  handleIncomingSignal,
+  updatedStreamMap,
+  type IncomingSignalData,
+} from "./webrtc-helpers";
 
 export function useWebRTCHuddle(
   huddleId: number | null,
@@ -49,6 +31,8 @@ export function useWebRTCHuddle(
 
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStreams, setRemoteStreams] = useState<Map<string, MediaStream>>(new Map());
+  const [remoteScreenStreams, setRemoteScreenStreams] = useState<Map<string, MediaStream>>(new Map());
+  const [isMicReady, setIsMicReady] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [screenStream, setScreenStream] = useState<MediaStream | null>(null);
   const [isSharingScreen, setIsSharingScreen] = useState(false);
@@ -56,27 +40,58 @@ export function useWebRTCHuddle(
   const [realtimeError, setRealtimeError] = useState<string | null>(null);
 
   const peerConnections = useRef<Map<string, RTCPeerConnection>>(new Map());
+  const pendingCandidates = useRef<Map<string, RTCIceCandidateInit[]>>(new Map());
+  const makingOffer = useRef<Set<string>>(new Set());
+  const streamsByUser = useRef<Map<string, Map<string, MediaStream>>>(new Map());
   const localStreamRef = useRef<MediaStream | null>(null);
   const screenStreamRef = useRef<MediaStream | null>(null);
   const knownParticipants = useRef<Set<string>>(new Set());
-  const streamReady = useRef(false);
   const sendSignalRef = useRef<typeof sendSignalMutation.mutate>(sendSignalMutation.mutate);
 
   useEffect(() => {
     sendSignalRef.current = sendSignalMutation.mutate;
   });
 
-  const closePeerConnection = useCallback((targetUserId: string) => {
-    const pc = peerConnections.current.get(targetUserId);
-    if (pc) {
-      pc.close();
-      peerConnections.current.delete(targetUserId);
+  const classifyStreams = useCallback((userId: string) => {
+    const streams = streamsByUser.current.get(userId);
+    let mic: MediaStream | null = null;
+    let screen: MediaStream | null = null;
+    if (streams) {
+      for (const stream of streams.values()) {
+        const liveVideo = stream
+          .getVideoTracks()
+          .some((t) => t.readyState === "live" && !t.muted);
+        const liveAudio = stream.getAudioTracks().some((t) => t.readyState === "live");
+        if (liveVideo && !screen) screen = stream;
+        else if (!liveVideo && liveAudio && !mic) mic = stream;
+      }
     }
-    setRemoteStreams((prev) => {
-      const next = new Map(prev);
-      next.delete(targetUserId);
-      return next;
-    });
+    setRemoteStreams((prev) => updatedStreamMap(prev, userId, mic));
+    setRemoteScreenStreams((prev) => updatedStreamMap(prev, userId, screen));
+  }, []);
+
+  const closePeerConnection = useCallback(
+    (targetUserId: string) => {
+      const pc = peerConnections.current.get(targetUserId);
+      if (pc) {
+        pc.close();
+        peerConnections.current.delete(targetUserId);
+      }
+      pendingCandidates.current.delete(targetUserId);
+      makingOffer.current.delete(targetUserId);
+      streamsByUser.current.delete(targetUserId);
+      classifyStreams(targetUserId);
+    },
+    [classifyStreams],
+  );
+
+  const flushPendingCandidates = useCallback(async (targetUserId: string, pc: RTCPeerConnection) => {
+    const queued = pendingCandidates.current.get(targetUserId);
+    if (!queued || queued.length === 0) return;
+    pendingCandidates.current.delete(targetUserId);
+    for (const candidate of queued) {
+      await pc.addIceCandidate(new RTCIceCandidate(candidate)).catch(() => {});
+    }
   }, []);
 
   const createPeerConnection = useCallback(
@@ -86,20 +101,54 @@ export function useWebRTCHuddle(
         iceTransportPolicy: "all",
       });
 
-      const stream = localStreamRef.current;
-      if (stream) {
-        stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+      const micStream = localStreamRef.current;
+      if (micStream) {
+        micStream.getTracks().forEach((track) => pc.addTrack(track, micStream));
+      }
+      const activeScreen = screenStreamRef.current;
+      if (activeScreen) {
+        activeScreen.getTracks().forEach((track) => pc.addTrack(track, activeScreen));
       }
 
-      pc.ontrack = (event) => {
-        const [remoteStream] = event.streams;
-        if (remoteStream) {
-          setRemoteStreams((prev) => {
-            const next = new Map(prev);
-            next.set(targetUserId, remoteStream);
-            return next;
-          });
+      pc.onnegotiationneeded = async () => {
+        if (!huddleId) return;
+        try {
+          makingOffer.current.add(targetUserId);
+          await pc.setLocalDescription();
+          const sdp = pc.localDescription?.sdp;
+          if (sdp) {
+            sendSignalRef.current({
+              huddleId,
+              type: "offer",
+              targetUserId,
+              payload: { sdp, fromUserId: currentUserId },
+            });
+          }
+        } catch {
+        } finally {
+          makingOffer.current.delete(targetUserId);
         }
+      };
+
+      pc.ontrack = (event) => {
+        const [stream] = event.streams;
+        if (!stream) return;
+        let byId = streamsByUser.current.get(targetUserId);
+        if (!byId) {
+          byId = new Map();
+          streamsByUser.current.set(targetUserId, byId);
+        }
+        if (!byId.has(stream.id)) {
+          byId.set(stream.id, stream);
+          const reclassify = () => classifyStreams(targetUserId);
+          stream.addEventListener("addtrack", reclassify);
+          stream.addEventListener("removetrack", reclassify);
+        }
+        const reclassifyTrack = () => classifyStreams(targetUserId);
+        event.track.addEventListener("ended", reclassifyTrack);
+        event.track.addEventListener("mute", reclassifyTrack);
+        event.track.addEventListener("unmute", reclassifyTrack);
+        classifyStreams(targetUserId);
       };
 
       pc.onicecandidate = (event) => {
@@ -114,21 +163,11 @@ export function useWebRTCHuddle(
 
       pc.onconnectionstatechange = () => {
         if (pc.connectionState === "failed" || pc.connectionState === "disconnected") {
-          setTimeout(async () => {
-            if (pc.connectionState === "failed" || pc.connectionState === "disconnected") {
+          setTimeout(() => {
+            const stillBroken =
+              pc.connectionState === "failed" || pc.connectionState === "disconnected";
+            if (stillBroken && currentUserId < targetUserId) {
               pc.restartIce();
-              if (pc.signalingState === "stable" && huddleId) {
-                try {
-                  const offer = await pc.createOffer({ iceRestart: true });
-                  await pc.setLocalDescription(offer);
-                  sendSignalRef.current({
-                    huddleId,
-                    type: "offer",
-                    targetUserId,
-                    payload: { sdp: offer.sdp, fromUserId: currentUserId },
-                  });
-                } catch {}
-              }
             }
           }, 2000);
         }
@@ -137,20 +176,11 @@ export function useWebRTCHuddle(
       peerConnections.current.set(targetUserId, pc);
       return pc;
     },
-    [huddleId, currentUserId],
+    [huddleId, currentUserId, classifyStreams],
   );
 
   useEffect(() => {
     if (!huddleId) return;
-
-    const bc = new BroadcastChannel(`huddle-${huddleId}`);
-    bc.postMessage("claim");
-    let isActive = true;
-    bc.onmessage = (e) => {
-      if (e.data === "claim" && isActive) {
-        bc.postMessage("yield");
-      }
-    };
 
     let mounted = true;
 
@@ -171,9 +201,15 @@ export function useWebRTCHuddle(
           return;
         }
         localStreamRef.current = stream;
-        streamReady.current = true;
         setLocalStream(stream);
         setMicError(null);
+        peerConnections.current.forEach((pc) => {
+          const hasAudioSender = pc.getSenders().some((s) => s.track?.kind === "audio");
+          if (!hasAudioSender) {
+            stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+          }
+        });
+        setIsMicReady(true);
       })
       .catch((err: unknown) => {
         if (mounted) {
@@ -183,15 +219,13 @@ export function useWebRTCHuddle(
 
     return () => {
       mounted = false;
-      isActive = false;
-      bc.close();
       const stream = localStreamRef.current;
       if (stream) {
         stream.getTracks().forEach((t) => t.stop());
       }
       localStreamRef.current = null;
-      streamReady.current = false;
       setLocalStream(null);
+      setIsMicReady(false);
     };
   }, [huddleId]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -204,41 +238,19 @@ export function useWebRTCHuddle(
 
     const handleSignal = async (msg: InboundMessage) => {
       const signal = msg.data as IncomingSignalData;
-      if (!signal) return;
+      if (!signal?.fromUserId) return;
 
       try {
-        if (signal.type === "offer") {
-          const fromUserId = signal.fromUserId;
-          let pc = peerConnections.current.get(fromUserId);
-          if (!pc) {
-            pc = createPeerConnection(fromUserId);
-          }
-          await pc.setRemoteDescription(
-            new RTCSessionDescription({ type: "offer", sdp: signal.payload.sdp ?? "" }),
-          );
-          const answer = await pc.createAnswer();
-          await pc.setLocalDescription(answer);
-          sendSignalRef.current({
-            huddleId,
-            type: "answer",
-            targetUserId: fromUserId,
-            payload: { sdp: answer.sdp, fromUserId: currentUserId },
-          });
-        } else if (signal.type === "answer") {
-          const fromUserId = signal.fromUserId;
-          const pc = peerConnections.current.get(fromUserId);
-          if (pc && pc.signalingState !== "stable") {
-            await pc.setRemoteDescription(
-              new RTCSessionDescription({ type: "answer", sdp: signal.payload.sdp ?? "" }),
-            );
-          }
-        } else if (signal.type === "ice-candidate") {
-          const fromUserId = signal.fromUserId;
-          const pc = peerConnections.current.get(fromUserId);
-          if (pc && signal.payload.candidate) {
-            await pc.addIceCandidate(new RTCIceCandidate(signal.payload.candidate));
-          }
-        }
+        await handleIncomingSignal(signal, {
+          huddleId,
+          currentUserId,
+          peerConnections: peerConnections.current,
+          pendingCandidates: pendingCandidates.current,
+          makingOffer: makingOffer.current,
+          createPeerConnection,
+          flushPendingCandidates,
+          sendSignal: sendSignalRef.current,
+        });
       } catch {}
     };
 
@@ -258,6 +270,7 @@ export function useWebRTCHuddle(
         }
         if (ok) {
           didSubscribe = true;
+          setRealtimeError(null);
           return;
         }
         if (!cancelled) {
@@ -284,12 +297,13 @@ export function useWebRTCHuddle(
     huddleId,
     currentUserId,
     createPeerConnection,
+    flushPendingCandidates,
     isAblyConnected,
     sessionStatus,
   ]);
 
   useEffect(() => {
-    if (!huddleId || !streamReady.current) return;
+    if (!huddleId || !isMicReady) return;
 
     const activeUserIds = new Set(
       participants
@@ -307,24 +321,12 @@ export function useWebRTCHuddle(
     for (const userId of activeUserIds) {
       if (!knownParticipants.current.has(userId)) {
         knownParticipants.current.add(userId);
-
         if (currentUserId < userId) {
-          const pc = createPeerConnection(userId);
-          pc.createOffer()
-            .then((offer) => pc.setLocalDescription(offer).then(() => offer))
-            .then((offer) => {
-              sendSignalRef.current({
-                huddleId,
-                type: "offer",
-                targetUserId: userId,
-                payload: { sdp: offer.sdp, fromUserId: currentUserId },
-              });
-            })
-            .catch(() => {});
+          createPeerConnection(userId);
         }
       }
     }
-  }, [participants, huddleId, currentUserId, createPeerConnection, closePeerConnection]);
+  }, [participants, huddleId, currentUserId, isMicReady, createPeerConnection, closePeerConnection]);
 
   const toggleMute = useCallback(() => {
     const stream = localStreamRef.current;
@@ -366,7 +368,18 @@ export function useWebRTCHuddle(
   }, []);
 
   const stopScreenShare = useCallback(() => {
-    screenStreamRef.current?.getTracks().forEach((t) => t.stop());
+    const stream = screenStreamRef.current;
+    if (stream) {
+      const screenTracks = new Set(stream.getTracks());
+      peerConnections.current.forEach((pc) => {
+        pc.getSenders()
+          .filter((s) => s.track !== null && screenTracks.has(s.track))
+          .forEach((s) => {
+            pc.removeTrack(s);
+          });
+      });
+      stream.getTracks().forEach((t) => t.stop());
+    }
     screenStreamRef.current = null;
     setScreenStream(null);
     setIsSharingScreen(false);
@@ -426,10 +439,14 @@ export function useWebRTCHuddle(
     screenStreamRef.current?.getTracks().forEach((t) => t.stop());
     screenStreamRef.current = null;
     localStreamRef.current = null;
-    streamReady.current = false;
     knownParticipants.current.clear();
+    pendingCandidates.current.clear();
+    makingOffer.current.clear();
+    streamsByUser.current.clear();
     setLocalStream(null);
+    setIsMicReady(false);
     setRemoteStreams(new Map());
+    setRemoteScreenStreams(new Map());
     setIsMuted(false);
     setScreenStream(null);
     setIsSharingScreen(false);
@@ -444,6 +461,7 @@ export function useWebRTCHuddle(
   return {
     localStream,
     remoteStreams,
+    remoteScreenStreams,
     screenStream,
     isMuted,
     isSharingScreen,

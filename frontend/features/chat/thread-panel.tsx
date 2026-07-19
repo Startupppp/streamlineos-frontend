@@ -147,7 +147,7 @@ export function ThreadPanel({
 
   const parentMessage = data?.pages[0]?.parentMessage ?? null;
   const replies = useMemo(
-    () => data?.pages.flatMap((p) => p.replies) ?? [],
+    () => [...(data?.pages ?? [])].reverse().flatMap((p) => p.replies),
     [data],
   );
 

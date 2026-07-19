@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
-export type IntegrationToolkit = "googlecalendar" | "outlook";
+export type IntegrationToolkit = "googlecalendar" | "outlook" | "gmail";
 export type IntegrationConnectionStatus = "active" | "needs_reauth" | "disabled";
 
 export interface IntegrationConnection {
@@ -28,8 +28,11 @@ export function useIntegrationConnections() {
 export function useInitiateIntegrationConnection() {
   return useMutation({
     mutationKey: ["integrations", "connections", "initiate"],
-    mutationFn: (toolkit: IntegrationToolkit) =>
-      apiClient.post<{ redirectUrl: string }>("/integrations/connections/initiate", { toolkit }),
+    mutationFn: ({ toolkit, returnPath }: { toolkit: IntegrationToolkit; returnPath?: string }) =>
+      apiClient.post<{ redirectUrl: string }>("/integrations/connections/initiate", {
+        toolkit,
+        ...(returnPath !== undefined && { returnPath }),
+      }),
   });
 }
 

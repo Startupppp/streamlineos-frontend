@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { useSessions, useRevokeSession, useRevokeAllSessions, type UserSession } from "@/hooks/api/hr/sessions";
 import { getApiError } from "@/lib/api-client";
-import { formatIpAddress } from "@/lib/format-utils";
+import { formatClientDeviceLabel, formatIpAddress } from "@/lib/format-utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
@@ -97,8 +97,7 @@ export default function SessionsPage() {
       cell: (s) => (
         <div className="flex items-center gap-2">
           <span className="truncate max-w-[280px] font-medium">
-            {s.browser}
-            {s.os ? ` · ${s.os}` : s.platform ? ` · ${s.platform}` : ""}
+            {formatClientDeviceLabel(s)}
           </span>
           {s.isCurrent && (
             <Badge variant="secondary" className="shrink-0 text-[10px] h-4 px-1.5">

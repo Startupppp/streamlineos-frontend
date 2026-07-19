@@ -334,7 +334,7 @@ export function MessagePanel({
 
   const messages: Message[] = useMemo(() => {
     const all =
-      (messagesData?.pages.flatMap((p) => p.messages) as Message[]) ?? [];
+      ([...(messagesData?.pages ?? [])].reverse().flatMap((p) => p.messages) as Message[]) ?? [];
     const seen = new Set<number>();
     return all.filter((msg) => {
       if (seen.has(msg.id)) return false;

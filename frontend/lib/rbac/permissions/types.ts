@@ -526,4 +526,8 @@ export type PermissionKey =
   | "sign:bulk_send:run"
   | "sign:admin:manage"
   | "sign:audit:view"
-  | "sign:certificate:download";
+  | "sign:certificate:download"
+  | "mail:inbox:view"
+  | "mail:messages:send"
+  | "mail:messages:manage"
+  | "mail:ai:use";

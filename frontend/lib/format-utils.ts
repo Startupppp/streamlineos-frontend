@@ -205,3 +205,14 @@ export function formatIpAddress(ip: string | null | undefined): string {
   if (/^fe80:/i.test(ip)) return "Local network";
   return ip;
 }
+
+export function formatClientDeviceLabel(device: {
+  browser: string | null | undefined;
+  os?: string | null;
+  platform?: string | null;
+}): string {
+  const browser = device.browser?.trim() || "Unknown";
+  if (device.os?.trim()) return `${browser} · ${device.os.trim()}`;
+  if (device.platform?.trim()) return `${browser} · ${device.platform.trim()}`;
+  return browser;
+}

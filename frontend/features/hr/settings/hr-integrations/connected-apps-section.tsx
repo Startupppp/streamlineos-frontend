@@ -53,7 +53,7 @@ function AppCard({
 
   const handleConnect = useCallback(async () => {
     try {
-      const result = await initiate.mutateAsync(config.toolkit);
+      const result = await initiate.mutateAsync({ toolkit: config.toolkit });
       window.location.href = result.redirectUrl;
     } catch (e) {
       toast.error(getErrorMessage(e));

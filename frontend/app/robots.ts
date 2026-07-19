@@ -29,6 +29,7 @@ export default function robots(): MetadataRoute.Robots {
           "/settings/",
           "/sign/",
           "/signin",
+          "/signup",
           "/support/",
           "/surveys/",
           "/timesheets/",

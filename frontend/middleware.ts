@@ -93,7 +93,7 @@ const PROTECTED_ROUTES = [
   "/surveys",
 ];
 
-const AUTH_ROUTES = ["/signin", "/signup", "/verify-email"];
+const AUTH_ROUTES = ["/signin", "/verify-email"];
 
 const ALLOW_AUTHENTICATED = ["/invitation"];
 
@@ -202,6 +202,12 @@ export default async function middleware(req: NextRequest) {
     const httpsUrl = req.nextUrl.clone();
     httpsUrl.protocol = "https";
     return NextResponse.redirect(httpsUrl, 301);
+  }
+
+  if (pathname === "/signup" || pathname.startsWith("/signup/")) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/signin";
+    return NextResponse.redirect(url);
   }
 
   if (pathname.startsWith("/api/")) {

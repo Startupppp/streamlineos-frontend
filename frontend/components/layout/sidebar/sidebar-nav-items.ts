@@ -2043,6 +2043,21 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    label: "Mail",
+    module: "mail",
+    requiredPermission: "mail:inbox:view",
+    routes: [
+      {
+        label: "Inbox",
+        icon: Inbox,
+        href: "/mail",
+        exact: true,
+        requiredPermission: "mail:inbox:view",
+        module: "mail",
+      },
+    ],
+  },
+  {
     label: "Knowledge",
     module: "documents",
     requiredPermission: ["kb:pages:view"],
@@ -2384,7 +2399,8 @@ export type ProductKey =
   | "surveys"
   | "administration"
   | "payroll"
-  | "sign";
+  | "sign"
+  | "mail";
 
 export interface ProductDefinition {
   key: ProductKey;
@@ -2422,6 +2438,7 @@ export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
     icon: IndianRupee,
   },
   { key: "sign", label: "SignOS", href: "/sign", icon: PenTool },
+  { key: "mail", label: "Mail", href: "/mail", icon: Inbox },
 ];
 
 export const PRODUCT_DESCRIPTIONS: Record<ProductKey, string> = {
@@ -2438,6 +2455,7 @@ export const PRODUCT_DESCRIPTIONS: Record<ProductKey, string> = {
   administration: "Settings & access",
   payroll: "Runs, payslips & compliance",
   sign: "Envelopes & e-signatures",
+  mail: "Gmail & Outlook unified inbox",
 };
 
 export interface ModuleAccent {
@@ -2526,6 +2544,12 @@ export const MODULE_ACCENTS: Record<ProductKey, ModuleAccent> = {
     indicator: "bg-sky-600 dark:bg-sky-500",
     border: "border-sky-600 dark:border-sky-500",
   },
+  mail: {
+    text: "!text-sky-600 dark:!text-sky-400",
+    bg: "bg-sky-50 dark:bg-sky-950/40",
+    indicator: "bg-sky-600 dark:bg-sky-500",
+    border: "border-sky-600 dark:border-sky-500",
+  },
 };
 
 const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
@@ -2550,6 +2574,7 @@ const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
   ],
   payroll: ["Payroll"],
   sign: ["SignOS"],
+  mail: ["Mail"],
 };
 
 export function getNavGroupsForProduct(
@@ -2610,6 +2635,7 @@ const MODULE_KEY_MAP: Partial<Record<ProductKey, string>> = {
   surveys: "SURVEYS",
   payroll: "PAYROLL",
   sign: "SIGN",
+  mail: "MAIL",
 };
 
 export function isModuleEnabled(
@@ -2650,6 +2676,7 @@ export function getProductFromPathname(pathname: string): ProductKey {
   if (pathname.startsWith("/knowledge")) return "documents";
   if (pathname.startsWith("/surveys")) return "surveys";
   if (pathname.startsWith("/payroll")) return "payroll";
+  if (pathname.startsWith("/mail")) return "mail";
   if (
     pathname.startsWith("/organization") ||
     pathname.startsWith("/users") ||

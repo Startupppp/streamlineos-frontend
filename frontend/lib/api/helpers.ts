@@ -15,3 +15,15 @@ export async function withAuth(
   }
   return handler(session as Session);
 }
+
+export function unwrapEnvelope(payload: unknown): unknown {
+  if (
+    payload !== null &&
+    typeof payload === "object" &&
+    "success" in payload &&
+    "data" in payload
+  ) {
+    return payload.data;
+  }
+  return payload;
+}
