@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { headers } from "next/headers";
 
 import "../globals.css";
+import "../lib/env";
 import { Toaster } from "../components/ui/sonner";
 import { SessionProvider } from "../components/providers/session-provider";
 import { getServerAuth } from "../lib/get-server-auth";
