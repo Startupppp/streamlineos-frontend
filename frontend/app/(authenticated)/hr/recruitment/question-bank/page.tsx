@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { ErrorState } from "@/components/shared/error-state";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
@@ -175,7 +175,7 @@ export default function QuestionBankPage() {
         )}
       </div>
 
-      <ConfirmDialog
+      <ConfirmSheet
         open={deleteTargetId !== null}
         onOpenChange={handleDeleteCancel}
         title="Delete Question"

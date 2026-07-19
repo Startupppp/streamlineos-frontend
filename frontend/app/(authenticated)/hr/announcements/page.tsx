@@ -18,7 +18,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyMailIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
@@ -615,7 +615,7 @@ function AnnouncementsContent() {
         </div>
       </HrSheet>
 
-      <ConfirmDialog
+      <ConfirmSheet
         open={deleteId !== null}
         onOpenChange={handleDeleteDialogOpenChange}
         title="Delete Announcement"

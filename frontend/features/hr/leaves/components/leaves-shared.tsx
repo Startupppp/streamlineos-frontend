@@ -27,14 +27,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { resolveImageUrl, cn } from "@/lib/utils";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
+import { ConfirmWithReasonSheet } from "@/components/ui/confirm-with-reason-sheet";
 import { getColorSafe, wfhStatusColors } from "@/lib/theme-constants";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
@@ -357,7 +350,6 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
   onCancel?: (id: number) => void;
 }) {
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
-  const [rejectReason, setRejectReason] = useState("");
 
   const status = request.status ?? "PENDING";
   const typeName = request.leaveType?.name ?? "Leave";
@@ -392,23 +384,12 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
     };
 
   function handleOpenRejectDialog() {
-    setRejectReason("");
     setRejectDialogOpen(true);
   }
 
-  function handleCloseRejectDialog() {
+  function handleConfirmReject(reason: string) {
     setRejectDialogOpen(false);
-  }
-
-  function handleConfirmReject() {
-    setRejectDialogOpen(false);
-    onReject?.(request.id, rejectReason || undefined);
-  }
-
-  function handleRejectReasonChange(
-    e: React.ChangeEvent<HTMLTextAreaElement>,
-  ) {
-    setRejectReason(e.target.value);
+    onReject?.(request.id, reason || undefined);
   }
 
   function handleCancelRequest() {
@@ -545,27 +526,15 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
           </DropdownMenuContent>
         </DropdownMenu>
       </td>
-      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Rejection reason</DialogTitle>
-          </DialogHeader>
-          <Textarea
-            placeholder="Reason (optional)"
-            value={rejectReason}
-            onChange={handleRejectReasonChange}
-            className="min-h-[80px] resize-none"
-          />
-          <DialogFooter>
-            <Button variant="outline" onClick={handleCloseRejectDialog}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={handleConfirmReject}>
-              Reject
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ConfirmWithReasonSheet
+        open={rejectDialogOpen}
+        onOpenChange={setRejectDialogOpen}
+        title="Rejection reason"
+        reasonPlaceholder="Reason for rejection"
+        reasonRequired
+        confirmLabel="Reject"
+        onConfirm={handleConfirmReject}
+      />
     </tr>
   );
 });

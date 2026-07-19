@@ -249,7 +249,7 @@ export default function EmployeesPage() {
       }
  variant="display"
       actions={
-        <div className="flex items-center gap-2">
+        <div className="flex w-full sm:w-auto flex-wrap items-center gap-2">
           <ViewToggle<ViewMode>
             value={view}
             onChange={(v) => {
@@ -259,14 +259,20 @@ export default function EmployeesPage() {
             options={VIEW_OPTIONS}
             size="sm"
           />
-          <Button variant="outline" size="sm" className="h-8 gap-1.5" onClick={() => void handleExport()}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5 flex-1 sm:flex-none"
+            onClick={() => void handleExport()}
+          >
             <Download className="h-3.5 w-3.5" />
             Export
           </Button>
-          <Button size="sm" className="h-8 gap-1.5 shadow-sm" asChild>
+          <Button size="sm" className="h-8 gap-1.5 shadow-sm flex-1 sm:flex-none" asChild>
             <Link href="/hr/onboarding">
               <UserPlus className="h-3.5 w-3.5" />
-              Add Employee
+              <span className="sm:hidden">Add</span>
+              <span className="hidden sm:inline">Add Employee</span>
             </Link>
           </Button>
         </div>
@@ -325,7 +331,7 @@ export default function EmployeesPage() {
         ) : view === "grid" ? (
           <div
             className={cn(
-              "grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5",
+              "grid gap-3 sm:gap-4 grid-cols-1 min-[380px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5",
               isFetching && "opacity-70 transition-opacity",
             )}
           >

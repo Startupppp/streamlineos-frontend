@@ -16,7 +16,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { cn } from "@/lib/utils";
 import type { DocumentTemplate } from "@/hooks/api/hr/document-templates";
 
@@ -196,7 +196,7 @@ export function DefaultStarButton({
         <Star className={cn("h-4 w-4", isCurrentDefault && "fill-amber-500")} />
       </Button>
 
-      <ConfirmDialog
+      <ConfirmSheet
         open={confirmOpen}
         onOpenChange={handleConfirmOpenChange}
         title={confirmTitle}

@@ -244,28 +244,32 @@ export function DataTable<T>({
   }
 
   return (
-    <div className={cn("border border-border rounded-md flex flex-col", className)}>
+    <div className={cn("border border-border rounded-md flex flex-col min-w-0", className)}>
       {(search !== undefined || toolbar !== undefined) && (
-        <div className="shrink-0 flex items-center justify-between gap-2 border-b border-border bg-card bg-muted/40 px-2 py-1.5">
+        <div className="shrink-0 flex flex-col gap-2 border-b border-border bg-card bg-muted/40 px-2 py-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
           {search !== undefined ? (
             <SearchInput
               value={search.value}
               onValueChange={handleSearchChange}
               placeholder={search.placeholder ?? "Search…"}
               aria-label={search.placeholder ?? "Search"}
-              className="w-56"
+              className="w-full min-w-0 sm:w-56 sm:max-w-xs"
             />
           ) : (
-            <div />
+            <div className="hidden sm:block" />
           )}
-          {toolbar}
+          {toolbar ? (
+            <div className="flex min-w-0 flex-wrap items-center gap-2 sm:justify-end sm:shrink-0">
+              {toolbar}
+            </div>
+          ) : null}
         </div>
       )}
-      <div className="flex-1 min-h-0 overflow-auto flex flex-col">
+      <div className="flex-1 min-h-0 overflow-auto overscroll-x-contain flex flex-col [-webkit-overflow-scrolling:touch]">
         {isLoading ? (
           <div
-            style={minWidth ? { minWidth } : undefined}
-            className={cn(!minWidth && "min-w-max")}
+            style={minWidth && minWidth !== "auto" ? { minWidth } : undefined}
+            className={cn((!minWidth || minWidth === "content") && "min-w-max")}
           >
             <Table>
               <TableHeader className="sticky top-0 z-10 bg-muted/40 border-b border-border backdrop-blur-sm">
@@ -324,8 +328,8 @@ export function DataTable<T>({
           </div>
         ) : (
           <div
-            style={minWidth ? { minWidth } : undefined}
-            className={cn(!minWidth && "min-w-max")}
+            style={minWidth && minWidth !== "auto" ? { minWidth } : undefined}
+            className={cn((!minWidth || minWidth === "content") && "min-w-max")}
           >
             <Table>
               <TableHeader className="sticky top-0 z-10 bg-muted/40 border-b border-border backdrop-blur-sm">

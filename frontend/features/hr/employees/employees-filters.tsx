@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 
 export interface Department {
@@ -32,6 +32,9 @@ interface EmployeesFiltersProps {
   onClear: () => void;
 }
 
+/** Full-width in mobile/tablet filter popover; fixed widths on desktop toolbar. */
+const controlClass = "w-full md:w-auto";
+
 export function EmployeesFilters({
   search,
   filterDept,
@@ -44,12 +47,16 @@ export function EmployeesFilters({
   onClear,
 }: EmployeesFiltersProps) {
   return (
-    <div className={FILTER_TOOLBAR_ROW}>
-      <div className="w-60 max-w-[min(15rem,70vw)]">
-          <SearchInput value={search} onValueChange={onSearchChange} placeholder="Search name, email, ID…" />
-        </div>
+    <>
+      <SearchInput
+        value={search}
+        onValueChange={onSearchChange}
+        placeholder="Search name, email, ID…"
+        aria-label="Search employees"
+        className={cn(controlClass, "md:w-60 md:max-w-[min(15rem,70vw)]")}
+      />
       <Select value={filterDept} onValueChange={onDeptChange}>
-        <SelectTrigger className={cn("w-44", FILTER_SELECT_TRIGGER)}>
+        <SelectTrigger className={cn(controlClass, "md:w-44", FILTER_SELECT_TRIGGER)}>
           <SelectValue placeholder="Department" />
         </SelectTrigger>
         <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
@@ -64,7 +71,7 @@ export function EmployeesFilters({
         </SelectContent>
       </Select>
       <Select value={filterStatus} onValueChange={onStatusChange}>
-        <SelectTrigger className={cn("w-32", FILTER_SELECT_TRIGGER)}>
+        <SelectTrigger className={cn(controlClass, "md:w-32", FILTER_SELECT_TRIGGER)}>
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
@@ -82,14 +89,26 @@ export function EmployeesFilters({
           </SelectItem>
         </SelectContent>
       </Select>
-      <Button variant="outline" size="sm" className="text-xs gap-1.5" asChild>
+      <Button
+        variant="outline"
+        size="sm"
+        className={cn(controlClass, "text-xs gap-1.5 md:w-auto")}
+        asChild
+      >
         <Link href="/hr/termination">View Terminated</Link>
       </Button>
       {hasFilters && (
-        <AnimatedIconButton icon={XIcon} iconSize={14} variant="ghost" size="sm" className="text-xs gap-1.5" onClick={onClear}>
+        <AnimatedIconButton
+          icon={XIcon}
+          iconSize={14}
+          variant="ghost"
+          size="sm"
+          className={cn(controlClass, "text-xs gap-1.5 justify-center md:w-auto")}
+          onClick={onClear}
+        >
           Clear
         </AnimatedIconButton>
       )}
-    </div>
+    </>
   );
 }

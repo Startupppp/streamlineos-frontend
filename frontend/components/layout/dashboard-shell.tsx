@@ -1,21 +1,21 @@
-"use client"
+"use client";
 
-import { useState, useCallback, useEffect, useRef } from "react"
-import dynamic from "next/dynamic"
-import Link from "next/link"
-import { AppSidebar } from "./app-sidebar"
-import { GlobalHeader } from "./header/global-header"
-import { MobileBottomNav } from "./mobile-bottom-nav"
-import { CommandPalette } from "./command-palette"
-import { NotActivatedPage } from "../auth/not-activated-page"
-import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
-import { usePushSubscription } from "@/hooks/common/use-push-subscription"
-import { TrialBanner } from "@/components/billing/trial-banner"
-import { ProductSwitcherMenu } from "./header/product-switcher-menu"
-import { WorkspaceSwitcher } from "./header/workspace-switcher"
-import { useProductSidebarVisibility } from "./sidebar/use-product-sidebar-visibility"
-import { AskOsProvider } from "@/components/assistant/ask-os-provider"
-import { CommandPaletteProvider } from "@/features/command-palette"
+import { useState, useCallback, useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
+import Link from "next/link";
+import { AppSidebar } from "./app-sidebar";
+import { GlobalHeader } from "./header/global-header";
+import { MobileBottomNav } from "./mobile-bottom-nav";
+import { CommandPalette } from "./command-palette";
+import { NotActivatedPage } from "../auth/not-activated-page";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { usePushSubscription } from "@/hooks/common/use-push-subscription";
+import { TrialBanner } from "@/components/billing/trial-banner";
+import { ProductSwitcherMenu } from "./header/product-switcher-menu";
+import { WorkspaceSwitcher } from "./header/workspace-switcher";
+import { useProductSidebarVisibility } from "./sidebar/use-product-sidebar-visibility";
+import { AskOsProvider } from "@/components/assistant/ask-os-provider";
+import { CommandPaletteProvider } from "@/features/command-palette";
 
 const SuccessChecklist = dynamic(
   () =>
@@ -23,7 +23,7 @@ const SuccessChecklist = dynamic(
       (m) => m.SuccessChecklist,
     ),
   { ssr: false },
-)
+);
 
 const ChatUnreadNotifications = dynamic(
   () =>
@@ -31,21 +31,21 @@ const ChatUnreadNotifications = dynamic(
       (m) => m.ChatUnreadNotifications,
     ),
   { ssr: false },
-)
+);
 
-const SIDEBAR_COOKIE = "sidebar-collapsed"
-const SIDEBAR_COLLAPSED_W = "3.5rem"
-const SIDEBAR_EXPANDED_W = "17rem"
+const SIDEBAR_COOKIE = "sidebar-collapsed";
+const SIDEBAR_COLLAPSED_W = "3.5rem";
+const SIDEBAR_EXPANDED_W = "17rem";
 
 function setSidebarCookie(collapsed: boolean) {
-  document.cookie = `${SIDEBAR_COOKIE}=${collapsed}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`
+  document.cookie = `${SIDEBAR_COOKIE}=${collapsed}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
 }
 
 interface DashboardShellProps {
-  userId: string
-  hasDashboardAccess: boolean
-  defaultCollapsed: boolean
-  children: React.ReactNode
+  userId: string;
+  hasDashboardAccess: boolean;
+  defaultCollapsed: boolean;
+  children: React.ReactNode;
 }
 
 export function DashboardShell({
@@ -54,59 +54,62 @@ export function DashboardShell({
   defaultCollapsed,
   children,
 }: DashboardShellProps) {
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(defaultCollapsed)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [productSwitcherOpen, setProductSwitcherOpen] = useState(false)
-  const [workspaceSwitcherOpen, setWorkspaceSwitcherOpen] = useState(false)
-  const { hideSidebar } = useProductSidebarVisibility()
-  usePushSubscription(userId)
-  const rafIdRef = useRef<number | null>(null)
+  const [isSidebarCollapsed, setIsSidebarCollapsed] =
+    useState(defaultCollapsed);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [productSwitcherOpen, setProductSwitcherOpen] = useState(false);
+  const [workspaceSwitcherOpen, setWorkspaceSwitcherOpen] = useState(false);
+  const { hideSidebar } = useProductSidebarVisibility();
+  usePushSubscription(userId);
+  const rafIdRef = useRef<number | null>(null);
 
   useEffect(() => {
     return () => {
       if (rafIdRef.current !== null) {
-        cancelAnimationFrame(rafIdRef.current)
-        rafIdRef.current = null
+        cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
       }
-    }
-  }, [])
+    };
+  }, []);
 
   const handleToggleSidebar = useCallback(() => {
     setIsSidebarCollapsed((prev) => {
-      const next = !prev
-      setSidebarCookie(next)
-      return next
-    })
-  }, [])
+      const next = !prev;
+      setSidebarCookie(next);
+      return next;
+    });
+  }, []);
 
   const handleOpenMobileMenu = useCallback(() => {
     if (hideSidebar) {
-      setProductSwitcherOpen(true)
-      return
+      setProductSwitcherOpen(true);
+      return;
     }
-    setMobileMenuOpen(true)
-  }, [hideSidebar])
-  const handleCloseMobileMenu = useCallback(() => setMobileMenuOpen(false), [])
+    setMobileMenuOpen(true);
+  }, [hideSidebar]);
+  const handleCloseMobileMenu = useCallback(() => setMobileMenuOpen(false), []);
 
   const deferCloseMobileMenu = useCallback(() => {
-    if (rafIdRef.current !== null) cancelAnimationFrame(rafIdRef.current)
+    if (rafIdRef.current !== null) cancelAnimationFrame(rafIdRef.current);
     rafIdRef.current = requestAnimationFrame(() => {
-      rafIdRef.current = null
-      setMobileMenuOpen(false)
-    })
-  }, [])
+      rafIdRef.current = null;
+      setMobileMenuOpen(false);
+    });
+  }, []);
 
   const handleRequestProductSwitcher = useCallback(() => {
-    setProductSwitcherOpen(true)
-    deferCloseMobileMenu()
-  }, [deferCloseMobileMenu])
+    setProductSwitcherOpen(true);
+    deferCloseMobileMenu();
+  }, [deferCloseMobileMenu]);
 
   const handleRequestWorkspaceSwitcher = useCallback(() => {
-    setWorkspaceSwitcherOpen(true)
-    deferCloseMobileMenu()
-  }, [deferCloseMobileMenu])
+    setWorkspaceSwitcherOpen(true);
+    deferCloseMobileMenu();
+  }, [deferCloseMobileMenu]);
 
-  const sidebarW = isSidebarCollapsed ? SIDEBAR_COLLAPSED_W : SIDEBAR_EXPANDED_W
+  const sidebarW = isSidebarCollapsed
+    ? SIDEBAR_COLLAPSED_W
+    : SIDEBAR_EXPANDED_W;
 
   return (
     <div className="h-dvh flex flex-col overflow-hidden">
@@ -153,8 +156,15 @@ export function DashboardShell({
             </div>
 
             {!hideSidebar && (
-              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen} modal>
-                <SheetContent side="left" className="z-[100] p-0 w-[17rem] border-r-sidebar-border">
+              <Sheet
+                open={mobileMenuOpen}
+                onOpenChange={setMobileMenuOpen}
+                modal
+              >
+                <SheetContent
+                  side="left"
+                  className="z-[100] p-0 w-[17rem] border-r-sidebar-border"
+                >
                   <SheetTitle className="sr-only">Navigation</SheetTitle>
                   <AppSidebar
                     isMobile
@@ -184,5 +194,5 @@ export function DashboardShell({
         <NotActivatedPage />
       )}
     </div>
-  )
+  );
 }

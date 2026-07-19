@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { format, addDays } from "date-fns";
@@ -82,6 +82,7 @@ export default function ExitManagementPage() {
   const [rejectDialog, setRejectDialog] = useState<RejectDialogState | null>(null);
   const [rejectRemarks, setRejectRemarks] = useState("");
   const [rejectRemarksOpen, setRejectRemarksOpen] = useState(false);
+  const [rejectRemarksError, setRejectRemarksError] = useState<string | null>(null);
 
   const [withdrawId, setWithdrawId] = useState<number | null>(null);
 
@@ -214,20 +215,27 @@ export default function ExitManagementPage() {
   const handleOpenRejectDialog = useCallback((id: number, type: "hr" | "ceo") => {
     setRejectDialog({ id, type });
     setRejectRemarks("");
+    setRejectRemarksError(null);
     setRejectRemarksOpen(true);
   }, []);
 
   const handleRejectConfirm = useCallback(() => {
     if (!rejectDialog) return;
+    const trimmedRemarks = rejectRemarks.trim();
+    if (!trimmedRemarks) {
+      setRejectRemarksError("Remarks are required to reject a resignation.");
+      return;
+    }
     const mutate = rejectDialog.type === "hr" ? hrReview.mutate : ceoReview.mutate;
     mutate(
-      { id: rejectDialog.id, action: "reject", remarks: rejectRemarks.trim() || undefined },
+      { id: rejectDialog.id, action: "reject", remarks: trimmedRemarks },
       {
         onSuccess: () => {
           toast.success("Resignation rejected");
           setRejectRemarksOpen(false);
           setRejectDialog(null);
           setRejectRemarks("");
+          setRejectRemarksError(null);
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       }
@@ -308,7 +316,12 @@ export default function ExitManagementPage() {
 
   const handleRejectRemarksChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setRejectRemarks(e.target.value);
+    setRejectRemarksError(null);
   }, []);
+
+  const handleRejectRemarksBlur = useCallback(() => {
+    setRejectRemarksError(rejectRemarks.trim() ? null : "Remarks are required to reject a resignation.");
+  }, [rejectRemarks]);
 
   const handleHrApproveClose = useCallback((open: boolean) => {
     if (!open) setHrApproveId(null);
@@ -323,6 +336,7 @@ export default function ExitManagementPage() {
       setRejectRemarksOpen(false);
       setRejectDialog(null);
       setRejectRemarks("");
+      setRejectRemarksError(null);
     }
   }, []);
 
@@ -544,7 +558,7 @@ export default function ExitManagementPage() {
         </div>
       </HrSheet>
 
-      <ConfirmDialog
+      <ConfirmSheet
         open={hrApproveId !== null}
         onOpenChange={handleHrApproveClose}
         title="Approve Resignation (HR)"
@@ -554,7 +568,7 @@ export default function ExitManagementPage() {
         isPending={hrReview.isPending}
       />
 
-      <ConfirmDialog
+      <ConfirmSheet
         open={ceoApproveId !== null}
         onOpenChange={handleCeoApproveClose}
         title="Approve Resignation (CEO)"
@@ -577,20 +591,25 @@ export default function ExitManagementPage() {
         </p>
         <div className="space-y-1.5">
           <label className="text-sm font-semibold text-foreground">
-            Remarks <span className="text-muted-foreground font-normal">(optional)</span>
+            Remarks <span className="text-destructive">*</span>
           </label>
           <Textarea
             placeholder="Enter your rejection remarks..."
             value={rejectRemarks}
             onChange={handleRejectRemarksChange}
+            onBlur={handleRejectRemarksBlur}
             rows={4}
             maxLength={1000}
             className="resize-none w-full"
+            aria-invalid={rejectRemarksError !== null}
           />
+          {rejectRemarksError && (
+            <p className="text-xs text-destructive">{rejectRemarksError}</p>
+          )}
         </div>
       </HrSheet>
 
-      <ConfirmDialog
+      <ConfirmSheet
         open={withdrawId !== null}
         onOpenChange={handleWithdrawClose}
         title="Withdraw Resignation"

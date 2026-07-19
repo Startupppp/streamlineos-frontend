@@ -31,7 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { cn } from "@/lib/utils";
 
 import { apiClient } from "@/lib/api-client";
@@ -505,7 +505,7 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
         </SheetContent>
       </Sheet>
 
-      <ConfirmDialog
+      <ConfirmSheet
         open={approveDoc !== null}
         onOpenChange={handleCloseApprove}
         title="Approve Document"

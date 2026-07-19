@@ -20,7 +20,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { ExternalBoardsSheet } from "@/features/hr/recruitment/jobs/external-boards-sheet";
 import { toast } from "sonner";
 import {
@@ -478,7 +478,7 @@ export default function JobPostingsPage() {
       {boardsJobId !== null && (
         <ExternalBoardsSheet jobId={boardsJobId} onClose={handleCloseBoardsSheet} />
       )}
-      <ConfirmDialog
+      <ConfirmSheet
         open={deleteJobId !== null}
         onOpenChange={handleConfirmDialogOpenChange}
         title="Delete job posting?"

@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import {
   useEngagementCampaigns,
   useCreateCampaign,
@@ -248,7 +248,7 @@ export function CampaignsTab() {
         </div>
       </HrSheet>
 
-      <ConfirmDialog
+      <ConfirmSheet
         open={deleteId !== null}
         onOpenChange={(open) => { if (!open) setDeleteId(null); }}
         title="Delete Campaign"

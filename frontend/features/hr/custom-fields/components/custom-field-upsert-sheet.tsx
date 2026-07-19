@@ -26,7 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { AlertTriangle, Lock } from "lucide-react";
 import { PlusIcon, XIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -634,7 +634,7 @@ export function CustomFieldUpsertSheet({
         </SheetContent>
       </Sheet>
 
-      <ConfirmDialog
+      <ConfirmSheet
         open={confirmSensitiveOpen}
         onOpenChange={(isOpen) => {
           if (!isOpen) handleCancelSensitiveConfirm();

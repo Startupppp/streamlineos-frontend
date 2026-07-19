@@ -43,7 +43,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -526,7 +526,7 @@ export function GoalsTab() {
         </Form>
       </HrSheet>
 
-      <ConfirmDialog
+      <ConfirmSheet
         open={deleteId !== null}
         onOpenChange={handleDeleteDialogChange}
         title="Delete Goal"

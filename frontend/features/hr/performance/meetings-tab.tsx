@@ -22,7 +22,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { resolveImageUrl, cn } from "@/lib/utils";
@@ -229,7 +229,7 @@ export function MeetingsTab() {
         </div>
       </HrSheet>
 
-      <ConfirmDialog
+      <ConfirmSheet
         open={deleteId !== null}
         onOpenChange={handleDeleteDialogChange}
         title="Delete Meeting"

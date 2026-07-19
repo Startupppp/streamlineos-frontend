@@ -24,7 +24,7 @@ import {
   Form, FormField, FormItem, FormLabel, FormControl, FormMessage,
 } from "@/components/ui/form";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Plus, Trash2, Pencil, Calendar, CheckCircle, Archive } from "lucide-react";
@@ -354,7 +354,7 @@ export function CyclesTab() {
         </Form>
       </HrSheet>
 
-      <ConfirmDialog
+      <ConfirmSheet
         open={deleteId !== null}
         onOpenChange={handleDeleteDialogChange}
         title="Delete Review Cycle"

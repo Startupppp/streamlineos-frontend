@@ -16,7 +16,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { CONTENT_FILL_PANEL, FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
@@ -255,7 +255,7 @@ export default function IntakeInboxPage() {
         )}
       </PageWrapper>
 
-      <ConfirmDialog
+      <ConfirmSheet
         open={rejectOpen}
         onOpenChange={setRejectOpen}
         title={`Reject ${selectedIds.size} candidate${selectedIds.size !== 1 ? "s" : ""}?`}

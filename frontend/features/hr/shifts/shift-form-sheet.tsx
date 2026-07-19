@@ -6,8 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
+import { getErrorMessage } from "@/lib/api-client";
 import {
   useCreateShift,
   useUpdateShift,
@@ -98,7 +98,9 @@ export function ShiftFormSheet({ open, onOpenChange, shift }: Props) {
       shift
         ? {
             name: shift.name,
-            type: SHIFT_TYPES.includes(shift.type as (typeof SHIFT_TYPES)[number])
+            type: SHIFT_TYPES.includes(
+              shift.type as (typeof SHIFT_TYPES)[number],
+            )
               ? (shift.type as (typeof SHIFT_TYPES)[number])
               : "FIXED",
             startTime: shift.startTime,
@@ -132,7 +134,15 @@ export function ShiftFormSheet({ open, onOpenChange, shift }: Props) {
     };
     if (shift) updateShift.mutate({ id: shift.id, ...pendingValues }, handlers);
     else createShift.mutate(pendingValues, handlers);
-  }, [pendingValues, shift, isEdit, createShift, updateShift, form, onOpenChange]);
+  }, [
+    pendingValues,
+    shift,
+    isEdit,
+    createShift,
+    updateShift,
+    form,
+    onOpenChange,
+  ]);
 
   const isPending = createShift.isPending || updateShift.isPending;
 
@@ -158,7 +168,11 @@ export function ShiftFormSheet({ open, onOpenChange, shift }: Props) {
                     Shift Name
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g. Morning Shift" className="text-sm" {...field} />
+                    <Input
+                      placeholder="e.g. Morning Shift"
+                      className="text-sm"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -181,7 +195,9 @@ export function ShiftFormSheet({ open, onOpenChange, shift }: Props) {
                     </FormControl>
                     <SelectContent>
                       {SHIFT_TYPES.map((t) => (
-                        <SelectItem key={t} value={t}>{t}</SelectItem>
+                        <SelectItem key={t} value={t}>
+                          {t}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -239,7 +255,9 @@ export function ShiftFormSheet({ open, onOpenChange, shift }: Props) {
                         max={480}
                         className="text-sm"
                         {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
+                        onChange={(e) =>
+                          field.onChange(parseInt(e.target.value, 10))
+                        }
                       />
                     </FormControl>
                     <FormMessage />
@@ -261,7 +279,9 @@ export function ShiftFormSheet({ open, onOpenChange, shift }: Props) {
                         max={120}
                         className="text-sm"
                         {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
+                        onChange={(e) =>
+                          field.onChange(parseInt(e.target.value, 10))
+                        }
                       />
                     </FormControl>
                     <FormMessage />
@@ -275,9 +295,14 @@ export function ShiftFormSheet({ open, onOpenChange, shift }: Props) {
               name="isNightShift"
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between rounded-lg border p-3">
-                  <FormLabel className="text-sm font-medium cursor-pointer">Night Shift</FormLabel>
+                  <FormLabel className="text-sm font-medium cursor-pointer">
+                    Night Shift
+                  </FormLabel>
                   <FormControl>
-                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
                   </FormControl>
                 </FormItem>
               )}
@@ -286,7 +311,7 @@ export function ShiftFormSheet({ open, onOpenChange, shift }: Props) {
         </Form>
       </HrSheet>
 
-      <ConfirmDialog
+      <ConfirmSheet
         open={confirmOpen}
         onOpenChange={(next) => {
           setConfirmOpen(next);

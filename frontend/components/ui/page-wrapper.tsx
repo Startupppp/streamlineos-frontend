@@ -37,7 +37,9 @@ export function PageWrapper({
   actions,
   filters,
   filtersClassName,
-  filtersCollapseBreakpoint = "sm",
+  // md: collapse filters into a popover on phones + tablets so multi-select
+  // toolbars don't force awkward horizontal scrolling on ~768–1024px widths.
+  filtersCollapseBreakpoint = "md",
   mobileFiltersInline = false,
   actionsInline = false,
   children,
@@ -57,19 +59,19 @@ export function PageWrapper({
     filtersCollapseBreakpoint === "md" ? "hidden md:flex" : "hidden sm:flex";
 
   return (
-    <div className={cn("flex flex-col flex-1 min-h-0", className)}>
+    <div className={cn("flex flex-col flex-1 min-h-0 min-w-0 overflow-x-hidden", className)}>
       <div
         className={cn(
           "shrink-0",
           PAGE_CHROME_X,
-          actionsInline ? "pt-3.5 pb-2" : "pt-5 pb-3 sm:pt-6 sm:pb-3",
+          actionsInline ? "pt-3.5 pb-2" : "pt-4 pb-3 sm:pt-6 sm:pb-3",
         )}
       >
         <div
           className={cn(
             actionsInline
               ? "flex flex-row items-center justify-between gap-2 sm:gap-3"
-              : "flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3",
+              : "flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-3",
           )}
         >
           <div
@@ -103,7 +105,7 @@ export function PageWrapper({
                   className="mt-1 text-[13px] text-muted-foreground leading-snug max-w-2xl"
                 />
               ) : subtitle ? (
-                <p className="mt-1 text-[13px] text-muted-foreground leading-snug max-w-2xl line-clamp-1">
+                <p className="mt-1 text-[13px] text-muted-foreground leading-snug max-w-2xl line-clamp-2 sm:line-clamp-1">
                   {subtitle}
                 </p>
               ) : null}
@@ -115,7 +117,8 @@ export function PageWrapper({
               className={cn(
                 actionsInline
                   ? "flex shrink-0 items-center gap-2"
-                  : "grid w-full auto-cols-fr grid-flow-col gap-2 sm:flex sm:w-auto sm:shrink-0 sm:items-center",
+                  : // Wrap on phones; avoid equal-width grid that squishes 3+ actions.
+                    "flex w-full flex-wrap items-center gap-2 sm:w-auto sm:shrink-0 sm:flex-nowrap sm:justify-end",
               )}
             >
               {actions}
@@ -125,17 +128,20 @@ export function PageWrapper({
       </div>
 
       {filters && (
-        <div className="shrink-0">
+        <div className="shrink-0 min-w-0">
           {!mobileFiltersInline && (
             <div className={cn(PAGE_CHROME_X, "pb-2.5", mobileFiltersClass, filtersClassName)}>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="text-xs gap-1.5">
+                  <Button variant="outline" size="sm" className="h-9 gap-1.5 text-xs">
                     <SlidersHorizontal className="h-4 w-4" />
                     Filters
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="max-w-[85vw] p-3" align="start">
+                <PopoverContent
+                  className="w-[min(22rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] p-3"
+                  align="start"
+                >
                   <div className="flex flex-col gap-2">
                     {filters}
                   </div>
@@ -145,7 +151,7 @@ export function PageWrapper({
           )}
           <div
             className={cn(
-              "w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0 pb-3 sm:gap-3",
+              "w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain scrollbar-hide [&>*]:shrink-0 pb-3 sm:gap-3",
               PAGE_CHROME_X,
               mobileFiltersInline ? "flex" : desktopFiltersClass,
               filtersClassName,

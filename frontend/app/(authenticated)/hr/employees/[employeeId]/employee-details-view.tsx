@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useHydrated } from "@/hooks/common/use-hydrated";
 import dynamic from "next/dynamic";
 import { EditEmployeeForm, type EmployeeData } from "./edit-employee-form";
@@ -11,7 +11,6 @@ import {
   useHrEmployeeStats,
   useHrEmployeeProjects,
   useHrEmployeeTickets,
-  useTerminateEmployee,
   useDirectReports,
   useManagerScorecard,
   useEmployeeAvailability,
@@ -48,10 +47,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useCan } from "@/hooks/api/access";
-import { toast } from "sonner";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { resolveImageUrl, cn } from "@/lib/utils";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { format } from "date-fns";
 import { canDeleteEmployee } from "@/features/hr/employees/hr-types";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -318,13 +314,11 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
   );
   const { data: projects } = useHrEmployeeProjects(employee.id);
   const { data: ticketsResult } = useHrEmployeeTickets(employee.id);
-  const terminateMutation = useTerminateEmployee();
   const router = useRouter();
   const { data: session } = useSession();
   const canManageEmployees = useCan("hr:employees:manage");
   const canUpdateEmployee = useCan("hr:employees:update");
   const canViewSensitive = useCan("hr:sensitive:view");
-  const [terminateOpen, setTerminateOpen] = useState(false);
   const searchParams = useSearchParams();
   const defaultTab = searchParams.get("tab") ?? "overview";
 
@@ -340,17 +334,9 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
   const { pct: completeness, missing: missingFields } =
     profileCompletenessScore(employee);
 
-  const handleTerminateClick = useCallback(() => setTerminateOpen(true), []);
-  const handleTerminateConfirm = useCallback(() => {
-    terminateMutation.mutate(employee.id, {
-      onSuccess: () => {
-        toast.success(`${employeeName} has been terminated.`);
-        setTerminateOpen(false);
-        router.push("/hr/employees");
-      },
-      onError: (err) => toast.error(getErrorMessage(err)),
-    });
-  }, [employee.id, employeeName, terminateMutation, router]);
+  const handleTerminateClick = useCallback(() => {
+    router.push(`/hr/termination?employeeId=${employee.id}`);
+  }, [employee.id, router]);
 
   const handleBack = useCallback(() => router.back(), [router]);
 
@@ -408,7 +394,6 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
     );
 
   return (
-    <>
       <PageWrapper
         title={employeeName}
         subtitle={employee.designation ?? employee.role ?? ""}
@@ -445,7 +430,6 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                 size="sm"
                 className="gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
                 onClick={handleTerminateClick}
-                disabled={terminateMutation.isPending}
               >
                 <UserX className="h-3.5 w-3.5" />
                 Terminate
@@ -809,16 +793,5 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
           </TabsContent>
         </Tabs>
       </PageWrapper>
-
-      <ConfirmDialog
-        open={terminateOpen}
-        onOpenChange={setTerminateOpen}
-        title="Terminate Employee"
-        description={`Are you sure you want to terminate ${employeeName}? They will lose access immediately.`}
-        confirmLabel="Terminate"
-        destructive
-        onConfirm={handleTerminateConfirm}
-      />
-    </>
   );
 }

@@ -98,7 +98,7 @@ function useBulkImportDeals() {
     mutationKey: ["deals", "bulk-import"],
     mutationFn: (deals: ParsedDeal[]) =>
       apiClient.post<{ created: number; failed: number }>(
-        "/crm/deals/bulk-import",
+        "/deals/bulk-import",
         { deals },
       ),
   });

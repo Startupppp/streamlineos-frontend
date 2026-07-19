@@ -96,8 +96,13 @@ export function PageTabsToolbar({
                   <ListFilter className="h-4 w-4" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent align="end" className="w-64 space-y-2 p-3">
-                {resolveSlot(filters)}
+              <PopoverContent
+                align="end"
+                className="w-[min(18rem,calc(100vw-2rem))] space-y-2 p-3"
+              >
+                <div className="flex flex-col gap-2">
+                  {resolveSlot(filters)}
+                </div>
               </PopoverContent>
             </Popover>
           </>

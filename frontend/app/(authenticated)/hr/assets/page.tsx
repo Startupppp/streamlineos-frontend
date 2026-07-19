@@ -42,7 +42,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { DatePicker } from "@/components/ui/date-picker";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   useHrAssets,
@@ -1040,7 +1040,7 @@ export default function HrAssetsPage() {
         </div>
       </HrSheet>
 
-      <ConfirmDialog
+      <ConfirmSheet
         open={deleteAssetId !== null}
         onOpenChange={handleCloseDelete}
         title="Retire Asset"

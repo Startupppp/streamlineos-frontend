@@ -76,15 +76,15 @@ export function HrHero({
         className="pointer-events-none absolute -bottom-8 right-20 h-24 w-24 rounded-full border border-sky-200/40 dark:border-sky-400/10"
       />
 
-      <div className="relative p-5 sm:p-6 lg:p-7">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="relative p-4 sm:p-6 lg:p-7">
+        <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0 max-w-2xl">
             {eyebrow && (
               <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-600/80 dark:text-blue-300/80 mb-1.5">
                 {eyebrow}
               </p>
             )}
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-balance leading-tight text-foreground">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold tracking-tight text-balance leading-tight text-foreground">
               {title}
             </h2>
             {description && (
@@ -93,9 +93,13 @@ export function HrHero({
               </p>
             )}
           </div>
-          {actions && <div className="flex flex-wrap items-center gap-2 shrink-0">{actions}</div>}
+          {actions && (
+            <div className="flex flex-wrap items-center gap-2 shrink-0 w-full sm:w-auto">
+              {actions}
+            </div>
+          )}
         </div>
-        {children && <div className="relative mt-5">{children}</div>}
+        {children && <div className="relative mt-4 sm:mt-5 min-w-0">{children}</div>}
       </div>
     </div>
   );
@@ -173,7 +177,12 @@ export function HrSectionHeader({
   className?: string;
 }) {
   return (
-    <div className={cn("flex items-start justify-between gap-3 mb-3", className)}>
+    <div
+      className={cn(
+        "flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3 mb-3",
+        className,
+      )}
+    >
       <div className="min-w-0">
         <h2 className="text-sm font-semibold tracking-tight text-foreground">{title}</h2>
         {description && (
@@ -184,13 +193,13 @@ export function HrSectionHeader({
         (typeof action === "object" && action !== null && "href" in action ? (
           <Link
             href={action.href}
-            className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700 dark:text-blue-300 transition-colors"
+            className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700 dark:text-blue-300 transition-colors self-start"
           >
             {action.label}
             <ArrowRight className="h-3 w-3" />
           </Link>
         ) : (
-          action
+          <div className="shrink-0 self-start">{action}</div>
         ))}
     </div>
   );
@@ -319,7 +328,12 @@ export function HrPageContent({
   className?: string;
 }) {
   return (
-    <div className={cn("flex flex-1 min-h-0 flex-col gap-4 sm:gap-5", className)}>
+    <div
+      className={cn(
+        "flex flex-1 min-h-0 min-w-0 flex-col gap-4 sm:gap-5 overflow-x-hidden",
+        className,
+      )}
+    >
       {children}
     </div>
   );

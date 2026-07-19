@@ -67,125 +67,142 @@ export function HrEmployeeTable({
   currentUserId,
 }: HrEmployeeTableProps) {
   const canManageEmployees = useCan("hr:employees:update");
-  const columns = useMemo<DataTableColumn<Employee>[]>(() => [
-    {
-      key: "name",
-      header: "Name",
-      cell: (user) => {
-        const displayName = getDisplayName(user);
-        const initials = getInitials(user);
-        return (
-          <Link href={`/hr/employees/${user.id}`} className="flex items-center gap-3">
-            <Avatar className="w-8 shrink-0">
-              <AvatarImage src={resolveImageUrl(user.image)} alt="" />
-              <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
-            <div className="min-w-0">
-              <TruncatedText
-                text={displayName}
-                className="text-sm font-semibold text-foreground hover:text-primary transition-colors duration-200"
-              />
-            </div>
-          </Link>
-        );
+  const columns = useMemo<DataTableColumn<Employee>[]>(
+    () => [
+      {
+        key: "name",
+        header: "Name",
+        cell: (user) => {
+          const displayName = getDisplayName(user);
+          const initials = getInitials(user);
+          return (
+            <Link
+              href={`/hr/employees/${user.id}`}
+              className="flex items-center gap-3"
+            >
+              <Avatar className="w-8 shrink-0">
+                <AvatarImage src={resolveImageUrl(user.image)} alt="" />
+                <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0">
+                <TruncatedText
+                  text={displayName}
+                  className="text-sm font-semibold text-foreground hover:text-primary transition-colors duration-200"
+                />
+              </div>
+            </Link>
+          );
+        },
       },
-    },
-    {
-      key: "email",
-      header: "Email",
-      cell: (user) => (
-        <span className="text-xs text-muted-foreground whitespace-nowrap">{user.email}</span>
-      ),
-    },
-    {
-      key: "role",
-      header: "Role",
-      cell: (user) =>
-        user.designation ? (
-          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border whitespace-nowrap">
-            {user.designation}
+      {
+        key: "email",
+        header: "Email",
+        headerClassName: "hidden md:table-cell",
+        className: "hidden md:table-cell",
+        cell: (user) => (
+          <span className="text-xs text-muted-foreground whitespace-nowrap">
+            {user.email}
           </span>
-        ) : (
-          <span className="text-xs text-muted-foreground">—</span>
         ),
-    },
-    {
-      key: "department",
-      header: "Department",
-      cell: (user) => (
-        <span className="text-xs text-muted-foreground whitespace-nowrap">
-          {user.department?.name ?? "—"}
-        </span>
-      ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      cell: (user) => {
-        const isActive = user.isActive !== false;
-        return (
-          <span
-            className={cn(
-              "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
-              isActive
-                ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800"
-                : "bg-muted text-muted-foreground border-border",
-            )}
-          >
+      },
+      {
+        key: "role",
+        header: "Role",
+        headerClassName: "hidden sm:table-cell",
+        className: "hidden sm:table-cell",
+        cell: (user) =>
+          user.designation ? (
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border whitespace-nowrap">
+              {user.designation}
+            </span>
+          ) : (
+            <span className="text-xs text-muted-foreground">—</span>
+          ),
+      },
+      {
+        key: "department",
+        header: "Department",
+        headerClassName: "hidden lg:table-cell",
+        className: "hidden lg:table-cell",
+        cell: (user) => (
+          <span className="text-xs text-muted-foreground whitespace-nowrap">
+            {user.department?.name ?? "—"}
+          </span>
+        ),
+      },
+      {
+        key: "status",
+        header: "Status",
+        cell: (user) => {
+          const isActive = user.isActive !== false;
+          return (
             <span
               className={cn(
-                "h-1.5 w-1.5 rounded-full",
-                isActive ? "bg-emerald-500" : "bg-muted-foreground/50",
+                "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+                isActive
+                  ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800"
+                  : "bg-muted text-muted-foreground border-border",
               )}
-            />
-            {isActive ? "Active" : "Inactive"}
-          </span>
-        );
-      },
-    },
-    {
-      key: "actions",
-      header: "Actions",
-      headerClassName: "text-right",
-      className: "text-right",
-      cell: (user) => {
-        const displayName = getDisplayName(user);
-        const canTerminate = canDeleteEmployee(
-          user.role,
-          user.id,
-          user.isActive,
-          currentUserId,
-          canManageEmployees,
-        );
-
-        function handleTerminateClick() {
-          onRequestDelete(user);
-        }
-
-        return (
-          <div className="flex items-center justify-end gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="w-7"
-              aria-label={`Edit ${displayName}`}
-              title={`Edit ${displayName}`}
-              asChild
             >
-              <Link href={`/hr/employees/${user.id}?tab=profile`}>
-                <Pencil className="h-3.5 w-3.5" />
-              </Link>
-            </Button>
-            {canTerminate && (
-              <TerminateButton displayName={displayName} onClick={handleTerminateClick} />
-            )}
-          </div>
-        );
+              <span
+                className={cn(
+                  "h-1.5 w-1.5 rounded-full",
+                  isActive ? "bg-emerald-500" : "bg-muted-foreground/50",
+                )}
+              />
+              {isActive ? "Active" : "Inactive"}
+            </span>
+          );
+        },
       },
-    },
-  ], [currentUserId, canManageEmployees, onRequestDelete]);
+      {
+        key: "actions",
+        header: "Actions",
+        headerClassName: "text-right w-[72px]",
+        className: "text-right w-[72px]",
+        cell: (user) => {
+          const displayName = getDisplayName(user);
+          const canTerminate = canDeleteEmployee(
+            user.role,
+            user.id,
+            user.isActive,
+            currentUserId,
+            canManageEmployees,
+          );
+
+          function handleTerminateClick() {
+            onRequestDelete(user);
+          }
+
+          return (
+            <div className="flex items-center justify-end gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="w-7"
+                aria-label={`Edit ${displayName}`}
+                title={`Edit ${displayName}`}
+                asChild
+              >
+                <Link href={`/hr/employees/${user.id}?tab=profile`}>
+                  <Pencil className="h-3.5 w-3.5" />
+                </Link>
+              </Button>
+              {canTerminate && (
+                <TerminateButton
+                  displayName={displayName}
+                  onClick={handleTerminateClick}
+                />
+              )}
+            </div>
+          );
+        },
+      },
+    ],
+    [currentUserId, canManageEmployees, onRequestDelete],
+  );
 
   return (
     <DataTable

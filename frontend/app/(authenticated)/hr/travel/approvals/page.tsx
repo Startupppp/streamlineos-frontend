@@ -263,34 +263,44 @@ export default function TravelApprovalsPage() {
   );
 
   const handleManagerApprove = useCallback(
-    (id: number) => {
-      toast.promise(managerApprove.mutateAsync(id), {
-        loading: "Approving...",
-        success: "Manager approved",
-        error: (e: unknown) => getErrorMessage(e),
-      });
+    async (id: number) => {
+      const loadingToastId = toast.loading("Approving travel request...");
+      try {
+        await managerApprove.mutateAsync(id);
+        toast.success("Travel request approved by manager", { id: loadingToastId });
+      } catch (error) {
+        toast.error(getErrorMessage(error), { id: loadingToastId });
+      }
     },
     [managerApprove],
   );
 
   const handleFinanceApprove = useCallback(
-    (id: number) => {
-      toast.promise(financeApprove.mutateAsync(id), {
-        loading: "Approving...",
-        success: "Finance approved",
-        error: (e: unknown) => getErrorMessage(e),
-      });
+    async (id: number) => {
+      const loadingToastId = toast.loading("Approving travel request...");
+      try {
+        await financeApprove.mutateAsync(id);
+        toast.success("Travel request approved by finance", { id: loadingToastId });
+      } catch (error) {
+        toast.error(getErrorMessage(error), { id: loadingToastId });
+      }
     },
     [financeApprove],
   );
 
   const handleReject = useCallback(
-    (id: number, reason: string) => {
-      toast.promise(reject.mutateAsync({ id, reason }), {
-        loading: "Rejecting...",
-        success: "Request rejected",
-        error: (e: unknown) => getErrorMessage(e),
-      });
+    async (id: number, reason: string) => {
+      if (!reason.trim()) {
+        toast.error("Please provide a rejection reason");
+        return;
+      }
+      const loadingToastId = toast.loading("Rejecting travel request...");
+      try {
+        await reject.mutateAsync({ id, reason: reason.trim() });
+        toast.success("Travel request rejected", { id: loadingToastId });
+      } catch (error) {
+        toast.error(getErrorMessage(error), { id: loadingToastId });
+      }
     },
     [reject],
   );

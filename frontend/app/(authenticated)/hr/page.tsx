@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
-import { getErrorMessage } from "@/lib/get-error-message";
 import Link from "next/link";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -26,7 +25,6 @@ import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import {
   useHrEmployees,
   useHrDepartments,
-  useTerminateEmployee,
   unwrapEmployees,
 } from "@/hooks/api/hr";
 
@@ -41,7 +39,6 @@ import {
 import { EmployeesLoadingSkeleton } from "@/features/hr/employees/employees-loading-skeleton";
 import { HrFilterBar } from "@/features/hr/employees/hr-filter-bar";
 import { HrEmployeeTable } from "@/features/hr/employees/hr-employee-table";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { HrDashboardOverview } from "@/features/hr/hr-dashboard-overview";
 import {
   HrHero,
@@ -58,9 +55,6 @@ export default function HRDashboardPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
@@ -113,8 +107,6 @@ export default function HRDashboardPage() {
     isActive: isActiveParam,
   });
 
-  const terminateMutation = useTerminateEmployee();
-
   const employees = useMemo(
     () => unwrapEmployees(employeesPage),
     [employeesPage],
@@ -163,18 +155,6 @@ export default function HRDashboardPage() {
     [updateParams],
   );
 
-  const handleDelete = useCallback(async () => {
-    if (!employeeToDelete) return;
-    terminateMutation.mutate(employeeToDelete.id, {
-      onSuccess: () => {
-        toast.success("Employee terminated");
-        setDeleteDialogOpen(false);
-        setEmployeeToDelete(null);
-      },
-      onError: (err) => toast.error(getErrorMessage(err)),
-    });
-  }, [employeeToDelete, terminateMutation]);
-
   const handleExport = useCallback(async () => {
     // Export current page results (server-filtered). For full export use higher limit.
     try {
@@ -216,10 +196,12 @@ export default function HRDashboardPage() {
     });
   }, [updateParams]);
 
-  const handleRequestDelete = useCallback((employee: Employee) => {
-    setEmployeeToDelete(employee);
-    setDeleteDialogOpen(true);
-  }, []);
+  const handleRequestDelete = useCallback(
+    (employee: Employee) => {
+      router.push(`/hr/termination?employeeId=${employee.id}`);
+    },
+    [router],
+  );
 
   if (isLoading) return <EmployeesLoadingSkeleton />;
 
@@ -237,15 +219,16 @@ export default function HRDashboardPage() {
       subtitle="Directory, headcount, and day-to-day people ops"
  variant="display"
       actions={
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="gap-2 h-9" onClick={handleExport}>
+        <div className="flex w-full sm:w-auto flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" className="gap-2 h-9 flex-1 sm:flex-none" onClick={handleExport}>
             <Download className="h-4 w-4" aria-hidden="true" />
-            Export
+            <span className="sm:inline">Export</span>
           </Button>
-          <Button size="sm" className="gap-2 h-9 shadow-sm" asChild>
+          <Button size="sm" className="gap-2 h-9 shadow-sm flex-1 sm:flex-none" asChild>
             <Link href="/hr/onboarding">
               <Plus className="h-4 w-4" aria-hidden="true" />
-              Add Employee
+              <span className="sm:hidden">Add</span>
+              <span className="hidden sm:inline">Add Employee</span>
             </Link>
           </Button>
         </div>
@@ -292,7 +275,7 @@ export default function HRDashboardPage() {
             </>
           }
         >
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+          <div className="grid grid-cols-1 min-[400px]:grid-cols-2 lg:grid-cols-4 gap-2.5">
             <HrQuickAction
               href="/hr/onboarding"
               icon={UserPlus}
@@ -381,20 +364,6 @@ export default function HRDashboardPage() {
         </div>
 
       </HrPageContent>
-
-      <ConfirmDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        title="Terminate Employee"
-        description={
-          employeeToDelete
-            ? `Are you sure you want to terminate ${employeeToDelete.firstName ?? ""} ${employeeToDelete.lastName ?? ""}? This action cannot be undone.`
-            : ""
-        }
-        confirmLabel="Terminate"
-        destructive
-        onConfirm={handleDelete}
-      />
     </PageWrapper>
   );
 }

@@ -11,7 +11,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useHrHolidaysForYear, useAddLegacyHoliday, useDeleteLegacyHoliday, useUpdateLegacyHoliday } from "@/hooks/api/hr";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { toast } from "sonner";
 import { Pencil, PartyPopper } from "lucide-react";
 import { PlusIcon, Trash2Icon, CheckIcon, XIcon } from "@animateicons/react/lucide";
@@ -352,7 +352,7 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
         </p>
       </CardContent>
 
-      <ConfirmDialog
+      <ConfirmSheet
         open={pendingHoliday !== null}
         onOpenChange={handlePendingOpenChange}
         title="Add Holiday"
@@ -362,7 +362,7 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
         isPending={addMutation.isPending}
       />
 
-      <ConfirmDialog
+      <ConfirmSheet
         open={deleteConfirmId !== null}
         onOpenChange={handleDeleteConfirmOpenChange}
         title="Remove Holiday"

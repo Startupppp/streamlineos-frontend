@@ -15,6 +15,7 @@ interface PaginatedRuns {
 interface RunDetail {
   run: PayrollRun;
   checklist: PayrollChecklistItem[];
+  payoutHealth: { failedCount: number; heldCount: number } | null;
 }
 
 export function usePayrollRuns(params?: { page?: number; limit?: number }) {

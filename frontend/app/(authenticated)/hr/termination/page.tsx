@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useCan } from "@/hooks/api/access";
 import { isToday, isFuture, parseISO } from "date-fns";
@@ -11,7 +12,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { TerminationList } from "@/features/hr/termination/termination-list";
 import { TerminationFormSheet } from "@/features/hr/termination/termination-form-sheet";
 import { TerminationDetailSheet } from "@/features/hr/termination/termination-detail-sheet";
@@ -37,6 +38,8 @@ type StatusFilter = "ALL" | TerminationStatus;
 export default function TerminationPage() {
   const { data: session } = useSession();
   const canApproveExit = useCan("hr:exit:approve");
+  const searchParams = useSearchParams();
+  const employeeIdParam = searchParams.get("employeeId");
 
   const role = session?.user?.role;
   const isHR = role === "HR";
@@ -52,8 +55,8 @@ export default function TerminationPage() {
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
 
-  const [createOpen, setCreateOpen] = useState(false);
-  const [selectedUserId, setSelectedUserId] = useState("");
+  const [createOpen, setCreateOpen] = useState(() => Boolean(employeeIdParam));
+  const [selectedUserId, setSelectedUserId] = useState(() => employeeIdParam ?? "");
   const [selectedReason, setSelectedReason] = useState("");
   const [remarks, setRemarks] = useState("");
   const [effectiveDate, setEffectiveDate] = useState("");
@@ -387,7 +390,7 @@ export default function TerminationPage() {
         onInternalNotesChange={handleInternalNotesChange}
       />
 
-      <ConfirmDialog
+      <ConfirmSheet
         open={submitId !== null}
         onOpenChange={handleSubmitConfirmClose}
         title="Submit for CEO Approval"
@@ -415,7 +418,7 @@ export default function TerminationPage() {
         isViewOnly
       />
 
-      <ConfirmDialog
+      <ConfirmSheet
         open={emailRecord !== null}
         onOpenChange={handleEmailRecordClose}
         title="Send Termination Email"
@@ -425,7 +428,7 @@ export default function TerminationPage() {
         isPending={sendEmail.isPending}
       />
 
-      <ConfirmDialog
+      <ConfirmSheet
         open={completeId !== null}
         onOpenChange={handleCompleteIdClose}
         title="Complete Termination"

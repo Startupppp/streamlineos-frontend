@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger, SheetBody } from "@/components/ui/sheet";
@@ -330,7 +330,7 @@ export default function TalentPoolsPage() {
         )}
       </PageWrapper>
 
-      <ConfirmDialog
+      <ConfirmSheet
         open={deleteTarget !== null}
         onOpenChange={handleCloseDeleteDialog}
         title="Delete this talent pool?"

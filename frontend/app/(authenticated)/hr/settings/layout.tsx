@@ -36,7 +36,7 @@ export default function HrSettingsLayout({
             const isActive =
               tab.href === "/hr/settings"
                 ? pathname === "/hr/settings"
-                : pathname === tab.href;
+                : pathname === tab.href || pathname.startsWith(`${tab.href}/`);
             return (
               <Link
                 key={tab.href}
@@ -49,12 +49,15 @@ export default function HrSettingsLayout({
                 )}
               >
                 {tab.label}
+                {isActive && (
+                  <span className="absolute bottom-0 left-1 right-1 sm:left-0 sm:right-0 h-0.5 bg-primary rounded-full" />
+                )}
               </Link>
             );
           })}
         </nav>
       </div>
-      <div className="flex-1 min-h-0">{children}</div>
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>
     </div>
   );
 }

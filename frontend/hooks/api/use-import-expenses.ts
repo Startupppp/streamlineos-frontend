@@ -16,11 +16,20 @@ interface ImportExpensesResult {
   error?: string;
 }
 
-async function importExpensesRequest({ file, autoApprove }: ImportVariables): Promise<ImportExpensesResult> {
-  const form = new FormData();
-  form.append("file", file, file.name);
-  form.append("autoApprove", String(autoApprove));
-  const result = await apiClient.upload<ImportExpensesResult>("/hr/expenses/import", form);
+/**
+ * Backend `POST /hr/expenses/import` expects JSON
+ * `{ fileName, content, autoApprove }` — not multipart FormData.
+ */
+async function importExpensesRequest({
+  file,
+  autoApprove,
+}: ImportVariables): Promise<ImportExpensesResult> {
+  const content = await file.text();
+  const result = await apiClient.post<ImportExpensesResult>("/hr/expenses/import", {
+    fileName: file.name,
+    content,
+    autoApprove,
+  });
   if (!result.success) {
     throw new Error(result.error ?? "Failed to import expenses");
   }

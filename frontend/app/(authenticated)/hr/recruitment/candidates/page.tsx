@@ -19,7 +19,7 @@ import {
 } from "@/hooks/api/hr";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { toast } from "sonner";
 import {
   Plus,
@@ -378,7 +378,7 @@ export default function CandidatesPage() {
         </div>
       </PageWrapper>
 
-      <ConfirmDialog
+      <ConfirmSheet
         open={bulkRejectOpen}
         onOpenChange={setBulkRejectOpen}
         title={`Reject ${selectedIds.size} candidate(s)?`}
@@ -403,7 +403,7 @@ export default function CandidatesPage() {
         candidate={editingCandidate}
         onOpenChange={handleCloseEditSheet}
       />
-      <ConfirmDialog
+      <ConfirmSheet
         open={deleteDialogOpen}
         onOpenChange={handleCloseDeleteDialog}
         title="Delete candidate?"

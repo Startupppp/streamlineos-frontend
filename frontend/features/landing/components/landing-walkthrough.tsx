@@ -7,22 +7,22 @@ import { walkthroughSteps } from "../data/pillars";
 
 export function LandingWalkthrough() {
   return (
-    <section id="features" className="relative py-16 lg:py-24">
-      <div className="container mx-auto px-4 lg:px-8">
+    <section id="features" className="relative py-14 sm:py-16 lg:py-24">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-10% 0px" }}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] as const }}
-          className="max-w-2xl text-center mx-auto mb-14 lg:mb-20"
+          className="max-w-2xl text-center mx-auto mb-10 sm:mb-14 lg:mb-20"
         >
-          <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-[-0.03em] leading-[1.05] text-slate-900">
+          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-[-0.03em] leading-[1.05] text-slate-900">
             One workspace.{" "}
             <span className="text-blue-600">Four moments that matter.</span>
           </h2>
         </motion.div>
 
-        <div className="max-w-6xl mx-auto space-y-20 lg:space-y-28">
+        <div className="max-w-6xl mx-auto space-y-14 sm:space-y-20 lg:space-y-28">
           {walkthroughSteps.map((step, i) => (
             <WalkthroughRow key={step.eyebrow} step={step} index={i} />
           ))}
@@ -46,7 +46,7 @@ function WalkthroughRow({
   const handleVisualEnter = useCallback(() => setVisualIn(true), []);
   return (
     <div
-      className={`grid gap-8 lg:gap-14 lg:grid-cols-2 items-center ${
+      className={`grid gap-6 sm:gap-8 lg:gap-14 lg:grid-cols-2 items-center min-w-0 ${
         isReverse ? "lg:[direction:rtl]" : ""
       }`}
     >
@@ -68,12 +68,14 @@ function WalkthroughRow({
           <span className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-blue-600 text-white text-[11px] font-bold font-mono shrink-0">
             {String(index + 1).padStart(2, "0")}
           </span>
-          <span className="text-[12px] font-medium text-blue-600">{step.eyebrow}</span>
+          <span className="text-[12px] font-medium text-blue-600">
+            {step.eyebrow}
+          </span>
         </div>
-        <h3 className="font-display text-2xl lg:text-4xl font-bold text-slate-900 tracking-[-0.02em] leading-tight mb-4">
+        <h3 className="font-display text-xl sm:text-2xl lg:text-4xl font-bold text-slate-900 tracking-[-0.02em] leading-tight mb-3 sm:mb-4">
           {step.title}
         </h3>
-        <p className="text-slate-600 text-base lg:text-lg leading-relaxed mb-5">
+        <p className="text-slate-600 text-sm sm:text-base lg:text-lg leading-relaxed mb-4 sm:mb-5">
           {step.description}
         </p>
         <ul className="space-y-2.5">
@@ -82,7 +84,9 @@ function WalkthroughRow({
               <span className="mt-0.5 h-5 w-5 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 inline-flex items-center justify-center shrink-0 shadow-[0_4px_12px_-4px_rgba(59,130,246,0.5)]">
                 <Check className="h-3 w-3 text-white" strokeWidth={3} />
               </span>
-              <span className="text-[14px] text-slate-700">{b}</span>
+              <span className="text-[13px] sm:text-[14px] text-slate-700 min-w-0">
+                {b}
+              </span>
             </li>
           ))}
         </ul>
@@ -93,7 +97,11 @@ function WalkthroughRow({
         whileInView={{ opacity: 1 }}
         onViewportEnter={handleVisualEnter}
         viewport={{ once: true, margin: "-15% 0px" }}
-        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] as const, delay: 0.08 }}
+        transition={{
+          duration: 0.8,
+          ease: [0.22, 1, 0.36, 1] as const,
+          delay: 0.08,
+        }}
         className={`lg:[direction:ltr] transition-transform duration-700 delay-75 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
           visualIn
             ? "translate-x-0 translate-y-0 scale-100"
@@ -112,16 +120,17 @@ function WalkthroughVisual({ index }: { index: number }) {
   const visuals = [HireVisual, OnboardVisual, DeliverVisual, CloseVisual];
   const Visual = visuals[index] ?? HireVisual;
   return (
-    <div className="relative aspect-[5/4] rounded-2xl border border-slate-200/80 bg-white/80 backdrop-blur-sm overflow-hidden p-6 shadow-[0_20px_60px_-24px_rgba(30,64,175,0.18)]">
+    <div className="relative aspect-[5/4] sm:aspect-[5/4] rounded-xl sm:rounded-2xl border border-slate-200/80 bg-white/80 backdrop-blur-sm overflow-hidden p-3.5 sm:p-6 shadow-[0_20px_60px_-24px_rgba(30,64,175,0.18)]">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(59,130,246,0.10),_transparent_60%)]" />
-      <div className="relative h-full">
+      <div className="relative h-full min-w-0 overflow-hidden">
         <Visual />
       </div>
     </div>
   );
 }
 
-const cardCls = "rounded-xl border border-slate-200 bg-white p-4 shadow-sm";
+const cardCls =
+  "rounded-lg sm:rounded-xl border border-slate-200 bg-white p-2.5 sm:p-4 shadow-sm";
 
 function HireVisual() {
   const candidates = [
@@ -142,21 +151,30 @@ function HireVisual() {
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.45, delay: i * 0.1 }}
-          className={`${cardCls} flex items-center justify-between`}
+          className={`${cardCls} flex items-center justify-between gap-2 min-w-0`}
         >
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <span
-              className="h-9 w-9 rounded-full inline-flex items-center justify-center text-[11px] font-bold text-white"
-              style={{ background: "linear-gradient(135deg, #3b82f6, #06b6d4)" }}
+              className="h-8 w-8 sm:h-9 sm:w-9 rounded-full inline-flex items-center justify-center text-[11px] font-bold text-white shrink-0"
+              style={{
+                background: "linear-gradient(135deg, #3b82f6, #06b6d4)",
+              }}
             >
-              {c.name.split(" ").map((n) => n[0]).join("")}
+              {c.name
+                .split(" ")
+                .map((n) => n[0])
+                .join("")}
             </span>
-            <div>
-              <p className="text-[12px] font-semibold text-slate-900">{c.name}</p>
-              <p className="text-[10px] text-slate-500 font-mono">{c.role}</p>
+            <div className="min-w-0">
+              <p className="text-[11px] sm:text-[12px] font-semibold text-slate-900 truncate">
+                {c.name}
+              </p>
+              <p className="text-[9px] sm:text-[10px] text-slate-500 font-mono truncate">
+                {c.role}
+              </p>
             </div>
           </div>
-          <span className="text-[11px] font-mono text-emerald-700 px-2 py-1 rounded-md bg-emerald-50 border border-emerald-200">
+          <span className="text-[10px] sm:text-[11px] font-mono text-emerald-700 px-1.5 sm:px-2 py-1 rounded-md bg-emerald-50 border border-emerald-200 shrink-0">
             {c.score}
           </span>
         </motion.div>
@@ -197,7 +215,11 @@ function OnboardVisual() {
             viewport={{ once: true }}
             transition={{ duration: 0.4, delay: 0.4 + i * 0.08 }}
             className={`flex items-center gap-3 text-[12px] ${
-              s.done ? "text-slate-600" : s.current ? "text-slate-900 font-medium" : "text-slate-400"
+              s.done
+                ? "text-slate-600"
+                : s.current
+                  ? "text-slate-900 font-medium"
+                  : "text-slate-400"
             }`}
           >
             <span
@@ -205,8 +227,8 @@ function OnboardVisual() {
                 s.done
                   ? "bg-blue-600 border-blue-500 text-white"
                   : s.current
-                  ? "border-cyan-400 text-cyan-600"
-                  : "border-slate-300"
+                    ? "border-cyan-400 text-cyan-600"
+                    : "border-slate-300"
               }`}
             >
               {s.done ? "✓" : s.current ? "•" : ""}
@@ -231,7 +253,7 @@ function DeliverVisual() {
     { title: "Done", count: 12, items: ["Wire SSO", "Audit log v2"] },
   ];
   return (
-    <div className="grid grid-cols-3 gap-2 h-full">
+    <div className="grid grid-cols-3 gap-1 sm:gap-2 h-full min-w-0">
       {cols.map((col, ci) => (
         <motion.div
           key={col.title}
@@ -239,15 +261,15 @@ function DeliverVisual() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: ci * 0.1 }}
-          className={`rounded-xl border p-2.5 space-y-1.5 ${
+          className={`rounded-lg sm:rounded-xl border p-1.5 sm:p-2.5 space-y-1 sm:space-y-1.5 min-w-0 ${
             col.highlight
               ? "bg-blue-50 border-blue-200"
               : "bg-slate-50/70 border-slate-200"
           }`}
         >
-          <div className="flex items-center justify-between text-[11px] font-medium text-slate-500 mb-1">
-            <span>{col.title}</span>
-            <span>{col.count}</span>
+          <div className="flex items-center justify-between gap-1 text-[9px] sm:text-[11px] font-medium text-slate-500 mb-1 min-w-0">
+            <span className="truncate">{col.title}</span>
+            <span className="shrink-0">{col.count}</span>
           </div>
           {col.items.map((it, ti) => (
             <motion.div
@@ -256,7 +278,7 @@ function DeliverVisual() {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.35, delay: ci * 0.1 + ti * 0.06 }}
-              className="rounded-md bg-white border border-slate-200 p-2 text-[10px] text-slate-700 leading-tight shadow-sm"
+              className="rounded-md bg-white border border-slate-200 p-1.5 sm:p-2 text-[9px] sm:text-[10px] text-slate-700 leading-tight shadow-sm truncate"
             >
               {it}
             </motion.div>
