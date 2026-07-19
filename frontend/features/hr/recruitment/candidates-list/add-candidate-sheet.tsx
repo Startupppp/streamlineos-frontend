@@ -30,6 +30,7 @@ import { cn } from "@/lib/utils";
 import {
   candidateSchema,
   DEFAULT_CANDIDATE_VALUES,
+  normalizeCandidatePhone,
   type CandidateFormValues,
 } from "./candidate-schema";
 
@@ -62,12 +63,17 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
 
   const handleSubmit = useCallback(
     (data: AddCandidateForm) => {
+      const linkedinRaw = data.linkedinUrl?.trim() || undefined;
+      const linkedinUrl = linkedinRaw?.startsWith("www.")
+        ? `https://${linkedinRaw}`
+        : linkedinRaw;
+
       createCandidate.mutate(
         {
           firstName: data.firstName.trim(),
           lastName: data.lastName.trim(),
           email: data.email.trim(),
-          phone: data.phone?.trim() || undefined,
+          phone: normalizeCandidatePhone(data.phone),
           source: data.source,
           currentRole: data.currentRole?.trim() || undefined,
           currentCompany: data.currentCompany?.trim() || undefined,
@@ -75,7 +81,7 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
           skills: data.skills?.trim()
             ? data.skills.split(",").map((s) => s.trim()).filter(Boolean)
             : undefined,
-          linkedinUrl: data.linkedinUrl?.trim() || undefined,
+          linkedinUrl,
           notes: data.notes?.trim() || undefined,
         },
         {

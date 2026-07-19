@@ -317,7 +317,7 @@ interface Props {
 export function OffersTab({ candidateId }: Props) {
   const canApprove = useCan("hr:offers:approve");
 
-  const { data: offers, isLoading } = useCandidateOffers(candidateId);
+  const { data: offers, isLoading, isError, refetch } = useCandidateOffers(candidateId);
   const createOffer = useCreateCandidateOffer(candidateId);
   const updateOffer = useUpdateCandidateOffer(candidateId);
   const deleteOffer = useDeleteCandidateOffer(candidateId);
@@ -335,9 +335,47 @@ export function OffersTab({ candidateId }: Props) {
   const [historyOffer, setHistoryOffer] = useState<CandidateOffer | null>(null);
 
   const handleCreate = useCallback(() => {
+    const salaryNum = offeredSalary ? Number(offeredSalary) : undefined;
+    if (salaryNum !== undefined && (!Number.isFinite(salaryNum) || salaryNum <= 0)) {
+      toast.error("Offer salary must be a positive number");
+      return;
+    }
+    if (validUntil) {
+      const expiry = new Date(validUntil);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (Number.isNaN(expiry.getTime()) || expiry < today) {
+        toast.error("Offer expiry must be today or a future date");
+        return;
+      }
+    }
+    if (joiningDate) {
+      const join = new Date(joiningDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (Number.isNaN(join.getTime()) || join < today) {
+        toast.error("Joining date must be today or a future date");
+        return;
+      }
+    }
+    if (offerLetterUrl.trim()) {
+      try {
+        const parsed = new URL(
+          offerLetterUrl.startsWith("www.") ? `https://${offerLetterUrl}` : offerLetterUrl,
+        );
+        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+          toast.error("Offer letter URL must be a valid http(s) link");
+          return;
+        }
+      } catch {
+        toast.error("Offer letter URL must be a valid link");
+        return;
+      }
+    }
+
     createOffer.mutate(
       {
-        offeredSalary: offeredSalary ? Number(offeredSalary) : undefined,
+        offeredSalary: salaryNum,
         offeredDesignation: offeredDesignation || undefined,
         joiningDate: joiningDate || undefined,
         validUntil: validUntil || undefined,
@@ -414,6 +452,16 @@ export function OffersTab({ candidateId }: Props) {
 
       {isLoading ? (
         <LoadingState variant="list" rows={8} />
+      ) : isError ? (
+        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-center space-y-2">
+          <p className="text-sm font-medium">Unable to load offers</p>
+          <p className="text-xs text-muted-foreground">
+            You may not have permission to view offers, or the server returned an unexpected response.
+          </p>
+          <Button size="sm" variant="outline" onClick={() => void refetch()}>
+            Try again
+          </Button>
+        </div>
       ) : !offers?.length ? (
         <RecruitmentEmptyState illustration={<EmptyDocumentsIllustration />} title="No offers created yet" compact />
       ) : (

@@ -28,7 +28,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { candidateSchema, type CandidateFormValues } from "./candidate-schema";
+import {
+  candidateSchema,
+  normalizeCandidatePhone,
+  type CandidateFormValues,
+} from "./candidate-schema";
 
 type EditCandidateForm = CandidateFormValues;
 
@@ -82,13 +86,18 @@ export function EditCandidateSheet({
   const handleSubmit = useCallback(
     (data: EditCandidateForm) => {
       if (!candidate) return;
+      const linkedinRaw = data.linkedinUrl?.trim() || undefined;
+      const linkedinUrl = linkedinRaw?.startsWith("www.")
+        ? `https://${linkedinRaw}`
+        : linkedinRaw;
+
       updateCandidate.mutate(
         {
           id: candidate.id,
           firstName: data.firstName.trim(),
           lastName: data.lastName.trim(),
           email: data.email.trim(),
-          phone: data.phone?.trim() || undefined,
+          phone: normalizeCandidatePhone(data.phone),
           source: data.source || undefined,
           currentRole: data.currentRole?.trim() || undefined,
           currentCompany: data.currentCompany?.trim() || undefined,
@@ -96,7 +105,7 @@ export function EditCandidateSheet({
           skills: data.skills?.trim()
             ? data.skills.split(",").map((s) => s.trim()).filter(Boolean)
             : [],
-          linkedinUrl: data.linkedinUrl?.trim() || undefined,
+          linkedinUrl,
           notes: data.notes?.trim() || undefined,
         },
         {
