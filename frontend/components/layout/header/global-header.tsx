@@ -125,8 +125,13 @@ function DesktopHeader({
 
 function MobileHeader() {
   return (
-    <div className="flex items-center h-full w-full px-4">
-      <HeaderBrand />
+    <div className="flex items-center justify-between h-full w-full gap-2 px-3 sm:px-4 min-w-0">
+      <div className="min-w-0 shrink">
+        <HeaderBrand />
+      </div>
+      <div className="flex items-center gap-1 shrink-0">
+        <NotificationBell />
+      </div>
     </div>
   )
 }

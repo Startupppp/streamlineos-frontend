@@ -26,20 +26,23 @@ export default function HrSettingsLayout({
   const pathname = usePathname();
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="shrink-0 border-b bg-background/95 backdrop-blur-sm px-1">
-        <nav className="flex items-center gap-1 overflow-x-auto scrollbar-none" aria-label="HR Settings">
+    <div className="flex h-full min-w-0 flex-col overflow-x-hidden">
+      <div className="sticky top-0 z-20 shrink-0 border-b bg-background/95 backdrop-blur-sm">
+        <nav
+          className="flex items-center gap-0.5 overflow-x-auto overscroll-x-contain scrollbar-hide px-2 sm:px-3 touch-pan-x"
+          aria-label="HR Settings"
+        >
           {TABS.map((tab) => {
             const isActive =
               tab.href === "/hr/settings"
                 ? pathname === "/hr/settings"
-                : pathname === tab.href;
+                : pathname === tab.href || pathname.startsWith(`${tab.href}/`);
             return (
               <Link
                 key={tab.href}
                 href={tab.href}
                 className={cn(
-                  "relative px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors",
+                  "relative px-2.5 sm:px-3 py-2.5 text-xs sm:text-sm font-medium whitespace-nowrap transition-colors shrink-0",
                   isActive
                     ? "text-foreground"
                     : "text-muted-foreground hover:text-foreground",
@@ -47,14 +50,14 @@ export default function HrSettingsLayout({
               >
                 {tab.label}
                 {isActive && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
+                  <span className="absolute bottom-0 left-1 right-1 sm:left-0 sm:right-0 h-0.5 bg-primary rounded-full" />
                 )}
               </Link>
             );
           })}
         </nav>
       </div>
-      <div className="flex-1 min-h-0">{children}</div>
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>
     </div>
   );
 }

@@ -133,7 +133,7 @@ export function DashboardShell({
                 id="dashboard-content"
                 className="flex-1 min-w-0 flex flex-col overflow-hidden md:pb-6"
               >
-                <div className="flex-1 min-h-0 overflow-auto flex flex-col pb-16 md:pb-0">
+                <div className="flex-1 min-h-0 min-w-0 overflow-auto overflow-x-hidden flex flex-col pb-16 md:pb-0 overscroll-y-contain">
                   {children}
                   <SuccessChecklist />
                 </div>

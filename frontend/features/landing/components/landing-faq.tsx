@@ -9,21 +9,21 @@ export function LandingFAQ() {
   const [open, setOpen] = useState<number | null>(0);
 
   return (
-    <section id="faq" className="relative py-16 lg:py-24">
-      <div className="container mx-auto px-4 lg:px-8">
+    <section id="faq" className="relative py-14 sm:py-16 lg:py-24">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-10% 0px" }}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] as const }}
-          className="max-w-2xl text-center mx-auto mb-10"
+          className="max-w-2xl text-center mx-auto mb-8 sm:mb-10"
         >
-          <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-[-0.03em] leading-[1.05] text-slate-900">
+          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-[-0.03em] leading-[1.05] text-slate-900">
             Frequently asked <span className="text-blue-600">questions.</span>
           </h2>
         </motion.div>
 
-        <div className="max-w-3xl mx-auto space-y-3">
+        <div className="max-w-3xl mx-auto space-y-2.5 sm:space-y-3">
           {faqs.map((f, i) => {
             const isOpen = open === i;
             return (
@@ -33,23 +33,24 @@ export function LandingFAQ() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-10% 0px" }}
                 transition={{ duration: 0.45, delay: i * 0.04 }}
-                className={`rounded-2xl border overflow-hidden transition-all duration-300 ${
+                className={`rounded-xl sm:rounded-2xl border overflow-hidden transition-all duration-300 ${
                   isOpen
                     ? "border-blue-300/60 bg-white shadow-[0_18px_44px_-18px_rgba(30,64,175,0.15)]"
                     : "border-slate-200 bg-white/70 hover:border-blue-200"
                 }`}
               >
                 <button
+                  type="button"
                   onClick={() => setOpen(isOpen ? null : i)}
-                  className="w-full flex items-center justify-between gap-6 px-5 py-4 text-left"
+                  className="w-full flex items-start sm:items-center justify-between gap-3 sm:gap-6 px-4 sm:px-5 py-3.5 sm:py-4 text-left"
                 >
-                  <span className="font-display text-base font-semibold text-slate-900">
+                  <span className="font-display text-sm sm:text-base font-semibold text-slate-900 min-w-0 pr-1">
                     {f.question}
                   </span>
                   <motion.span
                     animate={{ rotate: isOpen ? 45 : 0 }}
                     transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] as const }}
-                    className={`h-7 w-7 rounded-full inline-flex items-center justify-center shrink-0 ${
+                    className={`mt-0.5 h-7 w-7 rounded-full inline-flex items-center justify-center shrink-0 ${
                       isOpen
                         ? "bg-gradient-to-br from-blue-500 to-cyan-500 text-white shadow-[0_4px_14px_-4px_rgba(59,130,246,0.5)]"
                         : "bg-slate-100 text-slate-600"
@@ -67,7 +68,7 @@ export function LandingFAQ() {
                       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] as const }}
                       className="overflow-hidden"
                     >
-                      <p className="px-5 pb-5 text-sm text-slate-600 leading-relaxed">
+                      <p className="px-4 sm:px-5 pb-4 sm:pb-5 text-sm text-slate-600 leading-relaxed">
                         {f.answer}
                       </p>
                     </motion.div>

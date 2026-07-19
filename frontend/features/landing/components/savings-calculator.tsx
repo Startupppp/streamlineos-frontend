@@ -32,17 +32,17 @@ export function SavingsCalculator() {
   const startupAnnual = PRICING_TIERS[1].annual ?? 399;
 
   return (
-    <div className="rounded-2xl border border-slate-200/90 bg-white p-6 sm:p-8 shadow-sm">
-      <div className="mb-8">
+    <div className="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-6 md:p-8 shadow-sm min-w-0">
+      <div className="mb-6 sm:mb-8">
         <label
           htmlFor="seats-slider"
-          className="mb-3 flex items-center justify-between text-sm"
+          className="mb-3 flex items-center justify-between gap-3 text-sm"
         >
-          <span className="inline-flex items-center gap-2 font-medium text-slate-700">
-            <Users className="h-4 w-4 text-slate-400" aria-hidden />
+          <span className="inline-flex items-center gap-2 font-medium text-slate-700 min-w-0">
+            <Users className="h-4 w-4 text-slate-400 shrink-0" aria-hidden />
             Team size
           </span>
-          <span className="font-display text-2xl font-bold tabular-nums text-slate-900">
+          <span className="font-display text-xl sm:text-2xl font-bold tabular-nums text-slate-900 shrink-0">
             {seats}
             <span className="ml-1.5 text-sm font-medium text-slate-500">users</span>
           </span>

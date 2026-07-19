@@ -219,15 +219,16 @@ export default function HRDashboardPage() {
       subtitle="Directory, headcount, and day-to-day people ops"
  variant="display"
       actions={
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="gap-2 h-9" onClick={handleExport}>
+        <div className="flex w-full sm:w-auto flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" className="gap-2 h-9 flex-1 sm:flex-none" onClick={handleExport}>
             <Download className="h-4 w-4" aria-hidden="true" />
-            Export
+            <span className="sm:inline">Export</span>
           </Button>
-          <Button size="sm" className="gap-2 h-9 shadow-sm" asChild>
+          <Button size="sm" className="gap-2 h-9 shadow-sm flex-1 sm:flex-none" asChild>
             <Link href="/hr/onboarding">
               <Plus className="h-4 w-4" aria-hidden="true" />
-              Add Employee
+              <span className="sm:hidden">Add</span>
+              <span className="hidden sm:inline">Add Employee</span>
             </Link>
           </Button>
         </div>
@@ -274,7 +275,7 @@ export default function HRDashboardPage() {
             </>
           }
         >
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+          <div className="grid grid-cols-1 min-[400px]:grid-cols-2 lg:grid-cols-4 gap-2.5">
             <HrQuickAction
               href="/hr/onboarding"
               icon={UserPlus}

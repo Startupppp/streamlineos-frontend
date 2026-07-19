@@ -21,9 +21,11 @@ export function Magnetic({ children, strength = 0.4, className }: Props) {
   return (
     <motion.div
       ref={ref}
-      className={className}
-      style={{ x: tx, y: ty, display: "inline-flex" }}
+      className={className ?? "inline-flex"}
+      style={{ x: tx, y: ty }}
       onMouseMove={(e) => {
+        // Magnetic tilt is pointer-only; skip work on coarse touch devices.
+        if (window.matchMedia("(pointer: coarse)").matches) return;
         const rect = ref.current?.getBoundingClientRect();
         if (!rect) return;
         x.set(e.clientX - rect.left - rect.width / 2);

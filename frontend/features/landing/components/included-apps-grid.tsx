@@ -71,7 +71,7 @@ function AppChip({
       <motion.span
         whileHover={{ rotate: [0, -8, 8, 0] }}
         transition={{ duration: 0.4 }}
-        className="w-7 rounded-md bg-slate-100 group-hover:bg-blue-100 inline-flex items-center justify-center shrink-0 transition-colors"
+        className="h-7 w-7 rounded-md bg-slate-100 group-hover:bg-blue-100 inline-flex items-center justify-center shrink-0 transition-colors"
       >
         <Icon className="h-3.5 w-3.5 text-slate-600 group-hover:text-blue-700" aria-hidden />
       </motion.span>

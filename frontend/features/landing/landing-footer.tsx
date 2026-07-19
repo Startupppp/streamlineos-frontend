@@ -44,16 +44,16 @@ export function LandingFooter() {
       transition={{ duration: 0.6, ease: EASE_OUT }}
       className="relative border-t border-slate-200/80 bg-white/70 backdrop-blur-sm"
     >
-      <div className="container mx-auto px-4 lg:px-8">
-        <MotionStagger className="grid grid-cols-2 md:grid-cols-5 gap-8 py-12">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <MotionStagger className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-5 gap-x-6 gap-y-8 py-10 sm:py-12">
           <MotionItem className="col-span-2 max-w-xs">
             <Link
               href="/"
-              className="flex items-center gap-2.5 mb-4 group"
+              className="flex items-center gap-2.5 mb-4 group min-w-0"
               aria-label={BRAND_NAME}
             >
-              <AnimatedLogo size={36} className="rounded-xl" />
-              <span className="font-display text-lg font-bold tracking-tight text-slate-900">
+              <AnimatedLogo size={36} className="rounded-xl shrink-0" />
+              <span className="font-display text-base sm:text-lg font-bold tracking-tight text-slate-900 truncate">
                 {BRAND_NAME}
               </span>
             </Link>
@@ -70,8 +70,8 @@ export function LandingFooter() {
           </MotionItem>
 
           {footerCols.map((col) => (
-            <MotionItem key={col.title}>
-              <h4 className="text-[11px] font-semibold text-slate-500 mb-4">
+            <MotionItem key={col.title} className="min-w-0">
+              <h4 className="text-[11px] font-semibold text-slate-500 mb-3 sm:mb-4">
                 {col.title}
               </h4>
               <ul className="space-y-2.5">
@@ -90,7 +90,7 @@ export function LandingFooter() {
           ))}
         </MotionStagger>
 
-        <MotionReveal className="border-t border-slate-200/80 py-6 flex flex-col md:flex-row justify-between items-center gap-2">
+        <MotionReveal className="border-t border-slate-200/80 py-5 sm:py-6 flex flex-col sm:flex-row justify-between items-center gap-2 text-center sm:text-left">
           <p className="text-xs font-mono text-slate-400">
             &copy; {new Date().getFullYear()} {BRAND_NAME}. All rights reserved.
           </p>
@@ -121,7 +121,7 @@ function SocialLink({
       whileHover={{ scale: 1.08, y: -2 }}
       whileTap={{ scale: 0.95 }}
       transition={{ type: "spring", stiffness: 400, damping: 20 }}
-      className="w-8 rounded-lg bg-slate-100 hover:bg-blue-50 inline-flex items-center justify-center text-slate-500 hover:text-blue-600 transition-colors"
+      className="h-8 w-8 rounded-lg bg-slate-100 hover:bg-blue-50 inline-flex items-center justify-center text-slate-500 hover:text-blue-600 transition-colors"
     >
       <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
         <path d={d} />

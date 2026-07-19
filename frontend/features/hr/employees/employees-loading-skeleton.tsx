@@ -6,7 +6,7 @@ import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export function EmployeesGridSkeleton({ count = 15 }: { count?: number }) {
   return (
-    <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+    <div className="grid gap-3 grid-cols-1 min-[380px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
       {Array.from({ length: count }).map((_, i) => (
         <div
           key={i}

@@ -28,10 +28,10 @@ const fadeUp: Variants = {
 
 export function LandingHero() {
   return (
-    <section className="relative pt-28 pb-16 lg:pt-32 lg:pb-20 overflow-hidden">
+    <section className="relative pt-24 pb-12 sm:pt-28 sm:pb-16 lg:pt-32 lg:pb-20 overflow-hidden">
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute -top-24 -left-24 h-[420px] w-[420px] rounded-full bg-blue-400/20 blur-[120px]" />
-        <div className="absolute -top-8 right-0 h-[420px] w-[420px] rounded-full bg-cyan-300/20 blur-[120px]" />
+        <div className="absolute -top-24 -left-24 h-[min(420px,70vw)] w-[min(420px,70vw)] rounded-full bg-blue-400/20 blur-[120px]" />
+        <div className="absolute -top-8 right-0 h-[min(420px,70vw)] w-[min(420px,70vw)] rounded-full bg-cyan-300/20 blur-[120px]" />
       </div>
 
       <div
@@ -47,17 +47,17 @@ export function LandingHero() {
         }}
       />
 
-      <div className="container relative mx-auto px-4 lg:px-8 z-10 grid lg:grid-cols-12 gap-10 lg:gap-14 items-center">
-        <div className="lg:col-span-6 text-center lg:text-left">
+      <div className="container relative mx-auto px-4 sm:px-6 lg:px-8 z-10 grid lg:grid-cols-12 gap-8 sm:gap-10 lg:gap-14 items-center">
+        <div className="lg:col-span-6 text-center lg:text-left min-w-0">
           <motion.div
             custom={0}
             initial="hidden"
             animate="visible"
             variants={fadeUp}
-            className="inline-flex items-center gap-2 rounded-full glass-panel px-3.5 py-1.5 mb-6"
+            className="inline-flex items-center gap-2 rounded-full glass-panel px-3.5 py-1.5 mb-5 sm:mb-6 max-w-full"
           >
-            <Sparkles className="h-3 w-3 text-blue-500" />
-            <span className="text-[11px] font-medium text-slate-700">
+            <Sparkles className="h-3 w-3 text-blue-500 shrink-0" />
+            <span className="text-[11px] font-medium text-slate-700 truncate">
               One OS for every team function
             </span>
           </motion.div>
@@ -67,7 +67,7 @@ export function LandingHero() {
             initial="hidden"
             animate="visible"
             variants={fadeUp}
-            className="font-display text-5xl sm:text-6xl lg:text-[4.5rem] xl:text-[5rem] font-extrabold tracking-[-0.03em] leading-[0.98] mb-4 text-slate-900"
+            className="font-display text-[2.125rem] leading-[1.05] sm:text-5xl md:text-6xl lg:text-[4.5rem] xl:text-[5rem] font-extrabold tracking-[-0.03em] sm:leading-[0.98] mb-4 text-slate-900"
           >
             All your business
             <br />
@@ -79,7 +79,7 @@ export function LandingHero() {
             initial="hidden"
             animate="visible"
             variants={fadeUp}
-            className="font-display mx-auto lg:mx-0 mb-2 max-w-xl text-lg sm:text-xl font-bold text-slate-900"
+            className="font-display mx-auto lg:mx-0 mb-2 max-w-xl text-base sm:text-lg md:text-xl font-bold text-slate-900"
           >
             Simple, efficient, yet affordable!
           </motion.p>
@@ -89,7 +89,7 @@ export function LandingHero() {
             initial="hidden"
             animate="visible"
             variants={fadeUp}
-            className="font-sans mx-auto lg:mx-0 mb-6 max-w-xl text-[15px] sm:text-base text-slate-600 leading-relaxed"
+            className="font-sans mx-auto lg:mx-0 mb-6 max-w-xl text-sm sm:text-[15px] md:text-base text-slate-600 leading-relaxed px-1 sm:px-0"
           >
             <span className="font-semibold text-blue-600">
               {cheapestAnnualLabel()}
@@ -105,21 +105,21 @@ export function LandingHero() {
             initial="hidden"
             animate="visible"
             variants={fadeUp}
-            className="flex flex-col sm:flex-row items-center lg:justify-start justify-center gap-3 mb-6"
+            className="flex flex-col sm:flex-row items-stretch sm:items-center lg:justify-start justify-center gap-3 mb-6 w-full sm:w-auto max-w-sm sm:max-w-none mx-auto lg:mx-0"
           >
-            <Magnetic strength={0.35}>
-              <Link href="/signin">
-                <Button size="lg" className="h-12 px-7 text-[15px]">
+            <Magnetic strength={0.35} className="w-full sm:w-auto">
+              <Link href="/signin" className="block w-full sm:w-auto">
+                <Button size="lg" className="h-12 w-full sm:w-auto px-7 text-[15px]">
                   Start now — it&apos;s free
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
             </Magnetic>
-            <a href="#apps">
+            <a href="#apps" className="block w-full sm:w-auto">
               <Button
                 size="lg"
                 variant="outline"
-                className="h-12 px-7 text-[15px]"
+                className="h-12 w-full sm:w-auto px-7 text-[15px]"
               >
                 View all apps
                 <ChevronRight className="ml-1.5 h-4 w-4" />
@@ -132,12 +132,12 @@ export function LandingHero() {
             initial="hidden"
             animate="visible"
             variants={fadeUp}
-            className="flex flex-wrap items-center lg:justify-start justify-center gap-x-5 gap-y-1.5 text-[11px] font-medium text-slate-400"
+            className="flex flex-wrap items-center lg:justify-start justify-center gap-x-4 sm:gap-x-5 gap-y-1.5 text-[11px] font-medium text-slate-400"
           >
             <span>No credit card</span>
-            <span className="h-1 w-1 rounded-full bg-slate-300" />
+            <span className="h-1 w-1 rounded-full bg-slate-300" aria-hidden />
             <span>Instant access</span>
-            <span className="h-1 w-1 rounded-full bg-slate-300" />
+            <span className="h-1 w-1 rounded-full bg-slate-300" aria-hidden />
             <span>Free up to {PRICING.freeSeatLimit} seats</span>
           </motion.div>
 
@@ -146,7 +146,7 @@ export function LandingHero() {
             initial="hidden"
             animate="visible"
             variants={fadeUp}
-            className="mt-8 -mx-4 lg:mx-0 hidden sm:block"
+            className="mt-8 -mx-4 sm:mx-0"
           >
             <Marquee speed={52}>
               <div className="flex gap-2 px-2">
@@ -171,7 +171,7 @@ export function LandingHero() {
           initial={{ opacity: 0, y: 40, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.9, delay: 0.25, ease: EASE_OUT_QUART }}
-          className="lg:col-span-6 relative"
+          className="lg:col-span-6 relative min-w-0 px-0 sm:px-4 md:px-8 lg:px-0"
         >
           <HeroPreview />
         </motion.div>
@@ -182,13 +182,13 @@ export function LandingHero() {
 
 function HeroPreview() {
   return (
-    <div className="relative mx-auto max-w-[560px]">
-      <div className="absolute -inset-6 -z-10 rounded-[2rem] bg-gradient-to-br from-blue-400/25 via-cyan-300/15 to-transparent blur-2xl" />
+    <div className="relative mx-auto w-full max-w-[560px] pb-2 md:pb-10">
+      <div className="absolute -inset-4 sm:-inset-6 -z-10 rounded-[2rem] bg-gradient-to-br from-blue-400/25 via-cyan-300/15 to-transparent blur-2xl" />
 
       <motion.div
         animate={{ y: [-6, 6, -6] }}
         transition={{ duration: 8, ease: "easeInOut", repeat: Infinity }}
-        className="absolute -top-6 -left-10 lg:-left-16 z-20 w-[220px] rounded-2xl glass-panel-strong p-4 shadow-[0_24px_60px_-20px_rgba(30,64,175,0.25)] rotate-[-6deg] hidden sm:block"
+        className="absolute -top-4 -left-2 md:-top-6 md:-left-6 lg:-left-16 z-20 w-[min(200px,42vw)] md:w-[220px] rounded-2xl glass-panel-strong p-3.5 md:p-4 shadow-[0_24px_60px_-20px_rgba(30,64,175,0.25)] rotate-[-6deg] hidden md:block"
       >
         <div className="flex items-center justify-between mb-3">
           <span className="text-[11px] font-medium text-blue-600">
@@ -233,7 +233,7 @@ function HeroPreview() {
       <motion.div
         animate={{ y: [6, -6, 6] }}
         transition={{ duration: 8, ease: "easeInOut", repeat: Infinity }}
-        className="relative z-10 rounded-2xl glass-panel-strong p-6 shadow-[0_30px_80px_-24px_rgba(30,64,175,0.28)]"
+        className="relative z-10 rounded-2xl glass-panel-strong p-4 sm:p-5 md:p-6 shadow-[0_30px_80px_-24px_rgba(30,64,175,0.28)]"
       >
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
@@ -309,7 +309,7 @@ function HeroPreview() {
       <motion.div
         animate={{ y: [-4, 8, -4] }}
         transition={{ duration: 9, ease: "easeInOut", repeat: Infinity }}
-        className="absolute -bottom-8 -right-6 lg:-right-12 z-20 w-[200px] rounded-2xl glass-panel-strong p-4 shadow-[0_24px_60px_-20px_rgba(6,182,212,0.25)] rotate-[5deg] hidden sm:block"
+        className="absolute -bottom-6 -right-2 md:-bottom-8 md:-right-6 lg:-right-12 z-20 w-[min(180px,40vw)] md:w-[200px] rounded-2xl glass-panel-strong p-3.5 md:p-4 shadow-[0_24px_60px_-20px_rgba(6,182,212,0.25)] rotate-[5deg] hidden md:block"
       >
         <div className="flex items-center justify-between mb-3">
           <span className="text-[11px] font-medium text-cyan-600">

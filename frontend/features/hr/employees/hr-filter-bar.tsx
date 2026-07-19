@@ -27,6 +27,9 @@ interface HrFilterBarProps {
   onClearFilters: () => void;
 }
 
+/** Full-width in mobile filter popover; fixed widths on desktop toolbars. */
+const controlClass = "w-full md:w-auto";
+
 export function HrFilterBar({
   searchTerm,
   onSearchChange,
@@ -56,10 +59,16 @@ export function HrFilterBar({
 
   return (
     <>
-      <SearchInput placeholder="Search employees..." value={searchTerm} onValueChange={handleSearchChange} aria-label="Search employees" className="w-[200px]" />
+      <SearchInput
+        placeholder="Search employees..."
+        value={searchTerm}
+        onValueChange={handleSearchChange}
+        aria-label="Search employees"
+        className={cn(controlClass, "md:w-[200px]")}
+      />
 
       <Select value={deptFilter} onValueChange={onDeptChange}>
-        <SelectTrigger className={cn("w-[130px]", FILTER_SELECT_TRIGGER)}>
+        <SelectTrigger className={cn(controlClass, "md:w-[130px]", FILTER_SELECT_TRIGGER)}>
           <SelectValue placeholder="Department" />
         </SelectTrigger>
         <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -73,7 +82,7 @@ export function HrFilterBar({
       </Select>
 
       <Select value={statusFilter} onValueChange={handleStatusChange}>
-        <SelectTrigger className={cn("w-[120px]", FILTER_SELECT_TRIGGER)}>
+        <SelectTrigger className={cn(controlClass, "md:w-[120px]", FILTER_SELECT_TRIGGER)}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -84,7 +93,7 @@ export function HrFilterBar({
       </Select>
 
       <Select value={roleFilter} onValueChange={handleRoleChange}>
-        <SelectTrigger className={cn("w-[120px]", FILTER_SELECT_TRIGGER)}>
+        <SelectTrigger className={cn(controlClass, "md:w-[120px]", FILTER_SELECT_TRIGGER)}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -106,7 +115,7 @@ export function HrFilterBar({
           iconSize={14}
           variant="ghost"
           size="sm"
-          className="px-2 gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors duration-200"
+          className="w-full md:w-auto px-2 gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors duration-200 justify-center"
           onClick={onClearFilters}
           aria-label="Clear filters"
         >

@@ -94,19 +94,19 @@ function PricingCard({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-5% 0px" }}
       transition={{ duration: 0.4, delay: index * 0.04, ease: EASE_OUT }}
-      className={`relative flex flex-col rounded-2xl border bg-white transition-shadow hover:shadow-md ${
+      className={`relative flex flex-col rounded-2xl border bg-white transition-shadow hover:shadow-md min-w-0 ${
         tier.highlight
           ? "border-blue-300 shadow-sm ring-1 ring-blue-200/60"
           : "border-slate-200/90 shadow-sm"
       }`}
     >
       {tier.badge ? (
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-blue-600 px-3 py-0.5 text-[11px] font-semibold text-white tracking-wide">
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-blue-600 px-3 py-0.5 text-[11px] font-semibold text-white tracking-wide whitespace-nowrap">
           {tier.badge}
         </div>
       ) : null}
 
-      <div className="border-b border-slate-100 px-5 pt-6 pb-5">
+      <div className="border-b border-slate-100 px-4 sm:px-5 pt-6 pb-5">
         <h3 className="font-display text-lg font-bold text-slate-900">{tier.name}</h3>
         <p className="mt-0.5 text-xs text-slate-500">{tier.tagline}</p>
 
@@ -123,7 +123,7 @@ function PricingCard({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2, ease: EASE_OUT }}
-              className="font-display text-3xl font-extrabold text-slate-900 tabular-nums leading-none"
+              className="font-display text-2xl sm:text-3xl font-extrabold text-slate-900 tabular-nums leading-none"
             >
               {displayPrice}
             </motion.span>
@@ -140,7 +140,7 @@ function PricingCard({
         ) : null}
       </div>
 
-      <ul className="flex-1 space-y-2.5 px-5 py-5">
+      <ul className="flex-1 space-y-2.5 px-4 sm:px-5 py-5">
         {bullets.map((item) => (
           <li
             key={item}
@@ -156,7 +156,7 @@ function PricingCard({
         ))}
       </ul>
 
-      <div className="space-y-2 px-5 pb-5">
+      <div className="space-y-2 px-4 sm:px-5 pb-5">
         <Link href={tier.ctaHref} className="block">
           <Button
             variant={tier.highlight ? "default" : "outline"}

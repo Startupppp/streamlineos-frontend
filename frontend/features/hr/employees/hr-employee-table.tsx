@@ -96,6 +96,8 @@ export function HrEmployeeTable({
     {
       key: "email",
       header: "Email",
+      headerClassName: "hidden md:table-cell",
+      className: "hidden md:table-cell",
       cell: (user) => (
         <span className="text-xs text-muted-foreground whitespace-nowrap">{user.email}</span>
       ),
@@ -103,6 +105,8 @@ export function HrEmployeeTable({
     {
       key: "role",
       header: "Role",
+      headerClassName: "hidden sm:table-cell",
+      className: "hidden sm:table-cell",
       cell: (user) =>
         user.designation ? (
           <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border whitespace-nowrap">
@@ -115,6 +119,8 @@ export function HrEmployeeTable({
     {
       key: "department",
       header: "Department",
+      headerClassName: "hidden lg:table-cell",
+      className: "hidden lg:table-cell",
       cell: (user) => (
         <span className="text-xs text-muted-foreground whitespace-nowrap">
           {user.department?.name ?? "—"}
@@ -149,8 +155,8 @@ export function HrEmployeeTable({
     {
       key: "actions",
       header: "Actions",
-      headerClassName: "text-right",
-      className: "text-right",
+      headerClassName: "text-right w-[72px]",
+      className: "text-right w-[72px]",
       cell: (user) => {
         const displayName = getDisplayName(user);
         const canTerminate = canDeleteEmployee(
@@ -195,7 +201,8 @@ export function HrEmployeeTable({
           data={employees}
           columns={columns}
           getRowKey={(user) => user.id}
-          minWidth="700px"
+          // Fit available width; columns hide via responsive table-cell classes.
+          minWidth="auto"
           pagination={{
             mode: "server",
             page,
@@ -204,7 +211,7 @@ export function HrEmployeeTable({
             onPageChange,
             onPageSizeChange,
           }}
-          className="border-0 rounded-none flex-1"
+          className="border-0 rounded-none flex-1 min-w-0"
         />
       </CardContent>
     </Card>

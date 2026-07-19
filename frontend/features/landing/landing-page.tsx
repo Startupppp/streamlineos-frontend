@@ -13,10 +13,10 @@ import { LandingPageMotion } from "./landing-page-motion";
 
 export function LandingPage() {
   return (
-    <div className="relative flex min-h-screen flex-col surface-soft text-slate-900 selection:bg-blue-500/20 selection:text-blue-950">
+    <div className="relative flex min-h-screen flex-col overflow-x-hidden surface-soft text-slate-900 selection:bg-blue-500/20 selection:text-blue-950">
       <LandingNav />
       <LandingPageMotion>
-        <main className="flex-1">
+        <main className="flex-1 min-w-0">
           <LandingHero />
           <LandingApps />
           <LandingWalkthrough />

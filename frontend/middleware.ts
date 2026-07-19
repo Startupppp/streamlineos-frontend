@@ -93,7 +93,7 @@ const PROTECTED_ROUTES = [
   "/surveys",
 ];
 
-const AUTH_ROUTES = ["/signin", "/verify-email"];
+const AUTH_ROUTES = ["/signin", "/signup", "/verify-email"];
 
 const ALLOW_AUTHENTICATED = ["/invitation"];
 
