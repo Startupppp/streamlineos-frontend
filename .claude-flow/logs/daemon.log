@@ -850,3 +850,7 @@
 [2026-07-19T02:29:34.324Z] [INFO] Worker audit completed in 2ms
 [2026-07-19T02:37:34.124Z] [INFO] Starting worker: map (1/2 concurrent)
 [2026-07-19T02:37:34.125Z] [ERROR] Worker map failed: UNKNOWN: unknown error, open 'D:\projects\personal\Streamlineos\.claude-flow\metrics\codebase-map.json'
+[2026-07-19T02:39:34.413Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-19T02:39:34.415Z] [INFO] Worker audit completed in 51ms
+[2026-07-19T02:41:34.111Z] [INFO] Starting worker: optimize (1/2 concurrent)
+[2026-07-19T02:41:34.112Z] [INFO] Worker optimize completed in 2ms
