@@ -119,7 +119,7 @@ export function SavingsCalculator() {
         </summary>
         <div className="mt-4 space-y-3 rounded-xl border border-slate-200 bg-slate-50/80 p-4">
           <p className="text-sm leading-relaxed text-slate-600">
-            HR + CRM + Chat + Docs separately (Keka + HubSpot + Slack + Notion) costs ~
+            HR + CRM + Chat + Docs separately (Keka + HubSpot + a chat tool + Notion) costs ~
             {INR(vsStack.stackPerSeat)} per seat.
           </p>
           <div className="grid gap-3 sm:grid-cols-2">

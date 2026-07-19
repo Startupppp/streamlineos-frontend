@@ -60,7 +60,7 @@ export function ExtractTasksCard({
       <Textarea
         value={text}
         onChange={handleTextChange}
-        placeholder="Paste meeting notes, Slack thread, or any unstructured text…"
+        placeholder="Paste meeting notes, a chat thread, or any unstructured text…"
         className="min-h-[80px] resize-none text-[13px]"
         disabled={mutation.isPending}
         aria-label="Text to extract tasks from"

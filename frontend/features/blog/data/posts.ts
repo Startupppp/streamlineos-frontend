@@ -21,11 +21,11 @@ const posts: BlogPost[] = [
     author: { name: "Aditya Challa", role: "Founder" },
     content: `## The problem we kept seeing
 
-Talk to any 20-to-200-person team in India and the operating stack looks identical: Keka or GreytHR for HR, Zoho or HubSpot for CRM, ClickUp or Asana for projects, Slack for chat, Razorpay for billing, Google Workspace for docs, and a graveyard of spreadsheets stitching them together.
+Talk to any 20-to-200-person team in India and the operating stack looks identical: Keka or GreytHR for HR, Zoho or HubSpot for CRM, ClickUp or Asana for projects, a chat tool, Razorpay for billing, Google Workspace for docs, and a graveyard of spreadsheets stitching them together.
 
 The math works out to roughly **₹18,000 to ₹40,000 per employee per year** in seat licenses alone — before anyone has done the work of making those tools agree on who an employee actually is, or whether a candidate, a contractor, and a customer-success owner are the same person.
 
-The deeper problem isn't cost. It's that the **data model is fractured**. An employee record in Keka is a different object than the same person's owner field on a HubSpot deal, which is different again from their @company.com identity in Slack. Every integration is a translation layer. Every report is a join across three SaaS APIs done by hand in a Google Sheet on the last Friday of the month.
+The deeper problem isn't cost. It's that the **data model is fractured**. An employee record in Keka is a different object than the same person's owner field on a HubSpot deal, which is different again from their @company.com identity in the chat tool. Every integration is a translation layer. Every report is a join across three SaaS APIs done by hand in a Google Sheet on the last Friday of the month.
 
 We built StreamlineOS because we believe small teams shouldn't have to glue together five SaaS products to know what's happening in their own company.
 
@@ -81,7 +81,7 @@ Over the next 90 days we're focused on three things:
 
 1. **Get the first 10 paying customers** — primarily 30-to-100-person Indian SaaS companies, agencies, and consultancies. The product fits them best.
 2. **Open the HR + Projects + CRM modules** in sequence, validated with real customer workflows rather than feature checklists.
-3. **Build the integration surface** — Razorpay (done), Google Workspace (in progress), Slack, WhatsApp Business, Zapier.
+3. **Build the integration surface** — Razorpay (done), Google Workspace (in progress), WhatsApp Business, Zapier.
 
 If you're building a team operating system or running one, I'd love to compare notes. Reach out at [founders@streamlineos.in](mailto:founders@streamlineos.in) or via the [contact page](/contact).
 

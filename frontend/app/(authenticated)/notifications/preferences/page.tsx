@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { Bell, Mail, Smartphone, MessageSquare, Slack, Volume2, Moon, BellOff } from "lucide-react";
+import { Bell, Mail, Smartphone, MessageSquare, Volume2, Moon, BellOff } from "lucide-react";
 import { XIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -34,8 +34,6 @@ const CHANNELS = [
   { key: "pushEnabled" as const, label: "Push", description: "Browser & mobile push alerts", icon: Smartphone },
   { key: "smsEnabled" as const, label: "SMS", description: "Text messages to your phone", icon: MessageSquare },
   { key: "whatsappEnabled" as const, label: "WhatsApp", description: "Messages via WhatsApp", icon: MessageSquare },
-  { key: "slackEnabled" as const, label: "Slack", description: "Posts to your Slack workspace", icon: Slack },
-  { key: "teamsEnabled" as const, label: "Teams", description: "Posts to Microsoft Teams", icon: MessageSquare },
   { key: "soundEnabled" as const, label: "Sound", description: "Play sound for new notifications", icon: Volume2 },
 ];
 

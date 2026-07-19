@@ -26,8 +26,6 @@ const CHANNELS: Array<{ value: NotificationChannel; label: string }> = [
   { value: "PUSH", label: "Push" },
   { value: "SMS", label: "SMS" },
   { value: "WHATSAPP", label: "WhatsApp" },
-  { value: "SLACK", label: "Slack" },
-  { value: "TEAMS", label: "Teams" },
   { value: "WEBHOOK", label: "Webhook" },
 ];
 

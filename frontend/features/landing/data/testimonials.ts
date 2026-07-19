@@ -29,7 +29,7 @@ export const testimonials: Testimonial[] = [
   },
   {
     quote:
-      "The realtime chat is sub-100ms — faster than the Slack we were paying $40/user for. Pinning it to the deal context changed how we run handoffs.",
+      "The realtime chat is sub-100ms — faster than the chat tool we were paying $40/user for. Pinning it to the deal context changed how we run handoffs.",
     name: "Ananya Kapoor",
     role: "VP Operations, Lumen",
     initials: "AK",

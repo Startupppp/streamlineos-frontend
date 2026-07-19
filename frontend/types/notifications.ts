@@ -41,8 +41,6 @@ export type NotificationChannel =
   | "PUSH"
   | "SMS"
   | "WHATSAPP"
-  | "SLACK"
-  | "TEAMS"
   | "WEBHOOK";
 export type BroadcastStatus =
   | "DRAFT"
@@ -177,10 +175,8 @@ export interface NotificationPreferences {
   emailEnabled: boolean;
   pushEnabled: boolean;
   smsEnabled: boolean;
-  inAppEnabled: boolean;
-  slackEnabled: boolean;
-  teamsEnabled: boolean;
   whatsappEnabled: boolean;
+  inAppEnabled: boolean;
   soundEnabled: boolean;
   quietHoursStart: string | null;
   quietHoursEnd: string | null;
@@ -196,10 +192,8 @@ export interface UpdatePreferencesInput {
   emailEnabled?: boolean;
   pushEnabled?: boolean;
   smsEnabled?: boolean;
-  inAppEnabled?: boolean;
-  slackEnabled?: boolean;
-  teamsEnabled?: boolean;
   whatsappEnabled?: boolean;
+  inAppEnabled?: boolean;
   soundEnabled?: boolean;
   quietHoursStart?: string | null;
   quietHoursEnd?: string | null;
@@ -213,8 +207,6 @@ export type NotificationProviderName =
   | "SMTP"
   | "TWILIO"
   | "META_WHATSAPP"
-  | "SLACK"
-  | "TEAMS"
   | "WEBHOOK"
   | "WEB_PUSH"
   | "INTERNAL"

@@ -258,7 +258,7 @@ export default function WebhooksPage() {
                 <Label htmlFor="webhook-desc">Description (optional)</Label>
                 <Input
                   id="webhook-desc"
-                  placeholder="e.g. Notify Slack on deal won"
+                  placeholder="e.g. Notify the team on deal won"
                   value={description}
                   onChange={handleDescriptionChange}
                 />

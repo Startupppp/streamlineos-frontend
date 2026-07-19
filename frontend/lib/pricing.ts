@@ -137,7 +137,7 @@ export const COMPETITOR_PRICES = {
   zohoOne: 2500,
   keka: 120,
   hubspotStarter: 1700,
-  slackPro: 365,
+  teamChat: 365,
   notion: 830,
   asana: 915,
   pipedrive: 1160,
@@ -174,7 +174,7 @@ export function calculateSavingsVsStack(seats: number) {
   const stackPerSeat =
     COMPETITOR_PRICES.keka +
     COMPETITOR_PRICES.hubspotStarter +
-    COMPETITOR_PRICES.slackPro +
+    COMPETITOR_PRICES.teamChat +
     COMPETITOR_PRICES.notion;
   const stackAnnual = stackPerSeat * seats * 12;
   const streamlineAnnual = (PRICING_TIERS[1].annual ?? 0) * seats * 12;

@@ -80,8 +80,6 @@ const CHANNELS: Array<{ value: NotificationChannel; label: string }> = [
   { value: "PUSH", label: "Push" },
   { value: "SMS", label: "SMS" },
   { value: "WHATSAPP", label: "WhatsApp" },
-  { value: "SLACK", label: "Slack" },
-  { value: "TEAMS", label: "Teams" },
   { value: "WEBHOOK", label: "Webhook" },
 ];
 
@@ -89,8 +87,6 @@ const PROVIDERS: Array<{ value: NotificationProviderName; label: string }> = [
   { value: "SMTP", label: "SMTP" },
   { value: "TWILIO", label: "Twilio" },
   { value: "META_WHATSAPP", label: "Meta WhatsApp" },
-  { value: "SLACK", label: "Slack" },
-  { value: "TEAMS", label: "Teams" },
   { value: "WEBHOOK", label: "Webhook" },
   { value: "WEB_PUSH", label: "Web Push" },
   { value: "INTERNAL", label: "Internal" },
