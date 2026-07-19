@@ -854,3 +854,12 @@
 [2026-07-19T02:39:34.415Z] [INFO] Worker audit completed in 51ms
 [2026-07-19T02:41:34.111Z] [INFO] Starting worker: optimize (1/2 concurrent)
 [2026-07-19T02:41:34.112Z] [INFO] Worker optimize completed in 2ms
+[2026-07-19T02:43:33.858Z] [INFO] Starting worker: consolidate (1/2 concurrent)
+[2026-07-19T02:43:33.858Z] [INFO] Consolidate worker: distillation skipped (no-db)
+[2026-07-19T02:43:33.859Z] [INFO] Worker consolidate completed in 3ms
+[2026-07-19T02:45:34.001Z] [INFO] Starting worker: testgaps (1/2 concurrent)
+[2026-07-19T02:45:34.002Z] [INFO] Worker testgaps completed in 2ms
+[2026-07-19T02:49:34.420Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-19T02:49:34.421Z] [INFO] Worker audit completed in 3ms
+[2026-07-19T02:52:34.146Z] [INFO] Starting worker: map (1/2 concurrent)
+[2026-07-19T02:52:34.147Z] [INFO] Worker map completed in 4ms
