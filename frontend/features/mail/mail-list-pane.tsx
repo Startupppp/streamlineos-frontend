@@ -8,7 +8,15 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { SearchInput } from "@/components/ui/search-input";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { Inbox, Send, Archive, Trash2, Star, Paperclip, AlertCircle } from "lucide-react";
+import {
+  Inbox,
+  Send,
+  Archive,
+  Trash2,
+  Star,
+  Paperclip,
+  AlertCircle,
+} from "lucide-react";
 import { StarIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { format, isToday, isThisYear, parseISO } from "date-fns";
@@ -18,7 +26,11 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import type { MailFolder, MailMessageSummary, MailAccount } from "@/types/mail";
 
-const FOLDER_NAV: { key: MailFolder; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+const FOLDER_NAV: {
+  key: MailFolder;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+}[] = [
   { key: "inbox", label: "Inbox", icon: Inbox },
   { key: "starred", label: "Starred", icon: Star },
   { key: "sent", label: "Sent", icon: Send },
@@ -37,17 +49,30 @@ interface StarButtonProps {
   messageId: string;
   accountId: number;
   isStarred: boolean;
-  onAction: (messageId: string, accountId: number, action: "star" | "unstar", threadId?: string) => void;
+  onAction: (
+    messageId: string,
+    accountId: number,
+    action: "star" | "unstar",
+    threadId?: string,
+  ) => void;
   threadId?: string | null;
 }
 
 const StarButton = forwardRef<HTMLButtonElement, StarButtonProps>(
-  function StarButton({ messageId, accountId, isStarred, onAction, threadId }, _ref) {
+  function StarButton(
+    { messageId, accountId, isStarred, onAction, threadId },
+    _ref,
+  ) {
     const { iconRef, hoverHandlers } = useAnimatedIcon();
     const handleClick = useCallback(
       (e: React.MouseEvent) => {
         e.stopPropagation();
-        onAction(messageId, accountId, isStarred ? "unstar" : "star", threadId ?? undefined);
+        onAction(
+          messageId,
+          accountId,
+          isStarred ? "unstar" : "star",
+          threadId ?? undefined,
+        );
       },
       [messageId, accountId, isStarred, onAction, threadId],
     );
@@ -57,7 +82,9 @@ const StarButton = forwardRef<HTMLButtonElement, StarButtonProps>(
         aria-label={isStarred ? "Unstar" : "Star"}
         className={cn(
           "flex items-center justify-center h-6 w-6 rounded transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-          isStarred ? "text-amber-500" : "text-muted-foreground hover:text-foreground",
+          isStarred
+            ? "text-amber-500"
+            : "text-muted-foreground hover:text-foreground",
         )}
         onClick={handleClick}
         {...hoverHandlers}
@@ -73,11 +100,19 @@ interface QuickActionsProps {
   accountId: number;
   threadId?: string | null;
   folder: MailFolder;
-  onAction: (messageId: string, accountId: number, action: "archive" | "trash", threadId?: string) => void;
+  onAction: (
+    messageId: string,
+    accountId: number,
+    action: "archive" | "trash",
+    threadId?: string,
+  ) => void;
 }
 
 const QuickActions = forwardRef<HTMLDivElement, QuickActionsProps>(
-  function QuickActions({ messageId, accountId, threadId, folder, onAction }, _ref) {
+  function QuickActions(
+    { messageId, accountId, threadId, folder, onAction },
+    _ref,
+  ) {
     const handleArchive = useCallback(
       (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -124,13 +159,27 @@ interface MessageRowProps {
   isSelected: boolean;
   folder: MailFolder;
   onSelect: (message: MailMessageSummary) => void;
-  onAction: (messageId: string, accountId: number, action: "star" | "unstar" | "archive" | "trash", threadId?: string) => void;
+  onAction: (
+    messageId: string,
+    accountId: number,
+    action: "star" | "unstar" | "archive" | "trash",
+    threadId?: string,
+  ) => void;
 }
 
-function MessageRow({ message, isSelected, folder, onSelect, onAction }: MessageRowProps) {
+function MessageRow({
+  message,
+  isSelected,
+  folder,
+  onSelect,
+  onAction,
+}: MessageRowProps) {
   const [isHovered, setIsHovered] = useState(false);
 
-  const handleSelect = useCallback(() => onSelect(message), [message, onSelect]);
+  const handleSelect = useCallback(
+    () => onSelect(message),
+    [message, onSelect],
+  );
   const handleMouseEnter = useCallback(() => setIsHovered(true), []);
   const handleMouseLeave = useCallback(() => setIsHovered(false), []);
 
@@ -141,25 +190,32 @@ function MessageRow({ message, isSelected, folder, onSelect, onAction }: Message
       type="button"
       className={cn(
         "w-full text-left px-3 py-2.5 border-b border-border/30 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring",
-        isSelected ? "bg-primary/10 border-l-2 border-l-primary" : "hover:bg-muted/50",
+        isSelected
+          ? "bg-primary/10 border-l-2 border-l-primary"
+          : "hover:bg-muted/50",
         !message.isRead && !isSelected && "bg-primary/5",
       )}
       onClick={handleSelect}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       aria-label={`Message from ${senderLabel}: ${message.subject}`}
-      aria-selected={isSelected}
+      aria-current={isSelected ? "true" : undefined}
     >
       <div className="flex items-start justify-between gap-1.5 min-w-0">
         <div className="flex items-center gap-1.5 min-w-0 flex-1">
           {!message.isRead && (
-            <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0 mt-1" aria-hidden />
+            <span
+              className="h-1.5 w-1.5 rounded-full bg-primary shrink-0 mt-1"
+              aria-hidden
+            />
           )}
           <TruncatedText
             text={senderLabel}
             className={cn(
               "text-[13px] min-w-0",
-              !message.isRead ? "font-semibold text-foreground" : "font-medium text-foreground/80",
+              !message.isRead
+                ? "font-semibold text-foreground"
+                : "font-medium text-foreground/80",
             )}
           />
         </div>
@@ -173,7 +229,12 @@ function MessageRow({ message, isSelected, folder, onSelect, onAction }: Message
               onAction={onAction}
             />
           ) : (
-            <span className={cn("text-[11px] text-muted-foreground", !message.isRead && "font-medium text-foreground/70")}>
+            <span
+              className={cn(
+                "text-[11px] text-muted-foreground",
+                !message.isRead && "font-medium text-foreground/70",
+              )}
+            >
               {formatMessageDate(message.date)}
             </span>
           )}
@@ -185,11 +246,16 @@ function MessageRow({ message, isSelected, folder, onSelect, onAction }: Message
           text={message.subject}
           className={cn(
             "text-[12px] flex-1 min-w-0",
-            !message.isRead ? "font-semibold text-foreground" : "text-foreground/70",
+            !message.isRead
+              ? "font-semibold text-foreground"
+              : "text-foreground/70",
           )}
         />
         {message.hasAttachments && (
-          <Paperclip className="h-3 w-3 text-muted-foreground shrink-0" aria-hidden />
+          <Paperclip
+            className="h-3 w-3 text-muted-foreground shrink-0"
+            aria-hidden
+          />
         )}
       </div>
 
@@ -249,9 +315,21 @@ export function MailListPane({
   const accountErrors = data?.pages[0]?.accountErrors ?? [];
 
   const handleAction = useCallback(
-    (messageId: string, accountId: number, action: "star" | "unstar" | "archive" | "trash", threadId?: string) => {
+    (
+      messageId: string,
+      accountId: number,
+      action: "star" | "unstar" | "archive" | "trash",
+      threadId?: string,
+    ) => {
       mailAction.mutate(
-        { messageId, body: { accountId, action, ...(threadId !== undefined && { threadId }) } },
+        {
+          messageId,
+          body: {
+            accountId,
+            action,
+            ...(threadId !== undefined && { threadId }),
+          },
+        },
         {
           onError: (err) => toast.error(getErrorMessage(err)),
         },
@@ -296,7 +374,10 @@ export function MailListPane({
         />
       </div>
 
-      <nav className="flex flex-col gap-0.5 px-2 py-1.5 border-b border-border/20 shrink-0" aria-label="Mail folders">
+      <nav
+        className="flex flex-col gap-0.5 px-2 py-1.5 border-b border-border/20 shrink-0"
+        aria-label="Mail folders"
+      >
         {FOLDER_NAV.map((folder) => {
           const Icon = folder.icon;
           return (
@@ -326,7 +407,10 @@ export function MailListPane({
               key={ae.accountId}
               className="flex items-start gap-2 rounded-md bg-destructive/10 border border-destructive/20 px-2 py-1.5"
             >
-              <AlertCircle className="h-3.5 w-3.5 text-destructive shrink-0 mt-0.5" aria-hidden />
+              <AlertCircle
+                className="h-3.5 w-3.5 text-destructive shrink-0 mt-0.5"
+                aria-hidden
+              />
               <div className="min-w-0">
                 <p className="text-[11px] font-medium text-destructive">
                   {ae.accountEmail ?? `Account ${ae.accountId}`}
@@ -361,7 +445,9 @@ export function MailListPane({
           </div>
         ) : isError ? (
           <div className="flex flex-col items-center justify-center gap-2 py-8 px-4 text-center">
-            <p className="text-sm text-muted-foreground">{getErrorMessage(error)}</p>
+            <p className="text-sm text-muted-foreground">
+              {getErrorMessage(error)}
+            </p>
           </div>
         ) : allMessages.length === 0 ? (
           <div className="flex-1 h-full flex items-center justify-center p-4">
@@ -369,8 +455,14 @@ export function MailListPane({
               compact
               illustrationPreset="mail"
               illustrationSize="sm"
-              title={debouncedSearch ? "No messages found" : `No messages in ${activeFolder}`}
-              description={debouncedSearch ? "Try different search terms." : undefined}
+              title={
+                debouncedSearch
+                  ? "No messages found"
+                  : `No messages in ${activeFolder}`
+              }
+              description={
+                debouncedSearch ? "Try different search terms." : undefined
+              }
             />
           </div>
         ) : (

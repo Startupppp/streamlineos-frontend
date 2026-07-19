@@ -102,6 +102,57 @@ export function useReplyMail() {
   });
 }
 
+interface MailInboxSummaryHighlight {
+  subject: string;
+  fromEmail: string;
+  reason: string;
+}
+
+interface MailInboxSummaryResult {
+  summary: string;
+  highlights: MailInboxSummaryHighlight[];
+  actionItems: string[];
+}
+
+interface MailThreadSummaryResult {
+  summary: string;
+  actionItems: string[];
+  suggestedReply: string;
+}
+
+interface MailAiDraftResult {
+  subject: string;
+  bodyHtml: string;
+}
+
+export function useMailInboxSummary() {
+  return useMutation({
+    mutationKey: ["mail", "ai", "inbox-summary"],
+    mutationFn: (params: { accountId?: number | "all" }) =>
+      apiClient.post<MailInboxSummaryResult>("/mail/ai/inbox-summary", params),
+  });
+}
+
+export function useMailThreadSummary() {
+  return useMutation({
+    mutationKey: ["mail", "ai", "thread-summary"],
+    mutationFn: (params: { accountId: number; threadId: string }) =>
+      apiClient.post<MailThreadSummaryResult>("/mail/ai/thread-summary", params),
+  });
+}
+
+export function useMailAiDraft() {
+  return useMutation({
+    mutationKey: ["mail", "ai", "draft"],
+    mutationFn: (params: {
+      mode: "compose" | "reply";
+      instruction: string;
+      accountId?: number;
+      threadId?: string;
+    }) => apiClient.post<MailAiDraftResult>("/mail/ai/draft", params),
+  });
+}
+
 export function useMailAction() {
   const qc = useQueryClient();
   return useMutation({
