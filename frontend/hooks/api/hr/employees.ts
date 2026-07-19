@@ -46,6 +46,8 @@ export type HrEmployeesParams = {
   search?: string;
   departmentId?: number;
   isActive?: "true" | "false" | "all";
+  /** Server-side role filter (users.role). */
+  role?: string;
 };
 
 /**

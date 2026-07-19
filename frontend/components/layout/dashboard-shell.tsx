@@ -25,6 +25,14 @@ const SuccessChecklist = dynamic(
   { ssr: false },
 );
 
+const WelcomeToast = dynamic(
+  () =>
+    import("@/components/workspace-onboarding/welcome-toast").then(
+      (m) => m.WelcomeToast,
+    ),
+  { ssr: false },
+)
+
 const ChatUnreadNotifications = dynamic(
   () =>
     import("@/components/chat/chat-unread-notifications").then(
@@ -150,6 +158,7 @@ export function DashboardShell({
               >
                 <div className="flex-1 min-h-0 overflow-auto flex flex-col pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
                   {children}
+                  <WelcomeToast />
                   <SuccessChecklist />
                 </div>
               </main>

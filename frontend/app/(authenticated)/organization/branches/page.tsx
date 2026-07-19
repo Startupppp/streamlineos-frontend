@@ -58,7 +58,12 @@ import { RequireModule } from "@/components/auth/require-module";
 const NO_BUSINESS_UNIT = "none";
 
 const formSchema = z.object({
-  name: z.string().trim().min(1, "Name is required").max(100),
+  name: z
+    .string()
+    .trim()
+    .min(1, "Name is required")
+    .max(100)
+    .refine((v) => /[\p{L}\p{N}]/u.test(v), "Name must contain at least one letter or number"),
   code: z
     .string()
     .trim()
@@ -346,7 +351,10 @@ export default function OrgBranchesPage() {
       update.mutate(
         { id: b.id, status: "ARCHIVED" },
         {
-          onSuccess: () => toast.success("Branch archived"),
+          onSuccess: () => {
+            toast.success("Branch archived");
+            setShowArchived(true);
+          },
           onError: (err) => toast.error(getApiError(err)),
         },
       );
@@ -359,7 +367,10 @@ export default function OrgBranchesPage() {
       update.mutate(
         { id: b.id, status: "ACTIVE" },
         {
-          onSuccess: () => toast.success("Branch restored"),
+          onSuccess: () => {
+            toast.success("Branch restored");
+            setShowArchived(false);
+          },
           onError: (err) => toast.error(getApiError(err)),
         },
       );
@@ -500,25 +511,30 @@ export default function OrgBranchesPage() {
       title="Branches"
       subtitle="Branches within your organization."
       actions={
-        <AnimatedIconButton
-          icon={PlusIcon}
-          iconSize={16}
-          iconClassName="mr-1.5"
-          size="sm"
-          onClick={handleOpenCreate}
-        >
-          Add Branch
-        </AnimatedIconButton>
+        <div className="flex items-center gap-2">
+          <Button
+            variant={showArchived ? "secondary" : "outline"}
+            size="sm"
+            className="text-xs"
+            onClick={handleToggleArchived}
+          >
+            <Archive className="h-4 w-4 mr-1.5" />
+            {showArchived ? "Show Active" : `Archived (${archived.length})`}
+          </Button>
+          <AnimatedIconButton
+            icon={PlusIcon}
+            iconSize={16}
+            iconClassName="mr-1.5"
+            size="sm"
+            onClick={handleOpenCreate}
+          >
+            Add Branch
+          </AnimatedIconButton>
+        </div>
       }
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
           <SearchInput placeholder="Search branches…" value={search} onValueChange={handleSearchInputChange} />
-          {archived.length > 0 && (
-            <Button variant="outline" size="sm" className="text-xs" onClick={handleToggleArchived}>
-              <Archive className="h-4 w-4 mr-1.5" />
-              {showArchived ? "Show Active" : `Archived (${archived.length})`}
-            </Button>
-          )}
         </div>
       }
     >

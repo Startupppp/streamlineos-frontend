@@ -151,7 +151,8 @@ export function PageWrapper({
           )}
           <div
             className={cn(
-              "w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain scrollbar-hide [&>*]:shrink-0 pb-3 sm:gap-3",
+              // Horizontal filter toolbar: fixed-size controls, no full-width search steal.
+              "w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain scrollbar-hide touch-pan-x pb-3 sm:gap-2.5",
               PAGE_CHROME_X,
               mobileFiltersInline ? "flex" : desktopFiltersClass,
               filtersClassName,
@@ -183,7 +184,7 @@ export function PageWrapper({
         >
           <div
             className={cn(
-              "flex min-h-full flex-col overscroll-contain",
+              "flex min-h-full w-full flex-col overscroll-contain",
               PAGE_CHROME_X,
               PAGE_CHROME_BOTTOM,
             )}

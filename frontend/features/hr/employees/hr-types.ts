@@ -12,7 +12,11 @@ export interface Employee {
 }
 
 export type UserRole = string;
+
+/** @deprecated Use EmployeeStatusFilter from employee-list-filters */
 export type StatusFilter = "All" | "Active" | "Inactive";
+
+/** @deprecated Use role string + "all" from employee-list-filters */
 export type RoleFilter =
   | "All"
   | "CEO"
@@ -23,6 +27,8 @@ export type RoleFilter =
   | "DESIGN"
   | "VIDEO_EDITOR"
   | "DIGITAL_MARKETING";
+
+export type { EmployeeStatusFilter } from "./employee-list-filters";
 
 export const ROLE_LABELS: Record<string, string> = {
   CEO: "CEO",

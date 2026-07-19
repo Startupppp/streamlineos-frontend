@@ -363,7 +363,7 @@ export default function MovementsPage() {
               </SelectContent>
             </Select>
             <Select value={dirFilter} onValueChange={handleDirChange}>
-              <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "text-xs w-[120px]")}>
+              <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "text-xs w-28")}>
                 <SelectValue placeholder="Direction" />
               </SelectTrigger>
               <SelectContent>
@@ -386,7 +386,7 @@ export default function MovementsPage() {
               </SelectContent>
             </Select>
             <Select value={datePreset} onValueChange={handleDatePresetChange}>
-              <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "text-xs w-[130px]")}>
+              <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "text-xs w-32")}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

@@ -76,9 +76,13 @@ export function HrHero({
         className="pointer-events-none absolute -bottom-8 right-20 h-24 w-24 rounded-full border border-sky-200/40 dark:border-sky-400/10"
       />
 
-      <div className="relative p-4 sm:p-6 lg:p-7">
-        <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="min-w-0 max-w-2xl">
+      <div className="relative p-4 sm:p-5 md:p-6 lg:p-7">
+        {/*
+          Stack header until lg: with the app sidebar, sm/md widths (~700–900px
+          content) are too tight for title + actions side-by-side.
+        */}
+        <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-end lg:justify-between lg:gap-6">
+          <div className="min-w-0 max-w-2xl flex-1">
             {eyebrow && (
               <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-600/80 dark:text-blue-300/80 mb-1.5">
                 {eyebrow}
@@ -88,13 +92,13 @@ export function HrHero({
               {title}
             </h2>
             {description && (
-              <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed text-pretty">
+              <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed text-pretty max-w-prose">
                 {description}
               </p>
             )}
           </div>
           {actions && (
-            <div className="flex flex-wrap items-center gap-2 shrink-0 w-full sm:w-auto">
+            <div className="flex min-w-0 w-full flex-wrap items-stretch gap-2 sm:items-center lg:w-auto lg:shrink-0 lg:justify-end">
               {actions}
             </div>
           )}
@@ -135,7 +139,7 @@ export function HrQuickAction({
     <Link
       href={href}
       className={cn(
-        "group relative flex items-start gap-3 rounded-2xl border border-border/70 bg-card p-3.5 sm:p-4",
+        "group relative flex min-w-0 items-start gap-2.5 rounded-2xl border border-border/70 bg-card p-3 sm:gap-3 sm:p-3.5 md:p-4",
         "shadow-sm transition-all duration-300",
         "hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-16px_rgba(15,23,42,0.25)]",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
@@ -143,19 +147,19 @@ export function HrQuickAction({
     >
       <div
         className={cn(
-          "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br border border-transparent",
+          "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br border border-transparent sm:h-10 sm:w-10",
           tones[tone],
         )}
       >
-        <Icon className="h-4.5 w-4.5 h-4 w-4" />
+        <Icon className="h-4 w-4" />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1">
-          <p className="text-sm font-semibold text-foreground truncate">{label}</p>
-          <ArrowRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 -translate-x-1 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0" />
+        <div className="flex min-w-0 items-center gap-1">
+          <p className="truncate text-sm font-semibold text-foreground">{label}</p>
+          <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-0 -translate-x-1 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0" />
         </div>
         {description && (
-          <p className="mt-0.5 text-[11px] text-muted-foreground leading-snug line-clamp-2">
+          <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground line-clamp-2 sm:line-clamp-1 md:line-clamp-2">
             {description}
           </p>
         )}
@@ -319,7 +323,7 @@ export function HrIconWell({
   );
 }
 
-/** Page content container — threads the fill-chain from PageWrapper to the primary data region */
+/** Page content container — natural height so PageWrapper ScrollArea can scroll */
 export function HrPageContent({
   children,
   className,
@@ -330,7 +334,7 @@ export function HrPageContent({
   return (
     <div
       className={cn(
-        "flex flex-1 min-h-0 min-w-0 flex-col gap-4 sm:gap-5 overflow-x-hidden",
+        "flex w-full min-w-0 flex-col gap-4 sm:gap-5 overflow-x-hidden [&>*]:shrink-0",
         className,
       )}
     >

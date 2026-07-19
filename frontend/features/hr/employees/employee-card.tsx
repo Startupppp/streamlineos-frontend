@@ -5,7 +5,6 @@ import { Mail, Building2, Briefcase } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { HrStatusBadge } from "@/features/hr/shared/hr-ui";
-import { ROLE_LABELS } from "@/features/hr/employees/hr-types";
 import { resolveImageUrl, cn } from "@/lib/utils";
 import type { Employee } from "@/types/hr";
 
@@ -14,18 +13,13 @@ interface EmployeeCardProps {
   department: string | null;
 }
 
-function formatRoleLabel(role: string | null | undefined): string | null {
-  if (!role?.trim()) return null;
-  return ROLE_LABELS[role] ?? role.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
 export function EmployeeCard({ employee: emp, department }: EmployeeCardProps) {
   const displayName =
     emp.firstName && emp.lastName
       ? `${emp.firstName} ${emp.lastName}`
       : (emp.name ?? "—");
   const initial = (emp.firstName?.[0] ?? emp.name?.[0] ?? "?").toUpperCase();
-  const roleLabel = formatRoleLabel(emp.role);
+  const designation = emp.designation?.trim() || null;
 
   return (
     <Link
@@ -49,25 +43,19 @@ export function EmployeeCard({ employee: emp, department }: EmployeeCardProps) {
             </AvatarFallback>
           </Avatar>
 
-          <div className="w-full space-y-0.5 min-w-0">
+          <div className="w-full min-w-0">
             <TruncatedText
               text={displayName}
               className="font-semibold text-sm leading-tight text-foreground"
             />
-            {emp.designation && (
-              <TruncatedText
-                text={emp.designation}
-                className="text-[11px] text-muted-foreground"
-              />
-            )}
           </div>
 
-          {(roleLabel || department) && (
+          {(designation || department) && (
             <div className="flex flex-wrap items-center justify-center gap-1.5 max-w-full">
-              {roleLabel && (
+              {designation && (
                 <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border max-w-full">
                   <Briefcase className="h-3 w-3 shrink-0" />
-                  <TruncatedText text={roleLabel} className="text-[10px] font-semibold" />
+                  <TruncatedText text={designation} className="text-[10px] font-semibold" />
                 </span>
               )}
               {department && (

@@ -23,6 +23,7 @@ import { downloadXlsx } from "@/lib/export/xlsx-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { useBulkOnboardEmployees, useHrDepartments } from "@/hooks/api/hr";
+import { useOrgDepartments } from "@/hooks/api/org-hierarchy";
 import type { BulkOnboardEmployeeRow, BulkOnboardResult } from "@/types/hr";
 
 /** Canonical template columns — keep in sync with backend bulkOnboardEmployeeRowSchema. */
@@ -166,10 +167,24 @@ function validateAndMap(
   if (!designation) errors.push("designation is required");
   if (!department) errors.push("department is required");
   else if (deptNames.size > 0 && !deptNames.has(department.toLowerCase()) && !/^\d+$/.test(department)) {
-    errors.push(`unknown department "${department}"`);
+    errors.push(`unknown department "${department}" — use an Organization department name or code`);
   }
   if (genderRaw && !GENDER_VALUES.has(genderRaw)) {
     errors.push("gender must be MALE, FEMALE, or OTHER");
+  }
+
+  if (dateOfBirth) {
+    const dob = /^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth)
+      ? new Date(`${dateOfBirth}T00:00:00`)
+      : new Date(dateOfBirth);
+    const minAgeMs = 16 * 365.25 * 24 * 60 * 60 * 1000;
+    if (Number.isNaN(dob.getTime())) {
+      errors.push("invalid dateOfBirth (use YYYY-MM-DD)");
+    } else if (dob >= new Date()) {
+      errors.push("dateOfBirth cannot be in the future");
+    } else if (Date.now() - dob.getTime() < minAgeMs) {
+      errors.push("Employee must be at least 16 years old");
+    }
   }
 
   let monthlySalary: number | undefined;
@@ -280,16 +295,23 @@ async function parseFile(file: File): Promise<ParsedRow[]> {
 }
 
 /** Normalize ExcelJS cell values (dates, rich text, formulas) to plain strings. */
+function formatLocalDate(value: Date): string {
+  const y = value.getFullYear();
+  const m = String(value.getMonth() + 1).padStart(2, "0");
+  const d = String(value.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
 function excelCellToString(cell: { text?: string; value?: unknown }): string {
   const value = cell.value;
   if (value == null || value === "") return "";
   if (value instanceof Date) {
-    // Prefer ISO date portion for DOB / joiningDate columns
-    return value.toISOString().slice(0, 10);
+    // Local calendar date — toISOString() shifts DOB/joiningDate in non-UTC zones
+    return formatLocalDate(value);
   }
   if (typeof value === "object" && value !== null && "result" in value) {
     const result = (value as { result?: unknown }).result;
-    if (result instanceof Date) return result.toISOString().slice(0, 10);
+    if (result instanceof Date) return formatLocalDate(result);
     if (result != null) return String(result).trim();
   }
   if (typeof value === "object" && value !== null && "text" in value) {
@@ -394,6 +416,7 @@ export async function downloadBulkOnboardTemplate(departmentNames: string[] = []
 export function BulkOnboardPanel() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { data: departments } = useHrDepartments();
+  const { data: orgDepartments } = useOrgDepartments({ limit: 200, status: "ACTIVE" });
   const bulkOnboard = useBulkOnboardEmployees();
 
   const [step, setStep] = useState<Step>("upload");
@@ -403,15 +426,28 @@ export function BulkOnboardPanel() {
   const [result, setResult] = useState<BulkOnboardResult | null>(null);
   const [parsing, setParsing] = useState(false);
 
-  const deptNames = useMemo(
-    () => new Set((departments ?? []).map((d) => d.name.trim().toLowerCase())),
-    [departments],
-  );
+  const deptNames = useMemo(() => {
+    const names = new Set<string>();
+    for (const d of departments ?? []) {
+      if (d.name?.trim()) names.add(d.name.trim().toLowerCase());
+    }
+    for (const d of orgDepartments?.data ?? []) {
+      if (d.name?.trim()) names.add(d.name.trim().toLowerCase());
+      if (d.code?.trim()) names.add(d.code.trim().toLowerCase());
+    }
+    return names;
+  }, [departments, orgDepartments?.data]);
 
-  const deptNameList = useMemo(
-    () => (departments ?? []).map((d) => d.name).sort((a, b) => a.localeCompare(b)),
-    [departments],
-  );
+  const deptNameList = useMemo(() => {
+    const labels = new Set<string>();
+    for (const d of departments ?? []) {
+      if (d.name?.trim()) labels.add(d.name.trim());
+    }
+    for (const d of orgDepartments?.data ?? []) {
+      if (d.name?.trim()) labels.add(d.name.trim());
+    }
+    return [...labels].sort((a, b) => a.localeCompare(b));
+  }, [departments, orgDepartments?.data]);
 
   const validCount = useMemo(() => previewRows.filter((r) => r.valid).length, [previewRows]);
   const invalidCount = previewRows.length - validCount;

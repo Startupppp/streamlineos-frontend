@@ -10,6 +10,8 @@ import {
   getUserDisplayName,
   type NamedUser,
 } from "@/features/projects/shared/resolve-user-name";
+import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyLeaderboardIllustration } from "@/components/illustrations";
 
 const GRID_LABELS: Record<string, { label: string; bg: string }> = {
   "3-3": { label: "Star", bg: "bg-blue-50 border-blue-200 dark:bg-blue-500/10 dark:border-blue-500/30" },
@@ -94,9 +96,11 @@ export function NineBoxGrid() {
           })}
         </div>
       ) : (
-        <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">
-          Select a review cycle to view the 9-box grid
-        </div>
+        <EmptyState
+          illustration={<EmptyLeaderboardIllustration className="h-full w-full" />}
+          title="No 9-box data yet"
+          description="Select a review cycle above to view the performance vs potential grid."
+        />
       )}
     </div>
   );

@@ -359,7 +359,7 @@ export default function AuditLogPage() {
         </SelectContent>
       </Select>
       <Select value={targetTypeFilter} onValueChange={handleTargetTypeFilter}>
-        <SelectTrigger className={`w-[130px] ${FILTER_SELECT_TRIGGER}`}>
+        <SelectTrigger className={`w-32 ${FILTER_SELECT_TRIGGER}`}>
           <SelectValue placeholder="All types" />
         </SelectTrigger>
         <SelectContent>

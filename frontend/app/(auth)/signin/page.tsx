@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -115,6 +116,16 @@ export default function SignInPage() {
         )}
 
         <PasswordlessSigninForm getCallbackUrl={getCallbackUrl} />
+
+        <p className="text-center text-[13px] text-muted-foreground">
+          Don&apos;t have an account?{" "}
+          <Link
+            href="/signup"
+            className="font-medium text-foreground underline-offset-2 hover:underline"
+          >
+            Sign up
+          </Link>
+        </p>
 
         <p className="text-[11px] text-muted-foreground/50 text-center leading-relaxed">
           Encrypted in transit over TLS. Sessions are signed and rotated.

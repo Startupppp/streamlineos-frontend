@@ -12,7 +12,7 @@ export const PAGE_CHROME_X = "px-4 sm:px-6 lg:px-8";
 export const PAGE_CHROME_BOTTOM = "pb-2";
 
 export const FILTER_SELECT_TRIGGER =
-  "border-input bg-card text-foreground [&_svg:not([class*='text-'])]:text-muted-foreground";
+  "border-input bg-card text-foreground [&_svg]:text-muted-foreground";
 
 export const FILTER_TOOLBAR_ROW =
   "flex w-full min-w-0 max-w-full flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain scrollbar-hide touch-pan-x [&>*]:shrink-0";

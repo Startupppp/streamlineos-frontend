@@ -408,7 +408,7 @@ export default function JobPostingsPage() {
         filters={
           <div className={FILTER_TOOLBAR_ROW}>
             <Select value={statusFilter ?? "ALL"} onValueChange={handleStatusFilterChange}>
-              <SelectTrigger className={cn("w-[130px]", FILTER_SELECT_TRIGGER)}>
+              <SelectTrigger className={cn("w-32", FILTER_SELECT_TRIGGER)}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
@@ -418,7 +418,7 @@ export default function JobPostingsPage() {
               </SelectContent>
             </Select>
             <Select value={visibilityFilter ?? "ALL"} onValueChange={handleVisibilityFilterChange}>
-              <SelectTrigger className={cn("w-[140px]", FILTER_SELECT_TRIGGER)}>
+              <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="min-w-[var(--radix-select-trigger-width)]">

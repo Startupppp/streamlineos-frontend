@@ -147,7 +147,7 @@ export default function QuestionBankPage() {
             </SelectContent>
           </Select>
           <Select value={difficulty} onValueChange={setDifficulty}>
-            <SelectTrigger className={cn("w-[120px]", FILTER_SELECT_TRIGGER)}>
+            <SelectTrigger className={cn("w-28", FILTER_SELECT_TRIGGER)}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="min-w-[var(--radix-select-trigger-width)]">

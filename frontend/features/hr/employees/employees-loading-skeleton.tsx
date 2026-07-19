@@ -37,10 +37,10 @@ export function EmployeesLoadingSkeleton() {
       }
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
-          <Skeleton className="h-9 w-[200px] rounded-md" />
-          <Skeleton className="h-9 w-[130px] rounded-md" />
-          <Skeleton className="h-9 w-[120px] rounded-md" />
-          <Skeleton className="h-9 w-[120px] rounded-md" />
+          <Skeleton className="h-9 w-48 rounded-md" />
+          <Skeleton className="h-9 w-32 rounded-md" />
+          <Skeleton className="h-9 w-28 rounded-md" />
+          <Skeleton className="h-9 w-28 rounded-md" />
         </div>
       }
     >

@@ -36,12 +36,13 @@ export const useOrgMembers = (
     "queryKey" | "queryFn"
   >
 ) => {
+  const safeLimit = Math.min(Math.max(limit, 1), 200);
   return useQuery<MembersResponse, Error>({
-    queryKey: [...queryKeys.organization.members(), { page, limit, search }] as const,
+    queryKey: [...queryKeys.organization.members(), { page, limit: safeLimit, search }] as const,
     queryFn: () =>
       apiClient.get<MembersResponse>("/organization/members", {
         page: String(page),
-        limit: String(limit),
+        limit: String(safeLimit),
         ...(search ? { search } : {}),
       }),
     staleTime: 30_000,

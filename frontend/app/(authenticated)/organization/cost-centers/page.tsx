@@ -53,7 +53,12 @@ const formSchema = z.object({
     .min(2)
     .max(20)
     .regex(/^[A-Za-z0-9]+$/, "Only alphanumeric characters"),
-  name: z.string().trim().min(1, "Name is required").max(100),
+  name: z
+    .string()
+    .trim()
+    .min(1, "Name is required")
+    .max(100)
+    .refine((v) => /[\p{L}\p{N}]/u.test(v), "Name must contain at least one letter or number"),
   description: z.string().trim().max(500).optional(),
 });
 
@@ -191,7 +196,10 @@ export default function OrgCostCentersPage() {
       update.mutate(
         { id: c.id, status: "ARCHIVED" },
         {
-          onSuccess: () => toast.success("Cost center archived"),
+          onSuccess: () => {
+            toast.success("Cost center archived");
+            setShowArchived(true);
+          },
           onError: (err) => toast.error(getApiError(err)),
         },
       );
@@ -204,7 +212,10 @@ export default function OrgCostCentersPage() {
       update.mutate(
         { id: c.id, status: "ACTIVE" },
         {
-          onSuccess: () => toast.success("Cost center restored"),
+          onSuccess: () => {
+            toast.success("Cost center restored");
+            setShowArchived(false);
+          },
           onError: (err) => toast.error(getApiError(err)),
         },
       );
@@ -346,19 +357,24 @@ export default function OrgCostCentersPage() {
       title="Cost Centers"
       subtitle="Cost centers for expense tracking."
       actions={
-        <AnimatedIconButton icon={PlusIcon} iconSize={16} iconClassName="mr-1.5" size="sm" onClick={handleOpenCreate}>
-          Add Cost Center
-        </AnimatedIconButton>
+        <div className="flex items-center gap-2">
+          <Button
+            variant={showArchived ? "secondary" : "outline"}
+            size="sm"
+            className="text-xs"
+            onClick={handleToggleArchived}
+          >
+            <Archive className="h-4 w-4 mr-1.5" />
+            {showArchived ? "Show Active" : `Archived (${archived.length})`}
+          </Button>
+          <AnimatedIconButton icon={PlusIcon} iconSize={16} iconClassName="mr-1.5" size="sm" onClick={handleOpenCreate}>
+            Add Cost Center
+          </AnimatedIconButton>
+        </div>
       }
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
           <SearchInput placeholder="Search cost centers…" value={search} onValueChange={handleSearchInputChange} />
-          {archived.length > 0 && (
-            <Button variant="outline" size="sm" className="text-xs" onClick={handleToggleArchived}>
-              <Archive className="h-4 w-4 mr-1.5" />
-              {showArchived ? "Show Active" : `Archived (${archived.length})`}
-            </Button>
-          )}
         </div>
       }
     >
