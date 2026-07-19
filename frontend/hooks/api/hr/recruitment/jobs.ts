@@ -9,6 +9,11 @@ import type {
   CreateJobPostingInput,
   UpdateJobPostingInput,
 } from "@/types/hr";
+import {
+  normalizeRecruitmentList,
+  unwrapRecruitmentItems,
+  type RecruitmentListResponse,
+} from "./list-response";
 
 export type JobBoardPlatform = "LINKEDIN" | "NAUKRI" | "INDEED";
 
@@ -66,31 +71,80 @@ export function useRecruitmentStats() {
   });
 }
 
-export function useJobPostings(params?: { status?: string }) {
+export type JobPostingsParams = {
+  status?: string;
+  page?: number;
+  pageSize?: number;
+};
+
+/**
+ * Backend returns `{ items, total, page, pageSize, totalPages }`.
+ * Hooks normalize to a flat JobPosting[] so list UIs keep working.
+ */
+export function useJobPostings(params?: JobPostingsParams) {
+  const page = params?.page ?? 1;
+  const pageSize = params?.pageSize ?? 100;
+  const queryParams = {
+    ...(params?.status ? { status: params.status } : {}),
+    page,
+    pageSize,
+  };
   return useQuery({
-    queryKey: queryKeys.hr.jobPostings(params as Record<string, unknown> | undefined),
-    queryFn: () =>
-      apiClient.get<JobPosting[]>("/hr/recruitment/jobs", params as Record<string, unknown> | undefined),
+    queryKey: queryKeys.hr.jobPostings(queryParams as Record<string, unknown>),
+    queryFn: async (): Promise<JobPosting[]> => {
+      const res = await apiClient.get<JobPosting[] | RecruitmentListResponse<JobPosting>>(
+        "/hr/recruitment/jobs",
+        queryParams,
+      );
+      return unwrapRecruitmentItems(res);
+    },
+    staleTime: 2 * 60_000,
+  });
+}
+
+/** Full paginated jobs payload when totals/pagination UI is needed. */
+export function useJobPostingsPage(params?: JobPostingsParams) {
+  const page = params?.page ?? 1;
+  const pageSize = params?.pageSize ?? 20;
+  const queryParams = {
+    ...(params?.status ? { status: params.status } : {}),
+    page,
+    pageSize,
+  };
+  return useQuery({
+    queryKey: [...queryKeys.hr.jobPostings(queryParams as Record<string, unknown>), "page"] as const,
+    queryFn: async (): Promise<RecruitmentListResponse<JobPosting>> => {
+      const res = await apiClient.get<JobPosting[] | RecruitmentListResponse<JobPosting>>(
+        "/hr/recruitment/jobs",
+        queryParams,
+      );
+      return normalizeRecruitmentList(res, pageSize);
+    },
     staleTime: 2 * 60_000,
   });
 }
 
 export function useJobPosting(id: number) {
+  const enabled = Number.isFinite(id) && id > 0;
   return useQuery({
     queryKey: queryKeys.hr.jobPosting(id),
     queryFn: () => apiClient.get<JobPosting>(`/hr/recruitment/jobs/${id}`),
     staleTime: 2 * 60_000,
-    enabled: !!id,
+    enabled,
   });
 }
+
+const JOB_POSTINGS_ROOT = [...queryKeys.hr.all, "jobPostings"] as const;
 
 export function useCreateJobPosting() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: CreateJobPostingInput) =>
       apiClient.post<JobPosting>("/hr/recruitment/jobs", data),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.jobPostings() }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: JOB_POSTINGS_ROOT });
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.recruitmentStats() });
+    },
   });
 }
 
@@ -99,9 +153,10 @@ export function useUpdateJobPosting() {
   return useMutation({
     mutationFn: ({ id, ...data }: UpdateJobPostingInput & { id: number }) =>
       apiClient.patch<{ success: boolean }>(`/hr/recruitment/jobs/${id}`, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.jobPostings() });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.recruitmentStats() });
+    onSuccess: (_data, vars) => {
+      void qc.invalidateQueries({ queryKey: JOB_POSTINGS_ROOT });
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.jobPosting(vars.id) });
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.recruitmentStats() });
     },
   });
 }
@@ -111,8 +166,22 @@ export function useDeleteJobPosting() {
   return useMutation({
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/recruitment/jobs/${id}`),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.jobPostings() }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: JOB_POSTINGS_ROOT });
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.recruitmentStats() });
+    },
+  });
+}
+
+export function useDuplicateJobPosting() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) =>
+      apiClient.post<JobPosting>(`/hr/recruitment/jobs/${id}/duplicate`, {}),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: JOB_POSTINGS_ROOT });
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.recruitmentStats() });
+    },
   });
 }
 
@@ -128,7 +197,10 @@ export function usePublishJobToBoards() {
   return useMutation({
     mutationFn: ({ jobId, platforms }: { jobId: number; platforms: JobBoardPlatform[] }) =>
       apiClient.post<PublishJobResult>(`/hr/recruitment/jobs/${jobId}/publish`, { platforms }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.jobPostings() }),
+    onSuccess: (_data, vars) => {
+      void qc.invalidateQueries({ queryKey: JOB_POSTINGS_ROOT });
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.jobPosting(vars.jobId) });
+    },
   });
 }
 

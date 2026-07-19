@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { format } from "date-fns";
 import type { ReferralStatus } from "@/types/hr/recruitment";
+import { ErrorState } from "@/components/shared/error-state";
 
 const STATUS_CONFIG: Record<ReferralStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   SUBMITTED: { label: "Submitted", variant: "secondary" },
@@ -44,8 +45,15 @@ const referSchema = z.object({
 type ReferFormValues = z.infer<typeof referSchema>;
 
 export default function ReferPage() {
-  const { data: referrals = [], isLoading: loadingReferrals } = useAllReferrals();
-  const { data: jobs = [] } = useJobPostings({ status: "OPEN" });
+  const {
+    data: referrals = [],
+    isLoading: loadingReferrals,
+    isError: referralsError,
+    refetch: refetchReferrals,
+  } = useAllReferrals();
+  const { data: jobs = [], isError: jobsError, refetch: refetchJobs } = useJobPostings({
+    status: "OPEN",
+  });
   const createMutation = useSubmitReferral();
 
   const {
@@ -161,6 +169,16 @@ export default function ReferPage() {
             <div className="space-y-3">
               {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
             </div>
+          ) : referralsError ? (
+            <ErrorState
+              title="Unable to load your referrals"
+              description="Try again. If this keeps happening, check your permissions."
+              onRetry={() => {
+                void refetchReferrals();
+                if (jobsError) void refetchJobs();
+              }}
+              compact
+            />
           ) : referrals.length === 0 ? (
             <Card className="shadow-sm">
               <CardContent className="py-8 text-center text-sm text-muted-foreground">

@@ -4,9 +4,16 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { useJobPostings, useUpdateJobPosting, useDeleteJobPosting, useHrDepartments } from "@/hooks/api/hr";
-import { usePublishJobToBoards, useJobShareLinks } from "@/hooks/api/hr/recruitment";
+import { useUpdateJobPosting, useDeleteJobPosting, useHrDepartments } from "@/hooks/api/hr";
+import {
+  useJobPostingsPage,
+  usePublishJobToBoards,
+  useJobShareLinks,
+  useDuplicateJobPosting,
+} from "@/hooks/api/hr/recruitment";
 import type { JobBoardPlatform, JobShareLinks } from "@/hooks/api/hr/recruitment";
+import type { JobPosting } from "@/types/hr";
+import { RecruitmentListPagination } from "@/features/hr/recruitment/components/recruitment-list-pagination";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,7 +32,7 @@ import { ExternalBoardsSheet } from "@/features/hr/recruitment/jobs/external-boa
 import { toast } from "sonner";
 import {
   Plus, Trash2, Play, Pause, Share2, Loader2, Copy,
-  ExternalLink, MapPin, Users, Briefcase, Building2, Pencil, ListChecks,
+  ExternalLink, MapPin, Users, Briefcase, Building2, Pencil, ListChecks, CopyPlus,
 } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -136,13 +143,15 @@ function ShareJobDialog({ jobId, onClose }: { jobId: number; onClose: () => void
 }
 
 interface JobCardProps {
-  job: NonNullable<ReturnType<typeof useJobPostings>["data"]>[number];
+  job: JobPosting;
   deptName: string | undefined;
   isPublishPending: boolean;
+  isDuplicatePending: boolean;
   onStatusChange: (id: number, status: JobPostingStatus) => void;
   onPublish: (id: number) => void;
   onShare: (id: number) => void;
   onTrackBoards: (id: number) => void;
+  onDuplicate: (id: number) => void;
   onDelete: (id: number) => void;
 }
 
@@ -150,10 +159,12 @@ function JobCard({
   job,
   deptName,
   isPublishPending,
+  isDuplicatePending,
   onStatusChange,
   onPublish,
   onShare,
   onTrackBoards,
+  onDuplicate,
   onDelete,
 }: JobCardProps) {
   const statusStyle = (job.status && STATUS_STYLES[job.status]) || STATUS_STYLES.DRAFT;
@@ -165,6 +176,9 @@ function JobCard({
   function handleTrackBoards() { onTrackBoards(job.id); }
   function handlePause() { onStatusChange(job.id, "PAUSED"); }
   function handleResume() { onStatusChange(job.id, "OPEN"); }
+  function handleClose() { onStatusChange(job.id, "CLOSED"); }
+  function handleReopen() { onStatusChange(job.id, "OPEN"); }
+  function handleDuplicate() { onDuplicate(job.id); }
   function handleDelete() { onDelete(job.id); }
 
   return (
@@ -202,6 +216,9 @@ function JobCard({
                   <Pencil className="mr-2 h-3.5 w-3.5" /> Edit
                 </Link>
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleDuplicate} disabled={isDuplicatePending}>
+                <CopyPlus className="mr-2 h-3.5 w-3.5" /> Duplicate
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               {job.status === "DRAFT" && (
                 <DropdownMenuItem onClick={handlePublishOpen}>
@@ -225,8 +242,23 @@ function JobCard({
                 </>
               )}
               {job.status === "PAUSED" && (
-                <DropdownMenuItem onClick={handleResume}>
-                  <Play className="mr-2 h-3.5 w-3.5" /> Resume
+                <>
+                  <DropdownMenuItem onClick={handleResume}>
+                    <Play className="mr-2 h-3.5 w-3.5" /> Resume
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleClose}>
+                    Close job
+                  </DropdownMenuItem>
+                </>
+              )}
+              {(job.status === "OPEN") && (
+                <DropdownMenuItem onClick={handleClose}>
+                  Close job
+                </DropdownMenuItem>
+              )}
+              {(job.status === "CLOSED" || job.status === "FILLED") && (
+                <DropdownMenuItem onClick={handleReopen}>
+                  <Play className="mr-2 h-3.5 w-3.5" /> Reopen
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
@@ -313,12 +345,19 @@ export default function JobPostingsPage() {
   const searchParams = useSearchParams();
   const statusFilter = searchParams.get("status") as JobPostingStatus | null;
   const visibilityFilter = searchParams.get("visibility");
-
-  const { data: allJobs, isLoading, isError, refetch } = useJobPostings(
-    statusFilter ? { status: statusFilter } : undefined
+  const pageFromUrl = Math.max(1, Number(searchParams.get("page") ?? "1") || 1);
+  const pageSizeFromUrl = Math.min(
+    100,
+    Math.max(6, Number(searchParams.get("pageSize") ?? "12") || 12),
   );
 
-  const jobs = allJobs?.filter((job) => {
+  const { data: jobsPage, isLoading, isError, refetch } = useJobPostingsPage({
+    ...(statusFilter ? { status: statusFilter } : {}),
+    page: pageFromUrl,
+    pageSize: pageSizeFromUrl,
+  });
+
+  const jobs = (jobsPage?.items ?? []).filter((job) => {
     if (visibilityFilter === "internal") return job.isInternal === true;
     if (visibilityFilter === "external") return !job.isInternal;
     return true;
@@ -326,6 +365,7 @@ export default function JobPostingsPage() {
 
   const updateJob = useUpdateJobPosting();
   const deleteJob = useDeleteJobPosting();
+  const duplicateJob = useDuplicateJobPosting();
   const publishToBoards = usePublishJobToBoards();
   const { data: departments } = useHrDepartments();
 
@@ -338,9 +378,23 @@ export default function JobPostingsPage() {
       const params = new URLSearchParams(searchParams.toString());
       if (value && value !== "ALL") params.set(key, value);
       else params.delete(key);
+      if (key !== "page" && key !== "pageSize") params.delete("page");
       router.replace(`?${params.toString()}`, { scroll: false });
     },
     [searchParams, router]
+  );
+
+  const setPagination = useCallback(
+    (next: { page?: number; pageSize?: number }) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (next.pageSize != null) params.set("pageSize", String(next.pageSize));
+      if (next.page != null) {
+        if (next.page <= 1) params.delete("page");
+        else params.set("page", String(next.page));
+      }
+      router.replace(`?${params.toString()}`, { scroll: false });
+    },
+    [searchParams, router],
   );
 
   const handleStatusChange = useCallback(
@@ -363,6 +417,19 @@ export default function JobPostingsPage() {
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [deleteJobId, deleteJob]);
+
+  const handleDuplicate = useCallback(
+    (id: number) => {
+      duplicateJob.mutate(id, {
+        onSuccess: (job) => {
+          toast.success("Job duplicated as draft");
+          router.push(`/hr/recruitment/jobs/${job.id}/edit`);
+        },
+        onError: (e) => toast.error(getErrorMessage(e)),
+      });
+    },
+    [duplicateJob, router],
+  );
 
   const handlePublish = useCallback(
     (id: number) => {
@@ -388,11 +455,19 @@ export default function JobPostingsPage() {
   function handleCloseBoardsSheet() { setBoardsJobId(null); }
   function handleConfirmDialogOpenChange(open: boolean) { if (!open) setDeleteJobId(null); }
 
+  const total = jobsPage?.total ?? 0;
+  const subtitle =
+    isLoading
+      ? "Loading positions…"
+      : total > 0
+        ? `${total.toLocaleString()} position${total === 1 ? "" : "s"}`
+        : "Manage open positions";
+
   return (
     <>
       <PageWrapper
         title="Job Postings"
-        subtitle="Manage open positions"
+        subtitle={subtitle}
         actions={
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" asChild>
@@ -437,8 +512,8 @@ export default function JobPostingsPage() {
           </div>
         ) : isError ? (
           <div className="flex flex-col items-center justify-center flex-1 gap-4 text-center">
-            <p className="text-sm font-semibold text-foreground">Failed to load job postings</p>
-            <p className="text-xs text-muted-foreground">An error occurred while fetching data.</p>
+            <p className="text-sm font-semibold text-foreground">Unable to load job postings</p>
+            <p className="text-xs text-muted-foreground">Try again. If this keeps happening, check your permissions or contact an admin.</p>
             <Button size="sm" variant="outline" onClick={handleRetry}>Try again</Button>
           </div>
         ) : !jobs?.length ? (
@@ -450,24 +525,36 @@ export default function JobPostingsPage() {
             className={CONTENT_FILL_PANEL}
           />
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {jobs.map((job) => {
-              const deptName = departments?.find((d) => d.id === job.departmentId)?.name;
-              return (
-                <JobCard
-                  key={job.id}
-                  job={job}
-                  deptName={deptName}
-                  isPublishPending={publishToBoards.isPending}
-                  onStatusChange={handleStatusChange}
-                  onPublish={handlePublish}
-                  onShare={setShareJobId}
-                  onTrackBoards={setBoardsJobId}
-                  onDelete={setDeleteJobId}
-                />
-              );
-            })}
-          </div>
+          <>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {jobs.map((job) => {
+                const deptName = departments?.find((d) => d.id === job.departmentId)?.name;
+                return (
+                  <JobCard
+                    key={job.id}
+                    job={job}
+                    deptName={deptName}
+                    isPublishPending={publishToBoards.isPending}
+                    isDuplicatePending={duplicateJob.isPending}
+                    onStatusChange={handleStatusChange}
+                    onPublish={handlePublish}
+                    onShare={setShareJobId}
+                    onTrackBoards={setBoardsJobId}
+                    onDuplicate={handleDuplicate}
+                    onDelete={setDeleteJobId}
+                  />
+                );
+              })}
+            </div>
+            <RecruitmentListPagination
+              page={jobsPage?.page ?? 1}
+              pageSize={jobsPage?.pageSize ?? pageSizeFromUrl}
+              total={jobsPage?.total ?? 0}
+              totalPages={jobsPage?.totalPages ?? 1}
+              onPageChange={(p) => setPagination({ page: p })}
+              onPageSizeChange={(size) => setPagination({ page: 1, pageSize: size })}
+            />
+          </>
         )}
         </div>
       </PageWrapper>

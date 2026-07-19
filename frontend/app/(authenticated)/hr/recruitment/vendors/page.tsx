@@ -18,6 +18,7 @@ import { useRecruitmentVendors, useDeleteVendor, type RecruitmentVendor } from "
 import { VendorSheet } from "@/features/hr/recruitment/vendors/vendor-sheet";
 import { SubmissionSheet } from "@/features/hr/recruitment/vendors/submission-sheet";
 import { VendorCard } from "@/features/hr/recruitment/vendors/vendor-card";
+import { ErrorState } from "@/components/shared/error-state";
 
 const HR_ROLES = ["CEO", "HR", "ADMIN", "HR_MANAGER", "OWNER"];
 
@@ -26,7 +27,7 @@ export default function VendorsPage() {
   const role = (session?.user as { role?: string })?.role ?? "";
   const isHr = HR_ROLES.includes(role);
 
-  const { data: vendors = [], isLoading } = useRecruitmentVendors();
+  const { data: vendors = [], isLoading, isError, refetch } = useRecruitmentVendors();
   const deleteVendor = useDeleteVendor();
 
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -75,6 +76,18 @@ export default function VendorsPage() {
             {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-44 rounded-xl" />)}
           </div>
         </div>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="Vendors" subtitle="Manage recruitment agencies and staffing partners" variant="display">
+        <ErrorState
+          title="Unable to load vendors"
+          description="Try again. If this keeps happening, check your permissions or contact an admin."
+          onRetry={() => void refetch()}
+        />
       </PageWrapper>
     );
   }

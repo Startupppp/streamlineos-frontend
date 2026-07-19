@@ -282,7 +282,7 @@ function ScheduledReportItem({
 }
 
 function ScheduledReportsList() {
-  const { data: reports = [], isLoading } = useScheduledReports();
+  const { data: reports = [], isLoading, isError, refetch } = useScheduledReports();
   const deleteReport = useDeleteScheduledReport();
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
@@ -308,6 +308,17 @@ function ScheduledReportsList() {
   }
 
   if (isLoading) return <Skeleton className="h-24 rounded-lg" />;
+  if (isError) {
+    return (
+      <div className="mt-6 rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-center">
+        <p className="text-sm font-medium text-foreground">Unable to load scheduled reports</p>
+        <p className="text-xs text-muted-foreground mt-1">Try again shortly.</p>
+        <Button size="sm" variant="outline" className="mt-3" onClick={() => void refetch()}>
+          Try again
+        </Button>
+      </div>
+    );
+  }
   if (reports.length === 0) return null;
 
   return (

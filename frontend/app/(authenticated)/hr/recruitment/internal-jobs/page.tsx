@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { format, isAfter } from "date-fns";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { ErrorState } from "@/components/shared/error-state";
 
 const TYPE_LABELS: Record<string, string> = {
   FULL_TIME: "Full Time",
@@ -153,7 +154,7 @@ function JobCardItem({ job, onApply }: JobCardItemProps) {
 
 export default function InternalJobsPage() {
   const qc = useQueryClient();
-  const { data: jobs = [], isLoading } = useQuery({
+  const { data: jobs = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["internalJobs"],
     queryFn: () => apiClient.get<InternalJob[]>("/hr/recruitment/internal-jobs"),
     staleTime: 2 * 60_000,
@@ -175,6 +176,18 @@ export default function InternalJobsPage() {
             {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-48 rounded-xl" />)}
           </div>
         </div>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="Internal Openings" subtitle="Open positions available exclusively for employees." variant="display">
+        <ErrorState
+          title="Unable to load internal openings"
+          description="Try again. If this keeps happening, check your permissions or contact an admin."
+          onRetry={() => void refetch()}
+        />
       </PageWrapper>
     );
   }

@@ -33,6 +33,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { format } from "date-fns";
 import type { EmailSequence, EmailSequenceTrigger } from "@/types/hr/recruitment";
+import { ErrorState } from "@/components/shared/error-state";
 
 const TRIGGER_LABELS: Record<EmailSequenceTrigger, string> = {
   MANUAL: "Manual",
@@ -352,7 +353,7 @@ function SequenceCard({ sequence, togglingId, onToggle, onEdit, onDelete }: Sequ
 }
 
 export default function EmailSequencesPage() {
-  const { data: sequences = [], isLoading } = useEmailSequences();
+  const { data: sequences = [], isLoading, isError, refetch } = useEmailSequences();
   const deleteMutation = useDeleteEmailSequence();
   const qc = useQueryClient();
 
@@ -405,6 +406,18 @@ export default function EmailSequencesPage() {
         <div className="flex flex-1 min-h-0 flex-col gap-3">
           {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
         </div>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="Email Sequences" subtitle="Automated drip campaigns for candidates." actions={pageActions} variant="display">
+        <ErrorState
+          title="Unable to load email sequences"
+          description="Try again. If this keeps happening, check your permissions or contact an admin."
+          onRetry={() => void refetch()}
+        />
       </PageWrapper>
     );
   }

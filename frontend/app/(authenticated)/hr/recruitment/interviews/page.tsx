@@ -44,7 +44,9 @@ import { cn } from "@/lib/utils";
 import { ErrorState } from "@/components/shared/error-state";
 
 export default function InterviewsPage() {
-  const { data: interviews, isLoading, isError, refetch } = useInterviews();
+  const { data: interviews, isLoading, isError, refetch } = useInterviews({
+    pageSize: 100,
+  });
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [feedbackInterview, setFeedbackInterview] = useState<Interview | null>(
@@ -113,7 +115,11 @@ export default function InterviewsPage() {
   if (isError) {
     return (
       <PageWrapper title="Interviews" subtitle="Schedule and track interviews">
-        <ErrorState description="Failed to load interviews" onRetry={refetch} />
+        <ErrorState
+          title="Unable to load interviews"
+          description="You may not have permission to view interviews, or the server returned an unexpected response. Try again."
+          onRetry={refetch}
+        />
       </PageWrapper>
     );
   }
@@ -130,10 +136,16 @@ export default function InterviewsPage() {
     );
   }
 
+  const totalLabel = interviewStats.total;
+  const subtitle =
+    totalLabel > 0
+      ? `${totalLabel} interview${totalLabel === 1 ? "" : "s"} · ${interviewStats.pending} scheduled`
+      : "Schedule and track interviews";
+
   return (
     <PageWrapper
       title="Interviews"
-      subtitle="Schedule and track interviews"
+      subtitle={subtitle}
       actions={
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="sm" asChild>

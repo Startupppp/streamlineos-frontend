@@ -8,6 +8,11 @@ import type {
   CreateInterviewInput,
   UpdateInterviewInput,
 } from "@/types/hr";
+import {
+  normalizeRecruitmentList,
+  unwrapRecruitmentItems,
+  type RecruitmentListResponse,
+} from "./list-response";
 
 export interface ScorecardCriterion {
   name: string;
@@ -187,17 +192,65 @@ export interface BookingLinkResponse {
 const INTERVIEW_SLAS_KEY = queryKeys.hr.interviewSlas();
 const SLA_REPORT_KEY = queryKeys.hr.slaReport();
 
-export function useInterviews(params?: {
+export type InterviewsParams = {
   candidateId?: number;
   upcoming?: boolean;
   relevant?: boolean;
+  page?: number;
+  pageSize?: number;
+  /** @deprecated prefer page/pageSize */
   limit?: number;
+  /** @deprecated prefer page/pageSize */
   offset?: number;
-}) {
+};
+
+/**
+ * Backend returns `{ items, total, page, pageSize, totalPages }`.
+ * Hook normalizes to Interview[] so list/calendar UIs keep working.
+ */
+export function useInterviews(params?: InterviewsParams) {
+  const pageSize = params?.pageSize ?? params?.limit ?? 100;
+  const page =
+    params?.page ??
+    (params?.offset != null ? Math.floor(params.offset / pageSize) + 1 : 1);
+  const queryParams: Record<string, unknown> = { page, pageSize };
+  if (params?.candidateId) queryParams.candidateId = params.candidateId;
+  if (params?.upcoming != null) queryParams.upcoming = params.upcoming ? "true" : "false";
+  if (params?.relevant != null) queryParams.relevant = params.relevant ? "true" : "false";
+
   return useQuery({
-    queryKey: queryKeys.hr.interviews(params as Record<string, unknown> | undefined),
-    queryFn: () =>
-      apiClient.get<Interview[]>("/hr/recruitment/interviews", params as Record<string, unknown> | undefined),
+    queryKey: queryKeys.hr.interviews(queryParams),
+    queryFn: async (): Promise<Interview[]> => {
+      const res = await apiClient.get<Interview[] | RecruitmentListResponse<Interview>>(
+        "/hr/recruitment/interviews",
+        queryParams,
+      );
+      return unwrapRecruitmentItems(res);
+    },
+    staleTime: 2 * 60_000,
+  });
+}
+
+/** Full paginated interviews payload. */
+export function useInterviewsPage(params?: InterviewsParams) {
+  const pageSize = params?.pageSize ?? params?.limit ?? 20;
+  const page =
+    params?.page ??
+    (params?.offset != null ? Math.floor(params.offset / pageSize) + 1 : 1);
+  const queryParams: Record<string, unknown> = { page, pageSize };
+  if (params?.candidateId) queryParams.candidateId = params.candidateId;
+  if (params?.upcoming != null) queryParams.upcoming = params.upcoming ? "true" : "false";
+  if (params?.relevant != null) queryParams.relevant = params.relevant ? "true" : "false";
+
+  return useQuery({
+    queryKey: [...queryKeys.hr.interviews(queryParams), "page"] as const,
+    queryFn: async (): Promise<RecruitmentListResponse<Interview>> => {
+      const res = await apiClient.get<Interview[] | RecruitmentListResponse<Interview>>(
+        "/hr/recruitment/interviews",
+        queryParams,
+      );
+      return normalizeRecruitmentList(res, pageSize);
+    },
     staleTime: 2 * 60_000,
   });
 }

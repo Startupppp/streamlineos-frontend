@@ -33,6 +33,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { ErrorState } from "@/components/shared/error-state";
 
 type HeadcountStatus = "DRAFT" | "SUBMITTED" | "APPROVED" | "REJECTED" | "JOB_CREATED";
 
@@ -311,7 +312,7 @@ export default function HeadcountPage() {
   const role = (session?.user as { role?: string })?.role ?? "";
   const isHr = HR_ROLES.includes(role);
 
-  const { data: requests = [], isLoading } = useQuery({
+  const { data: requests = [], isLoading, isError, refetch } = useQuery({
     queryKey: queryKeys.hr.headcountRequests(),
     queryFn: () => apiClient.get<HeadcountRequest[]>("/hr/recruitment/headcount"),
     staleTime: 2 * 60_000,
@@ -368,6 +369,18 @@ export default function HeadcountPage() {
             {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-40 rounded-xl" />)}
           </div>
         </div>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="Headcount Planning" subtitle="Manage hiring requests" variant="display">
+        <ErrorState
+          title="Unable to load headcount requests"
+          description="Try again. If this keeps happening, check your permissions or contact an admin."
+          onRetry={() => void refetch()}
+        />
       </PageWrapper>
     );
   }
