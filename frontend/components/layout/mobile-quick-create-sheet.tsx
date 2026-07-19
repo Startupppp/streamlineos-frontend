@@ -1,7 +1,6 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
 import { useCallback, useState } from "react"
 import { PlusIcon } from "@animateicons/react/lucide"
 import {
@@ -10,23 +9,22 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
-import { getProductFromPathname } from "./sidebar/sidebar-nav-items"
-import {
-  GLOBAL_ACTIONS,
-  PRODUCT_ACTIONS,
-  PRODUCT_LABELS,
-} from "./header/quick-create-button"
+import { useCommandPalette } from "@/features/command-palette/hooks/use-command-palette"
+import { useQuickCreateGroups } from "./header/quick-create-button"
 
 export function MobileQuickCreateSheet() {
   const [open, setOpen] = useState(false)
-  const pathname = usePathname()
-  const activeProduct = getProductFromPathname(pathname)
-  const productActions = PRODUCT_ACTIONS[activeProduct] ?? []
-  const visibleGlobalActions = GLOBAL_ACTIONS.filter(
-    (action) => !productActions.some((productAction) => productAction.href === action.href),
-  )
+  const groups = useQuickCreateGroups()
+  const { openCreateTicket } = useCommandPalette()
 
   const handleClose = useCallback(() => setOpen(false), [])
+
+  const handleCreateIssue = useCallback(() => {
+    openCreateTicket()
+    setOpen(false)
+  }, [openCreateTicket])
+
+  if (groups.length === 0) return null
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -45,46 +43,42 @@ export function MobileQuickCreateSheet() {
         <SheetTitle className="text-sm font-semibold text-foreground mb-3">
           Create
         </SheetTitle>
-        <div className="flex flex-col gap-1">
-          {productActions.length > 0 && (
-            <>
+        <div className="flex flex-col gap-1 max-h-[70vh] overflow-y-auto">
+          {groups.map((group, groupIndex) => (
+            <div key={group.id}>
+              {groupIndex > 0 ? <div className="my-1 h-px bg-border" /> : null}
               <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground px-1 mb-1">
-                {PRODUCT_LABELS[activeProduct] ?? activeProduct}
+                {group.label}
               </p>
-              {productActions.map((action) => (
-                <Link
-                  key={action.href}
-                  href={action.href}
-                  onClick={handleClose}
-                  className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
-                >
-                  <action.icon className="h-4 w-4 text-muted-foreground shrink-0" />
-                  {action.label}
-                </Link>
-              ))}
-            </>
-          )}
-          {visibleGlobalActions.length > 0 && (
-            <>
-              {productActions.length > 0 && (
-                <div className="my-1 h-px bg-border" />
-              )}
-              <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground px-1 mb-1">
-                General
-              </p>
-              {visibleGlobalActions.map((action) => (
-                <Link
-                  key={action.href}
-                  href={action.href}
-                  onClick={handleClose}
-                  className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
-                >
-                  <action.icon className="h-4 w-4 text-muted-foreground shrink-0" />
-                  {action.label}
-                </Link>
-              ))}
-            </>
-          )}
+              {group.items.map((action) => {
+                if (action.action === "create-issue") {
+                  return (
+                    <button
+                      key={action.id}
+                      type="button"
+                      onClick={handleCreateIssue}
+                      className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-foreground hover:bg-muted transition-colors text-left"
+                    >
+                      <action.icon className="h-4 w-4 text-muted-foreground shrink-0" />
+                      {action.label}
+                    </button>
+                  )
+                }
+                if (!action.href) return null
+                return (
+                  <Link
+                    key={action.id}
+                    href={action.href}
+                    onClick={handleClose}
+                    className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
+                  >
+                    <action.icon className="h-4 w-4 text-muted-foreground shrink-0" />
+                    {action.label}
+                  </Link>
+                )
+              })}
+            </div>
+          ))}
         </div>
       </SheetContent>
     </Sheet>

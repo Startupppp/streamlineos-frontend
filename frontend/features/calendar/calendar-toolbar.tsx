@@ -15,6 +15,7 @@ import {
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
+  EllipsisIcon,
   PlusIcon,
 } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
@@ -29,10 +30,17 @@ import {
 } from "@/components/ui/select";
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { cn } from "@/lib/utils";
 import type { View } from "./big-calendar-wrapper";
 import { CalendarMonthYearPicker } from "./calendar-month-year-picker";
 
@@ -62,6 +70,16 @@ interface CalendarToolbarProps {
   onOpenCreateTicket: () => void;
   onToggleHrEvents: () => void;
   onToggleCrmEvents: () => void;
+}
+
+function ShareMenuItems() {
+  return (
+    <>
+      <DropdownMenuItem className="text-xs">Copy link</DropdownMenuItem>
+      <DropdownMenuItem className="text-xs">Email calendar</DropdownMenuItem>
+      <DropdownMenuItem className="text-xs">Embed calendar</DropdownMenuItem>
+    </>
+  );
 }
 
 export const CalendarToolbar = memo(function CalendarToolbar({
@@ -94,18 +112,18 @@ export const CalendarToolbar = memo(function CalendarToolbar({
   }, [currentDate, view]);
 
   return (
-    <div className="flex items-center justify-between flex-nowrap gap-2 shrink-0 select-none pb-2 border-b border-border overflow-x-auto scrollbar-hide">
-      <div className="flex items-center gap-2 min-w-0">
+    <div className="flex w-full min-w-0 shrink-0 select-none flex-col gap-2 border-b border-border pb-2 xl:flex-row xl:items-center xl:justify-between xl:gap-3">
+      <div className="flex min-w-0 items-center gap-2 xl:flex-1">
         <Button
           variant="outline"
           size="sm"
-          className="text-xs font-medium px-3 shrink-0"
+          className="shrink-0 px-3 text-xs font-medium"
           onClick={onToday}
         >
           Today
         </Button>
 
-        <div className="flex items-center shrink-0">
+        <div className="flex shrink-0 items-center">
           <AnimatedIconButton
             icon={ChevronLeftIcon}
             iconSize={16}
@@ -126,19 +144,26 @@ export const CalendarToolbar = memo(function CalendarToolbar({
           />
         </div>
 
-        <CalendarMonthYearPicker
-          currentDate={currentDate}
-          title={navTitle}
-          onDateChange={onDateChange}
-        />
+        <div className="min-w-0 flex-1 overflow-hidden">
+          <CalendarMonthYearPicker
+            currentDate={currentDate}
+            title={navTitle}
+            onDateChange={onDateChange}
+          />
+        </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex min-w-0 flex-wrap items-center gap-2 xl:shrink-0 xl:flex-nowrap xl:justify-end">
         <Select value={view} onValueChange={handleViewChange}>
-          <SelectTrigger className="w-[95px] text-xs font-medium">
+          <SelectTrigger
+            className={cn(
+              "h-8 w-fit min-w-[5.5rem] text-xs font-medium",
+              FILTER_SELECT_TRIGGER,
+            )}
+          >
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
             <SelectItem value="day" className="text-xs">
               Day
             </SelectItem>
@@ -151,64 +176,112 @@ export const CalendarToolbar = memo(function CalendarToolbar({
           </SelectContent>
         </Select>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-xs font-medium gap-1 px-3"
-            >
-              <Share2 className="h-3.5 w-3.5" />
-              <span className="hidden md:inline">Share</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-40 text-xs">
-            <DropdownMenuItem className="text-xs">Copy link</DropdownMenuItem>
-            <DropdownMenuItem className="text-xs">
-              Email calendar
-            </DropdownMenuItem>
-            <DropdownMenuItem className="text-xs">
-              Embed calendar
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="hidden items-center gap-2 md:flex">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1 px-3 text-xs font-medium"
+              >
+                <Share2 className="h-3.5 w-3.5" />
+                <span className="hidden lg:inline">Share</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40 text-xs">
+              <ShareMenuItems />
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-        <Button
-          variant="outline"
-          size="icon"
-          className="w-8 relative"
-          aria-label="Calendar accounts"
-          onClick={onOpenAccounts}
-        >
-          <Link2 className="h-3.5 w-3.5" />
-          {activeConnectionCount > 0 && (
-            <span className="absolute -top-1 -right-1 h-3.5 min-w-[14px] rounded-full bg-primary px-0.5 text-[9px] font-semibold leading-[14px] text-primary-foreground text-center">
-              {activeConnectionCount}
-            </span>
-          )}
-        </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            className="relative w-8"
+            aria-label="Calendar accounts"
+            onClick={onOpenAccounts}
+          >
+            <Link2 className="h-3.5 w-3.5" />
+            {activeConnectionCount > 0 && (
+              <span className="absolute -top-1 -right-1 h-3.5 min-w-[14px] rounded-full bg-primary px-0.5 text-center text-[9px] font-semibold leading-[14px] text-primary-foreground">
+                {activeConnectionCount}
+              </span>
+            )}
+          </Button>
 
-        <Button
-          variant={hrEventsVisible ? "secondary" : "outline"}
-          size="sm"
-          className="text-xs font-medium gap-1 px-3"
-          aria-label={hrEventsVisible ? "Hide HR events" : "Show HR events"}
-          onClick={onToggleHrEvents}
-        >
-          <Building2 className="h-3.5 w-3.5" />
-          <span className="hidden md:inline">HR events</span>
-        </Button>
+          <Button
+            variant={hrEventsVisible ? "secondary" : "outline"}
+            size="sm"
+            className="gap-1 px-3 text-xs font-medium"
+            aria-label={hrEventsVisible ? "Hide HR events" : "Show HR events"}
+            onClick={onToggleHrEvents}
+          >
+            <Building2 className="h-3.5 w-3.5" />
+            <span className="hidden lg:inline">HR events</span>
+          </Button>
 
-        <Button
-          variant={crmEventsVisible ? "secondary" : "outline"}
-          size="sm"
-          className="text-xs font-medium gap-1 px-3"
-          aria-label={crmEventsVisible ? "Hide CRM events" : "Show CRM events"}
-          onClick={onToggleCrmEvents}
-        >
-          <Handshake className="h-3.5 w-3.5" />
-          <span className="hidden md:inline">CRM events</span>
-        </Button>
+          <Button
+            variant={crmEventsVisible ? "secondary" : "outline"}
+            size="sm"
+            className="gap-1 px-3 text-xs font-medium"
+            aria-label={
+              crmEventsVisible ? "Hide CRM events" : "Show CRM events"
+            }
+            onClick={onToggleCrmEvents}
+          >
+            <Handshake className="h-3.5 w-3.5" />
+            <span className="hidden lg:inline">CRM events</span>
+          </Button>
+        </div>
+
+        <div className="md:hidden">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <AnimatedIconButton
+                icon={EllipsisIcon}
+                iconSize={16}
+                variant="outline"
+                size="icon"
+                className="w-8"
+                aria-label="More calendar actions"
+              />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52 text-xs">
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger className="text-xs">
+                  <Share2 className="mr-2 h-3.5 w-3.5" />
+                  Share
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="w-40 text-xs">
+                  <ShareMenuItems />
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+              <DropdownMenuItem className="text-xs" onClick={onOpenAccounts}>
+                <Link2 className="mr-2 h-3.5 w-3.5" />
+                Calendar accounts
+                {activeConnectionCount > 0 ? (
+                  <span className="ml-auto text-muted-foreground">
+                    {activeConnectionCount}
+                  </span>
+                ) : null}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuCheckboxItem
+                className="text-xs"
+                checked={hrEventsVisible}
+                onCheckedChange={onToggleHrEvents}
+              >
+                HR events
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                className="text-xs"
+                checked={crmEventsVisible}
+                onCheckedChange={onToggleCrmEvents}
+              >
+                CRM events
+              </DropdownMenuCheckboxItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -217,7 +290,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
               iconSize={14}
               iconClassName="mr-0"
               size="sm"
-              className="text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground gap-1"
+              className="gap-1 bg-primary text-xs font-semibold text-primary-foreground hover:bg-primary/90"
             >
               <span className="hidden sm:inline">Add</span>
             </AnimatedIconButton>
@@ -228,13 +301,13 @@ export const CalendarToolbar = memo(function CalendarToolbar({
               Add event
             </DropdownMenuItem>
             <DropdownMenuItem className="text-xs" onClick={onOpenCreateTicket}>
-              <Ticket className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+              <Ticket className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
               Add ticket due date
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <div className="h-4 border-l border-border mx-1" />
+        <div className="mx-0.5 hidden h-4 border-l border-border sm:block" />
 
         <ViewToggle<ViewMode>
           value={viewMode}
@@ -246,4 +319,3 @@ export const CalendarToolbar = memo(function CalendarToolbar({
     </div>
   );
 });
-

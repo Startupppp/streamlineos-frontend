@@ -88,6 +88,7 @@ export function CalendarView() {
     end: Date;
   } | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const createParamConsumedRef = useRef(false);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [isSlotChoiceOpen, setIsSlotChoiceOpen] = useState(false);
   const [pendingSlot, setPendingSlot] = useState<{
@@ -275,6 +276,17 @@ export function CalendarView() {
       onSettled: () => router.replace("/calendar"),
     });
   }, [searchParams, finalizeMutate, router]);
+
+  useEffect(() => {
+    if (createParamConsumedRef.current) return;
+    if (searchParams.get("create") !== "1") return;
+    createParamConsumedRef.current = true;
+    setCreateSlot(null);
+    setIsCreateOpen(true);
+    const next = new URLSearchParams(searchParams.toString());
+    next.delete("create");
+    router.replace(`/calendar${next.size > 0 ? `?${next.toString()}` : ""}`);
+  }, [searchParams, router]);
 
   return (
     <div className="flex flex-col gap-3 h-full">

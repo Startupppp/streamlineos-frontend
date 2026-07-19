@@ -50,11 +50,14 @@ export function MailShell() {
   const [selectedMessage, setSelectedMessage] =
     useState<MailMessageSummary | null>(null);
   const [showMobileList, setShowMobileList] = useState(true);
-  const [composeOpen, setComposeOpen] = useState(false);
+  const [composeOpen, setComposeOpen] = useState(
+    () => searchParams.get("compose") === "1",
+  );
   const [composeMode, setComposeMode] = useState<MailComposeMode>({
     type: "compose",
   });
   const [summarySheetOpen, setSummarySheetOpen] = useState(false);
+  const composeParamConsumedRef = useRef(false);
 
   const { summaryState, triggerSummary } = useMailInboxSummarySheet();
   const { iconRef: sparklesRef, hoverHandlers: sparklesHover } =
@@ -82,6 +85,17 @@ export function MailShell() {
       },
     });
   }, [searchParams, finalizeMutate, router]);
+
+  useEffect(() => {
+    if (composeParamConsumedRef.current) return;
+    if (searchParams.get("compose") !== "1") return;
+    composeParamConsumedRef.current = true;
+    setComposeMode({ type: "compose" });
+    setComposeOpen(true);
+    const next = new URLSearchParams(searchParams.toString());
+    next.delete("compose");
+    router.replace(`/mail${next.size > 0 ? `?${next.toString()}` : ""}`);
+  }, [searchParams, router]);
 
   const handleOpenAccountsSheet = useCallback(
     () => setAccountsSheetOpen(true),

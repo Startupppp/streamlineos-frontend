@@ -23,6 +23,7 @@ import {
 } from "@/hooks/api/leads";
 import { useCreateDeal } from "@/hooks/api/crm";
 import { useLeadsFilters } from "@/hooks/common/use-leads-filters";
+import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { useSession } from "next-auth/react";
 import { ADMIN_ROLES } from "@/lib/constants/roles";
 import { toast } from "sonner";
@@ -39,7 +40,7 @@ import type { BoardLead, LeadStatus } from "@/features/crm/leads/leads-types";
 export default function LeadsPipelinePage() {
   const { data: board, isLoading: boardLoading, isError: boardError, refetch: refetchBoard } = useLeadBoard();
   const { data: stats, isLoading: statsLoading, isError: statsError } = useLeadStats();
-  const [createOpen, setCreateOpen] = useState(false);
+  const { open: createOpen, onOpenChange: setCreateOpen } = useQueryParamOpen("create");
   const [selectedLeadId, setSelectedLeadId] = useState<number | null>(null);
 
   const {

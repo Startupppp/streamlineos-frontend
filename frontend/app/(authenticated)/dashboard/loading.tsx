@@ -5,7 +5,7 @@ import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 export default function DashboardLoading() {
   return (
     <PageWrapper
-      title="Good morning"
+      title="Dashboard"
       subtitle="Loading your workspace…"
       actions={<Skeleton className="h-9 w-28 rounded-md" />}
     >

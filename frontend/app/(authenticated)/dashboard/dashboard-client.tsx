@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useCallback, useEffect, useRef } from "react";
+import { useMemo, useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -92,6 +92,11 @@ export function DashboardClient() {
     canViewTickets,
   } = access;
 
+  const [headerClock, setHeaderClock] = useState<{
+    greeting: string;
+    todayFormatted: string;
+  } | null>(null);
+
   const {
     data: stats,
     isLoading,
@@ -158,24 +163,27 @@ export function DashboardClient() {
       shownMeetingToastRef.current = true;
       if (todayActivities.length === 1) {
         const a = todayActivities[0];
-        toast.info(
-          `Scheduled ${a.type} today: ${a.subject || "No subject"}`,
-          { duration: 6000 },
-        );
+        toast.info(`Scheduled ${a.type} today: ${a.subject || "No subject"}`, {
+          duration: 6000,
+        });
       } else {
-        toast.info(
-          `${todayActivities.length} meetings/calls scheduled today`,
-          { duration: 6000 },
-        );
+        toast.info(`${todayActivities.length} meetings/calls scheduled today`, {
+          duration: 6000,
+        });
       }
     }
   }, [todayActivities]);
 
-  const greeting = useMemo(() => getGreeting(), []);
-  const todayFormatted = useMemo(
-    () => format(new Date(), "EEEE, MMMM do, yyyy"),
-    [],
-  );
+  useEffect(() => {
+    setHeaderClock({
+      greeting: getGreeting(),
+      todayFormatted: format(new Date(), "EEEE, MMMM do, yyyy"),
+    });
+  }, []);
+
+  const pageTitle = headerClock
+    ? `${headerClock.greeting}, ${firstName}`
+    : "Dashboard";
 
   const handleRefresh = useCallback(() => void refetch(), [refetch]);
   const handleGoToProjects = useCallback(
@@ -206,7 +214,11 @@ export function DashboardClient() {
     return [...inProgress, ...todo].map(toDashboardTicket);
   }, [myIssuesData]);
 
-  const statCards = useDashboardStatCards(stats, access, sortedMyTickets.length);
+  const statCards = useDashboardStatCards(
+    stats,
+    access,
+    sortedMyTickets.length,
+  );
 
   const showHrTeamRow =
     hrEnabled && (canViewLeaves || canViewAttendance || canApproveLeaves);
@@ -216,7 +228,7 @@ export function DashboardClient() {
 
   if (isLoading || access.accessLoading) {
     return (
-      <PageWrapper title="Dashboard" subtitle="Loading your workspace…">
+      <PageWrapper title={pageTitle} subtitle="Loading your workspace…">
         <div
           className="space-y-4"
           role="status"
@@ -236,7 +248,7 @@ export function DashboardClient() {
 
   if (error) {
     return (
-      <PageWrapper title="Dashboard" subtitle="Something went wrong">
+      <PageWrapper title={pageTitle} subtitle="Something went wrong">
         <div
           className="rounded-xl border border-destructive/30 bg-destructive/5 p-6"
           role="alert"
@@ -260,7 +272,7 @@ export function DashboardClient() {
 
   if (!stats) {
     return (
-      <PageWrapper title="Dashboard">
+      <PageWrapper title={pageTitle}>
         <EmptyState
           illustration={<EmptyActivityIllustration className="h-40 w-40" />}
           title="No data available"
@@ -271,19 +283,21 @@ export function DashboardClient() {
     );
   }
 
+  const pageSubtitle = headerClock
+    ? `${headerClock.todayFormatted} · ${stats.orgName}`
+    : stats.orgName;
+
   return (
     <PageWrapper
-      title={`${greeting}, ${firstName}`}
-      subtitle={`${todayFormatted} · ${stats.orgName}`}
+      title={pageTitle}
+      subtitle={pageSubtitle}
       actions={hrEnabled ? <ClockInWidget /> : undefined}
     >
       <div className="space-y-4">
         {statCards.length > 0 && (
           <motion.div variants={fadeUp} initial="hidden" animate="visible">
             <StatCardGrid
-              cols={
-                statCards.length >= 4 ? 4 : statCards.length >= 3 ? 3 : 2
-              }
+              cols={statCards.length >= 4 ? 4 : statCards.length >= 3 ? 3 : 2}
             >
               {statCards.map((stat) => (
                 <StatCard

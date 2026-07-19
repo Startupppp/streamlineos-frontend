@@ -2,7 +2,22 @@
 
 import { useCallback } from "react";
 import Link from "next/link";
-import { CircleUser, Bell, CreditCard, Key, LogOut, Zap } from "lucide-react";
+import {
+  CircleUser,
+  Bell,
+  Building2,
+  CreditCard,
+  Key,
+  LayoutGrid,
+  Lock,
+  LogOut,
+  Shield,
+  ShieldAlert,
+  ShieldCheck,
+  UserCheck,
+  Users,
+  Zap,
+} from "lucide-react";
 import { useSession } from "next-auth/react";
 import {
   DropdownMenu,
@@ -27,8 +42,13 @@ export function UserAvatarMenu({ variant = "header" }: UserAvatarMenuProps) {
   const isMobile = useIsMobile();
   const { data: session } = useSession();
   const { mutate: handleSignOut, isPending: isSigningOut } = useSignOut();
-  const canManageBilling = useCan("settings:manage");
+  const canViewSettings = useCan("settings:view");
+  const canManageSettings = useCan("settings:manage");
+  const canManageRbac = useCan("settings:rbac:manage");
   const canViewAiCredits = useCan("billing:ai-credits:view");
+
+  const canSeeOrgPeople = canViewSettings || canManageSettings;
+  const showAccessGroup = canManageRbac || canManageSettings;
 
   const name = session?.user?.name ?? "User";
   const email = session?.user?.email ?? "";
@@ -93,7 +113,7 @@ export function UserAvatarMenu({ variant = "header" }: UserAvatarMenuProps) {
             My Account
           </Link>
         </DropdownMenuItem>
-        {canManageBilling && (
+        {canManageSettings && (
           <DropdownMenuItem asChild>
             <Link href="/billing" className="gap-2 cursor-pointer">
               <CreditCard className="h-3.5 w-3.5" />
@@ -109,6 +129,72 @@ export function UserAvatarMenu({ variant = "header" }: UserAvatarMenuProps) {
             </Link>
           </DropdownMenuItem>
         )}
+        {canSeeOrgPeople && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link href="/settings/organization" className="gap-2 cursor-pointer">
+                <Building2 className="h-3.5 w-3.5" />
+                Organization
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/users" className="gap-2 cursor-pointer">
+                <Users className="h-3.5 w-3.5" />
+                People
+              </Link>
+            </DropdownMenuItem>
+          </>
+        )}
+        {showAccessGroup && (
+          <>
+            <DropdownMenuSeparator />
+            {canManageRbac && (
+              <>
+                <DropdownMenuItem asChild>
+                  <Link href="/settings/roles" className="gap-2 cursor-pointer">
+                    <Shield className="h-3.5 w-3.5" />
+                    Roles
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/settings/permissions" className="gap-2 cursor-pointer">
+                    <ShieldAlert className="h-3.5 w-3.5" />
+                    Permission Matrix
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/settings/rbac" className="gap-2 cursor-pointer">
+                    <UserCheck className="h-3.5 w-3.5" />
+                    Role Assignment
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/settings/delegations" className="gap-2 cursor-pointer">
+                    <ShieldCheck className="h-3.5 w-3.5" />
+                    Access Policies
+                  </Link>
+                </DropdownMenuItem>
+              </>
+            )}
+            {canManageSettings && (
+              <>
+                <DropdownMenuItem asChild>
+                  <Link href="/settings/modules" className="gap-2 cursor-pointer">
+                    <LayoutGrid className="h-3.5 w-3.5" />
+                    Modules
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/settings/security" className="gap-2 cursor-pointer">
+                    <Lock className="h-3.5 w-3.5" />
+                    Security
+                  </Link>
+                </DropdownMenuItem>
+              </>
+            )}
+          </>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link
@@ -120,22 +206,21 @@ export function UserAvatarMenu({ variant = "header" }: UserAvatarMenuProps) {
           </Link>
         </DropdownMenuItem>
         <ThemeMenuSubmenu />
-        {canManageBilling && (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link
-                href="/settings/api-tokens"
-                className="gap-2 cursor-pointer"
-              >
-                <Key className="h-3.5 w-3.5" />
-                API Keys
-              </Link>
-            </DropdownMenuItem>
-          </>
+        {canManageSettings && (
+          <DropdownMenuItem asChild>
+            <Link
+              href="/settings/api-tokens"
+              className="gap-2 cursor-pointer"
+            >
+              <Key className="h-3.5 w-3.5" />
+              API Keys
+            </Link>
+          </DropdownMenuItem>
         )}
         <DropdownMenuSeparator />
-        <DropdownMenuItem variant="destructive" className="gap-2 cursor-pointer"
+        <DropdownMenuItem
+          variant="destructive"
+          className="gap-2 cursor-pointer"
           onClick={handleSignOutClick}
           disabled={isSigningOut}
         >

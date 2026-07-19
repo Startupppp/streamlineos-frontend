@@ -84,6 +84,17 @@ export default function ChatPage() {
     router.replace("/chat");
   }, [searchParams, router]);
 
+  const consumedDmParamRef = useRef(false);
+  useEffect(() => {
+    if (consumedDmParamRef.current) return;
+    if (searchParams.get("dm") !== "1") return;
+    consumedDmParamRef.current = true;
+    setEmptyDMOpen(true);
+    const next = new URLSearchParams(searchParams.toString());
+    next.delete("dm");
+    router.replace(`/chat${next.size > 0 ? `?${next.toString()}` : ""}`);
+  }, [searchParams, router]);
+
   const handleSearchFocused = useCallback(() => setShowSearchFocus(false), []);
   const handleBack = useCallback(() => setShowMobileList(true), []);
   const handleToggleInfo = useCallback(() => setShowInfoPanel((p) => !p), []);

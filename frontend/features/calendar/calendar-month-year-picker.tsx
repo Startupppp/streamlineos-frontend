@@ -118,7 +118,7 @@ export const CalendarMonthYearPicker = memo(function CalendarMonthYearPicker({
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="rounded-md px-2 py-1 text-lg font-normal text-foreground transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+          className="max-w-full truncate rounded-md px-2 py-1 text-left text-base font-normal text-foreground transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 md:text-lg"
           aria-label="Choose month and year"
         >
           {title}
