@@ -107,7 +107,8 @@ Minimum required:
 |---|---|
 | `NEXTAUTH_SECRET` | `openssl rand -base64 48` |
 | `NEXTAUTH_URL` | e.g. `http://localhost:1000` |
-| `NEXT_PUBLIC_API_URL` | NestJS backend URL, e.g. `http://localhost:1500` |
+| `NEXT_PUBLIC_API_URL` | NestJS backend URL. Local: `http://localhost:1500`. Production: `https://api.streamlineos.in` (not `*.up.railway.app`) |
+| `API_INTERNAL_URL` | Optional server-only backend URL if Cloudflare challenges Vercel→API (see `docs/production-api-domain.md`) |
 | `BACKEND_JWT_SECRET` | Must match the backend `.env` |
 | `INTERNAL_API_SECRET` | Must match the backend `.env` |
 
@@ -200,7 +201,8 @@ The seeder is idempotent — re-running it refreshes the OWNER password and tops
 ## Production deployment
 
 - Runs on any Next-compatible host (Vercel, Fly.io, Railway, self-hosted Node).
-- Required for prod: the NestJS backend (`streamlineos-api`) reachable at `NEXT_PUBLIC_API_URL`, matching `BACKEND_JWT_SECRET`/`INTERNAL_API_SECRET`, and HTTPS termination. Database, Redis, storage, email delivery, and payments are provisioned in the backend.
+- Required for prod: the NestJS backend reachable at `NEXT_PUBLIC_API_URL` (**`https://api.streamlineos.in`**), matching `BACKEND_JWT_SECRET`/`INTERNAL_API_SECRET`, and HTTPS termination. Database, Redis, storage, email delivery, and payments are provisioned in the backend.
+- Cellular / carrier reliability: browsers must use the first-party API hostname. Ops checklist: `docs/production-api-domain.md`.
 - Middleware enforces HTTPS redirects (`x-forwarded-proto`), MFA gates, and coarse routing; authorization is re-asserted in the backend on every request.
 
 ---

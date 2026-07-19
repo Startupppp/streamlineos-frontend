@@ -1,4 +1,5 @@
 const NETWORK_PATTERN = /failed to fetch|networkerror|network request failed|load failed|fetch failed/i;
+const HOST_IN_MESSAGE = /contacting\s+([a-z0-9.-]+)/i;
 
 function statusFallback(code: number): string {
   if (code === 400) return "The request was invalid. Please check your input and try again.";
@@ -24,10 +25,20 @@ function extractMessage(error: unknown): string {
   return "";
 }
 
+function networkMessage(message: string): string {
+  const hostMatch = HOST_IN_MESSAGE.exec(message);
+  if (hostMatch?.[1]) {
+    return `Network error contacting ${hostMatch[1]}. Check your connection and try again.`;
+  }
+  return "Network error. Check your connection and try again.";
+}
+
 export function getErrorMessage(error: unknown): string {
   const message = extractMessage(error);
   if (!message) return "Something went wrong. Please try again.";
-  if (NETWORK_PATTERN.test(message)) return "Network error. Check your connection and try again.";
+  if (NETWORK_PATTERN.test(message) || HOST_IN_MESSAGE.test(message)) {
+    return networkMessage(message);
+  }
 
   const bareStatus = message.match(/^(\d{3})(\s|$)/);
   if (bareStatus) return statusFallback(Number(bareStatus[1]));

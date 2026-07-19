@@ -17,7 +17,6 @@ import {
   Star,
 } from "lucide-react";
 import {
-  ChevronDownIcon,
   CompassIcon,
   PlusIcon,
   SearchIcon,
@@ -27,10 +26,8 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import React from "react";
 import { useRouter } from "next/navigation";
 import { EmptyMailIllustration } from "@/components/illustrations";
-import { useChatChannels, useArchivedChannels, useChatOnlineUsers, useSetPresenceStatus } from "@/hooks/api";
-import { useSession } from "next-auth/react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { cn, resolveImageUrl } from "@/lib/utils";
+import { useChatChannels, useArchivedChannels, useChatOnlineUsers } from "@/hooks/api";
+import { cn } from "@/lib/utils";
 import type { Channel } from "./chat-types";
 import { ChannelSidebarSection } from "./channel-sidebar-section";
 import { ChannelItem } from "./channel-item";
@@ -38,7 +35,7 @@ import { NewDMDialog } from "./new-dm-dialog";
 import { NewGroupDialog } from "./new-group-dialog";
 import { ChatSearchDialog } from "./chat-search-dialog";
 import { ChatSidebarNav } from "./chat-sidebar-nav";
-import { TruncatedText } from "@/components/ui/truncated-text";
+import { ChatPresenceMenu } from "./chat-presence-menu";
 
 const RAIL_ICON_SIZE = 14;
 
@@ -120,25 +117,6 @@ export function ChannelSidebar({
   const [search, setSearch] = useState("");
   const [showArchived, setShowArchived] = useState(false);
   const [newDMOpen, setNewDMOpen] = useState(false);
-  const { data: session } = useSession();
-  const [showStatusMenu, setShowStatusMenu] = useState(false);
-  const setStatus = useSetPresenceStatus();
-  const [currentStatus, setCurrentStatus] = useState<"ONLINE" | "AWAY" | "BUSY" | "INVISIBLE">("ONLINE");
-
-  const STATUS_OPTIONS = [
-    { value: "ONLINE" as const, label: "Online", color: "bg-emerald-500" },
-    { value: "AWAY" as const, label: "Away", color: "bg-yellow-400" },
-    { value: "BUSY" as const, label: "Busy", color: "bg-red-500" },
-    { value: "INVISIBLE" as const, label: "Invisible", color: "bg-zinc-400" },
-  ];
-
-  const handleSelectStatus = useCallback((value: "ONLINE" | "AWAY" | "BUSY" | "INVISIBLE") => {
-    setCurrentStatus(value);
-    setShowStatusMenu(false);
-    setStatus.mutate(value);
-  }, [setStatus]);
-
-  const handleToggleStatusMenu = useCallback(() => setShowStatusMenu((p) => !p), []);
   const [newGroupOpen, setNewGroupOpen] = useState(false);
   const [chatSearchOpen, setChatSearchOpen] = useState(false);
   const [dmsCollapsed, setDmsCollapsed] = useState(false);
@@ -283,7 +261,7 @@ export function ChannelSidebar({
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-0.5">
+            <div className="hidden items-center gap-0.5 sm:flex">
               <SidebarSearchButton
                 type="button"
                 onClick={handleOpenChatSearch}
@@ -547,51 +525,11 @@ export function ChannelSidebar({
           )}
         </ScrollArea>
 
-        <div className={cn("px-3 py-2.5 border-t border-border/30 shrink-0", isCollapsed && "md:px-1.5")}>
-          <div className="relative">
-            <button
-              type="button"
-              onClick={handleToggleStatusMenu}
-              className={cn(
-                "w-full flex items-center rounded-xl hover:bg-muted/40 transition-colors",
-                isCollapsed ? "md:justify-center md:px-1 md:py-1.5 gap-2.5 px-2 py-1.5" : "gap-2.5 px-2 py-1.5",
-              )}
-              aria-label="Set status"
-            >
-              <div className="relative shrink-0">
-                <Avatar className="w-7 border border-border/30">
-                  <AvatarImage src={resolveImageUrl(session?.user?.image)} />
-                  <AvatarFallback className="text-[9px] font-semibold bg-primary/10 text-primary">
-                    {session?.user?.name?.charAt(0)?.toUpperCase() ?? "U"}
-                  </AvatarFallback>
-                </Avatar>
-                <span className={cn("absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-background", STATUS_OPTIONS.find(o => o.value === currentStatus)?.color ?? "bg-emerald-500")} />
-              </div>
-              <div className={cn("flex-1 min-w-0 text-left", isCollapsed && "md:hidden")}>
-                <TruncatedText text={session?.user?.name ?? "You"} className="text-[12px] font-medium" />
-                <p className="text-[10px] text-muted-foreground">{STATUS_OPTIONS.find(o => o.value === currentStatus)?.label ?? "Online"}</p>
-              </div>
-              <ChevronDownIcon size={12} className={cn("text-muted-foreground/50 shrink-0", isCollapsed && "md:hidden")} />
-            </button>
-            {showStatusMenu && (
-              <div className="absolute bottom-full left-0 right-0 mb-1 bg-background border border-border/60 rounded-xl shadow-lg overflow-hidden z-30">
-                {STATUS_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => handleSelectStatus(opt.value)}
-                    className={cn(
-                      "w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-muted/40 transition-colors text-[12px]",
-                      currentStatus === opt.value && "bg-muted/30 font-medium"
-                    )}
-                  >
-                    <span className={cn("h-2 w-2 rounded-full shrink-0", opt.color)} />
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+        <div className={cn("hidden shrink-0 border-t border-border/30 px-3 py-2.5 sm:block", isCollapsed && "md:px-1.5")}>
+          <ChatPresenceMenu
+            compact={isCollapsed}
+            className={cn(isCollapsed && "md:justify-center md:px-1")}
+          />
         </div>
 
         <ChatSearchDialog

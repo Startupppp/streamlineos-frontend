@@ -3,9 +3,8 @@
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { cn } from "@/lib/utils";
-import { useIsMobile } from "@/hooks/common/use-mobile";
 import { ChannelSidebar } from "./channel-sidebar";
+import { getChatSidebarClassName } from "./chat-shell-layout";
 
 const CHAT_SIDEBAR_COOKIE = "chat-sidebar-collapsed";
 
@@ -24,28 +23,23 @@ interface ChatShellProps {
   children: React.ReactNode;
   activeChannelId?: number | null;
   onSelectChannel?: (channelId: number) => void;
-  showMobileSidebar?: boolean;
   autoFocusSearch?: boolean;
   onSearchFocused?: () => void;
   onStartCall?: (channelId: number, type: "huddle") => void;
   onOpenSettings?: (channelId: number) => void;
-  compactMobileSidebar?: boolean;
 }
 
 export function ChatShell({
   children,
   activeChannelId = null,
   onSelectChannel,
-  showMobileSidebar = true,
   autoFocusSearch,
   onSearchFocused,
   onStartCall,
   onOpenSettings,
-  compactMobileSidebar = false,
 }: ChatShellProps) {
   const { data: session } = useSession();
   const router = useRouter();
-  const isMobile = useIsMobile();
   const { sidebarCollapsed } = useChatSidebarCollapse();
 
   const handleSelectChannel = useCallback(
@@ -59,18 +53,10 @@ export function ChatShell({
     [onSelectChannel, router],
   );
 
-  const effectiveCollapsed =
-    sidebarCollapsed || (compactMobileSidebar && isMobile);
-
   return (
     <div className="flex flex-1 min-h-0 min-w-0 bg-background">
       <div
-        className={cn(
-          "relative z-0 flex flex-col shrink-0 border-r border-border/40 bg-card/50 transition-[width] duration-300 ease-in-out overflow-hidden",
-          compactMobileSidebar ? "w-14" : "w-full",
-          effectiveCollapsed ? "md:w-[3.5rem]" : "md:w-[300px] lg:w-[340px]",
-          !showMobileSidebar && !compactMobileSidebar && "hidden md:flex",
-        )}
+        className={getChatSidebarClassName(sidebarCollapsed)}
       >
         <ChannelSidebar
           activeChannelId={activeChannelId}
@@ -78,18 +64,13 @@ export function ChatShell({
           currentUserId={session?.user?.id ?? ""}
           autoFocusSearch={autoFocusSearch}
           onSearchFocused={onSearchFocused}
-          isCollapsed={effectiveCollapsed}
+          isCollapsed={sidebarCollapsed}
           onStartCall={onStartCall}
           onOpenSettings={onOpenSettings}
         />
       </div>
 
-      <div
-        className={cn(
-          "relative z-10 flex-1 flex flex-col min-w-0 min-h-0",
-          showMobileSidebar && !compactMobileSidebar && "hidden md:flex",
-        )}
-      >
+      <div className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col">
         {children}
       </div>
     </div>

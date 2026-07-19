@@ -102,7 +102,7 @@ export function ChatSidebarNav({ isCollapsed = false }: ChatSidebarNavProps) {
     <nav
       aria-label="Chat navigation"
       className={cn(
-        "shrink-0 border-b border-border/30 flex flex-row items-center gap-0.5 overflow-x-auto scrollbar-hide",
+        "hidden shrink-0 border-b border-border/30 sm:flex flex-row items-center gap-0.5 overflow-x-auto scrollbar-hide",
         isCollapsed ? "flex-wrap justify-center px-1 py-2" : "px-3 py-2",
       )}
     >

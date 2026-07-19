@@ -7,6 +7,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { ArrowLeft } from "lucide-react";
 import {
   BookmarkIcon,
+  EllipsisIcon,
   MicIcon,
   PaperclipIcon,
   UsersIcon,
@@ -60,6 +61,14 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { AiActionsMenu, type AiAction } from "@/components/ai";
 import { useChatSummarize } from "@/hooks/api/chat-summarize";
 import { useCan } from "@/hooks/api/access";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { useIsChatMobile } from "./use-chat-mobile";
 
 const PaperclipButton = React.forwardRef<
   HTMLButtonElement,
@@ -144,6 +153,7 @@ export function MessagePanel({
   const joinHuddle = useJoinHuddle();
   const summarize = useChatSummarize();
   const canUseAi = useCan("ai:chat:use");
+  const isChatMobile = useIsChatMobile();
 
   const summarizeAction: AiAction = useMemo(
     () => ({
@@ -843,6 +853,21 @@ export function MessagePanel({
   const handleCloseThread = useCallback(() => {
     setThreadMessageId(null);
   }, []);
+  const handleToggleFiles = useCallback(() => {
+    setShowFilesPanel((previous) => !previous);
+    setShowSavedPanel(false);
+  }, []);
+  const handleToggleSaved = useCallback(() => {
+    setShowSavedPanel((previous) => !previous);
+    setShowFilesPanel(false);
+  }, []);
+  const handleHuddle = useCallback(() => {
+    if (activeHuddle) {
+      joinHuddle.mutate({ huddleId: activeHuddle.id, channelId });
+      return;
+    }
+    startHuddle.mutate(channelId);
+  }, [activeHuddle, channelId, joinHuddle, startHuddle]);
 
   const groupedMessages = useMemo(() => {
     const groups: { date: string; messages: Message[] }[] = [];
@@ -876,7 +901,67 @@ export function MessagePanel({
   return (
     <div className="flex flex-1 min-w-0 overflow-hidden">
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-        <div className="h-[56px] px-4 border-b border-border/40 flex items-center gap-3 shrink-0 bg-card/80 backdrop-blur-sm sticky top-0 z-20">
+        <div className="flex h-12 shrink-0 items-center gap-2 border-b border-border/40 bg-card/80 px-3 backdrop-blur-sm sm:hidden">
+          <button
+            type="button"
+            className="flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            onClick={onBack}
+            aria-label="Back to conversations"
+          >
+            <ArrowLeft className="size-4" />
+          </button>
+          <div className="min-w-0 flex-1">
+            <TruncatedText text={displayName} className="text-sm font-semibold" />
+          </div>
+          {!isInHuddle && (
+            <AnimatedIconButton
+              icon={MicIcon}
+              iconSize={16}
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "size-8 shrink-0",
+                activeHuddle && "text-emerald-600 hover:text-emerald-600",
+              )}
+              onClick={handleHuddle}
+              disabled={startHuddle.isPending || joinHuddle.isPending}
+              aria-label={activeHuddle ? "Join huddle" : "Start huddle"}
+            />
+          )}
+          {canUseAi && (
+            <AiActionsMenu
+              actions={[summarizeAction]}
+              align="end"
+              disabled={!channelId}
+              triggerLabel="AI"
+              className="h-8 px-2 text-[10px]"
+            />
+          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <AnimatedIconButton
+                icon={EllipsisIcon}
+                iconSize={16}
+                variant="ghost"
+                size="icon"
+                className="size-8 shrink-0"
+                aria-label="Conversation actions"
+              />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onSelect={handleToggleFiles}>
+                Shared files
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={handleToggleSaved}>
+                Saved messages
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={onToggleInfo}>
+                Member details
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        <div className="hidden h-[56px] shrink-0 items-center gap-3 border-b border-border/40 bg-card/80 px-4 backdrop-blur-sm sm:flex sticky top-0 z-20">
           {onToggleSidebar && (
             <ChannelSidebarCollapseButton
               isCollapsed={isSidebarCollapsed ?? false}
@@ -884,13 +969,13 @@ export function MessagePanel({
             />
           )}
           <button
+            type="button"
             onClick={onBack}
-            className="md:hidden p-1.5 -ml-1 hover:bg-muted/50 rounded-lg"
+            className="rounded-lg p-1.5 hover:bg-muted/50 md:hidden"
             aria-label="Back to channels"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="size-4" />
           </button>
-
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className="relative shrink-0">
               <ChannelAvatar
@@ -957,13 +1042,7 @@ export function MessagePanel({
                     ? "text-green-500 hover:text-green-500 hover:bg-green-500/10"
                     : "text-muted-foreground hover:text-foreground",
                 )}
-                onClick={() => {
-                  if (activeHuddle) {
-                    joinHuddle.mutate({ huddleId: activeHuddle.id, channelId });
-                  } else {
-                    startHuddle.mutate(channelId);
-                  }
-                }}
+                onClick={handleHuddle}
                 disabled={startHuddle.isPending || joinHuddle.isPending}
                 aria-label={activeHuddle ? "Join huddle" : "Start huddle"}
               >
@@ -982,10 +1061,7 @@ export function MessagePanel({
               />
             )}
             <PaperclipButton
-              onClick={() => {
-                setShowFilesPanel((p) => !p);
-                setShowSavedPanel(false);
-              }}
+              onClick={handleToggleFiles}
               className={cn(
                 "h-8 w-8 rounded-lg flex items-center justify-center hover:bg-muted/60 transition-colors",
                 showFilesPanel
@@ -997,10 +1073,7 @@ export function MessagePanel({
             />
             <BookmarkButton
               active={showSavedPanel}
-              onClick={() => {
-                setShowSavedPanel((p) => !p);
-                setShowFilesPanel(false);
-              }}
+              onClick={handleToggleSaved}
               className={cn(
                 "h-8 w-8 rounded-lg flex items-center justify-center hover:bg-muted/60 transition-colors",
                 showSavedPanel
@@ -1159,6 +1232,17 @@ export function MessagePanel({
         )}
       </AnimatePresence>
 
+      {isChatMobile && (
+      <Sheet open={showSavedPanel} onOpenChange={setShowSavedPanel}>
+        <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:hidden">
+          <SavedMessagesPanel
+            onClose={() => setShowSavedPanel(false)}
+            onJumpToChannel={() => setShowSavedPanel(false)}
+          />
+        </SheetContent>
+      </Sheet>
+      )}
+
       <AnimatePresence>
         {showFilesPanel && (
           <motion.div
@@ -1175,6 +1259,17 @@ export function MessagePanel({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {isChatMobile && (
+      <Sheet open={showFilesPanel} onOpenChange={setShowFilesPanel}>
+        <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:hidden">
+          <SharedFilesPanel
+            channelId={channelId}
+            onClose={() => setShowFilesPanel(false)}
+          />
+        </SheetContent>
+      </Sheet>
+      )}
 
       <ForwardMessageDialog
         message={forwardMessage}

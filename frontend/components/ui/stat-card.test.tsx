@@ -17,7 +17,7 @@ describe("StatCardGrid", () => {
       "snap-x",
       "sm:grid",
       "sm:grid-cols-4",
-      "[&>*]:min-w-[150px]",
+      "[&>*]:min-w-[176px]",
       "sm:[&>*]:min-w-0",
     );
   });

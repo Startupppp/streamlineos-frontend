@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { AppSidebar } from "./app-sidebar";
 import { GlobalHeader } from "./header/global-header";
 import { MobileBottomNav } from "./mobile-bottom-nav";
@@ -16,6 +17,9 @@ import { WorkspaceSwitcher } from "./header/workspace-switcher";
 import { useProductSidebarVisibility } from "./sidebar/use-product-sidebar-visibility";
 import { AskOsProvider } from "@/components/assistant/ask-os-provider";
 import { CommandPaletteProvider } from "@/features/command-palette";
+import { ChatMobileBottomNav } from "@/features/chat/chat-mobile-bottom-nav";
+import { getChatMobileContentPaddingClassName } from "@/features/chat/chat-mobile-chrome-layout";
+import { cn } from "@/lib/utils";
 
 const SuccessChecklist = dynamic(
   () =>
@@ -62,9 +66,12 @@ export function DashboardShell({
   defaultCollapsed,
   children,
 }: DashboardShellProps) {
+  const pathname = usePathname();
+  const route = pathname ?? "";
   const [isSidebarCollapsed, setIsSidebarCollapsed] =
     useState(defaultCollapsed);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isChatConversationOpen, setIsChatConversationOpen] = useState(false);
   const [productSwitcherOpen, setProductSwitcherOpen] = useState(false);
   const [workspaceSwitcherOpen, setWorkspaceSwitcherOpen] = useState(false);
   const { hideSidebar } = useProductSidebarVisibility();
@@ -97,6 +104,20 @@ export function DashboardShell({
   }, [hideSidebar]);
   const handleCloseMobileMenu = useCallback(() => setMobileMenuOpen(false), []);
 
+  useEffect(() => {
+    if (!route.startsWith("/chat")) return;
+    const handleConversationChange = (event: Event) => {
+      if (!(event instanceof CustomEvent) || typeof event.detail !== "boolean") {
+        return;
+      }
+      setIsChatConversationOpen(event.detail);
+    };
+    window.addEventListener("chat:conversation-change", handleConversationChange);
+    return () => {
+      window.removeEventListener("chat:conversation-change", handleConversationChange);
+    };
+  }, [route]);
+
   const deferCloseMobileMenu = useCallback(() => {
     if (rafIdRef.current !== null) cancelAnimationFrame(rafIdRef.current);
     rafIdRef.current = requestAnimationFrame(() => {
@@ -118,6 +139,7 @@ export function DashboardShell({
   const sidebarW = isSidebarCollapsed
     ? SIDEBAR_COLLAPSED_W
     : SIDEBAR_EXPANDED_W;
+  const isChatRoute = route.startsWith("/chat");
 
   return (
     <div className="h-dvh flex flex-col overflow-hidden">
@@ -139,6 +161,7 @@ export function DashboardShell({
               isSidebarCollapsed={isSidebarCollapsed}
               onToggleSidebar={handleToggleSidebar}
               showSidebarToggle={!hideSidebar}
+              mobileNavOpen={mobileMenuOpen}
             />
 
             <div className="flex-1 flex min-h-0">
@@ -156,7 +179,13 @@ export function DashboardShell({
                 id="dashboard-content"
                 className="flex-1 min-w-0 flex flex-col overflow-hidden md:pb-6"
               >
-                <div className="flex-1 min-h-0 overflow-auto flex flex-col pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
+                <div
+                  className={cn(
+                    "flex-1 min-h-0 overflow-auto flex flex-col pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0",
+                    isChatRoute &&
+                      getChatMobileContentPaddingClassName(isChatConversationOpen),
+                  )}
+                >
                   {children}
                   <WelcomeToast />
                   <SuccessChecklist />
@@ -168,12 +197,10 @@ export function DashboardShell({
               <Drawer
                 open={mobileMenuOpen}
                 onOpenChange={setMobileMenuOpen}
-                direction="left"
+                direction="bottom"
                 modal
               >
-                <DrawerContent
-                  className="z-[100] p-0 w-[17rem] border-r-sidebar-border"
-                >
+                <DrawerContent className="z-[100] flex h-[96dvh] max-h-[96dvh] w-full flex-col gap-0 overflow-hidden rounded-t-xl border-t border-sidebar-border bg-sidebar p-0 pb-[env(safe-area-inset-bottom)]">
                   <DrawerTitle className="sr-only">Navigation</DrawerTitle>
                   <AppSidebar
                     isMobile
@@ -186,17 +213,23 @@ export function DashboardShell({
             )}
 
             <ProductSwitcherMenu
-              sheetOnly
+              drawerOnly
               open={productSwitcherOpen}
               onOpenChange={setProductSwitcherOpen}
             />
             <WorkspaceSwitcher
-              sheetOnly
+              drawerOnly
               open={workspaceSwitcherOpen}
               onOpenChange={setWorkspaceSwitcherOpen}
             />
 
-            <MobileBottomNav onOpenMobileMenu={handleOpenMobileMenu} />
+            <MobileBottomNav
+              onOpenMobileMenu={handleOpenMobileMenu}
+              className={isChatRoute ? "max-sm:hidden" : undefined}
+            />
+            {isChatRoute && (
+              <ChatMobileBottomNav onOpenMobileMenu={handleOpenMobileMenu} />
+            )}
           </AskOsProvider>
         </CommandPaletteProvider>
       ) : (

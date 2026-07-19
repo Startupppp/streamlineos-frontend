@@ -1,11 +1,12 @@
 "use client";
 
 import { forwardRef, useState, type ComponentPropsWithoutRef } from "react";
-import { MessageCircle, PenLine, Search } from "lucide-react";
+import { MessageCircle, PenLine } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { SearchInput } from "@/components/ui/search-input";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { AiConversation } from "@/hooks/api/chat-ai-assistant";
@@ -89,7 +90,6 @@ export function AskOsConversationList({
     setEditingId(null);
   }
 
-  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) { onSearchChange(e.target.value); }
   function handleSelectBtn(e: React.MouseEvent<HTMLButtonElement>) { onSelect(Number(e.currentTarget.dataset.id)); }
 
   function handleMenuRename(e: React.MouseEvent<HTMLElement>) {
@@ -117,11 +117,13 @@ export function AskOsConversationList({
   return (
     <div className="flex h-full flex-col">
       <div className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2">
-        <div className="flex flex-1 items-center gap-1.5 rounded-lg border border-input bg-background px-2.5">
-          <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-          <input type="text" value={search} onChange={handleSearchChange} placeholder="Search conversations…"
-            className="flex-1 bg-transparent text-xs focus-visible:outline-none" />
-        </div>
+        <SearchInput
+          value={search}
+          onValueChange={onSearchChange}
+          placeholder="Search conversations…"
+          className="flex-1"
+          inputClassName="h-9 text-xs"
+        />
         <button type="button" onClick={onNewChat} aria-label="New chat"
           className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted">
           <PenLine className="h-4 w-4" />

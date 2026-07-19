@@ -3,6 +3,8 @@ import type { PropsWithChildren } from "react";
 import { DashboardShell } from "./dashboard-shell";
 
 const drawerCalls: Array<{ direction?: string; open?: boolean }> = [];
+const productSwitcherCalls: Array<{ drawerOnly?: boolean }> = [];
+const workspaceSwitcherCalls: Array<{ drawerOnly?: boolean }> = [];
 
 jest.mock("next/dynamic", () => () => () => null);
 
@@ -48,6 +50,10 @@ jest.mock("./mobile-bottom-nav", () => ({
   ),
 }));
 
+jest.mock("@/features/chat/chat-mobile-bottom-nav", () => ({
+  ChatMobileBottomNav: () => null,
+}));
+
 jest.mock("./command-palette", () => ({
   CommandPalette: () => null,
 }));
@@ -78,11 +84,17 @@ jest.mock("@/components/billing/trial-banner", () => ({
 }));
 
 jest.mock("./header/product-switcher-menu", () => ({
-  ProductSwitcherMenu: () => null,
+  ProductSwitcherMenu: ({ drawerOnly }: { drawerOnly?: boolean }) => {
+    productSwitcherCalls.push({ drawerOnly });
+    return null;
+  },
 }));
 
 jest.mock("./header/workspace-switcher", () => ({
-  WorkspaceSwitcher: () => null,
+  WorkspaceSwitcher: ({ drawerOnly }: { drawerOnly?: boolean }) => {
+    workspaceSwitcherCalls.push({ drawerOnly });
+    return null;
+  },
 }));
 
 jest.mock("./sidebar/use-product-sidebar-visibility", () => ({
@@ -100,9 +112,11 @@ jest.mock("@/features/command-palette", () => ({
 describe("DashboardShell mobile navigation", () => {
   beforeEach(() => {
     drawerCalls.length = 0;
+    productSwitcherCalls.length = 0;
+    workspaceSwitcherCalls.length = 0;
   });
 
-  it("uses a left drawer and closes it after navigation", () => {
+  it("uses a bottom drawer and closes it after navigation", () => {
     render(
       <DashboardShell
         userId="user-1"
@@ -115,7 +129,7 @@ describe("DashboardShell mobile navigation", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Open menu" }));
 
-    expect(drawerCalls.at(-1)).toEqual({ direction: "left", open: true });
+    expect(drawerCalls.at(-1)).toEqual({ direction: "bottom", open: true });
 
     const navigationButtons = screen.getAllByRole("button", {
       name: "Navigate",
@@ -126,6 +140,21 @@ describe("DashboardShell mobile navigation", () => {
     }
     fireEvent.click(mobileNavigationButton);
 
-    expect(drawerCalls.at(-1)).toEqual({ direction: "left", open: false });
+    expect(drawerCalls.at(-1)).toEqual({ direction: "bottom", open: false });
+  });
+
+  it("configures mobile switchers as drawers", () => {
+    render(
+      <DashboardShell
+        userId="user-1"
+        hasDashboardAccess
+        defaultCollapsed={false}
+      >
+        <div>Content</div>
+      </DashboardShell>,
+    );
+
+    expect(productSwitcherCalls.at(-1)).toEqual({ drawerOnly: true });
+    expect(workspaceSwitcherCalls.at(-1)).toEqual({ drawerOnly: true });
   });
 });

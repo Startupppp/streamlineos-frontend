@@ -19,6 +19,12 @@ const serverSchema = z.object({
     .min(32, "BACKEND_JWT_SECRET must be at least 32 characters")
     .optional(),
 
+  API_INTERNAL_URL: z.preprocess(
+    (value) =>
+      typeof value === "string" && value.trim() === "" ? undefined : value,
+    z.string().url().optional(),
+  ),
+
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   GOOGLE_SITE_VERIFICATION: z.string().optional(),

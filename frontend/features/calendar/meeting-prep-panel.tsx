@@ -14,7 +14,7 @@ import { AiCitationChips } from "@/components/ai/ai-citation-chips";
 import { AiPermissionDenied } from "@/components/ai/ai-permission-denied";
 import { CalendarConnectInline } from "@/features/calendar/calendar-connect-inline";
 import { useCan } from "@/hooks/api/access";
-import { useIntegrationConnections } from "@/hooks/api/integrations";
+import { useCalendarConnections } from "./use-calendar-connections";
 import {
   useMeetingPrep,
   type MeetingPrepResult,
@@ -40,7 +40,7 @@ function PrepSkeleton() {
 
 export function MeetingPrepPanel({ eventId, eventTitle, onClose: _onClose }: MeetingPrepPanelProps) {
   const canUse = useCan("calendar:ai:use");
-  const { data: connections = [] } = useIntegrationConnections();
+  const { data: connections = [] } = useCalendarConnections();
   const hasConnectedCalendar = connections.some((c) => c.status === "active");
 
   const [includeCrm, setIncludeCrm] = useState(false);

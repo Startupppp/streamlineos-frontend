@@ -150,7 +150,7 @@ export function StatCardGrid({
           : "grid gap-3",
         mobileScroll ? STAT_GRID_RESPONSIVE_COLS[cols] : STAT_GRID_COLS[cols],
         mobileScroll
-          ? "[&>*]:h-full [&>*]:min-w-[150px] [&>*]:shrink-0 [&>*]:snap-start sm:[&>*]:min-w-0 sm:[&>*]:shrink"
+          ? "[&>*]:h-full [&>*]:min-w-[176px] [&>*]:shrink-0 [&>*]:snap-start sm:[&>*]:min-w-0 sm:[&>*]:shrink"
           : "[&>*]:min-w-0 [&>*]:h-full",
         className,
       )}
@@ -253,7 +253,7 @@ export const StatCard = memo(function StatCard({
       <div className="min-w-0 flex-1 space-y-0.5">
         <p
           className={cn(
-            "text-[11px] font-medium leading-tight truncate",
+            "text-[11px] font-medium leading-tight sm:truncate",
             featured ? "text-primary-foreground/70" : "text-muted-foreground",
           )}
         >

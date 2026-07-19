@@ -5,4 +5,6 @@ export const BRAND_DESCRIPTION =
 
 export const BRAND_DOMAIN = "www.streamlineos.in";
 export const BRAND_URL = `https://${BRAND_DOMAIN}`;
+export const BRAND_API_DOMAIN = "api.streamlineos.in";
+export const BRAND_API_URL = `https://${BRAND_API_DOMAIN}`;
 export const BRAND_SUPPORT_EMAIL = "support@streamlineos.in";

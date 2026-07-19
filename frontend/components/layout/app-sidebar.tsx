@@ -179,26 +179,26 @@ export function AppSidebar({
     <TooltipProvider>
       <div
         className={cn(
-          "relative flex flex-col h-full overflow-visible bg-sidebar text-sidebar-foreground",
+          "relative flex min-h-0 flex-col bg-sidebar text-sidebar-foreground",
+          isMobile ? "h-full w-full flex-1 overflow-hidden" : "h-full overflow-visible",
           !isMobile && "transition-[width] duration-300 ease-in-out",
-          isMobile ? "w-full" : effectiveCollapsed ? "w-[3.5rem]" : "w-[17rem]",
+          !isMobile && (effectiveCollapsed ? "w-[3.5rem]" : "w-[17rem]"),
         )}
       >
         {isMobile && (
-          <div className="shrink-0 px-2.5 py-2 border-b border-sidebar-border">
-            <ProductSwitcherMenu
-              variant="sidebar"
+          <div className="shrink-0 border-b border-sidebar-border">
+            <div className="px-2.5 py-2">
+              <ProductSwitcherMenu
+                variant="sidebar"
+                triggerOnly
+                onRequestOpen={onRequestProductSwitcher}
+              />
+            </div>
+            <SidebarWorkspaceRow
               triggerOnly
-              onRequestOpen={onRequestProductSwitcher}
+              onRequestOpen={onRequestWorkspaceSwitcher}
             />
           </div>
-        )}
-
-        {isMobile && (
-          <SidebarWorkspaceRow
-            triggerOnly
-            onRequestOpen={onRequestWorkspaceSwitcher}
-          />
         )}
 
         <ScrollArea className="flex-1 min-h-0">

@@ -57,6 +57,7 @@ import { MyTasksWidget } from "@/components/dashboard/my-tasks-widget";
 import { TimesheetWidget } from "@/components/dashboard/timesheet-widget";
 import { AnnouncementsWidget } from "@/components/dashboard/announcements-widget";
 import { UpcomingEventsWidget } from "@/components/dashboard/upcoming-events-widget";
+import { shouldRenderDashboardLoading } from "./dashboard-hydration";
 
 const ExecutiveKpiWidget = dynamic(
   () =>
@@ -96,6 +97,7 @@ export function DashboardClient() {
     greeting: string;
     todayFormatted: string;
   } | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   const {
     data: stats,
@@ -179,6 +181,7 @@ export function DashboardClient() {
       greeting: getGreeting(),
       todayFormatted: format(new Date(), "EEEE, MMMM do, yyyy"),
     });
+    setMounted(true);
   }, []);
 
   const pageTitle = headerClock
@@ -226,7 +229,13 @@ export function DashboardClient() {
   const showBottomRow =
     (projectsEnabled && canViewTickets) || (hrEnabled && canViewAttendance);
 
-  if (isLoading || access.accessLoading) {
+  if (
+    shouldRenderDashboardLoading({
+      accessLoading: access.accessLoading,
+      isLoading,
+      mounted,
+    })
+  ) {
     return (
       <PageWrapper title={pageTitle} subtitle="Loading your workspace…">
         <div

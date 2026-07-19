@@ -1,7 +1,6 @@
 ﻿"use client";
 
-import { memo, useCallback, useMemo } from "react";
-import { format } from "date-fns";
+import { memo, useCallback } from "react";
 import {
   Share2,
   Calendar as CalendarIcon,
@@ -42,7 +41,6 @@ import {
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 import type { View } from "./big-calendar-wrapper";
-import { CalendarMonthYearPicker } from "./calendar-month-year-picker";
 
 type ViewMode = "calendar" | "list" | "history";
 
@@ -53,6 +51,8 @@ const VIEW_MODE_OPTIONS: ViewOption<ViewMode>[] = [
 ];
 
 interface CalendarToolbarPrimaryActionsProps {
+  activeConnectionCount: number;
+  onOpenAccounts: () => void;
   onOpenCreate: () => void;
   onOpenCreateTicket: () => void;
 }
@@ -69,6 +69,8 @@ function ShareMenuItems() {
 
 export const CalendarToolbarPrimaryActions = memo(
   function CalendarToolbarPrimaryActions({
+    activeConnectionCount,
+    onOpenAccounts,
     onOpenCreate,
     onOpenCreateTicket,
   }: CalendarToolbarPrimaryActionsProps) {
@@ -89,6 +91,21 @@ export const CalendarToolbarPrimaryActions = memo(
             <ShareMenuItems />
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <Button
+          variant="outline"
+          size="icon"
+          className="relative w-8"
+          aria-label="Calendar accounts"
+          onClick={onOpenAccounts}
+        >
+          <Link2 className="h-3.5 w-3.5" />
+          {activeConnectionCount > 0 ? (
+            <span className="absolute -top-1 -right-1 h-3.5 min-w-[14px] rounded-full bg-primary px-0.5 text-center text-[9px] font-semibold leading-[14px] text-primary-foreground">
+              {activeConnectionCount}
+            </span>
+          ) : null}
+        </Button>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -121,17 +138,13 @@ export const CalendarToolbarPrimaryActions = memo(
 interface CalendarToolbarProps {
   view: View;
   viewMode: ViewMode;
-  currentDate: Date;
-  activeConnectionCount: number;
   hrEventsVisible: boolean;
   crmEventsVisible: boolean;
   onPrev: () => void;
   onNext: () => void;
   onToday: () => void;
-  onDateChange: (date: Date) => void;
   onViewChange: (v: View) => void;
   onViewModeChange: (v: ViewMode) => void;
-  onOpenAccounts: () => void;
   onOpenCreate: () => void;
   onOpenCreateTicket: () => void;
   onToggleHrEvents: () => void;
@@ -142,17 +155,13 @@ interface CalendarToolbarProps {
 export const CalendarToolbar = memo(function CalendarToolbar({
   view,
   viewMode,
-  currentDate,
-  activeConnectionCount,
   hrEventsVisible,
   crmEventsVisible,
   onPrev,
   onNext,
   onToday,
-  onDateChange,
   onViewChange,
   onViewModeChange,
-  onOpenAccounts,
   onOpenCreate,
   onOpenCreateTicket,
   onToggleHrEvents,
@@ -163,11 +172,6 @@ export const CalendarToolbar = memo(function CalendarToolbar({
     (v: string) => onViewChange(v as View),
     [onViewChange],
   );
-
-  const navTitle = useMemo(() => {
-    if (view === "day") return format(currentDate, "MMMM d, yyyy");
-    return format(currentDate, "MMMM yyyy");
-  }, [currentDate, view]);
 
   return (
     <div className="flex w-full min-w-0 shrink-0 select-none flex-row items-center justify-between gap-2 border-b border-border pb-2">
@@ -202,13 +206,6 @@ export const CalendarToolbar = memo(function CalendarToolbar({
           />
         </div>
 
-        <div className="min-w-0 flex-1 overflow-hidden">
-          <CalendarMonthYearPicker
-            currentDate={currentDate}
-            title={navTitle}
-            onDateChange={onDateChange}
-          />
-        </div>
       </div>
 
       <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
@@ -252,21 +249,6 @@ export const CalendarToolbar = memo(function CalendarToolbar({
               </DropdownMenuContent>
             </DropdownMenu>
           ) : null}
-
-          <Button
-            variant="outline"
-            size="icon"
-            className="relative w-8"
-            aria-label="Calendar accounts"
-            onClick={onOpenAccounts}
-          >
-            <Link2 className="h-3.5 w-3.5" />
-            {activeConnectionCount > 0 && (
-              <span className="absolute -top-1 -right-1 h-3.5 min-w-[14px] rounded-full bg-primary px-0.5 text-center text-[9px] font-semibold leading-[14px] text-primary-foreground">
-                {activeConnectionCount}
-              </span>
-            )}
-          </Button>
 
           <Button
             variant={hrEventsVisible ? "secondary" : "outline"}
@@ -317,15 +299,6 @@ export const CalendarToolbar = memo(function CalendarToolbar({
                   </DropdownMenuSubContent>
                 </DropdownMenuSub>
               ) : null}
-              <DropdownMenuItem className="text-xs" onClick={onOpenAccounts}>
-                <Link2 className="mr-2 h-3.5 w-3.5" />
-                Calendar accounts
-                {activeConnectionCount > 0 ? (
-                  <span className="ml-auto text-muted-foreground">
-                    {activeConnectionCount}
-                  </span>
-                ) : null}
-              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuCheckboxItem
                 className="text-xs"

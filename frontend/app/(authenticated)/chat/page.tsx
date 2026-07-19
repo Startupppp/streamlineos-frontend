@@ -15,6 +15,8 @@ import { NewDMDialog } from "@/features/chat/new-dm-dialog";
 import { NewGroupDialog } from "@/features/chat/new-group-dialog";
 import { ChatAblyProvider } from "@/features/chat/ably-provider";
 import { useChatSidebarCollapse } from "@/features/chat/chat-shell";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { useIsChatMobile } from "@/features/chat/use-chat-mobile";
 
 function ChatNotifications({
   activeChannelId,
@@ -48,6 +50,7 @@ export default function ChatPage() {
   const [emptyGroupOpen, setEmptyGroupOpen] = useState(false);
   const [showSearchFocus, setShowSearchFocus] = useState(false);
   const { sidebarCollapsed, handleToggleSidebar } = useChatSidebarCollapse();
+  const isChatMobile = useIsChatMobile();
 
   const heartbeat = useChatHeartbeat();
   const heartbeatRef = useRef(heartbeat);
@@ -134,6 +137,25 @@ export default function ChatPage() {
 
   const handleAutoStartHandled = useCallback(() => setPendingCallAction(null), []);
 
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent("chat:conversation-change", {
+        detail: activeChannelId !== null && !showMobileList,
+      }),
+    );
+  }, [activeChannelId, showMobileList]);
+
+  useEffect(() => {
+    const handleOpenNewDM = () => setEmptyDMOpen(true);
+    const handleOpenNewChannel = () => setEmptyGroupOpen(true);
+    window.addEventListener("chat:open-new-dm", handleOpenNewDM);
+    window.addEventListener("chat:open-new-channel", handleOpenNewChannel);
+    return () => {
+      window.removeEventListener("chat:open-new-dm", handleOpenNewDM);
+      window.removeEventListener("chat:open-new-channel", handleOpenNewChannel);
+    };
+  }, []);
+
   return (
     <ChatAblyProvider>
       <ChatNotifications
@@ -214,6 +236,20 @@ export default function ChatPage() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {isChatMobile && activeChannelId && (
+          <Sheet open={showInfoPanel} onOpenChange={setShowInfoPanel}>
+            <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:hidden">
+              <ChannelInfoPanel
+                channelId={activeChannelId}
+                currentUserId={currentUserId ?? ""}
+                onClose={handleCloseInfo}
+                onLeftChannel={handleLeftChannel}
+                onArchived={handleArchived}
+              />
+            </SheetContent>
+          </Sheet>
+        )}
 
         <NewDMDialog
           open={emptyDMOpen}

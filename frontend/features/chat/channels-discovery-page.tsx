@@ -95,14 +95,13 @@ export function ChannelsDiscoveryPage() {
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-background">
-      <div className="px-6 pt-5 pb-3 border-b border-border/30">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background">
+      <div className="border-b border-border/30 px-4 pb-3 pt-5 sm:px-6">
         <div className="flex items-start justify-between gap-3">
           <div>
             <h1 className="text-[16px] font-bold">Channels</h1>
             <p className="text-[12px] text-muted-foreground">
-              Browse and join public channels in your organization. Your direct messages and
-              private channels live under Discuss.
+              Public channels for your org. DMs and private chats are in Discuss.
             </p>
           </div>
           <AnimatedIconButton
@@ -116,13 +115,13 @@ export function ChannelsDiscoveryPage() {
             Create Channel
           </AnimatedIconButton>
         </div>
-        <div className="min-w-0 mt-3 max-w-sm bg-muted/30 border-border/30">
+        <div className="mt-3 w-full min-w-0 max-w-none bg-muted/30 border-border/30 sm:max-w-sm">
           <SearchInput placeholder="Search channels..." value={search} onValueChange={handleSearchChange} />
         </div>
       </div>
 
       <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
-        <div className="overscroll-contain px-6 py-4">
+        <div className="overscroll-contain px-4 py-4 pb-[calc(4rem+env(safe-area-inset-bottom))] sm:px-6 md:pb-4">
         {isLoading ? (
           <div className="space-y-2">
             {[1, 2, 3, 4].map((i) => (

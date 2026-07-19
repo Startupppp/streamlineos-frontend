@@ -10,7 +10,7 @@ import { PAGE_CHROME_BOTTOM, PAGE_CHROME_X } from "@/components/ui/content-fill-
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface PageWrapperProps {
-  title: string;
+  title: React.ReactNode;
   subtitle?: React.ReactNode;
   badge?: React.ReactNode;
   backHref?: string;
@@ -90,7 +90,7 @@ export function PageWrapper({
             )}
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className={titleClass}>
+                <h1 className={cn(titleClass, typeof title === "string" ? undefined : "w-fit shrink-0")}>
                   {title}
                 </h1>
                 {badge && (

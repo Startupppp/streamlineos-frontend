@@ -19,10 +19,12 @@ Connect Cursor or Claude Code to your StreamlineOS workspace so your AI coding a
 
 | Environment | URL |
 |---|---|
-| Production | `https://streamlineos-backend-production.up.railway.app` |
+| Production | `https://api.streamlineos.in` |
 | Local development | `http://localhost:1500` |
 
 **Use the production URL** unless you are developing StreamlineOS itself. All examples below show production; swap in the local URL when needed.
+
+> Prefer `api.streamlineos.in` over the legacy Railway hostname (`*.up.railway.app`). Some mobile carriers cannot reach Railway’s shared domain. See `docs/production-api-domain.md`.
 
 ### Changing the URL later
 
@@ -54,7 +56,7 @@ Create or edit `.cursor/mcp.json` in the repository root (or your global Cursor 
       "args": ["<absolute-path-to-repo>/backend/scripts/mcp-server.mjs"],
       "env": {
         "STREAMLINEOS_TOKEN": "slos_your_token_here",
-        "STREAMLINEOS_API_URL": "https://streamlineos-backend-production.up.railway.app"
+        "STREAMLINEOS_API_URL": "https://api.streamlineos.in"
       }
     }
   }
@@ -74,7 +76,7 @@ Run once in any terminal:
 ```bash
 claude mcp add streamlineos \
   -e STREAMLINEOS_TOKEN=slos_your_token_here \
-  -e STREAMLINEOS_API_URL=https://streamlineos-backend-production.up.railway.app \
+  -e STREAMLINEOS_API_URL=https://api.streamlineos.in \
   -- node /absolute/path/to/backend/scripts/mcp-server.mjs
 ```
 

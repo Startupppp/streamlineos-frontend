@@ -253,6 +253,14 @@ async function getBackendToken(): Promise<string | null> {
   return fetchingTokenPromise;
 }
 
+function requestHost(url: string): string {
+  try {
+    return new URL(url).host;
+  } catch {
+    return "";
+  }
+}
+
 export async function authedFetch(url: string, init: RequestInit, useBackend: boolean, path: string): Promise<Response> {
   const headers = new Headers(init.headers);
   const isPublic = isPublicPath(path);
@@ -263,22 +271,35 @@ export async function authedFetch(url: string, init: RequestInit, useBackend: bo
   }
 
   const credentials: RequestCredentials = useBackend ? "omit" : "include";
-  let res = await fetch(url, { ...init, headers, credentials });
+  try {
+    let res = await fetch(url, { ...init, headers, credentials });
 
-  if (useBackend && !isPublic && res.status === 401) {
-    cachedToken = null;
-    const token = await getBackendToken();
-    if (token) {
-      headers.set("Authorization", `Bearer ${token}`);
-      res = await fetch(url, { ...init, headers, credentials });
+    if (useBackend && !isPublic && res.status === 401) {
+      cachedToken = null;
+      const token = await getBackendToken();
+      if (token) {
+        headers.set("Authorization", `Bearer ${token}`);
+        res = await fetch(url, { ...init, headers, credentials });
+      }
+      if (res.status === 401 && typeof window !== "undefined") {
+        void import("next-auth/react").then(({ signOut }) => {
+          void signOut({ callbackUrl: "/signin" });
+        });
+      }
     }
-    if (res.status === 401 && typeof window !== "undefined") {
-      void import("next-auth/react").then(({ signOut }) => {
-        void signOut({ callbackUrl: "/signin" });
-      });
+    return res;
+  } catch (error: unknown) {
+    const host = requestHost(url);
+    if (host) {
+      throw new ApiError(
+        `Network error contacting ${host}. Check your connection and try again.`,
+        undefined,
+        "NETWORK_ERROR",
+      );
     }
+    if (error instanceof Error) throw error;
+    throw new ApiError("Network error. Check your connection and try again.", undefined, "NETWORK_ERROR");
   }
-  return res;
 }
 
 export function buildUrl(path: string, params?: Record<string, unknown>): string {

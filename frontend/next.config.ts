@@ -26,6 +26,17 @@ function shouldSendStrictTransportSecurity(): boolean {
   return true;
 }
 
+function apiConnectOrigin(): string {
+  const raw = process.env.NEXT_PUBLIC_API_URL;
+  if (!raw) return "";
+  try {
+    const parsed = new URL(raw);
+    return `${parsed.protocol}//${parsed.host}`;
+  } catch {
+    return "";
+  }
+}
+
 function buildContentSecurityPolicy(): string {
   const isDev = process.env.NODE_ENV === "development";
   const scriptSrc = [
@@ -34,6 +45,18 @@ function buildContentSecurityPolicy(): string {
     "https://accounts.google.com",
     "https://checkout.razorpay.com",
   ].join(" ");
+  const apiOrigin = apiConnectOrigin();
+  const connectSrc = [
+    "'self'",
+    "https://accounts.google.com",
+    "https://*.upstash.io",
+    "https://*.r2.dev",
+    "https://*.r2.cloudflarestorage.com",
+    "wss://",
+    "https://api.razorpay.com",
+    "https://checkout.razorpay.com",
+    ...(apiOrigin ? [apiOrigin] : []),
+  ].join(" ");
 
   return [
     "default-src 'self'",
@@ -41,7 +64,7 @@ function buildContentSecurityPolicy(): string {
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: blob: https://api.dicebear.com https://*.r2.dev https://*.r2.cloudflarestorage.com https://images.unsplash.com https://lh3.googleusercontent.com https://streamlineos.app",
-    "connect-src 'self' https://accounts.google.com https://*.upstash.io https://*.r2.dev https://*.r2.cloudflarestorage.com wss:// https://api.razorpay.com https://checkout.razorpay.com",
+    `connect-src ${connectSrc}`,
     "worker-src 'self' blob:",
     "frame-src 'self' https://accounts.google.com https://checkout.razorpay.com https://api.razorpay.com",
     "object-src 'none'",

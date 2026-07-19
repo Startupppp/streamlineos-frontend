@@ -11,7 +11,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 import {
   Tooltip,
   TooltipContent,
@@ -39,7 +44,7 @@ interface ProductSwitcherMenuProps {
   onOpenChange?: (open: boolean) => void;
   triggerOnly?: boolean;
   onRequestOpen?: () => void;
-  sheetOnly?: boolean;
+  drawerOnly?: boolean;
 }
 
 interface ProductTileProps {
@@ -217,7 +222,7 @@ function ProductGrid({
 
 export function ProductSwitcherMenu({
   onRequestOpen,
-  sheetOnly = false,
+  drawerOnly = false,
   variant = "header",
   triggerOnly = false,
   open: controlledOpen,
@@ -252,7 +257,7 @@ export function ProductSwitcherMenu({
 
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const enableHoverOpen =
-    !isMobile && variant === "header" && !triggerOnly && !sheetOnly;
+    !isMobile && variant === "header" && !triggerOnly && !drawerOnly;
 
   const clearCloseTimeout = useCallback(() => {
     if (closeTimeoutRef.current !== null) {
@@ -360,11 +365,9 @@ export function ProductSwitcherMenu({
     </button>
   );
 
-  const sheetContent = (
-    <SheetContent
-      side="bottom"
-      className="w-full max-w-none gap-0 p-0 px-4 pb-6 pt-4"
-    >
+  const drawerContent = (
+    <DrawerContent className="flex h-[min(96dvh,40rem)] max-h-[96dvh] w-full flex-col gap-0 overflow-hidden rounded-t-xl border-t bg-sidebar p-4 pb-[env(safe-area-inset-bottom)] shadow-2xl">
+      <DrawerTitle className="sr-only">Products</DrawerTitle>
       <AnimatePresence>
         {open && (
           <ProductGrid
@@ -375,15 +378,15 @@ export function ProductSwitcherMenu({
           />
         )}
       </AnimatePresence>
-    </SheetContent>
+    </DrawerContent>
   );
 
-  if (sheetOnly)
+  if (drawerOnly)
     return (
       <TooltipProvider delayDuration={200}>
-        <Sheet open={open} onOpenChange={handleOpenChange}>
-          {sheetContent}
-        </Sheet>
+        <Drawer open={open} onOpenChange={handleOpenChange} direction="bottom">
+          {drawerContent}
+        </Drawer>
       </TooltipProvider>
     );
 
@@ -391,10 +394,10 @@ export function ProductSwitcherMenu({
 
   if (isMobile)
     return (
-      <Sheet open={open} onOpenChange={handleOpenChange}>
-        <SheetTrigger asChild>{triggerButton}</SheetTrigger>
-        {sheetContent}
-      </Sheet>
+      <Drawer open={open} onOpenChange={handleOpenChange}>
+        <DrawerTrigger asChild>{triggerButton}</DrawerTrigger>
+        {drawerContent}
+      </Drawer>
     );
 
   return (

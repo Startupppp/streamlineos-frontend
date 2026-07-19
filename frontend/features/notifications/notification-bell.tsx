@@ -14,6 +14,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/common/use-mobile";
@@ -123,6 +129,114 @@ function PopoverSkeleton() {
   );
 }
 
+interface NotificationPanelProps {
+  surface: "popover" | "drawer";
+  unreadCount: number;
+  isLoading: boolean;
+  isError: boolean;
+  recentNotifications: Notification[];
+  isMarkingAllRead: boolean;
+  onItemClick: (notification: Notification) => void;
+  onMarkAllRead: () => void;
+  onClose: () => void;
+  markAllReadHoverHandlers: ReturnType<typeof useAnimatedIcon>["hoverHandlers"];
+  markAllReadIconRef: ReturnType<typeof useAnimatedIcon>["iconRef"];
+}
+
+function NotificationPanel({
+  surface,
+  unreadCount,
+  isLoading,
+  isError,
+  recentNotifications,
+  isMarkingAllRead,
+  onItemClick,
+  onMarkAllRead,
+  onClose,
+  markAllReadHoverHandlers,
+  markAllReadIconRef,
+}: NotificationPanelProps) {
+  const title =
+    surface === "drawer" ? (
+      <DrawerTitle className="text-sm font-semibold text-foreground">
+        Notifications
+      </DrawerTitle>
+    ) : (
+      <h3 className="text-sm font-semibold text-foreground">Notifications</h3>
+    );
+
+  return (
+    <>
+      <div className="flex items-center justify-between border-b border-border px-3 py-2.5">
+        {title}
+        <div className="flex items-center gap-1">
+          {unreadCount > 0 && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              disabled={isMarkingAllRead}
+              onClick={onMarkAllRead}
+              title="Mark all read"
+              {...markAllReadHoverHandlers}
+            >
+              <CheckCheckIcon ref={markAllReadIconRef} size={14} />
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto px-1 py-1">
+        {isLoading ? (
+          <PopoverSkeleton />
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center px-4 py-8 text-center">
+            <Inbox className="mb-2 w-8 text-muted-foreground/30" />
+            <p className="text-sm font-medium text-foreground">
+              Couldn&apos;t load notifications
+            </p>
+            <Link
+              href="/notifications"
+              onClick={onClose}
+              className="mt-0.5 text-xs text-accent hover:underline"
+            >
+              Open the notification center
+            </Link>
+          </div>
+        ) : recentNotifications.length === 0 ? (
+          <div className="flex flex-col items-center justify-center px-4 py-8 text-center">
+            <Inbox className="mb-2 w-8 text-muted-foreground/30" />
+            <p className="text-sm font-medium text-foreground">
+              You&apos;re all caught up
+            </p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              No unread notifications
+            </p>
+          </div>
+        ) : (
+          recentNotifications.map((notification) => (
+            <PopoverNotificationItem
+              key={notification.id}
+              notification={notification}
+              onItemClick={onItemClick}
+            />
+          ))
+        )}
+      </div>
+
+      <div className="border-t border-border px-3 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
+        <Link
+          href="/notifications"
+          onClick={onClose}
+          className="block w-full py-1 text-center text-xs text-muted-foreground transition-colors hover:text-foreground"
+        >
+          See all notifications →
+        </Link>
+      </div>
+    </>
+  );
+}
+
 export function NotificationBell() {
   const router = useRouter();
   const isMobile = useIsMobile();
@@ -130,7 +244,10 @@ export function NotificationBell() {
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const enableHoverOpen = !isMobile;
 
-  const bellAnimated = useAnimatedIcon();
+  const {
+    iconRef: bellIconRef,
+    hoverHandlers: bellHoverHandlers,
+  } = useAnimatedIcon();
   const markAllReadAnimated = useAnimatedIcon();
 
   useNotificationEvents();
@@ -180,115 +297,84 @@ export function NotificationBell() {
         markRead.mutate(notification.id);
       }
       if (notification.link) {
+        handleOpenChange(false);
         router.push(notification.link);
       }
     },
-    [markRead, router],
+    [handleOpenChange, markRead, router],
   );
 
   const handleMarkAllRead = useCallback(() => {
     markAllRead.mutate(undefined);
   }, [markAllRead]);
 
+  const handleClose = useCallback(() => {
+    handleOpenChange(false);
+  }, [handleOpenChange]);
+
+  const notificationPanel = (
+    <NotificationPanel
+      surface={isMobile ? "drawer" : "popover"}
+      unreadCount={unreadCount}
+      isLoading={isLoading}
+      isError={isError}
+      recentNotifications={recentNotifications}
+      isMarkingAllRead={markAllRead.isPending}
+      onItemClick={handleItemClick}
+      onMarkAllRead={handleMarkAllRead}
+      onClose={handleClose}
+      markAllReadHoverHandlers={markAllReadAnimated.hoverHandlers}
+      markAllReadIconRef={markAllReadAnimated.iconRef}
+    />
+  );
+
+  const trigger = (
+    <button
+      type="button"
+      aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ""}`}
+      onMouseEnter={
+        enableHoverOpen
+          ? handleHoverEnter
+          : bellHoverHandlers.onMouseEnter
+      }
+      onMouseLeave={
+        enableHoverOpen
+          ? handleHoverLeave
+          : bellHoverHandlers.onMouseLeave
+      }
+      className="relative flex h-8 w-8 items-center justify-center rounded-lg text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+    >
+      {unreadCount > 0 ? (
+        <BellRingIcon ref={bellIconRef} size={16} />
+      ) : (
+        <BellIcon ref={bellIconRef} size={16} />
+      )}
+      <BellBadge count={unreadCount} />
+    </button>
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={handleOpenChange}>
+        <DrawerTrigger asChild>{trigger}</DrawerTrigger>
+        <DrawerContent className="flex h-[min(80dvh,32rem)] flex-col gap-0 overflow-hidden rounded-t-xl border bg-card p-0 shadow-2xl">
+          {notificationPanel}
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ""}`}
-          onMouseEnter={
-            enableHoverOpen
-              ? handleHoverEnter
-              : bellAnimated.hoverHandlers.onMouseEnter
-          }
-          onMouseLeave={
-            enableHoverOpen
-              ? handleHoverLeave
-              : bellAnimated.hoverHandlers.onMouseLeave
-          }
-          className="relative h-8 w-8 rounded-lg flex items-center justify-center text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
-        >
-          {unreadCount > 0 ? (
-            <BellRingIcon ref={bellAnimated.iconRef} size={16} />
-          ) : (
-            <BellIcon ref={bellAnimated.iconRef} size={16} />
-          )}
-          <BellBadge count={unreadCount} />
-        </button>
-      </PopoverTrigger>
+      <PopoverTrigger asChild>{trigger}</PopoverTrigger>
       <PopoverContent
         align="end"
         sideOffset={8}
-        className="w-80 sm:w-[360px] p-0 shadow-lg"
-        onMouseEnter={enableHoverOpen ? handleHoverEnter : undefined}
-        onMouseLeave={enableHoverOpen ? handleHoverLeave : undefined}
+        className="flex max-h-[420px] w-80 flex-col p-0 shadow-lg sm:w-[360px]"
+        onMouseEnter={handleHoverEnter}
+        onMouseLeave={handleHoverLeave}
       >
-        <div className="flex items-center justify-between px-3 py-2.5 border-b border-border">
-          <h3 className="text-sm font-semibold text-foreground">
-            Notifications
-          </h3>
-          <div className="flex items-center gap-1">
-            {unreadCount > 0 && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
-                disabled={markAllRead.isPending}
-                onClick={handleMarkAllRead}
-                title="Mark all read"
-                {...markAllReadAnimated.hoverHandlers}
-              >
-                <CheckCheckIcon ref={markAllReadAnimated.iconRef} size={14} />
-              </Button>
-            )}
-          </div>
-        </div>
-
-        <div className="max-h-[360px] overflow-y-auto py-1 px-1">
-          {isLoading ? (
-            <PopoverSkeleton />
-          ) : isError ? (
-            <div className="flex flex-col items-center justify-center py-8 text-center px-4">
-              <Inbox className="w-8 text-muted-foreground/30 mb-2" />
-              <p className="text-sm font-medium text-foreground">
-                Couldn&apos;t load notifications
-              </p>
-              <Link
-                href="/notifications"
-                className="text-xs text-accent hover:underline mt-0.5"
-              >
-                Open the notification center
-              </Link>
-            </div>
-          ) : recentNotifications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 text-center px-4">
-              <Inbox className="w-8 text-muted-foreground/30 mb-2" />
-              <p className="text-sm font-medium text-foreground">
-                You&apos;re all caught up
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                No unread notifications
-              </p>
-            </div>
-          ) : (
-            recentNotifications.map((notification) => (
-              <PopoverNotificationItem
-                key={notification.id}
-                notification={notification}
-                onItemClick={handleItemClick}
-              />
-            ))
-          )}
-        </div>
-
-        <div className="border-t border-border px-3 py-2">
-          <Link
-            href="/notifications"
-            className="block w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors py-1"
-          >
-            See all notifications →
-          </Link>
-        </div>
+        {notificationPanel}
       </PopoverContent>
     </Popover>
   );

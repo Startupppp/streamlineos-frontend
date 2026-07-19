@@ -13,9 +13,13 @@ import { MobileQuickCreateSheet } from "./mobile-quick-create-sheet"
 
 interface MobileBottomNavProps {
   onOpenMobileMenu: () => void
+  className?: string
 }
 
-export function MobileBottomNav({ onOpenMobileMenu }: MobileBottomNavProps) {
+export function MobileBottomNav({
+  onOpenMobileMenu,
+  className,
+}: MobileBottomNavProps) {
   const { open: askOsOpen, toggle: toggleAskOs } = useAskOs()
 
   const handleAskOsClick = useCallback(() => {
@@ -36,7 +40,10 @@ export function MobileBottomNav({ onOpenMobileMenu }: MobileBottomNavProps) {
 
   return (
     <nav
-      className="md:hidden fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-md border-t border-border z-50 pb-[env(safe-area-inset-bottom)]"
+      className={cn(
+        "md:hidden fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-md border-t border-border z-50 pb-[env(safe-area-inset-bottom)]",
+        className,
+      )}
       aria-label="Mobile navigation"
     >
       <div className="flex items-center justify-around h-16 px-2">

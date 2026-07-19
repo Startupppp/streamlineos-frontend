@@ -45,6 +45,7 @@ export function useFinalizeIntegrationConnection() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.integrations.all });
       void qc.invalidateQueries({ queryKey: queryKeys.calendar.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.mail.all });
     },
   });
 }
@@ -58,6 +59,7 @@ export function useDisconnectIntegration() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.integrations.all });
       void qc.invalidateQueries({ queryKey: queryKeys.calendar.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.mail.all });
     },
   });
 }

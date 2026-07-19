@@ -12,6 +12,7 @@ import {
   subWeeks,
   addDays,
   subDays,
+  format,
 } from "date-fns";
 import { Plus, Ticket } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -42,14 +43,13 @@ import { useCalendarAccountFilters } from "./use-calendar-account-filters";
 import { useHrCalendarEventsMapped, useHrEventsVisible } from "./use-hr-calendar-events";
 import { useCrmEventsVisible } from "./use-crm-calendar-events";
 import { getErrorMessage } from "@/lib/get-error-message";
-import {
-  useFinalizeIntegrationConnection,
-  useIntegrationConnections,
-} from "@/hooks/api/integrations";
+import { useFinalizeIntegrationConnection } from "@/hooks/api/integrations";
+import { useCalendarConnections } from "./use-calendar-connections";
 import {
   CalendarToolbar,
   CalendarToolbarPrimaryActions,
 } from "./calendar-toolbar";
+import { CalendarMonthYearPicker } from "./calendar-month-year-picker";
 import { useEventPropGetter } from "./use-event-prop-getter";
 import { useCalendarComputed } from "./use-calendar-computed";
 import { useCalendarSlotSelectionGuard } from "./use-calendar-slot-selection-guard";
@@ -124,7 +124,7 @@ export function CalendarView() {
     rangeStart,
     rangeEnd,
   );
-  const { data: connections = [] } = useIntegrationConnections();
+  const { data: connections = [] } = useCalendarConnections();
   const finalize = useFinalizeIntegrationConnection();
   const finalizeRef = useRef(false);
 
@@ -294,11 +294,19 @@ export function CalendarView() {
 
   return (
     <PageWrapper
-      title="Calendar"
+      title={
+        <CalendarMonthYearPicker
+          currentDate={currentDate}
+          title={format(currentDate, "MMMM yyyy")}
+          onDateChange={setCurrentDate}
+        />
+      }
       noInternalScroll
       actionsInline
       actions={
         <CalendarToolbarPrimaryActions
+          activeConnectionCount={activeConnectionCount}
+          onOpenAccounts={handleOpenAccounts}
           onOpenCreate={handleOpenCreate}
           onOpenCreateTicket={handleOpenCreateTicket}
         />
@@ -308,17 +316,13 @@ export function CalendarView() {
         <CalendarToolbar
           view={view}
           viewMode={viewMode}
-          currentDate={currentDate}
-          activeConnectionCount={activeConnectionCount}
           hrEventsVisible={hrEventsVisible}
           crmEventsVisible={crmEventsVisible}
           onPrev={handlePrev}
           onNext={handleNext}
           onToday={handleToday}
-          onDateChange={setCurrentDate}
           onViewChange={setView}
           onViewModeChange={setViewMode}
-          onOpenAccounts={handleOpenAccounts}
           onOpenCreate={handleOpenCreate}
           onOpenCreateTicket={handleOpenCreateTicket}
           onToggleHrEvents={toggleHrEvents}
@@ -393,7 +397,10 @@ export function CalendarView() {
         />
 
         <Dialog open={isSlotChoiceOpen} onOpenChange={setIsSlotChoiceOpen}>
-          <DialogContent className="max-w-xs p-4">
+          <DialogContent
+            className="max-w-none p-4 md:max-w-xs"
+            showCloseButton={false}
+          >
             <DialogHeader>
               <DialogTitle className="text-sm font-semibold">
                 What would you like to create?

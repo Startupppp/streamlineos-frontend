@@ -17,7 +17,8 @@ export function SidebarWorkspaceRow({
   return (
     <div
       className={cn(
-        "shrink-0 min-w-0 border-b border-sidebar-border",
+        "shrink-0 min-w-0",
+        triggerOnly ? "border-t border-sidebar-border" : "border-b border-sidebar-border",
         isCollapsed ? "flex justify-center px-1 py-2" : "px-2.5 py-2",
       )}
     >

@@ -4,6 +4,7 @@ import dynamic from "next/dynamic"
 import Link from "next/link"
 import { Search, CalendarDays, MessageSquare } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { cn } from "@/lib/utils"
 import { HeaderBrand } from "./header-brand"
 import { ProductSwitcherMenu } from "./product-switcher-menu"
 import { WorkspaceSwitcher } from "./workspace-switcher"
@@ -123,9 +124,15 @@ function DesktopHeader({
   )
 }
 
-function MobileHeader() {
+function MobileHeader({ hidden }: { hidden?: boolean }) {
   return (
-    <div className="flex items-center justify-between h-full w-full gap-2 px-3 sm:px-4 min-w-0">
+    <div
+      className={cn(
+        "flex items-center justify-between h-full w-full gap-2 px-3 sm:px-4 min-w-0",
+        hidden && "invisible pointer-events-none",
+      )}
+      aria-hidden={hidden}
+    >
       <div className="min-w-0 shrink">
         <HeaderBrand />
       </div>
@@ -140,10 +147,12 @@ export function GlobalHeader({
   isSidebarCollapsed = false,
   onToggleSidebar,
   showSidebarToggle = true,
+  mobileNavOpen = false,
 }: {
   isSidebarCollapsed?: boolean
   onToggleSidebar?: () => void
   showSidebarToggle?: boolean
+  mobileNavOpen?: boolean
 }) {
   return (
     <header className="h-14 border-b border-sidebar-border bg-sidebar text-sidebar-foreground shrink-0 z-40 relative">
@@ -156,7 +165,7 @@ export function GlobalHeader({
           />
         </div>
         <div className="md:hidden h-full">
-          <MobileHeader />
+          <MobileHeader hidden={mobileNavOpen} />
         </div>
       </TooltipProvider>
     </header>

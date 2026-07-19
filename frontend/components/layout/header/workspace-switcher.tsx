@@ -10,7 +10,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Sheet, SheetContent } from "@/components/ui/sheet"
+import {
+  Drawer,
+  DrawerContent,
+  DrawerTitle,
+} from "@/components/ui/drawer"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { TruncatedText } from "@/components/ui/truncated-text"
@@ -25,7 +29,7 @@ interface WorkspaceSwitcherProps {
   onOpenChange?: (open: boolean) => void
   triggerOnly?: boolean
   onRequestOpen?: () => void
-  sheetOnly?: boolean
+  drawerOnly?: boolean
 }
 
 interface WorkspaceOrg {
@@ -41,7 +45,7 @@ interface WorkspaceSwitcherPanelProps {
   onSwitch: (orgId: string) => void
   onCreateWorkspace: () => void
   onClose?: () => void
-  layout: "dropdown" | "sheet"
+  layout: "dropdown" | "drawer"
 }
 
 function WorkspaceSwitcherPanel({
@@ -156,7 +160,7 @@ export function WorkspaceSwitcher({
   onOpenChange: controlledOnOpenChange,
   triggerOnly = false,
   onRequestOpen,
-  sheetOnly = false,
+  drawerOnly = false,
 }: WorkspaceSwitcherProps) {
   const { data: session } = useSession()
   const { data: organizations } = useGetOrganizations()
@@ -254,14 +258,15 @@ export function WorkspaceSwitcher({
     <CreateWorkspaceDialog open={createOpen} onOpenChange={setCreateOpen} />
   )
 
-  if (sheetOnly) {
+  if (drawerOnly) {
     return (
       <>
-        <Sheet open={open} onOpenChange={handleOpenChange}>
-          <SheetContent side="bottom" className="w-full max-w-none gap-0 p-0 px-4 pb-6 pt-4">
-            <WorkspaceSwitcherPanel {...panelProps} layout="sheet" />
-          </SheetContent>
-        </Sheet>
+        <Drawer open={open} onOpenChange={handleOpenChange} direction="bottom">
+          <DrawerContent className="flex h-[min(96dvh,40rem)] max-h-[96dvh] w-full flex-col gap-0 overflow-hidden rounded-t-xl border-t bg-sidebar p-4 pb-[env(safe-area-inset-bottom)] shadow-2xl">
+            <DrawerTitle className="sr-only">Workspaces</DrawerTitle>
+            <WorkspaceSwitcherPanel {...panelProps} layout="drawer" />
+          </DrawerContent>
+        </Drawer>
         {createDialog}
       </>
     )

@@ -20,7 +20,7 @@ import {
   extractEventNumericId,
 } from "@/hooks/api/calendar";
 import type { CalendarListItem } from "@/hooks/api/calendar";
-import { useIntegrationConnections } from "@/hooks/api/integrations";
+import { useCalendarConnections } from "./use-calendar-connections";
 import { toast } from "sonner";
 import { EventFormFields } from "./event-form-fields";
 import type { TicketSearchResult } from "@/hooks/api/projects";
@@ -206,7 +206,7 @@ export function EventCreateDialog({
   const createEvent = useCreateCalendarEvent();
   const updateEvent = useUpdateCalendarEvent();
   const { data: members = [] } = useCalendarOrgMembers();
-  const { data: connections = [] } = useIntegrationConnections();
+  const { data: connections = [] } = useCalendarConnections();
   const { data: existingAttendees } = useEventAttendees(
     isEdit && open ? editNumericId : null,
   );

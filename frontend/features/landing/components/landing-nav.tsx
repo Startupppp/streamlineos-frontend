@@ -99,20 +99,10 @@ export function LandingNav() {
           </nav>
 
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            <Link href="/signin" className="hidden sm:inline-flex">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 border-0"
-              >
-                Sign in
-              </Button>
-            </Link>
             <Magnetic strength={0.3}>
               <Link href="/signin">
                 <Button size="sm" className="h-9 px-3 sm:px-4 text-xs sm:text-sm">
-                  <span className="sm:hidden">Start</span>
-                  <span className="hidden sm:inline">Get started</span>
+                  Get started
                   <ArrowRight className="ml-1 sm:ml-1.5 h-3.5 w-3.5" />
                 </Button>
               </Link>
@@ -148,13 +138,6 @@ export function LandingNav() {
                   {l.label}
                 </a>
               ))}
-              <Link
-                href="/signin"
-                onClick={() => setOpen(false)}
-                className="block px-3 py-3 text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg sm:hidden"
-              >
-                Sign in
-              </Link>
               <Link
                 href="/signin"
                 onClick={() => setOpen(false)}

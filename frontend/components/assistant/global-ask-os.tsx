@@ -160,6 +160,15 @@ export function GlobalAskOs() {
     el.scrollTop = el.scrollHeight;
   }, [draft]);
 
+  useEffect(() => {
+    if (!isMobile || !open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [isMobile, open]);
+
   const send = useCallback(
     async (textOverride?: string) => {
       const text = (textOverride ?? input).trim();
@@ -359,30 +368,54 @@ export function GlobalAskOs() {
   const btnCls =
     "rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted";
   const anchorClassName = cn(
-    "fixed right-0 bottom-16 md:bottom-[env(safe-area-inset-bottom,0px)] z-50 flex flex-col items-stretch",
-    open ? "w-[min(100vw,400px)]" : "hidden w-[min(100vw,130px)] md:flex",
+    "fixed flex flex-col items-stretch",
+    isMobile
+      ? cn("inset-0 z-[60] w-full", !open && "hidden")
+      : cn(
+          "right-0 bottom-[env(safe-area-inset-bottom,0px)] z-50",
+          open ? "w-[min(100vw,400px)]" : "hidden w-[min(100vw,130px)] md:flex",
+        ),
   );
+  const panelMotionProps = isMobile
+    ? {
+        initial: reduce ? false : { opacity: 0, y: 24 },
+        animate: { opacity: 1, y: 0 },
+        exit: reduce ? undefined : { opacity: 0, y: 24 },
+      }
+    : {
+        initial: reduce ? false : { height: 0, opacity: 0 },
+        animate: { height: "auto" as const, opacity: 1 },
+        exit: reduce ? undefined : { height: 0, opacity: 0 },
+      };
 
   if (!hydrated) return null;
-  if (isMobile && !open) return null;
 
   return createPortal(
     <div
       className={anchorClassName}
       role="complementary"
       aria-label="Ask OS assistant"
+      aria-modal={isMobile && open ? true : undefined}
     >
       <AnimatePresence initial={false}>
         {open && (
           <motion.div
             key="ask-os-panel"
-            initial={reduce ? false : { height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={reduce ? undefined : { height: 0, opacity: 0 }}
+            {...panelMotionProps}
             transition={panelTransition}
-            className="overflow-hidden"
+            className={cn(
+              "overflow-hidden",
+              isMobile && "flex h-full min-h-0 w-full flex-1 flex-col",
+            )}
           >
-            <div className="flex h-[min(70dvh,560px)] flex-col overflow-hidden rounded-tl-2xl border border-b-0 border-border bg-card shadow-2xl">
+            <div
+              className={cn(
+                "flex flex-col overflow-hidden bg-card",
+                isMobile
+                  ? "h-full min-h-0 w-full rounded-none border-0 pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]"
+                  : "h-[min(70dvh,560px)] rounded-tl-2xl border border-b-0 border-border shadow-2xl",
+              )}
+            >
               <div className="flex shrink-0 items-center justify-between border-b border-border bg-muted/40 px-4 py-3">
                 {isConversations ? (
                   <div className="flex items-center gap-2">
@@ -457,8 +490,16 @@ export function GlobalAskOs() {
                 </div>
               </div>
 
-              {isConversations ? (
-                <div className="min-h-0 flex-1 overflow-hidden">
+              <AnimatePresence initial={false} mode="wait">
+                {isConversations ? (
+                  <motion.div
+                    key="conversations"
+                    initial={reduce ? false : { opacity: 0, x: 24 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={reduce ? undefined : { opacity: 0, x: -24 }}
+                    transition={panelTransition}
+                    className="min-h-0 flex-1 overflow-hidden"
+                  >
                   <AskOsConversationList
                     conversations={conversations}
                     hasNextPage={convHasNext}
@@ -472,9 +513,16 @@ export function GlobalAskOs() {
                     onSearchChange={handleConvSearchChange}
                     activeConversationId={activeConversationId}
                   />
-                </div>
-              ) : (
-                <>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="chat"
+                    initial={reduce ? false : { opacity: 0, x: 24 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={reduce ? undefined : { opacity: 0, x: -24 }}
+                    transition={panelTransition}
+                    className="flex min-h-0 flex-1 flex-col"
+                  >
                   <div className="relative min-h-0 flex-1 overflow-hidden">
                     <div
                       ref={scrollRef}
@@ -614,8 +662,9 @@ export function GlobalAskOs() {
                       </Button>
                     )}
                   </form>
-                </>
-              )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </motion.div>
         )}
