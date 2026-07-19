@@ -24,7 +24,7 @@ import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/
 import { PmPageShell, PM_TOOLBAR, PmPanel } from "@/features/projects/shared/pm-chrome";
 import { TABLE_TITLE_CELL } from "@/features/projects/shared/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { cn, resolveImageUrl } from "@/lib/utils";
+import { resolveImageUrl } from "@/lib/utils";
 import { format } from "date-fns";
 
 interface PageProps {
@@ -225,10 +225,9 @@ export default function BacklogPage({ params }: PageProps) {
       subtitle="Manage and prioritize unscheduled work"
       actions={<CreateTicketDialog projectId={projectId} />}
       filters={
-        <div className={cn(PM_TOOLBAR, "sm:justify-end")}>
+        <div className={PM_TOOLBAR}>
           <TicketFilterBar
-            className="w-full sm:min-w-0 sm:max-w-xl"
-            align="end"
+            className="w-full"
             members={members}
             showSprintFilter={false}
           />

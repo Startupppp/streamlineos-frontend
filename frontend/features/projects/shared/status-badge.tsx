@@ -2,6 +2,8 @@
 
 import { memo } from "react";
 import { cn } from "@/lib/utils";
+import { resolveColumnColor } from "@/features/projects/shared/column-colors";
+import type { StatusConfigEntry } from "@/features/projects/shared/types";
 
 const STATUS_DOT: Record<string, string> = {
   TODO: "bg-slate-400",
@@ -47,6 +49,27 @@ export function getStatusHexColor(status: string): string {
   return STATUS_HEX[status] ?? "#94a3b8";
 }
 
+interface StatusConfigDotProps {
+  entry: StatusConfigEntry;
+  className?: string;
+}
+
+export function StatusConfigDot({
+  entry,
+  className = "h-2 w-2 shrink-0 rounded-full",
+}: StatusConfigDotProps) {
+  if (entry.color) {
+    return (
+      <span
+        className={className}
+        style={{ backgroundColor: resolveColumnColor(entry.color) }}
+        aria-hidden="true"
+      />
+    );
+  }
+  return <span className={cn(className, entry.dotColor)} aria-hidden="true" />;
+}
+
 interface StatusBadgeProps {
   status: string;
   customStates?: { name: string; color: string; group: string }[];
@@ -63,7 +86,8 @@ export const StatusBadge = memo(function StatusBadge({ status, customStates, cla
       <span className={cn("inline-flex items-center gap-1.5 text-xs", className)}>
         <span
           className="h-2 w-2 shrink-0 rounded-full"
-          style={{ backgroundColor: custom.color }}
+          style={{ backgroundColor: resolveColumnColor(custom.color) }}
+          aria-hidden="true"
         />
         <span className="truncate">{custom.name}</span>
       </span>
@@ -74,7 +98,7 @@ export const StatusBadge = memo(function StatusBadge({ status, customStates, cla
 
   return (
     <span className={cn("inline-flex items-center gap-1.5 text-xs", className)}>
-      <span className={cn("h-2 w-2 shrink-0 rounded-full", getStatusDotClass(status))} />
+      <span className={cn("h-2 w-2 shrink-0 rounded-full", getStatusDotClass(status))} aria-hidden="true" />
       <span className="truncate">{label}</span>
     </span>
   );

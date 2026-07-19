@@ -133,7 +133,7 @@ function OptionRow({ active, label, leading, color, onClick }: OptionRowProps) {
     <button
       type="button"
       onClick={onClick}
-      className="flex h-9 w-full items-center gap-2.5 rounded-md px-3 text-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:outline-none motion-reduce:transition-none"
+      className="flex h-9 w-full items-center gap-2.5 rounded-md px-3 text-left text-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:outline-none motion-reduce:transition-none"
     >
       <Check
         className={cn(
@@ -148,7 +148,7 @@ function OptionRow({ active, label, leading, color, onClick }: OptionRowProps) {
           style={{ backgroundColor: color }}
         />
       ) : null}
-      <span className="min-w-0 flex-1 truncate">{label}</span>
+      <span className="min-w-0 flex-1 truncate text-left">{label}</span>
     </button>
   );
 }

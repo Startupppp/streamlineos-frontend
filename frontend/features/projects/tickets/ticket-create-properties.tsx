@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
 import { popoverOptionBaseClass, popoverOptionSelectedClass } from "../shared/popover-option-classes";
+import { StatusConfigDot } from "../shared/status-badge";
 import { buildStatusConfig, getStatusEntry } from "../shared/types";
 import { getUserDisplayName, getUserInitials } from "../shared/resolve-user-name";
 import type { ProjectStatusRecord, ProjectMemberRecord, Cycle, TicketLabel } from "@/types/projects";
@@ -194,7 +195,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
       <Popover open={statusOpen} onOpenChange={setStatusOpen} modal>
         <PopoverTrigger asChild>
           <PillButton label="Set status">
-            <span className={cn("h-2 w-2 rounded-full shrink-0", currentStatus.dotColor)} />
+            <StatusConfigDot entry={currentStatus} />
             {currentStatus.label}
           </PillButton>
         </PopoverTrigger>
@@ -211,7 +212,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
                   value.status === s && popoverOptionSelectedClass,
                 )}
               >
-                <span className={cn("h-2 w-2 rounded-full shrink-0", entry.dotColor)} />
+                <StatusConfigDot entry={entry} />
                 {entry.label}
                 {value.status === s && <Check className="ml-auto h-3 w-3" />}
               </button>
@@ -286,7 +287,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
                       <AvatarImage src={resolveImageUrl(m.image)} />
                       <AvatarFallback className="text-[7px]">{getUserInitials(m)}</AvatarFallback>
                     </Avatar>
-                    <span className="min-w-0 flex-1 truncate text-xs">{getUserDisplayName(m)}</span>
+                    <span className="min-w-0 flex-1 truncate text-left text-xs">{getUserDisplayName(m)}</span>
                     {m.id === value.assigneeId && <Check className="ml-auto h-3 w-3 shrink-0" />}
                   </CommandItem>
                 ))}
@@ -362,7 +363,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
                         className="mr-2 h-2.5 w-2.5 rounded-full shrink-0"
                         style={{ backgroundColor: label.color ?? "#3b82f6" }}
                       />
-                      <span className="min-w-0 flex-1 truncate text-xs">{label.name}</span>
+                      <span className="min-w-0 flex-1 truncate text-left text-xs">{label.name}</span>
                       {value.labelIds.includes(label.id) && <Check className="ml-auto h-3 w-3 shrink-0" />}
                     </CommandItem>
                   ))}
@@ -413,7 +414,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
                   c.status === "active" ? "bg-green-500" : c.status === "completed" ? "bg-muted-foreground" : "bg-blue-400",
                 )}
               />
-              <span className="min-w-0 flex-1 truncate">{c.name}</span>
+              <span className="min-w-0 flex-1 truncate text-left">{c.name}</span>
               {c.status === "active" && (
                 <Badge variant="outline" className="h-4 px-1 text-[9px] text-green-600 border-green-500/40">Active</Badge>
               )}

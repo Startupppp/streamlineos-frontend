@@ -22,6 +22,7 @@ import { useProjectMembers } from "@/hooks/api/projects/projects";
 import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
 import { PriorityBadge } from "../shared/priority-badge";
 import { popoverOptionBaseClass, popoverOptionSelectedClass } from "../shared/popover-option-classes";
+import { StatusConfigDot } from "../shared/status-badge";
 import { buildStatusConfig, getStatusEntry } from "../shared/types";
 import type { TicketPriority } from "@/types/projects";
 import { AlertTriangle, ArrowUp, Minus, ArrowDown, Check, User, Gauge } from "lucide-react";
@@ -180,7 +181,7 @@ export const InlineAssignee = memo(function InlineAssignee({
                       <AvatarImage src={resolveImageUrl(m.image)} />
                       <AvatarFallback className="text-[7px]">{getUserInitials(m)}</AvatarFallback>
                     </Avatar>
-                    <span className="min-w-0 flex-1 truncate text-xs">{getUserDisplayName(m)}</span>
+                    <span className="min-w-0 flex-1 truncate text-left text-xs">{getUserDisplayName(m)}</span>
                     {m.id === currentAssigneeId && <Check className="ml-auto h-3 w-3 shrink-0" />}
                   </CommandItem>
                 ))}
@@ -321,7 +322,7 @@ export const InlineStatus = memo(function InlineStatus({
             className="inline-flex items-center gap-1 rounded px-1 py-0.5 hover:bg-muted/60 transition-colors"
             aria-label="Change status"
           >
-            <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", currentEntry.dotColor)} />
+            <StatusConfigDot entry={currentEntry} className="h-1.5 w-1.5 rounded-full shrink-0" />
             <span className="text-[10px] text-muted-foreground">{currentEntry.label}</span>
           </button>
         </PopoverTrigger>
@@ -338,7 +339,7 @@ export const InlineStatus = memo(function InlineStatus({
                   status === currentStatus && popoverOptionSelectedClass,
                 )}
               >
-                <span className={cn("h-2 w-2 rounded-full shrink-0", entry.dotColor)} />
+                <StatusConfigDot entry={entry} />
                 {entry.label}
                 {status === currentStatus && <Check className="ml-auto h-3 w-3" />}
               </button>

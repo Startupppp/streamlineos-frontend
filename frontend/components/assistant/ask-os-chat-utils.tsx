@@ -62,7 +62,7 @@ export function EmptyAskOs({
   onSuggestion: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }) {
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-4 py-6 text-center">
+    <div className="flex min-h-full flex-col items-center justify-center gap-4 py-6 text-center">
       <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-accent/10">
         <AnimatedLogo size={28} gradient className="rounded-xl" />
       </div>

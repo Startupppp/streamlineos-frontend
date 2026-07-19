@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PriorityBadge } from "../shared/priority-badge";
 import { popoverOptionBaseClass, popoverOptionSelectedClass } from "../shared/popover-option-classes";
+import { StatusConfigDot } from "../shared/status-badge";
 import { buildStatusConfig, getStatusEntry } from "../shared/types";
 import { getUserDisplayName, getUserInitials } from "../shared/resolve-user-name";
 import type { TicketPriority } from "@/types/projects";
@@ -139,7 +140,10 @@ export function SubtaskComposer({ ticketId, projectId, projectStatuses }: Subtas
           >
             {currentStatusEntry ? (
               <>
-                <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", currentStatusEntry.dotColor)} />
+                <StatusConfigDot
+                  entry={currentStatusEntry}
+                  className="h-1.5 w-1.5 rounded-full shrink-0"
+                />
                 <span className="text-[10px] text-muted-foreground">{currentStatusEntry.label}</span>
               </>
             ) : (
@@ -160,7 +164,7 @@ export function SubtaskComposer({ ticketId, projectId, projectStatuses }: Subtas
                   status === s && popoverOptionSelectedClass,
                 )}
               >
-                <span className={cn("h-2 w-2 rounded-full shrink-0", entry.dotColor)} />
+                <StatusConfigDot entry={entry} />
                 {entry.label}
                 {status === s && <Check className="ml-auto h-3 w-3" />}
               </button>

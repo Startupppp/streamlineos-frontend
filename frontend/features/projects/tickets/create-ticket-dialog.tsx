@@ -423,7 +423,7 @@ export function CreateTicketDialog({
       <Dialog open={resolvedOpen} onOpenChange={handleOpenChange}>
         <DialogContent className="flex h-auto max-h-[min(720px,calc(100dvh-100px))] flex-col gap-0 overflow-hidden p-0 md:flex md:h-auto md:max-h-[min(720px,calc(100dvh-100px))] md:max-w-2xl md:overflow-hidden md:sm:max-w-2xl">
           <DialogHeader className="shrink-0 border-b border-border/60 px-5 pb-3 pt-4">
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center justify-between gap-3 pr-8">
               <div className="flex min-w-0 items-center gap-2">
                 <Select
                   value={projectSelectValue}
@@ -637,12 +637,12 @@ export function CreateTicketDialog({
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <label className="flex cursor-pointer select-none items-center gap-2 rounded-md border border-border bg-card px-2 py-1">
+                  <label className="flex cursor-pointer select-none items-center gap-2 rounded-md border border-input bg-muted px-2 py-1">
                     <Switch
                       checked={createMore}
                       onCheckedChange={handleCreateMoreChange}
                       aria-label="Create more"
-                      className="border border-border data-[state=unchecked]:bg-muted"
+                      className="border border-border data-[state=unchecked]:bg-input"
                     />
                     <span className="text-xs text-muted-foreground">
                       Create more

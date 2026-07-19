@@ -21,6 +21,7 @@ import {
   FilterTypeLeading,
 } from "./filter-option-leading";
 import { resolveColumnColor } from "@/features/projects/shared/column-colors";
+import { StatusConfigDot } from "@/features/projects/shared/status-badge";
 import {
   getStatusEntry,
   type StatusConfigEntry,
@@ -180,15 +181,12 @@ export function StatusFilterDot({
   className?: string;
 }) {
   const entry = getStatusEntry(config, status.name);
-  if (status.color) {
-    return (
-      <span
-        className={className}
-        style={{ backgroundColor: resolveColumnColor(status.color) }}
-      />
-    );
-  }
-  return <span className={cn(className, entry.dotColor)} />;
+  return (
+    <StatusConfigDot
+      entry={status.color ? { ...entry, color: status.color } : entry}
+      className={className}
+    />
+  );
 }
 
 function FilterMenuSearch({

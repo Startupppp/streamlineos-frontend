@@ -25,7 +25,6 @@ import {
 } from "lucide-react";
 import { AnimatedLogo } from "@/features/landing/components/animated-logo";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import {
   useAskAI,
@@ -459,7 +458,7 @@ export function GlobalAskOs() {
               </div>
 
               {isConversations ? (
-                <div className="flex-1 overflow-hidden">
+                <div className="min-h-0 flex-1 overflow-hidden">
                   <AskOsConversationList
                     conversations={conversations}
                     hasNextPage={convHasNext}
@@ -476,16 +475,14 @@ export function GlobalAskOs() {
                 </div>
               ) : (
                 <>
-                  <div className="relative flex-1 overflow-hidden">
-                    <ScrollArea
-                      hideScrollbar
-                      className="absolute inset-0"
-                      viewportRef={scrollRef}
-                      onViewportScroll={handleScroll}
-                      viewportClassName="p-4"
+                  <div className="relative min-h-0 flex-1 overflow-hidden">
+                    <div
+                      ref={scrollRef}
+                      onScroll={handleScroll}
+                      className="absolute inset-0 overflow-y-auto overscroll-contain p-4 scrollbar-hide"
                     >
                       {isLoading ? (
-                        <div className="flex h-full items-center justify-center">
+                        <div className="flex min-h-full items-center justify-center">
                           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                         </div>
                       ) : showEmpty ? (
@@ -558,7 +555,7 @@ export function GlobalAskOs() {
                           )}
                         </div>
                       )}
-                    </ScrollArea>
+                    </div>
                     <AnimatePresence>
                       {showJump && (
                         <motion.button
