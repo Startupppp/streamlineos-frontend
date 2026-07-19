@@ -72,10 +72,8 @@ export function EmployeesFilters({
         >
           <SelectValue placeholder="Department" />
         </SelectTrigger>
-        <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-          <SelectItem value="all" className="text-xs">
-            All Departments
-          </SelectItem>
+        <SelectContent align="start">
+          <SelectItem value="all">All departments</SelectItem>
           {departments?.map((d) => (
             <SelectItem key={d.id} value={String(d.id)}>
               {d.name}
@@ -95,19 +93,11 @@ export function EmployeesFilters({
         >
           <SelectValue placeholder="Status" />
         </SelectTrigger>
-        <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-          <SelectItem value="all" className="text-xs">
-            All Status
-          </SelectItem>
-          <SelectItem value="active" className="text-xs">
-            Active
-          </SelectItem>
-          <SelectItem value="inactive" className="text-xs">
-            Inactive
-          </SelectItem>
-          <SelectItem value="terminated" className="text-xs">
-            Terminated
-          </SelectItem>
+        <SelectContent align="start">
+          {/* Only isActive-backed statuses — no fake "terminated" option */}
+          <SelectItem value="all">All statuses</SelectItem>
+          <SelectItem value="active">Active</SelectItem>
+          <SelectItem value="inactive">Inactive</SelectItem>
         </SelectContent>
       </Select>
 

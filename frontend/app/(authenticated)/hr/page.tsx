@@ -105,6 +105,8 @@ export default function HRDashboardPage() {
     [filters, debouncedSearchTerm],
   );
 
+  const { data: departments } = useHrDepartments();
+
   const {
     data: employeesPage,
     isLoading,
