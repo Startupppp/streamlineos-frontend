@@ -38,7 +38,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
     }
 
     return (
-      <div className={cn("relative w-full min-w-0", className)}>
+      <div data-slot="search-input" className={cn("relative w-full min-w-0", className)}>
         <Search
           className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
           aria-hidden="true"

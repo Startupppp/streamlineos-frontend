@@ -223,7 +223,7 @@ export default function MovementsReportPage() {
   const filterBar = (
     <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
       <Select value={warehouseId || "ALL"} onValueChange={handleWarehouseChange}>
-        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-full sm:max-w-[180px] text-xs")}>
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-full sm:max-w-44 text-xs")}>
           <SelectValue placeholder="All warehouses" />
         </SelectTrigger>
         <SelectContent>
@@ -236,7 +236,7 @@ export default function MovementsReportPage() {
         </SelectContent>
       </Select>
       <Select value={movementType} onValueChange={handleTypeChange}>
-        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-full sm:max-w-[160px] text-xs")}>
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-full sm:max-w-40 text-xs")}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

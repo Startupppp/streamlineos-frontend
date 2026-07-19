@@ -21,6 +21,13 @@ import {
   EmployeesFilters,
   type Department,
 } from "@/features/hr/employees/employees-filters";
+import {
+  parseEmployeeListFilters,
+  toHrEmployeesApiParams,
+  hasActiveEmployeeFilters,
+  employeeFiltersToUrlUpdates,
+  DEFAULT_PAGE_SIZE,
+} from "@/features/hr/employees/employee-list-filters";
 import { EmployeesGridSkeleton } from "@/features/hr/employees/employees-loading-skeleton";
 import { resolveImageUrl, cn } from "@/lib/utils";
 import type { Employee } from "@/types/hr";
@@ -35,7 +42,7 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 
 type ViewMode = "grid" | "list";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = DEFAULT_PAGE_SIZE;
 
 function buildEmployeeListColumns(
   getDept: (emp: Employee) => string | null,
@@ -123,39 +130,45 @@ export default function EmployeesPage() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
 
-  const page = Number(searchParams.get("page")) || 1;
-  const [search, setSearch] = useState(searchParams.get("q") || "");
-  const [filterDept, setFilterDept] = useState(searchParams.get("dept") || "all");
-  const [filterStatus, setFilterStatus] = useState(searchParams.get("status") || "all");
+  const filters = useMemo(
+    () =>
+      parseEmployeeListFilters(searchParams, {
+        size: PAGE_SIZE,
+        status: "all",
+      }),
+    [searchParams],
+  );
+
+  const [search, setSearch] = useState(filters.q);
   const [view, setView] = useState<ViewMode>(
     (searchParams.get("view") as ViewMode) || "grid",
   );
+
+  // Keep local search input in sync when URL is cleared externally.
+  useEffect(() => {
+    setSearch(filters.q);
+  }, [filters.q]);
 
   const debouncedSearch = useDebouncedValue(search, 300);
   const { data: departments } = useHrDepartments();
   const deptList = departments as Department[] | undefined;
 
-  const departmentId =
-    filterDept !== "all" ? Number(filterDept) || undefined : undefined;
-  const isActiveParam =
-    filterStatus === "active"
-      ? "true"
-      : filterStatus === "inactive" || filterStatus === "terminated"
-        ? "false"
-        : "all";
+  const apiParams = useMemo(
+    () =>
+      toHrEmployeesApiParams({
+        ...filters,
+        q: debouncedSearch,
+      }),
+    [filters, debouncedSearch],
+  );
 
-  const { data: pageData, isLoading, isFetching, isError, refetch } = useHrEmployees({
-    page,
-    limit: PAGE_SIZE,
-    search: debouncedSearch || undefined,
-    departmentId,
-    isActive: isActiveParam,
-  });
+  const { data: pageData, isLoading, isFetching, isError, refetch } = useHrEmployees(apiParams);
 
   const employees = useMemo(() => unwrapEmployees(pageData), [pageData]);
   const pagination = pageData?.pagination;
   const total = pagination?.total ?? 0;
   const totalPages = Math.max(1, pagination?.totalPages ?? 1);
+  const page = filters.page;
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
@@ -173,7 +186,12 @@ export default function EmployeesPage() {
   useEffect(() => {
     const current = searchParams.get("q") || "";
     if (debouncedSearch === current) return;
-    updateParams({ q: debouncedSearch || null, page: null });
+    updateParams(
+      employeeFiltersToUrlUpdates(
+        { q: debouncedSearch, page: 1 },
+        { size: PAGE_SIZE, status: "all" },
+      ),
+    );
   }, [debouncedSearch, searchParams, updateParams]);
 
   const deptMap = useMemo(() => {
@@ -182,14 +200,17 @@ export default function EmployeesPage() {
     return map;
   }, [deptList]);
 
-  const hasFilters =
-    search !== "" || filterDept !== "all" || filterStatus !== "all";
+  const hasFilters = hasActiveEmployeeFilters(filters, { status: "all" });
 
   const clearFilters = useCallback(() => {
     setSearch("");
-    setFilterDept("all");
-    setFilterStatus("all");
-    updateParams({ q: null, dept: null, status: null, page: null });
+    updateParams({
+      q: null,
+      dept: null,
+      status: null,
+      role: null,
+      page: null,
+    });
   }, [updateParams]);
 
   const getDept = (emp: Employee) =>
@@ -199,33 +220,31 @@ export default function EmployeesPage() {
   const handleExport = useCallback(async () => {
     try {
       const { downloadXlsx } = await import("@/lib/export/xlsx-utils");
+      const {
+        fetchAllEmployeesForExport,
+        mapEmployeesToExportRows,
+        EMPLOYEE_EXPORT_COLUMNS,
+      } = await import("@/features/hr/employees/export-employees");
+      const rows = mapEmployeesToExportRows(
+        await fetchAllEmployeesForExport({
+          search: apiParams.search,
+          departmentId: apiParams.departmentId,
+          isActive: apiParams.isActive,
+          role: apiParams.role,
+        }),
+      );
       await downloadXlsx(`directory-${new Date().toISOString().slice(0, 10)}.xlsx`, [
         {
           name: "Employees",
-          columns: [
-            { header: "Name", key: "name", width: 24 },
-            { header: "Email", key: "email", width: 28 },
-            { header: "Designation", key: "designation", width: 20 },
-            { header: "Department", key: "department", width: 18 },
-            { header: "Status", key: "status", width: 12 },
-          ],
-          rows: employees.map((e) => ({
-            name:
-              e.firstName && e.lastName
-                ? `${e.firstName} ${e.lastName}`
-                : (e.name ?? e.email),
-            email: e.email,
-            designation: e.designation ?? "",
-            department: getDept(e) ?? "",
-            status: e.isActive ? "Active" : "Inactive",
-          })),
+          columns: [...EMPLOYEE_EXPORT_COLUMNS],
+          rows,
         },
       ]);
-      toast.success("Directory exported");
+      toast.success(`Exported ${rows.length} employee${rows.length === 1 ? "" : "s"}`);
     } catch {
       toast.error("Export failed");
     }
-  }, [employees, deptMap]);
+  }, [apiParams]);
 
   if (isLoading) {
     return (
@@ -280,19 +299,27 @@ export default function EmployeesPage() {
       filters={
         <EmployeesFilters
           search={search}
-          filterDept={filterDept}
-          filterStatus={filterStatus}
+          departmentId={filters.departmentId}
+          status={filters.status}
           departments={deptList}
           hasFilters={hasFilters}
           onSearchChange={setSearch}
-          onDeptChange={(d) => {
-            setFilterDept(d);
-            updateParams({ dept: d === "all" ? null : d, page: null });
-          }}
-          onStatusChange={(s) => {
-            setFilterStatus(s);
-            updateParams({ status: s === "all" ? null : s, page: null });
-          }}
+          onDepartmentIdChange={(id) =>
+            updateParams(
+              employeeFiltersToUrlUpdates(
+                { departmentId: id, page: 1 },
+                { size: PAGE_SIZE, status: "all" },
+              ),
+            )
+          }
+          onStatusChange={(s) =>
+            updateParams(
+              employeeFiltersToUrlUpdates(
+                { status: s, page: 1 },
+                { size: PAGE_SIZE, status: "all" },
+              ),
+            )
+          }
           onClear={clearFilters}
         />
       }

@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FolderKanban } from "lucide-react";
 import Link from "next/link";
+import { EmptyProjectsIllustration } from "@/components/illustrations";
 
 interface ProjectStats {
     todo: number;
@@ -27,8 +28,8 @@ export function EmployeeProjectsList({ projects }: { projects: ProjectItem[] }) 
                 </CardHeader>
                 <CardContent>
                     <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
-                        <div className="h-12 w-12 rounded-lg bg-muted/50 flex items-center justify-center mb-3">
-                            <FolderKanban className="h-6 w-6 text-muted-foreground/50" />
+                        <div className="mb-3 h-24 w-24">
+                            <EmptyProjectsIllustration />
                         </div>
                         <p className="text-sm">No active projects found for this employee.</p>
                     </div>

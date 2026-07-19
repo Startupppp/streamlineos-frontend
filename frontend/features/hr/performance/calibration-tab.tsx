@@ -15,6 +15,8 @@ import {
   getUserDisplayName,
   type NamedUser,
 } from "@/features/projects/shared/resolve-user-name";
+import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyChartIllustration } from "@/components/illustrations";
 
 export function CalibrationTab() {
   const [selectedCycleId, setSelectedCycleId] = useState<number>(0);
@@ -171,7 +173,12 @@ export function CalibrationTab() {
               getRowKey={(row) => row.employeeId}
               isLoading={isLoading}
               emptyState={
-                <p className="text-sm text-muted-foreground py-4 text-center">No entries yet for this cycle.</p>
+                <EmptyState
+                  illustration={<EmptyChartIllustration className="h-full w-full" />}
+                  title="No calibration entries yet"
+                  description="Entries will appear here once ratings are ready for this cycle."
+                  compact
+                />
               }
             />
           </CardContent>
@@ -179,9 +186,11 @@ export function CalibrationTab() {
       )}
 
       {selectedCycleId === 0 && (
-        <div className="flex items-center justify-center h-40 text-sm text-muted-foreground">
-          Select a review cycle to view calibration entries
-        </div>
+        <EmptyState
+          illustration={<EmptyChartIllustration className="h-full w-full" />}
+          title="Select a review cycle"
+          description="Choose a review cycle above to view and edit calibration entries."
+        />
       )}
     </div>
   );

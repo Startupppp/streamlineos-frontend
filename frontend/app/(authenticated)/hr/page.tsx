@@ -21,6 +21,7 @@ import {
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import {
   useHrEmployees,
@@ -28,16 +29,16 @@ import {
   unwrapEmployees,
 } from "@/hooks/api/hr";
 
-import {
-  type Employee,
-  type StatusFilter,
-  type RoleFilter,
-  type PageSizeOption,
-  ROLE_LABELS,
-  PAGE_SIZE,
-} from "@/features/hr/employees/hr-types";
+import { type Employee, PAGE_SIZE } from "@/features/hr/employees/hr-types";
 import { EmployeesLoadingSkeleton } from "@/features/hr/employees/employees-loading-skeleton";
-import { HrFilterBar } from "@/features/hr/employees/hr-filter-bar";
+import { EmployeesFilters } from "@/features/hr/employees/employees-filters";
+import {
+  parseEmployeeListFilters,
+  toHrEmployeesApiParams,
+  hasActiveEmployeeFilters,
+  employeeFiltersToUrlUpdates,
+  DEFAULT_STATUS,
+} from "@/features/hr/employees/employee-list-filters";
 import { HrEmployeeTable } from "@/features/hr/employees/hr-employee-table";
 import { HrDashboardOverview } from "@/features/hr/hr-dashboard-overview";
 import {
@@ -68,122 +69,113 @@ export default function HRDashboardPage() {
     [searchParams, router, pathname],
   );
 
-  const [searchTerm, setSearchTermLocal] = useState(searchParams.get("q") || "");
+  const filters = useMemo(
+    () =>
+      parseEmployeeListFilters(searchParams, {
+        size: PAGE_SIZE,
+        status: DEFAULT_STATUS,
+      }),
+    [searchParams],
+  );
+
+  const [searchTerm, setSearchTermLocal] = useState(filters.q);
+  useEffect(() => {
+    setSearchTermLocal(filters.q);
+  }, [filters.q]);
+
   const debouncedSearchTerm = useDebouncedValue(searchTerm, 300);
   const debouncedSearchRef = useRef(debouncedSearchTerm);
   useEffect(() => {
     if (debouncedSearchRef.current === debouncedSearchTerm) return;
     debouncedSearchRef.current = debouncedSearchTerm;
-    updateParams({ q: debouncedSearchTerm || null, page: null });
+    updateParams(
+      employeeFiltersToUrlUpdates(
+        { q: debouncedSearchTerm, page: 1 },
+        { size: PAGE_SIZE, status: DEFAULT_STATUS },
+      ),
+    );
   }, [debouncedSearchTerm, updateParams]);
 
-  const deptFilter = searchParams.get("dept") || "All";
-  const statusFilter = (searchParams.get("status") as StatusFilter) || "Active";
-  const roleFilter = (searchParams.get("role") as RoleFilter) || "All";
-  const page = Number(searchParams.get("page")) || 1;
-  const pageSize = (Number(searchParams.get("size")) || PAGE_SIZE) as PageSizeOption;
+  const apiParams = useMemo(
+    () =>
+      toHrEmployeesApiParams({
+        ...filters,
+        q: debouncedSearchTerm,
+      }),
+    [filters, debouncedSearchTerm],
+  );
 
   const { data: departments } = useHrDepartments();
-  const departmentId = useMemo(() => {
-    if (deptFilter === "All") return undefined;
-    return departments?.find((d) => d.name === deptFilter)?.id;
-  }, [deptFilter, departments]);
 
-  const isActiveParam =
-    statusFilter === "Active" ? "true" : statusFilter === "Inactive" ? "false" : "all";
-
-  // Server-side directory page — never treat the response as a raw array
   const {
     data: employeesPage,
     isLoading,
     isFetching,
     isError,
     refetch,
-  } = useHrEmployees({
-    page,
-    limit: pageSize,
-    search: debouncedSearchTerm || undefined,
-    departmentId,
-    isActive: isActiveParam,
-  });
+  } = useHrEmployees(apiParams);
 
-  const employees = useMemo(
+  const displayEmployees = useMemo(
     () => unwrapEmployees(employeesPage),
     [employeesPage],
   );
 
-  // Client role filter (API has no role param yet)
-  const displayEmployees = useMemo(() => {
-    if (roleFilter === "All") return employees;
-    return employees.filter((e) => e.role === roleFilter);
-  }, [employees, roleFilter]);
-
   const pagination = employeesPage?.pagination;
-  const totalCount = pagination?.total ?? displayEmployees.length;
+  const totalCount = pagination?.total ?? 0;
   const totalPages = Math.max(1, pagination?.totalPages ?? 1);
+  const page = filters.page;
+  const pageSize = filters.size;
 
-  const departmentNames = useMemo(
-    () => (departments ?? []).map((d) => d.name).sort((a, b) => a.localeCompare(b)),
-    [departments],
-  );
-
-  const setSearchTerm = useCallback((q: string) => setSearchTermLocal(q), []);
-  const setDeptFilter = useCallback(
-    (d: string) => updateParams({ dept: d === "All" ? null : d, page: null }),
-    [updateParams],
-  );
-  const setStatusFilter = useCallback(
-    (s: StatusFilter) =>
-      updateParams({ status: s === "Active" ? null : s, page: null }),
-    [updateParams],
-  );
-  const setRoleFilter = useCallback(
-    (r: RoleFilter) => updateParams({ role: r === "All" ? null : r, page: null }),
-    [updateParams],
-  );
   const setPage = useCallback(
-    (p: number) => updateParams({ page: p === 1 ? null : String(p) }),
+    (p: number) =>
+      updateParams(
+        employeeFiltersToUrlUpdates(
+          { page: p },
+          { size: PAGE_SIZE, status: DEFAULT_STATUS },
+        ),
+      ),
     [updateParams],
   );
 
   const handlePageSizeChange = useCallback(
     (size: number) =>
-      updateParams({
-        size: size === PAGE_SIZE ? null : String(size),
-        page: null,
-      }),
+      updateParams(
+        employeeFiltersToUrlUpdates(
+          { size, page: 1 },
+          { size: PAGE_SIZE, status: DEFAULT_STATUS },
+        ),
+      ),
     [updateParams],
   );
 
   const handleExport = useCallback(async () => {
-    // Export current page results (server-filtered). For full export use higher limit.
     try {
       const { downloadXlsx } = await import("@/lib/export/xlsx-utils");
-      const rows = displayEmployees.map((e) => ({
-        name: `${e.firstName ?? ""} ${e.lastName ?? ""}`.trim() || e.email,
-        email: e.email,
-        role: e.designation ?? ROLE_LABELS[e.role] ?? e.role,
-        department: e.department?.name ?? "",
-        status: e.isActive !== false ? "Active" : "Inactive",
-      }));
+      const {
+        fetchAllEmployeesForExport,
+        mapEmployeesToExportRows,
+        EMPLOYEE_EXPORT_COLUMNS,
+      } = await import("@/features/hr/employees/export-employees");
+      const rows = mapEmployeesToExportRows(
+        await fetchAllEmployeesForExport({
+          search: apiParams.search,
+          departmentId: apiParams.departmentId,
+          isActive: apiParams.isActive,
+          role: apiParams.role,
+        }),
+      );
       await downloadXlsx(`employees-${new Date().toISOString().slice(0, 10)}.xlsx`, [
         {
           name: "Employees",
-          columns: [
-            { header: "Name", key: "name", width: 25 },
-            { header: "Email", key: "email", width: 30 },
-            { header: "Role", key: "role", width: 20 },
-            { header: "Department", key: "department", width: 20 },
-            { header: "Status", key: "status", width: 12 },
-          ],
+          columns: [...EMPLOYEE_EXPORT_COLUMNS],
           rows,
         },
       ]);
-      toast.success("Employees exported");
+      toast.success(`Exported ${rows.length} employee${rows.length === 1 ? "" : "s"}`);
     } catch {
       toast.error("Export failed");
     }
-  }, [displayEmployees]);
+  }, [apiParams]);
 
   const handleClearFilters = useCallback(() => {
     setSearchTermLocal("");
@@ -207,11 +199,9 @@ export default function HRDashboardPage() {
 
   const showFrom = totalCount > 0 ? (page - 1) * pageSize + 1 : 0;
   const showTo = Math.min(page * pageSize, totalCount);
-  const hasActiveFilters =
-    !!searchTerm ||
-    deptFilter !== "All" ||
-    statusFilter !== "Active" ||
-    roleFilter !== "All";
+  const hasActiveFilters = hasActiveEmployeeFilters(filters, {
+    status: DEFAULT_STATUS,
+  });
 
   return (
     <PageWrapper
@@ -234,17 +224,40 @@ export default function HRDashboardPage() {
         </div>
       }
       filters={
-        <HrFilterBar
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          deptFilter={deptFilter}
-          onDeptChange={setDeptFilter}
-          departments={departmentNames}
-          statusFilter={statusFilter}
-          onStatusChange={setStatusFilter}
-          roleFilter={roleFilter}
-          onRoleChange={setRoleFilter}
-          onClearFilters={handleClearFilters}
+        <EmployeesFilters
+          search={searchTerm}
+          departmentId={filters.departmentId}
+          status={filters.status}
+          role={filters.role}
+          showRole
+          departments={departments}
+          hasFilters={hasActiveFilters}
+          onSearchChange={setSearchTermLocal}
+          onDepartmentIdChange={(id) =>
+            updateParams(
+              employeeFiltersToUrlUpdates(
+                { departmentId: id, page: 1 },
+                { size: PAGE_SIZE, status: DEFAULT_STATUS },
+              ),
+            )
+          }
+          onStatusChange={(s) =>
+            updateParams(
+              employeeFiltersToUrlUpdates(
+                { status: s, page: 1 },
+                { size: PAGE_SIZE, status: DEFAULT_STATUS },
+              ),
+            )
+          }
+          onRoleChange={(r) =>
+            updateParams(
+              employeeFiltersToUrlUpdates(
+                { role: r, page: 1 },
+                { size: PAGE_SIZE, status: DEFAULT_STATUS },
+              ),
+            )
+          }
+          onClear={handleClearFilters}
         />
       }
     >
@@ -255,7 +268,7 @@ export default function HRDashboardPage() {
           description="Onboard faster, track leave and attendance, and run the full employee lifecycle from one calm workspace."
           actions={
             <>
-              <Button size="sm" className="h-9 gap-1.5 shadow-sm" asChild>
+              <Button size="sm" className="h-9 flex-1 gap-1.5 shadow-sm sm:flex-none" asChild>
                 <Link href="/hr/onboarding">
                   <UserPlus className="h-3.5 w-3.5" />
                   Onboard
@@ -264,7 +277,7 @@ export default function HRDashboardPage() {
               <Button
                 size="sm"
                 variant="outline"
-                className="h-9 gap-1.5 border-blue-200 bg-background/80 text-foreground hover:bg-background dark:border-blue-500/30"
+                className="h-9 flex-1 gap-1.5 border-blue-200 bg-background/80 text-foreground hover:bg-background sm:flex-none dark:border-blue-500/30"
                 asChild
               >
                 <Link href="/hr/employees">
@@ -275,7 +288,15 @@ export default function HRDashboardPage() {
             </>
           }
         >
-          <div className="grid grid-cols-1 min-[400px]:grid-cols-2 lg:grid-cols-4 gap-2.5">
+          <div
+            className={cn(
+              "flex min-h-0 w-full gap-2.5 overflow-x-auto overscroll-x-contain pb-0.5 scrollbar-hide",
+              "[&>*]:min-w-[min(100%,15.5rem)] [&>*]:shrink-0",
+              "min-[420px]:grid min-[420px]:grid-cols-2 min-[420px]:overflow-visible min-[420px]:pb-0",
+              "min-[420px]:[&>*]:min-w-0 min-[420px]:[&>*]:shrink",
+              "xl:grid-cols-4",
+            )}
+          >
             <HrQuickAction
               href="/hr/onboarding"
               icon={UserPlus}
