@@ -1,8 +1,14 @@
 "use client";
 
-import { memo, useCallback } from "react";
-import { motion, useReducedMotion } from "framer-motion";
-import { LayoutGrid, List, Table2, Calendar, BarChart3, Users } from "lucide-react";
+import { memo, useCallback, type ComponentType, type Ref } from "react";
+import { Calendar, Table2 } from "lucide-react";
+import {
+  ChartBarIcon,
+  LayoutGridIcon,
+  LayoutListIcon,
+  UsersIcon,
+} from "@animateicons/react/lucide";
+import type { IconHandle } from "@animateicons/react";
 import { cn } from "@/lib/utils";
 import {
   Select,
@@ -11,7 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { pmSpring } from "@/features/projects/shared/pm-motion";
 
 export type ViewType = "board" | "list" | "table" | "calendar" | "gantt" | "workload";
 
@@ -27,16 +32,28 @@ interface ViewSwitcherProps {
   onViewChange: (view: ViewType) => void;
   className?: string;
   allowedViews?: readonly ViewType[];
-  layoutId?: string;
 }
 
-const ALL_VIEWS = [
-  { value: "board" as const, icon: LayoutGrid, label: "Board" },
-  { value: "list" as const, icon: List, label: "List" },
-  { value: "table" as const, icon: Table2, label: "Table" },
-  { value: "calendar" as const, icon: Calendar, label: "Calendar" },
-  { value: "gantt" as const, icon: BarChart3, label: "Gantt" },
-  { value: "workload" as const, icon: Users, label: "Workload" },
+type AnimatedViewIcon = ComponentType<{
+  ref?: Ref<IconHandle>;
+  size?: number;
+  className?: string;
+}>;
+
+type StaticViewIcon = ComponentType<{ className?: string }>;
+
+const ALL_VIEWS: {
+  value: ViewType;
+  animatedIcon?: AnimatedViewIcon;
+  staticIcon?: StaticViewIcon;
+  label: string;
+}[] = [
+  { value: "board", animatedIcon: LayoutGridIcon, label: "Board" },
+  { value: "list", animatedIcon: LayoutListIcon, label: "List" },
+  { value: "table", staticIcon: Table2, label: "Table" },
+  { value: "calendar", staticIcon: Calendar, label: "Calendar" },
+  { value: "gantt", animatedIcon: ChartBarIcon, label: "Gantt" },
+  { value: "workload", animatedIcon: UsersIcon, label: "Workload" },
 ];
 
 export const ViewSwitcher = memo(function ViewSwitcher({
@@ -44,9 +61,7 @@ export const ViewSwitcher = memo(function ViewSwitcher({
   onViewChange,
   className,
   allowedViews,
-  layoutId = "pm-view-pill",
 }: ViewSwitcherProps) {
-  const shouldReduceMotion = useReducedMotion();
   const views = allowedViews
     ? ALL_VIEWS.filter((v) => allowedViews.includes(v.value))
     : ALL_VIEWS;
@@ -68,64 +83,34 @@ export const ViewSwitcher = memo(function ViewSwitcher({
     [allowedViews, onViewChange],
   );
 
+  const activeMeta = views.find((v) => v.value === activeView) ?? views[0];
+
   return (
     <div className={cn("flex min-w-0 items-center", className)}>
-      <div
-        className="relative hidden h-9 items-center gap-1 rounded-lg border border-input bg-card p-1 sm:inline-flex"
-        role="tablist"
-        aria-label="Board view"
-      >
-        {views.map((v) => {
-          const active = activeView === v.value;
-          const Icon = v.icon;
-          function handleClick() {
-            onViewChange(v.value);
-          }
-          return (
-            <button
-              key={v.value}
-              type="button"
-              role="tab"
-              aria-selected={active}
-              onClick={handleClick}
-              className={cn(
-                "relative z-10 inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium leading-none",
-                "transition-colors duration-150",
-                active
-                  ? "text-foreground"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {active ? (
-                <motion.span
-                  layoutId={layoutId}
-                  className="absolute inset-0 -z-10 rounded-md border border-primary/20 bg-card shadow-[0_0_12px_-4px] shadow-primary/30"
-                  transition={shouldReduceMotion ? { duration: 0 } : pmSpring}
-                />
-              ) : null}
-              <Icon className={cn("h-3.5 w-3.5", active && "text-primary")} />
-              <span className="hidden lg:inline">{v.label}</span>
-            </button>
-          );
-        })}
-      </div>
-
       <Select value={activeView} onValueChange={handleSelectChange}>
         <SelectTrigger
-          className="w-[128px] shrink-0 text-xs sm:hidden"
+          className="h-9 w-fit min-w-[7.5rem] shrink-0 gap-1 px-2 text-xs"
           aria-label="Select view"
         >
-          <SelectValue />
+          <SelectValue placeholder={activeMeta?.label ?? "View"} />
         </SelectTrigger>
-        <SelectContent>
-          {views.map((v) => (
-            <SelectItem key={v.value} value={v.value} className="text-xs">
-              <span className="flex items-center gap-1.5">
-                <v.icon className="h-3.5 w-3.5 text-muted-foreground" />
-                {v.label}
-              </span>
-            </SelectItem>
-          ))}
+        <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+          {views.map((v) => {
+            const AnimatedIcon = v.animatedIcon;
+            const StaticIcon = v.staticIcon;
+            return (
+              <SelectItem key={v.value} value={v.value} className="text-xs">
+                <span className="flex items-center gap-1.5">
+                  {AnimatedIcon ? (
+                    <AnimatedIcon size={14} className="h-3.5 w-3.5 text-muted-foreground" />
+                  ) : StaticIcon ? (
+                    <StaticIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                  ) : null}
+                  {v.label}
+                </span>
+              </SelectItem>
+            );
+          })}
         </SelectContent>
       </Select>
     </div>

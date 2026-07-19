@@ -1,6 +1,13 @@
 ﻿"use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { SearchInput } from "@/components/ui/search-input";
@@ -41,7 +48,11 @@ interface ProjectOption {
 interface TicketFilterBarProps {
   sprints?: { id: number; name: string }[];
   members?: Member[];
-  statuses?: Array<{ name: string; color?: string | null; type?: string | null }>;
+  statuses?: Array<{
+    name: string;
+    color?: string | null;
+    type?: string | null;
+  }>;
   projectId?: number;
   projectOptions?: ProjectOption[];
   showTypeFilter?: boolean;
@@ -85,8 +96,10 @@ export function TicketFilterBar({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
-  const { iconRef: hideDoneIconRef, hoverHandlers: hideDoneHoverHandlers } = useAnimatedIcon();
-  const { iconRef: clearAllIconRef, hoverHandlers: clearAllHoverHandlers } = useAnimatedIcon();
+  const { iconRef: hideDoneIconRef, hoverHandlers: hideDoneHoverHandlers } =
+    useAnimatedIcon();
+  const { iconRef: clearAllIconRef, hoverHandlers: clearAllHoverHandlers } =
+    useAnimatedIcon();
 
   const { data: cycles = [] } = useCycles(projectId ?? 0);
   const { data: labels = [] } = useProjectLabels(projectId);
@@ -103,13 +116,25 @@ export function TicketFilterBar({
   const dueDateFrom = searchParams.get("dueDateFrom") ?? "";
   const dueDateTo = searchParams.get("dueDateTo") ?? "";
 
-  const selectedStatuses = useMemo(() => parseMulti(statusParam), [statusParam]);
-  const selectedPriorities = useMemo(() => parseMulti(priorityParam), [priorityParam]);
+  const selectedStatuses = useMemo(
+    () => parseMulti(statusParam),
+    [statusParam],
+  );
+  const selectedPriorities = useMemo(
+    () => parseMulti(priorityParam),
+    [priorityParam],
+  );
   const selectedTypes = useMemo(() => parseMulti(typeParam), [typeParam]);
-  const selectedAssignees = useMemo(() => parseMulti(assigneeParam), [assigneeParam]);
+  const selectedAssignees = useMemo(
+    () => parseMulti(assigneeParam),
+    [assigneeParam],
+  );
   const selectedLabels = useMemo(() => parseMulti(labelsParam), [labelsParam]);
   const selectedCycles = useMemo(() => parseMulti(cycleParam), [cycleParam]);
-  const selectedProjectIds = useMemo(() => parseMulti(projectIdsParam), [projectIdsParam]);
+  const selectedProjectIds = useMemo(
+    () => parseMulti(projectIdsParam),
+    [projectIdsParam],
+  );
 
   const statusItems = useMemo<StatusFilterOption[]>(() => {
     if (statuses && statuses.length > 0) {
@@ -119,14 +144,19 @@ export function TicketFilterBar({
         type: s.type ?? null,
       }));
     }
-    return (["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"] as const).map((name) => ({
-      name,
-      color: null,
-      type: null,
-    }));
+    return (["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"] as const).map(
+      (name) => ({
+        name,
+        color: null,
+        type: null,
+      }),
+    );
   }, [statuses]);
 
-  const statusConfig = useMemo(() => buildStatusConfig(statusItems), [statusItems]);
+  const statusConfig = useMemo(
+    () => buildStatusConfig(statusItems),
+    [statusItems],
+  );
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -140,7 +170,18 @@ export function TicketFilterBar({
     if (selectedProjectIds.length) count += 1;
     if (dueDateFrom || dueDateTo) count += 1;
     return count;
-  }, [selectedStatuses, selectedPriorities, selectedTypes, sprintParam, selectedAssignees, selectedLabels, selectedCycles, selectedProjectIds, dueDateFrom, dueDateTo]);
+  }, [
+    selectedStatuses,
+    selectedPriorities,
+    selectedTypes,
+    sprintParam,
+    selectedAssignees,
+    selectedLabels,
+    selectedCycles,
+    selectedProjectIds,
+    dueDateFrom,
+    dueDateTo,
+  ]);
 
   const setParam = useCallback(
     (key: string, value: string) => {
@@ -169,9 +210,19 @@ export function TicketFilterBar({
   const clearAll = useCallback(() => {
     startTransition(() => {
       const params = new URLSearchParams(searchParams.toString());
-      ["status", "priority", "type", "sprintId", "assigneeId", "labels", "cycle", "projectIds", "dueDateFrom", "dueDateTo", "page"].forEach(
-        (k) => params.delete(k),
-      );
+      [
+        "status",
+        "priority",
+        "type",
+        "sprintId",
+        "assigneeId",
+        "labels",
+        "cycle",
+        "projectIds",
+        "dueDateFrom",
+        "dueDateTo",
+        "page",
+      ].forEach((k) => params.delete(k));
       const qs = params.toString();
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     });
@@ -286,8 +337,14 @@ export function TicketFilterBar({
     };
   }
 
-  const labelMap = useMemo(() => new Map(labels.map((l) => [String(l.id), l])), [labels]);
-  const cycleMap = useMemo(() => new Map(cycles.map((c) => [String(c.id), c])), [cycles]);
+  const labelMap = useMemo(
+    () => new Map(labels.map((l) => [String(l.id), l])),
+    [labels],
+  );
+  const cycleMap = useMemo(
+    () => new Map(cycles.map((c) => [String(c.id), c])),
+    [cycles],
+  );
   const memberMap = useMemo(
     () => new Map((members ?? []).map((m) => [m.id, m])),
     [members],
@@ -320,25 +377,27 @@ export function TicketFilterBar({
     selectedProjectIds.length > 0;
 
   return (
-    <div className={cn("flex min-w-0 flex-col gap-1.5", className)}>
+    <div className={cn("flex min-w-0 flex-col gap-0.5", className)}>
       <div
         className={cn(
-          "flex min-w-0 items-center gap-2",
+          "flex min-w-0 items-center gap-0.5 sm:gap-1",
           align === "end" && "sm:justify-end",
         )}
       >
         <div
           className={cn(
-            "relative shrink-0",
+            "relative min-w-0 flex-1",
             align === "end"
-              ? "w-[140px] sm:w-[168px]"
-              : "min-w-[120px] max-w-[220px] flex-1",
+              ? "max-w-[120px] sm:max-w-[128px] sm:flex-none sm:shrink-0 md:w-[128px]"
+              : "max-w-[160px] sm:max-w-[180px]",
           )}
         >
           <SearchInput
             placeholder="Search..."
             value={localSearch}
             onValueChange={handleSearchChange}
+            className="[&_svg]:left-2 [&_svg]:h-3.5 [&_svg]:w-3.5"
+            inputClassName="h-9 pl-7 pr-7 text-xs"
           />
         </div>
 
@@ -367,46 +426,52 @@ export function TicketFilterBar({
           onDueDateToChange={handleDueDateToChange}
         />
 
-        {showDoneToggle && onHideCompletedChange !== undefined && hideCompleted !== undefined && (
-          <TooltipProvider delayDuration={200}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={handleHideDoneClick}
-                  className={cn(
-                    "shrink-0",
-                    hideCompleted && "border-primary bg-primary/10 text-primary",
-                  )}
-                  aria-label={doneCount > 0 ? `Hide done (${doneCount})` : "Hide done"}
-                  aria-pressed={hideCompleted}
-                  {...hideDoneHoverHandlers}
-                >
-                  <CircleCheckIcon
-                    ref={hideDoneIconRef}
-                    size={14}
-                    className={hideCompleted ? "text-primary" : undefined}
-                  />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-xs">
-                {doneCount > 0 ? `Hide done (${doneCount})` : "Hide done"}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
+        {showDoneToggle &&
+          onHideCompletedChange !== undefined &&
+          hideCompleted !== undefined && (
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={handleHideDoneClick}
+                    className={cn(
+                      "size-9 shrink-0",
+                      hideCompleted &&
+                        "border-primary bg-primary/10 text-primary",
+                    )}
+                    aria-label={
+                      doneCount > 0 ? `Hide done (${doneCount})` : "Hide done"
+                    }
+                    aria-pressed={hideCompleted}
+                    {...hideDoneHoverHandlers}
+                  >
+                    <CircleCheckIcon
+                      ref={hideDoneIconRef}
+                      size={14}
+                      className={hideCompleted ? "text-primary" : undefined}
+                    />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="text-xs">
+                  {doneCount > 0 ? `Hide done (${doneCount})` : "Hide done"}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
 
         {activeFilterCount > 0 && (
           <button
             type="button"
             onClick={clearAll}
-            className="flex h-9 shrink-0 items-center gap-1 rounded-md border border-transparent px-2 text-sm text-muted-foreground transition-colors hover:border-border hover:bg-muted/50 hover:text-foreground"
+            className="flex size-9 shrink-0 items-center justify-center gap-0.5 rounded-md border border-transparent text-xs text-muted-foreground transition-colors hover:border-border hover:bg-muted/50 hover:text-foreground sm:h-9 sm:w-auto sm:px-1.5"
+            aria-label="Clear all filters"
             {...clearAllHoverHandlers}
           >
             <XIcon ref={clearAllIconRef} size={14} className="shrink-0" />
-            Clear all
+            <span className="hidden md:inline">Clear</span>
           </button>
         )}
       </div>
@@ -419,22 +484,42 @@ export function TicketFilterBar({
           )}
         >
           {selectedStatuses.map((s) => (
-            <FilterChip key={`status-${s}`} label={s.replace(/_/g, " ")} onRemove={makeRemoveStatus(s)} />
+            <FilterChip
+              key={`status-${s}`}
+              label={s.replace(/_/g, " ")}
+              onRemove={makeRemoveStatus(s)}
+            />
           ))}
           {selectedPriorities.map((p) => (
-            <FilterChip key={`priority-${p}`} label={p.charAt(0) + p.slice(1).toLowerCase()} onRemove={makeRemovePriority(p)} />
+            <FilterChip
+              key={`priority-${p}`}
+              label={p.charAt(0) + p.slice(1).toLowerCase()}
+              onRemove={makeRemovePriority(p)}
+            />
           ))}
           {selectedTypes.map((t) => (
-            <FilterChip key={`type-${t}`} label={t.charAt(0) + t.slice(1).toLowerCase()} onRemove={makeRemoveType(t)} />
+            <FilterChip
+              key={`type-${t}`}
+              label={t.charAt(0) + t.slice(1).toLowerCase()}
+              onRemove={makeRemoveType(t)}
+            />
           ))}
           {selectedAssignees.map((id) => {
             const label =
               id === "@me"
                 ? "Me"
                 : id === "__unassigned__"
-                ? "Unassigned"
-                : (memberMap.get(id) ? getUserDisplayName(memberMap.get(id)!) : id);
-            return <FilterChip key={`assignee-${id}`} label={label} onRemove={makeRemoveAssignee(id)} />;
+                  ? "Unassigned"
+                  : memberMap.get(id)
+                    ? getUserDisplayName(memberMap.get(id)!)
+                    : id;
+            return (
+              <FilterChip
+                key={`assignee-${id}`}
+                label={label}
+                onRemove={makeRemoveAssignee(id)}
+              />
+            );
           })}
           {selectedLabels.map((id) => {
             const l = labelMap.get(id);
@@ -449,11 +534,23 @@ export function TicketFilterBar({
           })}
           {selectedCycles.map((id) => {
             const c = cycleMap.get(id);
-            return <FilterChip key={`cycle-${id}`} label={c?.name ?? id} onRemove={makeRemoveCycle(id)} />;
+            return (
+              <FilterChip
+                key={`cycle-${id}`}
+                label={c?.name ?? id}
+                onRemove={makeRemoveCycle(id)}
+              />
+            );
           })}
           {selectedProjectIds.map((id) => {
             const p = projectMap.get(id);
-            return <FilterChip key={`project-${id}`} label={p?.name ?? id} onRemove={makeRemoveProject(id)} />;
+            return (
+              <FilterChip
+                key={`project-${id}`}
+                label={p?.name ?? id}
+                onRemove={makeRemoveProject(id)}
+              />
+            );
           })}
         </div>
       )}

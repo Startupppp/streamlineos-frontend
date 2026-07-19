@@ -26,6 +26,7 @@ import { QueueViewRail } from "@/features/support/inbox/queue-view-rail";
 import { SupportAblyProvider } from "@/features/support/inbox/support-ably-provider";
 import { useInboxShortcuts } from "@/features/support/inbox/use-inbox-shortcuts";
 import { AgentAvailabilityToggle } from "@/features/support/inbox/agent-availability-toggle";
+import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 
 const TICKET_STATUSES: readonly SupportTicketStatus[] = ["OPEN", "IN_PROGRESS", "WAITING", "RESOLVED", "CLOSED"];
 const TICKET_PRIORITIES: readonly SupportTicketPriority[] = ["LOW", "MEDIUM", "HIGH", "URGENT"];
@@ -54,7 +55,7 @@ function InboxContent() {
   const pathname = usePathname();
   const [, startTransition] = useTransition();
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
-  const [createOpen, setCreateOpen] = useState(false);
+  const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } = useQueryParamOpen("create");
 
   const statusFilter = searchParams.get("status") || "all";
   const priorityFilter = searchParams.get("priority") || "all";
@@ -87,7 +88,7 @@ function InboxContent() {
 
   const tickets = ticketsData?.items ?? [];
 
-  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+  const handleOpenCreate = useCallback(() => openCreate(), [openCreate]);
   useInboxShortcuts({
     tickets,
     selectedTicketId,

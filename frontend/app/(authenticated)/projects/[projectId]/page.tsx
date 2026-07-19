@@ -22,18 +22,15 @@ const ListView = dynamic(
   () => import("@/features/projects/views/list-view").then((m) => m.ListView),
   { ssr: false, loading: () => <Skeleton className="flex-1 min-h-[400px] rounded-xl" /> },
 );
-import { WorkloadFilterBar } from "@/features/projects/views/workload-filter-bar";
 import {
   INITIAL_FILTERS,
   type FilterState as WorkloadFilterState,
 } from "@/features/projects/views/workload-types";
 import {
-  ViewSwitcher,
   parseViewType,
   type ViewType,
 } from "@/features/projects/views/view-switcher";
-import { TicketFilterBar } from "@/features/projects/shared/ticket-filter-bar";
-import { DisplayOptionsPanel } from "@/features/projects/views/display-options-panel";
+import { ProjectViewsToolbar } from "@/features/projects/views/project-views-toolbar";
 import { hydrateDisplayOptions, useDisplayOptions } from "@/features/projects/views/use-display-options";
 import { CreateTicketDialog } from "@/features/projects/tickets/create-ticket-dialog";
 import { SaveViewDialog, type SaveViewMeta } from "@/features/projects/views/save-view-dialog";
@@ -44,22 +41,11 @@ import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { UploadIcon, DownloadIcon, BookmarkIcon, SettingsIcon } from "@animateicons/react/lucide";
-import { X, SearchX } from "lucide-react";
+import { SearchX } from "lucide-react";
 import { exportToCsv } from "@/lib/export-csv";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import Link from "next/link";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
-import { useCan } from "@/hooks/api/access";
 import type { KanbanTicket } from "@/features/projects/shared/types";
 import {
   filterHiddenCompletedTickets,
@@ -68,103 +54,17 @@ import {
 import { useExportTickets } from "@/hooks/api/projects/import-export";
 import { ImportTicketsDialog } from "@/features/projects/tickets/import-tickets-dialog";
 import { BulkActionBar } from "@/features/projects/backlog/bulk-action-bar";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import type { IconHandle } from "@animateicons/react";
 import {
   pmSnappy,
   viewSwap,
   viewSwapReduced,
 } from "@/features/projects/shared/pm-motion";
-import { PM_PANEL, PM_TOOLBAR } from "@/features/projects/shared/pm-chrome";
+import { PM_PANEL } from "@/features/projects/shared/pm-chrome";
 import { ProjectAiMenu } from "@/features/projects/ai/project-ai-menu";
 import { cn } from "@/lib/utils";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
-}
-
-type AnimatedToolbarIcon = React.ForwardRefExoticComponent<
-  { size?: number } & React.RefAttributes<IconHandle>
->;
-
-interface AnimatedToolbarIconButtonProps {
-  onClick: () => void;
-  ariaLabel: string;
-  Icon: AnimatedToolbarIcon;
-}
-
-function AnimatedToolbarIconButton({ onClick, ariaLabel, Icon }: AnimatedToolbarIconButtonProps) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-
-  return (
-    <Button
-      variant="outline"
-      size="icon"
-      onClick={onClick}
-      className="w-8 shrink-0 border-border/70 bg-background/60 backdrop-blur-sm"
-      aria-label={ariaLabel}
-      {...hoverHandlers}
-    >
-      <Icon ref={iconRef} size={14} />
-    </Button>
-  );
-}
-
-function ExportDropdownTrigger() {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button
-      variant="outline"
-      size="icon"
-      className="w-8 shrink-0 border-border/70 bg-background/60 backdrop-blur-sm"
-      aria-label="Export tickets"
-      {...hoverHandlers}
-    >
-      <DownloadIcon ref={iconRef} size={14} />
-    </Button>
-  );
-}
-
-interface SaveViewButtonProps {
-  onClick: () => void;
-}
-
-interface SettingsButtonProps {
-  href: string;
-}
-
-function SettingsButton({ href }: SettingsButtonProps) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button
-      variant="outline"
-      size="icon"
-      className="w-8 shrink-0 border-border/70 bg-background/60 backdrop-blur-sm"
-      aria-label="Project settings"
-      asChild
-      {...hoverHandlers}
-    >
-      <Link href={href}>
-        <SettingsIcon ref={iconRef} size={14} />
-      </Link>
-    </Button>
-  );
-}
-
-function SaveViewButton({ onClick }: SaveViewButtonProps) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button
-      variant="outline"
-      size="icon"
-      onClick={onClick}
-      className="w-8 shrink-0 border-border/70 bg-background/60 backdrop-blur-sm"
-      aria-label="Save view"
-      {...hoverHandlers}
-    >
-      <BookmarkIcon ref={iconRef} size={14} />
-    </Button>
-  );
 }
 
 export default function ProjectBoardPage({ params }: PageProps) {
@@ -177,10 +77,6 @@ export default function ProjectBoardPage({ params }: PageProps) {
   const isLoading = projectLoading || ticketsLoading;
   const searchParams = useSearchParams();
   const router = useRouter();
-  const canUpdateProject = useCan("projects:update");
-  const canManageProject = useCan("projects:manage");
-  const canDeleteProject = useCan("projects:delete");
-  const showSettingsAction = canUpdateProject || canManageProject || canDeleteProject;
   const shouldReduceMotion = useReducedMotion();
   const viewVariants = shouldReduceMotion ? viewSwapReduced : viewSwap;
 
@@ -577,6 +473,11 @@ export default function ProjectBoardPage({ params }: PageProps) {
 
   const handleOpenImport = useCallback(() => setImportOpen(true), []);
 
+  const handleOpenSaveView = useCallback(() => {
+    setSaveViewName("");
+    setSaveViewOpen(true);
+  }, []);
+
   const createParamOpen = searchParams.get("create") === "1";
   const createCycleParam = searchParams.get("cycleId");
   const createDefaultCycleId =
@@ -613,14 +514,13 @@ export default function ProjectBoardPage({ params }: PageProps) {
       title={data.name}
       subtitle={data.description ?? undefined}
       noInternalScroll
+      mobileFiltersInline
+      filtersClassName="!gap-1 !px-3 !pb-1 sm:!gap-1.5 sm:!px-4 lg:!px-6"
       contentClassName="!p-0 flex flex-col"
       className="relative"
       actions={
         <div className="flex items-center gap-2">
           <ProjectAiMenu projectId={projectId} />
-          {showSettingsAction ? (
-            <SettingsButton href={`/projects/${projectId}/settings`} />
-          ) : null}
           <CreateTicketDialog
             projectId={projectId}
             defaultCycleId={createDefaultCycleId}
@@ -630,79 +530,27 @@ export default function ProjectBoardPage({ params }: PageProps) {
         </div>
       }
       filters={
-        <div className={cn(PM_TOOLBAR)}>
-          <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-            <ViewSwitcher activeView={view} onViewChange={handleViewChange} />
-            <DisplayOptionsPanel viewType={view} options={displayOptions} onChange={setDisplayOptions} />
-            <div className="flex items-center gap-1.5">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <ExportDropdownTrigger />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-48">
-                  <DropdownMenuItem onClick={handleExportCurrentView}>
-                    Export current view
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleExportAllTickets}>
-                    Export all tickets
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <AnimatedToolbarIconButton
-                onClick={handleOpenImport}
-                ariaLabel="Import tickets"
-                Icon={UploadIcon}
-              />
-              <SaveViewButton
-                onClick={() => {
-                  setSaveViewName("");
-                  setSaveViewOpen(true);
-                }}
-              />
-            </div>
-            {activeView && (
-              <Badge
-                variant="secondary"
-                className="h-6 max-w-[12rem] shrink-0 cursor-default gap-1 bg-background/60 pl-2 pr-1 text-xs font-normal backdrop-blur-sm"
-              >
-                <span className="min-w-0 truncate">View: {activeView.name}</span>
-                <button
-                  type="button"
-                  onClick={handleClearView}
-                  aria-label="Clear view"
-                  className="ml-0.5 rounded-sm transition-colors hover:bg-muted"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
-            )}
-          </div>
-          {view === "workload" ? (
-            <WorkloadFilterBar
-              className="w-full sm:min-w-0 sm:flex-1 sm:justify-end"
-              projectId={projectId}
-              filters={workloadFilters}
-              members={members}
-              projectStatuses={statuses}
-              onFilterChange={handleWorkloadFilterChange}
-              onClearFilters={handleClearWorkloadFilters}
-            />
-          ) : (
-            <TicketFilterBar
-              className="w-full sm:min-w-0 sm:max-w-xl sm:flex-1"
-              align="end"
-              members={members}
-              statuses={statuses}
-              projectId={projectId}
-              showSprintFilter={false}
-              showDoneToggle
-              hideCompleted={hideCompleted}
-              onHideCompletedChange={setHideCompleted}
-              doneCount={doneCount}
-            />
-          )}
-        </div>
+        <ProjectViewsToolbar
+          view={view}
+          onViewChange={handleViewChange}
+          displayOptions={displayOptions}
+          onDisplayOptionsChange={setDisplayOptions}
+          activeViewName={activeView?.name ?? null}
+          onClearView={handleClearView}
+          onExportCurrentView={handleExportCurrentView}
+          onExportAllTickets={handleExportAllTickets}
+          onOpenImport={handleOpenImport}
+          onOpenSaveView={handleOpenSaveView}
+          projectId={projectId}
+          members={members}
+          statuses={statuses}
+          hideCompleted={hideCompleted}
+          onHideCompletedChange={setHideCompleted}
+          doneCount={doneCount}
+          workloadFilters={workloadFilters}
+          onWorkloadFilterChange={handleWorkloadFilterChange}
+          onClearWorkloadFilters={handleClearWorkloadFilters}
+        />
       }
     >
       {showEmptyFilterState ? (

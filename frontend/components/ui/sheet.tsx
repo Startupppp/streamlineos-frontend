@@ -5,7 +5,6 @@ import * as SheetPrimitive from "@radix-ui/react-dialog"
 import { XIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { ScrollArea } from "@/components/ui/scroll-area"
 
 function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />
@@ -94,15 +93,16 @@ function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
 
 function SheetBody({ className, children, ...props }: React.ComponentProps<"div">) {
   return (
-    <ScrollArea
+    <div
       data-slot="sheet-body"
-      hideScrollbar
-      className="flex-1 min-h-0"
+      className={cn(
+        "min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain",
+        className,
+      )}
+      {...props}
     >
-      <div className={cn(className)} {...props}>
-        {children}
-      </div>
-    </ScrollArea>
+      {children}
+    </div>
   )
 }
 

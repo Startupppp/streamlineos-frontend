@@ -23,6 +23,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { toast } from "sonner";
 import {
   useCalendarEvents,
@@ -45,7 +46,10 @@ import {
   useFinalizeIntegrationConnection,
   useIntegrationConnections,
 } from "@/hooks/api/integrations";
-import { CalendarToolbar } from "./calendar-toolbar";
+import {
+  CalendarToolbar,
+  CalendarToolbarPrimaryActions,
+} from "./calendar-toolbar";
 import { useEventPropGetter } from "./use-event-prop-getter";
 import { useCalendarComputed } from "./use-calendar-computed";
 import { useCalendarSlotSelectionGuard } from "./use-calendar-slot-selection-guard";
@@ -289,138 +293,151 @@ export function CalendarView() {
   }, [searchParams, router]);
 
   return (
-    <div className="flex flex-col gap-3 h-full">
-      <CalendarToolbar
-        view={view}
-        viewMode={viewMode}
-        currentDate={currentDate}
-        activeConnectionCount={activeConnectionCount}
-        hrEventsVisible={hrEventsVisible}
-        crmEventsVisible={crmEventsVisible}
-        onPrev={handlePrev}
-        onNext={handleNext}
-        onToday={handleToday}
-        onDateChange={setCurrentDate}
-        onViewChange={setView}
-        onViewModeChange={setViewMode}
-        onOpenAccounts={handleOpenAccounts}
-        onOpenCreate={handleOpenCreate}
-        onOpenCreateTicket={handleOpenCreateTicket}
-        onToggleHrEvents={toggleHrEvents}
-        onToggleCrmEvents={toggleCrmEvents}
-      />
+    <PageWrapper
+      title="Calendar"
+      noInternalScroll
+      actionsInline
+      actions={
+        <CalendarToolbarPrimaryActions
+          onOpenCreate={handleOpenCreate}
+          onOpenCreateTicket={handleOpenCreateTicket}
+        />
+      }
+    >
+      <div className="flex h-full flex-col gap-3">
+        <CalendarToolbar
+          view={view}
+          viewMode={viewMode}
+          currentDate={currentDate}
+          activeConnectionCount={activeConnectionCount}
+          hrEventsVisible={hrEventsVisible}
+          crmEventsVisible={crmEventsVisible}
+          onPrev={handlePrev}
+          onNext={handleNext}
+          onToday={handleToday}
+          onDateChange={setCurrentDate}
+          onViewChange={setView}
+          onViewModeChange={setViewMode}
+          onOpenAccounts={handleOpenAccounts}
+          onOpenCreate={handleOpenCreate}
+          onOpenCreateTicket={handleOpenCreateTicket}
+          onToggleHrEvents={toggleHrEvents}
+          onToggleCrmEvents={toggleCrmEvents}
+          hidePrimaryActions
+        />
 
-      {externalData?.errors && externalData.errors.length > 0 && (
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 rounded-md border border-amber-200 bg-amber-50 dark:bg-amber-500/10 dark:border-amber-500/30 px-3 py-1.5 shrink-0">
-          <span className="text-[11px] text-amber-700 dark:text-amber-300 flex-1 min-w-0">
-            {externalData.errors
-              .map((e) => `${e.accountEmail ?? "Account"}: ${e.message}`)
-              .join(" · ")}
-          </span>
-          <button
-            type="button"
-            onClick={handleOpenAccounts}
-            className="text-[11px] text-amber-800 dark:text-amber-300 font-medium underline underline-offset-2 shrink-0 self-start sm:self-auto"
-          >
-            Manage accounts
-          </button>
-        </div>
-      )}
+        {externalData?.errors && externalData.errors.length > 0 && (
+          <div className="flex shrink-0 flex-col gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-1.5 dark:border-amber-500/30 dark:bg-amber-500/10 sm:flex-row sm:items-center">
+            <span className="min-w-0 flex-1 text-[11px] text-amber-700 dark:text-amber-300">
+              {externalData.errors
+                .map((e) => `${e.accountEmail ?? "Account"}: ${e.message}`)
+                .join(" · ")}
+            </span>
+            <button
+              type="button"
+              onClick={handleOpenAccounts}
+              className="shrink-0 self-start text-[11px] font-medium text-amber-800 underline underline-offset-2 dark:text-amber-300 sm:self-auto"
+            >
+              Manage accounts
+            </button>
+          </div>
+        )}
 
-      <div className="flex-1 flex gap-4 min-h-0">
-        <div className="flex-1 min-w-0 flex flex-col">
-          <div
-            ref={calContainerRef}
-            className={cn(
-              "flex-1 min-h-0 rounded-lg border border-border bg-card calendar-container flex flex-col",
-              viewMode === "calendar" && view === "month"
-                ? "overflow-y-scroll"
-                : "overflow-hidden",
-            )}
-          >
-            {viewMode === "calendar" ? (
-              <BigCalendarWrapper
-                events={allCalEvents}
-                date={currentDate}
-                view={view}
-                calHeight={calHeight}
-                onView={setView}
-                onNavigate={setCurrentDate}
-                onSelectSlot={
-                  isCalendarOverlayOpen ? undefined : guardedSelectSlot
-                }
-                onSelectEvent={handleSelectEvent}
-                eventPropGetter={eventPropGetter}
-              />
-            ) : (
-              <CalendarEventsPanel
-                mode={viewMode}
-                events={events}
-                range={viewMode === "list" ? visibleRange : undefined}
-                onSelectEvent={handleSelectEventById}
-              />
-            )}
+        <div className="flex min-h-0 flex-1 gap-4">
+          <div className="flex min-w-0 flex-1 flex-col">
+            <div
+              ref={calContainerRef}
+              className={cn(
+                "calendar-container flex min-h-0 flex-1 flex-col rounded-lg border border-border bg-card",
+                viewMode === "calendar" && view === "month"
+                  ? "overflow-y-scroll"
+                  : "overflow-hidden",
+              )}
+            >
+              {viewMode === "calendar" ? (
+                <BigCalendarWrapper
+                  events={allCalEvents}
+                  date={currentDate}
+                  view={view}
+                  calHeight={calHeight}
+                  onView={setView}
+                  onNavigate={setCurrentDate}
+                  onSelectSlot={
+                    isCalendarOverlayOpen ? undefined : guardedSelectSlot
+                  }
+                  onSelectEvent={handleSelectEvent}
+                  eventPropGetter={eventPropGetter}
+                />
+              ) : (
+                <CalendarEventsPanel
+                  mode={viewMode}
+                  events={events}
+                  range={viewMode === "list" ? visibleRange : undefined}
+                  onSelectEvent={handleSelectEventById}
+                />
+              )}
+            </div>
           </div>
         </div>
+
+        <EventCreateDialog
+          open={isCreateOpen}
+          onOpenChange={setIsCreateOpen}
+          defaultSlot={createSlot}
+        />
+
+        <CreateTicketFromCalendarDialog
+          open={isCreateTicketOpen}
+          onClose={handleCloseCreateTicket}
+          defaultSlot={createTicketSlot}
+        />
+
+        <Dialog open={isSlotChoiceOpen} onOpenChange={setIsSlotChoiceOpen}>
+          <DialogContent className="max-w-xs p-4">
+            <DialogHeader>
+              <DialogTitle className="text-sm font-semibold">
+                What would you like to create?
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground">
+                Choose the type of item to add for the selected time.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col gap-1.5">
+              <Button
+                variant="outline"
+                className="h-8 justify-start gap-2 text-xs"
+                onClick={handleSlotChooseEvent}
+              >
+                <Plus className="h-3.5 w-3.5 text-muted-foreground" />
+                Calendar event
+              </Button>
+              <Button
+                variant="outline"
+                className="h-8 justify-start gap-2 text-xs"
+                onClick={handleSlotChooseTicket}
+              >
+                <Ticket className="h-3.5 w-3.5 text-muted-foreground" />
+                Ticket due date
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <EventDetailSheet event={selectedEvent} onClose={handleCloseDetail} />
+        <ExternalEventDetailSheet
+          event={selectedExternal}
+          onClose={handleCloseExternal}
+        />
+        <HrEventDetailSheet
+          event={selectedHrEvent}
+          onClose={handleCloseHrEvent}
+        />
+        <CalendarAccountsSheet
+          open={accountsOpen}
+          onClose={handleCloseAccounts}
+        />
       </div>
-
-      <EventCreateDialog
-        open={isCreateOpen}
-        onOpenChange={setIsCreateOpen}
-        defaultSlot={createSlot}
-      />
-
-      <CreateTicketFromCalendarDialog
-        open={isCreateTicketOpen}
-        onClose={handleCloseCreateTicket}
-        defaultSlot={createTicketSlot}
-      />
-
-      <Dialog open={isSlotChoiceOpen} onOpenChange={setIsSlotChoiceOpen}>
-        <DialogContent className="max-w-xs p-4">
-          <DialogHeader>
-            <DialogTitle className="text-sm font-semibold">
-              What would you like to create?
-            </DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground">
-              Choose the type of item to add for the selected time.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col gap-1.5">
-            <Button
-              variant="outline"
-              className="justify-start h-8 text-xs gap-2"
-              onClick={handleSlotChooseEvent}
-            >
-              <Plus className="h-3.5 w-3.5 text-muted-foreground" />
-              Calendar event
-            </Button>
-            <Button
-              variant="outline"
-              className="justify-start h-8 text-xs gap-2"
-              onClick={handleSlotChooseTicket}
-            >
-              <Ticket className="h-3.5 w-3.5 text-muted-foreground" />
-              Ticket due date
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <EventDetailSheet event={selectedEvent} onClose={handleCloseDetail} />
-      <ExternalEventDetailSheet
-        event={selectedExternal}
-        onClose={handleCloseExternal}
-      />
-      <HrEventDetailSheet
-        event={selectedHrEvent}
-        onClose={handleCloseHrEvent}
-      />
-      <CalendarAccountsSheet
-        open={accountsOpen}
-        onClose={handleCloseAccounts}
-      />
-    </div>
+    </PageWrapper>
   );
 }
 

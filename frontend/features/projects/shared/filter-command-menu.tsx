@@ -4,18 +4,37 @@ import {
   useState,
   useCallback,
   useRef,
+  forwardRef,
+  type ComponentPropsWithoutRef,
   type KeyboardEvent,
-  type MouseEvent,
   type ReactNode,
+  type ChangeEvent,
 } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 import { Command, CommandInput } from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
-import { ListFilter } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { ArrowLeft, Search } from "lucide-react";
+import { SlidersHorizontalIcon } from "@animateicons/react/lucide";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/common/use-mobile";
 import {
   FilterCategorySubmenu,
+  FILTER_CATEGORY_TITLES,
   type FilterCategory,
   type StatusFilterOption,
 } from "./filter-category-submenu";
@@ -107,6 +126,75 @@ interface CategoryDefinition {
   activeCount: number;
 }
 
+function MobileFilterSearch({
+  value,
+  onValueChange,
+}: {
+  value: string;
+  onValueChange: (value: string) => void;
+}) {
+  function handleChange(e: ChangeEvent<HTMLInputElement>) {
+    onValueChange(e.target.value);
+  }
+
+  return (
+    <div className="flex h-11 shrink-0 items-center gap-2 border-b border-border px-3">
+      <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+      <input
+        type="search"
+        value={value}
+        onChange={handleChange}
+        placeholder="Filter by…"
+        className="h-full flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+        aria-label="Search filters"
+      />
+    </div>
+  );
+}
+
+type FilterTriggerButtonProps = Omit<
+  ComponentPropsWithoutRef<typeof AnimatedIconButton>,
+  "icon" | "iconSize" | "children"
+> & {
+  activeFilterCount: number;
+};
+
+const FilterTriggerButton = forwardRef<
+  HTMLButtonElement,
+  FilterTriggerButtonProps
+>(function FilterTriggerButton(
+  { activeFilterCount, className, ...props },
+  ref,
+) {
+  return (
+    <AnimatedIconButton
+      ref={ref}
+      variant="outline"
+      size="sm"
+      {...props}
+      icon={SlidersHorizontalIcon}
+      iconSize={14}
+      className={cn(
+        "relative size-9 shrink-0 gap-1 p-0 text-xs font-normal md:h-9 md:w-auto md:px-2",
+        "data-[state=open]:border-primary data-[state=open]:focus-visible:border-primary",
+        className,
+      )}
+      aria-label={
+        activeFilterCount > 0
+          ? `Add filter (${activeFilterCount} active)`
+          : "Add filter"
+      }
+    >
+      <span className="hidden md:inline">Add filter</span>
+      {activeFilterCount > 0 ? (
+        <span className="absolute -right-1 -top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-primary px-0.5 text-[10px] font-semibold text-primary-foreground md:static md:ml-0.5 md:h-4 md:min-w-4 md:px-1">
+          {activeFilterCount}
+        </span>
+      ) : null}
+    </AnimatedIconButton>
+  );
+});
+
 export function FilterCommandMenu({
   activeFilterCount,
   statusItems,
@@ -131,9 +219,10 @@ export function FilterCommandMenu({
   onDueDateFromChange,
   onDueDateToChange,
 }: FilterCommandMenuProps) {
+  const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [hoveredCategory, setHoveredCategory] = useState<FilterCategory | null>(null);
+  const [activeCategory, setActiveCategory] = useState<FilterCategory | null>(null);
   const submenuRef = useRef<HTMLDivElement>(null);
   const categoryListRef = useRef<HTMLDivElement>(null);
   const shouldReduceMotion = useReducedMotion();
@@ -166,24 +255,9 @@ export function FilterCommandMenu({
   }
 
   const categories: CategoryDefinition[] = [
-    {
-      key: "status",
-      label: "Status",
-      visible: true,
-      activeCount: selectedStatuses.length,
-    },
-    {
-      key: "priority",
-      label: "Priority",
-      visible: true,
-      activeCount: selectedPriorities.length,
-    },
-    {
-      key: "type",
-      label: "Type",
-      visible: showTypeFilter,
-      activeCount: selectedTypes.length,
-    },
+    { key: "status", label: "Status", visible: true, activeCount: selectedStatuses.length },
+    { key: "priority", label: "Priority", visible: true, activeCount: selectedPriorities.length },
+    { key: "type", label: "Type", visible: showTypeFilter, activeCount: selectedTypes.length },
     {
       key: "assignee",
       label: "Assignee",
@@ -191,18 +265,8 @@ export function FilterCommandMenu({
       visible: showAssigneeFilter,
       activeCount: selectedAssignees.length,
     },
-    {
-      key: "label",
-      label: "Label",
-      visible: labels.length > 0,
-      activeCount: selectedLabels.length,
-    },
-    {
-      key: "cycle",
-      label: "Cycle",
-      visible: cycles.length > 0,
-      activeCount: selectedCycles.length,
-    },
+    { key: "label", label: "Label", visible: labels.length > 0, activeCount: selectedLabels.length },
+    { key: "cycle", label: "Cycle", visible: cycles.length > 0, activeCount: selectedCycles.length },
     {
       key: "sprint",
       label: "Sprint",
@@ -225,37 +289,35 @@ export function FilterCommandMenu({
 
   const visibleCategories = categories.filter((c) => c.visible);
 
-  function handleOpenChange(next: boolean) {
+  const handleOpenChange = useCallback((next: boolean) => {
     setOpen(next);
     if (!next) {
       setSearch("");
-      setHoveredCategory(null);
+      setActiveCategory(null);
     }
-  }
+  }, []);
 
-  function handleInteractOutside() {
-    setOpen(false);
-  }
+  const firstCategoryKey = visibleCategories[0]?.key ?? null;
+  const resolvedCategory =
+    activeCategory ??
+    (!isMobile && open && !isSearching ? firstCategoryKey : null);
 
   function handleSearchChange(value: string) {
     setSearch(value);
     if (value.trim().length > 0) {
-      setHoveredCategory(null);
+      setActiveCategory(null);
     }
   }
 
-  function handleCategoryMouseEnter(key: FilterCategory) {
-    setHoveredCategory(key);
-  }
-
-  function handleCategoryFocus(key: FilterCategory) {
-    setHoveredCategory(key);
+  function handleSelectCategory(key: FilterCategory) {
+    setActiveCategory(key);
+    setSearch("");
   }
 
   function handleCategoryKeyDown(key: FilterCategory, e: KeyboardEvent) {
     if (e.key === "ArrowRight" || e.key === "Enter" || e.key === " ") {
       e.preventDefault();
-      setHoveredCategory(key);
+      handleSelectCategory(key);
       setTimeout(() => {
         submenuRef.current?.focus();
       }, 0);
@@ -263,16 +325,13 @@ export function FilterCommandMenu({
   }
 
   function handleSubmenuClose() {
-    setHoveredCategory(null);
+    setActiveCategory(null);
     categoryListRef.current?.focus();
   }
 
-  function handleMenuMouseLeave(e: MouseEvent<HTMLDivElement>) {
-    const next = e.relatedTarget;
-    if (next instanceof Node && e.currentTarget.contains(next)) {
-      return;
-    }
-    setHoveredCategory(null);
+  function handleBackToCategories() {
+    setActiveCategory(null);
+    setSearch("");
   }
 
   const handleToggleStatus = useCallback((v: string) => { onToggleStatus(v); }, [onToggleStatus]);
@@ -316,29 +375,154 @@ export function FilterCommandMenu({
     onDueDateToChange: handleDueDateToChange,
   };
 
-  const showSubmenu = hoveredCategory !== null;
+  function renderCategoryList(dense: boolean) {
+    if (visibleCategories.length === 0) {
+      return (
+        <p className="px-3 py-8 text-center text-sm text-muted-foreground">
+          No filters available.
+        </p>
+      );
+    }
+
+    return (
+      <motion.div
+        ref={categoryListRef}
+        role="menu"
+        aria-label="Filter categories"
+        tabIndex={-1}
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-1.5 outline-none"
+        variants={listContainer}
+        initial="hidden"
+        animate="show"
+      >
+        {visibleCategories.map((cat) => {
+          const selected = resolvedCategory === cat.key;
+          function onSelect() {
+            handleSelectCategory(cat.key);
+          }
+          function onMouseEnter() {
+            if (!isMobile) handleSelectCategory(cat.key);
+          }
+          function onKeyDown(e: KeyboardEvent) {
+            handleCategoryKeyDown(cat.key, e);
+          }
+          return (
+            <motion.div
+              key={cat.key}
+              variants={shouldReduceMotion ? listItemReduced : listItem}
+              transition={pmSnappy}
+            >
+              <FilterCategoryRow
+                category={cat.key}
+                label={cat.label}
+                leading={cat.leading}
+                activeCount={cat.activeCount}
+                selected={selected}
+                dense={dense}
+                onSelect={onSelect}
+                onMouseEnter={onMouseEnter}
+                onKeyDown={onKeyDown}
+              />
+            </motion.div>
+          );
+        })}
+      </motion.div>
+    );
+  }
+
+  if (isMobile) {
+    const drillTitle = activeCategory
+      ? FILTER_CATEGORY_TITLES[activeCategory]
+      : "Filters";
+
+    return (
+      <Drawer open={open} onOpenChange={handleOpenChange}>
+        <DrawerTrigger asChild>
+          <FilterTriggerButton activeFilterCount={activeFilterCount} />
+        </DrawerTrigger>
+        <DrawerContent className="flex max-h-[min(92dvh,40rem)] flex-col gap-0 overflow-hidden rounded-t-xl border bg-card p-0 shadow-2xl">
+          <DrawerHeader className="shrink-0 border-b border-border px-3 py-3 text-left">
+            <div className="flex items-center gap-2">
+              {activeCategory && !isSearching ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 shrink-0"
+                  aria-label="Back to filter categories"
+                  onClick={handleBackToCategories}
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              ) : null}
+              <DrawerTitle className="text-sm font-semibold text-foreground">
+                {isSearching ? "Search filters" : drillTitle}
+              </DrawerTitle>
+              {activeFilterCount > 0 && !activeCategory ? (
+                <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground">
+                  {activeFilterCount}
+                </span>
+              ) : null}
+            </div>
+          </DrawerHeader>
+
+          {isSearching ? (
+            <div className="min-h-0 flex-1 overflow-hidden">
+              <FilterFlatSearch
+                search={search}
+                onSearchChange={handleSearchChange}
+                showTypeFilter={showTypeFilter}
+                showSprintFilter={showSprintFilter}
+                showAssigneeFilter={showAssigneeFilter}
+                {...sharedProps}
+              />
+            </div>
+          ) : activeCategory ? (
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+              <FilterCategorySubmenu
+                category={activeCategory}
+                onClose={handleBackToCategories}
+                showTitle={false}
+                className="w-full min-w-0"
+                listClassName="max-h-none overflow-visible p-1.5"
+                {...sharedProps}
+              />
+            </div>
+          ) : (
+            <div className="flex min-h-0 flex-1 flex-col pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+              <MobileFilterSearch value={search} onValueChange={handleSearchChange} />
+              {renderCategoryList(false)}
+            </div>
+          )}
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
+  const filterTriggerLabel =
+    activeFilterCount > 0
+      ? `Add filter (${activeFilterCount} active)`
+      : "Add filter";
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className="relative shrink-0 gap-1.5 px-2.5 text-xs font-normal data-[state=open]:border-primary data-[state=open]:focus-visible:border-primary"
-        >
-          <ListFilter className="h-3.5 w-3.5 shrink-0" />
-          <span>Add filter</span>
-          {activeFilterCount > 0 && (
-            <span className="ml-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
-              {activeFilterCount}
-            </span>
-          )}
-        </Button>
-      </PopoverTrigger>
+      <TooltipProvider delayDuration={200}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <PopoverTrigger asChild>
+              <FilterTriggerButton activeFilterCount={activeFilterCount} />
+            </PopoverTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="text-xs md:hidden">
+            {filterTriggerLabel}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       <PopoverContent
         align="start"
-        className="w-auto max-w-[min(520px,var(--radix-popover-content-available-width))] overflow-hidden p-0 data-[state=open]:animate-none data-[state=closed]:animate-none"
-        onInteractOutside={handleInteractOutside}
+        sideOffset={8}
+        collisionPadding={16}
+        className="w-auto max-w-[min(560px,var(--radix-popover-content-available-width))] overflow-hidden rounded-xl border border-border bg-card p-0 shadow-lg"
       >
         {isSearching ? (
           <FilterFlatSearch
@@ -350,11 +534,8 @@ export function FilterCommandMenu({
             {...sharedProps}
           />
         ) : (
-          <div
-            className="flex max-h-[min(480px,var(--radix-popover-content-available-height))]"
-            onMouseLeave={handleMenuMouseLeave}
-          >
-            <div className="flex w-[200px] shrink-0 flex-col">
+          <div className="flex max-h-[min(480px,var(--radix-popover-content-available-height))]">
+            <div className="flex w-[200px] shrink-0 flex-col border-r border-border">
               <Command
                 shouldFilter={false}
                 className={cn(
@@ -373,86 +554,34 @@ export function FilterCommandMenu({
                   onValueChange={handleSearchChange}
                 />
               </Command>
-              <motion.div
-                ref={categoryListRef}
-                role="menu"
-                aria-label="Filter categories"
-                tabIndex={-1}
-                className="overflow-y-auto scrollbar-hide p-1 outline-none"
-                variants={listContainer}
-                initial="hidden"
-                animate="show"
-              >
-                {visibleCategories.length === 0 ? (
-                  <p className="px-3 py-6 text-center text-sm text-muted-foreground">
-                    No filters available.
-                  </p>
-                ) : (
-                  visibleCategories.map((cat) => {
-                    const isHovered = hoveredCategory === cat.key;
-                    function onMouseEnter() {
-                      handleCategoryMouseEnter(cat.key);
-                    }
-                    function onFocus() {
-                      handleCategoryFocus(cat.key);
-                    }
-                    function onKeyDown(e: KeyboardEvent) {
-                      handleCategoryKeyDown(cat.key, e);
-                    }
-                    return (
-                      <motion.div
-                        key={cat.key}
-                        variants={shouldReduceMotion ? listItemReduced : listItem}
-                        transition={pmSnappy}
-                      >
-                        <FilterCategoryRow
-                          category={cat.key}
-                          label={cat.label}
-                          leading={cat.leading}
-                          activeCount={cat.activeCount}
-                          hovered={isHovered}
-                          onMouseEnter={onMouseEnter}
-                          onFocus={onFocus}
-                          onKeyDown={onKeyDown}
-                        />
-                      </motion.div>
-                    );
-                  })
-                )}
-              </motion.div>
+              {renderCategoryList(true)}
             </div>
 
-            <AnimatePresence initial={false}>
-              {showSubmenu && hoveredCategory ? (
+            <AnimatePresence initial={false} mode="wait">
+              {resolvedCategory ? (
                 <motion.div
-                  key={hoveredCategory}
+                  key={resolvedCategory}
                   ref={submenuRef}
                   tabIndex={-1}
-                  initial={
-                    shouldReduceMotion
-                      ? { opacity: 0 }
-                      : { opacity: 0, x: -8 }
-                  }
-                  animate={
-                    shouldReduceMotion
-                      ? { opacity: 1 }
-                      : { opacity: 1, x: 0 }
-                  }
-                  exit={
-                    shouldReduceMotion
-                      ? { opacity: 0 }
-                      : { opacity: 0, x: -6 }
-                  }
+                  initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, x: 6 }}
+                  animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, x: 0 }}
+                  exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, x: -4 }}
                   transition={pmSnappy}
-                  className="overflow-y-auto border-l border-border bg-muted/20 outline-none"
+                  className="min-w-0 overflow-y-auto bg-muted/15 outline-none"
                 >
                   <FilterCategorySubmenu
-                    category={hoveredCategory}
+                    category={resolvedCategory}
                     onClose={handleSubmenuClose}
+                    showTitle
+                    className="w-[280px]"
                     {...sharedProps}
                   />
                 </motion.div>
-              ) : null}
+              ) : (
+                <div className="flex w-[280px] items-center justify-center px-6 py-10 text-center text-sm text-muted-foreground">
+                  Select a filter to refine tickets.
+                </div>
+              )}
             </AnimatePresence>
           </div>
         )}

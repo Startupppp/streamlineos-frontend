@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useCallback } from "react";
 import { format } from "date-fns";
 import { useSession } from "next-auth/react";
 import {
@@ -10,6 +10,7 @@ import {
   useHrMyLeaveRequests,
   useHrLeavesThisWeek,
 } from "@/hooks/api/hr";
+import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -62,11 +63,19 @@ export function LeavesWfhContent() {
   const { data: thisWeekData } = useHrLeavesThisWeek();
   const { data: pendingWfhRequests } = useHrPendingWfhRequests();
 
-  const [leaveSheetOpen, setLeaveSheetOpen] = useState(false);
-  const [wfhSheetOpen, setWfhSheetOpen] = useState(false);
+  const {
+    open: leaveSheetOpen,
+    onOpenChange: setLeaveSheetOpen,
+    setOpen: openLeaveSheet,
+  } = useQueryParamOpen("create");
+  const {
+    open: wfhSheetOpen,
+    onOpenChange: setWfhSheetOpen,
+    setOpen: openWfhSheet,
+  } = useQueryParamOpen("wfh");
 
-  const handleOpenLeaveSheet = useCallback(() => setLeaveSheetOpen(true), []);
-  const handleOpenWfhSheet = useCallback(() => setWfhSheetOpen(true), []);
+  const handleOpenLeaveSheet = useCallback(() => openLeaveSheet(), [openLeaveSheet]);
+  const handleOpenWfhSheet = useCallback(() => openWfhSheet(), [openWfhSheet]);
 
   const balances = (contextData?.balances ?? []) as LeaveBalance[];
   const leaveTypes = (contextData?.types ?? []) as LeaveType[];

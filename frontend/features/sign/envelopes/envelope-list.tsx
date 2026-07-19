@@ -18,6 +18,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { IllustrationImage } from "@/components/illustrations/illustration-image";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { useDeleteSignEnvelope, useSignEnvelopes } from "@/hooks/api/sign/envelopes";
 import { EnvelopeStatusBadge } from "../components/envelope-status-badge";
 import { CreateEnvelopeDialog } from "../components/create-envelope-dialog";
@@ -42,7 +43,7 @@ const EDITABLE_STATUSES = new Set(["draft", "ready_to_send"]);
 export function EnvelopeList() {
   const router = useRouter();
   const [status, setStatus] = useState<string>("all");
-  const [createOpen, setCreateOpen] = useState(false);
+  const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } = useQueryParamOpen("create");
   const [editEnvelope, setEditEnvelope] = useState<SignEnvelope | null>(null);
   const [deleteEnvelope, setDeleteEnvelope] = useState<SignEnvelope | null>(null);
   const { data: envelopes, isLoading, isError, refetch } = useSignEnvelopes(
@@ -51,7 +52,7 @@ export function EnvelopeList() {
   const deleteMutation = useDeleteSignEnvelope();
 
   function handleCreateOpen() {
-    setCreateOpen(true);
+    openCreate();
   }
 
   function handleRetry() {

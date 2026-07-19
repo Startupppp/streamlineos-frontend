@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import WikiShell from "@/features/knowledge-base/components/wiki-shell";
 
 export default function KnowledgeBaseLayout({
@@ -5,5 +6,9 @@ export default function KnowledgeBaseLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <WikiShell>{children}</WikiShell>;
+  return (
+    <Suspense>
+      <WikiShell>{children}</WikiShell>
+    </Suspense>
+  );
 }

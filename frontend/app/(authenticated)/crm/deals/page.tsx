@@ -18,6 +18,7 @@ import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { DragDropContext, type DropResult } from "@hello-pangea/dnd";
 import { useDeals, useUpdateDealStage, useDeleteDeal, useCrmPipelines } from "@/hooks/api/crm";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import type { Deal, DealStage } from "@/types/crm";
 import { useHrEmployees, unwrapEmployees } from "@/hooks/api/hr";
 import { toast } from "sonner";
@@ -92,7 +93,7 @@ export default function DealsPage() {
 
   const handleExport = useDealsExport(allDeals);
 
-  const [createOpen, setCreateOpen] = useState(false);
+  const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } = useQueryParamOpen("create");
   const [dealToDelete, setDealToDelete] = useState<number | null>(null);
   const [sidePanelDealId, setSidePanelDealId] = useState<number | null>(null);
   const [winLossDialog, setWinLossDialog] = useState<{ id: number; stage: "WON" | "LOST" } | null>(null);
@@ -104,9 +105,9 @@ export default function DealsPage() {
   const [showConfetti, setShowConfetti] = useState(false);
 
   const handleConfettiDone = useCallback(() => setShowConfetti(false), []);
-  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
-  const handleCreateOpenChange = useCallback((open: boolean) => setCreateOpen(open), []);
-  const handleCreateSuccess = useCallback(() => setCreateOpen(false), []);
+  const handleOpenCreate = useCallback(() => openCreate(), [openCreate]);
+  const handleCreateOpenChange = useCallback((open: boolean) => setCreateOpen(open), [setCreateOpen]);
+  const handleCreateSuccess = useCallback(() => setCreateOpen(false), [setCreateOpen]);
   const handleSidePanelClose = useCallback(() => setSidePanelDealId(null), []);
 
   const handleSearchChange = useCallback((value: string) => {

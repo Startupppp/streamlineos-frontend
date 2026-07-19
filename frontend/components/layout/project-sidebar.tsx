@@ -1,6 +1,12 @@
 "use client";
 
-import { useState, useMemo, useCallback, Suspense, type ChangeEvent } from "react";
+import {
+  useState,
+  useMemo,
+  useCallback,
+  Suspense,
+  type ChangeEvent,
+} from "react";
 import Link from "next/link";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -41,8 +47,9 @@ import { useProjects } from "@/hooks/api/projects/projects";
 import {
   buildMoreGroups,
   buildPrimaryNav,
-  filterVisibleNavGroups,
+  filterHiddenNavGroups,
   filterVisibleNavItems,
+  flattenProjectNavItems,
   settingsNavItem,
   type ProjectNavItem,
   type ProjectNavPermissions,
@@ -90,7 +97,14 @@ function useIsActive(baseUrl: string) {
       if (href === baseUrl) {
         if (pathname !== baseUrl) return false;
         const view = searchParams.get("view");
-        return !view || view === "board" || view === "list" || view === "table" || view === "calendar" || view === "gantt";
+        return (
+          !view ||
+          view === "board" ||
+          view === "list" ||
+          view === "table" ||
+          view === "calendar" ||
+          view === "gantt"
+        );
       }
       return pathname === href || pathname.startsWith(`${href}/`);
     },
@@ -150,7 +164,9 @@ function ProjectNavLink({
           !collapsed && "mr-2",
         )}
       />
-      {!collapsed ? <TruncatedText text={item.label} className="tracking-tight" /> : null}
+      {!collapsed ? (
+        <TruncatedText text={item.label} className="tracking-tight" />
+      ) : null}
     </Link>
   );
 
@@ -159,7 +175,11 @@ function ProjectNavLink({
   return (
     <Tooltip delayDuration={0}>
       <TooltipTrigger asChild>{link}</TooltipTrigger>
-      <TooltipContent side="right" sideOffset={10} className="text-xs font-medium">
+      <TooltipContent
+        side="right"
+        sideOffset={10}
+        className="text-xs font-medium"
+      >
         {item.label}
       </TooltipContent>
     </Tooltip>
@@ -227,8 +247,13 @@ function ProjectSwitcher({
       <PopoverContent className="w-64 p-0" align="start" sideOffset={8}>
         <div className="border-b p-2">
           <div className="min-w-0">
-          <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search projects…" autoFocus />
-        </div>
+            <SearchInput
+              value={search}
+              onValueChange={handleSearchChange}
+              placeholder="Search projects…"
+              autoFocus
+            />
+          </div>
         </div>
         <ScrollArea className="max-h-64">
           {filtered.length === 0 ? (
@@ -257,8 +282,13 @@ function ProjectSwitcher({
                     <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-primary/10 text-[9px] font-bold text-primary">
                       {p.key.substring(0, 2).toUpperCase()}
                     </div>
-                    <TruncatedText text={p.name} className="min-w-0 flex-1 text-xs" />
-                    {isCurrent ? <Check className="h-3 w-3 shrink-0 text-primary" /> : null}
+                    <TruncatedText
+                      text={p.name}
+                      className="min-w-0 flex-1 text-xs"
+                    />
+                    {isCurrent ? (
+                      <Check className="h-3 w-3 shrink-0 text-primary" />
+                    ) : null}
                   </button>
                 );
               })}
@@ -289,13 +319,17 @@ function DesktopSidebar({
   const { hiddenIds, isVisible, setVisible, reset, hasCustomizations } =
     useProjectNavVisibility();
 
-  const visiblePrimary = useMemo(
-    () => filterVisibleNavItems(primary, hiddenIds),
-    [primary, hiddenIds],
+  const allNavItems = useMemo(
+    () => flattenProjectNavItems(primary, moreGroups),
+    [primary, moreGroups],
   );
-  const visibleMoreGroups = useMemo(
-    () => filterVisibleNavGroups(moreGroups, hiddenIds),
-    [moreGroups, hiddenIds],
+  const visibleNavItems = useMemo(
+    () => filterVisibleNavItems(allNavItems, hiddenIds),
+    [allNavItems, hiddenIds],
+  );
+  const overflowGroups = useMemo(
+    () => filterHiddenNavGroups(primary, moreGroups, hiddenIds),
+    [primary, moreGroups, hiddenIds],
   );
 
   const handleToggleCollapse = useCallback(() => {
@@ -368,13 +402,18 @@ function DesktopSidebar({
         </div>
 
         <ScrollArea className="relative flex-1">
-          <div className={cn("space-y-0.5 py-2.5", isCollapsed ? "px-1" : "px-1.5")}>
+          <div
+            className={cn(
+              "space-y-0.5 py-2.5",
+              isCollapsed ? "px-1" : "px-1.5",
+            )}
+          >
             {!isCollapsed ? (
               <p className="px-2 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/50">
                 Navigate
               </p>
             ) : null}
-            {visiblePrimary.map((item) => (
+            {visibleNavItems.map((item) => (
               <ProjectNavLink
                 key={item.id}
                 item={item}
@@ -386,7 +425,7 @@ function DesktopSidebar({
             <div className={cn("pt-1.5", isCollapsed && "flex justify-center")}>
               <ProjectMoreMenu
                 baseUrl={baseUrl}
-                groups={visibleMoreGroups}
+                groups={overflowGroups}
                 collapsed={isCollapsed}
                 onCustomize={handleOpenCustomize}
               />
@@ -439,18 +478,21 @@ function MobileProjectNav({
   const { hiddenIds, isVisible, setVisible, reset, hasCustomizations } =
     useProjectNavVisibility();
 
-  const visiblePrimary = useMemo(
-    () => filterVisibleNavItems(primary, hiddenIds),
-    [primary, hiddenIds],
+  const allNavItems = useMemo(
+    () => flattenProjectNavItems(primary, moreGroups),
+    [primary, moreGroups],
   );
-  const visibleMoreGroups = useMemo(
-    () => filterVisibleNavGroups(moreGroups, hiddenIds),
-    [moreGroups, hiddenIds],
+  const visibleNavItems = useMemo(
+    () => filterVisibleNavItems(allNavItems, hiddenIds),
+    [allNavItems, hiddenIds],
+  );
+  const overflowGroups = useMemo(
+    () => filterHiddenNavGroups(primary, moreGroups, hiddenIds),
+    [primary, moreGroups, hiddenIds],
   );
 
   const current =
-    primary.find((i) => isActive(i.href)) ??
-    moreGroups.flatMap((g) => g.items).find((i) => isActive(i.href)) ??
+    allNavItems.find((i) => isActive(i.href)) ??
     (isActive(settings.href) ? settings : undefined);
 
   const handleClose = useCallback(() => setOpen(false), []);
@@ -485,9 +527,14 @@ function MobileProjectNav({
                   {getProjectInitials(projectKey, projectName)}
                 </div>
                 <div className="min-w-0">
-                  <TruncatedText text={projectName ?? "Project"} className="text-sm font-semibold text-foreground" />
+                  <TruncatedText
+                    text={projectName ?? "Project"}
+                    className="text-sm font-semibold text-foreground"
+                  />
                   {projectKey ? (
-                    <p className="font-mono text-[10px] text-muted-foreground">{projectKey}</p>
+                    <p className="font-mono text-[10px] text-muted-foreground">
+                      {projectKey}
+                    </p>
                   ) : null}
                 </div>
               </div>
@@ -498,7 +545,7 @@ function MobileProjectNav({
                 <p className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Workspace
                 </p>
-                {visiblePrimary.map((item) => (
+                {visibleNavItems.map((item) => (
                   <ProjectNavLink
                     key={item.id}
                     item={item}
@@ -507,22 +554,15 @@ function MobileProjectNav({
                     onNavigate={handleClose}
                   />
                 ))}
-                {visibleMoreGroups.map((group) => (
-                  <div key={group.id} className="pt-3">
-                    <p className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                      {group.label}
-                    </p>
-                    {group.items.map((item) => (
-                      <ProjectNavLink
-                        key={item.id}
-                        item={item}
-                        active={isActive(item.href)}
-                        collapsed={false}
-                        onNavigate={handleClose}
-                      />
-                    ))}
-                  </div>
-                ))}
+                <div className="pt-1">
+                  <ProjectMoreMenu
+                    baseUrl={baseUrl}
+                    groups={overflowGroups}
+                    collapsed={false}
+                    onNavigate={handleClose}
+                    onCustomize={handleOpenCustomize}
+                  />
+                </div>
               </div>
             </ScrollArea>
 
@@ -547,16 +587,15 @@ function MobileProjectNav({
       </Sheet>
 
       <div className="flex min-w-0 items-center gap-1.5 text-sm">
-        <Link
-          href={baseUrl}
-          className="shrink-0 font-semibold text-foreground"
-        >
+        <Link href={baseUrl} className="shrink-0 font-semibold text-foreground">
           {projectKey ?? "Project"}
         </Link>
         {current && pathname !== baseUrl ? (
           <>
             <span className="text-muted-foreground">/</span>
-            <span className="truncate text-muted-foreground">{current.label}</span>
+            <span className="truncate text-muted-foreground">
+              {current.label}
+            </span>
           </>
         ) : null}
       </div>
@@ -594,7 +633,13 @@ export function ProjectSidebar(props: ProjectSidebarProps) {
   return (
     <>
       <div className="hidden h-full md:flex">
-        <Suspense fallback={<SidebarSuspenseFallback defaultCollapsed={props.defaultCollapsed} />}>
+        <Suspense
+          fallback={
+            <SidebarSuspenseFallback
+              defaultCollapsed={props.defaultCollapsed}
+            />
+          }
+        >
           <DesktopSidebar {...props} />
         </Suspense>
       </div>

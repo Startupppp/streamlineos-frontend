@@ -54,8 +54,55 @@ export interface ProjectNavGroup {
 
 export const PINNED_PROJECT_NAV_IDS = new Set<string>(["issues"]);
 
+export const DEFAULT_HIDDEN_PROJECT_NAV_IDS = new Set<string>([
+  "milestones",
+  "releases",
+  "cycles-detail",
+  "workload",
+  "meetings",
+  "approvals",
+  "qa",
+  "bugs",
+  "incidents",
+  "crs",
+  "client",
+  "intake",
+  "feedback",
+  "analytics",
+  "reports",
+  "budget",
+  "risks",
+  "decisions",
+  "modules",
+  "wiki",
+  "whiteboard",
+  "views",
+  "forms",
+  "workflow",
+  "automations",
+  "webhooks",
+  "ai",
+]);
+
 export function isProjectNavPinned(id: string): boolean {
   return PINNED_PROJECT_NAV_IDS.has(id);
+}
+
+export function isDefaultProjectNavHidden(
+  hiddenIds: ReadonlySet<string>,
+): boolean {
+  if (hiddenIds.size !== DEFAULT_HIDDEN_PROJECT_NAV_IDS.size) return false;
+  for (const id of DEFAULT_HIDDEN_PROJECT_NAV_IDS) {
+    if (!hiddenIds.has(id)) return false;
+  }
+  return true;
+}
+
+export function flattenProjectNavItems(
+  primary: ProjectNavItem[],
+  groups: ProjectNavGroup[],
+): ProjectNavItem[] {
+  return [...primary, ...groups.flatMap((group) => group.items)];
 }
 
 export function filterVisibleNavItems<T extends { id: string }>(
@@ -67,16 +114,32 @@ export function filterVisibleNavItems<T extends { id: string }>(
   );
 }
 
-export function filterVisibleNavGroups(
+export function filterHiddenNavItems<T extends { id: string }>(
+  items: T[],
+  hiddenIds: ReadonlySet<string>,
+): T[] {
+  return items.filter(
+    (item) => !isProjectNavPinned(item.id) && hiddenIds.has(item.id),
+  );
+}
+
+export function filterHiddenNavGroups(
+  primary: ProjectNavItem[],
   groups: ProjectNavGroup[],
   hiddenIds: ReadonlySet<string>,
 ): ProjectNavGroup[] {
-  return groups
-    .map((group) => ({
+  const sections: ProjectNavGroup[] = [
+    {
+      id: "navigate",
+      label: "Navigate",
+      items: filterHiddenNavItems(primary, hiddenIds),
+    },
+    ...groups.map((group) => ({
       ...group,
-      items: filterVisibleNavItems(group.items, hiddenIds),
-    }))
-    .filter((group) => group.items.length > 0);
+      items: filterHiddenNavItems(group.items, hiddenIds),
+    })),
+  ];
+  return sections.filter((group) => group.items.length > 0);
 }
 
 export interface ProjectNavPermissions {

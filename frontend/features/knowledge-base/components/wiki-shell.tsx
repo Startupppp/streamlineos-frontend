@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ import {
 
 export default function WikiShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: treeNodes = [], isLoading: treeLoading } = useKbPagesTree();
   const { data: favorites = [] } = useKbPagesFavorites();
   const createPage = useCreateKbPage();
@@ -38,6 +39,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
   const canManageSettings = useCan("kb:settings:manage");
   const [quickFindOpen, setQuickFindOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const createParamConsumedRef = useRef(false);
   const [collapsed, setCollapsed] = useState(
     () => typeof window !== "undefined" && localStorage.getItem("wiki-tree-collapsed") === "true"
   );
@@ -55,6 +57,17 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
       }
     );
   }, [createPage, router]);
+
+  useEffect(() => {
+    if (createParamConsumedRef.current) return;
+    if (searchParams.get("create") !== "1") return;
+    if (!canCreate) return;
+    createParamConsumedRef.current = true;
+    const next = new URLSearchParams(searchParams.toString());
+    next.delete("create");
+    router.replace(`${KNOWLEDGE_BASE}${next.size > 0 ? `?${next.toString()}` : ""}`);
+    handleNewPage();
+  }, [searchParams, router, canCreate, handleNewPage]);
 
   const handleOpenQuickFind = useCallback(() => {
     setQuickFindOpen(true);

@@ -93,50 +93,66 @@ export interface FilterCategoryRowProps {
   category: FilterCategory;
   label: string;
   activeCount: number;
-  hovered: boolean;
+  selected: boolean;
   leading?: ReactNode;
-  onMouseEnter: () => void;
-  onFocus: () => void;
-  onKeyDown: (e: KeyboardEvent) => void;
+  onSelect: () => void;
+  onMouseEnter?: () => void;
+  onKeyDown?: (e: KeyboardEvent) => void;
+  dense?: boolean;
 }
 
 export function FilterCategoryRow({
   category,
   label,
   activeCount,
-  hovered,
+  selected,
   leading,
+  onSelect,
   onMouseEnter,
-  onFocus,
   onKeyDown,
+  dense = false,
 }: FilterCategoryRowProps) {
   const { iconRef } = useAnimatedIcon();
   const shouldReduceMotion = useReducedMotion();
 
   function handleMouseEnter() {
     iconRef.current?.startAnimation?.();
-    onMouseEnter();
+    onMouseEnter?.();
   }
 
   function handleMouseLeave() {
     iconRef.current?.stopAnimation?.();
   }
 
+  function handleClick() {
+    onSelect();
+  }
+
+  function handleKeyDown(e: KeyboardEvent) {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onSelect();
+      return;
+    }
+    onKeyDown?.(e);
+  }
+
   return (
-    <div
+    <button
+      type="button"
       role="menuitem"
-      tabIndex={0}
       aria-haspopup="true"
-      aria-expanded={hovered}
+      aria-expanded={selected}
+      onClick={handleClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      onFocus={onFocus}
-      onKeyDown={onKeyDown}
+      onKeyDown={handleKeyDown}
       className={cn(
-        "relative flex h-9 cursor-default select-none items-center gap-2.5 rounded-md px-3 text-sm outline-none",
+        "relative flex w-full cursor-pointer select-none items-center gap-2.5 rounded-lg px-3 text-sm outline-none",
+        dense ? "h-9" : "h-10",
         "border-l-2 transition-[background-color,color,border-color] duration-150 ease-out motion-reduce:transition-none",
         "focus-visible:bg-primary/10 focus-visible:text-foreground focus-visible:border-l-primary",
-        hovered
+        selected
           ? "border-l-primary bg-primary/10 text-foreground"
           : "border-l-transparent text-foreground/90 hover:bg-muted/70",
       )}
@@ -145,9 +161,9 @@ export function FilterCategoryRow({
         category={category}
         leading={leading}
         iconRef={iconRef}
-        active={hovered}
+        active={selected}
       />
-      <span className="min-w-0 flex-1 truncate font-medium tracking-tight">{label}</span>
+      <span className="min-w-0 flex-1 truncate text-left font-medium tracking-tight">{label}</span>
       {activeCount > 0 && (
         <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground">
           {activeCount}
@@ -159,12 +175,12 @@ export function FilterCategoryRow({
         animate={
           shouldReduceMotion
             ? undefined
-            : { x: hovered ? 2 : 0 }
+            : { x: selected ? 2 : 0 }
         }
         transition={pmSnappy}
       >
         <ChevronRight className="h-4 w-4" />
       </motion.span>
-    </div>
+    </button>
   );
 }

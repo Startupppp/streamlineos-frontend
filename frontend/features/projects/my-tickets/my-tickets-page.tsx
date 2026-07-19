@@ -212,7 +212,6 @@ export function MyTicketsPage({ params }: PageProps) {
             activeView={view}
             onViewChange={handleViewChange}
             allowedViews={MY_TICKETS_VIEWS}
-            layoutId="my-tickets-view-pill"
           />
           <div className="min-w-0 flex-1 sm:flex sm:justify-end">
             <TicketFilterBar showSprintFilter={false} showAssigneeFilter={false} />

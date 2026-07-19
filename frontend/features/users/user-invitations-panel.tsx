@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useTransition, useEffect } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { format, isPast } from "date-fns";
 import { RefreshCw } from "lucide-react";
@@ -54,7 +55,7 @@ export function UserInvitationsPanel() {
   const router = useRouter();
   const pathname = usePathname();
   const [, startTransition] = useTransition();
-  const [inviteOpen, setInviteOpen] = useState(false);
+  const { open: inviteOpen, onOpenChange: setInviteOpen, setOpen: openInvite } = useQueryParamOpen("create");
   const [cancelId, setCancelId] = useState<string | null>(null);
 
   const q = searchParams.get("q") ?? "";
@@ -140,8 +141,8 @@ export function UserInvitationsPanel() {
   }, [cancel, cancelId]);
 
   const handleCancelDialogChange = useCallback((open: boolean) => { if (!open) setCancelId(null); }, []);
-  const handleOpenInvite = useCallback(() => setInviteOpen(true), []);
-  const handleInviteChange = useCallback((v: boolean) => setInviteOpen(v), []);
+  const handleOpenInvite = useCallback(() => openInvite(), [openInvite]);
+  const handleInviteChange = useCallback((v: boolean) => setInviteOpen(v), [setInviteOpen]);
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
   const handleClearFilters = useCallback(() => {
     setLocalSearch("");

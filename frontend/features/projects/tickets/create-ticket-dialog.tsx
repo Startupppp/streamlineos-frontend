@@ -36,6 +36,10 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PlusIcon, PaperclipIcon, XIcon, LinkIcon } from "@animateicons/react/lucide";
 import { useProjects } from "@/hooks/api/projects/projects";
 import { useTicketSearch } from "@/hooks/api/projects/ticket-search";
+import {
+  CreateTicketAiMenu,
+  type CreateTicketAiFieldPatch,
+} from "@/features/projects/ai/create-ticket-ai-menu";
 import { useCreateTicketForm } from "./use-create-ticket-form";
 import { TicketCreateProperties } from "./ticket-create-properties";
 import { TicketRelatedLinksEditor } from "./ticket-related-links-editor";
@@ -206,6 +210,7 @@ export function CreateTicketDialog({
   const projects = useMemo(() => projectsData?.data ?? [], [projectsData]);
 
   const [showLinksEditor, setShowLinksEditor] = useState(false);
+  const [descriptionEditorKey, setDescriptionEditorKey] = useState(0);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrls, setPreviewUrls] = useState<(string | null)[]>([]);
@@ -213,7 +218,34 @@ export function CreateTicketDialog({
   const dragCounterRef = useRef(0);
 
   const watchedTitle = form.watch("title") ?? "";
+  const watchedDescription = form.watch("description") ?? "";
   const duplicates = useDuplicateTitleWarning(watchedTitle, selectedProjectId);
+
+  const handleApplyAiTitle = useCallback(
+    (nextTitle: string) => {
+      form.setValue("title", nextTitle, { shouldValidate: true, shouldDirty: true });
+    },
+    [form],
+  );
+
+  const handleApplyAiDescription = useCallback(
+    (html: string) => {
+      form.setValue("description", html, { shouldValidate: true, shouldDirty: true });
+      setDescriptionEditorKey((k) => k + 1);
+    },
+    [form],
+  );
+
+  const handleApplyAiFields = useCallback(
+    (patch: CreateTicketAiFieldPatch) => {
+      handlePropertiesChange({
+        ...(patch.priority !== undefined ? { priority: patch.priority } : {}),
+        ...(patch.points !== undefined ? { points: patch.points } : {}),
+        ...(patch.labelIds !== undefined ? { labelIds: patch.labelIds } : {}),
+      });
+    },
+    [handlePropertiesChange],
+  );
 
   useEffect(() => {
     if (lockedProjectId != null) {
@@ -391,32 +423,43 @@ export function CreateTicketDialog({
       <Dialog open={resolvedOpen} onOpenChange={handleOpenChange}>
         <DialogContent className="flex h-auto max-h-[min(720px,calc(100dvh-100px))] flex-col gap-0 overflow-hidden p-0 md:flex md:h-auto md:max-h-[min(720px,calc(100dvh-100px))] md:max-w-2xl md:overflow-hidden md:sm:max-w-2xl">
           <DialogHeader className="shrink-0 border-b border-border/60 px-5 pb-3 pt-4">
-            <div className="flex items-center gap-2">
-              <Select
-                value={projectSelectValue}
-                onValueChange={handleProjectChange}
-                disabled={projectLocked || projectsLoading}
-              >
-                <SelectTrigger
-                  aria-label="Select project"
-                  className="w-auto max-w-[220px] gap-1.5 border-border bg-card px-2 text-xs font-medium shadow-sm disabled:opacity-100"
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-2">
+                <Select
+                  value={projectSelectValue}
+                  onValueChange={handleProjectChange}
+                  disabled={projectLocked || projectsLoading}
                 >
-                  <SelectValue placeholder={projectTriggerLabel} />
-                </SelectTrigger>
-                <SelectContent>
-                  {projects.map((p) => (
-                    <SelectItem key={p.id} value={String(p.id)} className="text-xs">
-                      <span className="mr-1.5 font-mono text-[10px] text-muted-foreground">
-                        {p.key}
-                      </span>
-                      {p.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <DialogTitle className="text-sm font-medium text-muted-foreground">
-                New Issue
-              </DialogTitle>
+                  <SelectTrigger
+                    aria-label="Select project"
+                    className="w-auto max-w-[220px] gap-1.5 border-border bg-card px-2 text-xs font-medium shadow-sm disabled:opacity-100"
+                  >
+                    <SelectValue placeholder={projectTriggerLabel} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projects.map((p) => (
+                      <SelectItem key={p.id} value={String(p.id)} className="text-xs">
+                        <span className="mr-1.5 font-mono text-[10px] text-muted-foreground">
+                          {p.key}
+                        </span>
+                        {p.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <DialogTitle className="text-sm font-medium text-muted-foreground">
+                  New Issue
+                </DialogTitle>
+              </div>
+              <CreateTicketAiMenu
+                projectId={selectedProjectId}
+                title={watchedTitle}
+                description={watchedDescription}
+                onApplyTitle={handleApplyAiTitle}
+                onApplyDescription={handleApplyAiDescription}
+                onApplyFields={handleApplyAiFields}
+                disabled={isPending || isUploading}
+              />
             </div>
           </DialogHeader>
 
@@ -498,6 +541,7 @@ export function CreateTicketDialog({
                         <div className="min-h-[120px] cursor-text">
                           <TiptapEditorDynamic
                             content={field.value ?? ""}
+                            contentKey={descriptionEditorKey}
                             onChangeHtml={handleDescriptionHtmlChange}
                             output="html"
                             minHeightClassName="min-h-[120px]"

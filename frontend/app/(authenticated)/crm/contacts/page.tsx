@@ -13,6 +13,7 @@ import { DataTableSkeleton } from "@/components/ui/data-table";
 import { staggerContainer } from "@/lib/motion-variants";
 import { useContacts, useDeleteContact } from "@/hooks/api/crm";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { CreateContactDialog } from "@/features/crm/contacts/create-contact-dialog";
 import { EditContactSheet } from "@/features/crm/contacts/edit-contact-sheet";
 import { ContactsCsvImportDialog } from "@/features/crm/contacts/contacts-csv-import-dialog";
@@ -33,7 +34,7 @@ export default function ContactsPage() {
   const router = useRouter();
   const pathname = usePathname();
   const [, startTransition] = useTransition();
-  const [createOpen, setCreateOpen] = useState(false);
+  const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } = useQueryParamOpen("create");
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [editContact, setEditContact] = useState<Contact | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -95,7 +96,7 @@ export default function ContactsPage() {
     () => updateParams({ view: "card" }),
     [updateParams],
   );
-  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+  const handleOpenCreate = useCallback(() => openCreate(), [openCreate]);
 
   const handleSearchChange = useCallback((value: string) => {
     setSearch(value);

@@ -119,7 +119,7 @@ export const WorkloadFilterBar = memo(function WorkloadFilterBar({
           <button
             type="button"
             onClick={onClearFilters}
-            className="flex h-8 shrink-0 items-center gap-1 rounded-md border border-transparent px-2 text-xs text-muted-foreground transition-colors hover:border-border hover:bg-muted/50 hover:text-foreground"
+            className="flex h-9 shrink-0 items-center gap-1 rounded-md border border-transparent px-2 text-xs text-muted-foreground transition-colors hover:border-border hover:bg-muted/50 hover:text-foreground"
             {...clearHoverHandlers}
           >
             <XIcon ref={clearIconRef} size={12} className="shrink-0" />
@@ -132,7 +132,7 @@ export const WorkloadFilterBar = memo(function WorkloadFilterBar({
             <TooltipTrigger asChild>
               <button
                 type="button"
-                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+                className="inline-flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
                 aria-label="About workload metrics"
                 {...infoHoverHandlers}
               >

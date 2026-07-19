@@ -60,10 +60,9 @@ export function ProjectNavCustomizeDialog({
 
   const sections: ProjectNavGroup[] = useMemo(
     () =>
-      [
-        { id: "navigate", label: "Navigate", items: primary },
-        ...groups,
-      ].filter((section) => section.items.length > 0),
+      [{ id: "navigate", label: "Navigate", items: primary }, ...groups].filter(
+        (section) => section.items.length > 0,
+      ),
     [groups, primary],
   );
 
@@ -76,14 +75,15 @@ export function ProjectNavCustomizeDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className={cn(
-          "!flex max-h-[min(85dvh,640px)] flex-col gap-0 overflow-hidden overflow-y-hidden p-0",
-          "md:!flex md:grid-cols-none md:max-h-[min(85dvh,640px)] md:max-w-md md:overflow-hidden md:overflow-y-hidden md:p-0 md:pb-0",
+          "flex max-h-[min(85dvh,640px)] flex-col gap-0 overflow-hidden p-0",
+          "md:max-h-[min(85dvh,640px)] md:max-w-md md:p-0 md:pb-0",
         )}
       >
         <DialogHeader className="shrink-0 border-b border-border/60 px-5 pb-3 pt-5 text-left">
           <DialogTitle>Customize sidebar</DialogTitle>
           <DialogDescription>
-            Choose which project tools appear in the sidebar. Issues stays pinned.
+            Choose which project tools appear in the sidebar. Issues stays
+            pinned.
           </DialogDescription>
         </DialogHeader>
 
@@ -91,7 +91,7 @@ export function ProjectNavCustomizeDialog({
           <Accordion
             type="multiple"
             defaultValue={defaultOpen}
-            className="px-3 py-2"
+            className="px-1 py-1"
           >
             {sections.map((section) => (
               <AccordionItem
@@ -124,12 +124,13 @@ export function ProjectNavCustomizeDialog({
 
         <DialogFooter className="shrink-0 border-t border-border/60 bg-background/40 px-5 py-3 sm:justify-between">
           <Button
+            size="sm"
             type="button"
             variant="ghost"
-            size="sm"
-            className="text-muted-foreground"
-            disabled={!hasCustomizations}
             onClick={handleReset}
+            disabled={!hasCustomizations}
+            aria-disabled={!hasCustomizations}
+            className="text-muted-foreground disabled:pointer-events-none disabled:opacity-40"
           >
             Reset to default
           </Button>
@@ -212,9 +213,7 @@ function CustomizeRow({
         onCheckedChange={handleCheckedChange}
         onClick={(event) => event.stopPropagation()}
         aria-label={
-          pinned
-            ? `${item.label} is pinned`
-            : `Show ${item.label} in sidebar`
+          pinned ? `${item.label} is pinned` : `Show ${item.label} in sidebar`
         }
       />
     </div>

@@ -8,6 +8,12 @@ import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { ViewType } from "./view-switcher";
 import type {
@@ -291,17 +297,26 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
 
   return (
     <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className="shrink-0 gap-1.5 px-2.5 text-xs font-normal"
-          aria-label="Display options"
-        >
-          <Settings2 className="h-3.5 w-3.5 shrink-0" />
-          Display
-        </Button>
-      </PopoverTrigger>
+      <TooltipProvider delayDuration={200}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="size-9 shrink-0 gap-1 p-0 text-xs font-normal md:h-9 md:w-auto md:px-2"
+                aria-label="Display options"
+              >
+                <Settings2 className="h-3.5 w-3.5 shrink-0" />
+                <span className="hidden md:inline">Display</span>
+              </Button>
+            </PopoverTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="text-xs md:hidden">
+            Display options
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       <PopoverContent align="start" collisionPadding={16} className="w-72 p-3 space-y-3">
         {showLayout && (
           <>

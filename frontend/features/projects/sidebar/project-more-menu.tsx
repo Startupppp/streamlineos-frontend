@@ -124,21 +124,28 @@ export function ProjectMoreMenu({
         side={collapsed ? "right" : "top"}
         align="start"
         sideOffset={8}
-        className="w-72 overflow-hidden border-border/60 bg-card/95 p-0 shadow-xl backdrop-blur-xl"
+        className="flex w-72 flex-col overflow-hidden border-border/60 bg-card/95 p-0 shadow-xl backdrop-blur-xl"
       >
-        <div className="relative border-b border-border/50 p-2">
+        <div className="relative shrink-0 border-b border-border/50 p-2">
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0 bg-gradient-to-r from-primary/[0.06] to-transparent"
           />
           <div className="min-w-0 border-border/60 bg-background/60">
-          <SearchInput value={query} onValueChange={handleQueryChange} placeholder="Search tools…" autoFocus />
+            <SearchInput
+              value={query}
+              onValueChange={handleQueryChange}
+              placeholder="Search tools…"
+              autoFocus
+            />
+          </div>
         </div>
-        </div>
-        <ScrollArea className="max-h-80">
+        <ScrollArea fill className="min-h-0 max-h-80 flex-1">
           {filteredGroups.length === 0 ? (
             <p className="px-3 py-6 text-center text-xs text-muted-foreground">
-              No matching tools
+              {query.trim()
+                ? "No matching tools"
+                : "All tools are in the sidebar"}
             </p>
           ) : (
             <div className="p-1.5">
@@ -163,17 +170,17 @@ export function ProjectMoreMenu({
           )}
         </ScrollArea>
         {onCustomize ? (
-          <div className="border-t border-border/50 p-1.5">
+          <div className="shrink-0 border-t border-border/50 bg-card p-1.5">
             <button
               type="button"
               onClick={handleCustomize}
               {...customizeHover.animatedNavHoverHandlers}
-              className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground"
+              className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[13px] font-medium text-foreground transition-colors hover:bg-muted/70"
             >
               <SidebarAnimatedNavIcon
                 icon={SlidersHorizontalIcon}
                 iconRef={customizeHover.iconRef}
-                className="h-3.5 w-3.5 shrink-0"
+                className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
               />
               <span>Customize sidebar</span>
             </button>

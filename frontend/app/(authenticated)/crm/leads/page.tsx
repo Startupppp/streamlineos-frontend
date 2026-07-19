@@ -165,7 +165,7 @@ export default function LeadsPipelinePage() {
         toast.error(getErrorMessage(err));
       }
     },
-    [createLead],
+    [createLead, setCreateOpen],
   );
 
   const handleMoveStatus = useCallback(

@@ -53,7 +53,7 @@ export function ChannelAvatar({
     return (
       <div
         className={cn(
-          "relative overflow-hidden border-2 border-background shadow-sm bg-muted",
+          "relative size-8 shrink-0 overflow-hidden border-2 border-background shadow-sm bg-muted",
           round,
           className,
         )}
@@ -72,7 +72,7 @@ export function ChannelAvatar({
   return (
     <div
       className={cn(
-        "bg-primary/10 flex items-center justify-center border-2 border-background shadow-sm",
+        "size-8 shrink-0 bg-primary/10 flex items-center justify-center border-2 border-background shadow-sm",
         round,
         className,
       )}

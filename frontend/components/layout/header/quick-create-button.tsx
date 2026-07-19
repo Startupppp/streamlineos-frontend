@@ -1,235 +1,45 @@
 "use client"
 
 import Link from "next/link"
-import { useMemo } from "react"
-import type { LucideIcon } from "lucide-react"
 import {
-  Building2,
-  CalendarDays,
-  ClipboardList,
-  FileText,
-  FolderPlus,
-  ListPlus,
-  MessageSquareText,
-  Package,
-  PenTool,
-  Receipt,
-  Send,
-  TicketPlus,
-  UserPlus,
-  Users,
-} from "lucide-react"
+  forwardRef,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentPropsWithoutRef,
+  type MouseEvent,
+} from "react"
 import { PlusIcon } from "@animateicons/react/lucide"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer"
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon"
+import { useIsMobile } from "@/hooks/common/use-mobile"
 import { useCan } from "@/hooks/api/access"
 import { useEnabledModules } from "@/hooks/api/access/org-modules"
 import { useCommandPalette } from "@/features/command-palette/hooks/use-command-palette"
+import { cn } from "@/lib/utils"
 import type { PermissionKey } from "@/lib/rbac/permissions"
+import {
+  QUICK_CREATE_GROUPS,
+  type CreateGroup,
+} from "./quick-create-groups"
 
-export interface CreateAction {
-  id: string
-  label: string
-  href?: string
-  icon: LucideIcon
-  permission?: PermissionKey | readonly PermissionKey[]
-  module?: string
-  action?: "create-issue"
-}
+const HOVER_CLOSE_DELAY_MS = 200
 
-export interface CreateGroup {
-  id: string
-  label: string
-  items: CreateAction[]
-}
-
-export const QUICK_CREATE_GROUPS: CreateGroup[] = [
-  {
-    id: "comms",
-    label: "Comms",
-    items: [
-      {
-        id: "send-mail",
-        label: "Send mail",
-        href: "/mail?compose=1",
-        icon: Send,
-        permission: "mail:messages:send",
-      },
-      {
-        id: "calendar-event",
-        label: "Calendar event",
-        href: "/calendar?create=1",
-        icon: CalendarDays,
-        permission: "calendar:write",
-      },
-      {
-        id: "new-dm",
-        label: "New message",
-        href: "/chat?dm=1",
-        icon: MessageSquareText,
-        permission: "chat:channels:write",
-      },
-    ],
-  },
-  {
-    id: "work",
-    label: "Work",
-    items: [
-      {
-        id: "new-project",
-        label: "New project",
-        href: "/projects/all?create=1",
-        icon: FolderPlus,
-        permission: "projects:create",
-        module: "PROJECTS",
-      },
-      {
-        id: "new-issue",
-        label: "New issue",
-        icon: ListPlus,
-        permission: "projects:tickets:create",
-        module: "PROJECTS",
-        action: "create-issue",
-      },
-      {
-        id: "support-ticket",
-        label: "Support ticket",
-        href: "/support/inbox?create=1",
-        icon: TicketPlus,
-        permission: "support:tickets:create",
-        module: "HELPDESK",
-      },
-    ],
-  },
-  {
-    id: "crm",
-    label: "CRM",
-    items: [
-      {
-        id: "new-lead",
-        label: "New lead",
-        href: "/crm/leads?create=1",
-        icon: UserPlus,
-        permission: "crm:leads:create",
-        module: "CRM",
-      },
-      {
-        id: "new-contact",
-        label: "New contact",
-        href: "/crm/contacts?create=1",
-        icon: Users,
-        permission: "crm:contacts:manage",
-        module: "CRM",
-      },
-      {
-        id: "new-deal",
-        label: "New deal",
-        href: "/crm/deals?create=1",
-        icon: FileText,
-        permission: "crm:deals:create",
-        module: "CRM",
-      },
-      {
-        id: "new-company",
-        label: "New company",
-        href: "/crm/companies?create=1",
-        icon: Building2,
-        permission: "crm:organizations:manage",
-        module: "CRM",
-      },
-    ],
-  },
-  {
-    id: "people",
-    label: "People",
-    items: [
-      {
-        id: "add-employee",
-        label: "Add employee",
-        href: "/hr/onboarding",
-        icon: UserPlus,
-        permission: "hr:employees:create",
-        module: "HR",
-      },
-      {
-        id: "leave-request",
-        label: "Leave request",
-        href: "/hr/leaves?create=1",
-        icon: CalendarDays,
-        permission: ["hr:leaves:create", "self:leaves"],
-        module: "HR",
-      },
-      {
-        id: "invite-user",
-        label: "Invite user",
-        href: "/users/invitations?create=1",
-        icon: UserPlus,
-        permission: "hr:employees:create",
-      },
-    ],
-  },
-  {
-    id: "docs",
-    label: "Docs & more",
-    items: [
-      {
-        id: "kb-page",
-        label: "Knowledge page",
-        href: "/knowledge?create=1",
-        icon: FileText,
-        permission: "kb:pages:create",
-        module: "KB",
-      },
-      {
-        id: "kb-article",
-        label: "Help article",
-        href: "/support/kb?create=1",
-        icon: FileText,
-        permission: "kb:articles:create",
-        module: "HELPDESK",
-      },
-      {
-        id: "new-survey",
-        label: "New survey",
-        href: "/surveys/new",
-        icon: ClipboardList,
-        permission: "surveys:create",
-        module: "SURVEYS",
-      },
-      {
-        id: "sign-envelope",
-        label: "Sign envelope",
-        href: "/sign/envelopes?create=1",
-        icon: PenTool,
-        permission: "sign:envelope:create",
-        module: "SIGN",
-      },
-      {
-        id: "new-invoice",
-        label: "New invoice",
-        href: "/billing/invoices/new",
-        icon: Receipt,
-        permission: "accounting:manage",
-        module: "FINANCE",
-      },
-      {
-        id: "new-product",
-        label: "New product",
-        href: "/inventory/products/new",
-        icon: Package,
-        permission: "inventory:products:create",
-        module: "INVENTORY",
-      },
-    ],
-  },
-]
+export type { CreateAction, CreateGroup } from "./quick-create-groups"
+export { QUICK_CREATE_GROUPS } from "./quick-create-groups"
 
 function isModuleEnabled(enabledModules: string[], moduleKey?: string): boolean {
   if (!moduleKey) return true
@@ -321,62 +131,257 @@ export function useQuickCreateGroups(): CreateGroup[] {
   ])
 }
 
+export function QuickCreatePanel({
+  groups,
+  onCreateIssue,
+  onNavigate,
+}: {
+  groups: CreateGroup[]
+  onCreateIssue: () => void
+  onNavigate: () => void
+}) {
+  return (
+    <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-4 pb-6">
+      {groups.map((group, groupIndex) => (
+        <div key={group.id}>
+          {groupIndex > 0 ? <div className="my-1 h-px bg-border" /> : null}
+          <p className="mb-1 px-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            {group.label}
+          </p>
+          {group.items.map((action) => {
+            if (action.action === "create-issue") {
+              return (
+                <button
+                  key={action.id}
+                  type="button"
+                  onClick={onCreateIssue}
+                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm text-foreground transition-colors hover:bg-muted"
+                >
+                  <action.icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  {action.label}
+                </button>
+              )
+            }
+            if (!action.href) return null
+            return (
+              <Link
+                key={action.id}
+                href={action.href}
+                onClick={onNavigate}
+                className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-foreground transition-colors hover:bg-muted"
+              >
+                <action.icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                {action.label}
+              </Link>
+            )
+          })}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+const QuickCreateTriggerButton = forwardRef<
+  HTMLButtonElement,
+  ComponentPropsWithoutRef<"button"> & {
+    iconRef: ReturnType<typeof useAnimatedIcon>["iconRef"]
+    hoverHandlers: ReturnType<typeof useAnimatedIcon>["hoverHandlers"]
+  }
+>(function QuickCreateTriggerButton(
+  {
+    iconRef,
+    hoverHandlers,
+    className,
+    type = "button",
+    onMouseEnter,
+    onMouseLeave,
+    ...props
+  },
+  ref,
+) {
+  const { onMouseEnter: onIconMouseEnter, onMouseLeave: onIconMouseLeave } =
+    hoverHandlers
+
+  const handleMouseEnter = useCallback(
+    (event: MouseEvent<HTMLButtonElement>) => {
+      onIconMouseEnter()
+      onMouseEnter?.(event)
+    },
+    [onIconMouseEnter, onMouseEnter],
+  )
+
+  const handleMouseLeave = useCallback(
+    (event: MouseEvent<HTMLButtonElement>) => {
+      onIconMouseLeave()
+      onMouseLeave?.(event)
+    },
+    [onIconMouseLeave, onMouseLeave],
+  )
+
+  return (
+    <button
+      ref={ref}
+      type={type}
+      aria-label="Quick create"
+      className={cn(
+        "flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm transition-all duration-200 hover:bg-primary/90 hover:shadow focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+        className,
+      )}
+      {...props}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      <PlusIcon ref={iconRef} size={16} />
+    </button>
+  )
+})
+
+function QuickCreateMenuItems({
+  groups,
+  onCreateIssue,
+  onNavigate,
+}: {
+  groups: CreateGroup[]
+  onCreateIssue: () => void
+  onNavigate: () => void
+}) {
+  return (
+    <div className="flex flex-col p-1">
+      {groups.map((group, groupIndex) => (
+        <div key={group.id}>
+          {groupIndex > 0 ? <div className="my-1 h-px bg-border" /> : null}
+          <p className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            {group.label}
+          </p>
+          {group.items.map((action) => {
+            if (action.action === "create-issue") {
+              return (
+                <button
+                  key={action.id}
+                  type="button"
+                  onClick={onCreateIssue}
+                  className="flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm text-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                >
+                  <action.icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  {action.label}
+                </button>
+              )
+            }
+            if (!action.href) return null
+            return (
+              <Link
+                key={action.id}
+                href={action.href}
+                onClick={onNavigate}
+                className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+              >
+                <action.icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                {action.label}
+              </Link>
+            )
+          })}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export function QuickCreateButton() {
   const groups = useQuickCreateGroups()
+  const isMobile = useIsMobile()
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { openCreateTicket } = useCommandPalette()
   const { iconRef, hoverHandlers } = useAnimatedIcon()
+  const enableHoverOpen = !isMobile
 
-  function handleCreateIssue() {
+  const handleOpenChange = useCallback((next: boolean) => {
+    setMenuOpen(next)
+  }, [])
+
+  const clearCloseTimeout = useCallback(() => {
+    if (closeTimeoutRef.current !== null) {
+      clearTimeout(closeTimeoutRef.current)
+      closeTimeoutRef.current = null
+    }
+  }, [])
+
+  const handleHoverEnter = useCallback(() => {
+    if (!enableHoverOpen) return
+    clearCloseTimeout()
+    handleOpenChange(true)
+  }, [enableHoverOpen, clearCloseTimeout, handleOpenChange])
+
+  const handleHoverLeave = useCallback(() => {
+    if (!enableHoverOpen) return
+    clearCloseTimeout()
+    closeTimeoutRef.current = setTimeout(() => {
+      handleOpenChange(false)
+      closeTimeoutRef.current = null
+    }, HOVER_CLOSE_DELAY_MS)
+  }, [enableHoverOpen, clearCloseTimeout, handleOpenChange])
+
+  useEffect(() => clearCloseTimeout, [clearCloseTimeout])
+
+  const handleCreateIssue = useCallback(() => {
     openCreateTicket()
-  }
+    setDrawerOpen(false)
+    setMenuOpen(false)
+  }, [openCreateTicket])
+
+  const handleNavigate = useCallback(() => {
+    setDrawerOpen(false)
+    setMenuOpen(false)
+  }, [])
 
   if (groups.length === 0) return null
 
+  if (isMobile) {
+    return (
+      <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
+        <DrawerTrigger asChild>
+          <QuickCreateTriggerButton iconRef={iconRef} hoverHandlers={hoverHandlers} />
+        </DrawerTrigger>
+        <DrawerContent className="flex max-h-[min(85dvh,32rem)] flex-col gap-0 overflow-hidden rounded-t-xl border bg-card p-0 shadow-2xl">
+          <DrawerHeader className="shrink-0 px-4 pb-2 pt-1">
+            <DrawerTitle className="text-sm font-semibold text-foreground">
+              Create
+            </DrawerTitle>
+          </DrawerHeader>
+          <QuickCreatePanel
+            groups={groups}
+            onCreateIssue={handleCreateIssue}
+            onNavigate={handleNavigate}
+          />
+        </DrawerContent>
+      </Drawer>
+    )
+  }
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button
-          type="button"
-          aria-label="Quick create"
-          className="size-8 rounded-lg flex items-center justify-center bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm hover:shadow transition-all duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
-          {...hoverHandlers}
-        >
-          <PlusIcon ref={iconRef} size={16} />
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-52" sideOffset={8}>
-        {groups.map((group, groupIndex) => (
-          <div key={group.id}>
-            {groupIndex > 0 ? <DropdownMenuSeparator /> : null}
-            <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-              {group.label}
-            </DropdownMenuLabel>
-            {group.items.map((action) => {
-              if (action.action === "create-issue") {
-                return (
-                  <DropdownMenuItem
-                    key={action.id}
-                    className="gap-2 cursor-pointer"
-                    onClick={handleCreateIssue}
-                  >
-                    <action.icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    {action.label}
-                  </DropdownMenuItem>
-                )
-              }
-              if (!action.href) return null
-              return (
-                <DropdownMenuItem key={action.id} asChild>
-                  <Link href={action.href} className="gap-2 cursor-pointer">
-                    <action.icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    {action.label}
-                  </Link>
-                </DropdownMenuItem>
-              )
-            })}
-          </div>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Popover open={menuOpen} onOpenChange={handleOpenChange}>
+      <PopoverTrigger asChild>
+        <QuickCreateTriggerButton
+          iconRef={iconRef}
+          hoverHandlers={hoverHandlers}
+          onMouseEnter={handleHoverEnter}
+          onMouseLeave={handleHoverLeave}
+        />
+      </PopoverTrigger>
+      <PopoverContent
+        align="end"
+        sideOffset={0}
+        className="w-52 max-h-[min(22rem,var(--radix-popover-content-available-height))] overflow-y-auto p-0"
+        onMouseEnter={handleHoverEnter}
+        onMouseLeave={handleHoverLeave}
+      >
+        <QuickCreateMenuItems
+          groups={groups}
+          onCreateIssue={handleCreateIssue}
+          onNavigate={handleNavigate}
+        />
+      </PopoverContent>
+    </Popover>
   )
 }

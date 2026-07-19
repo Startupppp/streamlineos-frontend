@@ -100,6 +100,19 @@ function ThemeOptionsGrid() {
   );
 }
 
+export function ThemeMenuPanel({ className }: { className?: string }) {
+  return (
+    <div className={cn("space-y-2", className)}>
+      <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+        <Palette className="h-3.5 w-3.5" />
+        Interface theme
+      </div>
+      <ModeOptionsRow />
+      <ThemeOptionsGrid />
+    </div>
+  );
+}
+
 export function ThemeMenuSubmenu() {
   return (
     <DropdownMenuSub>

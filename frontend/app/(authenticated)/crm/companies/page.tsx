@@ -18,6 +18,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useCrmOrganizations, useDeleteCrmOrganization } from "@/hooks/api/crm";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { CreateOrgDialog } from "@/features/crm/companies/create-org-dialog";
 import { CompanyMergeDialog } from "@/features/crm/companies/detail/company-merge-dialog";
 import { toast } from "sonner";
@@ -43,7 +44,7 @@ export default function CompaniesPage() {
   const pathname = usePathname();
   const [, startTransition] = useTransition();
 
-  const [createOpen, setCreateOpen] = useState(false);
+  const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } = useQueryParamOpen("create");
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkMergeOpen, setBulkMergeOpen] = useState(false);
@@ -82,7 +83,7 @@ export default function CompaniesPage() {
   });
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
-  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+  const handleOpenCreate = useCallback(() => openCreate(), [openCreate]);
   const handleClearSelection = useCallback(() => setSelectedIds(new Set()), []);
   const handleBulkMerge = useCallback(() => setBulkMergeOpen(true), []);
 

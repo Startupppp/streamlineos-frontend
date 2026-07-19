@@ -104,12 +104,15 @@ interface FilterCategorySubmenuProps {
   onDueDateFromChange: (v: string) => void;
   onDueDateToChange: (v: string) => void;
   onClose: () => void;
+  showTitle?: boolean;
+  className?: string;
+  listClassName?: string;
 }
 
 const PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
 const TYPES = ["TASK", "BUG", "STORY", "EPIC", "SUBTASK"] as const;
 
-const CATEGORY_TITLES: Record<FilterCategory, string> = {
+export const FILTER_CATEGORY_TITLES: Record<FilterCategory, string> = {
   status: "Status",
   priority: "Priority",
   type: "Type",
@@ -141,7 +144,7 @@ function OptionRow({
       type="button"
       onClick={onClick}
       className={cn(
-        "flex h-9 w-full items-center gap-2.5 rounded-md px-3 text-sm",
+        "flex h-9 w-full items-center gap-2 rounded-md px-3 text-left text-sm",
         "transition-colors motion-reduce:transition-none",
         "hover:bg-accent hover:text-accent-foreground",
         "focus-visible:outline-none focus-visible:bg-accent",
@@ -162,7 +165,7 @@ function OptionRow({
       ) : !leading && dotClassName ? (
         <span className={cn("h-2.5 w-2.5 shrink-0 rounded-full", dotClassName)} />
       ) : null}
-      <span className="min-w-0 flex-1 truncate">{label}</span>
+      <span className="min-w-0 flex-1 truncate text-left">{label}</span>
     </button>
   );
 }
@@ -222,24 +225,28 @@ function PanelShell({
   onKeyDown,
   containerRef,
   withSearch = false,
+  showTitle = true,
+  className,
 }: {
   category: FilterCategory;
   children: ReactNode;
   onKeyDown: (e: KeyboardEvent) => void;
   containerRef: RefObject<HTMLDivElement | null>;
   withSearch?: boolean;
+  showTitle?: boolean;
+  className?: string;
 }) {
   return (
     <div
       ref={containerRef}
       tabIndex={-1}
       onKeyDown={onKeyDown}
-      className="flex w-[240px] flex-col outline-none"
+      className={cn("flex w-[260px] flex-col outline-none", className)}
     >
-      {!withSearch ? (
+      {showTitle && !withSearch ? (
         <div className="flex h-10 shrink-0 items-center border-b border-border px-3">
           <span className="text-sm font-medium text-foreground">
-            {CATEGORY_TITLES[category]}
+            {FILTER_CATEGORY_TITLES[category]}
           </span>
         </div>
       ) : null}
@@ -284,6 +291,9 @@ export function FilterCategorySubmenu({
   onDueDateFromChange,
   onDueDateToChange,
   onClose,
+  showTitle = true,
+  className,
+  listClassName = "max-h-[min(50dvh,320px)] overflow-y-auto scrollbar-hide p-1",
 }: FilterCategorySubmenuProps) {
   const [search, setSearch] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
@@ -312,7 +322,7 @@ export function FilterCategorySubmenu({
 
   if (category === "dates") {
     return (
-      <PanelShell category={category} containerRef={containerRef} onKeyDown={handleKeyDown}>
+      <PanelShell category={category} containerRef={containerRef} onKeyDown={handleKeyDown} showTitle={showTitle} className={className}>
         <FilterDatesPanel
           dueDateFrom={dueDateFrom}
           dueDateTo={dueDateTo}
@@ -331,8 +341,8 @@ export function FilterCategorySubmenu({
         s.name.replace(/_/g, " ").toLowerCase().includes(q),
     );
     return (
-      <PanelShell category={category} containerRef={containerRef} onKeyDown={handleKeyDown}>
-        <div className="max-h-[280px] overflow-y-auto scrollbar-hide p-1">
+      <PanelShell category={category} containerRef={containerRef} onKeyDown={handleKeyDown} showTitle={showTitle} className={className}>
+        <div className={listClassName}>
           {filtered.map((s) => {
             const label = s.name.replace(/_/g, " ");
             const entry = getStatusEntry(statusConfig, s.name);
@@ -358,8 +368,8 @@ export function FilterCategorySubmenu({
 
   if (category === "priority") {
     return (
-      <PanelShell category={category} containerRef={containerRef} onKeyDown={handleKeyDown}>
-        <div className="max-h-[280px] overflow-y-auto scrollbar-hide p-1">
+      <PanelShell category={category} containerRef={containerRef} onKeyDown={handleKeyDown} showTitle={showTitle} className={className}>
+        <div className={listClassName}>
           {PRIORITIES.map((p) => {
             const label = p.charAt(0) + p.slice(1).toLowerCase();
             function handleClick() {
@@ -382,8 +392,8 @@ export function FilterCategorySubmenu({
 
   if (category === "type") {
     return (
-      <PanelShell category={category} containerRef={containerRef} onKeyDown={handleKeyDown}>
-        <div className="max-h-[280px] overflow-y-auto scrollbar-hide p-1">
+      <PanelShell category={category} containerRef={containerRef} onKeyDown={handleKeyDown} showTitle={showTitle} className={className}>
+        <div className={listClassName}>
           {TYPES.map((t) => {
             const label = t.charAt(0) + t.slice(1).toLowerCase();
             function handleClick() {
@@ -418,7 +428,10 @@ export function FilterCategorySubmenu({
         category={category}
         containerRef={containerRef}
         onKeyDown={handleKeyDown}
+       
         withSearch
+        showTitle={showTitle}
+        className={className}
       >
         {needsSearch ? (
           <FilterMenuSearch
@@ -427,7 +440,7 @@ export function FilterCategorySubmenu({
             placeholder="Search assignees…"
           />
         ) : null}
-        <div className="max-h-[280px] overflow-y-auto scrollbar-hide p-1">
+        <div className={listClassName}>
           {filtered.map((m) => {
             function handleClick() {
               onToggleAssignee(m.id);
@@ -457,7 +470,10 @@ export function FilterCategorySubmenu({
         category={category}
         containerRef={containerRef}
         onKeyDown={handleKeyDown}
+       
         withSearch
+        showTitle={showTitle}
+        className={className}
       >
         {needsSearch ? (
           <FilterMenuSearch
@@ -466,7 +482,7 @@ export function FilterCategorySubmenu({
             placeholder="Search labels…"
           />
         ) : null}
-        <div className="max-h-[280px] overflow-y-auto scrollbar-hide p-1">
+        <div className={listClassName}>
           {filtered.map((l) => {
             const labelId = String(l.id);
             function handleClick() {
@@ -490,8 +506,8 @@ export function FilterCategorySubmenu({
 
   if (category === "cycle") {
     return (
-      <PanelShell category={category} containerRef={containerRef} onKeyDown={handleKeyDown}>
-        <div className="max-h-[280px] overflow-y-auto scrollbar-hide p-1">
+      <PanelShell category={category} containerRef={containerRef} onKeyDown={handleKeyDown} showTitle={showTitle} className={className}>
+        <div className={listClassName}>
           {cycles.map((c) => {
             const cycleId = String(c.id);
             function handleClick() {
@@ -514,8 +530,8 @@ export function FilterCategorySubmenu({
 
   if (category === "sprint") {
     return (
-      <PanelShell category={category} containerRef={containerRef} onKeyDown={handleKeyDown}>
-        <div className="max-h-[280px] overflow-y-auto scrollbar-hide p-1">
+      <PanelShell category={category} containerRef={containerRef} onKeyDown={handleKeyDown} showTitle={showTitle} className={className}>
+        <div className={listClassName}>
           {sprints.map((s) => {
             const sprintId = String(s.id);
             function handleClick() {
@@ -549,7 +565,10 @@ export function FilterCategorySubmenu({
         category={category}
         containerRef={containerRef}
         onKeyDown={handleKeyDown}
+       
         withSearch
+        showTitle={showTitle}
+        className={className}
       >
         {needsSearch ? (
           <FilterMenuSearch
@@ -558,7 +577,7 @@ export function FilterCategorySubmenu({
             placeholder="Search projects…"
           />
         ) : null}
-        <div className="max-h-[280px] overflow-y-auto scrollbar-hide p-1">
+        <div className={listClassName}>
           {filtered.map((p) => {
             const projectId = String(p.id);
             function handleClick() {

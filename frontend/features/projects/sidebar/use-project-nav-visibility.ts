@@ -1,16 +1,21 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { isProjectNavPinned } from "./project-nav-config";
+import { useCallback, useSyncExternalStore } from "react";
+import {
+  DEFAULT_HIDDEN_PROJECT_NAV_IDS,
+  isDefaultProjectNavHidden,
+  isProjectNavPinned,
+} from "./project-nav-config";
 
 const STORAGE_KEY = "project-nav-hidden";
-const CHANGE_EVENT = "project-nav-hidden-changed";
 
-function readHiddenIds(): Set<string> {
-  if (typeof window === "undefined") return new Set();
+const listeners = new Set<() => void>();
+let cache: ReadonlySet<string> = new Set(DEFAULT_HIDDEN_PROJECT_NAV_IDS);
+let cacheRaw: string | null | undefined = undefined;
+
+function parseHiddenIds(raw: string | null): Set<string> {
+  if (raw === null) return new Set(DEFAULT_HIDDEN_PROJECT_NAV_IDS);
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return new Set();
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return new Set();
     return new Set(
@@ -20,32 +25,59 @@ function readHiddenIds(): Set<string> {
       ),
     );
   } catch {
-    return new Set();
+    return new Set(DEFAULT_HIDDEN_PROJECT_NAV_IDS);
   }
 }
 
-function writeHiddenIds(ids: Set<string>): void {
+function readSnapshot(): ReadonlySet<string> {
+  if (typeof window === "undefined") return cache;
+  const raw = window.localStorage.getItem(STORAGE_KEY);
+  if (raw === cacheRaw) return cache;
+  cacheRaw = raw;
+  cache = parseHiddenIds(raw);
+  return cache;
+}
+
+function writeHiddenIds(ids: ReadonlySet<string>): void {
+  if (typeof window === "undefined") return;
+  const next = new Set(
+    [...ids].filter((id) => id.length > 0 && !isProjectNavPinned(id)),
+  );
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([...ids]));
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify([...next]));
   } catch {
     return;
   }
-  window.dispatchEvent(new Event(CHANGE_EVENT));
+  cacheRaw = null;
+  cache = next;
+  listeners.forEach((listener) => listener());
+}
+
+function subscribe(listener: () => void): () => void {
+  listeners.add(listener);
+  const onStorage = (event: StorageEvent) => {
+    if (event.key === STORAGE_KEY || event.key === null) {
+      cacheRaw = undefined;
+      listener();
+    }
+  };
+  window.addEventListener("storage", onStorage);
+  return () => {
+    listeners.delete(listener);
+    window.removeEventListener("storage", onStorage);
+  };
+}
+
+function getServerSnapshot(): ReadonlySet<string> {
+  return cache;
 }
 
 export function useProjectNavVisibility() {
-  const [hiddenIds, setHiddenIds] = useState<Set<string>>(() => new Set());
-
-  useEffect(() => {
-    const sync = () => setHiddenIds(readHiddenIds());
-    sync();
-    window.addEventListener(CHANGE_EVENT, sync);
-    window.addEventListener("storage", sync);
-    return () => {
-      window.removeEventListener(CHANGE_EVENT, sync);
-      window.removeEventListener("storage", sync);
-    };
-  }, []);
+  const hiddenIds = useSyncExternalStore(
+    subscribe,
+    readSnapshot,
+    getServerSnapshot,
+  );
 
   const isVisible = useCallback(
     (id: string) => isProjectNavPinned(id) || !hiddenIds.has(id),
@@ -54,28 +86,22 @@ export function useProjectNavVisibility() {
 
   const setVisible = useCallback((id: string, visible: boolean) => {
     if (isProjectNavPinned(id)) return;
-    setHiddenIds((prev) => {
-      const next = new Set(prev);
-      if (visible) next.delete(id);
-      else next.add(id);
-      writeHiddenIds(next);
-      return next;
-    });
+    const current = readSnapshot();
+    const next = new Set(current);
+    if (visible) next.delete(id);
+    else next.add(id);
+    writeHiddenIds(next);
   }, []);
 
   const reset = useCallback(() => {
-    setHiddenIds(() => {
-      const next = new Set<string>();
-      writeHiddenIds(next);
-      return next;
-    });
+    writeHiddenIds(new Set(DEFAULT_HIDDEN_PROJECT_NAV_IDS));
   }, []);
 
   return {
-    hiddenIds: hiddenIds as ReadonlySet<string>,
+    hiddenIds,
     isVisible,
     setVisible,
     reset,
-    hasCustomizations: hiddenIds.size > 0,
+    hasCustomizations: !isDefaultProjectNavHidden(hiddenIds),
   };
 }
