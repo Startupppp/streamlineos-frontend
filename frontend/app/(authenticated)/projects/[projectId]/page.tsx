@@ -35,14 +35,12 @@ import { hydrateDisplayOptions, useDisplayOptions } from "@/features/projects/vi
 import { CreateTicketDialog } from "@/features/projects/tickets/create-ticket-dialog";
 import { SaveViewDialog, type SaveViewMeta } from "@/features/projects/views/save-view-dialog";
 import { buildTicketDetailUrl } from "@/features/projects/ticket-details/build-ticket-detail-url";
-import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
 import { Button } from "@/components/ui/button";
 import { SearchX } from "lucide-react";
-import { exportToCsv } from "@/lib/export-csv";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
@@ -51,8 +49,6 @@ import {
   filterHiddenCompletedTickets,
   getCompletedStatusNames,
 } from "@/features/projects/shared/completed-status";
-import { useExportTickets } from "@/hooks/api/projects/import-export";
-import { ImportTicketsDialog } from "@/features/projects/tickets/import-tickets-dialog";
 import { BulkActionBar } from "@/features/projects/backlog/bulk-action-bar";
 import {
   pmSnappy,
@@ -87,7 +83,6 @@ export default function ProjectBoardPage({ params }: PageProps) {
   const [displayOptions, setDisplayOptions] = useDisplayOptions(projectId);
   const [workloadFilters, setWorkloadFilters] = useState<WorkloadFilterState>(INITIAL_FILTERS);
 
-  const [importOpen, setImportOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
 
   const ticketParam = searchParams.get("ticket");
@@ -108,7 +103,6 @@ export default function ProjectBoardPage({ params }: PageProps) {
 
   const { data: views } = useViews(projectId);
   const createView = useCreateView();
-  const exportQuery = useExportTickets(projectId);
   const appliedViewIdRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -428,51 +422,6 @@ export default function ProjectBoardPage({ params }: PageProps) {
     setSelectedIds(sel);
   }, []);
 
-  const handleExportCurrentView = useCallback(() => {
-    if (filteredTickets.length === 0) {
-      toast.info("No tickets to export");
-      return;
-    }
-    exportToCsv(
-      `${data?.key ?? "export"}-filtered-tickets.csv`,
-      filteredTickets.map((t) => ({
-        number: t.ticketNumber,
-        title: t.title,
-        type: t.type,
-        status: t.status,
-        priority: t.priority ?? "",
-        points: t.points ?? "",
-        dueDate: t.dueDate ?? "",
-        assignee: t.assignee ? getUserDisplayName(t.assignee) : "",
-      })),
-    );
-    toast.success("Exported current view");
-  }, [filteredTickets, data?.key]);
-
-  const handleExportAllTickets = useCallback(() => {
-    exportQuery.refetch().then(({ data: rows }) => {
-      if (!rows || rows.length === 0) {
-        toast.info("No tickets to export");
-        return;
-      }
-      exportToCsv(
-        `${data?.key ?? "export"}-all-tickets.csv`,
-        rows.map((r) => ({
-          number: r.number,
-          title: r.title,
-          type: r.type,
-          status: r.status,
-          priority: r.priority,
-          points: r.points ?? "",
-          dueDate: r.dueDate ?? "",
-          assignee: r.assignee ?? "",
-        })),
-      );
-    }).catch((err: unknown) => toast.error(getErrorMessage(err)));
-  }, [exportQuery, data?.key]);
-
-  const handleOpenImport = useCallback(() => setImportOpen(true), []);
-
   const handleOpenSaveView = useCallback(() => {
     setSaveViewName("");
     setSaveViewOpen(true);
@@ -537,9 +486,6 @@ export default function ProjectBoardPage({ params }: PageProps) {
           onDisplayOptionsChange={setDisplayOptions}
           activeViewName={activeView?.name ?? null}
           onClearView={handleClearView}
-          onExportCurrentView={handleExportCurrentView}
-          onExportAllTickets={handleExportAllTickets}
-          onOpenImport={handleOpenImport}
           onOpenSaveView={handleOpenSaveView}
           projectId={projectId}
           members={members}
@@ -748,11 +694,6 @@ export default function ProjectBoardPage({ params }: PageProps) {
         displayOptions={{ ...displayOptions }}
         isSaving={createView.isPending}
         activeLayout={view}
-      />
-      <ImportTicketsDialog
-        open={importOpen}
-        onOpenChange={setImportOpen}
-        projectId={projectId}
       />
     </PageWrapper>
   );

@@ -63,7 +63,7 @@ The launch surface area is intentionally narrow:
 - **Authentication** — Google + credentials, with platform-owner role split from regular users.
 - **Marketing site** — landing, about, blog, contact, legal (privacy/terms/security).
 - **R2-backed file storage** — avatars, blog images, candidate documents, payslips, exports, all in one bucket with proper folder taxonomy.
-- **Email** — Resend with SendGrid fallback, all transactional flows (contact replies, auto-responses).
+- **Email** — Zoho ZeptoMail with Resend fallback, all transactional flows (contact replies, auto-responses).
 
 The HR/CRM/Projects modules are deeper in the codebase but gated behind the org-level setup flow — we'll roll those out as the first customer cohort comes online.
 

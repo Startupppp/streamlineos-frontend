@@ -37,7 +37,7 @@
 - **Ably** — realtime chat / presence.
 - **Tailwind CSS v4 + Radix UI** — `shadcn`-style primitives.
 - **TanStack Query** — client-side data layer over the REST API in `app/api/**`.
-- **Resend / SendGrid** — transactional email.
+- **Zoho ZeptoMail / Resend** — transactional email.
 - **Inngest** — background jobs (scheduled reports, payroll generation).
 - **AI (optional)** — Vercel AI SDK with Google Generative AI + OpenAI.
 

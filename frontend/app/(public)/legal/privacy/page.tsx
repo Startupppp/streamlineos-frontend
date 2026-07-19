@@ -174,7 +174,7 @@ export default function PrivacyPage() {
               {[
                 ["Neon (Postgres)", "Primary database", "AP Southeast 1 / your region"],
                 ["Cloudflare R2", "File storage (avatars, attachments, payslips)", "Global"],
-                ["SendGrid", "Transactional email (auth, notifications)", "US"],
+                ["Zoho ZeptoMail", "Transactional email (auth, notifications)", "India"],
                 ["Ably", "Realtime chat and presence", "Global edge"],
                 ["Inngest", "Background jobs and scheduled reports", "US / EU"],
                 ["Upstash Redis", "Rate limiting and session cache", "Your region"],

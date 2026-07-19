@@ -87,7 +87,6 @@ const CHANNELS: Array<{ value: NotificationChannel; label: string }> = [
 
 const PROVIDERS: Array<{ value: NotificationProviderName; label: string }> = [
   { value: "SMTP", label: "SMTP" },
-  { value: "SENDGRID", label: "SendGrid" },
   { value: "TWILIO", label: "Twilio" },
   { value: "META_WHATSAPP", label: "Meta WhatsApp" },
   { value: "SLACK", label: "Slack" },

@@ -2,25 +2,10 @@
 
 import { useCallback } from "react";
 import { X } from "lucide-react";
-import {
-  UploadIcon,
-  DownloadIcon,
-  BookmarkIcon,
-  EllipsisIcon,
-} from "@animateicons/react/lucide";
+import { BookmarkIcon } from "@animateicons/react/lucide";
 import type { IconHandle } from "@animateicons/react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { cn } from "@/lib/utils";
 import { TicketFilterBar } from "@/features/projects/shared/ticket-filter-bar";
 import { DisplayOptionsPanel } from "@/features/projects/views/display-options-panel";
 import { ViewSwitcher, type ViewType } from "@/features/projects/views/view-switcher";
@@ -54,36 +39,6 @@ function ToolbarIconButton({ onClick, ariaLabel, Icon }: ToolbarIconButtonProps)
   );
 }
 
-function ExportDropdownTrigger() {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button
-      variant="outline"
-      size="icon"
-      className={TOOLBAR_ICON_BTN}
-      aria-label="Export tickets"
-      {...hoverHandlers}
-    >
-      <DownloadIcon ref={iconRef} size={14} />
-    </Button>
-  );
-}
-
-function MoreActionsTrigger() {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button
-      variant="outline"
-      size="icon"
-      className={cn(TOOLBAR_ICON_BTN, "md:hidden")}
-      aria-label="More board actions"
-      {...hoverHandlers}
-    >
-      <EllipsisIcon ref={iconRef} size={14} />
-    </Button>
-  );
-}
-
 interface Member {
   id: string;
   name: string | null;
@@ -105,9 +60,6 @@ interface ProjectViewsToolbarProps {
   onDisplayOptionsChange: (options: DisplayOptions) => void;
   activeViewName?: string | null;
   onClearView?: () => void;
-  onExportCurrentView: () => void;
-  onExportAllTickets: () => void;
-  onOpenImport: () => void;
   onOpenSaveView: () => void;
   projectId: number;
   members: Member[];
@@ -130,9 +82,6 @@ export function ProjectViewsToolbar({
   onDisplayOptionsChange,
   activeViewName,
   onClearView,
-  onExportCurrentView,
-  onExportAllTickets,
-  onOpenImport,
   onOpenSaveView,
   projectId,
   members,
@@ -148,35 +97,6 @@ export function ProjectViewsToolbar({
     onOpenSaveView();
   }, [onOpenSaveView]);
 
-  const boardActions = (
-    <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <ExportDropdownTrigger />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-48">
-          <DropdownMenuItem onClick={onExportCurrentView}>
-            Export current view
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={onExportAllTickets}>
-            Export all tickets
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <ToolbarIconButton
-        onClick={onOpenImport}
-        ariaLabel="Import tickets"
-        Icon={UploadIcon}
-      />
-      <ToolbarIconButton
-        onClick={handleSaveViewClick}
-        ariaLabel="Save view"
-        Icon={BookmarkIcon}
-      />
-    </>
-  );
-
   return (
     <div className="flex w-full min-w-0 flex-nowrap items-center justify-between gap-1 sm:gap-1.5">
       <div className="flex min-w-0 shrink-0 items-center gap-1">
@@ -189,30 +109,11 @@ export function ProjectViewsToolbar({
             onChange={onDisplayOptionsChange}
           />
 
-          <div className="hidden items-center gap-0.5 sm:gap-1 md:flex">
-            {boardActions}
-          </div>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <MoreActionsTrigger />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={onExportCurrentView}>
-                Export current view
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onExportAllTickets}>
-                Export all tickets
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onOpenImport}>
-                Import tickets
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleSaveViewClick}>
-                Save view
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <ToolbarIconButton
+            onClick={handleSaveViewClick}
+            ariaLabel="Save view"
+            Icon={BookmarkIcon}
+          />
         </div>
 
         {activeViewName && onClearView ? (

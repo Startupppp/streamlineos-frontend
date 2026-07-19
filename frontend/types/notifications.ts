@@ -211,7 +211,6 @@ export interface UpdatePreferencesInput {
 
 export type NotificationProviderName =
   | "SMTP"
-  | "SENDGRID"
   | "TWILIO"
   | "META_WHATSAPP"
   | "SLACK"

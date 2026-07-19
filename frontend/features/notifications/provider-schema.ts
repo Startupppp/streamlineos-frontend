@@ -13,7 +13,6 @@ export const providerSchema = z.object({
   ]),
   provider: z.enum([
     "SMTP",
-    "SENDGRID",
     "TWILIO",
     "META_WHATSAPP",
     "SLACK",

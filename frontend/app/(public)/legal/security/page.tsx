@@ -144,7 +144,7 @@ export default function SecurityPage() {
             logged, and credentials are rotated quarterly (or immediately on offboarding).
           </li>
           <li>
-            Integration API keys you bring into the workspace (SendGrid, Razorpay, Ably, etc.)
+            Integration API keys you bring into the workspace (Razorpay, Ably, etc.)
             are encrypted application-side before storage and decrypted only inside the
             request that needs them.
           </li>
