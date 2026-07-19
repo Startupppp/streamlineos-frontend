@@ -16,7 +16,6 @@ import { queryKeys } from "@/lib/query-keys";
 import type {
   Channel,
   ChatNotificationPreference,
-  ChatOrgSettings,
   Message,
   MessagesPage,
   OnlineUser,
@@ -638,26 +637,6 @@ export function useRegenerateInviteLink() {
       apiClient.post<{ token: string }>(`/chat/channels/${channelId}/invite-link/regenerate`),
     onSuccess: (_data, channelId) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.inviteLink(channelId) });
-    },
-  });
-}
-
-export function useChatOrgSettings() {
-  return useQuery({
-    queryKey: queryKeys.chat.orgSettings(),
-    queryFn: () => apiClient.get<ChatOrgSettings>("/chat/settings"),
-    staleTime: 60_000,
-  });
-}
-
-export function useUpdateChatOrgSettings() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationKey: ["chat", "settings", "update"],
-    mutationFn: (patch: Partial<ChatOrgSettings>) =>
-      apiClient.patch<ChatOrgSettings>("/chat/settings", patch),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.orgSettings() });
     },
   });
 }

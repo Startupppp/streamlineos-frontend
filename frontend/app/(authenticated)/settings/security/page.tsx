@@ -7,7 +7,6 @@ import { useOrgSettings, useUpdateOrgSecuritySettings } from "@/hooks/api/organi
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -182,8 +181,6 @@ export default function SecurityPage() {
             </div>
           </CardContent>
         </Card>
-
-        <Separator />
 
         <div className="flex justify-end">
           <LoadingButton

@@ -271,7 +271,7 @@ export function DataTable<T>({
             style={minWidth && minWidth !== "auto" ? { minWidth } : undefined}
             className={cn((!minWidth || minWidth === "content") && "min-w-max")}
           >
-            <Table>
+            <Table containerClassName="overflow-visible">
               <TableHeader className="sticky top-0 z-10 bg-muted/40 border-b border-border backdrop-blur-sm">
                 {table.getHeaderGroups().map((hg) => (
                   <TableRow
@@ -331,7 +331,7 @@ export function DataTable<T>({
             style={minWidth && minWidth !== "auto" ? { minWidth } : undefined}
             className={cn((!minWidth || minWidth === "content") && "min-w-max")}
           >
-            <Table>
+            <Table containerClassName="overflow-visible">
               <TableHeader className="sticky top-0 z-10 bg-muted/40 border-b border-border backdrop-blur-sm">
                 {table.getHeaderGroups().map((hg) => (
                   <TableRow

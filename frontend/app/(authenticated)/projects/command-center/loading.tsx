@@ -9,7 +9,6 @@ export default function CommandCenterLoading() {
     <PageWrapper title="Command Center" subtitle="Overview of your projects and active work">
       <PmPageShell>
         <StatCardGridSkeleton cols={3} />
-        <Skeleton className={cn("h-14 w-full max-w-xl rounded-xl", PM_PANEL)} />
         <Skeleton className={cn("h-56 w-full rounded-xl", PM_PANEL)} />
         <Skeleton className={cn("h-48 w-full rounded-xl", PM_PANEL)} />
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">

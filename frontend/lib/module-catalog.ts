@@ -39,13 +39,6 @@ const EXTRA_MODULES: Record<string, ModuleCatalogEntry> = {
     iconBg: NEUTRAL_ACCENT.bg,
     iconText: NEUTRAL_ACCENT.text,
   },
-  blog: {
-    label: "Blog",
-    description: "Posts & publishing",
-    icon: Globe,
-    iconBg: NEUTRAL_ACCENT.bg,
-    iconText: NEUTRAL_ACCENT.text,
-  },
 };
 
 export function getModuleCatalogEntry(moduleKey: string): ModuleCatalogEntry {

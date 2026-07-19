@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useCallback, type ReactNode } from "react";
-import Script from "next/script";
+import { useState, useCallback, useEffect, type ReactNode } from "react";
 import { addMonths, format } from "date-fns";
-import { Package, RefreshCw, TrendingDown, TrendingUp, Zap } from "lucide-react";
+import { RefreshCw, TrendingDown, TrendingUp, Zap } from "lucide-react";
+import { ZapIcon } from "@animateicons/react/lucide";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -14,14 +15,7 @@ import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useCan } from "@/hooks/api/access";
 import {
   useAiCreditsWallet,
@@ -31,7 +25,11 @@ import {
   useVerifyAiCreditPurchase,
   type AiCreditTransaction,
   type AiCreditPack,
+  type PurchaseAiPackOrder,
+  type PurchaseAiPackResult,
 } from "@/hooks/api/ai-credits";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { cn } from "@/lib/utils";
 
 const TXN_LABELS: Record<
   AiCreditTransaction["type"],
@@ -104,14 +102,69 @@ function getTxnRowKey(txn: AiCreditTransaction): string | number {
   return txn.id;
 }
 
-function PackBuyButton({ pack, isPending, onBuy }: { pack: AiCreditPack; isPending: boolean; onBuy: (p: AiCreditPack) => void }) {
-  function handleClick() {
+function CreditPackCard({
+  pack,
+  canPurchase,
+  isPending,
+  isBusy,
+  onBuy,
+}: {
+  pack: AiCreditPack;
+  canPurchase: boolean;
+  isPending: boolean;
+  isBusy: boolean;
+  onBuy: (pack: AiCreditPack) => void;
+}) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  const totalCredits = pack.credits + pack.bonusCredits;
+
+  function handleBuy() {
     onBuy(pack);
   }
+
   return (
-    <LoadingButton size="sm" variant="outline" isPending={isPending} onClick={handleClick}>
-      Buy
-    </LoadingButton>
+    <div
+      className={cn(
+        "relative flex flex-col rounded-lg border border-border bg-card p-4 transition-shadow hover:shadow-sm",
+        pack.bonusCredits > 0 && "border-primary/25",
+      )}
+      {...hoverHandlers}
+    >
+      {pack.bonusCredits > 0 ? (
+        <span className="absolute -top-px right-3 inline-flex items-center rounded-b-md bg-primary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary-foreground">
+          +{pack.bonusCredits.toLocaleString()} bonus
+        </span>
+      ) : null}
+      <div className="mb-3 flex items-start gap-2.5">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+          <ZapIcon ref={iconRef} size={16} className="text-primary" />
+        </div>
+        <div className="min-w-0 flex-1 pt-0.5">
+          <p className="text-sm font-semibold text-foreground">{pack.name}</p>
+          <p className="text-xs text-muted-foreground tabular-nums">
+            {pack.credits.toLocaleString()} credits
+          </p>
+        </div>
+      </div>
+      <p className="mb-1 text-2xl font-bold tabular-nums tracking-tight text-foreground">
+        ₹{(pack.priceInPaise / 100).toLocaleString("en-IN")}
+      </p>
+      <p className="mb-4 text-xs text-muted-foreground tabular-nums">
+        {totalCredits.toLocaleString()} total credits
+      </p>
+      {canPurchase ? (
+        <LoadingButton
+          size="sm"
+          className="mt-auto w-full"
+          isPending={isPending}
+          loadingText="Opening…"
+          disabled={isBusy && !isPending}
+          onClick={handleBuy}
+        >
+          Buy
+        </LoadingButton>
+      ) : null}
+    </div>
   );
 }
 
@@ -135,14 +188,23 @@ export default function AiCreditsPage() {
 
   const [localAutoTopUp, setLocalAutoTopUp] = useState<boolean | null>(null);
   const [selectedPack, setSelectedPack] = useState<AiCreditPack | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [razorpayReady, setRazorpayReady] = useState(false);
 
   const autoTopUp = localAutoTopUp ?? (data?.wallet.autoTopUpEnabled ?? false);
   const wallet = data?.wallet;
   const packs = data?.packs ?? [];
   const txns = txnData?.items ?? [];
   const txnTotal = txnData?.total ?? 0;
+  const isBusy = purchaseMutation.isPending || verifyMutation.isPending;
+
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
 
   function handleAutoTopUpToggle(enabled: boolean) {
     setLocalAutoTopUp(enabled);
@@ -176,260 +238,190 @@ export default function AiCreditsPage() {
     void refetchTxns();
   }
 
-  function handleDialogClose(open: boolean) {
-    setDialogOpen(open);
+  function handleRazorpayDismiss() {
+    setSelectedPack(null);
   }
 
-  function handleCancelPurchase() {
-    setDialogOpen(false);
-  }
-
-  function handleRazorpayLoad() {
-    setRazorpayReady(true);
-  }
-
-  function handleBuyPack(pack: AiCreditPack) {
-    setSelectedPack(pack);
-    setDialogOpen(true);
-  }
-
-  function handleRazorpaySuccess(response: RazorpayPaymentResponse) {
-    if (!selectedPack) return;
+  function handleRazorpaySuccess(response: RazorpayPaymentResponse, pack: AiCreditPack) {
     verifyMutation.mutate(
       {
-        packId: selectedPack.id,
+        packId: pack.id,
         orderId: response.razorpay_order_id,
         paymentId: response.razorpay_payment_id,
         signature: response.razorpay_signature,
       },
       {
-        onSuccess: () => {
-          setDialogOpen(false);
+        onSettled: () => {
           setSelectedPack(null);
         },
       },
     );
   }
 
-  function handleConfirmPurchase() {
-    if (!selectedPack) return;
-    purchaseMutation.mutate(
-      { packId: selectedPack.id },
-      {
-        onSuccess: (result) => {
-          if ("orderId" in result && result.orderId && razorpayReady) {
-            const rz = new window.Razorpay({
-              key: result.keyId,
-              order_id: result.orderId,
-              amount: result.amount,
-              currency: result.currency,
-              name: "StreamlineOS",
-              description: `${selectedPack.name} – ${selectedPack.credits.toLocaleString()} credits`,
-              handler: handleRazorpaySuccess,
-            });
-            rz.open();
-          } else {
-            setDialogOpen(false);
-            setSelectedPack(null);
-          }
+  async function handleBuyPack(pack: AiCreditPack) {
+    setSelectedPack(pack);
+    let result: PurchaseAiPackOrder | PurchaseAiPackResult;
+    try {
+      result = await purchaseMutation.mutateAsync({ packId: pack.id });
+    } catch {
+      setSelectedPack(null);
+      return;
+    }
+    if (!("orderId" in result) || !result.orderId) {
+      setSelectedPack(null);
+      return;
+    }
+    if (!result.keyId) {
+      toast.error("Payment gateway not configured. Contact support.");
+      setSelectedPack(null);
+      return;
+    }
+    try {
+      const rz = new window.Razorpay({
+        key: result.keyId,
+        order_id: result.orderId,
+        amount: result.amount,
+        currency: result.currency,
+        name: "StreamlineOS",
+        description: `${pack.name} – ${pack.credits.toLocaleString()} credits`,
+        handler: (response: RazorpayPaymentResponse) => {
+          handleRazorpaySuccess(response, pack);
         },
-      },
-    );
+        modal: {
+          ondismiss: handleRazorpayDismiss,
+        },
+      });
+      rz.open();
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+      setSelectedPack(null);
+    }
   }
 
-  const isPending = purchaseMutation.isPending || verifyMutation.isPending;
-
   return (
-    <>
-      <Script
-        src="https://checkout.razorpay.com/v1/checkout.js"
-        onLoad={handleRazorpayLoad}
-      />
-      <PageWrapper title="AI Credits" subtitle="Manage your AI usage credits">
-        <div className="flex flex-1 min-h-0 flex-col gap-4">
-          {isError ? (
-            <ErrorState
-              title="Failed to load AI credits"
-              description="Something went wrong fetching your credit balance."
-              onRetry={handleRefresh}
-              className="flex-1"
-            />
-          ) : (
-            <>
+    <PageWrapper title="AI Credits" subtitle="Manage your AI usage credits">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
+        {isError ? (
+          <ErrorState
+            title="Failed to load AI credits"
+            description="Something went wrong fetching your credit balance."
+            onRetry={handleRefresh}
+            className="flex-1"
+          />
+        ) : (
+          <>
+            {isLoading ? (
+              <StatCardGridSkeleton cols={3} count={3} />
+            ) : (
+              <StatCardGrid cols={3}>
+                <StatCard label="Balance" value={wallet?.balance ?? 0} icon={Zap} tone="blue" />
+                <StatCard label="Total Granted" value={wallet?.lifetimeGranted ?? 0} icon={TrendingUp} tone="emerald" />
+                <StatCard label="Total Used" value={wallet?.lifetimeConsumed ?? 0} icon={TrendingDown} tone="amber" />
+              </StatCardGrid>
+            )}
+
+            <div>
+              <p className="mb-2 text-sm font-semibold">Credit Packs</p>
               {isLoading ? (
-                <StatCardGridSkeleton cols={3} count={3} />
-              ) : (
-                <StatCardGrid cols={3}>
-                  <StatCard label="Balance" value={wallet?.balance ?? 0} icon={Zap} tone="blue" hint="credits" />
-                  <StatCard label="Total Granted" value={wallet?.lifetimeGranted ?? 0} icon={TrendingUp} tone="emerald" />
-                  <StatCard label="Total Used" value={wallet?.lifetimeConsumed ?? 0} icon={TrendingDown} tone="amber" />
-                </StatCardGrid>
-              )}
-
-              <div>
-                <p className="text-sm font-semibold mb-2">Credit Packs</p>
-                {isLoading ? (
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {Array.from({ length: 3 }, (_, i) => (
-                      <div
-                        key={`pack-skel-${i}`}
-                        className="h-[116px] rounded-lg border border-border bg-card animate-pulse"
-                      />
-                    ))}
-                  </div>
-                ) : packs.length === 0 ? (
-                  <EmptyState
-                    illustrationPreset="report"
-                    title="No credit packs available"
-                    description="Top-up packs could not be loaded. Refresh the page or try again shortly."
-                    className="border border-border bg-card py-8"
-                    compact
-                    action={{ label: "Refresh", onClick: handleRefresh }}
-                  />
-                ) : (
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {packs.map((pack) => (
-                      <div key={pack.id} className="rounded-lg border border-border bg-card p-4">
-                        <div className="flex items-start gap-3">
-                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                            <Package className="h-4 w-4 text-primary" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-semibold">{pack.name}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {pack.credits.toLocaleString()} credits
-                              {pack.bonusCredits > 0 && (
-                                <Badge variant="secondary" className="ml-1.5 text-[10px]">
-                                  +{pack.bonusCredits.toLocaleString()} bonus
-                                </Badge>
-                              )}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
-                          <span className="text-sm font-medium">
-                            ₹{(pack.priceInPaise / 100).toLocaleString("en-IN")}
-                          </span>
-                          {canPurchase ? (
-                            <PackBuyButton
-                              pack={pack}
-                              isPending={purchaseMutation.isPending && selectedPack?.id === pack.id}
-                              onBuy={handleBuyPack}
-                            />
-                          ) : null}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="rounded-lg border border-border bg-card p-4">
-                <div className="mb-3 flex items-center justify-between">
-                  <p className="text-sm font-semibold">Auto Top-Up</p>
-                  <div className="flex items-center gap-2">
-                    <Label htmlFor="auto-topup" className="text-xs text-muted-foreground">
-                      {autoTopUp ? "Enabled" : "Disabled"}
-                    </Label>
-                    <Switch
-                      id="auto-topup"
-                      checked={autoTopUp}
-                      onCheckedChange={handleAutoTopUpToggle}
-                      disabled={configureTopUp.isPending || packs.length === 0}
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  {Array.from({ length: 4 }, (_, i) => (
+                    <div
+                      key={`pack-skel-${i}`}
+                      className="h-[180px] rounded-lg border border-border bg-card animate-pulse"
                     />
-                  </div>
+                  ))}
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Automatically purchase credits when your balance drops below the threshold.
-                  {autoTopUp && packs[0] ? ` Uses ${packs.find((p) => p.id === wallet?.autoTopUpPackId)?.name ?? packs[0].name} when balance is low.` : ""}
-                </p>
-              </div>
-
-              <div className="rounded-lg border border-border bg-card overflow-hidden">
-                <div className="px-4 py-3 flex items-center justify-between border-b border-border">
-                  <p className="text-sm font-semibold">Usage History</p>
-                  <Button variant="ghost" size="sm" onClick={handleRefresh}>
-                    <RefreshCw className="h-3.5 w-3.5" />
-                  </Button>
+              ) : packs.length === 0 ? (
+                <EmptyState
+                  illustrationPreset="report"
+                  title="No credit packs available"
+                  description="Top-up packs could not be loaded. Refresh the page or try again shortly."
+                  className="border border-border bg-card py-8"
+                  compact
+                  action={{ label: "Refresh", onClick: handleRefresh }}
+                />
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  {packs.map((pack) => (
+                    <CreditPackCard
+                      key={pack.id}
+                      pack={pack}
+                      canPurchase={canPurchase}
+                      isPending={isBusy && selectedPack?.id === pack.id}
+                      isBusy={isBusy}
+                      onBuy={handleBuyPack}
+                    />
+                  ))}
                 </div>
-                {txnLoading ? (
-                  <DataTableSkeleton rows={txnLimit} columns={6} />
-                ) : txnError ? (
-                  <ErrorState
-                    title="Failed to load transactions"
-                    description="Something went wrong fetching your usage history."
-                    onRetry={handleTxnRetry}
-                    compact
-                    className="border-0 bg-transparent py-8"
-                  />
-                ) : txns.length === 0 && txnPage === 1 ? (
-                  <EmptyState
-                    illustrationPreset="report"
-                    title="No transactions yet"
-                    description="Credits will appear here once used."
-                    className="border-0 bg-transparent py-8"
-                    compact
-                  />
-                ) : (
-                  <DataTable
-                    data={txns}
-                    columns={TXN_COLUMNS}
-                    getRowKey={getTxnRowKey}
-                    className="border-0 rounded-none"
-                    pagination={{
-                      mode: "server",
-                      page: txnPage,
-                      pageSize: txnLimit,
-                      total: txnTotal,
-                      onPageChange: handleTxnPageChange,
-                      onPageSizeChange: handleTxnPageSizeChange,
-                    }}
-                  />
-                )}
-              </div>
-            </>
-          )}
-        </div>
-      </PageWrapper>
-
-      <Dialog open={dialogOpen} onOpenChange={handleDialogClose}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirm Purchase</DialogTitle>
-            <DialogDescription>
-              {selectedPack && (
-                <>
-                  Add{" "}
-                  <span className="font-semibold text-foreground">
-                    {(selectedPack.credits + selectedPack.bonusCredits).toLocaleString()} credits
-                  </span>{" "}
-                  to your account for{" "}
-                  <span className="font-semibold text-foreground">
-                    ₹{(selectedPack.priceInPaise / 100).toLocaleString("en-IN")}
-                  </span>
-                  .
-                </>
               )}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={handleCancelPurchase}
-              disabled={isPending}
-            >
-              Cancel
-            </Button>
-            <LoadingButton
-              isPending={isPending}
-              loadingText="Processing…"
-              onClick={handleConfirmPurchase}
-            >
-              Confirm Purchase
-            </LoadingButton>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+            </div>
+
+            <div className="rounded-lg border border-border bg-card p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <p className="text-sm font-semibold">Auto Top-Up</p>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="auto-topup" className="text-xs text-muted-foreground">
+                    {autoTopUp ? "Enabled" : "Disabled"}
+                  </Label>
+                  <Switch
+                    id="auto-topup"
+                    checked={autoTopUp}
+                    onCheckedChange={handleAutoTopUpToggle}
+                    disabled={configureTopUp.isPending || packs.length === 0}
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Automatically purchase credits when your balance drops below the threshold.
+                {autoTopUp && packs[0] ? ` Uses ${packs.find((p) => p.id === wallet?.autoTopUpPackId)?.name ?? packs[0].name} when balance is low.` : ""}
+              </p>
+            </div>
+
+            <div className="overflow-hidden rounded-lg border border-border bg-card">
+              <div className="flex items-center justify-between border-b border-border px-4 py-3">
+                <p className="text-sm font-semibold">Usage History</p>
+                <Button variant="ghost" size="sm" onClick={handleRefresh}>
+                  <RefreshCw className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+              {txnLoading ? (
+                <DataTableSkeleton rows={txnLimit} columns={6} />
+              ) : txnError ? (
+                <ErrorState
+                  title="Failed to load transactions"
+                  description="Something went wrong fetching your usage history."
+                  onRetry={handleTxnRetry}
+                  compact
+                  className="border-0 bg-transparent py-8"
+                />
+              ) : txns.length === 0 && txnPage === 1 ? (
+                <EmptyState
+                  illustrationPreset="report"
+                  title="No transactions yet"
+                  description="Credits will appear here once used."
+                  className="border-0 bg-transparent py-8"
+                  compact
+                />
+              ) : (
+                <DataTable
+                  data={txns}
+                  columns={TXN_COLUMNS}
+                  getRowKey={getTxnRowKey}
+                  className="rounded-none border-0"
+                  pagination={{
+                    mode: "server",
+                    page: txnPage,
+                    pageSize: txnLimit,
+                    total: txnTotal,
+                    onPageChange: handleTxnPageChange,
+                    onPageSizeChange: handleTxnPageSizeChange,
+                  }}
+                />
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    </PageWrapper>
   );
 }

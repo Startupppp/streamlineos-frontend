@@ -257,7 +257,6 @@ export function CommandCenterPage() {
       <PageWrapper title="Home" noInternalScroll contentClassName="pb-0 sm:pb-0">
         <PmPageShell>
           <StatCardGridSkeleton cols={3} />
-          <Skeleton className={cn("h-14 w-full max-w-xl rounded-xl", PM_PANEL)} />
           <Skeleton className={cn("h-56 rounded-xl", PM_PANEL)} />
           <Skeleton className={cn("h-48 rounded-xl", PM_PANEL)} />
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

@@ -107,7 +107,7 @@ Ordered money-path first. Check off each page after fixing.
 - [x] `/billing/invoices/new` — New invoice creation
 - [x] `/billing/invoices/[invoiceId]` — Invoice detail: line items table, totals, payments history, record-payment dialog, send/mark-paid/delete actions
 - [x] `/billing/checkout` — Multi-step checkout wizard: plan selector → billing cycle → coupon → review & pay with Razorpay; 20% annual discount; coupon validation
-- [x] `/billing/ai-credits` — AI Credits wallet: balance stats, **credit pack top-up cards** (Buy → confirm → Razorpay/direct purchase), auto top-up toggle (defaults pack+threshold on enable), usage history table with server-paginated transactions (page/limit via `useAiCreditTransactions`; page-size selector 10/20/50; `GET /billing/ai-credits/transactions` caps at 100/page). Packs catalog seeded via migration `0290` + `listPacks` self-heal when empty (2026-07-18)
+- [x] `/billing/ai-credits` — AI Credits wallet: balance stats, **credit pack top-up cards** (Buy → Razorpay checkout directly / direct apply when gateway off; 4-col pack grid; receipt ≤40 chars), auto top-up toggle (defaults pack+threshold on enable), usage history table with server-paginated transactions (page/limit via `useAiCreditTransactions`; page-size selector 10/20/50; `GET /billing/ai-credits/transactions` caps at 100/page). Packs catalog seeded via migration `0290` + `listPacks` self-heal when empty (2026-07-19)
 - [x] `/billing/analytics` — Revenue Analytics (platform admin): MRR/ARR/ARPU/churn KPI cards, MRR trend BarChart, period selector (3m/6m/12m)
 - [x] `/billing/affiliate` — Affiliate Dashboard: register CTA, referral link copy, send invite email, commission history table; empty state when not registered
 - [x] `/billing/enterprise-quotes` — Enterprise Quotes list: status filter, table (ref/subject/status/seats/value/valid-until/deal), New Quote Sheet (seat negotiation + custom pricing + contract terms + Zod validation + live total preview), skeleton + empty + error states
@@ -535,7 +535,7 @@ All reconciled (hook URLs↔routes, chat signatures, PermissionKeys). Build not 
 - [x] `/settings/roles` — Roles list
 - [x] `/settings/roles/[roleId]` — Role editor: per-role permission matrix + member list via `useRole`/`useRoleMembers`, gated `settings:rbac:manage`, back button to `/settings/roles`
 - [x] `/settings/roles/simulate` — Permission Simulator — employee combobox, simulates effective permissions via GET /roles/simulate/:targetUserId, grouped by module with expandable rows, scope badges
-- [x] `/settings/modules` — Org module management: enable/disable feature modules via `useOrgModules`/`useToggleOrgModule`, responsive grid with Switch per module, gated `settings:manage`; Feedbucket removed from catalog 2026-07-13 (lives under PM `/projects/[projectId]/feedbucket`); 2026-07-19 cards restyled to product-switcher language (accent icon tile + name + one-line description) via shared `lib/module-catalog.ts` derived from `sidebar-nav-items` sources
+- [x] `/settings/modules` — Org module management: enable/disable feature modules via `useOrgModules`/`useToggleOrgModule`, responsive grid with Switch per module, gated `settings:manage`; Feedbucket removed from catalog 2026-07-13 (lives under PM `/projects/[projectId]/feedbucket`); 2026-07-19 cards restyled to product-switcher language (accent icon tile + name + one-line description) via shared `lib/module-catalog.ts` derived from `sidebar-nav-items` sources; Blog removed from org-modules catalog 2026-07-19 (public `/blogs` + RBAC kept — not an org toggle)
 - [x] `/settings/permissions` — Permission Matrix — replaced `DashboardGate allowedRoles` with `permission="settings:rbac:manage"`, added `GET /roles/permissions/matrix` backend endpoint, `useRolePermissionsMatrix()` hook, page now renders live role/permission data with loading skeleton, error state, and empty state
 - [x] `/settings/branches` — Branches (E2E fix: empty state fills content height with in-card primary CTA)
 - [x] `/settings/notifications` — Redirects to `/notifications/preferences`
@@ -555,7 +555,7 @@ All reconciled (hook URLs↔routes, chat signatures, PermissionKeys). Build not 
 - [x] `/accounting/settings/automations` — Finance automation rules
 - [x] `/settings/api-tokens` — API tokens
 - [x] `/settings/devices` — Trusted devices; browser/OS parsed via shared `parse-user-agent` (2026-07-13) — API clients show labels like Axios 1.18.1, not raw UA
-- [x] `/settings/login-history` — Login history; browser/OS columns from API-enriched DTOs (2026-07-13)
+- [x] `/settings/login-history` — Login history; pinned DataTable header+pagination via `noInternalScroll` fill chain (2026-07-19); browser/OS from API DTOs
 - [x] `/settings/security` — Security settings
 - [x] `/settings/sessions` — Active sessions; browser/OS from API-enriched DTOs (2026-07-13)
 - [x] `/settings/subscription` — **Redirects to `/billing?tab=plan`** (2026-07-16); plan management consolidated into Billing & Plan

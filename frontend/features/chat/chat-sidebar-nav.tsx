@@ -1,55 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
-import { Mic } from "lucide-react";
-import {
-  LayoutGridIcon,
-  MessageCircleIcon,
-  SettingsIcon,
-} from "@animateicons/react/lucide";
+import { usePathname } from "next/navigation";
+import { LayoutGridIcon, MessageCircleIcon } from "@animateicons/react/lucide";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import {
   SidebarAnimatedNavIcon,
   useAnimatedNavIconHover,
-  type AnimatedNavIconComponent,
 } from "@/components/layout/sidebar/sidebar-animated-nav";
 
 export const CHAT_NAV_ITEMS = [
   { href: "/chat", label: "Discuss", icon: MessageCircleIcon },
   { href: "/chat/channels", label: "Channels", icon: LayoutGridIcon },
-  {
-    href: "/chat/configuration?tab=settings",
-    label: "Settings",
-    icon: SettingsIcon,
-    configTab: "settings" as const,
-  },
-  {
-    href: "/chat/configuration?tab=voice-video",
-    label: "Huddle",
-    icon: Mic,
-    configTab: "voice-video" as const,
-  },
 ] as const;
 
 type ChatNavItem = (typeof CHAT_NAV_ITEMS)[number];
 
-export function isChatNavItemActive(
-  pathname: string,
-  item: ChatNavItem,
-  configTab: string,
-): boolean {
+export function isChatNavItemActive(pathname: string, item: ChatNavItem): boolean {
   if (item.href === "/chat") {
     return pathname === "/chat";
   }
   if (item.href === "/chat/channels") {
     return pathname.startsWith("/chat/channels");
-  }
-  if ("configTab" in item && item.configTab) {
-    if (!pathname.startsWith("/chat/configuration")) return false;
-    const activeConfigTab = configTab === "voice-video" ? "voice-video" : "settings";
-    return item.configTab === activeConfigTab;
   }
   return false;
 }
@@ -65,7 +38,6 @@ function ChatNavLink({
 }) {
   const { iconRef, animatedNavHoverHandlers } = useAnimatedNavIconHover();
   const Icon = item.icon;
-  const isAnimatedIcon = item.icon !== Mic;
 
   const linkClassName = cn(
     "shrink-0 rounded-lg font-medium transition-colors",
@@ -77,14 +49,12 @@ function ChatNavLink({
       : "text-muted-foreground hover:bg-muted hover:text-foreground",
   );
 
-  const iconNode = isAnimatedIcon ? (
+  const iconNode = (
     <SidebarAnimatedNavIcon
-      icon={Icon as AnimatedNavIconComponent}
+      icon={Icon}
       iconRef={iconRef}
       className="size-3.5 shrink-0"
     />
-  ) : (
-    <Icon className="size-3.5 shrink-0" />
   );
 
   if (isCollapsed) {
@@ -95,7 +65,7 @@ function ChatNavLink({
             href={item.href}
             aria-current={isActive ? "page" : undefined}
             aria-label={item.label}
-            {...(isAnimatedIcon ? animatedNavHoverHandlers : {})}
+            {...animatedNavHoverHandlers}
             className={linkClassName}
           >
             {iconNode}
@@ -112,7 +82,7 @@ function ChatNavLink({
     <Link
       href={item.href}
       aria-current={isActive ? "page" : undefined}
-      {...(isAnimatedIcon ? animatedNavHoverHandlers : {})}
+      {...animatedNavHoverHandlers}
       className={linkClassName}
     >
       {iconNode}
@@ -127,8 +97,6 @@ interface ChatSidebarNavProps {
 
 export function ChatSidebarNav({ isCollapsed = false }: ChatSidebarNavProps) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const configTab = searchParams.get("tab") ?? "settings";
 
   return (
     <nav
@@ -142,7 +110,7 @@ export function ChatSidebarNav({ isCollapsed = false }: ChatSidebarNavProps) {
         <ChatNavLink
           key={item.href}
           item={item}
-          isActive={isChatNavItemActive(pathname, item, configTab)}
+          isActive={isChatNavItemActive(pathname, item)}
           isCollapsed={isCollapsed}
         />
       ))}

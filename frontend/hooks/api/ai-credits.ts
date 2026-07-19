@@ -88,7 +88,7 @@ export interface PurchaseAiPackOrder {
   orderId: string;
   amount: number;
   currency: string;
-  keyId: string;
+  keyId: string | null;
   pack: AiCreditPack;
 }
 

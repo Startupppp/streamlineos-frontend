@@ -13,11 +13,16 @@ import {
 import {
   Archive,
   ArrowLeft,
-  Compass,
   MessageSquareText,
   Star,
 } from "lucide-react";
-import { SearchIcon, ChevronDownIcon } from "@animateicons/react/lucide";
+import {
+  ChevronDownIcon,
+  CompassIcon,
+  PlusIcon,
+  SearchIcon,
+  UsersIcon,
+} from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import React from "react";
 import { useRouter } from "next/navigation";
@@ -34,6 +39,8 @@ import { NewGroupDialog } from "./new-group-dialog";
 import { ChatSearchDialog } from "./chat-search-dialog";
 import { ChatSidebarNav } from "./chat-sidebar-nav";
 import { TruncatedText } from "@/components/ui/truncated-text";
+
+const RAIL_ICON_SIZE = 14;
 
 interface ChannelListEntryProps {
   channel: Channel;
@@ -89,7 +96,7 @@ const SidebarSearchButton = React.forwardRef<
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
     <button ref={ref} {...hoverHandlers} className={className} {...props}>
-      <SearchIcon ref={iconRef} size={14} />
+      <SearchIcon ref={iconRef} size={RAIL_ICON_SIZE} />
     </button>
   );
 });
@@ -153,6 +160,8 @@ export function ChannelSidebar({
   }, []);
   const handleOpenBrowse = useCallback(() => router.push("/chat/channels"), [router]);
   const handleOpenChatSearch = useCallback(() => setChatSearchOpen(true), []);
+  const handleOpenNewDM = useCallback(() => setNewDMOpen(true), []);
+  const handleOpenNewGroup = useCallback(() => setNewGroupOpen(true), []);
 
   useEffect(() => {
     if (autoFocusSearch && searchInputRef.current) {
@@ -243,7 +252,7 @@ export function ChannelSidebar({
           <button
             type="button"
             onClick={onClick}
-            className="w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+            className="flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
             aria-label={label}
           >
             {icon}
@@ -289,7 +298,7 @@ export function ChannelSidebar({
                 aria-label="Browse public channels"
                 title="Browse Channels"
               >
-                <Compass className="h-3.5 w-3.5" />
+                <CompassIcon size={RAIL_ICON_SIZE} />
               </button>
               <NewDMDialog open={newDMOpen} onOpenChange={setNewDMOpen} onCreated={onSelectChannel} />
               <NewGroupDialog open={newGroupOpen} onOpenChange={setNewGroupOpen} onCreated={onSelectChannel} />
@@ -313,11 +322,27 @@ export function ChannelSidebar({
           )}
         >
           <div className="flex flex-col items-center gap-0.5">
-            {renderCompactActionButton("Search", <SearchIcon size={14} />, handleOpenChatSearch)}
-            {renderCompactActionButton("Browse Channels", <Compass className="h-3.5 w-3.5" />, handleOpenBrowse)}
+            {renderCompactActionButton(
+              "Search",
+              <SearchIcon size={RAIL_ICON_SIZE} />,
+              handleOpenChatSearch,
+            )}
+            {renderCompactActionButton(
+              "Browse Channels",
+              <CompassIcon size={RAIL_ICON_SIZE} />,
+              handleOpenBrowse,
+            )}
+            {renderCompactActionButton(
+              "New Direct Message",
+              <PlusIcon size={RAIL_ICON_SIZE} />,
+              handleOpenNewDM,
+            )}
+            {renderCompactActionButton(
+              "New Channel",
+              <UsersIcon size={RAIL_ICON_SIZE} />,
+              handleOpenNewGroup,
+            )}
           </div>
-          <NewDMDialog open={newDMOpen} onOpenChange={setNewDMOpen} onCreated={onSelectChannel} />
-          <NewGroupDialog open={newGroupOpen} onOpenChange={setNewGroupOpen} onCreated={onSelectChannel} />
         </div>
 
         <ScrollArea className={cn("flex-1", isCollapsed ? "md:px-1 px-2" : "px-2")}>

@@ -128,6 +128,7 @@ export default function LoginHistoryPage() {
     <PageWrapper
       title="Login History"
       subtitle="A record of all sign-in events for your account."
+      noInternalScroll
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
           {(["all", "success", "failure"] as SuccessFilter[]).map((f) => (
@@ -141,39 +142,41 @@ export default function LoginHistoryPage() {
         </div>
       }
     >
-      {isError ? (
-        <ErrorState
-          title="Couldn't load login history"
-          description="Something went wrong while fetching your login history."
-          onRetry={handleRetry}
-          className="flex-1"
-        />
-      ) : (
-        <DataTable
-          data={data?.data ?? []}
-          columns={COLUMNS}
-          getRowKey={(e) => e.id}
-          isLoading={isLoading}
-          className="flex-1 min-h-0"
-          pagination={{
-            mode: "server",
-            page,
-            pageSize,
-            total: data?.total ?? 0,
-            onPageChange: handlePageChange,
-            onPageSizeChange: handlePageSizeChange,
-          }}
-          emptyState={
-            <EmptyState
-              illustrationPreset="activity"
-              title="No login history found"
-              description="No sign-in events have been recorded for your account."
-              compact
-            />
-          }
-          minWidth="600px"
-        />
-      )}
+      <div className="flex flex-1 min-h-0 flex-col">
+        {isError ? (
+          <ErrorState
+            title="Couldn't load login history"
+            description="Something went wrong while fetching your login history."
+            onRetry={handleRetry}
+            className="flex-1"
+          />
+        ) : (
+          <DataTable
+            data={data?.data ?? []}
+            columns={COLUMNS}
+            getRowKey={(e) => e.id}
+            isLoading={isLoading}
+            className="flex-1 min-h-0"
+            pagination={{
+              mode: "server",
+              page,
+              pageSize,
+              total: data?.total ?? 0,
+              onPageChange: handlePageChange,
+              onPageSizeChange: handlePageSizeChange,
+            }}
+            emptyState={
+              <EmptyState
+                illustrationPreset="activity"
+                title="No login history found"
+                description="No sign-in events have been recorded for your account."
+                compact
+              />
+            }
+            minWidth="600px"
+          />
+        )}
+      </div>
     </PageWrapper>
   );
 }

@@ -294,7 +294,6 @@ export const queryKeys = {
     huddle: (channelId: number) => [...base, "chat", "huddle", channelId] as const,
     savedMessages: () => [...base, "chat", "savedMessages"] as const,
     inviteLink: (channelId: number) => [...base, "chat", "inviteLink", channelId] as const,
-    orgSettings: () => [...base, "chat", "orgSettings"] as const,
   },
 
   aiChat: {

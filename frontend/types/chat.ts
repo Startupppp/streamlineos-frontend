@@ -54,13 +54,6 @@ export interface ChannelMember {
   } | null;
 }
 
-export interface ChatOrgSettings {
-  orgId?: string;
-  defaultNotificationPreference: "ALL" | "MENTIONS" | "NOTHING";
-  maxAttachmentSizeMb: number;
-  maxHuddleParticipants: number;
-}
-
 export interface LastMessage {
   content: string | null;
   senderName: string | null;
