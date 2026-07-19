@@ -36,14 +36,15 @@ import type {
   LeaveBalance,
 } from "@/features/hr/leaves/components/leaves-shared";
 
-const isSunday = (d: Date) => d.getDay() === 0;
+const isWeekend = (d: Date) => d.getDay() === 0 || d.getDay() === 6;
 
-function countNonSundayDays(startStr: string, endStr: string): number {
-  const end = new Date(endStr);
-  const current = new Date(startStr);
+/** Match backend leave-days.ts countWorkdays (Mon–Fri). */
+function countWorkdays(startStr: string, endStr: string): number {
+  const end = new Date(`${endStr}T00:00:00`);
+  const current = new Date(`${startStr}T00:00:00`);
   let count = 0;
   while (current <= end) {
-    if (current.getDay() !== 0) count++;
+    if (!isWeekend(current)) count++;
     current.setDate(current.getDate() + 1);
   }
   return count;
@@ -148,7 +149,7 @@ export function LeaveRequestSheet({
     }
     const days = watchedHalfDay
       ? 0.5
-      : countNonSundayDays(watchedStartDate, watchedEndDate);
+      : countWorkdays(watchedStartDate, watchedEndDate);
     const selectedType = leaveTypes.find(
       (t) => t.id.toString() === watchedLeaveTypeId,
     );
@@ -309,7 +310,7 @@ export function LeaveRequestSheet({
                         onChange={field.onChange}
                         fromDate={minDate ? new Date(minDate) : undefined}
                         placeholder="Start date"
-                        disabledDays={isSunday}
+                        disabledDays={isWeekend}
                       />
                     </FormControl>
                     <FormMessage />
@@ -336,7 +337,7 @@ export function LeaveRequestSheet({
                               : undefined
                         }
                         placeholder="End date"
-                        disabledDays={isSunday}
+                        disabledDays={isWeekend}
                       />
                     </FormControl>
                     <FormMessage />

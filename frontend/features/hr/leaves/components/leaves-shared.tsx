@@ -530,7 +530,8 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
         open={rejectDialogOpen}
         onOpenChange={setRejectDialogOpen}
         title="Rejection reason"
-        reasonPlaceholder="Reason (optional)"
+        reasonPlaceholder="Reason for rejection"
+        reasonRequired
         confirmLabel="Reject"
         onConfirm={handleConfirmReject}
       />

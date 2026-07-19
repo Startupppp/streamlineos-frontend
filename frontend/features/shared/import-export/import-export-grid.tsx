@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { staggerContainer } from "@/lib/motion-variants";
 import { EntityCard, type ImportEntity, type UploadState } from "./entity-card";
 
@@ -50,24 +51,29 @@ export function ImportExportGrid({ entities }: ImportExportGridProps) {
       try {
         setUploadState(entityId, { progress: 40 });
         const result = await apiClient.upload<{
-          imported: number;
-          skipped: number;
-          errors: string[];
+          imported?: number;
+          skipped?: number;
+          created?: number;
+          failed?: number;
+          errors?: string[];
         }>(endpoint, formData);
+        const imported = result.imported ?? result.created ?? 0;
+        const skipped = result.skipped ?? result.failed ?? 0;
         setUploadState(entityId, {
           status: "success",
           progress: 100,
-          message: `Imported ${result.imported}${result.skipped > 0 ? ` · ${result.skipped} skipped` : ""}`,
+          message: `Imported ${imported}${skipped > 0 ? ` · ${skipped} skipped` : ""}`,
         });
-        toast.success(`${result.imported} records imported`);
+        toast.success(`${imported} records imported`);
         setTimeout(() => setUploadState(entityId, DEFAULT_UPLOAD_STATE), 4000);
-      } catch {
+      } catch (err) {
+        const message = getErrorMessage(err);
         setUploadState(entityId, {
           status: "error",
           progress: 0,
-          message: "Import failed. Check the file format.",
+          message: message || "Import failed. Check the file format.",
         });
-        toast.error("Import failed");
+        toast.error(message || "Import failed");
         setTimeout(() => setUploadState(entityId, DEFAULT_UPLOAD_STATE), 4000);
       }
     },
@@ -86,8 +92,8 @@ export function ImportExportGrid({ entities }: ImportExportGridProps) {
       a.click();
       URL.revokeObjectURL(url);
       toast.success(`${entity.label} export downloaded`);
-    } catch {
-      toast.error(`Failed to export ${entity.label}`);
+    } catch (err) {
+      toast.error(getErrorMessage(err) || `Failed to export ${entity.label}`);
     } finally {
       setExportingIds((prev) => {
         const next = new Set(prev);
