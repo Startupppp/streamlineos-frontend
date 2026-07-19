@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect, useRef, useLayoutEffect, useCallback } from "react";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Check, Loader2, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { clearBackendTokenCache } from "@/lib/api-client";
+import { completeOnboardingGate } from "@/lib/onboarding-gate";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { clearAll } from "@/features/org-setup/lib/draft";
 import { useCompleteOrgSetupMutation, type OrgSetupPayload } from "@/lib/api/hooks/org";
@@ -36,6 +37,7 @@ function groupInviteesByRole(invitees: Invitee[]): { role: string; emails: strin
 }
 
 export function StepGeneration({ data }: StepGenerationProps) {
+  const { update } = useSession();
   const [completedSteps, setCompletedSteps] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [showWelcome, setShowWelcome] = useState(false);
@@ -112,7 +114,6 @@ export function StepGeneration({ data }: StepGenerationProps) {
     }
     setCompletedSteps(total);
     clearBackendTokenCache();
-    document.cookie = "org-setup-done=1; path=/; max-age=1800; SameSite=Lax";
     sessionStorage.setItem(SETUP_DONE_KEY, "1");
 
     if (autoLoginToken) {
@@ -121,6 +122,7 @@ export function StepGeneration({ data }: StepGenerationProps) {
         redirect: false,
       }).catch(() => null);
     }
+    await completeOnboardingGate("org-setup-done", update);
 
     // Brief beat so the final checklist ticks finish, then celebrate.
     await new Promise<void>((resolve) => setTimeout(resolve, 700));

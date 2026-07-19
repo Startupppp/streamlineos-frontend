@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useSession, signIn } from "next-auth/react";
 import { Loader2 } from "lucide-react";
 import { clearBackendTokenCache } from "@/lib/api-client";
+import { completeOnboardingGate } from "@/lib/onboarding-gate";
 import {
   useSkipOrgSetupMutation,
   usePatchOrgSetupSessionMutation,
@@ -34,7 +35,7 @@ import { StepSetup } from "@/features/org-setup/components/step-setup";
 import { StepInviteLaunch } from "@/features/org-setup/components/step-invite-launch";
 
 export default function OrgSetupPage() {
-  const { data: session } = useSession();
+  const { data: session, update } = useSession();
   const { mutateAsync: skipOrgSetup } = useSkipOrgSetupMutation();
   const { mutate: patchSession, isPending: isSaving } = usePatchOrgSetupSessionMutation();
   const { data: serverSession } = useOrgSetupSessionQuery();
@@ -121,19 +122,19 @@ export default function OrgSetupPage() {
     try {
       const res = await skipOrgSetup({});
       clearBackendTokenCache();
-      document.cookie = "org-setup-done=1; path=/; max-age=1800; SameSite=Lax";
       if (res?.autoLoginToken) {
         await signIn("credentials", {
           magicToken: res.autoLoginToken,
           redirect: false,
         }).catch(() => null);
       }
+      await completeOnboardingGate("org-setup-done", update);
       clearAll();
       window.location.replace("/dashboard");
     } catch {
       setIsSkipping(false);
     }
-  }, [skipOrgSetup]);
+  }, [skipOrgSetup, update]);
 
   useEffect(() => {
     const savedStep = loadStep();

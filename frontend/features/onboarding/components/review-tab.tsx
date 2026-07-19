@@ -14,6 +14,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { clearBackendTokenCache } from "@/lib/api-client";
+import { completeOnboardingGate } from "@/lib/onboarding-gate";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
@@ -66,11 +67,7 @@ export function ReviewTab({
       onSuccess: async () => {
         toast.success("Onboarding submitted! Redirecting…");
         clearBackendTokenCache();
-        document.cookie = "onboarding-done=1; path=/; max-age=1800; SameSite=Lax";
-        await Promise.race([
-          update({ userOnboardingCompletedAt: new Date().toISOString() }).catch(() => null),
-          new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
-        ]);
+        await completeOnboardingGate("onboarding-done", update);
         window.location.replace("/dashboard");
       },
       onError: (err) => {
