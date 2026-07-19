@@ -111,7 +111,6 @@ export function useExportResponses(surveyId: number) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ format: "csv", ...params }),
         },
-        true,
         url,
       );
       if (!res.ok) throw new Error(`Export failed: ${res.status} ${res.statusText}`);

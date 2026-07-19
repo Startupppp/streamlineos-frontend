@@ -159,7 +159,6 @@ export function useAskAI() {
             }),
             signal: controller.signal,
           },
-          true,
           "/chat",
         );
 

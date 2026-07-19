@@ -1,209 +1,9 @@
 import { getErrorMessage } from "./get-error-message";
 
-const SAME_ORIGIN = "/api";
 if (!process.env.NEXT_PUBLIC_API_URL) {
   throw new Error("NEXT_PUBLIC_API_URL is not set");
 }
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL;
-
-const MIGRATED_PREFIXES = [
-  "/agent-tokens",
-  "/contacts",
-  "/targets",
-  "/csat",
-  "/surveys",
-  "/inventory",
-  "/accounting",
-  "/finance",
-  "/ai",
-  "/audit-log",
-  "/careers",
-  "/billing",
-  "/blog",
-  "/branches",
-  "/calendar",
-  "/chat",
-  "/chat/channels",
-  "/chat/presence",
-  "/chat/search",
-  "/chat/status",
-  "/chat/unread",
-  "/chat/users",
-  "/clients",
-  "/crm",
-  "/customer-executive",
-  "/dashboard",
-  "/deals",
-  "/goals",
-  "/hr/analytics",
-  "/hr/asset-returns",
-  "/hr/attendance",
-  "/hr/background-verification",
-  "/hr/celebrations",
-  "/hr/certifications",
-  "/hr/dashboard",
-  "/hr/departments",
-  "/hr/directory",
-  "/hr/document-expiry",
-  "/hr/document-types",
-  "/hr/assets",
-  "/hr/access-requests",
-  "/hr/compliance/calendar",
-  "/hr/compliance",
-  "/hr/signatures",
-  "/hr/documents/letters",
-  "/hr/documents",
-  "/hr/reimbursements",
-  "/hr/email-templates",
-  "/hr/employees",
-  "/hr/exit",
-  "/hr/engagement",
-  "/hr/expenses",
-  "/hr/feedback",
-  "/hr/fnf",
-  "/hr/calendar",
-  "/hr/handbook",
-  "/hr/helpdesk",
-  "/hr/headcount",
-  "/hr/holidays",
-  "/hr/integrations/accounting-export",
-  "/hr/integrations/google-calendar",
-  "/hr/integrations/send-email",
-  "/hr/interview-questions",
-  "/hr/learning-paths",
-  "/hr/leave-calendar",
-  "/hr/leave-policy",
-  "/hr/leaves",
-  "/hr/loans",
-  "/hr/my-goals",
-  "/hr/notification-preferences",
-  "/hr/onboarding-docs",
-  "/hr/audit-logs",
-  "/hr/effective-changes",
-  "/hr/employments",
-  "/hr/org",
-  "/hr/org-chart",
-  "/hr/people",
-  "/hr/payroll-inputs",
-  "/hr/payroll-reports",
-  "/hr/payroll",
-  "/hr/payrolls",
-  "/hr/payslips",
-  "/hr/performance",
-  "/hr/recruitment/analytics",
-  "/hr/recruitment/automations",
-  "/hr/recruitment/bgv-compliance",
-  "/hr/recruitment/booking-links",
-  "/hr/recruitment/candidates",
-  "/hr/recruitment/diversity-report",
-  "/hr/recruitment/email-sequences",
-  "/hr/recruitment/external-referrals",
-  "/hr/recruitment/external-referrers",
-  "/hr/recruitment/headcount",
-  "/hr/recruitment/hiring-flows",
-  "/hr/recruitment/internal-jobs",
-  "/hr/recruitment/interviewer-performance",
-  "/hr/recruitment/interviewers",
-  "/hr/recruitment/interviews",
-  "/hr/recruitment/jobs",
-  "/hr/recruitment/messages",
-  "/hr/recruitment/offer-letter",
-  "/hr/recruitment/offer-templates",
-  "/hr/recruitment/offers",
-  "/hr/recruitment/pipeline",
-  "/hr/recruitment/portals",
-  "/hr/recruitment/recruiters",
-  "/hr/recruitment/referrals",
-  "/hr/recruitment/reports",
-  "/hr/recruitment/requisitions",
-  "/hr/recruitment/scorecard-analytics",
-  "/hr/recruitment/scorecard-templates",
-  "/hr/recruitment/stats",
-  "/hr/recruitment/talent-pools",
-  "/hr/recruitment/vendors",
-  "/hr/rich-documents",
-  "/hr/salary-structures",
-  "/hr/templates",
-  "/hr/sessions",
-  "/hr/skills",
-  "/hr/tax-calculator",
-  "/hr/teams",
-  "/hr/travel-visits",
-  "/hr/settings-hub",
-  "/hr/wfh",
-  "/hr/work-logs",
-  "/hr/shifts",
-  "/hr/rosters",
-  "/hr/overtime",
-  "/hr/geofencing",
-  "/hr/benefits",
-  "/hr/biometric",
-  "/hr/courses",
-  "/hr/training",
-  "/hr/policies",
-  "/hr/import",
-  "/hr/workflows",
-  "/hr/automations",
-  "/hr/forms",
-  "/hr/custom-fields",
-  "/hr/webhooks",
-  "/hr/cases",
-  "/hr/safety",
-  "/hr/global",
-  "/hr/analytics-plus",
-  "/hr/career-development",
-  "/hr/kpis",
-  "/hr/leave-policies",
-  "/hr/mentorships",
-  "/hr/probation",
-  "/hr/succession",
-  "/hr/termination",
-  "/hr/bonuses",
-  "/hr/incentives",
-  "/integrations",
-  "/invoices",
-  "/kb",
-  "/leads",
-  "/me",
-  "/notifications",
-  "/notification-templates",
-  "/notification-preferences",
-  "/notification-analytics",
-  "/notification-queue",
-  "/broadcasts",
-  "/onboarding",
-  "/org",
-  "/organization",
-  "/projects",
-  "/push",
-  "/quotes",
-  "/rbac",
-  "/reports",
-  "/roles",
-  "/sales",
-  "/search",
-  "/settings",
-  "/storage",
-  "/tasks",
-  "/webhooks",
-  "/workflows",
-  "/workspace-onboarding",
-  "/feature-flags",
-  "/org-hierarchy",
-  "/api-tokens",
-  "/support",
-  "/sign",
-  "/public",
-  "/access",
-  "/auth",
-  "/users",
-  "/payroll",
-  "/timesheets",
-  "/feedbucket",
-  "/hr/enterprise/comp",
-  "/hr/governance",
-  "/hr/enterprise/ops",
-] as const;
 
 const PUBLIC_AUTH_PATHS = new Set([
   "/auth/magic-link",
@@ -212,12 +12,6 @@ const PUBLIC_AUTH_PATHS = new Set([
   "/auth/email-otp",
   "/auth/email-otp/verify",
 ]);
-
-function isMigrated(path: string): boolean {
-  return MIGRATED_PREFIXES.some(
-    (p) => path === p || path.startsWith(`${p}/`) || path.startsWith(`${p}?`),
-  );
-}
 
 function isPublicPath(path: string): boolean {
   const clean = path.split("?")[0];
@@ -238,7 +32,7 @@ async function getBackendToken(): Promise<string | null> {
   if (fetchingTokenPromise) return fetchingTokenPromise;
   fetchingTokenPromise = (async () => {
     try {
-      const res = await fetch(`${SAME_ORIGIN}/auth/session`, { credentials: "include" });
+      const res = await fetch("/api/auth/session", { credentials: "include" });
       if (!res.ok) return null;
       const data = (await res.json()) as { backendJwt?: string };
       if (!data.backendJwt) return null;
@@ -261,25 +55,24 @@ function requestHost(url: string): string {
   }
 }
 
-export async function authedFetch(url: string, init: RequestInit, useBackend: boolean, path: string): Promise<Response> {
+export async function authedFetch(url: string, init: RequestInit, path: string): Promise<Response> {
   const headers = new Headers(init.headers);
   const isPublic = isPublicPath(path);
 
-  if (useBackend && !isPublic) {
+  if (!isPublic) {
     const token = await getBackendToken();
     if (token) headers.set("Authorization", `Bearer ${token}`);
   }
 
-  const credentials: RequestCredentials = useBackend ? "omit" : "include";
   try {
-    let res = await fetch(url, { ...init, headers, credentials });
+    let res = await fetch(url, { ...init, headers, credentials: "omit" });
 
-    if (useBackend && !isPublic && res.status === 401) {
+    if (!isPublic && res.status === 401) {
       cachedToken = null;
       const token = await getBackendToken();
       if (token) {
         headers.set("Authorization", `Bearer ${token}`);
-        res = await fetch(url, { ...init, headers, credentials });
+        res = await fetch(url, { ...init, headers, credentials: "omit" });
       }
       if (res.status === 401 && typeof window !== "undefined") {
         void import("next-auth/react").then(({ signOut }) => {
@@ -303,8 +96,7 @@ export async function authedFetch(url: string, init: RequestInit, useBackend: bo
 }
 
 export function buildUrl(path: string, params?: Record<string, unknown>): string {
-  const base = isMigrated(path) ? BACKEND_API_URL : SAME_ORIGIN;
-  const url = `${base}${path}`;
+  const url = `${BACKEND_API_URL}${path}`;
   if (!params || Object.keys(params).length === 0) return url;
   const search = new URLSearchParams(
     Object.entries(params)
@@ -365,7 +157,6 @@ async function get<T>(url: string, params?: Record<string, unknown>): Promise<T>
   const res = await authedFetch(
     buildUrl(url, params),
     { method: "GET", headers: { "Content-Type": "application/json" } },
-    isMigrated(url),
     url,
   );
   return parseResponse<T>(res);
@@ -379,7 +170,6 @@ async function post<T>(url: string, data?: unknown, config?: { headers?: Record<
       headers: { "Content-Type": "application/json", ...(config?.headers ?? {}) },
       body: data !== undefined ? JSON.stringify(data) : undefined,
     },
-    isMigrated(url),
     url,
   );
   return parseResponse<T>(res);
@@ -393,7 +183,6 @@ async function put<T>(url: string, data?: unknown): Promise<T> {
       headers: { "Content-Type": "application/json" },
       body: data !== undefined ? JSON.stringify(data) : undefined,
     },
-    isMigrated(url),
     url,
   );
   return parseResponse<T>(res);
@@ -407,7 +196,6 @@ async function patch<T>(url: string, data?: unknown): Promise<T> {
       headers: { "Content-Type": "application/json" },
       body: data !== undefined ? JSON.stringify(data) : undefined,
     },
-    isMigrated(url),
     url,
   );
   return parseResponse<T>(res);
@@ -421,19 +209,18 @@ async function del<T>(url: string, data?: unknown): Promise<T> {
       headers: { "Content-Type": "application/json" },
       body: data !== undefined ? JSON.stringify(data) : undefined,
     },
-    isMigrated(url),
     url,
   );
   return parseResponse<T>(res);
 }
 
 async function upload<T>(url: string, formData: FormData): Promise<T> {
-  const res = await authedFetch(buildUrl(url), { method: "POST", body: formData }, isMigrated(url), url);
+  const res = await authedFetch(buildUrl(url), { method: "POST", body: formData }, url);
   return parseResponse<T>(res);
 }
 
 async function download(url: string, params?: Record<string, unknown>): Promise<Blob> {
-  const res = await authedFetch(buildUrl(url, params), { method: "GET" }, isMigrated(url), url);
+  const res = await authedFetch(buildUrl(url, params), { method: "GET" }, url);
   if (!res.ok) {
     let message = `${res.status} ${res.statusText}`;
     try {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { useHydrated } from "@/hooks/common/use-hydrated";
 import dynamic from "next/dynamic";
 import { EditEmployeeForm, type EmployeeData } from "./edit-employee-form";
@@ -18,6 +19,10 @@ import {
 import { EmployeeProjectsList } from "@/components/hr/employee-projects-list";
 import { EmployeeTicketsList } from "@/components/hr/employee-tickets-list";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { apiClient } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -343,6 +348,28 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
   const attritionRiskMutation = useAIAttritionRisk();
   const generateReviewMutation = useAIGenerateReview();
 
+  const exportPdfMutation = useMutation({
+    mutationKey: ["hr", "employees", employee.id, "profile-pdf"],
+    mutationFn: async () => {
+      const blob = await apiClient.download(`/hr/employees/${employee.id}/profile-pdf`);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `employee-profile-${employeeName.replace(/\s+/g, "-").toLowerCase()}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    },
+    onError: (err) => {
+      toast.error(getErrorMessage(err));
+    },
+  });
+
+  const handleExportPdf = useCallback(() => {
+    exportPdfMutation.mutate();
+  }, [exportPdfMutation]);
+
   const aiActions = useMemo<AiAction[]>(() => {
     if (!canManageEmployees) return [];
     return [
@@ -409,20 +436,17 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
               Back
             </Button>
             {showManageActions && (
-              <Button
+              <LoadingButton
                 variant="outline"
                 size="sm"
                 className="gap-1.5"
-                asChild
+                isPending={exportPdfMutation.isPending}
+                loadingText="Exporting…"
+                onClick={handleExportPdf}
               >
-                <a
-                  href={`/api/hr/employees/${employee.id}/profile-pdf`}
-                  download
-                >
-                  <Download className="h-3.5 w-3.5" />
-                  Export PDF
-                </a>
-              </Button>
+                <Download className="h-3.5 w-3.5" />
+                Export PDF
+              </LoadingButton>
             )}
             {canTerminate && (
               <Button

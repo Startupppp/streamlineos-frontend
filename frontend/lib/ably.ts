@@ -1,15 +1,24 @@
-
-
 import Ably from "ably";
+import { apiClient } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
+
+type AblyAuthCallback = NonNullable<Ably.ClientOptions["authCallback"]>;
+
+function tokenAuthCallback(path: string): AblyAuthCallback {
+  return (_params, callback) => {
+    apiClient
+      .get<Ably.TokenRequest>(path)
+      .then((tokenRequest) => callback(null, tokenRequest))
+      .catch((error: unknown) => callback(getErrorMessage(error), null));
+  };
+}
 
 let client: Ably.Realtime | null = null;
 
 export function getAblyClient(): Ably.Realtime {
   if (!client) {
     client = new Ably.Realtime({
-      authUrl: "/api/chat/ably-token",
-      authMethod: "GET",
-
+      authCallback: tokenAuthCallback("/chat/ably-token"),
       autoConnect: false,
     });
   }
@@ -21,8 +30,7 @@ let supportClient: Ably.Realtime | null = null;
 export function getSupportAblyClient(): Ably.Realtime {
   if (!supportClient) {
     supportClient = new Ably.Realtime({
-      authUrl: "/api/support/ably-token",
-      authMethod: "GET",
+      authCallback: tokenAuthCallback("/support/ably-token"),
       autoConnect: false,
     });
   }
