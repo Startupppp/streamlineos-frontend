@@ -91,7 +91,7 @@ export function CreateBlueprintDialog({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>Name <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <Input placeholder="Blueprint name" className="text-sm" {...field} />
                   </FormControl>
@@ -117,7 +117,7 @@ export function CreateBlueprintDialog({
               name="pipelineId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Pipeline</FormLabel>
+                  <FormLabel>Pipeline <span className="text-destructive">*</span></FormLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
                     <FormControl>
                       <SelectTrigger className="text-sm">

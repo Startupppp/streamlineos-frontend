@@ -95,7 +95,7 @@ export default function DocumentReviewPage() {
             <SelectTrigger className={cn("w-[140px]", FILTER_SELECT_TRIGGER)}>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="w-[var(--radix-select-trigger-width)]">
+            <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
               <SelectItem value="ALL">All Status</SelectItem>
               <SelectItem value="PENDING">Pending</SelectItem>
               <SelectItem value="IN_PROGRESS">In Progress</SelectItem>

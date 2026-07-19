@@ -347,7 +347,7 @@ function EntityRulesTab({ entityType, onNewRule }: EntityRulesTabProps) {
         isPending={updateRule.isPending || createRule.isPending}
       />
 
-      <div className="space-y-6">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         {isLoading ? (
           <DataTableSkeleton rows={12} columns={6} />
         ) : isError ? (
@@ -359,15 +359,14 @@ function EntityRulesTab({ entityType, onNewRule }: EntityRulesTabProps) {
             className="min-h-[20dvh] border-0 bg-transparent"
           />
         ) : (
-          <Card className="bg-card rounded-lg border border-border shadow-sm">
-            <DataTable
-              data={rules ?? []}
-              columns={columns}
-              getRowKey={getRuleKey}
-              rowClassName={getRuleRowClassName}
-              emptyState={emptyState}
-            />
-          </Card>
+          <DataTable
+            data={rules ?? []}
+            columns={columns}
+            getRowKey={getRuleKey}
+            rowClassName={getRuleRowClassName}
+            emptyState={emptyState}
+            className="flex-1 min-h-0"
+          />
         )}
         <TestPanel entityType={entityType} />
       </div>

@@ -377,7 +377,7 @@ function EmailTemplatesContent() {
           <label className="text-sm font-medium">Category</label>
           <Select value={category} onValueChange={setCategory}>
             <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent className="w-[var(--radix-select-trigger-width)]">
+            <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
               {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
             </SelectContent>
           </Select>

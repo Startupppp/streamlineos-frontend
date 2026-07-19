@@ -13,10 +13,17 @@ import {
   SheetClose,
   SheetBody,
 } from "@/components/ui/sheet";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectTrigger,
@@ -162,19 +169,6 @@ export function TestCaseSheet({
 
   const isPending = create.isPending || update.isPending;
 
-  const PRIORITY_VALUES = ["low", "medium", "high"] as const;
-  const AUTOMATION_VALUES = ["manual", "automated", "planned"] as const;
-
-  function handlePriorityChange(v: string) {
-    const found = PRIORITY_VALUES.find((p) => p === v);
-    if (found) form.setValue("priority", found);
-  }
-
-  function handleAutomationStatusChange(v: string) {
-    const found = AUTOMATION_VALUES.find((a) => a === v);
-    if (found) form.setValue("automationStatus", found);
-  }
-
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="p-0 flex flex-col w-full sm:max-w-lg">
@@ -182,185 +176,229 @@ export function TestCaseSheet({
           <SheetTitle>{editCase ? "Edit Test Case" : "New Test Case"}</SheetTitle>
         </SheetHeader>
 
-        <SheetBody>
+        <Form {...form}>
           <form
-            id="tc-form"
             onSubmit={form.handleSubmit(handleSubmit)}
-            className="px-5 py-4 space-y-4"
+            className="flex flex-col flex-1 min-h-0"
           >
-            <div className="space-y-1.5">
-              <Label className="text-[11px]">Title *</Label>
-              <Input
-                {...form.register("title")}
-                className="text-[11px]"
-                placeholder="Test case title"
-              />
-              {form.formState.errors.title && (
-                <p className="text-[10px] text-destructive">
-                  {form.formState.errors.title.message}
-                </p>
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-[11px]">Suite</Label>
-                <Select
-                  value={form.watch("suiteId")}
-                  onValueChange={(v) => form.setValue("suiteId", v)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">No suite</SelectItem>
-                    {suites.map((s) => (
-                      <SelectItem key={s.id} value={String(s.id)}>
-                        {s.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[11px]">Priority</Label>
-                <Select
-                  value={form.watch("priority")}
-                  onValueChange={handlePriorityChange}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-[11px]">Automation</Label>
-                <Select
-                  value={form.watch("automationStatus")}
-                  onValueChange={handleAutomationStatusChange}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="manual">Manual</SelectItem>
-                    <SelectItem value="automated">Automated</SelectItem>
-                    <SelectItem value="planned">Planned</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[11px]">Component</Label>
-                <Input
-                  {...form.register("component")}
-                  className="text-[11px]"
-                  placeholder="e.g. Auth"
+            <SheetBody>
+              <div className="px-5 py-4 space-y-4">
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[11px]">Title <span className="text-destructive">*</span></FormLabel>
+                      <FormControl>
+                        <Input {...field} className="text-[11px]" placeholder="Test case title" />
+                      </FormControl>
+                      <FormMessage className="text-[10px]" />
+                    </FormItem>
+                  )}
                 />
-              </div>
-            </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-[11px]">Preconditions</Label>
-              <Textarea
-                {...form.register("preconditions")}
-                className="text-[11px] min-h-[60px] resize-none"
-                placeholder="Steps to set up before testing..."
-              />
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-[11px]">Steps</Label>
-                <AnimatedIconButton
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 text-[10px]"
-                  onClick={addStep}
-                  icon={PlusIcon}
-                  iconSize={12}
-                  iconClassName="mr-1"
-                >
-                  Add step
-                </AnimatedIconButton>
-              </div>
-              {fields.length === 0 && (
-                <p className="text-[10px] text-muted-foreground">No steps yet.</p>
-              )}
-              {fields.map((field, idx) => (
-                <div key={field.id} className="grid grid-cols-[1fr_1fr_auto] gap-1.5 items-start">
-                  <Input
-                    {...form.register(`steps.${idx}.action`)}
-                    className="text-[10px]"
-                    placeholder={`Step ${idx + 1} action`}
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField
+                    control={form.control}
+                    name="suiteId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[11px]">Suite</FormLabel>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <FormControl>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="none">No suite</SelectItem>
+                            {suites.map((s) => (
+                              <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage className="text-[10px]" />
+                      </FormItem>
+                    )}
                   />
-                  <Input
-                    {...form.register(`steps.${idx}.expected`)}
-                    className="text-[10px]"
-                    placeholder="Expected result"
-                  />
-                  <AnimatedIconButton
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="w-7 text-muted-foreground hover:text-destructive"
-                    onClick={() => remove(idx)}
-                    icon={Trash2Icon}
-                    iconSize={12}
+                  <FormField
+                    control={form.control}
+                    name="priority"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[11px]">Priority</FormLabel>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <FormControl>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="low">Low</SelectItem>
+                            <SelectItem value="medium">Medium</SelectItem>
+                            <SelectItem value="high">High</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage className="text-[10px]" />
+                      </FormItem>
+                    )}
                   />
                 </div>
-              ))}
-            </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-[11px]">Expected Result</Label>
-              <Textarea
-                {...form.register("expectedResult")}
-                className="text-[11px] min-h-[60px] resize-none"
-                placeholder="Overall expected outcome..."
-              />
-            </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField
+                    control={form.control}
+                    name="automationStatus"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[11px]">Automation</FormLabel>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <FormControl>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="manual">Manual</SelectItem>
+                            <SelectItem value="automated">Automated</SelectItem>
+                            <SelectItem value="planned">Planned</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage className="text-[10px]" />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="component"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[11px]">Component</FormLabel>
+                        <FormControl>
+                          <Input {...field} className="text-[11px]" placeholder="e.g. Auth" />
+                        </FormControl>
+                        <FormMessage className="text-[10px]" />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-[11px]">Linked Ticket</Label>
-              <TicketCombobox
-                projectId={projectId}
-                projectKey={projectKey}
-                value={form.watch("linkedTicketId")}
-                onChange={(v) => form.setValue("linkedTicketId", v)}
-                placeholder="Link a ticket…"
-                allowClear
-                className="text-[11px]"
-              />
-            </div>
+                <FormField
+                  control={form.control}
+                  name="preconditions"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[11px]">Preconditions</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          {...field}
+                          className="text-[11px] min-h-[60px] resize-none"
+                          placeholder="Steps to set up before testing..."
+                        />
+                      </FormControl>
+                      <FormMessage className="text-[10px]" />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <FormLabel className="text-[11px]">Steps</FormLabel>
+                    <AnimatedIconButton
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 text-[10px]"
+                      onClick={addStep}
+                      icon={PlusIcon}
+                      iconSize={12}
+                      iconClassName="mr-1"
+                    >
+                      Add step
+                    </AnimatedIconButton>
+                  </div>
+                  {fields.length === 0 && (
+                    <p className="text-[10px] text-muted-foreground">No steps yet.</p>
+                  )}
+                  {fields.map((fieldItem, idx) => (
+                    <div key={fieldItem.id} className="grid grid-cols-[1fr_1fr_auto] gap-1.5 items-start">
+                      <Input
+                        {...form.register(`steps.${idx}.action`)}
+                        className="text-[10px]"
+                        placeholder={`Step ${idx + 1} action`}
+                      />
+                      <Input
+                        {...form.register(`steps.${idx}.expected`)}
+                        className="text-[10px]"
+                        placeholder="Expected result"
+                      />
+                      <AnimatedIconButton
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="w-7 text-muted-foreground hover:text-destructive"
+                        onClick={() => remove(idx)}
+                        icon={Trash2Icon}
+                        iconSize={12}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="expectedResult"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[11px]">Expected Result</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          {...field}
+                          className="text-[11px] min-h-[60px] resize-none"
+                          placeholder="Overall expected outcome..."
+                        />
+                      </FormControl>
+                      <FormMessage className="text-[10px]" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="linkedTicketId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[11px]">Linked Ticket</FormLabel>
+                      <FormControl>
+                        <TicketCombobox
+                          projectId={projectId}
+                          projectKey={projectKey}
+                          value={field.value}
+                          onChange={field.onChange}
+                          placeholder="Link a ticket…"
+                          allowClear
+                          className="text-[11px]"
+                        />
+                      </FormControl>
+                      <FormMessage className="text-[10px]" />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </SheetBody>
+
+            <SheetFooter className="px-5 py-3 border-t shrink-0">
+              <div className="grid w-full grid-cols-2 gap-2">
+                <SheetClose asChild>
+                  <Button variant="outline" size="sm" className="text-[11px]">Cancel</Button>
+                </SheetClose>
+                <LoadingButton
+                  type="submit"
+                  size="sm"
+                  className="text-[11px]"
+                  isPending={isPending}
+                  loadingText="Saving…"
+                >
+                  {editCase ? "Save Changes" : "Create"}
+                </LoadingButton>
+              </div>
+            </SheetFooter>
           </form>
-        </SheetBody>
-
-        <SheetFooter className="px-5 py-3 border-t shrink-0 flex gap-2">
-          <SheetClose asChild>
-            <Button variant="outline" size="sm" className="text-[11px]">
-              Cancel
-            </Button>
-          </SheetClose>
-          <LoadingButton
-            type="submit"
-            form="tc-form"
-            size="sm"
-            className="text-[11px]"
-            isPending={isPending}
-            loadingText="Saving…"
-          >
-            {editCase ? "Save Changes" : "Create"}
-          </LoadingButton>
-        </SheetFooter>
+        </Form>
       </SheetContent>
     </Sheet>
   );

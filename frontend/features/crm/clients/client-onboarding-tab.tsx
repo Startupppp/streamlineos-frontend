@@ -2,6 +2,7 @@
 
 import { useCallback } from "react";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { CheckSquare, Square } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -19,7 +20,7 @@ export function ClientOnboardingTab({ clientId }: { clientId: number }) {
       const completed = !item.completedAt;
       toggleMutation.mutate(
         { id: item.id, completed, clientId },
-        { onError: () => toast.error("Failed to update item") },
+        { onError: (err) => toast.error(getErrorMessage(err)) },
       );
     },
     [toggleMutation, clientId],

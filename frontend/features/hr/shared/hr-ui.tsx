@@ -52,7 +52,7 @@ export function HrHero({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-2xl border border-blue-200/60 dark:border-blue-500/20",
+        "relative shrink-0 overflow-hidden rounded-2xl border border-blue-200/60 dark:border-blue-500/20",
         "bg-gradient-to-br from-sky-50 via-blue-50 to-blue-100/80",
         "dark:from-slate-900/40 dark:via-blue-950/30 dark:to-blue-950/20",
         "text-foreground shadow-[0_8px_28px_-18px_rgba(59,130,246,0.22)]",

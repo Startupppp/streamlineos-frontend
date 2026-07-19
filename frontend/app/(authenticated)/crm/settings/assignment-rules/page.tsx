@@ -366,7 +366,7 @@ export default function AssignmentRulesPage() {
         }
       >
         {isLoading ? (
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4">
             <div className="space-y-3">
               {[0, 1, 2].map((i) => <Skeleton key={i} className="h-16 w-full" />)}
             </div>
@@ -381,7 +381,7 @@ export default function AssignmentRulesPage() {
             className={CONTENT_FILL_PANEL}
           />
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4">
             <div>
               {rules && rules.length > 0 ? (
                 <DragDropContext onDragEnd={handleDragEnd}>

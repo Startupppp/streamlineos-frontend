@@ -3,8 +3,7 @@
 import React, { useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { format, addDays, startOfDay } from "date-fns";
+import { addDays, startOfDay, format } from "date-fns";
 import { toast } from "sonner";
 import { useCreateWfhRequest } from "@/hooks/api/hr";
 
@@ -27,6 +26,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/date-picker";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { wfhFormSchema, type WfhFormValues } from "./wfh-request-schema";
 import type { Approver } from "@/features/hr/leaves/components/leaves-shared";
 
 const WFH_REASONS = [
@@ -40,22 +40,6 @@ const WFH_REASONS = [
 ] as const;
 
 const isSunday = (d: Date) => d.getDay() === 0;
-
-const wfhFormSchema = z.object({
-  date: z
-    .string()
-    .min(1, "Date is required")
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format")
-    .refine(
-      (v) => v >= format(new Date(), "yyyy-MM-dd"),
-      "Date cannot be in the past",
-    )
-    .refine((v) => new Date(v).getDay() !== 0, "Cannot select a Sunday"),
-  reason: z.string().min(1, "Reason is required"),
-  notes: z.string().max(500).optional(),
-  approverId: z.string().min(1, "Approver is required"),
-});
-type WfhFormValues = z.infer<typeof wfhFormSchema>;
 
 interface WfhRequestSheetProps {
   open: boolean;
@@ -173,7 +157,7 @@ export function WfhRequestSheet({
                       <SelectValue placeholder="Select reason" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                  <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                     {WFH_REASONS.map((reason) => (
                       <SelectItem key={reason} value={reason}>
                         {reason}
@@ -200,7 +184,7 @@ export function WfhRequestSheet({
                       <SelectValue placeholder="Select approver" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                  <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                     {approvers.map((u) => (
                       <SelectItem key={u.id} value={u.id}>
                         {u.name ||

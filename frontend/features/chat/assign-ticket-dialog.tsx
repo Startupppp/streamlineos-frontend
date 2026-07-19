@@ -22,6 +22,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { Form } from "@/components/ui/form";
 import { useProjects, useProjectMembers } from "@/hooks/api/projects/projects";
 import { useAssignTicketFromChat } from "@/hooks/api/chat";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -138,98 +139,111 @@ export function AssignTicketDialog({
         <DialogHeader>
           <DialogTitle>Assign Ticket</DialogTitle>
         </DialogHeader>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 py-2">
-          {projectId === undefined && (
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 py-2">
+            {projectId === undefined && (
+              <div className="space-y-1.5">
+                <Label>
+                  Project <span className="text-destructive">*</span>
+                </Label>
+                <Controller
+                  control={form.control}
+                  name="projectIdStr"
+                  render={({ field }) => (
+                    <Select
+                      value={field.value}
+                      onValueChange={handleProjectChange}
+                      disabled={loadingProjects}
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={loadingProjects ? "Loading…" : "Select project"}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {projectsData?.data.map((p) => (
+                          <SelectItem key={p.id} value={String(p.id)}>
+                            {p.key} — {p.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {form.formState.errors.projectIdStr && (
+                  <p className="text-xs text-destructive">
+                    {form.formState.errors.projectIdStr.message}
+                  </p>
+                )}
+              </div>
+            )}
+            {ticketId === undefined && (
+              <div className="space-y-1.5">
+                <Label>
+                  Ticket <span className="text-destructive">*</span>
+                </Label>
+                <Controller
+                  control={form.control}
+                  name="ticketIdStr"
+                  render={({ field }) => (
+                    <TicketCombobox
+                      projectId={effectiveProjectId}
+                      value={field.value ? Number(field.value) : null}
+                      onChange={(id) => field.onChange(String(id))}
+                    />
+                  )}
+                />
+                {form.formState.errors.ticketIdStr && (
+                  <p className="text-xs text-destructive">
+                    {form.formState.errors.ticketIdStr.message}
+                  </p>
+                )}
+              </div>
+            )}
             <div className="space-y-1.5">
-              <Label>Project</Label>
+              <Label>
+                Assignee <span className="text-destructive">*</span>
+              </Label>
               <Controller
                 control={form.control}
-                name="projectIdStr"
+                name="assigneeId"
                 render={({ field }) => (
                   <Select
                     value={field.value}
-                    onValueChange={handleProjectChange}
-                    disabled={loadingProjects}
+                    onValueChange={field.onChange}
+                    disabled={loadingMembers || effectiveProjectId === 0}
                   >
                     <SelectTrigger>
                       <SelectValue
-                        placeholder={loadingProjects ? "Loading…" : "Select project"}
+                        placeholder={loadingMembers ? "Loading…" : "Select member"}
                       />
                     </SelectTrigger>
                     <SelectContent>
-                      {projectsData?.data.map((p) => (
-                        <SelectItem key={p.id} value={String(p.id)}>
-                          {p.key} — {p.name}
+                      {members?.map((m) => (
+                        <SelectItem key={m.id} value={m.id}>
+                          {m.name ?? m.email}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 )}
               />
-            </div>
-          )}
-          {ticketId === undefined && (
-            <div className="space-y-1.5">
-              <Label>Ticket</Label>
-              <Controller
-                control={form.control}
-                name="ticketIdStr"
-                render={({ field }) => (
-                  <TicketCombobox
-                    projectId={effectiveProjectId}
-                    value={field.value ? Number(field.value) : null}
-                    onChange={(id) => field.onChange(String(id))}
-                  />
-                )}
-              />
-              {form.formState.errors.ticketIdStr && (
+              {form.formState.errors.assigneeId && (
                 <p className="text-xs text-destructive">
-                  {form.formState.errors.ticketIdStr.message}
+                  {form.formState.errors.assigneeId.message}
                 </p>
               )}
             </div>
-          )}
-          <div className="space-y-1.5">
-            <Label>Assignee</Label>
-            <Controller
-              control={form.control}
-              name="assigneeId"
-              render={({ field }) => (
-                <Select
-                  value={field.value}
-                  onValueChange={field.onChange}
-                  disabled={loadingMembers || effectiveProjectId === 0}
-                >
-                  <SelectTrigger>
-                    <SelectValue
-                      placeholder={loadingMembers ? "Loading…" : "Select member"}
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {members?.map((m) => (
-                      <SelectItem key={m.id} value={m.id}>
-                        {m.name ?? m.email}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
-            {form.formState.errors.assigneeId && (
-              <p className="text-xs text-destructive">
-                {form.formState.errors.assigneeId.message}
-              </p>
-            )}
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={handleCancel}>
-              Cancel
-            </Button>
-            <LoadingButton type="submit" isPending={assign.isPending} loadingText="Assigning…">
-              Assign
-            </LoadingButton>
-          </DialogFooter>
-        </form>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={handleCancel}>
+                Cancel
+              </Button>
+              <LoadingButton type="submit" isPending={assign.isPending} loadingText="Assigning…">
+                Assign
+              </LoadingButton>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

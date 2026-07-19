@@ -32,6 +32,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { useCreateLoanAdjustment } from "@/hooks/api/payroll/loan-adjustments";
 import type { LoanAdjustmentType } from "@/types/payroll";
 
@@ -186,9 +187,9 @@ export function LoanAdjustmentDialog({
               <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isPending || !runId}>
-                {isPending ? "Submitting…" : "Submit"}
-              </Button>
+              <LoadingButton type="submit" isPending={isPending} disabled={isPending || !runId} loadingText="Submitting…">
+                Submit
+              </LoadingButton>
             </DialogFooter>
           </form>
         </Form>

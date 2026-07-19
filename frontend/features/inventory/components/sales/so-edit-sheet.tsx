@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useForm, useFieldArray, useWatch, Controller, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -10,7 +10,6 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
 import { LoadingButton } from "@/components/ui/loading-button";
 import {
@@ -21,6 +20,14 @@ import {
   SheetFooter,
   SheetBody,
 } from "@/components/ui/sheet";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import {
   Select,
   SelectContent,
@@ -87,7 +94,7 @@ export function SoEditSheet({ open, onOpenChange, soId, so }: SoEditSheetProps) 
   const variants = variantsQuery.data ?? [];
   const warehouses = warehousesQuery.data ?? [];
 
-  const { control, register, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     values: {
       orderDate: so.orderDate ?? "",
@@ -104,6 +111,8 @@ export function SoEditSheet({ open, onOpenChange, soId, so }: SoEditSheetProps) 
       })),
     },
   });
+
+  const { control, handleSubmit, reset } = form;
 
   const { fields, append, remove } = useFieldArray({ control, name: "lines" });
 
@@ -277,44 +286,48 @@ export function SoEditSheet({ open, onOpenChange, soId, so }: SoEditSheetProps) 
         <SheetHeader className="bg-muted/40 p-6 pb-4 pr-12 border-b text-left">
           <SheetTitle>Edit Sales Order</SheetTitle>
         </SheetHeader>
+        <Form {...form}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <SheetBody className="space-y-4 px-6 py-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label className="text-[13px] font-medium">
-                  Order Date <span className="text-destructive">*</span>
-                </Label>
-                <Controller
-                  name="orderDate"
-                  control={control}
-                  render={({ field }) => (
-                    <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
-                  )}
-                />
-                {errors.orderDate && (
-                  <p className="text-xs text-destructive">{errors.orderDate.message}</p>
+              <FormField
+                control={control}
+                name="orderDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Order Date <span className="text-destructive">*</span></FormLabel>
+                    <FormControl>
+                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[13px] font-medium">Required Date</Label>
-                <Controller
-                  name="requiredDate"
-                  control={control}
-                  render={({ field }) => (
-                    <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
-                  )}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[13px] font-medium">Warehouse</Label>
-                <Controller
-                  control={control}
-                  name="warehouseId"
-                  render={({ field }) => (
+              />
+              <FormField
+                control={control}
+                name="requiredDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Required Date</FormLabel>
+                    <FormControl>
+                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={control}
+                name="warehouseId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Warehouse</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Keep current" />
-                      </SelectTrigger>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Keep current" />
+                        </SelectTrigger>
+                      </FormControl>
                       <SelectContent className="max-h-72">
                         {warehouses.map((w) => (
                           <SelectItem key={w.id} value={String(w.id)}>
@@ -323,28 +336,56 @@ export function SoEditSheet({ open, onOpenChange, soId, so }: SoEditSheetProps) 
                         ))}
                       </SelectContent>
                     </Select>
-                  )}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[13px] font-medium">Currency</Label>
-                <Input {...register("currency")} placeholder="INR" className="" />
-              </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={control}
+                name="currency"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Currency</FormLabel>
+                    <FormControl>
+                      <Input placeholder="INR" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
-            <div className="space-y-1.5">
-              <Label className="text-[13px] font-medium">Shipping Address</Label>
-              <Textarea {...register("shippingAddress")} rows={2} />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-[13px] font-medium">Notes</Label>
-              <Textarea {...register("notes")} rows={2} />
-            </div>
+            <FormField
+              control={control}
+              name="shippingAddress"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Shipping Address</FormLabel>
+                  <FormControl>
+                    <Textarea rows={2} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Notes</FormLabel>
+                  <FormControl>
+                    <Textarea rows={2} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label className="text-[13px] font-medium">
+                <FormLabel className="text-[13px] font-medium">
                   Lines <span className="text-destructive">*</span>
-                </Label>
+                </FormLabel>
                 <AnimatedIconButton type="button" icon={PlusIcon} iconSize={14} iconClassName="mr-1" variant="outline" size="sm" className="text-xs" onClick={handleAddLine}>
                   Add line
                 </AnimatedIconButton>
@@ -366,6 +407,7 @@ export function SoEditSheet({ open, onOpenChange, soId, so }: SoEditSheetProps) 
             </LoadingButton>
           </SheetFooter>
         </form>
+        </Form>
       </SheetContent>
     </Sheet>
   );

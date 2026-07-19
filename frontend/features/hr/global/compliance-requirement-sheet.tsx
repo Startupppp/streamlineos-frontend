@@ -30,6 +30,8 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useCreateComplianceRequirement,
   useUpdateComplianceRequirement,
@@ -116,7 +118,11 @@ export function ComplianceRequirementSheet({ open, onOpenChange, existing }: Pro
 
     const mutation = existing ? update : create;
     mutation.mutate(body, {
-      onSuccess: () => onOpenChange(false),
+      onSuccess: () => {
+        toast.success(existing ? "Requirement updated" : "Requirement created");
+        onOpenChange(false);
+      },
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [existing, create, update, onOpenChange]);
 
@@ -136,7 +142,7 @@ export function ComplianceRequirementSheet({ open, onOpenChange, existing }: Pro
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>Name <span className="text-destructive">*</span></FormLabel>
                   <FormControl><Input {...field} placeholder="PF Monthly Filing" /></FormControl>
                   <FormMessage />
                 </FormItem>

@@ -31,7 +31,7 @@ export function StepTemplate({ draft, updateDraft }: StepSharedProps) {
 
   if (isError) {
     return (
-      <div className="flex flex-col items-center gap-3 py-8 text-center">
+      <div className="flex flex-col items-center gap-3 py-4 text-center">
         <p className="text-sm text-muted-foreground">Failed to load templates.</p>
         <Button type="button" variant="outline" size="sm" onClick={handleRefetch}>
           Try again

@@ -3,9 +3,10 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "sonner";
+import { spaceSchema, type SpaceFormValues } from "./spaces-page-schema";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -40,6 +41,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useCan } from "@/hooks/api/access";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useKbSpaces,
   useCreateKbSpace,
@@ -57,15 +59,6 @@ import {
 import type { KbSpace, KbAudience } from "@/types/kb";
 import Link from "next/link";
 import { TruncatedText } from "@/components/ui/truncated-text";
-
-const spaceSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  description: z.string().nullable().optional(),
-  icon: z.string().nullable().optional(),
-  audience: z.enum(["internal", "public", "mixed"]).optional(),
-});
-
-type SpaceFormValues = z.infer<typeof spaceSchema>;
 
 const AUDIENCE_LABELS: Record<KbAudience, string> = {
   internal: "Internal",
@@ -214,7 +207,7 @@ function SpaceSheet({
             form.reset();
             onSuccess();
           },
-          onError: () => toast.error("Failed to update space"),
+          onError: (e) => toast.error(getErrorMessage(e)),
         },
       );
     } else {
@@ -231,7 +224,7 @@ function SpaceSheet({
             form.reset();
             onSuccess();
           },
-          onError: () => toast.error("Failed to create space"),
+          onError: (e) => toast.error(getErrorMessage(e)),
         },
       );
     }
@@ -342,9 +335,9 @@ function SpaceSheet({
               >
                 Cancel
               </Button>
-              <Button type="submit" className="flex-1" disabled={isPending}>
+              <LoadingButton type="submit" className="flex-1" isPending={isPending} loadingText="Saving…">
                 {editingSpace ? "Save" : "Create"}
-              </Button>
+              </LoadingButton>
             </SheetFooter>
           </form>
         </Form>
@@ -407,7 +400,7 @@ export default function SpacesPage() {
         toast.success("Space deleted");
         setDeleteTarget(null);
       },
-      onError: () => toast.error("Failed to delete space"),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
 

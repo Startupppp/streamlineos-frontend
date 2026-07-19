@@ -80,8 +80,7 @@ export function useConfigureAutoTopUp() {
       void qc.invalidateQueries({ queryKey: ["billing", "ai-credits"] });
       toast.success("Auto top-up settings saved");
     },
-    onError: (e: Error) =>
-      toast.error(e.message ?? "Failed to update settings"),
+    onError: (e: unknown) => toast.error(getErrorMessage(e)),
   });
 }
 

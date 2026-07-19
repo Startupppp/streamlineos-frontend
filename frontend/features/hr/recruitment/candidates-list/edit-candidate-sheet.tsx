@@ -2,7 +2,6 @@
 
 import { useCallback, useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "sonner";
 import { User, Mail, Phone, Briefcase, Building2, Link2, FileText, Zap } from "lucide-react";
 
@@ -29,47 +28,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { candidateSchema, type CandidateFormValues } from "./candidate-schema";
 
-const editCandidateSchema = z.object({
-  firstName: z
-    .string()
-    .trim()
-    .min(1, "First name is required")
-    .max(80, "First name must be at most 80 characters")
-    .refine((v) => /[\p{L}\p{N}]/u.test(v), "First name must contain a letter or number"),
-  lastName: z
-    .string()
-    .trim()
-    .min(1, "Last name is required")
-    .max(80, "Last name must be at most 80 characters")
-    .refine((v) => /[\p{L}\p{N}]/u.test(v), "Last name must contain a letter or number"),
-  email: z.string().trim().email("Invalid email").max(254, "Email must be at most 254 characters"),
-  phone: z
-    .string()
-    .optional()
-    .or(z.literal(""))
-    .refine((val) => {
-      if (!val) return true;
-      const digits = val.replace(/\D/g, "");
-      return digits.length >= 7 && digits.length <= 15;
-    }, "Enter a valid phone number (7–15 digits)"),
-  source: z.string(),
-  currentRole: z.string().max(120).optional().or(z.literal("")),
-  currentCompany: z.string().max(120).optional().or(z.literal("")),
-  experienceYears: z.number().min(0, "Cannot be negative").max(50, "Cannot exceed 50 years").optional(),
-  skills: z.string().max(500).optional().or(z.literal("")),
-  linkedinUrl: z
-    .string()
-    .optional()
-    .or(z.literal(""))
-    .refine(
-      (v) => !v || v.startsWith("http://") || v.startsWith("https://") || v.startsWith("www."),
-      "Enter a valid URL",
-    ),
-  notes: z.string().max(2000).optional().or(z.literal("")),
-});
-
-type EditCandidateForm = z.infer<typeof editCandidateSchema>;
+type EditCandidateForm = CandidateFormValues;
 
 interface EditCandidateSheetProps {
   open: boolean;
@@ -160,7 +121,7 @@ export function EditCandidateSheet({
           ? `Update details for ${candidate.firstName} ${candidate.lastName}`
           : undefined
       }
-      resolver={zodResolver(editCandidateSchema)}
+      resolver={zodResolver(candidateSchema)}
       defaultValues={defaultValues}
       onSubmit={handleSubmit}
       isSubmitting={updateCandidate.isPending}
@@ -255,7 +216,7 @@ export function EditCandidateSheet({
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                        <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                           <SelectItem value="DIRECT">Direct</SelectItem>
                           <SelectItem value="REFERRAL">Referral</SelectItem>
                           <SelectItem value="LINKEDIN">LinkedIn</SelectItem>

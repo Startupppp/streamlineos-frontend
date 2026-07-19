@@ -75,7 +75,7 @@ export function FormBuilderTab({ projectId, formId }: FormBuilderTabProps) {
   const publicUrl = getPublicUrl(form.publicToken);
 
   function handleSave() {
-    if (!effectiveName.trim()) return;
+    if (!effectiveName.trim()) { toast.error("Form name is required"); return; }
     const payload: UpdateFormInput = {
       name: effectiveName.trim(),
       description: effectiveDescription.trim() || undefined,

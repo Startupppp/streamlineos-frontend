@@ -239,8 +239,8 @@ export function BankImportClient() {
       subtitle="Upload a CSV bank statement and map columns."
       backHref="/accounting/banking"
     >
-      <div>
-        <div className="flex items-center gap-2 mb-6">
+      <div className="flex flex-1 min-h-0 flex-col">
+        <div className="flex items-center gap-2 mb-4">
           {[1, 2, 3].map((s) => (
             <div key={s} className="flex items-center gap-2">
               <StepDot step={s} current={step} />

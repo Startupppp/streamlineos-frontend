@@ -64,7 +64,7 @@ export function Section7({ form }: SectionProps) {
                 <SelectTrigger>
                   <SelectValue placeholder="Select a hiring flow (optional)" />
                 </SelectTrigger>
-                <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                   <SelectItem value={NO_HIRING_FLOW}>None</SelectItem>
                   {(hiringFlows ?? []).map((f) => (
                     <SelectItem key={f.id} value={String(f.id)}>

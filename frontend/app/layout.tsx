@@ -84,6 +84,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: `${BRAND_NAME} — ${BRAND_TAGLINE}`,
     description: BRAND_DESCRIPTION,
+    site: "@streamlineos",
     creator: "@streamlineos",
   },
   robots: {

@@ -6,7 +6,6 @@ import { DownloadIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared";
@@ -210,29 +209,26 @@ function SlowMovingReportContent() {
         )}
 
         {hasRows && (
-          <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
-            <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
-              <DataTable
-                data={items}
-                columns={columns}
-                getRowKey={handleGetRowKey}
-                pagination={{
-                  mode: "server",
-                  page: currentPage,
-                  pageSize: LIMIT,
-                  total,
-                  onPageChange: handlePageChange,
-                }}
-                emptyState={
-                  <InventoryEmptyState
-                    illustration={<EmptySearchIllustration />}
-                    title="No results"
-                    description="No products match the current filter."
-                  />
-                }
-              />
-            </CardContent>
-          </Card>
+          <DataTable
+              data={items}
+              columns={columns}
+              className="flex-1 min-h-0"
+              getRowKey={handleGetRowKey}
+              pagination={{
+                mode: "server",
+                page: currentPage,
+                pageSize: LIMIT,
+                total,
+                onPageChange: handlePageChange,
+              }}
+              emptyState={
+                <InventoryEmptyState
+                  illustration={<EmptySearchIllustration />}
+                  title="No results"
+                  description="No products match the current filter."
+                />
+              }
+            />
         )}
       </div>
     </PageWrapper>

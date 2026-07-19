@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 import Link from "next/link";
-import { CircleUser, Bell, Key, LogOut } from "lucide-react";
+import { CircleUser, Bell, CreditCard, Key, LogOut, Zap } from "lucide-react";
 import { useSession } from "next-auth/react";
 import {
   DropdownMenu,
@@ -27,7 +27,8 @@ export function UserAvatarMenu({ variant = "header" }: UserAvatarMenuProps) {
   const isMobile = useIsMobile();
   const { data: session } = useSession();
   const { mutate: handleSignOut, isPending: isSigningOut } = useSignOut();
-  const isAdmin = useCan("settings:manage");
+  const canManageBilling = useCan("settings:manage");
+  const canViewAiCredits = useCan("billing:ai-credits:view");
 
   const name = session?.user?.name ?? "User";
   const email = session?.user?.email ?? "";
@@ -92,6 +93,22 @@ export function UserAvatarMenu({ variant = "header" }: UserAvatarMenuProps) {
             My Account
           </Link>
         </DropdownMenuItem>
+        {canManageBilling && (
+          <DropdownMenuItem asChild>
+            <Link href="/billing" className="gap-2 cursor-pointer">
+              <CreditCard className="h-3.5 w-3.5" />
+              Billing & Plan
+            </Link>
+          </DropdownMenuItem>
+        )}
+        {canViewAiCredits && (
+          <DropdownMenuItem asChild>
+            <Link href="/billing/ai-credits" className="gap-2 cursor-pointer">
+              <Zap className="h-3.5 w-3.5" />
+              AI Credits
+            </Link>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link
@@ -103,7 +120,7 @@ export function UserAvatarMenu({ variant = "header" }: UserAvatarMenuProps) {
           </Link>
         </DropdownMenuItem>
         <ThemeMenuSubmenu />
-        {isAdmin && (
+        {canManageBilling && (
           <>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>

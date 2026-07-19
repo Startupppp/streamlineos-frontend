@@ -155,7 +155,7 @@ export function LogActivityDialog({
             name="title"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Title</FormLabel>
+                <FormLabel>Title <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
                   <Input
                     placeholder="e.g. Called John about the proposal"

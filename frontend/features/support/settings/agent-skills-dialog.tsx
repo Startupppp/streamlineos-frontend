@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { useSetAgentSkills } from "@/hooks/api/support/macros";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 
 interface SkillChipProps {
@@ -85,7 +85,7 @@ export function AgentSkillsDialog({ userId, label, initialSkills, onClose }: Age
           toast.success("Skills updated");
           onClose();
         },
-        onError: (error) => toast.error(getApiError(error)),
+        onError: (error) => toast.error(getErrorMessage(error)),
       },
     );
   }, [setAgentSkills, userId, skills, onClose]);

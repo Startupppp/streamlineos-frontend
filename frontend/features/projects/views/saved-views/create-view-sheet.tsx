@@ -1,13 +1,20 @@
 "use client";
 
 import { useCallback } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { LayoutGrid, List, Kanban, Calendar, GitBranch } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Sheet,
   SheetContent,
@@ -79,90 +86,99 @@ export function CreateViewSheet({ projectId, open, onOpenChange, onCreated }: Cr
         <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle>Create View</SheetTitle>
         </SheetHeader>
-        <SheetBody className="px-6 py-5">
-          <form id="view-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-            <div>
-              <Label htmlFor="view-name">Name</Label>
-              <Input id="view-name" className="mt-1.5" {...form.register("name")} />
-              {form.formState.errors.name && (
-                <p className="text-xs text-destructive mt-1">
-                  {form.formState.errors.name.message}
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
+            <SheetBody className="px-6 py-5">
+              <div className="space-y-5">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Name <span className="text-destructive">*</span></FormLabel>
+                      <FormControl>
+                        <Input {...field} className="mt-1.5" placeholder="View name" />
+                      </FormControl>
+                      <FormMessage className="text-xs" />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="layoutType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Layout</FormLabel>
+                      <FormControl>
+                        <div className="grid grid-cols-3 gap-2 mt-1.5">
+                          {LAYOUT_TYPES.map((l) => {
+                            const m = LAYOUT_META[l];
+                            const isSelected = field.value === l;
+                            return (
+                              <button
+                                key={l}
+                                type="button"
+                                onClick={() => field.onChange(l)}
+                                className={cn(
+                                  "flex flex-col items-center gap-1.5 rounded-lg border p-3 text-xs font-medium transition-all",
+                                  isSelected
+                                    ? "border-primary bg-primary/5 text-foreground"
+                                    : "border-border bg-muted/40 text-muted-foreground hover:border-border hover:bg-muted",
+                                )}
+                              >
+                                {m?.icon}
+                                {m?.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </FormControl>
+                      <FormMessage className="text-xs" />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="visibility"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Visibility</FormLabel>
+                      <FormControl>
+                        <div className="flex mt-1.5 rounded-md border border-border overflow-hidden">
+                          {VISIBILITY_OPTIONS.map((opt, idx) => (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              onClick={() => field.onChange(opt.value)}
+                              className={cn(
+                                "flex-1 py-1.5 text-xs font-medium transition-colors",
+                                idx > 0 && "border-l border-border",
+                                field.value === opt.value
+                                  ? "bg-primary text-primary-foreground"
+                                  : "bg-card text-muted-foreground hover:bg-muted",
+                              )}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                      </FormControl>
+                      <FormMessage className="text-xs" />
+                    </FormItem>
+                  )}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Filters can be applied from the board view after creation.
                 </p>
-              )}
+              </div>
+            </SheetBody>
+            <div className="shrink-0 px-6 py-4 border-t">
+              <LoadingButton type="submit" isPending={createMutation.isPending} loadingText="Creating…" className="w-full">
+                Create View
+              </LoadingButton>
             </div>
-            <div>
-              <Label>Layout</Label>
-              <Controller
-                control={form.control}
-                name="layoutType"
-                render={({ field }) => (
-                  <div className="grid grid-cols-3 gap-2 mt-1.5">
-                    {LAYOUT_TYPES.map((l) => {
-                      const m = LAYOUT_META[l];
-                      const isSelected = field.value === l;
-                      return (
-                        <button
-                          key={l}
-                          type="button"
-                          onClick={() => field.onChange(l)}
-                          className={cn(
-                            "flex flex-col items-center gap-1.5 rounded-lg border p-3 text-xs font-medium transition-all",
-                            isSelected
-                              ? "border-primary bg-primary/5 text-foreground"
-                              : "border-border bg-muted/40 text-muted-foreground hover:border-border hover:bg-muted",
-                          )}
-                        >
-                          {m?.icon}
-                          {m?.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              />
-            </div>
-            <div>
-              <Label>Visibility</Label>
-              <Controller
-                control={form.control}
-                name="visibility"
-                render={({ field }) => (
-                  <div className="flex mt-1.5 rounded-md border border-border overflow-hidden">
-                    {VISIBILITY_OPTIONS.map((opt, idx) => (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        onClick={() => field.onChange(opt.value)}
-                        className={cn(
-                          "flex-1 py-1.5 text-xs font-medium transition-colors",
-                          idx > 0 && "border-l border-border",
-                          field.value === opt.value
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-card text-muted-foreground hover:bg-muted",
-                        )}
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Filters can be applied from the board view after creation.
-            </p>
           </form>
-        </SheetBody>
-        <div className="shrink-0 px-6 py-4 border-t">
-          <Button
-            type="submit"
-            form="view-form"
-            disabled={createMutation.isPending}
-            className="w-full"
-          >
-            {createMutation.isPending ? "Creating..." : "Create View"}
-          </Button>
-        </div>
+        </Form>
       </SheetContent>
     </Sheet>
   );

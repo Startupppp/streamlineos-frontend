@@ -63,7 +63,7 @@ export function BankTransfersContent() {
             action={{ label: "Go to Runs", href: "/payroll/runs" }}
           />
         ) : (
-          <div className="flex flex-1 min-h-0 flex-col space-y-6">
+          <div className="flex flex-1 min-h-0 flex-col space-y-4">
             <div className="flex items-center gap-4 bg-muted/40 border border-border rounded-lg p-3 flex-wrap">
               <span className="font-semibold text-sm text-foreground">
                 {formatMonth(run.month)}

@@ -3,7 +3,6 @@
 import { useState, useMemo } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -287,24 +286,21 @@ export default function MovementsReportPage() {
         )}
 
         {!query.error && (query.isLoading || rows.length > 0) && (
-          <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
-            <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
-              <DataTable
-                data={rows}
-                columns={MOVEMENTS_COLUMNS}
-                getRowKey={(row) => row.id}
-                isLoading={query.isLoading}
-                minWidth="900px"
-                pagination={{
-                  mode: "server",
-                  page,
-                  pageSize: 50,
-                  total: query.data?.total ?? 0,
-                  onPageChange: handlePageChange,
-                }}
-              />
-            </CardContent>
-          </Card>
+          <DataTable
+              data={rows}
+              columns={MOVEMENTS_COLUMNS}
+              className="flex-1 min-h-0"
+              getRowKey={(row) => row.id}
+              isLoading={query.isLoading}
+              minWidth="900px"
+              pagination={{
+                mode: "server",
+                page,
+                pageSize: 50,
+                total: query.data?.total ?? 0,
+                onPageChange: handlePageChange,
+              }}
+            />
         )}
       </div>
     </PageWrapper>

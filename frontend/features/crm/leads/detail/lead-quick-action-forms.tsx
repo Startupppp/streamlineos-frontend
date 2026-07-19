@@ -27,7 +27,7 @@ export function NotePanel({ form, onSubmit, isPending, onCancel }: NotePanelProp
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 p-4 rounded-lg bg-muted/20 border border-border/30">
         <FormField control={form.control} name="body" render={({ field }) => (
           <FormItem>
-            <FormLabel>Note</FormLabel>
+            <FormLabel>Note <span className="text-destructive">*</span></FormLabel>
             <FormControl><Textarea {...field} placeholder="Write a note..." rows={3} /></FormControl>
             <FormMessage />
           </FormItem>
@@ -54,7 +54,7 @@ export function TaskPanel({ form, onSubmit, isPending, onCancel }: TaskPanelProp
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 p-4 rounded-lg bg-muted/20 border border-border/30">
         <FormField control={form.control} name="title" render={({ field }) => (
           <FormItem>
-            <FormLabel>Task Title</FormLabel>
+            <FormLabel>Task Title <span className="text-destructive">*</span></FormLabel>
             <FormControl><Input {...field} placeholder="Follow up with..." /></FormControl>
             <FormMessage />
           </FormItem>
@@ -107,21 +107,21 @@ export function EmailPanel({ form, onSubmit, isPending, onCancel, emailTemplates
         )}
         <FormField control={form.control} name="to" render={({ field }) => (
           <FormItem>
-            <FormLabel>To</FormLabel>
+            <FormLabel>To <span className="text-destructive">*</span></FormLabel>
             <FormControl><Input {...field} placeholder="email@example.com" /></FormControl>
             <FormMessage />
           </FormItem>
         )} />
         <FormField control={form.control} name="subject" render={({ field }) => (
           <FormItem>
-            <FormLabel>Subject</FormLabel>
+            <FormLabel>Subject <span className="text-destructive">*</span></FormLabel>
             <FormControl><Input {...field} placeholder="Subject" /></FormControl>
             <FormMessage />
           </FormItem>
         )} />
         <FormField control={form.control} name="body" render={({ field }) => (
           <FormItem>
-            <FormLabel>Body</FormLabel>
+            <FormLabel>Body <span className="text-destructive">*</span></FormLabel>
             <FormControl><Textarea {...field} placeholder="Email body..." rows={4} /></FormControl>
             <FormMessage />
           </FormItem>

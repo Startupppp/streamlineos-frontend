@@ -8,7 +8,6 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import {
   Select,
@@ -339,18 +338,15 @@ export function ValuationClient() {
             className="flex-1 h-full"
           />
         ) : (
-          <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
-            <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
-              <DataTable
-                data={rows}
-                columns={columns}
-                getRowKey={(row) => `${row.variantId}-${row.warehouseId ?? "all"}`}
-                isLoading={isLoading}
-                pagination={{ pageSize: 25 }}
-                minWidth="760px"
-              />
-            </CardContent>
-          </Card>
+          <DataTable
+            data={rows}
+            columns={columns}
+            className="flex-1 min-h-0"
+            getRowKey={(row) => `${row.variantId}-${row.warehouseId ?? "all"}`}
+            isLoading={isLoading}
+            pagination={{ pageSize: 25 }}
+            minWidth="760px"
+          />
         )}
       </div>
 

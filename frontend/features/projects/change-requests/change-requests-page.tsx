@@ -26,7 +26,6 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { ChangeRequestSheet } from "./change-request-sheet";
 import {
   PmPageShell,
-  PmPanel,
   PmSection,
   PM_FILL_PANEL,
 } from "@/features/projects/shared/pm-chrome";
@@ -262,14 +261,12 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
                 action={canCreate ? { label: "New Change Request", onClick: handleNew } : undefined}
               />
           ) : (
-            <PmPanel className={PM_FILL_PANEL} solid>
-              <DataTable<ChangeRequest>
+            <DataTable<ChangeRequest>
                 data={filtered}
                 columns={columns}
                 getRowKey={(row) => row.id}
-                className="min-h-0 flex-1 border-0"
+                className={PM_FILL_PANEL}
               />
-            </PmPanel>
           )}
         </PmSection>
       </PmPageShell>

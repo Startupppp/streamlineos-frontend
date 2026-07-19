@@ -54,7 +54,6 @@ import type { Approval, ApprovalEntityType, ApprovalStatus, CreateApprovalInput,
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   PmPageShell,
-  PmPanel,
   PmSection,
   PM_FILL_PANEL,
 } from "@/features/projects/shared/pm-chrome";
@@ -455,9 +454,7 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
               }
             />
           ) : (
-            <PmPanel className={PM_FILL_PANEL}>
-              <DataTable data={items} columns={columns} getRowKey={(row) => row.id} minWidth="720px" className="min-h-0 flex-1" />
-            </PmPanel>
+            <DataTable data={items} columns={columns} getRowKey={(row) => row.id} minWidth="720px" className={PM_FILL_PANEL} />
           )}
         </PmSection>
       </PmPageShell>

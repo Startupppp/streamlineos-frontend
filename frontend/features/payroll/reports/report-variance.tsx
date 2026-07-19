@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -126,24 +125,21 @@ export function ReportVariance({ month }: ReportVarianceProps) {
         </StatCardGrid>
       )}
 
-      <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
-        <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
-          <DataTable
-            data={data?.perEmployee ?? []}
-            columns={COLUMNS}
-            getRowKey={(row) => row.userId}
-            minWidth="800px"
-            emptyState={
-              <EmptyState
-                compact
-                illustration={<EmptyReportIllustration />}
-                title="No variance data"
-                description="Variance is computed by comparing this month with the previous run."
-              />
-            }
+      <DataTable
+        className="flex-1 min-h-0"
+        data={data?.perEmployee ?? []}
+        columns={COLUMNS}
+        getRowKey={(row) => row.userId}
+        minWidth="800px"
+        emptyState={
+          <EmptyState
+            compact
+            illustration={<EmptyReportIllustration />}
+            title="No variance data"
+            description="Variance is computed by comparing this month with the previous run."
           />
-        </CardContent>
-      </Card>
+        }
+      />
     </div>
   );
 }

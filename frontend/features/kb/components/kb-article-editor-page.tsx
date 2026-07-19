@@ -6,7 +6,8 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ErrorState } from "@/components/shared/error-state";
 import { LoadingState } from "@/components/shared/loading-state";
 import { useKbArticle, useKbCategories } from "@/hooks/api/support/kb";
-import { getApiError, isApiError } from "@/lib/api-client";
+import { isApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { KbArticleEditor } from "./kb-article-editor";
 
 export function KbArticleEditorPage({ articleId }: { articleId: number }) {
@@ -34,7 +35,7 @@ export function KbArticleEditorPage({ articleId }: { articleId: number }) {
       <PageWrapper title="Edit Article">
         <ErrorState
           title="Failed to load article"
-          description={getApiError(articleQuery.error)}
+          description={getErrorMessage(articleQuery.error)}
           onRetry={handleRetry}
         />
       </PageWrapper>

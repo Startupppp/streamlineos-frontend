@@ -156,7 +156,7 @@ export function RecurringBillFormSheet({
         <div className="space-y-4 px-6 py-4">
           <div className="space-y-1.5">
             <Label htmlFor="name" className="text-xs font-medium">
-              Template name
+              Template name <span className="text-destructive">*</span>
             </Label>
             <Input
               id="name"
@@ -171,7 +171,7 @@ export function RecurringBillFormSheet({
 
           <div className="space-y-1.5">
             <Label htmlFor="vendorId" className="text-xs font-medium">
-              Vendor
+              Vendor <span className="text-destructive">*</span>
             </Label>
             <Select
               value={form.watch("vendorId")}
@@ -270,19 +270,22 @@ export function RecurringBillFormSheet({
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="expenseAccountCode" className="text-xs font-medium">
-                  Expense account
+                  Expense account <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="expenseAccountCode"
                   className="text-sm font-mono"
                   {...form.register("expenseAccountCode")}
                 />
+                {form.formState.errors.expenseAccountCode && (
+                  <p className="text-xs text-destructive">{form.formState.errors.expenseAccountCode.message}</p>
+                )}
               </div>
             </div>
 
             <div className="space-y-1.5">
               <Label htmlFor="lineDescription" className="text-xs font-medium">
-                Line item description
+                Line item description <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="lineDescription"
@@ -300,7 +303,7 @@ export function RecurringBillFormSheet({
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="lineQuantity" className="text-xs font-medium">
-                  Qty
+                  Qty <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="lineQuantity"
@@ -308,10 +311,13 @@ export function RecurringBillFormSheet({
                   placeholder="1"
                   {...form.register("lineQuantity")}
                 />
+                {form.formState.errors.lineQuantity && (
+                  <p className="text-xs text-destructive">{form.formState.errors.lineQuantity.message}</p>
+                )}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="lineRate" className="text-xs font-medium">
-                  Rate
+                  Rate <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="lineRate"
@@ -319,10 +325,13 @@ export function RecurringBillFormSheet({
                   placeholder="0.00"
                   {...form.register("lineRate")}
                 />
+                {form.formState.errors.lineRate && (
+                  <p className="text-xs text-destructive">{form.formState.errors.lineRate.message}</p>
+                )}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="lineGstRate" className="text-xs font-medium">
-                  GST %
+                  GST % <span className="text-destructive">*</span>
                 </Label>
                 <Select
                   value={form.watch("lineGstRate")}
@@ -341,6 +350,9 @@ export function RecurringBillFormSheet({
                     ))}
                   </SelectContent>
                 </Select>
+                {form.formState.errors.lineGstRate && (
+                  <p className="text-xs text-destructive">{form.formState.errors.lineGstRate.message}</p>
+                )}
               </div>
             </div>
 

@@ -18,6 +18,8 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   Form,
@@ -98,13 +100,13 @@ function MappingForm({
         { id: editing.id, ...input },
         {
           onSuccess: () => { toast.success("Mapping updated"); onSuccess(); },
-          onError: () => toast.error("Failed to update mapping"),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     } else {
       create.mutate(input, {
         onSuccess: () => { toast.success("Mapping created"); onSuccess(); form.reset(); },
-        onError: () => toast.error("Failed to create mapping"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       });
     }
   }
@@ -157,7 +159,7 @@ function MappingForm({
           name="ledgerName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-[11px]">Ledger Name</FormLabel>
+              <FormLabel className="text-[11px]">Ledger Name <span className="text-destructive">*</span></FormLabel>
               <FormControl>
                 <Input {...field} className="text-xs" placeholder="e.g. Salary Expense" />
               </FormControl>
@@ -192,9 +194,9 @@ function MappingForm({
           )}
         />
         <div className="flex gap-2 pt-1">
-          <Button type="submit" size="sm" className="text-xs" disabled={create.isPending || update.isPending}>
+          <LoadingButton type="submit" size="sm" className="text-xs" isPending={create.isPending || update.isPending} loadingText={editing ? "Updating…" : "Adding…"}>
             {editing ? "Update" : "Add Mapping"}
-          </Button>
+          </LoadingButton>
           <Button type="button" variant="ghost" size="sm" className="text-xs" onClick={onCancel}>
             Cancel
           </Button>

@@ -12,11 +12,18 @@ import {
   SheetFooter,
   SheetBody,
 } from "@/components/ui/sheet";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -87,7 +94,7 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
   const update = useUpdateRelease(projectId);
   const isPending = create.isPending || update.isPending;
 
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormValues>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       name: release?.name ?? "",
@@ -98,30 +105,9 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
     },
   });
 
-  const descriptionValue = watch("description");
-  const statusValue = watch("status");
-  const releaseDateValue = watch("releaseDate");
-
-  const handleReleaseDateChange = useCallback(
-    (val: string) => setValue("releaseDate", val || null),
-    [setValue],
-  );
-
-  const handleDescriptionChange = useCallback(
-    (html: string) => setValue("description", html || null, { shouldValidate: true }),
-    [setValue],
-  );
+  const descriptionValue = form.watch("description");
 
   const descriptionCharCount = (descriptionValue ?? "").replace(/<[^>]*>/g, "").length;
-
-  const handleStatusChange = useCallback(
-    (val: string) => {
-      if (val === "draft" || val === "released" || val === "archived") {
-        setValue("status", val);
-      }
-    },
-    [setValue],
-  );
 
   const onSubmit = useCallback(
     (values: FormValues) => {
@@ -166,80 +152,118 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
           <SheetTitle>{isEdit ? "Edit Release" : "New Release"}</SheetTitle>
         </SheetHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
-          <SheetBody className="px-6 py-4 space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label>Name *</Label>
-                <Input {...register("name")} placeholder="e.g. Q3 Release" />
-                {errors.name && (
-                  <p className="text-xs text-destructive">{errors.name.message}</p>
-                )}
-              </div>
-              <div className="space-y-1.5">
-                <Label>Version *</Label>
-                <Input {...register("version")} placeholder="e.g. 1.4.0" />
-                {errors.version && (
-                  <p className="text-xs text-destructive">{errors.version.message}</p>
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label>Status</Label>
-                <Select value={statusValue} onValueChange={handleStatusChange}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="released">Released</SelectItem>
-                    <SelectItem value="archived">Archived</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label>Release Date</Label>
-                <DatePicker
-                  value={releaseDateValue ?? ""}
-                  onChange={handleReleaseDateChange}
-                  placeholder="Pick a date"
-                  className="text-sm"
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
+            <SheetBody className="px-6 py-4 space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Name <span className="text-destructive">*</span></FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="e.g. Q3 Release" />
+                      </FormControl>
+                      <FormMessage className="text-xs" />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="version"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Version <span className="text-destructive">*</span></FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="e.g. 1.4.0" />
+                      </FormControl>
+                      <FormMessage className="text-xs" />
+                    </FormItem>
+                  )}
                 />
               </div>
-            </div>
 
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <Label>Release Notes</Label>
-                <span className={`text-[10px] tabular-nums ${descriptionCharCount > 10000 ? "text-destructive" : "text-muted-foreground"}`}>
-                  {descriptionCharCount.toLocaleString()} / 10,000
-                </span>
-              </div>
-              <div className="rounded-md border border-input min-h-[140px]">
-                <TiptapEditor
-                  content={descriptionValue ?? ""}
-                  onChangeHtml={handleDescriptionChange}
-                  placeholder="Describe what's in this release…"
-                  menuMode="static"
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="draft">Draft</SelectItem>
+                          <SelectItem value="released">Released</SelectItem>
+                          <SelectItem value="archived">Archived</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage className="text-xs" />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="releaseDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Release Date</FormLabel>
+                      <FormControl>
+                        <DatePicker
+                          value={field.value ?? ""}
+                          onChange={(val) => field.onChange(val || null)}
+                          placeholder="Pick a date"
+                          className="text-sm"
+                        />
+                      </FormControl>
+                      <FormMessage className="text-xs" />
+                    </FormItem>
+                  )}
                 />
               </div>
-              {errors.description && (
-                <p className="text-xs text-destructive">{errors.description.message}</p>
-              )}
-            </div>
-          </SheetBody>
 
-          <SheetFooter className="px-6 py-4 border-t">
-            <div className="grid w-full grid-cols-2 gap-2">
-              <Button type="button" variant="outline" onClick={onClose}>
-                Cancel
-              </Button>
-              <LoadingButton type="submit" isPending={isPending} loadingText="Saving…">
-                {isEdit ? "Save Changes" : "Create Release"}
-              </LoadingButton>
-            </div>
-          </SheetFooter>
-        </form>
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-center justify-between">
+                      <FormLabel>Release Notes</FormLabel>
+                      <span className={`text-[10px] tabular-nums ${descriptionCharCount > 10000 ? "text-destructive" : "text-muted-foreground"}`}>
+                        {descriptionCharCount.toLocaleString()} / 10,000
+                      </span>
+                    </div>
+                    <FormControl>
+                      <div className="rounded-md border border-input min-h-[140px]">
+                        <TiptapEditor
+                          content={field.value ?? ""}
+                          onChangeHtml={(html) => field.onChange(html || null)}
+                          placeholder="Describe what's in this release…"
+                          menuMode="static"
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
+            </SheetBody>
+
+            <SheetFooter className="px-6 py-4 border-t">
+              <div className="grid w-full grid-cols-2 gap-2">
+                <Button type="button" variant="outline" onClick={onClose}>
+                  Cancel
+                </Button>
+                <LoadingButton type="submit" isPending={isPending} loadingText="Saving…">
+                  {isEdit ? "Save Changes" : "Create Release"}
+                </LoadingButton>
+              </div>
+            </SheetFooter>
+          </form>
+        </Form>
       </SheetContent>
     </Sheet>
   );

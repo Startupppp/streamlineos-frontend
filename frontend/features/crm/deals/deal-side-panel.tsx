@@ -20,6 +20,7 @@ import { ActivityTimeline } from "./detail/activity-timeline";
 import { DealEditForm, type EditFormValues } from "./detail/deal-edit-form";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { useCrmStages } from "@/hooks/api/crm/metadata";
@@ -61,7 +62,7 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
         },
         {
           onSuccess: () => toast.success("Deal updated"),
-          onError: () => toast.error("Failed to update deal"),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },

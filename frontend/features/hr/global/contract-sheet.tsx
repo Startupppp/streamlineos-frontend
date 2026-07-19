@@ -30,6 +30,8 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useCreateContract,
   useUpdateContract,
@@ -124,7 +126,11 @@ export function ContractSheet({ open, onOpenChange, existing, defaultEmploymentI
 
     const mutation = existing ? update : create;
     mutation.mutate(body, {
-      onSuccess: () => onOpenChange(false),
+      onSuccess: () => {
+        toast.success(existing ? "Contract updated" : "Contract created");
+        onOpenChange(false);
+      },
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [existing, create, update, onOpenChange]);
 
@@ -187,7 +193,7 @@ export function ContractSheet({ open, onOpenChange, existing, defaultEmploymentI
             )} />
             <div className="grid grid-cols-2 gap-3">
               <FormField control={form.control} name="startDate" render={({ field }) => (
-                <FormItem><FormLabel>Start Date</FormLabel><FormControl><Input {...field} type="date" /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>Start Date <span className="text-destructive">*</span></FormLabel><FormControl><Input {...field} type="date" /></FormControl><FormMessage /></FormItem>
               )} />
               <FormField control={form.control} name="endDate" render={({ field }) => (
                 <FormItem><FormLabel>End Date</FormLabel><FormControl><Input {...field} type="date" /></FormControl><FormMessage /></FormItem>

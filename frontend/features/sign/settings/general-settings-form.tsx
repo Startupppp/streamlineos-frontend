@@ -1,38 +1,75 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useSignSettings, useUpdateSignSettings } from "@/hooks/api/sign/settings";
-import type { SignOrgSettings } from "@/types/sign";
+
+const generalSettingsSchema = z.object({
+  defaultExpirationDays: z.number().int().min(1).max(365).optional(),
+  expirationWarningDays: z.number().int().min(0).max(60).optional(),
+  defaultReminderFirstAfterDays: z.number().int().min(1).max(30).optional(),
+  defaultReminderRepeatDays: z.number().int().min(1).max(30).optional(),
+  defaultReminderMaxCount: z.number().int().min(0).max(100).optional(),
+  maxFileSizeMb: z.number().int().min(1).max(100).optional(),
+  publicFormsEnabled: z.boolean(),
+  bulkSendMaxRowsPerJob: z.number().int().min(1).max(100000).optional(),
+  bulkSendMaxActiveJobs: z.number().int().min(1).max(100).optional(),
+});
+
+type GeneralSettingsValues = z.infer<typeof generalSettingsSchema>;
+
+function toNumber(value: string): number | undefined {
+  const n = parseInt(value, 10);
+  return isNaN(n) ? undefined : n;
+}
 
 export function GeneralSettingsForm() {
   const { data: settings } = useSignSettings();
   const update = useUpdateSignSettings();
-  const [form, setForm] = useState<Partial<SignOrgSettings>>({});
+
+  const form = useForm<GeneralSettingsValues>({
+    resolver: zodResolver(generalSettingsSchema),
+    defaultValues: {
+      defaultExpirationDays: undefined,
+      expirationWarningDays: undefined,
+      defaultReminderFirstAfterDays: undefined,
+      defaultReminderRepeatDays: undefined,
+      defaultReminderMaxCount: undefined,
+      maxFileSizeMb: undefined,
+      publicFormsEnabled: false,
+      bulkSendMaxRowsPerJob: undefined,
+      bulkSendMaxActiveJobs: undefined,
+    },
+  });
 
   useEffect(() => {
-    if (settings) setForm(settings);
-  }, [settings]);
-
-  async function handleSave() {
-    try {
-      await update.mutateAsync({
-        defaultExpirationDays: form.defaultExpirationDays,
-        expirationWarningDays: form.expirationWarningDays,
-        defaultReminderFirstAfterDays: form.defaultReminderFirstAfterDays,
-        defaultReminderRepeatDays: form.defaultReminderRepeatDays,
-        defaultReminderMaxCount: form.defaultReminderMaxCount,
-        maxFileSizeMb: form.maxFileSizeMb,
-        publicFormsEnabled: form.publicFormsEnabled,
-        bulkSendMaxRowsPerJob: form.bulkSendMaxRowsPerJob,
-        bulkSendMaxActiveJobs: form.bulkSendMaxActiveJobs,
+    if (settings) {
+      form.reset({
+        defaultExpirationDays: settings.defaultExpirationDays ?? undefined,
+        expirationWarningDays: settings.expirationWarningDays ?? undefined,
+        defaultReminderFirstAfterDays: settings.defaultReminderFirstAfterDays ?? undefined,
+        defaultReminderRepeatDays: settings.defaultReminderRepeatDays ?? undefined,
+        defaultReminderMaxCount: settings.defaultReminderMaxCount ?? undefined,
+        maxFileSizeMb: settings.maxFileSizeMb ?? undefined,
+        publicFormsEnabled: settings.publicFormsEnabled ?? false,
+        bulkSendMaxRowsPerJob: settings.bulkSendMaxRowsPerJob ?? undefined,
+        bulkSendMaxActiveJobs: settings.bulkSendMaxActiveJobs ?? undefined,
       });
+    }
+  }, [settings, form]);
+
+  async function handleSave(values: GeneralSettingsValues) {
+    try {
+      await update.mutateAsync(values);
       toast.success("Settings saved");
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -47,79 +84,192 @@ export function GeneralSettingsForm() {
         <CardTitle className="text-sm font-semibold">Defaults &amp; limits</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <Label>Default expiration (days)</Label>
-            <Input
-              type="number"
-              value={form.defaultExpirationDays ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, defaultExpirationDays: Number(e.target.value) }))}
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSave)} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="defaultExpirationDays"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Default expiration (days)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        value={field.value ?? ""}
+                        onChange={(e) => field.onChange(toNumber(e.target.value))}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        ref={field.ref}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="expirationWarningDays"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Expiration warning (days before)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        value={field.value ?? ""}
+                        onChange={(e) => field.onChange(toNumber(e.target.value))}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        ref={field.ref}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="defaultReminderFirstAfterDays"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>First reminder after (days)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        value={field.value ?? ""}
+                        onChange={(e) => field.onChange(toNumber(e.target.value))}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        ref={field.ref}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="defaultReminderRepeatDays"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Repeat reminder every (days)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        value={field.value ?? ""}
+                        onChange={(e) => field.onChange(toNumber(e.target.value))}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        ref={field.ref}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="defaultReminderMaxCount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Max reminders</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        value={field.value ?? ""}
+                        onChange={(e) => field.onChange(toNumber(e.target.value))}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        ref={field.ref}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="maxFileSizeMb"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Max file size (MB)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        value={field.value ?? ""}
+                        onChange={(e) => field.onChange(toNumber(e.target.value))}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        ref={field.ref}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="bulkSendMaxRowsPerJob"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Bulk send max rows/job</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        value={field.value ?? ""}
+                        onChange={(e) => field.onChange(toNumber(e.target.value))}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        ref={field.ref}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="bulkSendMaxActiveJobs"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Bulk send max active jobs</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        value={field.value ?? ""}
+                        onChange={(e) => field.onChange(toNumber(e.target.value))}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        ref={field.ref}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <FormField
+              control={form.control}
+              name="publicFormsEnabled"
+              render={({ field }) => (
+                <FormItem>
+                  <label className="flex items-center gap-2.5 text-sm cursor-pointer">
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      ref={field.ref}
+                    />
+                    Allow public signing forms
+                  </label>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Expiration warning (days before)</Label>
-            <Input
-              type="number"
-              value={form.expirationWarningDays ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, expirationWarningDays: Number(e.target.value) }))}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label>First reminder after (days)</Label>
-            <Input
-              type="number"
-              value={form.defaultReminderFirstAfterDays ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, defaultReminderFirstAfterDays: Number(e.target.value) }))}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Repeat reminder every (days)</Label>
-            <Input
-              type="number"
-              value={form.defaultReminderRepeatDays ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, defaultReminderRepeatDays: Number(e.target.value) }))}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Max reminders</Label>
-            <Input
-              type="number"
-              value={form.defaultReminderMaxCount ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, defaultReminderMaxCount: Number(e.target.value) }))}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Max file size (MB)</Label>
-            <Input
-              type="number"
-              value={form.maxFileSizeMb ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, maxFileSizeMb: Number(e.target.value) }))}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Bulk send max rows/job</Label>
-            <Input
-              type="number"
-              value={form.bulkSendMaxRowsPerJob ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, bulkSendMaxRowsPerJob: Number(e.target.value) }))}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Bulk send max active jobs</Label>
-            <Input
-              type="number"
-              value={form.bulkSendMaxActiveJobs ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, bulkSendMaxActiveJobs: Number(e.target.value) }))}
-            />
-          </div>
-        </div>
-        <label className="flex items-center gap-2.5 text-sm cursor-pointer">
-          <Switch checked={form.publicFormsEnabled ?? false} onCheckedChange={(v) => setForm((f) => ({ ...f, publicFormsEnabled: v }))} />
-          Allow public signing forms
-        </label>
-        <LoadingButton onClick={handleSave} isPending={update.isPending} loadingText="Saving…">
-          Save
-        </LoadingButton>
+            <LoadingButton type="submit" isPending={update.isPending} loadingText="Saving…">
+              Save
+            </LoadingButton>
+          </form>
+        </Form>
       </CardContent>
     </Card>
   );

@@ -194,3 +194,14 @@ export function getFirstName(
   const userName = name || (email && email.includes("@") ? email.split("@")[0] : null) || "User";
   return userName.split(" ")[0] || "User";
 }
+
+export function formatIpAddress(ip: string | null | undefined): string {
+  if (!ip) return "—";
+  if (ip === "::1" || ip === "127.0.0.1") return "Local network";
+  if (/^10\./.test(ip)) return "Local network";
+  if (/^192\.168\./.test(ip)) return "Local network";
+  if (/^172\.(1[6-9]|2\d|3[01])\./.test(ip)) return "Local network";
+  if (/^(fc|fd)/i.test(ip)) return "Local network";
+  if (/^fe80:/i.test(ip)) return "Local network";
+  return ip;
+}

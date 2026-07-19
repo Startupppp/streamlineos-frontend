@@ -1,34 +1,55 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useSignSettings, useUpdateSignSettings } from "@/hooks/api/sign/settings";
+
+const brandingSchema = z.object({
+  emailSenderName: z.string().max(100).optional(),
+  signingPageSupportText: z.string().max(500).optional(),
+  completionMessage: z.string().max(2000).optional(),
+  disclosureText: z.string().max(5000).optional(),
+});
+
+type BrandingValues = z.infer<typeof brandingSchema>;
 
 export function BrandingSettingsForm() {
   const { data: settings } = useSignSettings();
   const update = useUpdateSignSettings();
-  const [form, setForm] = useState<Record<string, string>>({});
+
+  const form = useForm<BrandingValues>({
+    resolver: zodResolver(brandingSchema),
+    defaultValues: {
+      emailSenderName: "",
+      signingPageSupportText: "",
+      completionMessage: "",
+      disclosureText: "",
+    },
+  });
 
   useEffect(() => {
     if (settings?.brandingJson) {
-      setForm({
+      form.reset({
         emailSenderName: settings.brandingJson.emailSenderName ?? "",
         signingPageSupportText: settings.brandingJson.signingPageSupportText ?? "",
         completionMessage: settings.brandingJson.completionMessage ?? "",
         disclosureText: settings.brandingJson.disclosureText ?? "",
       });
     }
-  }, [settings]);
+  }, [settings, form]);
 
-  async function handleSave() {
+  async function handleSave(values: BrandingValues) {
     try {
-      await update.mutateAsync({ brandingJson: form });
+      await update.mutateAsync({ brandingJson: values });
       toast.success("Branding saved");
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -41,28 +62,65 @@ export function BrandingSettingsForm() {
         <CardTitle className="text-sm font-semibold">Branding</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="space-y-1.5">
-          <Label>Email sender name</Label>
-          <Input value={form.emailSenderName ?? ""} onChange={(e) => setForm((f) => ({ ...f, emailSenderName: e.target.value }))} />
-        </div>
-        <div className="space-y-1.5">
-          <Label>Signing page support text</Label>
-          <Input
-            value={form.signingPageSupportText ?? ""}
-            onChange={(e) => setForm((f) => ({ ...f, signingPageSupportText: e.target.value }))}
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label>Completion message</Label>
-          <Textarea rows={2} value={form.completionMessage ?? ""} onChange={(e) => setForm((f) => ({ ...f, completionMessage: e.target.value }))} />
-        </div>
-        <div className="space-y-1.5">
-          <Label>Custom disclosure text</Label>
-          <Textarea rows={3} value={form.disclosureText ?? ""} onChange={(e) => setForm((f) => ({ ...f, disclosureText: e.target.value }))} />
-        </div>
-        <LoadingButton onClick={handleSave} isPending={update.isPending} loadingText="Saving…">
-          Save
-        </LoadingButton>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSave)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="emailSenderName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email sender name</FormLabel>
+                  <FormControl>
+                    <Input {...field} value={field.value ?? ""} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="signingPageSupportText"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Signing page support text</FormLabel>
+                  <FormControl>
+                    <Input {...field} value={field.value ?? ""} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="completionMessage"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Completion message</FormLabel>
+                  <FormControl>
+                    <Textarea rows={2} {...field} value={field.value ?? ""} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="disclosureText"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Custom disclosure text</FormLabel>
+                  <FormControl>
+                    <Textarea rows={3} {...field} value={field.value ?? ""} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <LoadingButton type="submit" isPending={update.isPending} loadingText="Saving…">
+              Save
+            </LoadingButton>
+          </form>
+        </Form>
       </CardContent>
     </Card>
   );

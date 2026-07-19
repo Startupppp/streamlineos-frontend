@@ -70,7 +70,7 @@ export function BurnRateReport() {
     >
       <div className="flex flex-1 min-h-0 flex-col">
       {isLoading ? (
-        <div className="space-y-6">
+        <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[0, 1, 2].map((i) => (
               <div key={i} className="rounded-xl border border-border bg-card p-4 space-y-2">
@@ -98,7 +98,7 @@ export function BurnRateReport() {
           onRetry={handleRetry}
         />
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4">
           <StatCardGrid cols={3}>
             <StatCard
               label="Avg Burn Rate"

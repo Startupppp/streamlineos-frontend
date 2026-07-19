@@ -37,7 +37,7 @@ export function KbAnalyticsTab() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {stats && (
         <StatCardGrid cols={4}>
           <StatCard label="Total articles" value={stats.total} icon={BookOpen} />

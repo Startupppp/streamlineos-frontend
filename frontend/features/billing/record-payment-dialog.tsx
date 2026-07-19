@@ -162,7 +162,7 @@ export function RecordPaymentDialog({
           </div>
           <div className="space-y-1">
             <Label htmlFor="pay-date" className="text-xs">
-              Payment Date
+              Payment Date <span className="text-destructive">*</span>
             </Label>
             <Controller
               control={form.control}
@@ -183,7 +183,7 @@ export function RecordPaymentDialog({
             )}
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Payment Method</Label>
+            <Label className="text-xs">Payment Method <span className="text-destructive">*</span></Label>
             <Controller
               control={form.control}
               name="paymentMethod"

@@ -8,6 +8,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { MonthPicker } from "@/features/payroll/shared/month-picker";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 
 interface ReportFiltersProps {
   month: string;
@@ -47,7 +48,7 @@ export function ReportFilters({
       />
 
       <Select value={department} onValueChange={onDepartmentChange}>
-        <SelectTrigger className="h-9 w-40 text-sm">
+        <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-40`}>
           <SelectValue placeholder="All Departments" />
         </SelectTrigger>
         <SelectContent>
@@ -56,7 +57,7 @@ export function ReportFilters({
       </Select>
 
       <Select value={costCenter} onValueChange={onCostCenterChange}>
-        <SelectTrigger className="h-9 w-36 text-sm">
+        <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-36`}>
           <SelectValue placeholder="All Cost Centers" />
         </SelectTrigger>
         <SelectContent>
@@ -65,7 +66,7 @@ export function ReportFilters({
       </Select>
 
       <Select value={workerType} onValueChange={onWorkerTypeChange}>
-        <SelectTrigger className="h-9 w-36 text-sm">
+        <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-36`}>
           <SelectValue placeholder="All Types" />
         </SelectTrigger>
         <SelectContent>

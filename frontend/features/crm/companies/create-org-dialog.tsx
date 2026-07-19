@@ -95,7 +95,7 @@ export function CreateOrgDialog({ open, onOpenChange }: CreateOrgDialogProps) {
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Name *</FormLabel>
+                <FormLabel>Name <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
                   <Input {...field} placeholder="Company name" />
                 </FormControl>

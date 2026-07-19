@@ -217,7 +217,7 @@ export default function CustomFieldsPage() {
   if (isLoading) {
     return (
       <PageWrapper title="Custom Fields" subtitle="Loading...">
-        <div className="space-y-6">
+        <div className="space-y-4">
           <div className="flex gap-1">
             {[1, 2, 3].map((i) => <Skeleton key={i} className="h-4 w-20" />)}
           </div>

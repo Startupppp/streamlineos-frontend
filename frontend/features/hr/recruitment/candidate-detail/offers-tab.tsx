@@ -294,7 +294,7 @@ function OfferCard({
                 <SelectTrigger className="text-xs w-36">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                   {UPDATABLE_STATUSES.map((s) => (
                     <SelectItem key={s} value={s} className="text-xs">
                       {STATUS_CONFIG[s].label}

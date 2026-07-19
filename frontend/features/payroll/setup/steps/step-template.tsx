@@ -113,7 +113,7 @@ export function StepTemplate({
   if (templates.length === 0) {
     return (
       <div className="space-y-4">
-        <div className="flex flex-col items-center justify-center py-12 gap-3 text-center">
+        <div className="flex flex-col items-center justify-center py-6 gap-3 text-center">
           <p className="text-sm font-medium text-foreground">No templates available</p>
           <p className="text-xs text-muted-foreground">Contact your administrator to set up templates</p>
         </div>

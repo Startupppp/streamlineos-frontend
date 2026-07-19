@@ -439,7 +439,7 @@ function RoundFormSheet({
               <Label className="text-xs font-medium">Round Type <span className="text-destructive">*</span></Label>
               <Select value={roundType} onValueChange={handleRoundTypeChange}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                   {ROUND_TYPES.map(({ value, label }) => (
                     <SelectItem key={value} value={value}>{label}</SelectItem>
                   ))}
@@ -450,7 +450,7 @@ function RoundFormSheet({
               <Label className="text-xs font-medium">Mode <span className="text-destructive">*</span></Label>
               <Select value={mode} onValueChange={handleModeChange}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                   {ROUND_MODES.map(({ value, label }) => (
                     <SelectItem key={value} value={value}>{label}</SelectItem>
                   ))}

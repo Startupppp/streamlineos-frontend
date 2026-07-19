@@ -135,7 +135,7 @@ export function ProductFormSheet({
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Name</FormLabel>
+                    <FormLabel>Name <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <Input {...field} placeholder="e.g. Enterprise License" />
                     </FormControl>
@@ -193,7 +193,7 @@ export function ProductFormSheet({
                   name="unitPrice"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Unit Price</FormLabel>
+                      <FormLabel>Unit Price <span className="text-destructive">*</span></FormLabel>
                       <FormControl>
                         <Input {...field} type="number" min="0" step="0.01" />
                       </FormControl>

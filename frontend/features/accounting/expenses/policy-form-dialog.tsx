@@ -4,8 +4,14 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { EntityFormDialog } from "@/components/shared";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import type { FinExpensePolicy } from "@/types/accounting/expenses";
 
 const policySchema = z.object({
@@ -62,61 +68,74 @@ export function PolicyFormDialog({
     >
       {(form) => (
         <>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Policy name *</Label>
-            <Input
-              {...form.register("name")}
-              className="text-sm"
-              placeholder="Travel expenses"
-            />
-            {form.formState.errors.name && (
-              <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Policy name <span className="text-destructive">*</span></FormLabel>
+                <FormControl>
+                  <Input {...field} className="text-sm" placeholder="Travel expenses" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
-          </div>
+          />
 
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label className="text-xs">Max amount</Label>
-              <Input
-                {...form.register("maxAmount")}
-                type="number"
-                step="0.01"
-                min="0"
-                className="text-sm"
-                placeholder="5000"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Require receipt above</Label>
-              <Input
-                {...form.register("requiresReceiptAbove")}
-                type="number"
-                step="0.01"
-                min="0"
-                className="text-sm"
-                placeholder="500"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Require approval above</Label>
-              <Input
-                {...form.register("requiresApprovalAbove")}
-                type="number"
-                step="0.01"
-                min="0"
-                className="text-sm"
-                placeholder="2000"
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="maxAmount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Max amount</FormLabel>
+                  <FormControl>
+                    <Input {...field} type="number" step="0.01" min="0" className="text-sm" placeholder="5000" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="requiresReceiptAbove"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Require receipt above</FormLabel>
+                  <FormControl>
+                    <Input {...field} type="number" step="0.01" min="0" className="text-sm" placeholder="500" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="requiresApprovalAbove"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Require approval above</FormLabel>
+                  <FormControl>
+                    <Input {...field} type="number" step="0.01" min="0" className="text-sm" placeholder="2000" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
 
-          <div className="flex items-center gap-2">
-            <Switch
-              checked={form.watch("isActive")}
-              onCheckedChange={(checked) => form.setValue("isActive", checked)}
-            />
-            <Label className="text-sm">Active</Label>
-          </div>
+          <FormField
+            control={form.control}
+            name="isActive"
+            render={({ field }) => (
+              <FormItem className="flex items-center gap-2">
+                <FormControl>
+                  <Switch checked={field.value} onCheckedChange={field.onChange} />
+                </FormControl>
+                <FormLabel className="text-sm !mt-0">Active</FormLabel>
+              </FormItem>
+            )}
+          />
         </>
       )}
     </EntityFormDialog>

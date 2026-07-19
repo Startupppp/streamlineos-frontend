@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { XIcon, PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { getErrorMessage } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateCareerPath } from "@/hooks/api/hr/career";
 import {
   Form,
@@ -116,7 +116,7 @@ export function CreatePathSheet({ open, onOpenChange }: Props) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
-                  Name
+                  Name <span className="text-destructive">*</span>
                 </FormLabel>
                 <FormControl>
                   <Input placeholder="e.g. Engineering Track" className="text-sm" {...field} />

@@ -394,7 +394,7 @@ export default function ExpensesPage() {
         variants={staggerContainer}
         initial="hidden"
         animate="visible"
-        className="flex flex-1 min-h-0 flex-col gap-6"
+        className="flex flex-1 min-h-0 flex-col gap-4"
       >
         <motion.div variants={fadeUp}>
           <MemberExpenseStats stats={stats} />

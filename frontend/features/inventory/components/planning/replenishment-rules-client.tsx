@@ -7,7 +7,6 @@ import { PlusIcon } from "@animateicons/react/lucide";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import {
   AlertDialog,
@@ -225,18 +224,15 @@ export function ReplenishmentRulesClient() {
           className="flex-1 h-full"
         />
       ) : (
-        <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
-          <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
-            <DataTable
-              data={rules}
-              columns={columns}
-              getRowKey={(rule) => rule.id}
-              isLoading={isLoading}
-              pagination={{ mode: "server", page, pageSize: 50, total, onPageChange: setPage }}
-              minWidth="900px"
-            />
-          </CardContent>
-        </Card>
+        <DataTable
+          data={rules}
+          columns={columns}
+          className="flex-1 min-h-0"
+          getRowKey={(rule) => rule.id}
+          isLoading={isLoading}
+          pagination={{ mode: "server", page, pageSize: 50, total, onPageChange: setPage }}
+          minWidth="900px"
+        />
       )}
 
       <ReplenishmentRuleForm

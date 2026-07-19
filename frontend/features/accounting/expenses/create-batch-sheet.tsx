@@ -133,7 +133,7 @@ export function CreateBatchSheet({ open, onOpenChange, onCreated }: CreateBatchS
     >
       <div className="space-y-4">
         <div className="space-y-1.5">
-          <Label className="text-xs">Batch name</Label>
+          <Label className="text-xs">Batch name <span className="text-destructive">*</span></Label>
           <Input
             {...form.register("name")}
             className="text-sm"

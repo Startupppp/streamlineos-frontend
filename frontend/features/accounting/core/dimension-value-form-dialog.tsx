@@ -4,7 +4,13 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { EntityFormDialog } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -73,34 +79,39 @@ export function DimensionValueFormDialog({ open, onOpenChange, dimensionId, valu
     >
       {(form) => (
         <div className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="val-code">Code</Label>
-            <Input
-              id="val-code"
-              placeholder="e.g. CC-001"
-              readOnly={isEdit}
-              {...form.register("code")}
-              className={`font-mono text-sm ${isEdit ? "bg-muted" : ""} ${
-                form.formState.errors.code ? "border-destructive" : ""
-              }`}
-            />
-            {form.formState.errors.code && (
-              <p className="text-xs text-destructive">{form.formState.errors.code.message}</p>
+          <FormField
+            control={form.control}
+            name="code"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Code <span className="text-destructive">*</span></FormLabel>
+                <FormControl>
+                  <Input
+                    id="val-code"
+                    placeholder="e.g. CC-001"
+                    readOnly={isEdit}
+                    className={`font-mono text-sm${isEdit ? " bg-muted" : ""}`}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
-          </div>
+          />
 
-          <div className="space-y-1.5">
-            <Label htmlFor="val-name">Name</Label>
-            <Input
-              id="val-name"
-              placeholder="e.g. Engineering"
-              {...form.register("name")}
-              className={form.formState.errors.name ? "border-destructive" : ""}
-            />
-            {form.formState.errors.name && (
-              <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Name <span className="text-destructive">*</span></FormLabel>
+                <FormControl>
+                  <Input id="val-name" placeholder="e.g. Engineering" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
-          </div>
+          />
         </div>
       )}
     </EntityFormDialog>

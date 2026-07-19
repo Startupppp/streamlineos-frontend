@@ -28,6 +28,7 @@ import { CURRENCIES, PAY_FREQUENCIES } from "@/features/payroll/setup/lib/consta
 import type { SetupDraft } from "@/features/payroll/setup/lib/draft";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const COUNTRY_DEFAULT_CURRENCY: Record<string, string> = {
   IN: "INR",
@@ -134,7 +135,7 @@ export function StepProfile({ draft, updateDraft, goNext }: StepProfileProps) {
             updateDraft({ profile: profileDraft });
             goNext();
           },
-          onError: () => toast.error("Failed to save profile"),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     } else {
@@ -143,7 +144,7 @@ export function StepProfile({ draft, updateDraft, goNext }: StepProfileProps) {
           updateDraft({ policyId: result.id, profile: profileDraft });
           goNext();
         },
-        onError: () => toast.error("Failed to create policy"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       });
     }
   }

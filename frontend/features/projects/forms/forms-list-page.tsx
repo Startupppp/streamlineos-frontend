@@ -19,7 +19,6 @@ import { useForms, useCreateForm } from "@/hooks/api/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   PmPageShell,
-  PmPanel,
   PmSection,
   PM_FILL_PANEL,
 } from "@/features/projects/shared/pm-chrome";
@@ -241,15 +240,13 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
                 }
               />
           ) : (
-            <PmPanel className={PM_FILL_PANEL} solid>
-              <DataTable
+            <DataTable
                 data={filtered}
                 columns={columns}
                 getRowKey={(row) => row.id}
                 minWidth="680px"
-                className="min-h-0 flex-1 border-0"
+                className={PM_FILL_PANEL}
               />
-            </PmPanel>
           )}
         </PmSection>
       </PmPageShell>

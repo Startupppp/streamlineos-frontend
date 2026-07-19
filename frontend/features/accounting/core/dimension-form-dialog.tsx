@@ -5,7 +5,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useController } from "react-hook-form";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { EntityFormDialog } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -121,37 +127,42 @@ export function DimensionFormDialog({ open, onOpenChange, dimension }: Props) {
     >
       {(form) => (
         <div className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="dim-name">Name</Label>
-            <Input
-              id="dim-name"
-              placeholder="e.g. Cost Centre"
-              {...form.register("name")}
-              className={form.formState.errors.name ? "border-destructive" : ""}
-            />
-            {form.formState.errors.name && (
-              <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Name <span className="text-destructive">*</span></FormLabel>
+                <FormControl>
+                  <Input id="dim-name" placeholder="e.g. Cost Centre" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
-          </div>
+          />
+
+          <FormField
+            control={form.control}
+            name="key"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Key <span className="text-destructive">*</span></FormLabel>
+                <FormControl>
+                  <Input
+                    id="dim-key"
+                    placeholder="e.g. cost_centre"
+                    readOnly={isEdit}
+                    className={`font-mono text-sm${isEdit ? " bg-muted" : ""}`}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
           <div className="space-y-1.5">
-            <Label htmlFor="dim-key">Key</Label>
-            <Input
-              id="dim-key"
-              placeholder="e.g. cost_centre"
-              readOnly={isEdit}
-              {...form.register("key")}
-              className={`font-mono text-sm ${isEdit ? "bg-muted" : ""} ${
-                form.formState.errors.key ? "border-destructive" : ""
-              }`}
-            />
-            {form.formState.errors.key && (
-              <p className="text-xs text-destructive">{form.formState.errors.key.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-1.5">
-            <Label>Required for account types</Label>
+            <FormLabel>Required for account types</FormLabel>
             <div className="flex flex-wrap gap-1.5">
               {ACCOUNT_TYPES.map((t) => (
                 <AccountTypeToggle key={t} name={t} disabled={mutation.isPending} />

@@ -13,10 +13,17 @@ import {
   SheetClose,
   SheetBody,
 } from "@/components/ui/sheet";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectTrigger,
@@ -201,16 +208,6 @@ export function IncidentSheet({
 
   const isPending = create.isPending || update.isPending;
 
-  function handleSeverityChange(v: string) {
-    const found = SEVERITIES.find((s) => s === v);
-    if (found) form.setValue("severity", found);
-  }
-
-  function handleStatusChange(v: string) {
-    const found = STATUSES.find((s) => s === v);
-    if (found) form.setValue("status", found);
-  }
-
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="p-0 flex flex-col w-full sm:max-w-xl">
@@ -220,160 +217,238 @@ export function IncidentSheet({
           </SheetTitle>
         </SheetHeader>
 
-        <SheetBody className="px-5 py-4">
+        <Form {...form}>
           <form
             id="incident-form"
             onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-4"
+            className="flex flex-col flex-1 min-h-0"
           >
-            <div className="space-y-1.5">
-              <Label className="text-[11px]">Title *</Label>
-              <Input
-                {...form.register("title")}
-                className="text-[11px]"
-                placeholder="Short incident summary"
+            <SheetBody className="px-5 py-4 space-y-4">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[11px]">Title <span className="text-destructive">*</span></FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        className="text-[11px]"
+                        placeholder="Short incident summary"
+                      />
+                    </FormControl>
+                    <FormMessage className="text-[10px]" />
+                  </FormItem>
+                )}
               />
-              {form.formState.errors.title && (
-                <p className="text-[10px] text-destructive">
-                  {form.formState.errors.title.message}
-                </p>
-              )}
-            </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-[11px]">Description</Label>
-              <TiptapEditor
-                content={form.watch("description")}
-                output="html"
-                onChangeHtml={(v) => form.setValue("description", v)}
-                placeholder="What happened?"
-                minHeightClassName="min-h-[80px]"
-                menuMode="static"
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[11px]">Description</FormLabel>
+                    <FormControl>
+                      <TiptapEditor
+                        content={field.value}
+                        output="html"
+                        onChangeHtml={field.onChange}
+                        placeholder="What happened?"
+                        minHeightClassName="min-h-[80px]"
+                        menuMode="static"
+                      />
+                    </FormControl>
+                    <FormMessage className="text-[10px]" />
+                  </FormItem>
+                )}
               />
-            </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-[11px]">Severity</Label>
-                <Select
-                  value={form.watch("severity")}
-                  onValueChange={handleSeverityChange}
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="severity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[11px]">Severity</FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {SEVERITIES.map((s) => (
+                            <SelectItem key={s} value={s} className="capitalize">
+                              {s}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage className="text-[10px]" />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[11px]">Status</FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {STATUSES.map((s) => (
+                            <SelectItem key={s} value={s}>
+                              {STATUS_LABELS[s]}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage className="text-[10px]" />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="impact"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[11px]">Impact</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        className="text-[11px]"
+                        placeholder="Who / what is affected?"
+                      />
+                    </FormControl>
+                    <FormMessage className="text-[10px]" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="ownerId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[11px]">Owner</FormLabel>
+                    <ProjectMemberSelect
+                      projectId={projectId}
+                      mode="single"
+                      value={field.value}
+                      onChange={(v) => field.onChange(v ?? "")}
+                      allowUnassigned
+                      placeholder="Unassigned"
+                      className="text-[11px]"
+                    />
+                    <FormMessage className="text-[10px]" />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-3 gap-3">
+                <FormField
+                  control={form.control}
+                  name="detectedAt"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[11px]">Detected at</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="datetime-local"
+                          className="text-[11px]"
+                        />
+                      </FormControl>
+                      <FormMessage className="text-[10px]" />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="responseDueAt"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[11px]">Response due</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="datetime-local"
+                          className="text-[11px]"
+                        />
+                      </FormControl>
+                      <FormMessage className="text-[10px]" />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="resolutionDueAt"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[11px]">Resolution due</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="datetime-local"
+                          className="text-[11px]"
+                        />
+                      </FormControl>
+                      <FormMessage className="text-[10px]" />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="linkedTicketId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[11px]">Linked Ticket</FormLabel>
+                    <FormControl>
+                      <TicketCombobox
+                        projectId={projectId}
+                        projectKey={projectKey}
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Link a ticket…"
+                        allowClear
+                        className="text-[11px]"
+                      />
+                    </FormControl>
+                    <FormMessage className="text-[10px]" />
+                  </FormItem>
+                )}
+              />
+            </SheetBody>
+
+            <SheetFooter className="px-5 py-3 border-t shrink-0">
+              <div className="grid w-full grid-cols-2 gap-2">
+                <SheetClose asChild>
+                  <Button variant="outline" size="sm" className="text-[11px]">
+                    Cancel
+                  </Button>
+                </SheetClose>
+                <LoadingButton
+                  type="submit"
+                  size="sm"
+                  className="text-[11px]"
+                  isPending={isPending}
+                  loadingText="Saving…"
                 >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SEVERITIES.map((s) => (
-                      <SelectItem key={s} value={s} className="capitalize">
-                        {s}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  {editIncident ? "Save Changes" : "Create Incident"}
+                </LoadingButton>
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-[11px]">Status</Label>
-                <Select
-                  value={form.watch("status")}
-                  onValueChange={handleStatusChange}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {STATUSES.map((s) => (
-                      <SelectItem key={s} value={s}>
-                        {STATUS_LABELS[s]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-[11px]">Impact</Label>
-              <Input
-                {...form.register("impact")}
-                className="text-[11px]"
-                placeholder="Who / what is affected?"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-[11px]">Owner</Label>
-              <ProjectMemberSelect
-                projectId={projectId}
-                mode="single"
-                value={form.watch("ownerId")}
-                onChange={(v) => form.setValue("ownerId", v ?? "")}
-                allowUnassigned
-                placeholder="Unassigned"
-                className="text-[11px]"
-              />
-            </div>
-
-            <div className="grid grid-cols-3 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-[11px]">Detected at</Label>
-                <Input
-                  {...form.register("detectedAt")}
-                  type="datetime-local"
-                  className="text-[11px]"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[11px]">Response due</Label>
-                <Input
-                  {...form.register("responseDueAt")}
-                  type="datetime-local"
-                  className="text-[11px]"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[11px]">Resolution due</Label>
-                <Input
-                  {...form.register("resolutionDueAt")}
-                  type="datetime-local"
-                  className="text-[11px]"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-[11px]">Linked Ticket</Label>
-              <TicketCombobox
-                projectId={projectId}
-                projectKey={projectKey}
-                value={form.watch("linkedTicketId")}
-                onChange={(v) => form.setValue("linkedTicketId", v)}
-                placeholder="Link a ticket…"
-                allowClear
-                className="text-[11px]"
-              />
-            </div>
+            </SheetFooter>
           </form>
-        </SheetBody>
-
-        <SheetFooter className="px-5 py-3 border-t shrink-0">
-          <div className="grid w-full grid-cols-2 gap-2">
-            <SheetClose asChild>
-              <Button variant="outline" size="sm" className="text-[11px]">
-                Cancel
-              </Button>
-            </SheetClose>
-            <LoadingButton
-              type="submit"
-              form="incident-form"
-              size="sm"
-              className="text-[11px]"
-              isPending={isPending}
-              loadingText="Saving…"
-            >
-              {editIncident ? "Save Changes" : "Create Incident"}
-            </LoadingButton>
-          </div>
-        </SheetFooter>
+        </Form>
       </SheetContent>
     </Sheet>
   );

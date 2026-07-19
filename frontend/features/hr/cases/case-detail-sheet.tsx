@@ -17,6 +17,8 @@ import { Switch } from "@/components/ui/switch";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { cn } from "@/lib/utils";
 import { FileText, StickyNote, Lock, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PlusIcon } from "@animateicons/react/lucide";
 import {
@@ -60,7 +62,10 @@ function NoteThread({ caseId }: { caseId: number }) {
 
   function handleAdd() {
     if (!text.trim()) return;
-    addNote.mutate({ note: text.trim(), isConfidential }, { onSuccess: () => setText("") });
+    addNote.mutate({ note: text.trim(), isConfidential }, {
+      onSuccess: () => setText(""),
+      onError: (err) => toast.error(getErrorMessage(err)),
+    });
   }
 
   if (isLoading) return <Loader2 className="h-4 w-4 animate-spin mx-auto mt-4" />;
@@ -147,6 +152,18 @@ export function CaseDetailSheet({ caseId, open, onOpenChange }: Props) {
   const updateCase = useUpdateCase(caseId);
   const [activeTab, setActiveTab] = useState<"details" | "notes" | "documents">("details");
 
+  function handleStartInvestigation() {
+    startInvestigation.mutate(undefined, {
+      onError: (err) => toast.error(getErrorMessage(err)),
+    });
+  }
+
+  function handleMarkResolved() {
+    updateCase.mutate({ status: "resolved" }, {
+      onError: (err) => toast.error(getErrorMessage(err)),
+    });
+  }
+
   if (!open) return null;
 
   return (
@@ -231,7 +248,7 @@ export function CaseDetailSheet({ caseId, open, onOpenChange }: Props) {
                           size="sm"
                           variant="outline"
                           isPending={startInvestigation.isPending}
-                          onClick={() => startInvestigation.mutate()}
+                          onClick={handleStartInvestigation}
                         >
                           Start Investigation
                         </LoadingButton>
@@ -241,7 +258,7 @@ export function CaseDetailSheet({ caseId, open, onOpenChange }: Props) {
                           size="sm"
                           variant="outline"
                           isPending={updateCase.isPending}
-                          onClick={() => updateCase.mutate({ status: "resolved" })}
+                          onClick={handleMarkResolved}
                         >
                           Mark Resolved
                         </LoadingButton>

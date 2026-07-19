@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -8,8 +8,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { AppSheet } from "@/components/shared/app-sheet";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { useShipSalesOrder } from "@/hooks/api/inventory/sales-orders";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -91,39 +98,49 @@ export function ShipSheet({ open, onOpenChange, soId }: ShipSheetProps) {
 
   return (
     <AppSheet open={open} onOpenChange={handleOpenChange} title="Ship Order" footer={footer}>
-      <form className="space-y-4" onSubmit={handlePreventDefault}>
-        <div className="space-y-1.5">
-          <Label htmlFor="shipDate">Ship Date *</Label>
-          <Controller
-            name="shipDate"
+      <Form {...form}>
+        <form className="space-y-4" onSubmit={handlePreventDefault}>
+          <FormField
             control={form.control}
+            name="shipDate"
             render={({ field }) => (
-              <DatePicker id="shipDate" value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
+              <FormItem>
+                <FormLabel>Ship Date <span className="text-destructive">*</span></FormLabel>
+                <FormControl>
+                  <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
           />
-          {form.formState.errors.shipDate && (
-            <p className="text-xs text-destructive">{form.formState.errors.shipDate.message}</p>
-          )}
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="trackingNumber">Tracking Number</Label>
-          <Input
-            id="trackingNumber"
-            placeholder="Optional"
-            className="text-sm"
-            {...form.register("trackingNumber")}
+          <FormField
+            control={form.control}
+            name="trackingNumber"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tracking Number</FormLabel>
+                <FormControl>
+                  <Input placeholder="Optional" className="text-sm" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="notes">Notes</Label>
-          <Textarea
-            id="notes"
-            placeholder="Optional"
-            className="text-sm min-h-[80px] resize-none"
-            {...form.register("notes")}
+          <FormField
+            control={form.control}
+            name="notes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Notes</FormLabel>
+                <FormControl>
+                  <Textarea placeholder="Optional" className="text-sm min-h-[80px] resize-none" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
-      </form>
+        </form>
+      </Form>
     </AppSheet>
   );
 }

@@ -17,7 +17,7 @@ export default function CompOffPage() {
 
   return (
     <PageWrapper title="Compensatory Off" subtitle="Track earned comp-off from overtime work" variant="display">
-      <div className="flex flex-1 min-h-0 flex-col gap-6">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         {isLoading ? (
           <Skeleton className="h-40 rounded-2xl" />
         ) : (

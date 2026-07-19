@@ -63,7 +63,7 @@ export function QuoteSettingsForm({ settings, onSubmit, isPending }: QuoteSettin
             name="defaultExpiryDays"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Default Quote Expiry (days)</FormLabel>
+                <FormLabel>Default Quote Expiry (days) <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
                   <Input
                     type="number"

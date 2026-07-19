@@ -193,7 +193,7 @@ export function ReplenishmentRuleForm({ open, onOpenChange, editRule }: Replenis
             name="variantId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Product Variant</FormLabel>
+                <FormLabel>Product Variant <span className="text-destructive">*</span></FormLabel>
                 <Select
                   value={field.value}
                   onValueChange={field.onChange}
@@ -222,7 +222,7 @@ export function ReplenishmentRuleForm({ open, onOpenChange, editRule }: Replenis
             name="warehouseId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Warehouse</FormLabel>
+                <FormLabel>Warehouse <span className="text-destructive">*</span></FormLabel>
                 <Select
                   value={field.value}
                   onValueChange={field.onChange}
@@ -252,7 +252,7 @@ export function ReplenishmentRuleForm({ open, onOpenChange, editRule }: Replenis
               name="minQty"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Min Qty</FormLabel>
+                  <FormLabel>Min Qty <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <Input type="number" min={0} placeholder="0" {...field} />
                   </FormControl>
@@ -265,7 +265,7 @@ export function ReplenishmentRuleForm({ open, onOpenChange, editRule }: Replenis
               name="maxQty"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Max Qty</FormLabel>
+                  <FormLabel>Max Qty <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <Input type="number" min={0} placeholder="0" {...field} />
                   </FormControl>
@@ -278,7 +278,7 @@ export function ReplenishmentRuleForm({ open, onOpenChange, editRule }: Replenis
               name="reorderQty"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Reorder Qty</FormLabel>
+                  <FormLabel>Reorder Qty <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <Input type="number" min={0} placeholder="0" {...field} />
                   </FormControl>

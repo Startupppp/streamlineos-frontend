@@ -362,7 +362,7 @@ function AssetForm({
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                  <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                     {ASSET_TYPES.map((t) => (
                       <SelectItem key={t} value={t}>
                         {t}

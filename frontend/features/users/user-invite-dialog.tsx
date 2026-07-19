@@ -34,7 +34,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { useInviteUser } from "@/hooks/api/users";
 import { useOrgBranches, useOrgDepartments } from "@/hooks/api/org-hierarchy";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { CheckCircle2, Mail, ChevronDown } from "lucide-react";
 
@@ -113,7 +113,7 @@ export function UserInviteDialog({ open, onOpenChange }: UserInviteDialogProps) 
           toast.success(result.resent ? "Invitation re-sent!" : "Invitation sent!");
         },
         onError: (error) => {
-          toast.error(getApiError(error));
+          toast.error(getErrorMessage(error));
         },
       }
     );
@@ -162,7 +162,7 @@ export function UserInviteDialog({ open, onOpenChange }: UserInviteDialogProps) 
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email address</FormLabel>
+                    <FormLabel>Email address <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <div className="relative">
                         <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -185,7 +185,7 @@ export function UserInviteDialog({ open, onOpenChange }: UserInviteDialogProps) 
                 name="role"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Role</FormLabel>
+                    <FormLabel>Role <span className="text-destructive">*</span></FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>

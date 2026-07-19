@@ -8,30 +8,10 @@ import { getApiError } from "@/lib/api-client";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { ErrorState } from "@/components/shared/error-state";
-import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
-
-const MODULE_LABELS: Record<string, string> = {
-  hr: "HR & People",
-  crm: "CRM & Sales",
-  projects: "Projects",
-  accounting: "Accounting",
-  inventory: "Inventory",
-  kb: "Knowledge Base",
-  blog: "Blog",
-  support: "Support",
-  surveys: "Surveys",
-  payroll: "Payroll",
-  sign: "SignOS",
-};
-
-function getModuleLabel(moduleKey: string): string {
-  return (
-    MODULE_LABELS[moduleKey] ??
-    moduleKey.charAt(0).toUpperCase() + moduleKey.slice(1)
-  );
-}
+import { getModuleCatalogEntry } from "@/lib/module-catalog";
+import { cn } from "@/lib/utils";
 
 export default function ModulesPage() {
   return (
@@ -43,15 +23,16 @@ export default function ModulesPage() {
 
 function ModuleCardSkeleton() {
   return (
-    <Card>
-      <CardContent className="flex items-center justify-between p-5">
-        <div className="space-y-1.5">
-          <Skeleton className="h-4 w-28" />
-          <Skeleton className="h-3 w-16" />
+    <div className="flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3 shadow-sm">
+      <div className="flex items-center gap-3">
+        <Skeleton className="h-8 w-8 rounded-md shrink-0" />
+        <div className="space-y-1">
+          <Skeleton className="h-3.5 w-28" />
+          <Skeleton className="h-3 w-36" />
         </div>
-        <Skeleton className="h-5 w-9 rounded-full" />
-      </CardContent>
-    </Card>
+      </div>
+      <Skeleton className="h-5 w-9 rounded-full" />
+    </div>
   );
 }
 
@@ -70,6 +51,9 @@ function ModuleCard({
   core,
   onToggle,
 }: ModuleCardProps) {
+  const entry = getModuleCatalogEntry(moduleKey);
+  const Icon = entry.icon;
+
   const handleToggle = useCallback(
     (checked: boolean) => {
       onToggle(moduleKey, checked);
@@ -78,25 +62,43 @@ function ModuleCard({
   );
 
   return (
-    <Card>
-      <CardContent className="flex items-start justify-between gap-3 p-5">
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-foreground truncate">
-            {getModuleLabel(moduleKey)}
-          </p>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {core ? "Always on" : enabled ? "Enabled" : "Disabled"}
-          </p>
-        </div>
-        <Switch
-          checked={enabled}
-          onCheckedChange={handleToggle}
-          disabled={isPending || !!core}
-          aria-label={`Toggle ${getModuleLabel(moduleKey)}`}
-          className="flex-shrink-0 mt-0.5"
-        />
-      </CardContent>
-    </Card>
+    <div
+      className={cn(
+        "flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 shadow-sm",
+        core && "opacity-75",
+      )}
+    >
+      <span
+        className={cn(
+          "h-8 w-8 rounded-md flex items-center justify-center shrink-0",
+          entry.iconBg,
+          entry.iconText,
+        )}
+      >
+        <Icon className="h-[15px] w-[15px]" strokeWidth={1.75} />
+      </span>
+      <div className="flex-1 min-w-0">
+        <p className="text-[13px] font-semibold text-foreground leading-tight truncate">
+          {entry.label}
+        </p>
+        <p className="text-[11px] text-muted-foreground truncate leading-tight mt-0.5">
+          {entry.description
+            ? entry.description
+            : core
+              ? "Always on"
+              : enabled
+                ? "Enabled"
+                : "Disabled"}
+        </p>
+      </div>
+      <Switch
+        checked={enabled}
+        onCheckedChange={handleToggle}
+        disabled={isPending || !!core}
+        aria-label={`Toggle ${entry.label}`}
+        className="shrink-0"
+      />
+    </div>
   );
 }
 
@@ -106,12 +108,13 @@ function ModulesContent() {
 
   const handleToggle = useCallback(
     (moduleKey: string, enabled: boolean) => {
+      const entry = getModuleCatalogEntry(moduleKey);
       toggleModule.mutate(
         { moduleKey, enabled },
         {
           onSuccess: () =>
             toast.success(
-              `${getModuleLabel(moduleKey)} ${enabled ? "enabled" : "disabled"}`,
+              `${entry.label} ${enabled ? "enabled" : "disabled"}`,
             ),
           onError: (err) => toast.error(getApiError(err)),
         },

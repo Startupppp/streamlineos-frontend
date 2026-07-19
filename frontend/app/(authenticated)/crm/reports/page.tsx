@@ -98,7 +98,7 @@ export default function CrmReportsPage() {
       }
     >
       <motion.div
-        className="space-y-6"
+        className="space-y-4"
         variants={staggerContainer}
         initial="hidden"
         animate="visible"

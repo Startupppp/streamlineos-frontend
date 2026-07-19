@@ -212,7 +212,7 @@ export function PublicationsTab({ canManage }: PublicationsTabProps) {
   const canPublish = canManage && selectedRun?.status === "PAID";
 
   return (
-    <div className="flex flex-1 min-h-0 flex-col space-y-4">
+    <div className="flex flex-1 min-h-0 flex-col gap-3">
       <div className="flex items-center justify-between gap-3">
         <Select
           value={String(activeRunId || "")}

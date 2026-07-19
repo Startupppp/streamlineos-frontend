@@ -2,14 +2,24 @@
 
 import type { ReactNode } from "react";
 import { useState, useCallback } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { ExternalLink } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -64,6 +74,14 @@ import { ProviderIcon, ConnectionRow } from "./git-connection-row";
 import { CreatedSecretDialog } from "./git-created-secret-dialog";
 import { SetupInstructions } from "./git-setup-instructions";
 
+const gitConnectionSchema = z.object({
+  provider: z.string(),
+  repoUrl: z.string().min(1, "Repository URL is required"),
+  repoName: z.string(),
+});
+
+type GitConnectionFormValues = z.infer<typeof gitConnectionSchema>;
+
 const PROVIDERS: { value: GitProvider; label: string }[] = [
   { value: "github", label: "GitHub" },
   { value: "gitlab", label: "GitLab" },
@@ -92,66 +110,38 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
   const deleteConnection = useDeleteGitConnection();
 
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [provider, setProvider] = useState<GitProvider>("github");
-  const [repoUrl, setRepoUrl] = useState("");
-  const [repoName, setRepoName] = useState("");
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [created, setCreated] = useState<CreatedGitConnection | null>(null);
 
-  const resetForm = useCallback(() => {
-    setProvider("github");
-    setRepoUrl("");
-    setRepoName("");
-  }, []);
+  const gitForm = useForm<GitConnectionFormValues>({
+    resolver: zodResolver(gitConnectionSchema),
+    defaultValues: { provider: "github", repoUrl: "", repoName: "" },
+  });
 
   const handleDialogChange = useCallback(
     (open: boolean) => {
       setDialogOpen(open);
-      if (!open) resetForm();
+      if (!open) gitForm.reset();
     },
-    [resetForm],
+    [gitForm],
   );
 
   const handleOpenDialog = useCallback(() => setDialogOpen(true), []);
 
-  const handleProviderChange = useCallback((value: string) => {
-    const matched = PROVIDERS.find((p) => p.value === value);
-    if (matched) setProvider(matched.value);
-  }, []);
-
-  const handleRepoUrlChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setRepoUrl(e.target.value);
-    },
-    [],
-  );
-
-  const handleRepoNameChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setRepoName(e.target.value);
-    },
-    [],
-  );
-
-  const handleCreate = useCallback(() => {
-    const trimmedUrl = repoUrl.trim();
-    if (!trimmedUrl) {
-      toast.error("Repository URL is required");
-      return;
-    }
+  const handleCreate = useCallback((values: GitConnectionFormValues) => {
     createConnection.mutate(
-      { provider, repoUrl: trimmedUrl, repoName: repoName.trim() || undefined },
+      { provider: values.provider as GitProvider, repoUrl: values.repoUrl.trim(), repoName: values.repoName.trim() || undefined },
       {
         onSuccess: (data) => {
           toast.success("Connection created");
           setDialogOpen(false);
-          resetForm();
+          gitForm.reset();
           setCreated(data);
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [provider, repoUrl, repoName, createConnection, resetForm]);
+  }, [createConnection, gitForm]);
 
   const handleToggle = useCallback(
     (connection: GitConnection) => {
@@ -182,9 +172,7 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
     });
   }, [deleteId, deleteConnection]);
 
-  function handleCancelDialog() {
-    handleDialogChange(false);
-  }
+  const handleCancelDialog = useCallback(() => handleDialogChange(false), [handleDialogChange]);
 
   const handleDeleteDialogChange = useCallback((open: boolean) => {
     if (!open) setDeleteId(null);
@@ -273,61 +261,72 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
                 We generate a webhook URL and secret for you to paste into your repository.
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="git-provider">Provider</Label>
-                <Select value={provider} onValueChange={handleProviderChange}>
-                  <SelectTrigger id="git-provider">
-                    <SelectValue placeholder="Select provider" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PROVIDERS.map((p) => (
-                      <SelectItem key={p.value} value={p.value}>
-                        <span className="flex items-center gap-2">
-                          <ProviderIcon provider={p.value} className="h-4 w-4" />
-                          {p.label}
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="git-repo-url">Repository URL *</Label>
-                <div className="relative">
-                  <ExternalLink className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    id="git-repo-url"
-                    className="pl-9"
-                    placeholder="https://github.com/org/repo"
-                    value={repoUrl}
-                    onChange={handleRepoUrlChange}
-                  />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="git-repo-name">Display name (optional)</Label>
-                <Input
-                  id="git-repo-name"
-                  placeholder="org/repo"
-                  value={repoName}
-                  onChange={handleRepoNameChange}
+            <Form {...gitForm}>
+              <form onSubmit={gitForm.handleSubmit(handleCreate)} className="space-y-4">
+                <FormField
+                  control={gitForm.control}
+                  name="provider"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Provider</FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger><SelectValue placeholder="Select provider" /></SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {PROVIDERS.map((p) => (
+                            <SelectItem key={p.value} value={p.value}>
+                              <span className="flex items-center gap-2">
+                                <ProviderIcon provider={p.value} className="h-4 w-4" />
+                                {p.label}
+                              </span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage className="text-xs" />
+                    </FormItem>
+                  )}
                 />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={handleCancelDialog}>
-                Cancel
-              </Button>
-              <LoadingButton
-                onClick={handleCreate}
-                disabled={!repoUrl.trim()}
-                isPending={createConnection.isPending}
-                loadingText="Creating…"
-              >
-                Create connection
-              </LoadingButton>
-            </DialogFooter>
+                <FormField
+                  control={gitForm.control}
+                  name="repoUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Repository URL <span className="text-destructive">*</span></FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <ExternalLink className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                          <Input {...field} className="pl-9" placeholder="https://github.com/org/repo" />
+                        </div>
+                      </FormControl>
+                      <FormMessage className="text-xs" />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={gitForm.control}
+                  name="repoName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Display name (optional)</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="org/repo" />
+                      </FormControl>
+                      <FormMessage className="text-xs" />
+                    </FormItem>
+                  )}
+                />
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={handleCancelDialog}>
+                    Cancel
+                  </Button>
+                  <LoadingButton type="submit" isPending={createConnection.isPending} loadingText="Creating…">
+                    Create connection
+                  </LoadingButton>
+                </DialogFooter>
+              </form>
+            </Form>
           </DialogContent>
         </Dialog>
 

@@ -9,12 +9,13 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Upload, FileText, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -103,7 +104,7 @@ export function UserImportDialog({ open, onOpenChange }: UserImportDialogProps) 
         void queryClient.invalidateQueries({ queryKey: queryKeys.users.invitations() });
       }
     },
-    onError: (e) => toast.error(getApiError(e)),
+    onError: (e) => toast.error(getErrorMessage(e)),
   });
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -197,14 +198,16 @@ export function UserImportDialog({ open, onOpenChange }: UserImportDialogProps) 
               <Button variant="ghost" size="sm" onClick={handleClose} disabled={isPending}>
                 Cancel
               </Button>
-              <Button
+              <LoadingButton
                 size="sm"
                 onClick={handleImport}
-                disabled={preview.length === 0 || isPending}
+                isPending={isPending}
+                loadingText="Importing…"
+                disabled={preview.length === 0}
               >
                 <FileText className="h-3.5 w-3.5 mr-1.5" />
                 Import {preview.length > 0 ? `${preview.length} Users` : ""}
-              </Button>
+              </LoadingButton>
             </DialogFooter>
           </>
         ) : (

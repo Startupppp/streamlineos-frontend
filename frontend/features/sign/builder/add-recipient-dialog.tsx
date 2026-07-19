@@ -90,7 +90,9 @@ export function AddRecipientDialog({ envelopeId, open, onOpenChange, nextRouting
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Name</FormLabel>
+                <FormLabel>
+                  Name <span className="text-destructive">*</span>
+                </FormLabel>
                 <FormControl>
                   <Input placeholder="Jane Doe" {...field} />
                 </FormControl>
@@ -116,7 +118,9 @@ export function AddRecipientDialog({ envelopeId, open, onOpenChange, nextRouting
             name="roleName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Role</FormLabel>
+                <FormLabel>
+                  Role <span className="text-destructive">*</span>
+                </FormLabel>
                 <FormControl>
                   <Input placeholder="e.g. Signer, Approver, Vendor" {...field} />
                 </FormControl>

@@ -52,7 +52,7 @@ export default function MyPayrollPage() {
       title="My Payroll"
       subtitle={getCurrentMonthLabel()}
     >
-      <div className="space-y-6">
+      <div className="space-y-4">
         <StatCardGrid cols={4}>
           <StatCard
             label="Net Pay Last Month"
@@ -91,7 +91,7 @@ export default function MyPayrollPage() {
 
         <EssSectionNav items={sections} />
 
-        <div className="space-y-8">
+        <div className="space-y-4">
           <EssPayslipsSection />
 
           {toggles?.essShowSalaryStructure && <EssSalarySection />}

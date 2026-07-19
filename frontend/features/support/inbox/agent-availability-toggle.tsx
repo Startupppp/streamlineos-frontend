@@ -4,7 +4,7 @@ import { useCallback, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { useAgentAvailability, useSetMyAvailability } from "@/hooks/api/support/macros";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 
 export function AgentAvailabilityToggle() {
@@ -21,7 +21,7 @@ export function AgentAvailabilityToggle() {
   const handleToggle = useCallback(() => {
     setAvailability.mutate(!isAvailable, {
       onSuccess: () => toast.success(!isAvailable ? "You're now available" : "You're now away"),
-      onError: (error) => toast.error(getApiError(error)),
+      onError: (error) => toast.error(getErrorMessage(error)),
     });
   }, [isAvailable, setAvailability]);
 

@@ -162,8 +162,8 @@ export function RuntimeFlow({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-3 border-b border-border/60 pb-5">
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-2 border-b border-border/60 pb-4">
         <div className="flex items-center justify-between gap-3">
           <TruncatedText text={surveyTitle} className="text-xs font-medium uppercase tracking-wide text-muted-foreground" />
           <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
@@ -181,7 +181,7 @@ export function RuntimeFlow({
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: direction * -24 }}
           transition={{ duration: 0.2, ease: "easeOut" }}
-          className="space-y-6"
+          className="flex flex-col gap-4"
         >
           <div className="space-y-2">
             <h2 className="text-lg font-semibold leading-snug tracking-tight text-foreground sm:text-xl">

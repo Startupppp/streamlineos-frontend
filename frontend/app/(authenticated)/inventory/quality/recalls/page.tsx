@@ -247,6 +247,7 @@ function RecallsPageInner() {
             <DataTable
               data={items}
               columns={columns}
+              className="flex-1 min-h-0"
               getRowKey={(r) => r.id}
               onRowClick={handleRowClick}
               isLoading={recallsQuery.isLoading}

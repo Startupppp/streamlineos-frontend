@@ -3,7 +3,6 @@
 import { useMemo } from "react";
 import { AlertTriangle } from "lucide-react";
 
-import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -127,7 +126,7 @@ export function ReportRegister({
   ) : undefined;
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-1 min-h-0 flex-col gap-3">
       {data?.provisional && (
         <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
@@ -135,27 +134,24 @@ export function ReportRegister({
         </div>
       )}
 
-      <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
-        <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
-          <DataTable
-            data={data?.rows ?? []}
-            columns={columns}
-            getRowKey={(row) => row.employeeId}
-            isLoading={isLoading}
-            minWidth="900px"
-            footer={footerNode}
-            pagination={{ pageSize: 50 }}
-            emptyState={
-              <EmptyState
-                compact
-                illustration={<EmptyReportIllustration />}
-                title="No payroll register data"
-                description="Run payroll for this month to generate the register."
-              />
-            }
+      <DataTable
+        className="flex-1 min-h-0"
+        data={data?.rows ?? []}
+        columns={columns}
+        getRowKey={(row) => row.employeeId}
+        isLoading={isLoading}
+        minWidth="900px"
+        footer={footerNode}
+        pagination={{ pageSize: 50 }}
+        emptyState={
+          <EmptyState
+            compact
+            illustration={<EmptyReportIllustration />}
+            title="No payroll register data"
+            description="Run payroll for this month to generate the register."
           />
-        </CardContent>
-      </Card>
+        }
+      />
     </div>
   );
 }

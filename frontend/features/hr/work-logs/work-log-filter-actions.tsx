@@ -191,7 +191,7 @@ export function WorkLogFilterActions({
         <SelectTrigger className="h-9 w-[84px]" aria-label="Select year">
           <SelectValue placeholder="Year" />
         </SelectTrigger>
-        <SelectContent className="w-[var(--radix-select-trigger-width)]">
+        <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
           {availableYears.map((y) => (
             <SelectItem key={y} value={y.toString()} className="text-xs">{y}</SelectItem>
           ))}
@@ -202,7 +202,7 @@ export function WorkLogFilterActions({
         <SelectTrigger className="h-9 w-[130px]" aria-label="Select quarter">
           <SelectValue placeholder="Quarter" />
         </SelectTrigger>
-        <SelectContent className="w-[var(--radix-select-trigger-width)]">
+        <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
           <SelectItem value="1" className="text-xs">Q1 (Jan – Mar)</SelectItem>
           <SelectItem value="2" className="text-xs">Q2 (Apr – Jun)</SelectItem>
           <SelectItem value="3" className="text-xs">Q3 (Jul – Sep)</SelectItem>
@@ -294,7 +294,7 @@ export function WorkLogFilterActions({
               <Label className="text-[11px] font-semibold text-foreground/80 uppercase tracking-wider">Year</Label>
               <Select value={draftFilters.year.toString()} onValueChange={handleDraftYearChange}>
                 <SelectTrigger className="w-full text-sm"><SelectValue placeholder="Select year" /></SelectTrigger>
-                <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                   {availableYears.map((y) => (
                     <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
                   ))}
@@ -306,7 +306,7 @@ export function WorkLogFilterActions({
               <Label className="text-[11px] font-semibold text-foreground/80 uppercase tracking-wider">Quarter</Label>
               <Select value={draftFilters.quarter.toString()} onValueChange={handleDraftQuarterChange}>
                 <SelectTrigger className="w-full text-sm"><SelectValue placeholder="Select quarter" /></SelectTrigger>
-                <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                   <SelectItem value="1">Q1 (Jan – Mar)</SelectItem>
                   <SelectItem value="2">Q2 (Apr – Jun)</SelectItem>
                   <SelectItem value="3">Q3 (Jul – Sep)</SelectItem>

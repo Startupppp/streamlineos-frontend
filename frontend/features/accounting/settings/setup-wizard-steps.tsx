@@ -95,7 +95,7 @@ export function StepCompanyCurrency({ onComplete, onSkip }: StepProps) {
         <form onSubmit={form.handleSubmit(handleSave)} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1.5">
-              <Label>Base currency</Label>
+              <Label>Base currency <span className="text-destructive">*</span></Label>
               <Input
                 {...form.register("baseCurrency")}
                 className="uppercase"

@@ -248,7 +248,7 @@ export function QuoteCreateSheet({
                 name="subject"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Subject</FormLabel>
+                    <FormLabel>Subject <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <Input placeholder="Quote subject" {...field} />
                     </FormControl>

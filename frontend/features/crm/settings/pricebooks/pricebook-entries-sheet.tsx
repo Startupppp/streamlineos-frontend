@@ -176,7 +176,7 @@ export function PricebookEntriesSheet({
                     name="productId"
                     render={({ field }) => (
                       <FormItem className="col-span-3">
-                        <FormLabel className="text-xs">Product</FormLabel>
+                        <FormLabel className="text-xs">Product <span className="text-destructive">*</span></FormLabel>
                         <FormControl>
                           <Combobox
                             options={productOptions}
@@ -196,7 +196,7 @@ export function PricebookEntriesSheet({
                     name="unitPriceCents"
                     render={({ field }) => (
                       <FormItem className="col-span-2">
-                        <FormLabel className="text-xs">Price (cents)</FormLabel>
+                        <FormLabel className="text-xs">Price (cents) <span className="text-destructive">*</span></FormLabel>
                         <FormControl>
                           <Input
                             {...field}

@@ -171,7 +171,7 @@ export function AdminExpenseFilters({
           >
             <SelectValue placeholder="All Employees" />
           </SelectTrigger>
-          <SelectContent className="w-[var(--radix-select-trigger-width)]">
+          <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
             <SelectItem value="all">All Employees</SelectItem>
             {employees.map((e) => (
               <SelectItem key={e.id} value={e.id}>
@@ -235,7 +235,7 @@ export function MemberExpenseFilters({
             <Filter className="h-3 w-3 shrink-0" />
             <SelectValue placeholder="All Time" />
           </SelectTrigger>
-          <SelectContent className="w-[var(--radix-select-trigger-width)]">
+          <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
             <SelectItem value="all">All Time</SelectItem>
             <SelectItem value="this_month">This Month</SelectItem>
             <SelectItem value="last_month">Last Month</SelectItem>

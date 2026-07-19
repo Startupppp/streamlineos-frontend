@@ -324,22 +324,20 @@ export default function FinanceApprovalsPage() {
           ))}
         </div>
 
-        <div className="flex items-center gap-1 border-b border-border">
+        <div className="inline-flex h-9 w-full items-center gap-1 rounded-lg border border-border bg-card p-1 overflow-x-auto scrollbar-hide sm:w-fit">
           {STATUS_TABS.map((tab) => (
             <button
               key={tab.value}
+              type="button"
               onClick={makeStatusTabHandler(tab.value)}
               className={cn(
-                "relative px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors",
+                "inline-flex h-7 shrink-0 items-center rounded-md px-3 text-sm font-medium whitespace-nowrap transition-colors",
                 statusFilter === tab.value
-                  ? "text-foreground"
+                  ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
               {tab.label}
-              {statusFilter === tab.value && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
-              )}
             </button>
           ))}
         </div>

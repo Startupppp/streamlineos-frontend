@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
   Dialog,
   DialogContent,
@@ -8,9 +10,23 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+
+const createBoardSchema = z.object({
+  name: z.string().min(1, "Board name is required"),
+});
+
+type CreateBoardFormValues = z.infer<typeof createBoardSchema>;
 
 interface CreateBoardDialogProps {
   open: boolean;
@@ -25,24 +41,18 @@ export function CreateBoardDialog({
   onCreate,
   isPending,
 }: CreateBoardDialogProps) {
-  const [name, setName] = useState("");
-
-  function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
-    setName(event.target.value);
-  }
-
-  function handleSubmit() {
-    if (!name.trim()) return;
-    onCreate(name.trim());
-  }
-
-  function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
-    if (event.key === "Enter") handleSubmit();
-  }
+  const form = useForm<CreateBoardFormValues>({
+    resolver: zodResolver(createBoardSchema),
+    defaultValues: { name: "" },
+  });
 
   function handleOpenChange(nextOpen: boolean) {
-    if (!nextOpen) setName("");
+    if (!nextOpen) form.reset();
     onOpenChange(nextOpen);
+  }
+
+  function handleSubmit(values: CreateBoardFormValues) {
+    onCreate(values.name.trim());
   }
 
   return (
@@ -51,24 +61,31 @@ export function CreateBoardDialog({
         <DialogHeader>
           <DialogTitle>New Board</DialogTitle>
         </DialogHeader>
-        <div className="space-y-1.5 py-1">
-          <Label>Board name</Label>
-          <Input
-            autoFocus
-            placeholder="e.g. Sprint brainstorm"
-            value={name}
-            onChange={handleChange}
-            onKeyDown={handleKeyDown}
-          />
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => handleOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} disabled={isPending || !name.trim()}>
-            {isPending ? "Creating…" : "Create"}
-          </Button>
-        </DialogFooter>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 py-1">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Board name <span className="text-destructive">*</span></FormLabel>
+                  <FormControl>
+                    <Input {...field} autoFocus placeholder="e.g. Sprint brainstorm" />
+                  </FormControl>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              )}
+            />
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
+                Cancel
+              </Button>
+              <LoadingButton type="submit" isPending={isPending} loadingText="Creating…">
+                Create
+              </LoadingButton>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

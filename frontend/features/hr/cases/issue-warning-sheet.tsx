@@ -22,6 +22,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import { HrSheet } from "@/features/hr/hr-sheet";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateDisciplinaryAction } from "@/hooks/api/hr/cases";
 import type { DisciplinaryActionType } from "@/hooks/api/hr/cases";
 
@@ -68,9 +70,11 @@ export function IssueWarningSheet({ open, onOpenChange, caseId }: Props) {
       { ...values, caseId },
       {
         onSuccess: () => {
+          toast.success("Disciplinary action issued");
           onOpenChange(false);
           form.reset();
         },
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }
@@ -92,7 +96,7 @@ export function IssueWarningSheet({ open, onOpenChange, caseId }: Props) {
             name="employeeId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Employee</FormLabel>
+                <FormLabel>Employee <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
                   <UserCombobox
                     value={field.value}
@@ -133,7 +137,7 @@ export function IssueWarningSheet({ open, onOpenChange, caseId }: Props) {
             name="effectiveDate"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Effective Date</FormLabel>
+                <FormLabel>Effective Date <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
                   <Input type="date" className="" {...field} />
                 </FormControl>

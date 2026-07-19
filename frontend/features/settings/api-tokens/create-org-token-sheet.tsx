@@ -10,7 +10,7 @@ import {
   type CreateApiTokenInput,
   type CreateApiTokenResponse,
 } from "@/hooks/api/api-tokens";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -73,7 +73,7 @@ export function CreateOrgTokenSheet({
           form.reset();
           onCreated(result);
         },
-        onError: (err) => toast.error(getApiError(err)),
+        onError: (err) => toast.error(getErrorMessage(err)),
       });
     },
     [create, form, onCreated],
@@ -97,7 +97,7 @@ export function CreateOrgTokenSheet({
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Name</FormLabel>
+                    <FormLabel>Name <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <Input placeholder="e.g. CI/CD Deploy Key" {...field} />
                     </FormControl>

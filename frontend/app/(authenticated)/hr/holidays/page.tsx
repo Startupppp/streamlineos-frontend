@@ -52,7 +52,7 @@ import { cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useCan } from "@/hooks/api/access";
-import { getErrorMessage } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useHolidays,
   useCreateHoliday,
@@ -423,7 +423,7 @@ function UpcomingView({
   }, {});
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {Object.entries(grouped).map(([month, items]) => (
         <div key={month}>
           <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{month}</h3>

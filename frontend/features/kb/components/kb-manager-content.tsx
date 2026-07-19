@@ -59,7 +59,7 @@ import {
 import { useReindexAllKb } from "@/hooks/api/support/kb-rag";
 import { useAccess } from "@/hooks/api/access";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 
 function isStatus(v: string): v is KbArticleStatus {
@@ -194,7 +194,7 @@ export function KbManagerContent() {
           toast.warning(`${result.failures.length} article(s) failed to index`);
         }
       },
-      onError: (e) => toast.error(getApiError(e)),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
 
@@ -205,7 +205,7 @@ export function KbManagerContent() {
         toast.success("Category deleted");
         setDeleteCategory(null);
       },
-      onError: (e) => toast.error(getApiError(e)),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
 
@@ -216,7 +216,7 @@ export function KbManagerContent() {
         toast.success("Article deleted");
         setDeleteArticle(null);
       },
-      onError: (e) => toast.error(getApiError(e)),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
 
@@ -371,7 +371,7 @@ export function KbManagerContent() {
             <LoadingState variant="list" />
           ) : articlesQuery.error ? (
             <ErrorState
-              description={getApiError(articlesQuery.error)}
+              description={getErrorMessage(articlesQuery.error)}
               onRetry={handleArticlesRetry}
             />
           ) : articles.length === 0 && hasFilters ? (
@@ -416,7 +416,7 @@ export function KbManagerContent() {
             <LoadingState variant="list" />
           ) : categoriesQuery.error ? (
             <ErrorState
-              description={getApiError(categoriesQuery.error)}
+              description={getErrorMessage(categoriesQuery.error)}
               onRetry={handleCategoriesRetry}
             />
           ) : categories.length === 0 ? (

@@ -70,7 +70,7 @@ export function CreatePipelineDialog({
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3">
             <FormField control={form.control} name="name" render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-xs">Name</FormLabel>
+                <FormLabel className="text-xs">Name <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
                   <Input {...field} onChange={handleNameChange} placeholder="Sales Pipeline" className="text-sm" />
                 </FormControl>
@@ -95,7 +95,7 @@ export function CreatePipelineDialog({
             )} />
             <FormField control={form.control} name="key" render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-xs">Key</FormLabel>
+                <FormLabel className="text-xs">Key <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
                   <Input {...field} placeholder="sales-pipeline" className="text-sm font-mono" />
                 </FormControl>

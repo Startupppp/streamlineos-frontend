@@ -267,13 +267,13 @@ export default function DealDetailPage({
   if (isLoading) {
     return (
       <PageWrapper title={`Deal #${dealIdStr}`} backHref="/crm/deals">
-        <div className="space-y-6">
+        <div className="space-y-4">
           <div className="flex flex-wrap gap-1 p-2 rounded-lg bg-muted/30 border border-border">
             {Array.from({ length: 10 }).map((_, i) => (
               <Skeleton key={i} className="h-4 w-20 rounded-lg" />
             ))}
           </div>
-          <div className="grid gap-6 lg:grid-cols-5">
+          <div className="grid gap-4 lg:grid-cols-5">
             <Skeleton className="h-64 lg:col-span-3 rounded-lg" />
             <Skeleton className="h-64 lg:col-span-2 rounded-lg" />
           </div>
@@ -375,7 +375,7 @@ export default function DealDetailPage({
       }
     >
       <motion.div
-        className="space-y-6"
+        className="space-y-4"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -415,8 +415,8 @@ export default function DealDetailPage({
           })}
         </motion.div>
 
-        <div className="grid gap-6 lg:grid-cols-5">
-          <motion.div variants={itemVariants} className="lg:col-span-3 space-y-6">
+        <div className="grid gap-4 lg:grid-cols-5">
+          <motion.div variants={itemVariants} className="lg:col-span-3 space-y-4">
             {isEditing ? (
               <DealEditForm
                 deal={deal}
@@ -442,7 +442,7 @@ export default function DealDetailPage({
             <DealOrdersSection dealId={dealId} dealStage={deal.stage} />
           </motion.div>
 
-          <motion.div variants={itemVariants} className="lg:col-span-2 space-y-6">
+          <motion.div variants={itemVariants} className="lg:col-span-2 space-y-4">
             <DealSidebarCards
               dealId={dealId}
               dealName={deal.name}

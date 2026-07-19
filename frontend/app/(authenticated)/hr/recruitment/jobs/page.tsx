@@ -411,7 +411,7 @@ export default function JobPostingsPage() {
               <SelectTrigger className={cn("w-[130px]", FILTER_SELECT_TRIGGER)}>
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="w-[var(--radix-select-trigger-width)]">
+              <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                 {STATUS_OPTIONS.map((s) => (
                   <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
                 ))}
@@ -421,7 +421,7 @@ export default function JobPostingsPage() {
               <SelectTrigger className={cn("w-[140px]", FILTER_SELECT_TRIGGER)}>
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="w-[var(--radix-select-trigger-width)]">
+              <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                 <SelectItem value="ALL">All Postings</SelectItem>
                 <SelectItem value="external">External</SelectItem>
                 <SelectItem value="internal">Internal Only</SelectItem>

@@ -220,7 +220,7 @@ export function AssignmentRuleSheet({
             <form id="rule-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
               <FormField control={form.control} name="name" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>Name <span className="text-destructive">*</span></FormLabel>
                   <FormControl><Input {...field} placeholder="e.g. Mumbai Leads to Ravi" /></FormControl>
                   <FormMessage />
                 </FormItem>

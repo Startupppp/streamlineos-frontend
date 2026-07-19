@@ -334,7 +334,7 @@ export default function EmailTemplatesPage() {
             className={CONTENT_FILL_PANEL}
           />
         ) : (
-          <div className="space-y-6">
+          <div className="flex flex-1 min-h-0 flex-col gap-4">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {templates && templates.length > 0 ? (
                 templates.map(template => (

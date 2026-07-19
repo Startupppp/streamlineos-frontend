@@ -50,7 +50,6 @@ import type { Portfolio, CreatePortfolioInput, UpdatePortfolioInput } from "@/ty
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   PmPageShell,
-  PmPanel,
   PmSection,
   PM_FILL_PANEL,
 } from "@/features/projects/shared/pm-chrome";
@@ -328,15 +327,13 @@ export function PortfoliosPage() {
                 }
               />
           ) : (
-            <PmPanel className={PM_FILL_PANEL}>
-              <DataTable
-                data={displayed}
-                columns={columns}
-                getRowKey={(row) => row.id}
-                minWidth="780px"
-                className="min-h-0 flex-1"
-              />
-            </PmPanel>
+            <DataTable
+              data={displayed}
+              columns={columns}
+              getRowKey={(row) => row.id}
+              minWidth="780px"
+              className={PM_FILL_PANEL}
+            />
           )}
         </PmSection>
       </PmPageShell>

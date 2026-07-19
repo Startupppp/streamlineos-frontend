@@ -47,7 +47,7 @@ export default function WorkforceCostPage() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.22, ease: "easeOut" }}
-          className="flex flex-1 min-h-0 flex-col gap-6"
+          className="flex flex-1 min-h-0 flex-col gap-4"
         >
           {/* Summary */}
           {summaryLoading ? (

@@ -2,8 +2,8 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { useRouter } from "next/navigation";
+import { kbResearchBriefSchema, type KbResearchBriefFormValues } from "./kb-research-brief-form-schema";
 import {
   Form,
   FormControl,
@@ -26,24 +26,17 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateResearchBrief } from "@/hooks/api/kb/research-briefs";
 import { useKbSpaces } from "@/hooks/api/kb/spaces";
 
-const schema = z.object({
-  topic: z.string().min(3, "Topic must be at least 3 characters").max(300),
-  spaceId: z.number().optional(),
-});
-
-type FormValues = z.infer<typeof schema>;
-
 export function KbResearchBriefForm() {
   const router = useRouter();
   const createMutation = useCreateResearchBrief();
   const { data: spaces } = useKbSpaces();
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+  const form = useForm<KbResearchBriefFormValues>({
+    resolver: zodResolver(kbResearchBriefSchema),
     defaultValues: { topic: "", spaceId: undefined },
   });
 
-  function handleSubmit(values: FormValues) {
+  function handleSubmit(values: KbResearchBriefFormValues) {
     createMutation.mutate(
       { topic: values.topic, spaceId: values.spaceId },
       {

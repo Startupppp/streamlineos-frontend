@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { DownloadIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyPayroll } from "@/components/illustrations";
@@ -133,7 +134,7 @@ export function EssPayslipsSection() {
         </h2>
         {years.length > 0 && (
           <Select value={yearFilter} onValueChange={setYearFilter}>
-            <SelectTrigger className="w-28">
+            <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-28`}>
               <SelectValue placeholder="All years" />
             </SelectTrigger>
             <SelectContent>

@@ -127,7 +127,7 @@ export function ExpenseByCategoryReport() {
             compact
           />
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-6 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-4 items-start">
             <DataTable
               className="flex-1 min-h-0"
               data={data ?? []}

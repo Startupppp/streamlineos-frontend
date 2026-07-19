@@ -29,6 +29,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
 import {
   useCreateWorkAuth,
@@ -115,6 +117,7 @@ export function WorkAuthSheet({ open, onOpenChange, existing, defaultEmploymentI
     const mutation = existing ? update : create;
     mutation.mutate(body, {
       onSuccess: () => onOpenChange(false),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [existing, create, update, onOpenChange]);
 

@@ -36,7 +36,7 @@ import {
   type KbAttachment,
 } from "@/hooks/api/support/kb-attachments";
 import { useKbIndexStatus, useReindexKbArticle } from "@/hooks/api/support/kb-rag";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { formatFileSize } from "@/lib/format-utils";
 import { toast } from "sonner";
 import type { KbArticleDetail } from "@/hooks/api/support/kb";
@@ -124,7 +124,7 @@ export function KbAttachmentsPanel({ article }: { article: KbArticleDetail }) {
         );
         result.warnings.forEach((warning) => toast.warning(warning));
       },
-      onError: (e) => toast.error(getApiError(e)),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
 
@@ -142,14 +142,14 @@ export function KbAttachmentsPanel({ article }: { article: KbArticleDetail }) {
     }
     uploadAttachment.mutate(file, {
       onSuccess: () => toast.success("Attachment uploaded"),
-      onError: (e) => toast.error(getApiError(e)),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
 
   function handleDownload(attachment: KbAttachment) {
     downloadUrl.mutate(attachment.id, {
       onSuccess: (data) => window.open(data.url, "_blank", "noopener,noreferrer"),
-      onError: (e) => toast.error(getApiError(e)),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
 
@@ -158,7 +158,7 @@ export function KbAttachmentsPanel({ article }: { article: KbArticleDetail }) {
     const attachmentId = pendingDelete.id;
     deleteAttachment.mutate(attachmentId, {
       onSuccess: () => toast.success("Attachment deleted"),
-      onError: (e) => toast.error(getApiError(e)),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
     setPendingDelete(null);
   }
@@ -211,7 +211,7 @@ export function KbAttachmentsPanel({ article }: { article: KbArticleDetail }) {
           <ErrorState
             compact
             title="Couldn't load attachments"
-            description={getApiError(attachmentsQuery.error)}
+            description={getErrorMessage(attachmentsQuery.error)}
             onRetry={handleAttachmentsRetry}
           />
         ) : attachments.length === 0 ? (

@@ -13,11 +13,18 @@ import {
   SheetClose,
   SheetBody,
 } from "@/components/ui/sheet";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import dynamic from "next/dynamic";
 
 const TiptapEditor = dynamic(
@@ -84,63 +91,81 @@ export function PortalCrSheet({ projectId, open, onOpenChange }: PortalCrSheetPr
         <SheetHeader className="shrink-0 border-b px-5 py-4">
           <SheetTitle>Submit a Change Request</SheetTitle>
         </SheetHeader>
-        <SheetBody className="px-5 py-4">
+        <Form {...form}>
           <form
-            id="portal-cr-form"
             onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-4"
+            className="flex flex-col flex-1 min-h-0"
           >
-            <div className="space-y-1.5">
-              <Label className="text-[11px]">Title *</Label>
-              <Input
-                {...form.register("title")}
+            <SheetBody className="px-5 py-4">
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[11px]">Title <span className="text-destructive">*</span></FormLabel>
+                      <FormControl>
+                        <Input {...field} className="text-[11px]" placeholder="What needs to change?" />
+                      </FormControl>
+                      <FormMessage className="text-[10px]" />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[11px]">Description</FormLabel>
+                      <FormControl>
+                        <TiptapEditor
+                          content={field.value}
+                          output="html"
+                          onChangeHtml={field.onChange}
+                          placeholder="Describe the change in detail..."
+                          minHeightClassName="min-h-[100px]"
+                          menuMode="static"
+                        />
+                      </FormControl>
+                      <FormMessage className="text-[10px]" />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="impact"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[11px]">Business Impact</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          {...field}
+                          className="min-h-[72px] resize-none text-[11px]"
+                          placeholder="How does this affect the project scope, timeline, or budget?"
+                        />
+                      </FormControl>
+                      <FormMessage className="text-[10px]" />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </SheetBody>
+            <SheetFooter className="shrink-0 flex gap-2 border-t px-5 py-3">
+              <SheetClose asChild>
+                <Button variant="outline" size="sm" className="text-[11px]">Cancel</Button>
+              </SheetClose>
+              <LoadingButton
+                type="submit"
+                size="sm"
                 className="text-[11px]"
-                placeholder="What needs to change?"
-              />
-              {form.formState.errors.title && (
-                <p className="text-[10px] text-destructive">
-                  {form.formState.errors.title.message}
-                </p>
-              )}
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-[11px]">Description</Label>
-              <TiptapEditor
-                content={form.watch("description")}
-                output="html"
-                onChangeHtml={(v) => form.setValue("description", v)}
-                placeholder="Describe the change in detail..."
-                minHeightClassName="min-h-[100px]"
-                menuMode="static"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-[11px]">Business Impact</Label>
-              <Textarea
-                {...form.register("impact")}
-                className="min-h-[72px] resize-none text-[11px]"
-                placeholder="How does this affect the project scope, timeline, or budget?"
-              />
-            </div>
+                isPending={submit.isPending}
+                loadingText="Submitting…"
+              >
+                Submit Request
+              </LoadingButton>
+            </SheetFooter>
           </form>
-        </SheetBody>
-        <SheetFooter className="shrink-0 flex gap-2 border-t px-5 py-3">
-          <SheetClose asChild>
-            <Button variant="outline" size="sm" className="text-[11px]">
-              Cancel
-            </Button>
-          </SheetClose>
-          <LoadingButton
-            type="submit"
-            form="portal-cr-form"
-            size="sm"
-            className="text-[11px]"
-            isPending={submit.isPending}
-            loadingText="Submitting…"
-          >
-            Submit Request
-          </LoadingButton>
-        </SheetFooter>
+        </Form>
       </SheetContent>
     </Sheet>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useFieldArray, useForm, Controller } from "react-hook-form";
+import { useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -10,7 +10,14 @@ import { AppSheet } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { InventoryReferenceCombobox } from "@/components/inventory/inventory-reference-combobox";
 import {
   Select,
@@ -97,11 +104,6 @@ export function LoadCreateSheet({ open, onOpenChange }: LoadCreateSheetProps) {
     remove(index);
   }
 
-  function handleMemberTypeChange(index: number, value: string): void {
-    if (value !== "SHIPMENT" && value !== "TRANSFER") return;
-    form.setValue(`members.${index}.type`, value);
-  }
-
   async function onSubmit(values: LoadFormValues): Promise<void> {
     const members = values.members
       .filter((m) => m.referenceId.trim())
@@ -144,82 +146,92 @@ export function LoadCreateSheet({ open, onOpenChange }: LoadCreateSheetProps) {
         </div>
       }
     >
-      <form id="load-create-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="load-name" className="text-xs">Name (optional)</Label>
-          <Input
-            id="load-name"
-            placeholder="e.g. Morning run batch"
-            className="text-sm"
-            {...form.register("name")}
+      <Form {...form}>
+        <form id="load-create-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Name (optional)</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g. Morning run batch" className="text-sm" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
 
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label className="text-xs">Members</Label>
-            <AnimatedIconButton
-              type="button"
-              icon={PlusIcon}
-              iconSize={12}
-              iconClassName="mr-1"
-              variant="ghost"
-              size="sm"
-              className="h-6 px-2 text-xs"
-              onClick={handleAddMember}
-            >
-              Add
-            </AnimatedIconButton>
-          </div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <FormLabel className="text-xs">Members</FormLabel>
+              <AnimatedIconButton
+                type="button"
+                icon={PlusIcon}
+                iconSize={12}
+                iconClassName="mr-1"
+                variant="ghost"
+                size="sm"
+                className="h-6 px-2 text-xs"
+                onClick={handleAddMember}
+              >
+                Add
+              </AnimatedIconButton>
+            </div>
 
-          {fields.length === 0 && (
-            <p className="text-xs text-muted-foreground">
-              No members added. Click Add to include shipments or transfers.
-            </p>
-          )}
+            {fields.length === 0 && (
+              <p className="text-xs text-muted-foreground">
+                No members added. Click Add to include shipments or transfers.
+              </p>
+            )}
 
-          {fields.map((field, index) => (
-            <div key={field.id} className="flex items-end gap-2">
-              <div className="space-y-1 w-[130px] shrink-0">
-                <Label className="text-[10px] font-semibold text-foreground/80">Type</Label>
-                <Select
-                  value={form.watch(`members.${index}.type`)}
-                  onValueChange={(v) => handleMemberTypeChange(index, v)}
-                >
-                  <SelectTrigger className="text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="SHIPMENT">Shipment</SelectItem>
-                    <SelectItem value="TRANSFER">Transfer</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex-1 space-y-1 min-w-0">
-                <Label className="text-[10px] font-semibold text-foreground/80">Reference</Label>
-                <Controller
+            {fields.map((field, index) => (
+              <div key={field.id} className="flex items-end gap-2">
+                <FormField
                   control={form.control}
-                  name={`members.${index}.referenceId`}
-                  render={({ field }) => (
-                    <InventoryReferenceCombobox
-                      type={form.watch(`members.${index}.type`)}
-                      value={field.value}
-                      onChange={field.onChange}
-                      className="text-xs"
-                    />
+                  name={`members.${index}.type`}
+                  render={({ field: f }) => (
+                    <FormItem className="w-[130px] shrink-0">
+                      <FormLabel className="text-[10px] font-semibold text-foreground/80">Type</FormLabel>
+                      <Select value={f.value} onValueChange={f.onChange}>
+                        <FormControl>
+                          <SelectTrigger className="text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="SHIPMENT">Shipment</SelectItem>
+                          <SelectItem value="TRANSFER">Transfer</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
                   )}
                 />
-                {form.formState.errors.members?.[index]?.referenceId && (
-                  <p className="text-[10px] text-destructive">
-                    {form.formState.errors.members[index].referenceId.message}
-                  </p>
-                )}
+                <FormField
+                  control={form.control}
+                  name={`members.${index}.referenceId`}
+                  render={({ field: f }) => (
+                    <FormItem className="flex-1 min-w-0">
+                      <FormLabel className="text-[10px] font-semibold text-foreground/80">Reference</FormLabel>
+                      <FormControl>
+                        <InventoryReferenceCombobox
+                          type={form.watch(`members.${index}.type`)}
+                          value={f.value}
+                          onChange={f.onChange}
+                          className="text-xs"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <RemoveMemberButton index={index} onRemove={handleRemoveMember} />
               </div>
-              <RemoveMemberButton index={index} onRemove={handleRemoveMember} />
-            </div>
-          ))}
-        </div>
-      </form>
+            ))}
+          </div>
+        </form>
+      </Form>
     </AppSheet>
   );
 }

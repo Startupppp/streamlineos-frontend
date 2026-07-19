@@ -51,7 +51,7 @@ function CategoryMappingRow({ original, mapped, onValueChange }: CategoryMapping
         <SelectTrigger className="w-36">
           <SelectValue />
         </SelectTrigger>
-        <SelectContent className="w-[var(--radix-select-trigger-width)]">
+        <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
           {ALLOWED_CATEGORIES.map((cat) => (
             <SelectItem key={cat} value={cat} className="text-xs">{cat}</SelectItem>
           ))}

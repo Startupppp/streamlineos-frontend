@@ -144,7 +144,7 @@ const GapTableRow = memo(function GapTableRow({
 
 function AnalyticsSkeleton() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <StatCardGridSkeleton cols={5} count={5} />
       {Array.from({ length: 3 }).map((_, s) => (
         <div key={s} className="space-y-2">
@@ -206,7 +206,7 @@ export default function KnowledgeAnalyticsPage() {
   return (
     <PageWrapper title="Analytics">
       {overview && (
-        <StatCardGrid cols={5} className="mb-6">
+        <StatCardGrid cols={5} className="mb-4">
           <StatCard
             label="Total pages"
             value={overview.totalCount}
@@ -240,7 +240,7 @@ export default function KnowledgeAnalyticsPage() {
         </StatCardGrid>
       )}
 
-      <div className="space-y-8">
+      <div className="space-y-4">
         <section className="space-y-2">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold text-foreground">

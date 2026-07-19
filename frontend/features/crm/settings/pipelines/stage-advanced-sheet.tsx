@@ -147,7 +147,7 @@ export function StageAdvancedSheet({
             <SheetBody className="space-y-4 px-6 py-5">
             <FormField control={form.control} name="label" render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-xs">Label</FormLabel>
+                <FormLabel className="text-xs">Label <span className="text-destructive">*</span></FormLabel>
                 <FormControl><Input {...field} className="text-sm" /></FormControl>
                 <FormMessage />
               </FormItem>

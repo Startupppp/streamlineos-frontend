@@ -285,6 +285,7 @@ export default function ReturnsPage() {
           <DataTable
             data={vendorItems}
             columns={vendorColumns}
+            className="flex-1 min-h-0"
             getRowKey={(r) => r.id}
             isLoading={vendorQuery.isLoading}
             emptyState={
@@ -307,6 +308,7 @@ export default function ReturnsPage() {
           <DataTable
             data={customerItems}
             columns={customerColumns}
+            className="flex-1 min-h-0"
             getRowKey={(r) => r.id}
             isLoading={customerQuery.isLoading}
             emptyState={

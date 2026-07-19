@@ -9,8 +9,15 @@ import { AppSheet } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import {
   useCreateCarrier,
   useUpdateCarrier,
@@ -73,10 +80,6 @@ export function CarrierSheet({
     onOpenChange(false);
   }
 
-  function handleIsActiveChange(checked: boolean): void {
-    form.setValue("isActive", checked);
-  }
-
   async function onSubmit(values: CarrierFormValues): Promise<void> {
     try {
       if (isEdit && carrier) {
@@ -137,71 +140,81 @@ export function CarrierSheet({
         </div>
       }
     >
-      <form
-        id="carrier-form"
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-4"
-      >
-        <div className="space-y-1.5">
-          <Label htmlFor="carrier-name" className="text-xs">
-            Name *
-          </Label>
-          <Input
-            id="carrier-name"
-            placeholder="DHL Express"
-            className="text-sm"
-            {...form.register("name")}
+      <Form {...form}>
+        <form
+          id="carrier-form"
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="space-y-4"
+        >
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Name <span className="text-destructive">*</span></FormLabel>
+                <FormControl>
+                  <Input placeholder="DHL Express" className="text-sm" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-          {form.formState.errors.name && (
-            <p className="text-xs text-destructive">
-              {form.formState.errors.name.message}
-            </p>
-          )}
-        </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="carrier-code" className="text-xs">
-            Code *
-          </Label>
-          <Input
-            id="carrier-code"
-            placeholder="DHL"
-            className="text-sm"
-            {...form.register("code")}
+          <FormField
+            control={form.control}
+            name="code"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Code <span className="text-destructive">*</span></FormLabel>
+                <FormControl>
+                  <Input placeholder="DHL" className="text-sm" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-          {form.formState.errors.code && (
-            <p className="text-xs text-destructive">
-              {form.formState.errors.code.message}
-            </p>
-          )}
-        </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="carrier-tracking-url" className="text-xs">
-            Tracking URL Template
-          </Label>
-          <Input
-            id="carrier-tracking-url"
-            placeholder="https://track.carrier.com/{tracking}"
-            className="text-sm"
-            {...form.register("trackingUrlTemplate")}
+          <FormField
+            control={form.control}
+            name="trackingUrlTemplate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tracking URL Template</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="https://track.carrier.com/{tracking}"
+                    className="text-sm"
+                    {...field}
+                  />
+                </FormControl>
+                <p className="text-[10px] text-muted-foreground">
+                  Use {"{tracking}"} as placeholder
+                </p>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-          <p className="text-[10px] text-muted-foreground">
-            Use {"{tracking}"} as placeholder
-          </p>
-        </div>
 
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id="carrier-active"
-            checked={form.watch("isActive")}
-            onCheckedChange={handleIsActiveChange}
+          <FormField
+            control={form.control}
+            name="isActive"
+            render={({ field }) => (
+              <FormItem className="flex items-center gap-2">
+                <FormControl>
+                  <Checkbox
+                    id="carrier-active"
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <FormLabel htmlFor="carrier-active" className="text-sm font-normal cursor-pointer">
+                  Active
+                </FormLabel>
+              </FormItem>
+            )}
           />
-          <Label htmlFor="carrier-active" className="text-sm cursor-pointer">
-            Active
-          </Label>
-        </div>
-      </form>
+        </form>
+      </Form>
     </AppSheet>
   );
 }

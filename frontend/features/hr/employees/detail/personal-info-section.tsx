@@ -100,7 +100,7 @@ export function PersonalInfoSection() {
                     <SelectValue placeholder="Select gender" />
                   </SelectTrigger>
                 </FormControl>
-                <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                   <SelectItem value="MALE">Male</SelectItem>
                   <SelectItem value="FEMALE">Female</SelectItem>
                   <SelectItem value="OTHER">Other</SelectItem>

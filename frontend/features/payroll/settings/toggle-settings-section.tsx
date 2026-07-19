@@ -21,6 +21,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { ToggleRow } from "@/features/payroll/shared";
 import { useCreatePolicyVersion, useToggleImpact, usePayrollPolicyCurrent } from "@/hooks/api/payroll";
 import {
@@ -104,7 +106,7 @@ export function ToggleSettingsSection({ policy, activeVersion }: ToggleSettingsS
           setPending(null);
           reset();
         },
-        onError: () => toast.error("Failed to create policy version"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }
@@ -282,9 +284,9 @@ export function ToggleSettingsSection({ policy, activeVersion }: ToggleSettingsS
               >
                 Cancel
               </Button>
-              <Button type="submit" size="sm" disabled={createVersion.isPending}>
-                {createVersion.isPending ? "Saving…" : "Create Version"}
-              </Button>
+              <LoadingButton type="submit" size="sm" isPending={createVersion.isPending} loadingText="Saving…">
+                Create Version
+              </LoadingButton>
             </SheetFooter>
           </form>
         </SheetContent>

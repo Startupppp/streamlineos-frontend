@@ -16,6 +16,7 @@ import { Switch } from "@/components/ui/switch";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
+import { toast } from "sonner";
 import { useBillingProfile, useUpdateBillingProfile } from "@/hooks/api/subscription";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -88,7 +89,10 @@ export function BillingProfileTab() {
   });
 
   function handleSubmit(values: BillingProfileFormValues) {
-    updateProfile(values);
+    updateProfile(values, {
+      onSuccess: () => toast.success("Billing profile saved"),
+      onError: (err) => toast.error(getErrorMessage(err)),
+    });
   }
 
   function handleRetry() {
@@ -297,7 +301,7 @@ export function BillingProfileTab() {
               name="country"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Country</FormLabel>
+                  <FormLabel>Country <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <Input
                       {...field}

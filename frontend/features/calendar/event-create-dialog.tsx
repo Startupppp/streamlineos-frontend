@@ -199,6 +199,7 @@ export function EventCreateDialog({
     needsEndDateField(isEdit && event ? toEditForm(event) : toDefaultForm(defaultSlot)),
   );
   const [dateTimeError, setDateTimeError] = useState("");
+  const [titleError, setTitleError] = useState("");
   const [linkedTicket, setLinkedTicket] = useState<TicketSearchResult | null>(null);
   const [existingEntityId, setExistingEntityId] = useState<string | null>(null);
   const [ticketPickerOpen, setTicketPickerOpen] = useState(false);
@@ -216,6 +217,7 @@ export function EventCreateDialog({
       setForm(isEdit ? base : { ...base, syncConnectionId: "none" });
       setShowEndDate(needsEndDateField(base));
       setDateTimeError("");
+      setTitleError("");
       setLinkedTicket(null);
       setExistingEntityId(
         isEdit && event?.entityType === "ticket" && event.entityId
@@ -270,8 +272,9 @@ export function EventCreateDialog({
   const handleTitleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       set("title", e.target.value);
+      if (titleError) setTitleError("");
     },
-    [set],
+    [set, titleError],
   );
 
   const handleDescriptionChange = useCallback(
@@ -405,29 +408,30 @@ export function EventCreateDialog({
   const handleSave = useCallback(async () => {
     const trimmedTitle = form.title.trim();
     if (!trimmedTitle) {
-      toast.error("Event title is required");
+      setTitleError("Event title is required");
       return;
     }
     if (!/^[a-zA-Z0-9]/.test(trimmedTitle)) {
-      toast.error("Event title must start with a letter or number");
+      setTitleError("Event title must start with a letter or number");
       return;
     }
     if (!/[a-zA-Z0-9]/.test(trimmedTitle)) {
-      toast.error("Event title must contain at least one letter or number");
+      setTitleError("Event title must contain at least one letter or number");
       return;
     }
     if (trimmedTitle.length < 2) {
-      toast.error("Event title must be at least 2 characters");
+      setTitleError("Event title must be at least 2 characters");
       return;
     }
     if (trimmedTitle.length > 100) {
-      toast.error("Event title must be at most 100 characters");
+      setTitleError("Event title must be at most 100 characters");
       return;
     }
     if (/\s{2,}/.test(form.title)) {
-      toast.error("Event title cannot have consecutive spaces");
+      setTitleError("Event title cannot have consecutive spaces");
       return;
     }
+    setTitleError("");
     if (form.description) {
       if (form.description.trim().length < 5) {
         toast.error("Description must be at least 5 characters");
@@ -581,6 +585,7 @@ export function EventCreateDialog({
             <div className="px-4 py-2 space-y-2">
               <EventFormFields
                 title={form.title}
+                titleError={titleError}
                 description={form.description}
                 allDay={form.allDay}
                 startDate={form.startDate}

@@ -1,14 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { kbNoteSchema, type KbNoteFormValues } from "./kb-note-schema";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { useCreateKbSourceNote } from "@/hooks/api/kb/sources";
-import { getErrorMessage } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 interface KbNoteSheetProps {
   open: boolean;
@@ -16,45 +26,33 @@ interface KbNoteSheetProps {
 }
 
 export function KbNoteSheet({ open, onOpenChange }: KbNoteSheetProps) {
-  const [title, setTitle] = useState("");
-  const [text, setText] = useState("");
   const createNote = useCreateKbSourceNote();
 
-  function reset() {
-    setTitle("");
-    setText("");
-  }
-
-  function handleTitleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setTitle(e.target.value);
-  }
-
-  function handleTextChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    setText(e.target.value);
-  }
-
-  function handleClose() {
-    reset();
-    onOpenChange(false);
-  }
+  const form = useForm<KbNoteFormValues>({
+    resolver: zodResolver(kbNoteSchema),
+    defaultValues: { title: "", text: "" },
+  });
 
   function handleOpenChange(next: boolean) {
-    if (!next) reset();
+    if (!next) form.reset();
     onOpenChange(next);
   }
 
-  function handleSave() {
-    const trimmedTitle = title.trim();
-    const trimmedText = text.trim();
-    if (!trimmedTitle || !trimmedText) return;
+  function handleClose() {
+    form.reset();
+    onOpenChange(false);
+  }
+
+  function handleSave(values: KbNoteFormValues) {
     createNote.mutate(
-      { title: trimmedTitle, text: trimmedText },
+      { title: values.title.trim(), text: values.text.trim() },
       {
         onSuccess: () => {
           toast.success("Note added");
-          handleClose();
+          form.reset();
+          onOpenChange(false);
         },
-        onError: (error) => toast.error("Failed to add note", { description: getErrorMessage(error) }),
+        onError: (error) => toast.error(getErrorMessage(error)),
       },
     );
   }
@@ -71,33 +69,56 @@ export function KbNoteSheet({ open, onOpenChange }: KbNoteSheetProps) {
             Cancel
           </Button>
           <LoadingButton
-            type="button"
+            type="submit"
+            form="kb-note-form"
             size="sm"
-            onClick={handleSave}
             isPending={createNote.isPending}
             loadingText="Saving…"
-            disabled={!title.trim() || !text.trim()}
           >
             Save note
           </LoadingButton>
         </div>
       }
     >
-      <div className="space-y-3">
-        <Input
-          placeholder="Note title"
-          value={title}
-          onChange={handleTitleChange}
-          className="text-sm"
-        />
-        <Textarea
-          placeholder="Paste or type the content you want the AI to learn…"
-          value={text}
-          onChange={handleTextChange}
-          rows={6}
-          className="text-sm"
-        />
-      </div>
+      <Form {...form}>
+        <form id="kb-note-form" onSubmit={form.handleSubmit(handleSave)} className="space-y-3">
+          <FormField
+            control={form.control}
+            name="title"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Title <span className="text-destructive">*</span>
+                </FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="Note title" className="text-sm" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="text"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Content <span className="text-destructive">*</span>
+                </FormLabel>
+                <FormControl>
+                  <Textarea
+                    {...field}
+                    placeholder="Paste or type the content you want the AI to learn…"
+                    rows={6}
+                    className="text-sm"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </form>
+      </Form>
     </AppSheet>
   );
 }

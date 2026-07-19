@@ -274,7 +274,7 @@ export default function QuoteSettingsPage() {
         title="Quote Settings"
         subtitle="Configure quoting behavior and document templates"
       >
-        <div className="bg-card border border-border rounded-xl p-6 mb-6">
+        <div className="bg-card border border-border rounded-xl p-4 mb-4">
           <h2 className="text-sm font-semibold text-foreground mb-4">General Settings</h2>
           {settingsLoading ? (
             <SettingsSkeleton />
@@ -287,8 +287,8 @@ export default function QuoteSettingsPage() {
           )}
         </div>
 
-        <div className="bg-card border border-border rounded-xl p-6">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-card border border-border rounded-xl p-4">
+          <div className="flex items-center justify-between mb-3">
             <div>
               <h2 className="text-sm font-semibold text-foreground">Quote Templates</h2>
               <p className="text-xs text-muted-foreground mt-0.5">

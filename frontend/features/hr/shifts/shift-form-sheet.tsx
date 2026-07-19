@@ -7,7 +7,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { getErrorMessage } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useCreateShift,
   useUpdateShift,

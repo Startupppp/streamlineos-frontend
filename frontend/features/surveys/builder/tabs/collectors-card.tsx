@@ -10,7 +10,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import { getApiError } from "@/lib/api-client";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { useCollectors, useCreateCollector, usePatchCollector, type CollectorType, type CollectorStatus } from "@/hooks/api/surveys/collectors";
 
 const COLLECTOR_TYPE_LABELS: Record<CollectorType, string> = {
@@ -99,7 +101,7 @@ export function CollectorsCard({ surveyId }: { surveyId: number }) {
 
         <div className="flex items-center gap-2">
           <Select value={newType} onValueChange={(v) => setNewType(v as CollectorType)}>
-            <SelectTrigger className="flex-1"><SelectValue /></SelectTrigger>
+            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[200px]")}><SelectValue /></SelectTrigger>
             <SelectContent>
               {(Object.keys(COLLECTOR_TYPE_LABELS) as CollectorType[]).map((type) => (
                 <SelectItem key={type} value={type}>{COLLECTOR_TYPE_LABELS[type]}</SelectItem>

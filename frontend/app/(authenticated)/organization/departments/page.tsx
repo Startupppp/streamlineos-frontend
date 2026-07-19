@@ -46,6 +46,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
@@ -424,7 +425,7 @@ export default function OrgDepartmentsPage() {
         </AnimatedIconButton>
       }
       filters={
-        <>
+        <div className={FILTER_TOOLBAR_ROW}>
           <SearchInput placeholder="Search departments…" value={search} onValueChange={handleSearchInputChange} />
           {archived.length > 0 && (
             <Button variant="outline" size="sm" className="text-xs" onClick={handleToggleArchived}>
@@ -432,7 +433,7 @@ export default function OrgDepartmentsPage() {
               {showArchived ? "Show Active" : `Archived (${archived.length})`}
             </Button>
           )}
-        </>
+        </div>
       }
     >
       <DataTable

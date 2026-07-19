@@ -98,7 +98,7 @@ export default function LeadSourceReportPage() {
         />
       ) : (
         <motion.div
-          className="space-y-6"
+          className="space-y-4"
           variants={containerVariants}
           initial="hidden"
           animate="visible"

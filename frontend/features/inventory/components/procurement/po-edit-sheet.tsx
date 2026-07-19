@@ -10,7 +10,6 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
 import { LoadingButton } from "@/components/ui/loading-button";
 import {
@@ -21,6 +20,14 @@ import {
   SheetFooter,
   SheetBody,
 } from "@/components/ui/sheet";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import {
   Select,
   SelectContent,
@@ -108,7 +115,7 @@ export function PoEditSheet({ open, onOpenChange, po }: PoEditSheetProps) {
   const variants = variantsQuery.data ?? [];
   const vendors = vendorsQuery.data?.items ?? [];
 
-  const { control, register, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     values: {
       vendorId: po.vendor ? String(po.vendor.id) : "",
@@ -123,6 +130,8 @@ export function PoEditSheet({ open, onOpenChange, po }: PoEditSheetProps) {
       })),
     },
   });
+
+  const { control, handleSubmit, reset } = form;
 
   const { fields, append, remove } = useFieldArray({ control, name: "lines" });
 
@@ -280,21 +289,22 @@ export function PoEditSheet({ open, onOpenChange, po }: PoEditSheetProps) {
         <SheetHeader className="bg-muted/40 p-6 pb-4 pr-12 border-b text-left">
           <SheetTitle>Edit Purchase Order</SheetTitle>
         </SheetHeader>
+        <Form {...form}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <SheetBody className="space-y-4 px-6 py-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label className="text-[13px] font-medium">
-                  Vendor <span className="text-destructive">*</span>
-                </Label>
-                <Controller
-                  control={control}
-                  name="vendorId"
-                  render={({ field }) => (
+              <FormField
+                control={control}
+                name="vendorId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Vendor <span className="text-destructive">*</span></FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select vendor" />
-                      </SelectTrigger>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select vendor" />
+                        </SelectTrigger>
+                      </FormControl>
                       <SelectContent className="max-h-72">
                         {vendors.map((v) => (
                           <SelectItem key={v.id} value={String(v.id)}>
@@ -303,48 +313,56 @@ export function PoEditSheet({ open, onOpenChange, po }: PoEditSheetProps) {
                         ))}
                       </SelectContent>
                     </Select>
-                  )}
-                />
-                {errors.vendorId && (
-                  <p className="text-xs text-destructive">{errors.vendorId.message}</p>
+                    <FormMessage />
+                  </FormItem>
                 )}
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[13px] font-medium">
-                  Order Date <span className="text-destructive">*</span>
-                </Label>
-                <Controller
-                  name="orderDate"
-                  control={control}
-                  render={({ field }) => (
-                    <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
-                  )}
-                />
-                {errors.orderDate && (
-                  <p className="text-xs text-destructive">{errors.orderDate.message}</p>
+              />
+              <FormField
+                control={control}
+                name="orderDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Order Date <span className="text-destructive">*</span></FormLabel>
+                    <FormControl>
+                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[13px] font-medium">Expected Delivery</Label>
-                <Controller
-                  name="expectedDeliveryDate"
-                  control={control}
-                  render={({ field }) => (
-                    <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
-                  )}
-                />
-              </div>
+              />
+              <FormField
+                control={control}
+                name="expectedDeliveryDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Expected Delivery</FormLabel>
+                    <FormControl>
+                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
-            <div className="space-y-1.5">
-              <Label className="text-[13px] font-medium">Notes</Label>
-              <Textarea {...register("notes")} rows={2} />
-            </div>
+            <FormField
+              control={control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Notes</FormLabel>
+                  <FormControl>
+                    <Textarea rows={2} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label className="text-[13px] font-medium">
+                <FormLabel className="text-[13px] font-medium">
                   Lines <span className="text-destructive">*</span>
-                </Label>
+                </FormLabel>
                 <AnimatedIconButton type="button" icon={PlusIcon} iconSize={14} iconClassName="mr-1" variant="outline" size="sm" className="text-xs" onClick={handleAddLine}>
                   Add line
                 </AnimatedIconButton>
@@ -370,6 +388,7 @@ export function PoEditSheet({ open, onOpenChange, po }: PoEditSheetProps) {
             </LoadingButton>
           </SheetFooter>
         </form>
+        </Form>
       </SheetContent>
     </Sheet>
   );

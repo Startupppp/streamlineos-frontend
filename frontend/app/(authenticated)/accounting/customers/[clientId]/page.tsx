@@ -210,7 +210,7 @@ export default function CustomerLedgerDetailPage({
             >
               From
             </label>
-            <DatePicker id="customer-ledger-from" value={from ?? ""} onChange={handleFromChange} placeholder="Pick a date" className="w-full sm:w-[160px]" />
+            <DatePicker id="customer-ledger-from" value={from ?? ""} onChange={handleFromChange} placeholder="Pick a date" className="w-[160px]" />
           </div>
           <div className="flex flex-col gap-1">
             <label
@@ -219,7 +219,7 @@ export default function CustomerLedgerDetailPage({
             >
               To
             </label>
-            <DatePicker id="customer-ledger-to" value={to ?? ""} onChange={handleToChange} placeholder="Pick a date" className="w-full sm:w-[160px]" />
+            <DatePicker id="customer-ledger-to" value={to ?? ""} onChange={handleToChange} placeholder="Pick a date" className="w-[160px]" />
           </div>
         </div>
 

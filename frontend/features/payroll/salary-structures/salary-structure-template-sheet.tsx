@@ -42,7 +42,7 @@ interface SalaryStructureTemplateSheetProps {
   isPending: boolean;
 }
 
-function FieldGroup({ label, children }: { label: string; children: React.ReactNode }) {
+function FieldGroup({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
       <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
@@ -206,7 +206,7 @@ export function SalaryStructureTemplateSheet({
       submitLabel={template ? "Save Changes" : "Create Template"}
       isPending={isPending}
     >
-      <FieldGroup label="Template Name">
+      <FieldGroup label={<>Template Name <span className="text-destructive">*</span></>}>
         <Input
           {...register("name")}
           placeholder="e.g. Senior Engineer L3"
@@ -218,7 +218,7 @@ export function SalaryStructureTemplateSheet({
       </FieldGroup>
 
       <div className="grid grid-cols-2 gap-3">
-        <FieldGroup label="Basic Salary (₹)">
+        <FieldGroup label={<>Basic Salary (₹) <span className="text-destructive">*</span></>}>
           <Input
             {...register("basicSalary")}
             type="number"
@@ -324,7 +324,7 @@ export function SalaryStructureTemplateSheet({
       </p>
 
       <div className="grid grid-cols-2 gap-3">
-        <FieldGroup label="Effective From">
+        <FieldGroup label={<>Effective From <span className="text-destructive">*</span></>}>
           <Controller
             name="effectiveFrom"
             control={control}

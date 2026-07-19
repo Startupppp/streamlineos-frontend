@@ -342,6 +342,7 @@ function LoadsPageInner() {
             <DataTable
               data={items}
               columns={columns}
+              className="flex-1 min-h-0"
               getRowKey={(l) => l.id}
               isLoading={loadsQuery.isLoading}
               onRowClick={handleRowClick}

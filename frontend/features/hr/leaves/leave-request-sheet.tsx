@@ -3,7 +3,6 @@
 import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { format, startOfDay } from "date-fns";
 import { toast } from "sonner";
 
@@ -30,6 +29,7 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { AlertCircle } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useRequestLeave, useLeavePolicy } from "@/hooks/api/hr";
+import { leaveFormSchema, type LeaveFormValues } from "./leave-request-schema";
 import type {
   LeaveType,
   Approver,
@@ -48,43 +48,6 @@ function countNonSundayDays(startStr: string, endStr: string): number {
   }
   return count;
 }
-
-const leaveFormSchema = z
-  .object({
-    leaveTypeId: z.string().min(1, "Leave type is required"),
-    startDate: z.string().min(1, "Start date is required"),
-    endDate: z.string().min(1, "End date is required"),
-    halfDay: z.boolean(),
-    halfDayPeriod: z.enum(["AM", "PM"]),
-    priority: z.enum(["LOW", "MEDIUM", "HIGH"]),
-    reason: z
-      .string()
-      .trim()
-      .min(10, "Reason must be at least 10 characters")
-      .max(500, "Reason must be at most 500 characters"),
-    approverId: z.string().optional(),
-  })
-  .superRefine((data, ctx) => {
-    if (data.startDate && data.endDate) {
-      const start = new Date(data.startDate);
-      const end = new Date(data.endDate);
-      if (end < start) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "To date must be on or after From date",
-          path: ["endDate"],
-        });
-      }
-      if (data.halfDay && data.startDate !== data.endDate) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Half day leave cannot span multiple dates",
-          path: ["endDate"],
-        });
-      }
-    }
-  });
-type LeaveFormValues = z.infer<typeof leaveFormSchema>;
 
 interface LeaveRequestSheetProps {
   open: boolean;
@@ -277,7 +240,7 @@ export function LeaveRequestSheet({
                       <SelectValue placeholder="Select leave type" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                  <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                     {leaveTypes.map((t) => (
                       <SelectItem key={t.id} value={t.id.toString()}>
                         {t.name}
@@ -380,7 +343,7 @@ export function LeaveRequestSheet({
                           <SelectValue />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                      <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                         <SelectItem value="AM">
                           AM (Morning — first half)
                         </SelectItem>
@@ -410,7 +373,7 @@ export function LeaveRequestSheet({
                       <SelectValue placeholder="Select priority" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                  <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                     <SelectItem value="LOW">
                       <span className="flex items-center gap-2">
                         <span className="h-2 w-2 rounded-full bg-emerald-500" />
@@ -451,7 +414,7 @@ export function LeaveRequestSheet({
                         <SelectValue placeholder="Select approver" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                    <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                       {approvers.map((u) => (
                         <SelectItem key={u.id} value={u.id}>
                           {u.name ||

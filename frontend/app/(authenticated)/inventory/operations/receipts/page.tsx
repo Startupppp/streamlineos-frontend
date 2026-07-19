@@ -134,6 +134,7 @@ export default function ReceiptsPage() {
       <DataTable
         data={items}
         columns={columns}
+        className="flex-1 min-h-0"
         getRowKey={(g) => g.id}
         isLoading={query.isLoading}
         onRowClick={handleRowClick}

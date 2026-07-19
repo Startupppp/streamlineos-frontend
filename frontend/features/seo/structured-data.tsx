@@ -7,11 +7,8 @@ import {
 } from "@/lib/branding";
 import { PRICING } from "@/lib/pricing";
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Structured data (Schema.org / JSON-LD) — helps Google understand the brand,
-   product, FAQs, and breadcrumbs. Surfaces rich results (sitelinks, FAQ
-   expansions, breadcrumbs) in search.
-   ───────────────────────────────────────────────────────────────────────── */
+const ORG_ID = `${BRAND_URL}/#organization`;
+const WEBSITE_ID = `${BRAND_URL}/#website`;
 
 type JsonLdProps<T> = { data: T };
 
@@ -30,6 +27,7 @@ export function OrganizationJsonLd() {
       data={{
         "@context": "https://schema.org",
         "@type": "Organization",
+        "@id": ORG_ID,
         name: BRAND_NAME,
         legalName: BRAND_NAME,
         url: BRAND_URL,
@@ -57,19 +55,12 @@ export function WebsiteJsonLd() {
       data={{
         "@context": "https://schema.org",
         "@type": "WebSite",
+        "@id": WEBSITE_ID,
         name: BRAND_NAME,
         url: BRAND_URL,
         description: BRAND_DESCRIPTION,
-        publisher: {
-          "@type": "Organization",
-          name: BRAND_NAME,
-          logo: `${BRAND_URL}/logo.svg`,
-        },
-        potentialAction: {
-          "@type": "SearchAction",
-          target: `${BRAND_URL}/?q={search_term_string}`,
-          "query-input": "required name=search_term_string",
-        },
+        inLanguage: "en",
+        publisher: { "@id": ORG_ID },
       }}
     />
   );
@@ -87,13 +78,17 @@ export function SoftwareApplicationJsonLd() {
         operatingSystem: "Web, Cloud",
         description: BRAND_DESCRIPTION,
         url: BRAND_URL,
-        image: `${BRAND_URL}/logo.svg`,
+        image: `${BRAND_URL}/opengraph-image`,
+        screenshot: `${BRAND_URL}/opengraph-image`,
+        author: { "@id": ORG_ID },
+        publisher: { "@id": ORG_ID },
         offers: [
           {
             "@type": "Offer",
             name: "Free",
             price: "0",
             priceCurrency: "INR",
+            url: `${BRAND_URL}/pricing`,
             description: `Free forever for up to ${PRICING.freeSeatLimit} seats.`,
           },
           {
@@ -101,6 +96,7 @@ export function SoftwareApplicationJsonLd() {
             name: "Startup",
             price: "399",
             priceCurrency: "INR",
+            url: `${BRAND_URL}/pricing`,
             description:
               "Per seat per month, billed annually. All apps included.",
           },
@@ -109,6 +105,7 @@ export function SoftwareApplicationJsonLd() {
             name: "Growth",
             price: "639",
             priceCurrency: "INR",
+            url: `${BRAND_URL}/pricing`,
             description: "Per seat per month, billed annually.",
           },
           {
@@ -116,6 +113,7 @@ export function SoftwareApplicationJsonLd() {
             name: "Enterprise",
             price: "1499",
             priceCurrency: "INR",
+            url: `${BRAND_URL}/pricing`,
             description: "Starting price per seat per month, custom contracts.",
           },
         ],
@@ -132,13 +130,6 @@ export function SoftwareApplicationJsonLd() {
           "Role-based access control",
           "Multi-org / multi-branch",
         ],
-        aggregateRating: {
-          "@type": "AggregateRating",
-          ratingValue: "4.9",
-          ratingCount: "100",
-          bestRating: "5",
-          worstRating: "1",
-        },
       }}
     />
   );

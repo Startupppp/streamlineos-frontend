@@ -139,7 +139,7 @@ function RolesContent() {
         )}
       </div>
 
-      <div className="grid flex-1 min-h-0 gap-6 lg:grid-cols-[320px_1fr]">
+      <div className="grid flex-1 min-h-0 gap-4 lg:grid-cols-[320px_1fr]">
         <Card className="flex flex-col lg:min-h-0">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">

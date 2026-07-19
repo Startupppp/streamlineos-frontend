@@ -156,7 +156,7 @@ export function CampaignSheet({ open, onOpenChange, campaign }: CampaignSheetPro
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Name</FormLabel>
+                    <FormLabel>Name <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <Input placeholder="Summer Email Blast" {...field} />
                     </FormControl>

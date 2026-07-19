@@ -2,6 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -270,7 +271,7 @@ export function BillDetailView({
         columns={ITEM_COLUMNS}
         getRowKey={(row) => row.id}
         emptyState={
-          <p className="text-center text-sm text-muted-foreground py-8">No line items</p>
+          <EmptyState title="No line items" compact />
         }
         minWidth="760px"
       />

@@ -357,13 +357,13 @@ export default function FixedAssetsPage() {
         }
       >
         <Tabs defaultValue="assets" className="flex flex-1 min-h-0 flex-col">
-          <TabsList className="mb-4">
+          <TabsList>
             <TabsTrigger value="assets">Assets</TabsTrigger>
             <TabsTrigger value="categories">Categories</TabsTrigger>
           </TabsList>
 
           <TabsContent value="assets">
-            <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0 mb-4">
+            <div className={FILTER_TOOLBAR_ROW}>
               <Select value={statusFilter} onValueChange={handleStatusChange}>
                 <SelectTrigger
                   className={cn("w-[180px]", FILTER_SELECT_TRIGGER)}

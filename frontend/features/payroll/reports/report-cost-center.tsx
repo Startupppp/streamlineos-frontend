@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyReportIllustration } from "@/components/illustrations";
@@ -77,24 +76,21 @@ export function ReportCostCenter({ month, costCenter, workerType }: ReportCostCe
   ) : undefined;
 
   return (
-    <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
-      <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
-        <DataTable
-          data={data?.rows ?? []}
-          columns={COLUMNS}
-          getRowKey={(row) => row.costCenter}
-          isLoading={isLoading}
-          footer={footerNode}
-          emptyState={
-            <EmptyState
-              compact
-              illustration={<EmptyReportIllustration />}
-              title="No cost center data"
-              description="Run payroll for this month to see cost center breakdown."
-            />
-          }
+    <DataTable
+      className="flex-1 min-h-0"
+      data={data?.rows ?? []}
+      columns={COLUMNS}
+      getRowKey={(row) => row.costCenter}
+      isLoading={isLoading}
+      footer={footerNode}
+      emptyState={
+        <EmptyState
+          compact
+          illustration={<EmptyReportIllustration />}
+          title="No cost center data"
+          description="Run payroll for this month to see cost center breakdown."
         />
-      </CardContent>
-    </Card>
+      }
+    />
   );
 }

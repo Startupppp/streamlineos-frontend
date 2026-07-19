@@ -96,9 +96,9 @@ export function InventorySettingsClient() {
 
   return (
     <PageWrapper title="Settings" subtitle="Configure stock policies, procurement rules, and system sequences.">
-      <div className="flex flex-1 min-h-0 flex-col gap-6">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
       <FormProvider {...methods}>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {isLoading ? (
             <SettingsLoadingSkeleton />
           ) : (
@@ -126,7 +126,7 @@ export function InventorySettingsClient() {
         </form>
       </FormProvider>
 
-      <div className="space-y-6">
+      <div className="space-y-4">
         <NumberSequencesCard />
         <SettingsHealthCard />
         <WebhooksSettingsCard />

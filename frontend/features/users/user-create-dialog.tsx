@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { useCallback } from "react";
 import { useCreateUser } from "@/hooks/api/users";
 import { useOrgBranches, useOrgDepartments } from "@/hooks/api/org-hierarchy";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   Dialog,
   DialogContent,
@@ -106,7 +106,7 @@ export function UserCreateDialog({ open, onOpenChange, onSuccess }: UserCreateDi
           form.reset();
           onSuccess();
         },
-        onError: (err) => toast.error(getApiError(err)),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }
@@ -128,7 +128,7 @@ export function UserCreateDialog({ open, onOpenChange, onSuccess }: UserCreateDi
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>Email <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <Input type="email" placeholder="user@company.com" {...field} />
                   </FormControl>
@@ -171,7 +171,7 @@ export function UserCreateDialog({ open, onOpenChange, onSuccess }: UserCreateDi
               name="role"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Role</FormLabel>
+                  <FormLabel>Role <span className="text-destructive">*</span></FormLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
                     <FormControl>
                       <SelectTrigger>

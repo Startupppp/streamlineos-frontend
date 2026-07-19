@@ -146,7 +146,7 @@ export function BgvTracker({
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                  <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                     {BGV_STATUSES.map((s) => (
                       <SelectItem key={s.value} value={s.value}>
                         {s.label}

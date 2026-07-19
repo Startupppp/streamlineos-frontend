@@ -6,7 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Shield, Pencil } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -264,43 +263,37 @@ export default function SupportSlaPage() {
             className={CONTENT_FILL_PANEL}
           />
         ) : (
-          <div className="flex flex-1 min-h-0 flex-col gap-6">
+          <div className="flex flex-1 min-h-0 flex-col gap-3">
             <StatCardGrid cols={2}>
               <StatCard label="Total Policies" value={count} icon={Shield} tone="blue" />
               <StatCard label="Enabled" value={enabledCount} icon={Shield} tone="emerald" />
             </StatCardGrid>
 
-            <Card className="bg-card rounded-lg border border-border shadow-sm overflow-hidden">
-              <CardHeader className="px-4 py-3">
-                <CardTitle className="text-sm font-semibold">Policies</CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <DataTable
-                  data={policies ?? []}
-                  columns={columns}
-                  getRowKey={(policy) => policy.id}
-                  isLoading={isLoading}
-                  emptyState={
-                    <div className="py-14 px-4">
-                      <EmptyState
-                        illustrationPreset="security"
-                        title="No SLA policies defined"
-                        description="Create a policy to track response and resolution time commitments for tickets."
-                        action={{ label: "New Policy", onClick: handleOpenCreate }}
-                        className="border-0 bg-transparent"
-                      />
-                    </div>
-                  }
-                />
-              </CardContent>
-            </Card>
+            <DataTable
+              data={policies ?? []}
+              columns={columns}
+              getRowKey={(policy) => policy.id}
+              isLoading={isLoading}
+              className="flex-1 min-h-0"
+              emptyState={
+                <div className="py-14 px-4">
+                  <EmptyState
+                    illustrationPreset="security"
+                    title="No SLA policies defined"
+                    description="Create a policy to track response and resolution time commitments for tickets."
+                    action={{ label: "New Policy", onClick: handleOpenCreate }}
+                    className="border-0 bg-transparent"
+                  />
+                </div>
+              }
+            />
 
             {editingId !== null && (
-              <Card className="bg-card rounded-lg border border-border shadow-sm">
-                <CardHeader className="px-4 py-3">
-                  <CardTitle className="text-sm font-semibold">Edit Policy</CardTitle>
-                </CardHeader>
-                <CardContent className="px-4 pb-4">
+              <div className="rounded-lg border border-border bg-card shadow-sm">
+                <div className="px-4 py-3 border-b border-border">
+                  <p className="text-sm font-semibold">Edit Policy</p>
+                </div>
+                <div className="px-4 pb-4 pt-3">
                   <Form {...editForm}>
                     <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
                       <PolicyFormFields form={editForm} businessHoursOptions={businessHoursOptions} idPrefix="edit" />
@@ -312,8 +305,8 @@ export default function SupportSlaPage() {
                       </div>
                     </form>
                   </Form>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             )}
           </div>
         )}

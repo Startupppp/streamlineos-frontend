@@ -4,7 +4,6 @@ import { useState } from "react";
 import { AlertTriangle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyReportIllustration } from "@/components/illustrations";
@@ -85,7 +84,7 @@ export function ReportJournal({ month }: ReportJournalProps) {
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-1 min-h-0 flex-col gap-3">
       {unmappedCodes.length > 0 && (
         <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
@@ -107,26 +106,23 @@ export function ReportJournal({ month }: ReportJournalProps) {
         </div>
       )}
 
-      <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
-        <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
-          <DataTable
-            data={lines}
-            columns={COLUMNS}
-            getRowKey={(row) => `${row.account}-${row.description}`}
-            isLoading={isLoading}
-            minWidth="700px"
-            footer={footerNode}
-            emptyState={
-              <EmptyState
-                compact
-                illustration={<EmptyReportIllustration />}
-                title="No journal lines"
-                description="Journal entries are generated from locked payroll runs with accounting mappings."
-              />
-            }
+      <DataTable
+        className="flex-1 min-h-0"
+        data={lines}
+        columns={COLUMNS}
+        getRowKey={(row) => `${row.account}-${row.description}`}
+        isLoading={isLoading}
+        minWidth="700px"
+        footer={footerNode}
+        emptyState={
+          <EmptyState
+            compact
+            illustration={<EmptyReportIllustration />}
+            title="No journal lines"
+            description="Journal entries are generated from locked payroll runs with accounting mappings."
           />
-        </CardContent>
-      </Card>
+        }
+      />
 
       <AccountingMappingsSheet
         open={mappingSheetOpen}

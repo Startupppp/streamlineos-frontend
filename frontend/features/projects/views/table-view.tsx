@@ -251,7 +251,7 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
         selection={selection}
         minWidth="640px"
         className="w-full min-w-0 overflow-hidden"
-        emptyState={<div className="text-center py-8 text-muted-foreground text-sm">No work items found</div>}
+        emptyState={<div className="text-center py-4 text-muted-foreground text-sm">No work items found</div>}
       />
     </div>
   );

@@ -91,7 +91,7 @@ export function ApplyCreditNoteDialog({
         </DialogHeader>
         <form className="flex flex-col gap-4" onSubmit={form.handleSubmit(handleSubmit)}>
           <div className="space-y-1.5">
-            <Label className="text-xs">Invoice</Label>
+            <Label className="text-xs">Invoice <span className="text-destructive">*</span></Label>
             <Controller
               control={form.control}
               name="invoiceId"
@@ -117,7 +117,7 @@ export function ApplyCreditNoteDialog({
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">Amount to apply</Label>
+            <Label className="text-xs">Amount to apply <span className="text-destructive">*</span></Label>
             <Input
               {...form.register("amount")}
               className="text-sm"

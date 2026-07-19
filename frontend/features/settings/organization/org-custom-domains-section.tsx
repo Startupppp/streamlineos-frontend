@@ -7,8 +7,15 @@ import { z } from "zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Globe, CheckCircle2, Check } from "lucide-react";
@@ -17,7 +24,8 @@ import { Trash2Icon, PlusIcon, CopyIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
-import { apiClient, getApiError } from "@/lib/api-client";
+import { apiClient } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 type OrgCustomDomain = {
   id: string;
@@ -48,7 +56,7 @@ function useAddDomain() {
       qc.invalidateQueries({ queryKey: ["org", "custom-domains"] });
       toast.success("Domain added — add the TXT record to verify");
     },
-    onError: (err) => toast.error(getApiError(err)),
+    onError: (err) => toast.error(getErrorMessage(err)),
   });
 }
 
@@ -72,7 +80,7 @@ function useRemoveDomain() {
       qc.invalidateQueries({ queryKey: ["org", "custom-domains"] });
       toast.success("Domain removed");
     },
-    onError: (err) => toast.error(getApiError(err)),
+    onError: (err) => toast.error(getErrorMessage(err)),
   });
 }
 
@@ -182,21 +190,31 @@ export function OrgCustomDomainsSection({ canEdit }: OrgCustomDomainsSectionProp
       </CardHeader>
       <CardContent className="pb-5 space-y-4">
         {showAdd && (
-          <form onSubmit={form.handleSubmit(handleAdd)} className="border rounded-lg p-3 space-y-2 bg-muted/30">
-            <div className="space-y-1">
-              <Label className="text-sm font-medium">Domain *</Label>
-              <Input {...form.register("domain")} placeholder="app.yourcompany.com" />
-              {form.formState.errors.domain && <p className="text-[11px] text-destructive">{form.formState.errors.domain.message}</p>}
-            </div>
-            <div className="flex gap-2">
-              <LoadingButton type="submit" size="sm" isPending={addMutation.isPending} className="gap-1.5 h-8" loadingText="Adding…">
-                Add
-              </LoadingButton>
-              <Button type="button" variant="ghost" size="sm" className="h-8" onClick={handleCancelAdd}>
-                Cancel
-              </Button>
-            </div>
-          </form>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleAdd)} className="border rounded-lg p-3 space-y-2 bg-muted/30">
+              <FormField
+                control={form.control}
+                name="domain"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Domain <span className="text-destructive">*</span></FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="app.yourcompany.com" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex gap-2">
+                <LoadingButton type="submit" size="sm" isPending={addMutation.isPending} className="gap-1.5 h-8" loadingText="Adding…">
+                  Add
+                </LoadingButton>
+                <Button type="button" variant="ghost" size="sm" className="h-8" onClick={handleCancelAdd}>
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </Form>
         )}
 
         {isLoading ? (

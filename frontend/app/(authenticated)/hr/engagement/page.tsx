@@ -127,12 +127,12 @@ function OverviewTab() {
   const eomInitials = eomMember ? getUserInitials(eomMember) : eom ? "?" : null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <motion.div
         variants={staggerContainer}
         initial="hidden"
         animate="visible"
-        className="space-y-6"
+        className="space-y-4"
       >
         <motion.div variants={fadeUp}>
           <StatCardGrid cols={4}>
@@ -249,7 +249,7 @@ function RecognitionTab() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-foreground">Kudos Feed</p>
         <Button size="sm" className="gap-1.5" onClick={handleGiveKudos}>
@@ -292,7 +292,7 @@ function MoodTab() {
   const MOODS = ["", "😞", "😕", "😐", "🙂", "😄"];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <MoodCheckinWidget />
 
       <div className="bg-card border border-border rounded-xl p-4 space-y-3">

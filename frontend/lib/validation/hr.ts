@@ -1,6 +1,6 @@
 import { z } from "zod";
+import { isValidPhoneNumber } from "react-phone-number-input";
 
-/** Collapse internal whitespace; trim ends. Prefer for submit-time cleanup. */
 export function normalizeSpaces(value: string): string {
   return value.trim().replace(/\s+/g, " ");
 }
@@ -9,11 +9,6 @@ function hasLetterOrDigit(value: string): boolean {
   return /[\p{L}\p{N}]/u.test(value);
 }
 
-/**
- * Employee onboard form schema — intentionally permissive on special characters
- * and whitespace so real-world names/titles don't fail validation.
- * We only require non-empty meaningful text and light format checks for PAN/IFSC/etc.
- */
 export const onboardEmployeeInputSchema = z.object({
   firstName: z
     .string()
@@ -33,18 +28,14 @@ export const onboardEmployeeInputSchema = z.object({
     .email("Invalid email address")
     .max(254, "Email must be at most 254 characters"),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]),
-  phone: z.string().min(1, "Phone number is required").refine((val) => {
-    const digits = val.replace(/\D/g, "");
-    return digits.length >= 7 && digits.length <= 15;
-  }, "Please enter a valid phone number (7–15 digits)"),
+  phone: z
+    .string()
+    .min(1, "Phone number is required")
+    .refine((val) => isValidPhoneNumber(val), "Please enter a valid phone number"),
   whatsappSameAsPhone: z.boolean(),
   whatsappNumber: z
     .string()
-    .refine((val) => {
-      if (!val) return true;
-      const digits = val.replace(/\D/g, "");
-      return digits.length >= 7 && digits.length <= 15;
-    }, "Please enter a valid WhatsApp number (7–15 digits)")
+    .refine((val) => !val || isValidPhoneNumber(val), "Please enter a valid WhatsApp number")
     .optional(),
   password: z
     .string()

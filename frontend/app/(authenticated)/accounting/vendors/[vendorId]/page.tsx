@@ -215,7 +215,7 @@ export default function VendorLedgerDetailPage({ params }: PageProps) {
             >
               From
             </label>
-            <DatePicker id="vendor-ledger-from" value={from} onChange={handleFromChange} placeholder="Pick a date" className="w-full sm:w-[160px]" />
+            <DatePicker id="vendor-ledger-from" value={from} onChange={handleFromChange} placeholder="Pick a date" className="w-[160px]" />
           </div>
           <div className="flex flex-col gap-1">
             <label
@@ -224,7 +224,7 @@ export default function VendorLedgerDetailPage({ params }: PageProps) {
             >
               To
             </label>
-            <DatePicker id="vendor-ledger-to" value={to} onChange={handleToChange} placeholder="Pick a date" className="w-full sm:w-[160px]" />
+            <DatePicker id="vendor-ledger-to" value={to} onChange={handleToChange} placeholder="Pick a date" className="w-[160px]" />
           </div>
         </div>
 

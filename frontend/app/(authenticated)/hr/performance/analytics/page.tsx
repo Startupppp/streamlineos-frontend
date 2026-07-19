@@ -20,7 +20,7 @@ const PerformanceAnalyticsCharts = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="space-y-6">
+      <div className="space-y-4">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-card border border-border rounded-lg p-6 h-72 animate-pulse" />
           <div className="bg-card border border-border rounded-lg p-6 h-72 animate-pulse" />
@@ -147,7 +147,7 @@ export default function PerformanceAnalyticsPage() {
           </div>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4">
           <PerformanceAnalyticsStats totalCycles={cycles.length} activeCycles={activeCycles} />
 
           <PerformanceAnalyticsCharts

@@ -2,7 +2,6 @@
 
 import { useState, memo } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Card } from "@/components/ui/card";
 import { DatePicker } from "@/components/ui/date-picker";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
@@ -139,7 +138,7 @@ export default function BalanceSheetPage() {
             >
               As of
             </label>
-            <DatePicker id="balance-sheet-asof" value={asOf ?? ""} onChange={handleAsOfChange} placeholder="Pick a date" className="w-full sm:w-[160px]" />
+            <DatePicker id="balance-sheet-asof" value={asOf ?? ""} onChange={handleAsOfChange} placeholder="Pick a date" className="w-[160px]" />
           </div>
           {report && (
             <div className="ml-auto text-sm">
@@ -156,7 +155,7 @@ export default function BalanceSheetPage() {
       }
     >
       {query.isLoading && (
-        <div className="flex flex-1 min-h-0 flex-col space-y-4">
+        <div className="flex flex-1 min-h-0 flex-col space-y-3">
           <StatCardGridSkeleton cols={3} count={3} />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {Array.from({ length: 3 }).map((_, i) => (
@@ -188,7 +187,7 @@ export default function BalanceSheetPage() {
       )}
 
       {report && (
-        <div className="flex flex-1 min-h-0 flex-col space-y-4">
+        <div className="flex flex-1 min-h-0 flex-col space-y-3">
           <BalanceSheetSummaryStrip
             totalAssets={report.totalAssets}
             totalLiabilities={report.totalLiabilities}
@@ -222,7 +221,7 @@ export default function BalanceSheetPage() {
       )}
 
       {report && (
-        <Card className="p-4 mt-4 flex justify-between items-center bg-muted/40">
+        <div className="rounded-lg border border-border px-4 py-3 mt-3 flex justify-between items-center bg-muted/40">
           <div className="font-medium">Assets — (Liabilities + Equity)</div>
           <div className="text-lg font-mono tabular-nums">
             {(
@@ -231,7 +230,7 @@ export default function BalanceSheetPage() {
               Number(report.totalEquity)
             ).toFixed(2)}
           </div>
-        </Card>
+        </div>
       )}
     </PageWrapper>
   );

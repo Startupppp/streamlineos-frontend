@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DatePicker } from "@/components/ui/date-picker";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { Skeleton } from "@/components/ui/skeleton";
 import dynamic from "next/dynamic";
 import type { ChartDatum } from "@/features/accounting/taxes/tax-rate-chart";
@@ -152,7 +153,7 @@ export default function TaxPage() {
       title="Tax"
       subtitle="GST compliance and tax liability overview"
       filters={
-        <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+        <div className={FILTER_TOOLBAR_ROW}>
           <div className="flex flex-col gap-1">
             <label
               htmlFor="tax-from"
@@ -165,7 +166,7 @@ export default function TaxPage() {
               value={from}
               onChange={handleFromChange}
               placeholder="Pick a date"
-              className="w-full sm:w-[160px]"
+              className="w-[160px]"
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -180,7 +181,7 @@ export default function TaxPage() {
               value={to}
               onChange={handleToChange}
               placeholder="Pick a date"
-              className="w-full sm:w-[160px]"
+              className="w-[160px]"
             />
           </div>
         </div>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { DatePicker } from "@/components/ui/date-picker";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyReportIllustration } from "@/components/illustrations";
@@ -42,23 +43,20 @@ export function WorkingCapitalReport() {
       title="Working Capital"
       subtitle="Current assets vs current liabilities and working capital ratio as of a date."
       filters={
-        <div className="flex flex-col gap-1">
-          <label htmlFor="wc-asof" className="text-[11px] font-medium text-muted-foreground leading-none">
-            As of
-          </label>
+        <div className={FILTER_TOOLBAR_ROW}>
           <DatePicker
             id="wc-asof"
             value={asOf}
             onChange={handleAsOfChange}
-            placeholder="Pick a date"
-            className="w-[160px] text-sm"
+            placeholder="As of date"
+            className="w-[160px]"
           />
         </div>
       }
     >
       <div className="flex flex-1 min-h-0 flex-col">
         {isLoading ? (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
               {[0, 1, 2, 3].map((i) => (
                 <div key={i} className="rounded-xl border border-border bg-card p-4 space-y-2">
@@ -84,7 +82,7 @@ export function WorkingCapitalReport() {
             compact
           />
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <StatCardGrid cols={4}>
               <StatCard
                 label="Current Assets"
@@ -116,12 +114,12 @@ export function WorkingCapitalReport() {
               />
             </StatCardGrid>
 
-            <div className="rounded-xl border border-border bg-card p-4">
-              <p className="text-sm font-semibold text-foreground mb-1">Working Capital = Current Assets − Current Liabilities</p>
+            <div className="space-y-2">
+              <p className="text-sm font-semibold text-foreground">Working Capital = Current Assets − Current Liabilities</p>
               <p className="text-xs text-muted-foreground">
                 A current ratio of 2 or above is considered healthy. Below 1 indicates the company may have difficulty meeting short-term obligations.
               </p>
-              <StatCardGrid cols={3} className="mt-4">
+              <StatCardGrid cols={3}>
                 <StatCard
                   label="Current Assets"
                   value={formatCurrencyFull(Number(data.currentAssets))}

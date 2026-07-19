@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -85,6 +87,7 @@ export function AnonymousReportDialog({ open, onOpenChange }: Props) {
         setSubmitted(data.caseNumber);
         form.reset();
       },
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }
 
@@ -174,7 +177,7 @@ export function AnonymousReportDialog({ open, onOpenChange }: Props) {
                 name="summary"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Brief Summary</FormLabel>
+                    <FormLabel>Brief Summary <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <Input className="" placeholder="One-line description" {...field} />
                     </FormControl>
@@ -188,7 +191,7 @@ export function AnonymousReportDialog({ open, onOpenChange }: Props) {
                 name="details"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Full Details</FormLabel>
+                    <FormLabel>Full Details <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <Textarea
                         rows={5}

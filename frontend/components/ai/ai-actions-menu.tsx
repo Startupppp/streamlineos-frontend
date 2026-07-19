@@ -129,8 +129,7 @@ export function AiActionsMenu({
           {actions.map((action) => (
             <DropdownMenuItem
               key={action.key}
-              onSelect={(e) => {
-                e.preventDefault();
+              onSelect={() => {
                 void runAction(action);
               }}
               className="flex flex-col items-start gap-0.5"

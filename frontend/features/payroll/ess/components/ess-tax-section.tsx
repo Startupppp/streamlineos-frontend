@@ -8,6 +8,8 @@ import { motion } from "framer-motion";
 import { Scale, AlertCircle, CheckCircle, Lock, Edit } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetBody } from "@/components/ui/sheet";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -88,8 +90,8 @@ function TaxDeclarationSheet({ open, onClose, financialYear, currentRegime, curr
       });
       toast.success("Tax declaration submitted");
       onClose();
-    } catch {
-      toast.error("Failed to submit declaration");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     }
   };
 
@@ -157,9 +159,9 @@ function TaxDeclarationSheet({ open, onClose, financialYear, currentRegime, curr
           </SheetBody>
           <div className="shrink-0 px-6 py-4 border-t grid grid-cols-2 gap-2">
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? "Saving…" : "Save Declaration"}
-            </Button>
+            <LoadingButton type="submit" isPending={mutation.isPending} loadingText="Saving…">
+              Save Declaration
+            </LoadingButton>
           </div>
           </form>
         </Form>

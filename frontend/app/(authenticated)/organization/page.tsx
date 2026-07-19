@@ -108,7 +108,7 @@ export default function OrganizationOverviewPage() {
           : "Manage your company hierarchy and cost centers."
       }
     >
-      <div className="space-y-6">
+      <div className="space-y-4">
         <StatCardGrid cols={3}>
           {SECTIONS.map((section) => (
             <StatCard

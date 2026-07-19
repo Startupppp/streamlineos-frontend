@@ -176,7 +176,7 @@ export function VendorFormSheet({ open, onOpenChange }: VendorFormSheetProps) {
               name="currency"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Currency</FormLabel>
+                  <FormLabel>Currency <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <Input placeholder="INR" maxLength={3} {...field} />
                   </FormControl>

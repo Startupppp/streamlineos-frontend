@@ -9,6 +9,7 @@ import { z } from "zod";
 import { Package, Plus, ChevronDown, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
@@ -131,7 +132,7 @@ function OrderCard({ order, dealId, onDeleteRequest }: OrderCardProps) {
         { id: order.id, status, dealId },
         {
           onSuccess: () => toast.success(`Order status updated to ${status.toLowerCase()}`),
-          onError: () => toast.error("Failed to update order status"),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -273,7 +274,7 @@ export function DealOrdersSection({ dealId, dealStage }: DealOrdersSectionProps)
             setCreateOpen(false);
             form.reset();
           },
-          onError: () => toast.error("Failed to create order"),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -293,8 +294,8 @@ export function DealOrdersSection({ dealId, dealStage }: DealOrdersSectionProps)
           toast.success("Order deleted");
           setDeleteTargetId(null);
         },
-        onError: () => {
-          toast.error("Failed to delete order");
+        onError: (err) => {
+          toast.error(getErrorMessage(err));
           setDeleteTargetId(null);
         },
       },

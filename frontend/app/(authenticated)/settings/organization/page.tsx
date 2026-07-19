@@ -304,7 +304,7 @@ export default function OrganizationSettingsPage() {
 
   return (
     <PageWrapper title="Organization" subtitle="Manage your organization details and settings">
-      <div className="space-y-6">
+      <div className="space-y-4">
         <OrgProfileSection org={org} canEdit={canEdit} />
 
         <OrgBrandingSection org={org} canEdit={canEdit} />

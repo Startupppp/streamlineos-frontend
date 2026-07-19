@@ -9,6 +9,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Loader2, Pencil, Palette } from "lucide-react";
 import { UploadIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -226,66 +234,110 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
             </div>
           </div>
         ) : (
-          <form onSubmit={form.handleSubmit(handleSave)} className="space-y-5">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <Label className="text-sm font-medium">Logo</Label>
-                <div className="flex gap-2">
-                  <Input {...form.register("logo")} placeholder="https://cdn.example.com/logo.png" className="flex-1" />
-                  <UploadButton uploading={logoUploading} onClick={handleClickLogoInput} />
-                  <input ref={logoInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/svg+xml" className="hidden" onChange={handleLogoUpload} />
-                </div>
-                {logoVal && <Image src={logoVal} alt="Logo preview" width={200} height={40} className="h-10 w-auto rounded border mt-1 object-contain" />}
-                {form.formState.errors.logo && <p className="text-[11px] text-destructive">{form.formState.errors.logo.message}</p>}
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSave)} className="space-y-5">
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="logo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Logo</FormLabel>
+                      <div className="flex gap-2">
+                        <FormControl>
+                          <Input {...field} placeholder="https://cdn.example.com/logo.png" className="flex-1" />
+                        </FormControl>
+                        <UploadButton uploading={logoUploading} onClick={handleClickLogoInput} />
+                        <input ref={logoInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/svg+xml" className="hidden" onChange={handleLogoUpload} />
+                      </div>
+                      {logoVal && <Image src={logoVal} alt="Logo preview" width={200} height={40} className="h-10 w-auto rounded border mt-1 object-contain" />}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="favicon"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Favicon <span className="text-muted-foreground font-normal">(max 256 KB)</span></FormLabel>
+                      <div className="flex gap-2">
+                        <FormControl>
+                          <Input {...field} placeholder="https://cdn.example.com/favicon.ico" className="flex-1" />
+                        </FormControl>
+                        <UploadButton uploading={faviconUploading} onClick={handleClickFaviconInput} />
+                        <input ref={faviconInputRef} type="file" accept="image/x-icon,image/vnd.microsoft.icon,image/png,image/jpeg" className="hidden" onChange={handleFaviconUpload} />
+                      </div>
+                      {faviconVal && <Image src={faviconVal} alt="Favicon preview" width={32} height={32} className="h-8 w-8 rounded border mt-1 object-contain" />}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
-              <div className="space-y-1">
-                <Label className="text-sm font-medium">Favicon <span className="text-muted-foreground font-normal">(max 256 KB)</span></Label>
-                <div className="flex gap-2">
-                  <Input {...form.register("favicon")} placeholder="https://cdn.example.com/favicon.ico" className="flex-1" />
-                  <UploadButton uploading={faviconUploading} onClick={handleClickFaviconInput} />
-                  <input ref={faviconInputRef} type="file" accept="image/x-icon,image/vnd.microsoft.icon,image/png,image/jpeg" className="hidden" onChange={handleFaviconUpload} />
-                </div>
-                {faviconVal && <Image src={faviconVal} alt="Favicon preview" width={32} height={32} className="h-8 w-8 rounded border mt-1 object-contain" />}
-                {form.formState.errors.favicon && <p className="text-[11px] text-destructive">{form.formState.errors.favicon.message}</p>}
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="primaryColor"
+                  render={({ field }) => (
+                    <FormItem>
+                      <ColorField
+                        label="Primary color"
+                        value={field.value ?? "#2563eb"}
+                        onChange={(v) => field.onChange(v)}
+                        error={form.formState.errors.primaryColor?.message}
+                      />
+                      <FormMessage className="hidden" />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="secondaryColor"
+                  render={({ field }) => (
+                    <FormItem>
+                      <ColorField
+                        label="Secondary color"
+                        value={field.value ?? ""}
+                        onChange={(v) => field.onChange(v)}
+                        error={form.formState.errors.secondaryColor?.message}
+                      />
+                      <FormMessage className="hidden" />
+                    </FormItem>
+                  )}
+                />
               </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <ColorField
-                label="Primary color"
-                value={primaryVal}
-                onChange={(v) => form.setValue("primaryColor", v, { shouldDirty: true })}
-                error={form.formState.errors.primaryColor?.message}
+              <FormField
+                control={form.control}
+                name="loginBgUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Login page background URL</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="https://cdn.example.com/bg.jpg" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              <ColorField
-                label="Secondary color"
-                value={secondaryVal}
-                onChange={(v) => form.setValue("secondaryColor", v, { shouldDirty: true })}
-                error={form.formState.errors.secondaryColor?.message}
+
+              <EmailBrandingPreview
+                logo={logoVal}
+                primaryColor={HEX_COLOR.test(primaryVal) ? primaryVal : "#2563eb"}
+                secondaryColor={HEX_COLOR.test(secondaryVal) ? secondaryVal : undefined}
               />
-            </div>
 
-            <div className="space-y-1">
-              <Label className="text-sm font-medium">Login page background URL</Label>
-              <Input {...form.register("loginBgUrl")} placeholder="https://cdn.example.com/bg.jpg" />
-              {form.formState.errors.loginBgUrl && <p className="text-[11px] text-destructive">{form.formState.errors.loginBgUrl.message}</p>}
-            </div>
-
-            <EmailBrandingPreview
-              logo={logoVal}
-              primaryColor={HEX_COLOR.test(primaryVal) ? primaryVal : "#2563eb"}
-              secondaryColor={HEX_COLOR.test(secondaryVal) ? secondaryVal : undefined}
-            />
-
-            <div className="flex gap-2 pt-1">
-              <LoadingButton type="submit" isPending={isPending} size="sm" className="gap-1.5" loadingText="Saving…">
-                Save branding
-              </LoadingButton>
-              <Button type="button" variant="ghost" size="sm" onClick={handleCancel} disabled={isPending}>
-                Cancel
-              </Button>
-            </div>
-          </form>
+              <div className="flex gap-2 pt-1">
+                <LoadingButton type="submit" isPending={isPending} size="sm" className="gap-1.5" loadingText="Saving…">
+                  Save branding
+                </LoadingButton>
+                <Button type="button" variant="ghost" size="sm" onClick={handleCancel} disabled={isPending}>
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </Form>
         )}
       </CardContent>
     </Card>

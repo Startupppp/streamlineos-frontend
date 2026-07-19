@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -92,7 +94,14 @@ export function DelegationSheet() {
   });
 
   function handleGrant(values: ProxyForm) {
-    grantProxy.mutate(values, { onSuccess: () => { form.reset(); setSheetOpen(false); } });
+    grantProxy.mutate(values, {
+      onSuccess: () => {
+        toast.success("Delegation granted");
+        form.reset();
+        setSheetOpen(false);
+      },
+      onError: (err) => toast.error(getErrorMessage(err)),
+    });
   }
 
   function handleRevoke(id: number) {

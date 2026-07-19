@@ -18,6 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useUpdateFxRates } from "@/hooks/api/payroll/settings";
 import { CURRENCIES } from "@/features/payroll/setup/lib/constants";
 import type { PolicyRow, VersionRow } from "@/types/payroll/setup";
@@ -95,7 +97,7 @@ export function FxRatesSection({ policy, activeVersion }: FxRatesSectionProps) {
           toast.success("FX rates saved");
           setEditing(false);
         },
-        onError: () => toast.error("Failed to save FX rates"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }
@@ -208,9 +210,9 @@ export function FxRatesSection({ policy, activeVersion }: FxRatesSectionProps) {
           <Button type="button" variant="outline" size="sm" onClick={handleCancel}>
             Cancel
           </Button>
-          <Button type="submit" size="sm" disabled={update.isPending}>
-            {update.isPending ? "Saving…" : "Save Rates"}
-          </Button>
+          <LoadingButton type="submit" size="sm" isPending={update.isPending} loadingText="Saving…">
+            Save Rates
+          </LoadingButton>
         </div>
       </form>
     </PageSection>

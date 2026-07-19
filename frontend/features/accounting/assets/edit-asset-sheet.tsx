@@ -3,8 +3,14 @@
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import {
   Select,
   SelectContent,
@@ -87,48 +93,116 @@ export function EditAssetSheet({ open, onOpenChange, asset, onSuccess }: EditAss
 
         return (
         <>
-          <div className="space-y-1.5">
-            <Label htmlFor="edit-name">Name</Label>
-            <Input id="edit-name" {...form.register("name")} />
-            {form.formState.errors.name && (
-              <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Name <span className="text-destructive">*</span></FormLabel>
+                <FormControl>
+                  <Input id="edit-name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="edit-date">Acquisition Date</Label>
-            <Input id="edit-date" type="date" {...form.register("acquisitionDate")} />
+          />
+          <FormField
+            control={form.control}
+            name="acquisitionDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Acquisition Date <span className="text-destructive">*</span></FormLabel>
+                <FormControl>
+                  <Input id="edit-date" type="date" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <div className="grid grid-cols-2 gap-3">
+            <FormField
+              control={form.control}
+              name="acquisitionCost"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Acquisition Cost</FormLabel>
+                  <FormControl>
+                    <Input
+                      id="edit-cost"
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      {...field}
+                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="salvageValue"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Salvage Value</FormLabel>
+                  <FormControl>
+                    <Input
+                      id="edit-salvage"
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      {...field}
+                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-cost">Acquisition Cost</Label>
-              <Input id="edit-cost" type="number" min={0} step="0.01" {...form.register("acquisitionCost", { valueAsNumber: true })} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-salvage">Salvage Value</Label>
-              <Input id="edit-salvage" type="number" min={0} step="0.01" {...form.register("salvageValue", { valueAsNumber: true })} />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-life">Useful Life (months)</Label>
-              <Input id="edit-life" type="number" min={1} {...form.register("usefulLifeMonths", { valueAsNumber: true })} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Depreciation Method</Label>
-              <Select
-                value={form.watch("depreciationMethod")}
-                onValueChange={handleDepreciationMethodChange}
-              >
-                <SelectTrigger className="text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {METHOD_OPTIONS.map((m) => (
-                    <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <FormField
+              control={form.control}
+              name="usefulLifeMonths"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Useful Life (months) <span className="text-destructive">*</span></FormLabel>
+                  <FormControl>
+                    <Input
+                      id="edit-life"
+                      type="number"
+                      min={1}
+                      {...field}
+                      onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="depreciationMethod"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Depreciation Method</FormLabel>
+                  <Select value={field.value} onValueChange={handleDepreciationMethodChange}>
+                    <FormControl>
+                      <SelectTrigger className="text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {METHOD_OPTIONS.map((m) => (
+                        <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
         </>
         );

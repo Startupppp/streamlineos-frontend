@@ -317,18 +317,14 @@ export function BillingView() {
             className="flex-1 min-h-[40dvh]"
           />
         ) : (
-          <Card>
-            <CardContent className="p-0">
-              <DataTable
-                data={groups}
-                columns={BILLING_COLUMNS}
-                getRowKey={(r) => r.projectId ?? r.projectName}
-                isLoading={isLoading}
-                emptyState={emptyState}
-                minWidth="700px"
-              />
-            </CardContent>
-          </Card>
+          <DataTable
+            data={groups}
+            columns={BILLING_COLUMNS}
+            getRowKey={(r) => r.projectId ?? r.projectName}
+            isLoading={isLoading}
+            emptyState={emptyState}
+            minWidth="700px"
+          />
         )}
       </motion.div>
 

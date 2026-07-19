@@ -206,7 +206,7 @@ function DuplicateGroupCard({
 
 function DuplicatesSkeleton() {
   return (
-    <div className="flex flex-col flex-1 min-h-0 space-y-6">
+    <div className="flex flex-col flex-1 min-h-0 space-y-4">
       <StatCardGrid cols={2}>
         <StatCard label="Duplicate Groups Found" value={0} tone="red" icon={AlertTriangle} isLoading />
         <StatCard label="Leads at Risk" value={0} tone="amber" icon={Users} isLoading />
@@ -280,7 +280,7 @@ export default function DuplicateLeadsPage() {
           className="flex-1"
         />
       ) : (
-        <div className="flex flex-col flex-1 min-h-0 space-y-6">
+        <div className="flex flex-col flex-1 min-h-0 space-y-4">
           <StatCardGrid cols={2}>
             <StatCard
               label="Duplicate Groups Found"

@@ -26,7 +26,7 @@ export default function SupportCsatReportPage() {
       {isError ? (
         <ErrorState title="Could not load CSAT report" onRetry={handleRetry} />
       ) : (
-        <div className="flex flex-1 min-h-0 flex-col gap-6">
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
           <div>
             <h3 className="text-sm font-semibold text-muted-foreground mb-2">Per-Ticket CSAT</h3>
             <StatCardGrid cols={4}>

@@ -30,7 +30,6 @@ import { getSlaState } from "./sla";
 import type { Incident, IncidentSeverity, IncidentStatus } from "@/types/projects";
 import {
   PmPageShell,
-  PmPanel,
   PmSection,
   PM_FILL_PANEL,
 } from "@/features/projects/shared/pm-chrome";
@@ -299,14 +298,12 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
                 action={canManage ? { label: "New Incident", onClick: handleNew } : undefined}
               />
           ) : (
-            <PmPanel className={PM_FILL_PANEL} solid>
-              <DataTable<Incident>
-                data={filtered}
-                columns={columns}
-                getRowKey={(row) => row.id}
-                className="min-h-0 flex-1 border-0"
-              />
-            </PmPanel>
+            <DataTable<Incident>
+              data={filtered}
+              columns={columns}
+              getRowKey={(row) => row.id}
+              className={PM_FILL_PANEL}
+            />
           )}
         </PmSection>
       </PmPageShell>

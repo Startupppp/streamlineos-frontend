@@ -340,16 +340,15 @@ export default function TerritoriesPage() {
             className={CONTENT_FILL_PANEL}
           />
         ) : (
-          <div className="space-y-6">
-            <Card className="bg-card rounded-lg border border-border shadow-sm">
-              <DataTable
-                data={territories ?? []}
-                columns={columns}
-                getRowKey={getTerritoryKey}
-                rowClassName={getTerritoryRowClassName}
-                emptyState={emptyState}
-              />
-            </Card>
+          <div className="flex flex-1 min-h-0 flex-col gap-4">
+            <DataTable
+              data={territories ?? []}
+              columns={columns}
+              getRowKey={getTerritoryKey}
+              rowClassName={getTerritoryRowClassName}
+              emptyState={emptyState}
+              className="flex-1 min-h-0"
+            />
             <PreviewPanel />
           </div>
         )}

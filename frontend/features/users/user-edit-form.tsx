@@ -26,7 +26,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Separator } from "@/components/ui/separator";
 import { useUpdateUser } from "@/hooks/api/users";
 import type { User } from "@/hooks/api/users";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 
 const editSchema = z.object({
@@ -108,7 +108,7 @@ export function UserEditForm({ user, onSuccess, onCancel }: UserEditFormProps) {
           toast.success("User updated");
           onSuccess();
         },
-        onError: (e) => toast.error(getApiError(e)),
+        onError: (e) => toast.error(getErrorMessage(e)),
       }
     );
   }
@@ -122,7 +122,7 @@ export function UserEditForm({ user, onSuccess, onCancel }: UserEditFormProps) {
             name="firstName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>First Name</FormLabel>
+                <FormLabel>First Name <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
                   <Input {...field} placeholder="First name" />
                 </FormControl>
@@ -135,7 +135,7 @@ export function UserEditForm({ user, onSuccess, onCancel }: UserEditFormProps) {
             name="lastName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Last Name</FormLabel>
+                <FormLabel>Last Name <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
                   <Input {...field} placeholder="Last name" />
                 </FormControl>
@@ -178,7 +178,7 @@ export function UserEditForm({ user, onSuccess, onCancel }: UserEditFormProps) {
           name="role"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Role</FormLabel>
+              <FormLabel>Role <span className="text-destructive">*</span></FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>

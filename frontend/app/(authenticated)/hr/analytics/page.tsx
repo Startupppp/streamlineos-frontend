@@ -155,7 +155,7 @@ function DateRangeSelector({
       <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
         <SelectValue />
       </SelectTrigger>
-      <SelectContent className="w-[var(--radix-select-trigger-width)]">
+      <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
         <SelectItem value="month">This Month</SelectItem>
         <SelectItem value="quarter">This Quarter</SelectItem>
         <SelectItem value="year">This Year</SelectItem>

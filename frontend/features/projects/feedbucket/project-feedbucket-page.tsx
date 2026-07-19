@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { RefreshCcw } from "lucide-react";
@@ -34,8 +37,15 @@ import {
   SheetTitle,
   SheetFooter,
 } from "@/components/ui/sheet";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
   AlertDialog,
@@ -103,6 +113,13 @@ function embedSnippet(publicKey: string): string {
   return `<script src="${window.location.origin}/feedbucket-widget.js" data-key="${publicKey}" async></script>`;
 }
 
+const createWidgetSchema = z.object({
+  name: z.string().min(1, "Widget name is required"),
+  aiAssistEnabled: z.boolean(),
+});
+
+type CreateWidgetFormValues = z.infer<typeof createWidgetSchema>;
+
 interface CreateWidgetSheetProps {
   open: boolean;
   projectId: number;
@@ -110,33 +127,30 @@ interface CreateWidgetSheetProps {
 }
 
 function CreateWidgetSheet({ open, projectId, onClose }: CreateWidgetSheetProps) {
-  const [name, setName] = useState("");
-  const [aiAssistEnabled, setAiAssistEnabled] = useState(false);
   const createWidget = useCreateFeedbucketWidget();
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  const form = useForm<CreateWidgetFormValues>({
+    resolver: zodResolver(createWidgetSchema),
+    defaultValues: { name: "", aiAssistEnabled: false },
+  });
+
+  async function handleSubmit(values: CreateWidgetFormValues) {
     const input: CreateFeedbucketWidgetInput = {
-      name: name.trim(),
+      name: values.name.trim(),
       projectId,
       allowedDomains: [],
       autoCreateTicket: false,
       defaultTicketType: "BUG",
-      aiAssistEnabled,
+      aiAssistEnabled: values.aiAssistEnabled,
     };
     try {
       await createWidget.mutateAsync(input);
       toast.success("Feedback widget created");
-      setName("");
-      setAiAssistEnabled(false);
+      form.reset();
       onClose();
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
-  }
-
-  function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setName(e.target.value);
   }
 
   function handleOpenChange(v: boolean) {
@@ -149,44 +163,57 @@ function CreateWidgetSheet({ open, projectId, onClose }: CreateWidgetSheetProps)
         <SheetHeader className="px-6 py-4 border-b shrink-0">
           <SheetTitle>Create Feedback Widget</SheetTitle>
         </SheetHeader>
-        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
-          <SheetBody className="px-6 py-5 space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="widget-name">Widget name</Label>
-              <Input
-                id="widget-name"
-                value={name}
-                onChange={handleNameChange}
-                placeholder="e.g. Production feedback"
-                required
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col flex-1 min-h-0">
+            <SheetBody className="px-6 py-5 space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Widget name <span className="text-destructive">*</span></FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="e.g. Production feedback" />
+                    </FormControl>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="flex items-start justify-between gap-4 rounded-lg border border-border px-4 py-3">
-              <div className="space-y-0.5 min-w-0">
-                <Label htmlFor="create-ai-assist" className="text-sm font-medium cursor-pointer">
-                  AI assist in widget
-                </Label>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Let people submitting feedback draft a bug/feature with AI from their screenshot. Uses your org&apos;s AI credits; rate-limited.
-                </p>
+              <FormField
+                control={form.control}
+                name="aiAssistEnabled"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-start justify-between gap-4 rounded-lg border border-border px-4 py-3">
+                      <div className="space-y-0.5 min-w-0">
+                        <FormLabel className="text-sm font-medium cursor-pointer">AI assist in widget</FormLabel>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          Let people submitting feedback draft a bug/feature with AI from their screenshot. Uses your org&apos;s AI credits; rate-limited.
+                        </p>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          className="shrink-0 mt-0.5"
+                        />
+                      </FormControl>
+                    </div>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
+            </SheetBody>
+            <SheetFooter className="px-6 py-4 border-t shrink-0">
+              <div className="grid w-full grid-cols-2 gap-2">
+                <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+                <LoadingButton type="submit" isPending={createWidget.isPending} loadingText="Creating…">
+                  Create
+                </LoadingButton>
               </div>
-              <Switch
-                id="create-ai-assist"
-                checked={aiAssistEnabled}
-                onCheckedChange={setAiAssistEnabled}
-                className="shrink-0 mt-0.5"
-              />
-            </div>
-          </SheetBody>
-          <SheetFooter className="px-6 py-4 border-t shrink-0">
-            <div className="grid w-full grid-cols-2 gap-2">
-              <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-              <LoadingButton type="submit" isPending={createWidget.isPending} loadingText="Creating…">
-                Create
-              </LoadingButton>
-            </div>
-          </SheetFooter>
-        </form>
+            </SheetFooter>
+          </form>
+        </Form>
       </SheetContent>
     </Sheet>
   );

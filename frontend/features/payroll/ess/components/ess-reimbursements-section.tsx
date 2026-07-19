@@ -9,6 +9,8 @@ import { Receipt, Paperclip, Upload } from "lucide-react";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { PlusIcon, XIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -114,8 +116,8 @@ function SubmitSheet({ open, onClose }: { open: boolean; onClose: () => void }) 
       setReceiptUrl(null);
       setReceiptName(null);
       onClose();
-    } catch {
-      toast.error("Failed to submit claim");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     }
   };
 
@@ -235,9 +237,9 @@ function SubmitSheet({ open, onClose }: { open: boolean; onClose: () => void }) 
           </SheetBody>
           <div className="shrink-0 px-6 py-4 border-t grid grid-cols-2 gap-2">
             <Button type="button" variant="outline" onClick={handleClose}>Cancel</Button>
-            <Button type="submit" disabled={mutation.isPending || uploadFile.isPending}>
-              {mutation.isPending ? "Submitting…" : "Submit Claim"}
-            </Button>
+            <LoadingButton type="submit" isPending={mutation.isPending} disabled={mutation.isPending || uploadFile.isPending} loadingText="Submitting…">
+              Submit Claim
+            </LoadingButton>
           </div>
           </form>
         </Form>

@@ -23,6 +23,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import { HrSheet } from "@/features/hr/hr-sheet";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateCase } from "@/hooks/api/hr/cases";
 import type { CaseCategory, CaseSeverity } from "@/hooks/api/hr/cases";
 
@@ -85,9 +87,11 @@ export function NewCaseSheet({ open, onOpenChange }: Props) {
       },
       {
         onSuccess: () => {
+          toast.success("Case created successfully");
           onOpenChange(false);
           form.reset();
         },
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }
@@ -155,7 +159,7 @@ export function NewCaseSheet({ open, onOpenChange }: Props) {
             name="summary"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Summary</FormLabel>
+                <FormLabel>Summary <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
                   <Input className="" placeholder="Brief case summary" {...field} />
                 </FormControl>
@@ -169,7 +173,7 @@ export function NewCaseSheet({ open, onOpenChange }: Props) {
             name="details"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Details</FormLabel>
+                <FormLabel>Details <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
                   <Textarea
                     rows={5}

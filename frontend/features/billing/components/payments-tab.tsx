@@ -81,11 +81,9 @@ export function PaymentsTab() {
 
   if (isLoading) {
     return (
-      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
-        <div className="px-4 py-3 border-b border-border">
-          <Skeleton className="h-4 w-32" />
-        </div>
-        <div className="divide-y divide-border">
+      <div className="flex flex-1 min-h-0 flex-col gap-3">
+        <Skeleton className="h-4 w-32" />
+        <div className="divide-y divide-border rounded-xl border border-border">
           {[1, 2, 3, 4, 5].map((i) => (
             <div key={i} className="flex gap-4 px-4 py-3">
               <Skeleton className="h-4 w-36" />
@@ -116,22 +114,20 @@ export function PaymentsTab() {
   }));
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
-        <div className="px-4 py-3 border-b border-border">
-          <p className="text-sm font-semibold text-foreground">Subscription Payments</p>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Razorpay payment history for your subscription
-          </p>
-        </div>
-        <DataTable
-          data={payments}
-          columns={PAYMENT_COLUMNS}
-          getRowKey={getPaymentRowKey}
-          emptyState={EMPTY_STATE}
-          className="border-0 rounded-none"
-        />
+    <div className="flex flex-1 min-h-0 flex-col gap-3">
+      <div>
+        <p className="text-sm font-semibold text-foreground">Subscription Payments</p>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          Razorpay payment history for your subscription
+        </p>
       </div>
+      <DataTable
+        data={payments}
+        columns={PAYMENT_COLUMNS}
+        getRowKey={getPaymentRowKey}
+        emptyState={EMPTY_STATE}
+        className="flex-1 min-h-0"
+      />
     </div>
   );
 }

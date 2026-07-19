@@ -14,7 +14,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useRoleTemplates, useCloneRoleTemplate, type RoleTemplate } from "@/hooks/api/roles";
 
 interface RoleTemplateDialogProps {
@@ -39,7 +39,7 @@ export function RoleTemplateDialog({ open, onOpenChange }: RoleTemplateDialogPro
             toast.success(`"${template.name}" role cloned`);
             onOpenChange(false);
           },
-          onError: (e) => toast.error(getApiError(e)),
+          onError: (e) => toast.error(getErrorMessage(e)),
         },
       );
     },
@@ -63,7 +63,7 @@ export function RoleTemplateDialog({ open, onOpenChange }: RoleTemplateDialogPro
               <AlertCircle className="h-8 w-8 text-destructive" />
               <div>
                 <p className="text-sm font-medium">Failed to load templates</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{getApiError(error)}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{getErrorMessage(error)}</p>
               </div>
               <Button variant="outline" size="sm" onClick={handleRetry} className="gap-1.5">
                 <RefreshCw className="h-3.5 w-3.5" /> Retry

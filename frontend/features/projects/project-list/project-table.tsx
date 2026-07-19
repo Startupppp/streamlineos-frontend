@@ -334,7 +334,7 @@ export const ProjectTable = React.memo(function ProjectTable({ projects }: Proje
         rowClassName={() => "group h-9 hover:bg-primary/[0.035]"}
         className="min-h-0 flex-1 rounded-none border-0 bg-transparent shadow-none"
         emptyState={
-          <div className="py-8 text-center text-sm text-muted-foreground">No projects found</div>
+          <div className="py-4 text-center text-sm text-muted-foreground">No projects found</div>
         }
       />
       {activeProject ? (

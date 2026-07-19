@@ -117,9 +117,9 @@ export function SoQueuePage({ status, title, actionNoun, emptyTitle, emptyDescri
   }
 
   const filterBar = (
-    <div className="min-w-0 flex-1 max-w-sm w-full">
-          <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search SO # or customer…" />
-        </div>
+    <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+      <SearchInput className="min-w-0 flex-1 lg:max-w-xs" value={search} onValueChange={handleSearchChange} placeholder="Search SO # or customer…" />
+    </div>
   );
 
   return (
@@ -132,6 +132,7 @@ export function SoQueuePage({ status, title, actionNoun, emptyTitle, emptyDescri
       <DataTable
         data={items}
         columns={columns}
+        className="flex-1 min-h-0"
         getRowKey={(so) => so.id}
         isLoading={query.isLoading}
         emptyState={

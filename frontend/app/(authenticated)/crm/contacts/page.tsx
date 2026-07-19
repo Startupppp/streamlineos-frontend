@@ -263,8 +263,8 @@ export default function ContactsPage() {
         }
         filters={
           <div className={FILTER_TOOLBAR_ROW}>
-            <div className="min-w-0 flex-1 lg:max-w-md">
-              <SearchInput placeholder="Search contacts (min 3 chars)..." value={search} onValueChange={handleSearchChange} />
+            <div className="w-[220px] max-w-[min(220px,70vw)]">
+              <SearchInput placeholder="Search contacts..." value={search} onValueChange={handleSearchChange} />
             </div>
             <CrmOptionSelect
               type="source"

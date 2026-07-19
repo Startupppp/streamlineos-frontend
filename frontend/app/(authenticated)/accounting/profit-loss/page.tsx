@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DatePicker } from "@/components/ui/date-picker";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -57,14 +58,15 @@ interface ReportCardProps {
 
 function ReportCard({ title, rows, totalLabel, totalAmount }: ReportCardProps) {
   return (
-    <div className="bg-card border border-border rounded-lg p-4 mb-3">
-      <h3 className="text-sm font-semibold border-b border-border pb-2 mb-2">
-        {title}
-      </h3>
+    <div className="rounded-lg border border-border overflow-hidden">
+      <div className="px-4 py-2.5 border-b bg-muted/40">
+        <h3 className="text-sm font-semibold tracking-tight">{title}</h3>
+      </div>
       <DataTable
         data={rows}
         columns={profitLossColumns}
         getRowKey={(row) => row.accountId}
+        className="border-0 rounded-none"
         emptyState={<p className="py-6 text-center text-sm text-muted-foreground">No {title.toLowerCase()} accounts for this range.</p>}
         footer={<div className="flex items-center justify-between text-sm font-semibold"><span>{totalLabel}</span><span className="tabular-nums font-bold text-base font-mono">{totalAmount}</span></div>}
       />
@@ -100,7 +102,7 @@ export default function ProfitLossPage() {
       title="Profit & Loss"
       subtitle="Income minus expense for the selected range."
       filters={
-        <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+        <div className={FILTER_TOOLBAR_ROW}>
           <div className="flex flex-col gap-1">
             <label
               htmlFor="pnl-from"
@@ -108,7 +110,7 @@ export default function ProfitLossPage() {
             >
               From
             </label>
-            <DatePicker id="pnl-from" value={from ?? ""} onChange={handleFromChange} placeholder="Pick a date" className="w-full sm:w-[160px]" />
+            <DatePicker id="pnl-from" value={from ?? ""} onChange={handleFromChange} placeholder="Pick a date" className="w-[160px]" />
           </div>
           <div className="flex flex-col gap-1">
             <label
@@ -117,7 +119,7 @@ export default function ProfitLossPage() {
             >
               To
             </label>
-            <DatePicker id="pnl-to" value={to ?? ""} onChange={handleToChange} placeholder="Pick a date" className="w-full sm:w-[160px]" />
+            <DatePicker id="pnl-to" value={to ?? ""} onChange={handleToChange} placeholder="Pick a date" className="w-[160px]" />
           </div>
         </div>
       }
@@ -137,8 +139,8 @@ export default function ProfitLossPage() {
             description="Pick a different date range or post entries to see this report populate."
           />
         ) : (
-          <div className="flex flex-1 min-h-0 flex-col space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="flex flex-1 min-h-0 flex-col gap-3">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
               <ReportCard
                 title="Income"
                 rows={income}
@@ -152,7 +154,7 @@ export default function ProfitLossPage() {
                 totalAmount={pnl.totalExpense}
               />
             </div>
-            <div className="bg-card border border-border rounded-lg px-4 py-3 flex items-center justify-between gap-4">
+            <div className="rounded-lg border border-border px-4 py-3 flex items-center justify-between gap-4 bg-muted/40">
               <span className="text-sm font-semibold text-foreground">
                 Net income
               </span>

@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { LoadingState, ErrorState } from "@/components/shared";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { useGstr1 } from "@/hooks/api/accounting";
@@ -220,7 +221,7 @@ export default function Gstr1Page() {
       title="GSTR-1 Summary"
       subtitle="Outward supplies for the selected period."
       filters={
-        <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+        <div className={FILTER_TOOLBAR_ROW}>
           <div className="flex flex-col gap-1">
             <label
               htmlFor="gstr1-from"
@@ -228,7 +229,7 @@ export default function Gstr1Page() {
             >
               From
             </label>
-            <DatePicker id="gstr1-from" value={from ?? ""} onChange={handleFromChange} placeholder="Pick a date" className="w-full sm:w-[160px]" />
+            <DatePicker id="gstr1-from" value={from ?? ""} onChange={handleFromChange} placeholder="Pick a date" className="w-[160px]" />
           </div>
           <div className="flex flex-col gap-1">
             <label
@@ -237,7 +238,7 @@ export default function Gstr1Page() {
             >
               To
             </label>
-            <DatePicker id="gstr1-to" value={to ?? ""} onChange={handleToChange} placeholder="Pick a date" className="w-full sm:w-[160px]" />
+            <DatePicker id="gstr1-to" value={to ?? ""} onChange={handleToChange} placeholder="Pick a date" className="w-[160px]" />
           </div>
         </div>
       }

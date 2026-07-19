@@ -55,16 +55,13 @@ function NavLink({ tab, active }: { tab: NavTab; active: boolean }) {
       href={tab.href}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "relative whitespace-nowrap px-3 py-2.5 text-sm font-medium transition-colors",
+        "inline-flex h-7 shrink-0 items-center rounded-md px-3 text-sm font-medium whitespace-nowrap transition-colors",
         active
-          ? "text-foreground"
+          ? "bg-primary text-primary-foreground"
           : "text-muted-foreground hover:text-foreground",
       )}
     >
       {tab.label}
-      {active && (
-        <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-primary" />
-      )}
     </Link>
   );
 }
@@ -86,7 +83,7 @@ export function NotificationsNav() {
 
   return (
     <nav className="shrink-0 border-b border-border bg-background px-2 sm:px-4">
-      <div className="flex items-center gap-1 overflow-x-auto overflow-y-hidden">
+      <div className="inline-flex h-9 w-full items-center gap-1 rounded-lg border border-border bg-card p-1 overflow-x-auto scrollbar-hide sm:w-fit my-2">
         {PERSONAL_TABS.map((tab) => (
           <NavLink
             key={tab.href}

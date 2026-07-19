@@ -13,10 +13,17 @@ import {
   SheetClose,
   SheetBody,
 } from "@/components/ui/sheet";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
@@ -133,133 +140,154 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
           <SheetTitle>New Test Run</SheetTitle>
         </SheetHeader>
 
-        <SheetBody className="px-5 py-4">
+        <Form {...form}>
           <form
-            id="run-form"
             onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-4"
+            className="flex flex-col flex-1 min-h-0"
           >
-            <div className="space-y-1.5">
-              <Label className="text-[11px]">Name *</Label>
-              <Input
-                {...form.register("name")}
-                className="text-[11px]"
-                placeholder="e.g. Sprint 12 Regression"
-              />
-              {form.formState.errors.name && (
-                <p className="text-[10px] text-destructive">
-                  {form.formState.errors.name.message}
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-[11px]">Test Selection</Label>
-              <Tabs value={mode} onValueChange={handleModeChange}>
-                <TabsList>
-                  <TabsTrigger value="suite" className="text-[10px]">
-                    By Suite
-                  </TabsTrigger>
-                  <TabsTrigger value="cases" className="text-[10px]">
-                    By Cases
-                  </TabsTrigger>
-                </TabsList>
-                <TabsContent value="suite" className="mt-2">
-                  <Select
-                    value={form.watch("suiteId")}
-                    onValueChange={(v) => form.setValue("suiteId", v)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select suite" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">No suite</SelectItem>
-                      {(suites ?? []).map((s) => (
-                        <SelectItem key={s.id} value={String(s.id)}>
-                          {s.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </TabsContent>
-                <TabsContent value="cases" className="mt-2">
-                  <ScrollArea className="h-40 border rounded-md p-2">
-                    {cases.length === 0 && (
-                      <p className="text-[10px] text-muted-foreground">No test cases found.</p>
-                    )}
-                    {cases.map((tc) => (
-                      <div key={tc.id} className="flex items-center gap-2 py-1">
-                        <Checkbox
-                          id={`tc-${tc.id}`}
-                          checked={selectedCaseIds.has(tc.id)}
-                          onCheckedChange={() => toggleCase(tc.id)}
-                        />
-                        <label htmlFor={`tc-${tc.id}`} className="text-[11px] cursor-pointer">
-                          TC-{tc.caseNumber} — {tc.title}
-                        </label>
-                      </div>
-                    ))}
-                  </ScrollArea>
-                  {selectedCaseIds.size > 0 && (
-                    <p className="text-[10px] text-muted-foreground mt-1">
-                      {selectedCaseIds.size} case(s) selected
-                    </p>
+            <SheetBody className="px-5 py-4">
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[11px]">Name <span className="text-destructive">*</span></FormLabel>
+                      <FormControl>
+                        <Input {...field} className="text-[11px]" placeholder="e.g. Sprint 12 Regression" />
+                      </FormControl>
+                      <FormMessage className="text-[10px]" />
+                    </FormItem>
                   )}
-                </TabsContent>
-              </Tabs>
-            </div>
+                />
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-[11px]">Environment</Label>
-                <Input
-                  {...form.register("environment")}
-                  className="text-[11px]"
-                  placeholder="e.g. Staging"
+                <div className="space-y-2">
+                  <FormLabel className="text-[11px]">Test Selection</FormLabel>
+                  <Tabs value={mode} onValueChange={handleModeChange}>
+                    <TabsList>
+                      <TabsTrigger value="suite" className="text-[10px]">By Suite</TabsTrigger>
+                      <TabsTrigger value="cases" className="text-[10px]">By Cases</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="suite" className="mt-2">
+                      <FormField
+                        control={form.control}
+                        name="suiteId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <Select value={field.value} onValueChange={field.onChange}>
+                              <FormControl>
+                                <SelectTrigger><SelectValue placeholder="Select suite" /></SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="none">No suite</SelectItem>
+                                {(suites ?? []).map((s) => (
+                                  <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage className="text-[10px]" />
+                          </FormItem>
+                        )}
+                      />
+                    </TabsContent>
+                    <TabsContent value="cases" className="mt-2">
+                      <ScrollArea className="h-40 border rounded-md p-2">
+                        {cases.length === 0 && (
+                          <p className="text-[10px] text-muted-foreground">No test cases found.</p>
+                        )}
+                        {cases.map((tc) => (
+                          <div key={tc.id} className="flex items-center gap-2 py-1">
+                            <Checkbox
+                              id={`tc-${tc.id}`}
+                              checked={selectedCaseIds.has(tc.id)}
+                              onCheckedChange={() => toggleCase(tc.id)}
+                            />
+                            <label htmlFor={`tc-${tc.id}`} className="text-[11px] cursor-pointer">
+                              TC-{tc.caseNumber} — {tc.title}
+                            </label>
+                          </div>
+                        ))}
+                      </ScrollArea>
+                      {selectedCaseIds.size > 0 && (
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          {selectedCaseIds.size} case(s) selected
+                        </p>
+                      )}
+                    </TabsContent>
+                  </Tabs>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField
+                    control={form.control}
+                    name="environment"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[11px]">Environment</FormLabel>
+                        <FormControl>
+                          <Input {...field} className="text-[11px]" placeholder="e.g. Staging" />
+                        </FormControl>
+                        <FormMessage className="text-[10px]" />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="browserDevice"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[11px]">Browser / Device</FormLabel>
+                        <FormControl>
+                          <Input {...field} className="text-[11px]" placeholder="e.g. Chrome 124" />
+                        </FormControl>
+                        <FormMessage className="text-[10px]" />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="testerId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[11px]">Tester</FormLabel>
+                      <FormControl>
+                        <ProjectMemberSelect
+                          projectId={projectId}
+                          mode="single"
+                          value={field.value}
+                          onChange={(v) => field.onChange(v ?? "")}
+                          allowUnassigned
+                          placeholder="Assign tester…"
+                          className="text-[11px]"
+                        />
+                      </FormControl>
+                      <FormMessage className="text-[10px]" />
+                    </FormItem>
+                  )}
                 />
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-[11px]">Browser / Device</Label>
-                <Input
-                  {...form.register("browserDevice")}
-                  className="text-[11px]"
-                  placeholder="e.g. Chrome 124"
-                />
-              </div>
-            </div>
+            </SheetBody>
 
-            <div className="space-y-1.5">
-              <Label className="text-[11px]">Tester</Label>
-              <ProjectMemberSelect
-                projectId={projectId}
-                mode="single"
-                value={form.watch("testerId")}
-                onChange={(v) => form.setValue("testerId", v ?? "")}
-                allowUnassigned
-                placeholder="Assign tester…"
-                className="text-[11px]"
-              />
-            </div>
+            <SheetFooter className="px-5 py-3 border-t shrink-0">
+              <div className="grid w-full grid-cols-2 gap-2">
+                <SheetClose asChild>
+                  <Button variant="outline" size="sm" className="text-[11px]">Cancel</Button>
+                </SheetClose>
+                <LoadingButton
+                  type="submit"
+                  size="sm"
+                  className="text-[11px]"
+                  isPending={create.isPending}
+                  loadingText="Creating…"
+                >
+                  Create Run
+                </LoadingButton>
+              </div>
+            </SheetFooter>
           </form>
-        </SheetBody>
-
-        <SheetFooter className="px-5 py-3 border-t shrink-0 flex gap-2">
-          <SheetClose asChild>
-            <Button variant="outline" size="sm" className="text-[11px]">
-              Cancel
-            </Button>
-          </SheetClose>
-          <LoadingButton
-            type="submit"
-            form="run-form"
-            size="sm"
-            className="text-[11px]"
-            isPending={create.isPending}
-            loadingText="Creating…"
-          >
-            Create Run
-          </LoadingButton>
-        </SheetFooter>
+        </Form>
       </SheetContent>
     </Sheet>
   );

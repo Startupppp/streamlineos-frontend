@@ -18,7 +18,7 @@ import {
   useAddKbComment,
   useDeleteKbComment,
 } from "@/hooks/api/support/kb-comments";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { resolveImageUrl } from "@/lib/utils";
 import { toast } from "sonner";
 import type { KbArticleDetail } from "@/hooks/api/support/kb";
@@ -105,14 +105,14 @@ export function KbCommentsPanel({ article }: { article: KbArticleDetail }) {
         setDraft("");
         toast.success("Comment added");
       },
-      onError: (e) => toast.error(getApiError(e)),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
 
   function handleDelete(commentId: number) {
     deleteComment.mutate(commentId, {
       onSuccess: () => toast.success("Comment deleted"),
-      onError: (e) => toast.error(getApiError(e)),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
 
@@ -158,7 +158,7 @@ export function KbCommentsPanel({ article }: { article: KbArticleDetail }) {
           <ErrorState
             compact
             title="Couldn't load comments"
-            description={getApiError(commentsQuery.error)}
+            description={getErrorMessage(commentsQuery.error)}
             onRetry={handleCommentsRetry}
           />
         ) : comments.length === 0 ? (

@@ -128,7 +128,7 @@ export default function FindExpertPage() {
             <SelectTrigger className={cn("w-[160px]", FILTER_SELECT_TRIGGER)}>
               <SelectValue placeholder="All Departments" />
             </SelectTrigger>
-            <SelectContent className="w-[var(--radix-select-trigger-width)]">
+            <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
               <SelectItem value="__all__">All Departments</SelectItem>
               {(departments ?? []).map((d) => (
                 <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>
@@ -140,7 +140,7 @@ export default function FindExpertPage() {
             <SelectTrigger className={cn("w-[150px]", FILTER_SELECT_TRIGGER)}>
               <SelectValue placeholder="All Roles" />
             </SelectTrigger>
-            <SelectContent className="w-[var(--radix-select-trigger-width)]">
+            <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
               <SelectItem value="__all__">All Roles</SelectItem>
               {ROLES.map((r) => (
                 <SelectItem key={r} value={r}>{r.charAt(0) + r.slice(1).toLowerCase()}</SelectItem>
@@ -177,7 +177,7 @@ export default function FindExpertPage() {
             description="Try a different skill or a broader search term."
           />
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-4">
             {hasMultipleGroups && (
               <p className="text-xs text-muted-foreground">
                 Similar skills found — showing results grouped by matched skill name.

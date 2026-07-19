@@ -9,6 +9,8 @@ import { PageSection } from "@/components/ui/page-wrapper";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   Select,
   SelectContent,
@@ -86,7 +88,7 @@ export function PolicyProfileSection({ policy }: PolicyProfileSectionProps) {
           toast.success("Policy updated");
           setEditing(false);
         },
-        onError: () => toast.error("Failed to update policy"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }
@@ -140,7 +142,7 @@ export function PolicyProfileSection({ policy }: PolicyProfileSectionProps) {
             )}
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Currency</Label>
+            <Label className="text-xs">Currency <span className="text-destructive">*</span></Label>
             <Select value={watch("currency")} onValueChange={handleCurrencyChange}>
               <SelectTrigger className="text-sm">
                 <SelectValue />
@@ -155,7 +157,7 @@ export function PolicyProfileSection({ policy }: PolicyProfileSectionProps) {
             </Select>
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Pay Frequency</Label>
+            <Label className="text-xs">Pay Frequency <span className="text-destructive">*</span></Label>
             <Select value={watch("payFrequency")} onValueChange={handleFrequencyChange}>
               <SelectTrigger className="text-sm">
                 <SelectValue />
@@ -170,7 +172,7 @@ export function PolicyProfileSection({ policy }: PolicyProfileSectionProps) {
             </Select>
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Pay Day</Label>
+            <Label className="text-xs">Pay Day <span className="text-destructive">*</span></Label>
             <Select value={watch("payDay")} onValueChange={handlePayDayChange}>
               <SelectTrigger className="text-sm">
                 <SelectValue />
@@ -197,9 +199,9 @@ export function PolicyProfileSection({ policy }: PolicyProfileSectionProps) {
           <Button type="button" variant="outline" size="sm" onClick={handleCancel}>
             Cancel
           </Button>
-          <Button type="submit" size="sm" disabled={update.isPending}>
-            {update.isPending ? "Saving…" : "Save Changes"}
-          </Button>
+          <LoadingButton type="submit" size="sm" isPending={update.isPending} loadingText="Saving…">
+            Save Changes
+          </LoadingButton>
         </div>
       </form>
     </PageSection>

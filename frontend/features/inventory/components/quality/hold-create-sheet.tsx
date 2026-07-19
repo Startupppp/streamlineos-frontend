@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { AppSheet } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -16,6 +15,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { ProductVariantCombobox } from "@/components/inventory/product-variant-combobox";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -121,169 +128,197 @@ export function HoldCreateSheet({ open, onOpenChange }: Props) {
       description="Place inventory on a quality hold"
       footer={footer}
     >
-      <form className="space-y-4" onSubmit={form.handleSubmit(handleSubmit)}>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="col-span-2 space-y-1.5">
-            <Label className="text-xs font-semibold text-foreground/80">Variant *</Label>
-            <Controller
+      <Form {...form}>
+        <form className="space-y-4" onSubmit={form.handleSubmit(handleSubmit)}>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="col-span-2">
+              <FormField
+                control={form.control}
+                name="variantId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Variant <span className="text-destructive">*</span></FormLabel>
+                    <FormControl>
+                      <ProductVariantCombobox
+                        value={field.value}
+                        onChange={(next) => {
+                          field.onChange(next);
+                          form.setValue("lotId", "");
+                          form.setValue("serialId", "");
+                        }}
+                        className="text-xs"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <FormField
               control={form.control}
-              name="variantId"
+              name="qty"
               render={({ field }) => (
-                <ProductVariantCombobox
-                  value={field.value}
-                  onChange={(next) => {
-                    field.onChange(next);
-                    form.setValue("lotId", "");
-                    form.setValue("serialId", "");
-                  }}
-                  className="text-xs"
-                />
+                <FormItem>
+                  <FormLabel>Qty <span className="text-destructive">*</span></FormLabel>
+                  <FormControl>
+                    <Input
+                      className="text-xs"
+                      type="number"
+                      placeholder="Quantity"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
             />
-            {form.formState.errors.variantId && (
-              <p className="text-[10px] text-destructive">{form.formState.errors.variantId.message}</p>
-            )}
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-foreground/80">Qty *</Label>
-            <Input
-              className="text-xs"
-              type="number"
-              placeholder="Quantity"
-              {...form.register("qty")}
-            />
-            {form.formState.errors.qty && (
-              <p className="text-[10px] text-destructive">{form.formState.errors.qty.message}</p>
-            )}
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-foreground/80">
-              Warehouse <span className="font-normal text-muted-foreground">(opt.)</span>
-            </Label>
-            <Controller
+            <FormField
               control={form.control}
               name="warehouseId"
               render={({ field }) => (
-                <Select
-                  value={field.value || "none"}
-                  onValueChange={(v) => {
-                    field.onChange(v === "none" ? "" : v);
-                    form.setValue("locationId", "");
-                  }}
-                >
-                  <SelectTrigger className="text-xs">
-                    <SelectValue placeholder="Optional" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    {warehouses.map((wh) => (
-                      <SelectItem key={wh.id} value={String(wh.id)}>
-                        {wh.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormItem>
+                  <FormLabel>
+                    Warehouse <span className="font-normal text-muted-foreground">(opt.)</span>
+                  </FormLabel>
+                  <Select
+                    value={field.value || "none"}
+                    onValueChange={(v) => {
+                      field.onChange(v === "none" ? "" : v);
+                      form.setValue("locationId", "");
+                    }}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="text-xs">
+                        <SelectValue placeholder="Optional" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {warehouses.map((wh) => (
+                        <SelectItem key={wh.id} value={String(wh.id)}>
+                          {wh.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
               )}
             />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-foreground/80">
-              Location <span className="font-normal text-muted-foreground">(opt.)</span>
-            </Label>
-            <Controller
+            <FormField
               control={form.control}
               name="locationId"
               render={({ field }) => (
-                <Select
-                  value={field.value || "none"}
-                  onValueChange={(v) => field.onChange(v === "none" ? "" : v)}
-                  disabled={!warehouseId}
-                >
-                  <SelectTrigger className="text-xs">
-                    <SelectValue placeholder={warehouseId ? "Optional" : "Select warehouse first"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    {locations.map((loc) => (
-                      <SelectItem key={loc.id} value={String(loc.id)}>
-                        {loc.name} ({loc.code})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormItem>
+                  <FormLabel>
+                    Location <span className="font-normal text-muted-foreground">(opt.)</span>
+                  </FormLabel>
+                  <Select
+                    value={field.value || "none"}
+                    onValueChange={(v) => field.onChange(v === "none" ? "" : v)}
+                    disabled={!warehouseId}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="text-xs">
+                        <SelectValue placeholder={warehouseId ? "Optional" : "Select warehouse first"} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {locations.map((loc) => (
+                        <SelectItem key={loc.id} value={String(loc.id)}>
+                          {loc.name} ({loc.code})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
               )}
             />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-foreground/80">
-              Lot <span className="font-normal text-muted-foreground">(opt.)</span>
-            </Label>
-            <Controller
+            <FormField
               control={form.control}
               name="lotId"
               render={({ field }) => (
-                <Select
-                  value={field.value || "none"}
-                  onValueChange={(v) => field.onChange(v === "none" ? "" : v)}
-                  disabled={!variantEnabled || lots.length === 0}
-                >
-                  <SelectTrigger className="text-xs">
-                    <SelectValue placeholder={variantEnabled ? "Optional" : "Select variant first"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    {lots.map((lot) => (
-                      <SelectItem key={lot.id} value={String(lot.id)}>
-                        {lot.lotNumber}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormItem>
+                  <FormLabel>
+                    Lot <span className="font-normal text-muted-foreground">(opt.)</span>
+                  </FormLabel>
+                  <Select
+                    value={field.value || "none"}
+                    onValueChange={(v) => field.onChange(v === "none" ? "" : v)}
+                    disabled={!variantEnabled || lots.length === 0}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="text-xs">
+                        <SelectValue placeholder={variantEnabled ? "Optional" : "Select variant first"} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {lots.map((lot) => (
+                        <SelectItem key={lot.id} value={String(lot.id)}>
+                          {lot.lotNumber}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
               )}
             />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-foreground/80">
-              Serial <span className="font-normal text-muted-foreground">(opt.)</span>
-            </Label>
-            <Controller
+            <FormField
               control={form.control}
               name="serialId"
               render={({ field }) => (
-                <Select
-                  value={field.value || "none"}
-                  onValueChange={(v) => field.onChange(v === "none" ? "" : v)}
-                  disabled={!variantEnabled || serials.length === 0}
-                >
-                  <SelectTrigger className="text-xs">
-                    <SelectValue placeholder={variantEnabled ? "Optional" : "Select variant first"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    {serials.map((serial) => (
-                      <SelectItem key={serial.id} value={String(serial.id)}>
-                        {serial.serialNumber}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormItem>
+                  <FormLabel>
+                    Serial <span className="font-normal text-muted-foreground">(opt.)</span>
+                  </FormLabel>
+                  <Select
+                    value={field.value || "none"}
+                    onValueChange={(v) => field.onChange(v === "none" ? "" : v)}
+                    disabled={!variantEnabled || serials.length === 0}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="text-xs">
+                        <SelectValue placeholder={variantEnabled ? "Optional" : "Select variant first"} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {serials.map((serial) => (
+                        <SelectItem key={serial.id} value={String(serial.id)}>
+                          {serial.serialNumber}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
               )}
             />
           </div>
-        </div>
 
-        <div className="space-y-1.5">
-          <Label className="text-xs font-semibold text-foreground/80">Reason *</Label>
-          <Textarea
-            className="text-xs min-h-[80px] resize-none"
-            placeholder="Describe the reason for this hold…"
-            {...form.register("reason")}
+          <FormField
+            control={form.control}
+            name="reason"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Reason <span className="text-destructive">*</span></FormLabel>
+                <FormControl>
+                  <Textarea
+                    className="text-xs min-h-[80px] resize-none"
+                    placeholder="Describe the reason for this hold…"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-          {form.formState.errors.reason && (
-            <p className="text-[10px] text-destructive">{form.formState.errors.reason.message}</p>
-          )}
-        </div>
-      </form>
+        </form>
+      </Form>
     </AppSheet>
   );
 }

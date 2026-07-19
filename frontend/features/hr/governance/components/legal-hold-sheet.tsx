@@ -27,6 +27,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import { useCreateLegalHold, useAttachHoldItem, useDetachHoldItem, useHoldItems, type LegalHold } from "../hooks/use-legal-holds";
@@ -85,13 +87,17 @@ export function LegalHoldSheet({ open, onClose, hold }: LegalHoldSheetProps) {
   });
 
   function handleCreate(values: PlaceHoldForm) {
-    createHold.mutate(values, { onSuccess: () => { form.reset(); onClose(); } });
+    createHold.mutate(values, {
+      onSuccess: () => { form.reset(); onClose(); },
+      onError: (err) => toast.error(getErrorMessage(err)),
+    });
   }
 
   function handleAttach() {
     if (!hold || !itemRef.trim()) return;
     attachItem.mutate({ holdId: hold.id, itemType, itemRef: itemRef.trim() }, {
       onSuccess: () => { setItemRef(""); setShowAttach(false); },
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }
 

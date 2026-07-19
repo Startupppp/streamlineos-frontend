@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Money } from "@/features/accounting/shared";
 import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
@@ -255,18 +256,12 @@ export function BankAccountDetailClient({ bankAccountId }: Props) {
             placeholder: "Search transactions…",
           }}
           emptyState={
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <p className="text-sm font-medium text-foreground mb-1">No transactions</p>
-              <p className="text-xs text-muted-foreground mb-3">
-                Import a bank statement to see transactions here.
-              </p>
-              <Button size="sm" variant="outline" asChild>
-                <Link href={`/accounting/banking/import?bankAccountId=${id}`}>
-                  <Upload className="h-4 w-4 mr-1" />
-                  Import Statement
-                </Link>
-              </Button>
-            </div>
+            <EmptyState
+              title="No transactions"
+              description="Import a bank statement to see transactions here."
+              action={{ label: "Import Statement", href: `/accounting/banking/import?bankAccountId=${id}` }}
+              compact
+            />
           }
         />
       )}

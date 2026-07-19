@@ -22,6 +22,7 @@ import { useIsMobile } from "@/hooks/common/use-mobile";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
 import {
   PRODUCT_DEFINITIONS,
+  PRODUCT_DESCRIPTIONS,
   getProductFromPathname,
   isModuleEnabled,
   MODULE_ACCENTS,
@@ -40,22 +41,6 @@ interface ProductSwitcherMenuProps {
   onRequestOpen?: () => void;
   sheetOnly?: boolean;
 }
-
-const PRODUCT_DESCRIPTIONS: Record<ProductKey, string> = {
-  home: "Overview & activity",
-  crm: "Leads, deals & contacts",
-  hrms: "People & payroll",
-  projects: "Plan & deliver work",
-  timesheets: "Track, approve & bill time",
-  inventory: "Stock & orders",
-  finance: "Accounts & books",
-  helpdesk: "Tickets & support",
-  documents: "Knowledge base",
-  surveys: "Surveys & feedback",
-  administration: "Settings & access",
-  payroll: "Runs, payslips & compliance",
-  sign: "Envelopes & e-signatures",
-};
 
 interface ProductTileProps {
   productKey: ProductKey;

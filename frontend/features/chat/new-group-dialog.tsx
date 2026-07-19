@@ -268,7 +268,7 @@ export function NewGroupDialog({
 
             <div>
               <Label className="mb-1.5 block text-[12px] font-medium text-muted-foreground">
-                Channel name
+                Channel name <span className="text-destructive">*</span>
               </Label>
               <div className="relative">
                 <Hash className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/50" />
@@ -280,6 +280,9 @@ export function NewGroupDialog({
                   autoFocus
                 />
               </div>
+              {!name.trim() && name !== "" && (
+                <p className="mt-1 text-xs text-destructive">Channel name is required</p>
+              )}
             </div>
 
             <div>

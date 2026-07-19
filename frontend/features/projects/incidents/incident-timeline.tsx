@@ -9,9 +9,16 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import { useAddIncidentUpdate } from "@/hooks/api/projects/incidents";
 import type { IncidentUpdate, IncidentStatus } from "@/types/projects";
 
@@ -67,33 +74,48 @@ function AddUpdateForm({ projectId, incidentId }: AddUpdateFormProps) {
   }
 
   return (
-    <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-2 pt-3 border-t">
-      <div className="space-y-1.5">
-        <Label className="text-[11px]">Post update</Label>
-        <Textarea
-          {...form.register("message")}
-          placeholder="What's the latest status?"
-          className="text-[11px] min-h-[64px] resize-none"
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-2 pt-3 border-t">
+        <FormField
+          control={form.control}
+          name="message"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-[11px]">Post update <span className="text-destructive">*</span></FormLabel>
+              <FormControl>
+                <Textarea {...field} placeholder="What's the latest status?" className="text-[11px] min-h-[64px] resize-none" />
+              </FormControl>
+              <FormMessage className="text-[10px]" />
+            </FormItem>
+          )}
         />
-        {form.formState.errors.message && (
-          <p className="text-[10px] text-destructive">{form.formState.errors.message.message}</p>
-        )}
-      </div>
-      <div className="flex items-center gap-2">
-        <div className="w-44">
-          <Select value={form.watch("newStatus")} onValueChange={(v) => form.setValue("newStatus", v)}>
-            <SelectTrigger><SelectValue placeholder="Change status?" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">No status change</SelectItem>
-              {STATUSES.map((s) => <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>)}
-            </SelectContent>
-          </Select>
+        <div className="flex items-center gap-2">
+          <div className="w-44">
+            <FormField
+              control={form.control}
+              name="newStatus"
+              render={({ field }) => (
+                <FormItem>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger><SelectValue placeholder="Change status?" /></SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="none">No status change</SelectItem>
+                      {STATUSES.map((s) => <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage className="text-[10px]" />
+                </FormItem>
+              )}
+            />
+          </div>
+          <LoadingButton type="submit" size="sm" className="text-[11px]" isPending={addUpdate.isPending} loadingText="Posting…">
+            Post Update
+          </LoadingButton>
         </div>
-        <LoadingButton type="submit" size="sm" className="text-[11px]" isPending={addUpdate.isPending} loadingText="Posting…">
-          Post Update
-        </LoadingButton>
-      </div>
-    </form>
+      </form>
+    </Form>
   );
 }
 

@@ -159,7 +159,7 @@ export function ApprovalsView() {
         </button>
       ))}
       <Select value={memberFilter} onValueChange={setMemberFilter}>
-        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-full sm:w-44")}>
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-44")}>
           <SelectValue placeholder="All members" />
         </SelectTrigger>
         <SelectContent>

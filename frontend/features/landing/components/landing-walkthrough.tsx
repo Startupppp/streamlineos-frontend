@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useState } from "react";
 import { motion } from "framer-motion";
 import { Check } from "lucide-react";
 import { walkthroughSteps } from "../data/pillars";
@@ -39,6 +40,10 @@ function WalkthroughRow({
   index: number;
 }) {
   const isReverse = index % 2 === 1;
+  const [textIn, setTextIn] = useState(false);
+  const [visualIn, setVisualIn] = useState(false);
+  const handleTextEnter = useCallback(() => setTextIn(true), []);
+  const handleVisualEnter = useCallback(() => setVisualIn(true), []);
   return (
     <div
       className={`grid gap-8 lg:gap-14 lg:grid-cols-2 items-center ${
@@ -46,11 +51,18 @@ function WalkthroughRow({
       }`}
     >
       <motion.div
-        initial={{ opacity: 0, x: isReverse ? 32 : -32 }}
-        whileInView={{ opacity: 1, x: 0 }}
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        onViewportEnter={handleTextEnter}
         viewport={{ once: true, margin: "-15% 0px" }}
         transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] as const }}
-        className="lg:[direction:ltr]"
+        className={`lg:[direction:ltr] transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
+          textIn
+            ? "translate-x-0 translate-y-0"
+            : `translate-y-6 lg:translate-y-0 ${
+                isReverse ? "lg:translate-x-8" : "lg:-translate-x-8"
+              }`
+        }`}
       >
         <div className="flex items-center gap-3 mb-4">
           <span className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-blue-600 text-white text-[11px] font-bold font-mono shrink-0">
@@ -77,11 +89,18 @@ function WalkthroughRow({
       </motion.div>
 
       <motion.div
-        initial={{ opacity: 0, x: isReverse ? -32 : 32, scale: 0.97 }}
-        whileInView={{ opacity: 1, x: 0, scale: 1 }}
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        onViewportEnter={handleVisualEnter}
         viewport={{ once: true, margin: "-15% 0px" }}
         transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] as const, delay: 0.08 }}
-        className="lg:[direction:ltr]"
+        className={`lg:[direction:ltr] transition-transform duration-700 delay-75 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
+          visualIn
+            ? "translate-x-0 translate-y-0 scale-100"
+            : `translate-y-6 lg:translate-y-0 scale-[0.97] ${
+                isReverse ? "lg:-translate-x-8" : "lg:translate-x-8"
+              }`
+        }`}
       >
         <WalkthroughVisual index={index} />
       </motion.div>

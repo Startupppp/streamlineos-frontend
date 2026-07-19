@@ -16,19 +16,19 @@ export function SurveyBuilderTabs({ survey }: { survey: SurveyForm }) {
         <TabsTrigger value="results">Results</TabsTrigger>
         <TabsTrigger value="automations">Automations</TabsTrigger>
       </TabsList>
-      <TabsContent value="questions" className="mt-4">
+      <TabsContent value="questions">
         <QuestionsTab survey={survey} />
       </TabsContent>
-      <TabsContent value="options" className="mt-4">
+      <TabsContent value="options">
         <OptionsTab survey={survey} />
       </TabsContent>
-      <TabsContent value="messages" className="mt-4">
+      <TabsContent value="messages">
         <MessagesTab survey={survey} />
       </TabsContent>
-      <TabsContent value="results" className="mt-4">
+      <TabsContent value="results">
         <ResultsTab survey={survey} />
       </TabsContent>
-      <TabsContent value="automations" className="mt-4">
+      <TabsContent value="automations">
         <AutomationsTab survey={survey} />
       </TabsContent>
     </Tabs>

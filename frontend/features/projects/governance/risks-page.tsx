@@ -31,8 +31,8 @@ import { RiskMatrix } from "./risk-matrix";
 import { RiskFormSheet } from "./risk-form-sheet";
 import {
   PmPageShell,
-  PmPanel,
   PmSection,
+  PmPanel,
   PM_FILL_PANEL,
 } from "@/features/projects/shared/pm-chrome";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
@@ -324,15 +324,13 @@ export function RisksPage({ projectId }: RisksPageProps) {
                 }
               />
           ) : (
-            <PmPanel className={PM_FILL_PANEL} solid>
-              <DataTable
+            <DataTable
                 data={displayed}
                 columns={columns}
                 getRowKey={(row) => row.id}
                 minWidth="780px"
-                className="min-h-0 flex-1 border-0"
+                className={PM_FILL_PANEL}
               />
-            </PmPanel>
           )}
         </PmSection>
       </PmPageShell>

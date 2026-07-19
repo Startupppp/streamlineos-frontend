@@ -131,7 +131,7 @@ export default function AgedPayablesPage() {
               value={asOf ?? ""}
               onChange={handleAsOfChange}
               placeholder="Pick a date"
-              className="w-full sm:w-[160px]"
+              className="w-[160px]"
             />
           </div>
         </div>

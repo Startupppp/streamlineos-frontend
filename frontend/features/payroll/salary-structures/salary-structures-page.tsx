@@ -256,7 +256,7 @@ export function SalaryStructuresPageContent() {
           initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
           animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
           transition={{ duration: 0.22, ease: "easeOut" }}
-          className="flex flex-col items-center justify-center flex-1 h-full py-16"
+          className="flex flex-col items-center justify-center flex-1 h-full"
         >
           <EmptyState
             illustrationPreset="documents"

@@ -5,6 +5,7 @@ import { Building2, GitBranch, Briefcase, Users } from "lucide-react";
 import { ChevronRightIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { SearchInput } from "@/components/ui/search-input";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -222,7 +223,9 @@ export default function OrgTreePage() {
       title="Organization Tree"
       subtitle="Full hierarchy from business units down to teams"
       filters={
-        <SearchInput placeholder="Search nodes…" value={search} onValueChange={handleSearchChange} />
+        <div className={FILTER_TOOLBAR_ROW}>
+          <SearchInput placeholder="Search nodes…" value={search} onValueChange={handleSearchChange} />
+        </div>
       }
     >
       <div className="space-y-3">

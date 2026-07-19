@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import {
   Select,
   SelectContent,
@@ -148,7 +149,7 @@ const LineRow = memo(function LineRow({
 
       <div className="grid grid-cols-2 gap-2">
         <div className="col-span-2 space-y-1">
-          <Label className="text-xs text-muted-foreground">Variant</Label>
+          <Label className="text-xs text-muted-foreground">Variant <span className="text-destructive">*</span></Label>
           <Controller
             control={control}
             name={`lines.${index}.variantId`}
@@ -166,7 +167,7 @@ const LineRow = memo(function LineRow({
         </div>
 
         <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">Warehouse</Label>
+          <Label className="text-xs text-muted-foreground">Warehouse <span className="text-destructive">*</span></Label>
           <Controller
             control={control}
             name={`lines.${index}.warehouseId`}
@@ -191,7 +192,7 @@ const LineRow = memo(function LineRow({
         </div>
 
         <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">Location</Label>
+          <Label className="text-xs text-muted-foreground">Location <span className="text-destructive">*</span></Label>
           <Controller
             control={control}
             name={`lines.${index}.locationId`}
@@ -223,7 +224,7 @@ const LineRow = memo(function LineRow({
         </div>
 
         <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">Quantity</Label>
+          <Label className="text-xs text-muted-foreground">Quantity <span className="text-destructive">*</span></Label>
           <Input
             type="number"
             min="0.0001"
@@ -360,6 +361,7 @@ export function OpeningStockSheet({ open, onOpenChange }: OpeningStockSheetProps
         </div>
       }
     >
+      <Form {...form}>
       <div className="space-y-4">
         <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 dark:border-amber-500/30 dark:bg-amber-500/10">
           <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5 dark:text-amber-400" aria-hidden="true" />
@@ -439,17 +441,27 @@ export function OpeningStockSheet({ open, onOpenChange }: OpeningStockSheetProps
           </div>
         </div>
 
-        <div className="space-y-1">
-          <Label className="text-xs">Notes (optional)</Label>
-          <Textarea
-            placeholder="Add notes about this opening stock entry…"
-            maxLength={500}
-            rows={2}
-            className="text-xs resize-none"
-            {...form.register("notes")}
-          />
-        </div>
+        <FormField
+          control={form.control}
+          name="notes"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs">Notes (optional)</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Add notes about this opening stock entry…"
+                  maxLength={500}
+                  rows={2}
+                  className="text-xs resize-none"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </div>
+      </Form>
     </AppSheet>
   );
 }

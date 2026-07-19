@@ -42,6 +42,7 @@ type EventCategory = (typeof EVENT_CATEGORIES)[number];
 
 interface EventFormFieldsProps {
   title: string;
+  titleError?: string;
   description: string;
   allDay: boolean;
   startDate: string;
@@ -78,6 +79,7 @@ interface EventFormFieldsProps {
 
 export function EventFormFields({
   title,
+  titleError,
   description,
   allDay,
   startDate,
@@ -113,17 +115,24 @@ export function EventFormFields({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-2.5">
-        <Tag className="h-4 w-4 text-muted-foreground shrink-0" />
-        <div className="flex-1">
+      <div className="flex items-start gap-2.5">
+        <Tag className="h-4 w-4 text-muted-foreground shrink-0 mt-2" />
+        <div className="flex-1 space-y-1">
           <Input
             id="ev-title"
             value={title}
             onChange={onTitleChange}
             placeholder="Add Title"
-            className="text-sm border-0 border-b border-border rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary placeholder:text-muted-foreground/60 font-medium"
+            className={cn(
+              "text-sm border-0 border-b border-border rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary placeholder:text-muted-foreground/60 font-medium",
+              titleError && "border-destructive",
+            )}
             autoFocus
+            aria-required
           />
+          {titleError && (
+            <p className="text-[10px] text-destructive">{titleError}</p>
+          )}
         </div>
       </div>
 

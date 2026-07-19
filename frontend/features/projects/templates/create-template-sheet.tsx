@@ -1,15 +1,24 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import type { ChangeEvent } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PlusIcon } from "@animateicons/react/lucide";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -30,40 +39,34 @@ import { TicketRow, type TicketDraft } from "./ticket-row";
 
 const CATEGORIES = ["GENERAL", "SOFTWARE", "ONBOARDING", "MARKETING", "SALES", "HR"] as const;
 
+const createTemplateSchema = z.object({
+  name: z.string().min(1, "Template name is required"),
+  description: z.string(),
+  category: z.string(),
+});
+
+type CreateTemplateFormValues = z.infer<typeof createTemplateSchema>;
+
 interface CreateTemplateSheetProps {
   open: boolean;
   onClose: () => void;
 }
 
 export function CreateTemplateSheet({ open, onClose }: CreateTemplateSheetProps) {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [category, setCategory] = useState<string>("GENERAL");
   const [tickets, setTickets] = useState<TicketDraft[]>([
     { title: "", type: "TASK", priority: "MEDIUM", phase: "", estimatedHours: "", order: 0 },
   ]);
   const create = useCreateProjectTemplate();
 
-  const handleNameChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => setName(e.target.value),
-    [],
-  );
-  const handleDescriptionChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => setDescription(e.target.value),
-    [],
-  );
+  const form = useForm<CreateTemplateFormValues>({
+    resolver: zodResolver(createTemplateSchema),
+    defaultValues: { name: "", description: "", category: "GENERAL" },
+  });
 
   const addTicket = useCallback(() => {
     setTickets((prev) => [
       ...prev,
-      {
-        title: "",
-        type: "TASK",
-        priority: "MEDIUM",
-        phase: "",
-        estimatedHours: "",
-        order: prev.length,
-      },
+      { title: "", type: "TASK", priority: "MEDIUM", phase: "", estimatedHours: "", order: prev.length },
     ]);
   }, []);
 
@@ -80,13 +83,16 @@ export function CreateTemplateSheet({ open, onClose }: CreateTemplateSheetProps)
     [],
   );
 
-  const handleCreate = useCallback(() => {
-    if (!name.trim() || tickets.some((t) => !t.title.trim())) return;
+  function handleCreate(values: CreateTemplateFormValues) {
+    if (tickets.some((t) => !t.title.trim())) {
+      toast.error("All task titles are required");
+      return;
+    }
     create.mutate(
       {
-        name: name.trim(),
-        description: description.trim() || undefined,
-        category,
+        name: values.name.trim(),
+        description: values.description.trim() || undefined,
+        category: values.category,
         tickets: tickets.map((t, i) => ({
           title: t.title.trim(),
           type: t.type,
@@ -104,7 +110,7 @@ export function CreateTemplateSheet({ open, onClose }: CreateTemplateSheetProps)
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [name, tickets, description, category, create, onClose]);
+  }
 
   return (
     <Sheet open={open} onOpenChange={onClose}>
@@ -112,91 +118,107 @@ export function CreateTemplateSheet({ open, onClose }: CreateTemplateSheetProps)
         <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle>New Project Template</SheetTitle>
         </SheetHeader>
-        <SheetBody className="px-6 py-5 space-y-4">
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="sm:col-span-2 space-y-1">
-              <Label>Template Name *</Label>
-              <Input
-                placeholder="e.g. Software Development"
-                value={name}
-                onChange={handleNameChange}
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleCreate)} className="flex flex-col flex-1 min-h-0">
+            <SheetBody className="px-6 py-5 space-y-4">
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="sm:col-span-2">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Template Name <span className="text-destructive">*</span></FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="e.g. Software Development" />
+                        </FormControl>
+                        <FormMessage className="text-xs" />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <FormField
+                  control={form.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Category</FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {CATEGORIES.map((c) => (
+                            <SelectItem key={c} value={c}>{c}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage className="text-xs" />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="What is this template for?" />
+                    </FormControl>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
               />
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <FormLabel>Default Tasks ({tickets.length})</FormLabel>
+                  <AnimatedIconButton
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    icon={PlusIcon}
+                    iconSize={16}
+                    iconClassName="mr-1"
+                    onClick={addTicket}
+                    className="active:scale-[0.98]"
+                  >
+                    Add Task
+                  </AnimatedIconButton>
+                </div>
+                {tickets.map((ticket, idx) => (
+                  <TicketRow
+                    key={idx}
+                    ticket={ticket}
+                    index={idx}
+                    isOnlyTicket={tickets.length <= 1}
+                    onUpdate={updateTicket}
+                    onRemove={removeTicket}
+                  />
+                ))}
+              </div>
+            </SheetBody>
+            <div className="shrink-0 px-6 py-4 border-t">
+              <div className="grid grid-cols-2 gap-2">
+                <SheetClose asChild>
+                  <Button type="button" variant="outline" size="sm" className="w-full active:scale-[0.98]">
+                    Cancel
+                  </Button>
+                </SheetClose>
+                <LoadingButton
+                  type="submit"
+                  size="sm"
+                  isPending={create.isPending}
+                  loadingText="Creating…"
+                  className="w-full active:scale-[0.98]"
+                >
+                  Create Template
+                </LoadingButton>
+              </div>
             </div>
-            <div className="space-y-1">
-              <Label>Category</Label>
-              <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CATEGORIES.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="space-y-1">
-            <Label>Description</Label>
-            <Input
-              placeholder="What is this template for?"
-              value={description}
-              onChange={handleDescriptionChange}
-            />
-          </div>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label>Default Tasks ({tickets.length})</Label>
-              <AnimatedIconButton
-                type="button"
-                variant="outline"
-                size="sm"
-                icon={PlusIcon}
-                iconSize={16}
-                iconClassName="mr-1"
-                onClick={addTicket}
-                className="active:scale-[0.98]"
-              >
-                Add Task
-              </AnimatedIconButton>
-            </div>
-            {tickets.map((ticket, idx) => (
-              <TicketRow
-                key={idx}
-                ticket={ticket}
-                index={idx}
-                isOnlyTicket={tickets.length <= 1}
-                onUpdate={updateTicket}
-                onRemove={removeTicket}
-              />
-            ))}
-          </div>
-        </SheetBody>
-        <div className="shrink-0 px-6 py-4 border-t">
-          <div className="grid grid-cols-2 gap-2">
-            <SheetClose asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full active:scale-[0.98]"
-              >
-                Cancel
-              </Button>
-            </SheetClose>
-            <LoadingButton
-              size="sm"
-              onClick={handleCreate}
-              disabled={!name.trim() || tickets.some((t) => !t.title.trim())}
-              isPending={create.isPending}
-              loadingText="Creating…"
-              className="w-full active:scale-[0.98]"
-            >
-              Create Template
-            </LoadingButton>
-          </div>
-        </div>
+          </form>
+        </Form>
       </SheetContent>
     </Sheet>
   );

@@ -352,7 +352,7 @@ export default function ScoringRulesPage() {
             className={CONTENT_FILL_PANEL}
           />
         ) : (
-          <div className="space-y-6">
+          <div className="flex flex-1 min-h-0 flex-col gap-4">
             <Card className="bg-card rounded-lg border border-border shadow-sm overflow-hidden">
               <CardHeader className="px-4 py-3">
                 <CardTitle className="text-sm font-semibold">Rules</CardTitle>

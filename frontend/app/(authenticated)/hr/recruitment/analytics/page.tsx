@@ -75,7 +75,7 @@ export default function RecruitmentAnalyticsPage() {
     <PageWrapper
       title="Recruitment Analytics"
       subtitle="Track hiring performance and pipeline health">
-      <div className="flex flex-1 min-h-0 flex-col gap-6">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         {isLoading ? (
           <StatCardGridSkeleton cols={3} />
         ) : (

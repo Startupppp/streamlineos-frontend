@@ -354,28 +354,20 @@ export function CollectionsTab() {
 
       <div className="space-y-2">
         <h3 className="text-sm font-semibold text-foreground">Top Overdue Customers</h3>
-        {topRisk.length === 0 && !summary.isLoading ? (
-          <EmptyState
-            illustrationPreset="clients"
-            title="No overdue customers"
-            description="All receivables are current."
-            compact
-          />
-        ) : (
-          <DataTable
-            data={topRisk}
-            columns={riskColumns}
-            getRowKey={(row) => row.clientId}
-            isLoading={summary.isLoading}
-            emptyState={
-              <EmptyState
-                illustrationPreset="clients"
-                title="No overdue customers"
-                compact
-              />
-            }
-          />
-        )}
+        <DataTable
+          data={topRisk}
+          columns={riskColumns}
+          getRowKey={(row) => row.clientId}
+          isLoading={summary.isLoading}
+          emptyState={
+            <EmptyState
+              illustrationPreset="clients"
+              title="No overdue customers"
+              description="All receivables are current."
+              compact
+            />
+          }
+        />
       </div>
 
       <AppSheet

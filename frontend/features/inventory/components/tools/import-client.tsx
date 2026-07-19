@@ -245,7 +245,7 @@ function ExportTab() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-4">
       <Card>
         <CardHeader className="border-b border-border/60 pb-3">
           <CardTitle className="text-sm font-semibold">Export Data</CardTitle>
@@ -299,22 +299,20 @@ function ExportTab() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader className="border-b border-border/60 pb-3">
-          <CardTitle className="text-sm font-semibold">Export History</CardTitle>
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-xs font-semibold text-foreground">Export History</p>
           {hasActiveJobs && (
             <span className="text-[10px] text-muted-foreground">Auto-refreshing…</span>
           )}
-        </CardHeader>
-        <CardContent className="p-0">
-          <ExportJobsTable
-            jobs={liveJobs}
-            isLoading={isLoadingJobs}
-            onDownload={handleDownload}
-            isDownloading={downloadMutation.isPending}
-          />
-        </CardContent>
-      </Card>
+        </div>
+        <ExportJobsTable
+          jobs={liveJobs}
+          isLoading={isLoadingJobs}
+          onDownload={handleDownload}
+          isDownloading={downloadMutation.isPending}
+        />
+      </div>
     </div>
   );
 }
@@ -438,21 +436,18 @@ export function ImportClient() {
     setJobId(null);
   }
 
-  const tabTriggerClass =
-    "h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 text-sm";
-
   return (
     <PageWrapper
       title="Import & Export"
       subtitle="Import products, vendors, stock, and more from CSV or Excel files. Export data for offline analysis."
     >
-      <Tabs defaultValue="import" className="space-y-4">
-        <TabsList className="w-full justify-start border-b bg-transparent p-0 rounded-none shrink-0">
-          <TabsTrigger value="import" className={tabTriggerClass}>Import</TabsTrigger>
-          <TabsTrigger value="export" className={tabTriggerClass}>Export</TabsTrigger>
+      <Tabs defaultValue="import" className="flex flex-1 min-h-0 flex-col gap-4">
+        <TabsList className="inline-flex h-9 w-full items-center gap-1 rounded-lg border border-border bg-card p-1 overflow-x-auto scrollbar-hide sm:w-fit shrink-0">
+          <TabsTrigger value="import" className="inline-flex h-7 shrink-0 items-center rounded-md px-3 text-sm font-medium whitespace-nowrap transition-colors data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground">Import</TabsTrigger>
+          <TabsTrigger value="export" className="inline-flex h-7 shrink-0 items-center rounded-md px-3 text-sm font-medium whitespace-nowrap transition-colors data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground">Export</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="import" className="space-y-6 mt-0">
+        <TabsContent value="import" className="flex flex-col gap-4 mt-0">
           {!canImport ? (
             <InventoryEmptyState
               title="Access Denied"
@@ -499,25 +494,21 @@ export function ImportClient() {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm font-semibold">Import History</CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <DataTable
-                    data={jobsData?.items ?? []}
-                    columns={IMPORT_HISTORY_COLUMNS}
-                    getRowKey={(job) => job.id}
-                    isLoading={isJobsLoading}
-                    emptyState={<div className="py-8 text-center text-sm text-muted-foreground">No import jobs yet.</div>}
-                  />
-                </CardContent>
-              </Card>
+              <div>
+                <p className="text-xs font-semibold text-foreground mb-2">Import History</p>
+                <DataTable
+                  data={jobsData?.items ?? []}
+                  columns={IMPORT_HISTORY_COLUMNS}
+                  getRowKey={(job) => job.id}
+                  isLoading={isJobsLoading}
+                  emptyState={<div className="py-8 text-center text-sm text-muted-foreground">No import jobs yet.</div>}
+                />
+              </div>
             </>
           )}
         </TabsContent>
 
-        <TabsContent value="export" className="space-y-6 mt-0">
+        <TabsContent value="export" className="flex flex-col gap-4 mt-0">
           <ExportTab />
         </TabsContent>
       </Tabs>

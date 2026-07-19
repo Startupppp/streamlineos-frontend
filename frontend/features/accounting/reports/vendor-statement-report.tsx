@@ -13,6 +13,7 @@ import { useVendorsOutstanding } from "@/hooks/api/accounting";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { downloadCsv } from "@/features/accounting/shared";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { formatCurrencyFull } from "@/lib/format-utils";
 
 type VendorStatementRow =
@@ -198,24 +199,19 @@ export function VendorStatementReport() {
       subtitle="Chronological AP activity for a vendor with running balance."
       onExport={vendorId ? handleExport : undefined}
       filters={
-        <div className="flex min-w-0 flex-nowrap items-center gap-3 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-          <div className="flex flex-col gap-1">
-            <label htmlFor="vs-vendor" className="text-[11px] font-medium text-muted-foreground leading-none">
-              Vendor
-            </label>
-            <Select value={vendorId ? String(vendorId) : ""} onValueChange={handleVendorChange}>
-              <SelectTrigger id="vs-vendor" className="w-[200px] text-sm">
-                <SelectValue placeholder="Select vendor…" />
-              </SelectTrigger>
-              <SelectContent>
-                {(vendorsQuery.data?.items ?? []).map((v) => (
-                  <SelectItem key={v.vendorId} value={String(v.vendorId)}>
-                    {v.vendorName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        <div className={FILTER_TOOLBAR_ROW}>
+          <Select value={vendorId ? String(vendorId) : ""} onValueChange={handleVendorChange}>
+            <SelectTrigger id="vs-vendor" className={`w-[200px] ${FILTER_SELECT_TRIGGER}`}>
+              <SelectValue placeholder="Select vendor…" />
+            </SelectTrigger>
+            <SelectContent>
+              {(vendorsQuery.data?.items ?? []).map((v) => (
+                <SelectItem key={v.vendorId} value={String(v.vendorId)}>
+                  {v.vendorName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <DateRangeFilter
             from={from}
             to={to}

@@ -38,7 +38,7 @@ import {
   type ChatMessage,
 } from "@/features/knowledge-base/components/kb-chat-parts";
 import { queryKeys } from "@/lib/query-keys";
-import { getErrorMessage } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 interface Pending {
   question: string;

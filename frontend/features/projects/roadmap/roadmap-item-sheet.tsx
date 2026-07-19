@@ -1,10 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -28,8 +37,19 @@ import {
   useCreateRoadmapItem,
   useUpdateRoadmapItem,
 } from "@/hooks/api/projects/roadmap";
-import type { RoadmapItem, RoadmapStatus } from "@/types/projects";
+import type { RoadmapItem } from "@/types/projects";
 import { ROADMAP_STATUS_OPTIONS } from "./roadmap-constants";
+
+const roadmapItemSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string(),
+  status: z.enum(["planned", "in_progress", "completed", "cancelled"]),
+  category: z.string(),
+  targetQuarter: z.string(),
+  isPublic: z.boolean(),
+});
+
+type RoadmapItemFormValues = z.infer<typeof roadmapItemSchema>;
 
 interface RoadmapItemSheetProps {
   item?: RoadmapItem;
@@ -38,43 +58,30 @@ interface RoadmapItemSheetProps {
 
 export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
   const isEdit = !!item;
-  const [title, setTitle] = useState(item?.title ?? "");
-  const [description, setDescription] = useState(item?.description ?? "");
-  const [status, setStatus] = useState<RoadmapStatus>(item?.status ?? "planned");
-  const [category, setCategory] = useState(item?.category ?? "");
-  const [targetQuarter, setTargetQuarter] = useState(item?.targetQuarter ?? "");
-  const [isPublic, setIsPublic] = useState(item?.isPublic ?? true);
-
   const create = useCreateRoadmapItem();
   const update = useUpdateRoadmapItem();
   const isPending = create.isPending || update.isPending;
 
-  function handleTitleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setTitle(e.target.value);
-  }
-  function handleDescriptionChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    setDescription(e.target.value);
-  }
-  function handleStatusChange(v: string) {
-    const found = ROADMAP_STATUS_OPTIONS.find((o) => o.value === v);
-    if (found) setStatus(found.value);
-  }
-  function handleTargetQuarterChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setTargetQuarter(e.target.value);
-  }
-  function handleCategoryChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setCategory(e.target.value);
-  }
+  const form = useForm<RoadmapItemFormValues>({
+    resolver: zodResolver(roadmapItemSchema),
+    defaultValues: {
+      title: item?.title ?? "",
+      description: item?.description ?? "",
+      status: item?.status ?? "planned",
+      category: item?.category ?? "",
+      targetQuarter: item?.targetQuarter ?? "",
+      isPublic: item?.isPublic ?? true,
+    },
+  });
 
-  function handleSave() {
-    if (!title.trim()) return;
+  function handleSave(values: RoadmapItemFormValues) {
     const payload = {
-      title: title.trim(),
-      description: description.trim() || undefined,
-      status,
-      category: category.trim() || undefined,
-      targetQuarter: targetQuarter.trim() || undefined,
-      isPublic,
+      title: values.title.trim(),
+      description: values.description.trim() || undefined,
+      status: values.status,
+      category: values.category.trim() || undefined,
+      targetQuarter: values.targetQuarter.trim() || undefined,
+      isPublic: values.isPublic,
     };
     if (isEdit) {
       update.mutate(
@@ -82,10 +89,10 @@ export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
           id: item.id,
           title: payload.title,
           description: payload.description ?? null,
-          status,
+          status: payload.status,
           category: payload.category ?? null,
           targetQuarter: payload.targetQuarter ?? null,
-          isPublic,
+          isPublic: payload.isPublic,
         },
         {
           onSuccess: () => { toast.success("Roadmap item updated"); onClose(); },
@@ -106,54 +113,114 @@ export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
         <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle>{isEdit ? "Edit Roadmap Item" : "New Roadmap Item"}</SheetTitle>
         </SheetHeader>
-        <SheetBody className="px-6 py-5 space-y-4">
-          <div className="space-y-1">
-            <Label>Title *</Label>
-            <Input placeholder="e.g. Dark mode support" value={title} onChange={handleTitleChange} />
-          </div>
-          <div className="space-y-1">
-            <Label>Description</Label>
-            <Textarea rows={4} value={description} onChange={handleDescriptionChange} />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label>Status</Label>
-              <Select value={status} onValueChange={handleStatusChange}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {ROADMAP_STATUS_OPTIONS.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label>Target Quarter</Label>
-              <Input placeholder="e.g. Q3 2026" value={targetQuarter} onChange={handleTargetQuarterChange} />
-            </div>
-          </div>
-          <div className="space-y-1">
-            <Label>Category</Label>
-            <Input placeholder="e.g. Integrations" value={category} onChange={handleCategoryChange} />
-          </div>
-          <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-3 py-2.5">
-            <div>
-              <p className="text-sm font-medium text-foreground">Public</p>
-              <p className="text-xs text-muted-foreground">Show this item on the public board</p>
-            </div>
-            <Switch
-              checked={isPublic}
-              onCheckedChange={setIsPublic}
-              className="border border-border data-[state=unchecked]:bg-input"
-            />
-          </div>
-        </SheetBody>
-        <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
-          <Button variant="outline" className="flex-1" onClick={onClose}>Cancel</Button>
-          <LoadingButton className="flex-1" onClick={handleSave} disabled={!title.trim()} isPending={isPending} loadingText="Saving…">
-            {isEdit ? "Save Changes" : "Create Item"}
-          </LoadingButton>
-        </SheetFooter>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSave)} className="flex flex-col flex-1 min-h-0">
+            <SheetBody className="px-6 py-5 space-y-4">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title <span className="text-destructive">*</span></FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="e.g. Dark mode support" />
+                    </FormControl>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} rows={4} />
+                    </FormControl>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {ROADMAP_STATUS_OPTIONS.map((o) => (
+                            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage className="text-xs" />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="targetQuarter"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Target Quarter</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="e.g. Q3 2026" />
+                      </FormControl>
+                      <FormMessage className="text-xs" />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="e.g. Integrations" />
+                    </FormControl>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="isPublic"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-3 py-2.5">
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Public</p>
+                        <p className="text-xs text-muted-foreground">Show this item on the public board</p>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          className="border border-border data-[state=unchecked]:bg-input"
+                        />
+                      </FormControl>
+                    </div>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
+            </SheetBody>
+            <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
+              <Button type="button" variant="outline" className="flex-1" onClick={onClose}>Cancel</Button>
+              <LoadingButton type="submit" className="flex-1" isPending={isPending} loadingText="Saving…">
+                {isEdit ? "Save Changes" : "Create Item"}
+              </LoadingButton>
+            </SheetFooter>
+          </form>
+        </Form>
       </SheetContent>
     </Sheet>
   );

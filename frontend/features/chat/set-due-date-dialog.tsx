@@ -23,6 +23,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { Form } from "@/components/ui/form";
 import { useProjects } from "@/hooks/api/projects/projects";
 import { useSetDueDateFromChat } from "@/hooks/api/chat";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -136,90 +137,103 @@ export function SetDueDateDialog({
         <DialogHeader>
           <DialogTitle>Set Due Date</DialogTitle>
         </DialogHeader>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 py-2">
-          {projectId === undefined && (
-            <div className="space-y-1.5">
-              <Label>Project</Label>
-              <Controller
-                control={form.control}
-                name="projectIdStr"
-                render={({ field }) => (
-                  <Select
-                    value={field.value}
-                    onValueChange={handleProjectChange}
-                    disabled={loadingProjects}
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={loadingProjects ? "Loading…" : "Select project"}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {projectsData?.data.map((p) => (
-                        <SelectItem key={p.id} value={String(p.id)}>
-                          {p.key} — {p.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 py-2">
+            {projectId === undefined && (
+              <div className="space-y-1.5">
+                <Label>
+                  Project <span className="text-destructive">*</span>
+                </Label>
+                <Controller
+                  control={form.control}
+                  name="projectIdStr"
+                  render={({ field }) => (
+                    <Select
+                      value={field.value}
+                      onValueChange={handleProjectChange}
+                      disabled={loadingProjects}
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={loadingProjects ? "Loading…" : "Select project"}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {projectsData?.data.map((p) => (
+                          <SelectItem key={p.id} value={String(p.id)}>
+                            {p.key} — {p.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {form.formState.errors.projectIdStr && (
+                  <p className="text-xs text-destructive">
+                    {form.formState.errors.projectIdStr.message}
+                  </p>
                 )}
-              />
-            </div>
-          )}
-          {ticketId === undefined && (
+              </div>
+            )}
+            {ticketId === undefined && (
+              <div className="space-y-1.5">
+                <Label>
+                  Ticket <span className="text-destructive">*</span>
+                </Label>
+                <Controller
+                  control={form.control}
+                  name="ticketIdStr"
+                  render={({ field }) => (
+                    <TicketCombobox
+                      projectId={effectiveProjectId}
+                      value={field.value ? Number(field.value) : null}
+                      onChange={(id) => field.onChange(String(id))}
+                    />
+                  )}
+                />
+                {form.formState.errors.ticketIdStr && (
+                  <p className="text-xs text-destructive">
+                    {form.formState.errors.ticketIdStr.message}
+                  </p>
+                )}
+              </div>
+            )}
             <div className="space-y-1.5">
-              <Label>Ticket</Label>
+              <Label htmlFor="sdd-date">
+                Due Date <span className="text-destructive">*</span>
+              </Label>
               <Controller
                 control={form.control}
-                name="ticketIdStr"
+                name="dueDate"
                 render={({ field }) => (
-                  <TicketCombobox
-                    projectId={effectiveProjectId}
-                    value={field.value ? Number(field.value) : null}
-                    onChange={(id) => field.onChange(String(id))}
+                  <DatePicker
+                    id="sdd-date"
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="Pick a date"
                   />
                 )}
               />
-              {form.formState.errors.ticketIdStr && (
+              {form.formState.errors.dueDate && (
                 <p className="text-xs text-destructive">
-                  {form.formState.errors.ticketIdStr.message}
+                  {form.formState.errors.dueDate.message}
                 </p>
               )}
             </div>
-          )}
-          <div className="space-y-1.5">
-            <Label htmlFor="sdd-date">Due Date</Label>
-            <Controller
-              control={form.control}
-              name="dueDate"
-              render={({ field }) => (
-                <DatePicker
-                  id="sdd-date"
-                  value={field.value}
-                  onChange={field.onChange}
-                  placeholder="Pick a date"
-                />
-              )}
-            />
-            {form.formState.errors.dueDate && (
-              <p className="text-xs text-destructive">
-                {form.formState.errors.dueDate.message}
-              </p>
-            )}
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={handleCancel}>
-              Cancel
-            </Button>
-            <LoadingButton
-              type="submit"
-              isPending={dueDateMutation.isPending}
-              loadingText="Saving…"
-            >
-              Set Date
-            </LoadingButton>
-          </DialogFooter>
-        </form>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={handleCancel}>
+                Cancel
+              </Button>
+              <LoadingButton
+                type="submit"
+                isPending={dueDateMutation.isPending}
+                loadingText="Saving…"
+              >
+                Set Date
+              </LoadingButton>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

@@ -68,7 +68,7 @@ function VariantFormBody({ form, isPending, onCancel }: VariantFormBodyProps) {
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Name</FormLabel>
+              <FormLabel>Name <span className="text-destructive">*</span></FormLabel>
               <FormControl>
                 <Input placeholder="e.g. Large / Red" {...field} />
               </FormControl>
@@ -81,7 +81,7 @@ function VariantFormBody({ form, isPending, onCancel }: VariantFormBodyProps) {
           name="sku"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>SKU</FormLabel>
+              <FormLabel>SKU <span className="text-destructive">*</span></FormLabel>
               <FormControl>
                 <Input className="font-mono" {...field} />
               </FormControl>
@@ -127,7 +127,7 @@ function VariantFormBody({ form, isPending, onCancel }: VariantFormBodyProps) {
             name="sellingPrice"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Selling Price</FormLabel>
+                <FormLabel>Selling Price <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
                   <Input
                     type="number"

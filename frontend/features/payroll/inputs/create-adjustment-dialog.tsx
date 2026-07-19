@@ -25,6 +25,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import { useCreatePayrollAdjustment } from "@/hooks/api/payroll/payroll-inputs";
@@ -64,9 +66,11 @@ export function CreateAdjustmentDialog({ open, onOpenChange, periodId }: CreateA
       },
       {
         onSuccess: () => {
+          toast.success("Adjustment created");
           form.reset();
           onOpenChange(false);
         },
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }
@@ -84,7 +88,7 @@ export function CreateAdjustmentDialog({ open, onOpenChange, periodId }: CreateA
               name="userId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Employee</FormLabel>
+                  <FormLabel>Employee <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <UserCombobox
                       value={field.value}
@@ -180,7 +184,7 @@ export function CreateAdjustmentDialog({ open, onOpenChange, periodId }: CreateA
               name="reason"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Reason</FormLabel>
+                  <FormLabel>Reason <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <Textarea rows={2} placeholder="Describe the reason..." {...field} />
                   </FormControl>

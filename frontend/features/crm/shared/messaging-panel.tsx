@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { MessageCircle, Smartphone } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Button } from "@/components/ui/button";
 import { useCreateTask } from "@/hooks/api/tasks";
 import type { TaskEntityType } from "@/hooks/api/tasks";
@@ -31,7 +32,7 @@ export function MessagingPanel({ phone, entityType, entityId }: MessagingPanelPr
       },
       {
         onSuccess: () => toast.success("WhatsApp opened and activity logged"),
-        onError: () => toast.error("Failed to log WhatsApp activity"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       }
     );
   }, [phone, entityType, entityId, createTask]);
@@ -49,7 +50,7 @@ export function MessagingPanel({ phone, entityType, entityId }: MessagingPanelPr
       },
       {
         onSuccess: () => toast.success("SMS app opened and activity logged"),
-        onError: () => toast.error("Failed to log SMS activity"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       }
     );
   }, [phone, entityType, entityId, createTask]);

@@ -187,13 +187,11 @@ export default function CertificationsPage() {
       }
     >
       {!certs?.length ? (
-        <div className="flex-1 rounded-2xl border border-border/70 bg-card/90 shadow-sm overflow-hidden">
-          <EmptyState
-            illustrationPreset="learning"
-            title="No certifications recorded"
-            description="Add professional certifications to track credentials and renewal dates."
-          />
-        </div>
+        <EmptyState
+          illustrationPreset="learning"
+          title="No certifications recorded"
+          description="Add professional certifications to track credentials and renewal dates."
+        />
       ) : (
         <div className="space-y-3">
           <div className={FILTER_TOOLBAR_ROW}>

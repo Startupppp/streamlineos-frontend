@@ -116,7 +116,7 @@ export function RunsPageContent() {
   return (
     <PageWrapper
       title="Payroll Runs"
-      subtitle={data ? `${data.total} total runs` : undefined}
+      subtitle="View and manage payroll runs by month"
       backHref="/payroll"
       actions={
         canManage ? (

@@ -114,7 +114,7 @@ export function AddBankAccountSheet({ open, onOpenChange }: AddBankAccountSheetP
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Account Name</FormLabel>
+                <FormLabel>Account Name <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
                   <Input placeholder="e.g. HDFC Current Account" {...field} />
                 </FormControl>
@@ -196,7 +196,7 @@ export function AddBankAccountSheet({ open, onOpenChange }: AddBankAccountSheetP
               name="currency"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Currency</FormLabel>
+                  <FormLabel>Currency <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <Input placeholder="INR" {...field} />
                   </FormControl>
@@ -212,7 +212,7 @@ export function AddBankAccountSheet({ open, onOpenChange }: AddBankAccountSheetP
               name="openingBalance"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Opening Balance</FormLabel>
+                  <FormLabel>Opening Balance <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <Input placeholder="0" {...field} />
                   </FormControl>

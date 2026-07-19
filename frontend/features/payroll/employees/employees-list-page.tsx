@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EmptyPersonIllustration } from "@/components/illustrations";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { SalaryProfileSheet } from "@/features/payroll/runs/salary-profile-sheet";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
 import { useEmployeeProfiles } from "@/hooks/api/payroll/employees";
@@ -176,7 +177,7 @@ export function EmployeesListPage() {
       filters={
         <>
           <Select value={workerType} onValueChange={handleWorkerTypeChange}>
-            <SelectTrigger className="h-9 w-36">
+            <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-36`}>
               <SelectValue placeholder="Worker type" />
             </SelectTrigger>
             <SelectContent>
@@ -189,7 +190,7 @@ export function EmployeesListPage() {
             </SelectContent>
           </Select>
           <Select value={status} onValueChange={handleStatusChange}>
-            <SelectTrigger className="h-9 w-32">
+            <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-32`}>
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>

@@ -13,11 +13,18 @@ import {
   SheetClose,
   SheetBody,
 } from "@/components/ui/sheet";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import dynamic from "next/dynamic";
 
@@ -140,96 +147,176 @@ export function ChangeRequestSheet({ projectId, open, onOpenChange, editCr }: Ch
         <SheetHeader className="px-5 py-4 border-b shrink-0">
           <SheetTitle>{editCr ? `Edit CR-${editCr.crNumber}` : "New Change Request"}</SheetTitle>
         </SheetHeader>
-        <SheetBody>
-          <form id="cr-form" onSubmit={form.handleSubmit(handleSubmit)} className="px-5 py-4 space-y-4">
-            <div className="space-y-1.5">
-              <Label className="text-[11px]">Title *</Label>
-              <Input {...form.register("title")} className="text-[11px]" placeholder="Describe the change" />
-              {form.formState.errors.title && (
-                <p className="text-[10px] text-destructive">{form.formState.errors.title.message}</p>
-              )}
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-[11px]">Description</Label>
-              <TiptapEditor
-                content={form.watch("description")}
-                output="html"
-                onChangeHtml={(v) => form.setValue("description", v)}
-                placeholder="What needs to change and why..."
-                minHeightClassName="min-h-[80px]"
-                contentKey={editCr?.id ?? "new"}
-                menuMode="static"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-[11px]">Impact</Label>
-              <Textarea
-                {...form.register("impact")}
-                className="text-[11px] min-h-[60px] resize-none"
-                placeholder="Impact on scope, schedule, or cost..."
-              />
-            </div>
-            {editCr && (
-              <>
-                <div className="space-y-1.5">
-                  <Label className="text-[11px]">Status</Label>
-                  <Select value={form.watch("status")} onValueChange={(v) => form.setValue("status", v)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {CR_STATUSES.map((s) => (
-                        <SelectItem key={s} value={s}>{CR_STATUS_LABELS[s]}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-[11px]">Estimate (hrs)</Label>
-                    <Input {...form.register("estimateHours")} type="number" step="0.5" className="text-[11px]" placeholder="0" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-[11px]">Budget (₹)</Label>
-                    <Input {...form.register("budgetRs")} type="number" step="1" className="text-[11px]" placeholder="0" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-[11px]">Timeline (days)</Label>
-                    <Input {...form.register("timelineDays")} type="number" className="text-[11px]" placeholder="0" />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-[11px]">Approval Owner</Label>
-                  <ProjectMemberSelect
-                    projectId={projectId}
-                    mode="single"
-                    value={form.watch("approvalOwnerId") === "none" ? "" : form.watch("approvalOwnerId")}
-                    onChange={(v) => form.setValue("approvalOwnerId", v ?? "none")}
-                    allowUnassigned
-                    placeholder="Unassigned"
-                    className="text-[11px]"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-[11px]">Decision Comment</Label>
-                  <Textarea
-                    {...form.register("decisionComment")}
-                    className="text-[11px] min-h-[56px] resize-none"
-                    placeholder="Approve/reject reasoning..."
-                  />
-                </div>
-              </>
-            )}
+        <Form {...form}>
+          <form id="cr-form" onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col flex-1 min-h-0">
+            <SheetBody>
+              <div className="px-5 py-4 space-y-4">
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[11px]">Title <span className="text-destructive">*</span></FormLabel>
+                      <FormControl>
+                        <Input {...field} className="text-[11px]" placeholder="Describe the change" />
+                      </FormControl>
+                      <FormMessage className="text-[10px]" />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[11px]">Description</FormLabel>
+                      <FormControl>
+                        <TiptapEditor
+                          content={field.value}
+                          output="html"
+                          onChangeHtml={field.onChange}
+                          placeholder="What needs to change and why..."
+                          minHeightClassName="min-h-[80px]"
+                          contentKey={editCr?.id ?? "new"}
+                          menuMode="static"
+                        />
+                      </FormControl>
+                      <FormMessage className="text-[10px]" />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="impact"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[11px]">Impact</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          {...field}
+                          className="text-[11px] min-h-[60px] resize-none"
+                          placeholder="Impact on scope, schedule, or cost..."
+                        />
+                      </FormControl>
+                      <FormMessage className="text-[10px]" />
+                    </FormItem>
+                  )}
+                />
+                {editCr && (
+                  <>
+                    <FormField
+                      control={form.control}
+                      name="status"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-[11px]">Status</FormLabel>
+                          <Select value={field.value} onValueChange={field.onChange}>
+                            <FormControl>
+                              <SelectTrigger><SelectValue /></SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {CR_STATUSES.map((s) => (
+                                <SelectItem key={s} value={s}>{CR_STATUS_LABELS[s]}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage className="text-[10px]" />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="grid grid-cols-3 gap-3">
+                      <FormField
+                        control={form.control}
+                        name="estimateHours"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-[11px]">Estimate (hrs)</FormLabel>
+                            <FormControl>
+                              <Input {...field} type="number" step="0.5" className="text-[11px]" placeholder="0" />
+                            </FormControl>
+                            <FormMessage className="text-[10px]" />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="budgetRs"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-[11px]">Budget (₹)</FormLabel>
+                            <FormControl>
+                              <Input {...field} type="number" step="1" className="text-[11px]" placeholder="0" />
+                            </FormControl>
+                            <FormMessage className="text-[10px]" />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="timelineDays"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-[11px]">Timeline (days)</FormLabel>
+                            <FormControl>
+                              <Input {...field} type="number" className="text-[11px]" placeholder="0" />
+                            </FormControl>
+                            <FormMessage className="text-[10px]" />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <FormField
+                      control={form.control}
+                      name="approvalOwnerId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-[11px]">Approval Owner</FormLabel>
+                          <ProjectMemberSelect
+                            projectId={projectId}
+                            mode="single"
+                            value={field.value === "none" ? "" : field.value}
+                            onChange={(v) => field.onChange(v ?? "none")}
+                            allowUnassigned
+                            placeholder="Unassigned"
+                            className="text-[11px]"
+                          />
+                          <FormMessage className="text-[10px]" />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="decisionComment"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-[11px]">Decision Comment</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              {...field}
+                              className="text-[11px] min-h-[56px] resize-none"
+                              placeholder="Approve/reject reasoning..."
+                            />
+                          </FormControl>
+                          <FormMessage className="text-[10px]" />
+                        </FormItem>
+                      )}
+                    />
+                  </>
+                )}
+              </div>
+            </SheetBody>
+            <SheetFooter className="px-5 py-3 border-t shrink-0">
+              <div className="grid w-full grid-cols-2 gap-2">
+                <SheetClose asChild>
+                  <Button variant="outline" size="sm" className="text-[11px]">Cancel</Button>
+                </SheetClose>
+                <LoadingButton type="submit" size="sm" className="text-[11px]" isPending={isPending} loadingText="Saving…">
+                  {editCr ? "Save Changes" : "Create"}
+                </LoadingButton>
+              </div>
+            </SheetFooter>
           </form>
-        </SheetBody>
-        <SheetFooter className="px-5 py-3 border-t shrink-0">
-          <div className="grid w-full grid-cols-2 gap-2">
-            <SheetClose asChild>
-              <Button variant="outline" size="sm" className="text-[11px]">Cancel</Button>
-            </SheetClose>
-            <LoadingButton type="submit" form="cr-form" size="sm" className="text-[11px]" isPending={isPending} loadingText="Saving…">
-              {editCr ? "Save Changes" : "Create"}
-            </LoadingButton>
-          </div>
-        </SheetFooter>
+        </Form>
       </SheetContent>
     </Sheet>
   );

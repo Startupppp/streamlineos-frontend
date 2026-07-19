@@ -29,7 +29,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import {
   PmPageShell,
-  PmPanel,
   PmSection,
   PM_FILL_PANEL,
 } from "@/features/projects/shared/pm-chrome";
@@ -315,14 +314,12 @@ export function BugsPage({ projectId }: BugsPageProps) {
                 action={canCreate ? { label: "Report Bug", onClick: handleNewBug } : undefined}
               />
           ) : (
-            <PmPanel className={PM_FILL_PANEL} solid>
-              <DataTable<Bug>
-                data={bugs ?? []}
-                columns={columns}
-                getRowKey={(row) => row.id}
-                className="min-h-0 flex-1 border-0"
-              />
-            </PmPanel>
+            <DataTable<Bug>
+              data={bugs ?? []}
+              columns={columns}
+              getRowKey={(row) => row.id}
+              className={PM_FILL_PANEL}
+            />
           )}
         </PmSection>
       </PmPageShell>

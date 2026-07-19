@@ -76,7 +76,7 @@ export function PaymentRunFormSheet({ open, onOpenChange }: PaymentRunFormSheetP
         <div className="space-y-4 px-6 py-4">
           <div className="space-y-1.5">
             <Label htmlFor="run-name" className="text-xs font-medium">
-              Name <span className="text-destructive">*</span>
+              Name <span className="text-destructive" aria-hidden="true">*</span>
             </Label>
             <Input
               id="run-name"

@@ -348,7 +348,7 @@ export default function SlaPage() {
             className={CONTENT_FILL_PANEL}
           />
         ) : (
-          <div className="space-y-6">
+          <div className="flex flex-1 min-h-0 flex-col gap-4">
             {slaReport && (
               <StatCardGrid cols={4}>
                 <StatCard
@@ -384,18 +384,13 @@ export default function SlaPage() {
               </StatCardGrid>
             )}
 
-            <Card className="bg-card rounded-xl border border-border shadow-sm">
-              <CardHeader className="px-4 py-3">
-                <CardTitle className="text-sm font-semibold">Policies</CardTitle>
-              </CardHeader>
-              <DataTable
-                data={policies ?? []}
-                columns={columns}
-                getRowKey={getPolicyKey}
-                isLoading={isLoading}
-                emptyState={policyEmptyState}
-              />
-            </Card>
+            <DataTable
+              data={policies ?? []}
+              columns={columns}
+              getRowKey={getPolicyKey}
+              isLoading={isLoading}
+              emptyState={policyEmptyState}
+            />
 
             {breachesLoading ? (
               <Skeleton className="h-40 w-full rounded-xl" />
@@ -403,7 +398,7 @@ export default function SlaPage() {
               <BreachedLeadsTable leads={breachedLeads} />
             ) : (
               <Card className="bg-card rounded-xl border border-border shadow-sm">
-                <div className="py-8 px-4 text-center">
+                <div className="py-4 px-4 text-center">
                   <p className="text-sm text-muted-foreground">No SLA breaches in the last 30 days.</p>
                 </div>
               </Card>

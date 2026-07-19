@@ -95,7 +95,7 @@ export function StepReview({ draft, goNext, goBack }: StepReviewProps) {
   if (preview.isError || !preview.data) {
     return (
       <div className="space-y-4">
-        <div className="flex flex-col items-center justify-center py-12 gap-3 text-center">
+        <div className="flex flex-col items-center justify-center py-6 gap-3 text-center">
           <p className="text-sm text-muted-foreground">Failed to generate policy preview</p>
           <Button variant="outline" size="sm" onClick={handleRetry}>
             Retry

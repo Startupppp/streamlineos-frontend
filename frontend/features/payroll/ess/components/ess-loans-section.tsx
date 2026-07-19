@@ -7,7 +7,9 @@ import { z } from "zod";
 import { motion } from "framer-motion";
 import { Coins } from "lucide-react";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -102,8 +104,8 @@ function RequestLoanDialog({ open, onClose }: LoanDialogProps) {
       toast.success("Loan request submitted");
       form.reset();
       onClose();
-    } catch {
-      toast.error("Failed to submit loan request");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     }
   };
 
@@ -120,7 +122,7 @@ function RequestLoanDialog({ open, onClose }: LoanDialogProps) {
               name="amount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Amount (₹)</FormLabel>
+                  <FormLabel>Amount (₹) <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <Input type="number" min="0" step="0.01" placeholder="0.00" {...field} />
                   </FormControl>
@@ -133,7 +135,7 @@ function RequestLoanDialog({ open, onClose }: LoanDialogProps) {
               name="totalEmis"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Repayment months</FormLabel>
+                  <FormLabel>Repayment months <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <Input type="number" min="1" max="60" placeholder="e.g. 12" {...field} />
                   </FormControl>
@@ -146,7 +148,7 @@ function RequestLoanDialog({ open, onClose }: LoanDialogProps) {
               name="reason"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Reason</FormLabel>
+                  <FormLabel>Reason <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <Input placeholder="Brief reason for this request" {...field} />
                   </FormControl>
@@ -156,9 +158,9 @@ function RequestLoanDialog({ open, onClose }: LoanDialogProps) {
             />
             <DialogFooter>
               <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-              <Button type="submit" disabled={mutation.isPending}>
-                {mutation.isPending ? "Submitting…" : "Submit Request"}
-              </Button>
+              <LoadingButton type="submit" isPending={mutation.isPending} loadingText="Submitting…">
+                Submit Request
+              </LoadingButton>
             </DialogFooter>
           </form>
         </Form>

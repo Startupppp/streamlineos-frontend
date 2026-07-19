@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetBody } from "@/components/ui/sheet";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
@@ -284,7 +285,7 @@ export function NewTransferSheet({ open, onOpenChange }: { open: boolean; onOpen
   const { data: variants = [] } = useProductVariants({ activeOnly: true });
   const createMutation = useCreateTransfer();
 
-  const { control, handleSubmit, reset, setValue, register, watch, formState: { errors } } = useForm<FormValues>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(newTransferSchema),
     defaultValues: {
       fromWarehouseId: 0,
@@ -295,6 +296,8 @@ export function NewTransferSheet({ open, onOpenChange }: { open: boolean; onOpen
       lines: [{ productVariantId: 0, quantity: 0, lotId: undefined, serialId: undefined }],
     },
   });
+
+  const { control, handleSubmit, reset, setValue, register, watch, formState: { errors } } = form;
 
   const { fields, append, remove } = useFieldArray({ control, name: "lines" });
 
@@ -367,6 +370,7 @@ export function NewTransferSheet({ open, onOpenChange }: { open: boolean; onOpen
           <SheetTitle>New Transfer</SheetTitle>
           <SheetDescription>Move stock between warehouse locations.</SheetDescription>
         </SheetHeader>
+        <Form {...form}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <SheetBody className="space-y-4 px-6 py-4">
             <div className="grid grid-cols-2 gap-4">
@@ -393,21 +397,29 @@ export function NewTransferSheet({ open, onOpenChange }: { open: boolean; onOpen
                 locationError={errors.toLocationId?.message}
               />
             </div>
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <Label className="text-[13px] font-medium">Notes</Label>
-                <span className={`text-[11px] tabular-nums ${notesValue.length > NOTES_MAX ? "text-destructive" : "text-muted-foreground"}`}>
-                  {notesValue.length}/{NOTES_MAX}
-                </span>
-              </div>
-              <Textarea
-                {...register("notes")}
-                placeholder="Reason or notes for this transfer…"
-                rows={2}
-                maxLength={NOTES_MAX}
-              />
-              {errors.notes && <p className="text-xs text-destructive">{errors.notes.message}</p>}
-            </div>
+            <FormField
+              control={control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <div className="flex items-center justify-between">
+                    <FormLabel>Notes</FormLabel>
+                    <span className={`text-[11px] tabular-nums ${notesValue.length > NOTES_MAX ? "text-destructive" : "text-muted-foreground"}`}>
+                      {notesValue.length}/{NOTES_MAX}
+                    </span>
+                  </div>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Reason or notes for this transfer…"
+                      rows={2}
+                      maxLength={NOTES_MAX}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <Label className="text-[13px] font-medium">
@@ -445,6 +457,7 @@ export function NewTransferSheet({ open, onOpenChange }: { open: boolean; onOpen
             </div>
           </SheetFooter>
         </form>
+        </Form>
       </SheetContent>
     </Sheet>
   );

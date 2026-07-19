@@ -583,7 +583,7 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
                 <SelectTrigger className="">
                   <SelectValue placeholder="Select document type" />
                 </SelectTrigger>
-                <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                   {(documentTypes ?? [])
                     .filter((dt) => dt.isActive !== false)
                     .map((dt) => (

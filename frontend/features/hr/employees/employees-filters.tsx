@@ -52,7 +52,7 @@ export function EmployeesFilters({
         <SelectTrigger className={cn("w-44", FILTER_SELECT_TRIGGER)}>
           <SelectValue placeholder="Department" />
         </SelectTrigger>
-        <SelectContent className="w-[var(--radix-select-trigger-width)]">
+        <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
           <SelectItem value="all" className="text-xs">
             All Departments
           </SelectItem>
@@ -67,7 +67,7 @@ export function EmployeesFilters({
         <SelectTrigger className={cn("w-32", FILTER_SELECT_TRIGGER)}>
           <SelectValue placeholder="Status" />
         </SelectTrigger>
-        <SelectContent className="w-[var(--radix-select-trigger-width)]">
+        <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
           <SelectItem value="all" className="text-xs">
             All Status
           </SelectItem>

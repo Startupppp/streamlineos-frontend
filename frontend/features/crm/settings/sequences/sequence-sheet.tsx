@@ -342,15 +342,17 @@ export function SequenceSheet({ sequence, open, onOpenChange }: Props) {
           <SheetTitle>{isEdit ? "Edit Sequence" : "New Sequence"}</SheetTitle>
         </SheetHeader>
         <Tabs defaultValue="details" className="flex flex-col flex-1 min-h-0">
-          <TabsList className="shrink-0 rounded-none border-b w-full justify-start px-6 bg-transparent gap-0">
-            <TabsTrigger value="details" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent text-sm">Details</TabsTrigger>
-            {isEdit && (
-              <>
-                <TabsTrigger value="steps" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent text-sm">Steps</TabsTrigger>
-                <TabsTrigger value="enrollments" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent text-sm">Enrollments</TabsTrigger>
-              </>
-            )}
-          </TabsList>
+          <div className="shrink-0 border-b px-6 py-2">
+            <TabsList className="rounded-lg border border-border bg-card p-1 h-auto gap-1">
+              <TabsTrigger value="details" className="h-7 rounded-md px-3 text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground">Details</TabsTrigger>
+              {isEdit && (
+                <>
+                  <TabsTrigger value="steps" className="h-7 rounded-md px-3 text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground">Steps</TabsTrigger>
+                  <TabsTrigger value="enrollments" className="h-7 rounded-md px-3 text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground">Enrollments</TabsTrigger>
+                </>
+              )}
+            </TabsList>
+          </div>
 
           <TabsContent value="details" className="flex flex-col flex-1 min-h-0 mt-0 overflow-hidden">
             <Form {...form}>
@@ -361,7 +363,7 @@ export function SequenceSheet({ sequence, open, onOpenChange }: Props) {
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Name</FormLabel>
+                        <FormLabel>Name <span className="text-destructive">*</span></FormLabel>
                         <FormControl>
                           <Input {...field} placeholder="e.g. New Lead Outreach" />
                         </FormControl>

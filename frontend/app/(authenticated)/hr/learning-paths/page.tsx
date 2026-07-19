@@ -177,13 +177,11 @@ export default function LearningPathsPage() {
       }
     >
       {!paths?.length ? (
-        <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
-          <EmptyState
-            illustrationPreset="learning"
-            title="No learning paths available"
-            description="Create structured learning programs to support career development."
-          />
-        </div>
+        <EmptyState
+          illustrationPreset="learning"
+          title="No learning paths available"
+          description="Create structured learning programs to support career development."
+        />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {paths.map((lp: LearningPath) => {
@@ -289,7 +287,7 @@ export default function LearningPathsPage() {
               <SelectTrigger>
                 <SelectValue placeholder="Select level" />
               </SelectTrigger>
-              <SelectContent className="w-[var(--radix-select-trigger-width)]">
+              <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                 <SelectItem value="Beginner">Beginner</SelectItem>
                 <SelectItem value="Intermediate">Intermediate</SelectItem>
                 <SelectItem value="Advanced">Advanced</SelectItem>

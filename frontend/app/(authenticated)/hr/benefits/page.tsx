@@ -94,7 +94,7 @@ function MyBenefitsTab() {
   const activePlans = allPlans?.data ?? [];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {!activePlans.length ? (
         <EmptyState
           illustrationPreset="payroll"

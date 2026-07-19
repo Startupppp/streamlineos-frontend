@@ -10,7 +10,7 @@ import {
   type CreateUserApiTokenInput,
   type CreateUserApiTokenResponse,
 } from "@/hooks/api/user-api-tokens";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import {
@@ -70,7 +70,7 @@ export function CreateUserTokenSheet({
           form.reset();
           onCreated(result);
         },
-        onError: (err) => toast.error(getApiError(err)),
+        onError: (err) => toast.error(getErrorMessage(err)),
       });
     },
     [create, form, onCreated],
@@ -94,7 +94,7 @@ export function CreateUserTokenSheet({
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Name</FormLabel>
+                    <FormLabel>Name <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <Input placeholder="e.g. Local Dev Token" {...field} />
                     </FormControl>

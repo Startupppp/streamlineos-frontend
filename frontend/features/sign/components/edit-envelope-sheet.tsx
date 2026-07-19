@@ -1,6 +1,5 @@
 "use client";
 
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -10,12 +9,7 @@ import { EntityFormSheet } from "@/components/shared/entity-form-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useUpdateSignEnvelope } from "@/hooks/api/sign/envelopes";
 import type { SignEnvelope } from "@/types/sign";
-
-const editEnvelopeSchema = z.object({
-  title: z.string().trim().min(1, "Title is required").max(200),
-  message: z.string().trim().max(2000).optional(),
-});
-type EditEnvelopeValues = z.infer<typeof editEnvelopeSchema>;
+import { envelopeSchema, type EnvelopeValues } from "./envelope-schema";
 
 interface EditEnvelopeSheetProps {
   envelope: SignEnvelope;
@@ -26,7 +20,7 @@ interface EditEnvelopeSheetProps {
 export function EditEnvelopeSheet({ envelope, open, onOpenChange }: EditEnvelopeSheetProps) {
   const updateEnvelope = useUpdateSignEnvelope(envelope.id);
 
-  async function handleSubmit(values: EditEnvelopeValues) {
+  async function handleSubmit(values: EnvelopeValues) {
     try {
       await updateEnvelope.mutateAsync({
         title: values.title,
@@ -40,12 +34,12 @@ export function EditEnvelopeSheet({ envelope, open, onOpenChange }: EditEnvelope
   }
 
   return (
-    <EntityFormSheet<EditEnvelopeValues>
+    <EntityFormSheet<EnvelopeValues>
       open={open}
       onOpenChange={onOpenChange}
       title="Edit envelope"
       description="Update the title or message for this draft envelope."
-      resolver={zodResolver(editEnvelopeSchema)}
+      resolver={zodResolver(envelopeSchema)}
       defaultValues={{
         title: envelope.title,
         message: envelope.message ?? "",
@@ -63,7 +57,9 @@ export function EditEnvelopeSheet({ envelope, open, onOpenChange }: EditEnvelope
             name="title"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Title</FormLabel>
+                <FormLabel>
+                  Title <span className="text-destructive">*</span>
+                </FormLabel>
                 <FormControl>
                   <Input placeholder="e.g. Vendor Agreement — Acme Corp" {...field} />
                 </FormControl>

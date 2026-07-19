@@ -26,6 +26,7 @@ import { useSubmitJournalApproval } from "@/hooks/api/accounting/core";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { RecurringJournalsTab } from "@/features/accounting/core/recurring-journals-tab";
+import { cn } from "@/lib/utils";
 import type { JournalEntry, JournalEntryStatus } from "@/types/accounting";
 
 type TabValue = "entries" | "recurring";
@@ -321,26 +322,28 @@ export default function JournalListPage() {
       }
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
-        <div className="flex border-b border-border gap-1">
+        <div className="inline-flex h-9 w-full items-center gap-1 rounded-lg border border-border bg-card p-1 overflow-x-auto scrollbar-hide sm:w-fit">
           <button
             type="button"
             onClick={handleEntriesTab}
-            className={`px-3 pb-2 text-sm font-medium border-b-2 transition-colors ${
+            className={cn(
+              "inline-flex h-7 shrink-0 items-center rounded-md px-3 text-sm font-medium whitespace-nowrap transition-colors",
               tab === "entries"
-                ? "border-foreground text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground",
+            )}
           >
             Entries
           </button>
           <button
             type="button"
             onClick={handleRecurringTab}
-            className={`px-3 pb-2 text-sm font-medium border-b-2 transition-colors ${
+            className={cn(
+              "inline-flex h-7 shrink-0 items-center rounded-md px-3 text-sm font-medium whitespace-nowrap transition-colors",
               tab === "recurring"
-                ? "border-foreground text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground",
+            )}
           >
             Recurring
           </button>

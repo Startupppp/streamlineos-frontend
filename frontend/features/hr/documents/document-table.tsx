@@ -21,7 +21,6 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -478,58 +477,57 @@ export function DocumentTable({
     ) : undefined;
 
   return (
-    <Card className="rounded-2xl border border-border/70 bg-card/90 shadow-sm overflow-hidden">
-      <CardContent className="p-0" aria-live="polite">
-        {showFolders && folders.length > 0 && (
-          <div className="px-5 pt-4 pb-3 border-b border-border/50">
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-              Folders
-            </p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {folders.map((folder) => (
-                <button
-                  key={folder.name}
-                  className="flex items-center gap-2.5 p-2.5 rounded-xl border border-border bg-card hover:bg-muted/40 transition-colors duration-200 text-left"
+    <div className="flex flex-col flex-1 min-h-0 overflow-hidden rounded-2xl border border-border/70 bg-card/90 shadow-sm" aria-live="polite">
+      {showFolders && folders.length > 0 && (
+        <div className="px-5 pt-4 pb-3 border-b border-border/50 shrink-0">
+          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+            Folders
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {folders.map((folder) => (
+              <button
+                key={folder.name}
+                className="flex items-center gap-2.5 p-2.5 rounded-xl border border-border bg-card hover:bg-muted/40 transition-colors duration-200 text-left"
+              >
+                <div
+                  className={cn(
+                    "h-7 w-7 rounded-lg flex items-center justify-center shrink-0",
+                    FOLDER_COLORS[folder.colorIdx],
+                  )}
                 >
-                  <div
-                    className={cn(
-                      "h-7 w-7 rounded-lg flex items-center justify-center shrink-0",
-                      FOLDER_COLORS[folder.colorIdx],
-                    )}
-                  >
-                    <Folder className="h-3.5 w-3.5" />
-                  </div>
-                  <div className="min-w-0">
-                    <TruncatedText
-                      text={folder.name}
-                      className="text-xs font-medium text-foreground"
-                    />
-                    <p className="text-[10px] text-muted-foreground">
-                      {folder.count} files
-                    </p>
-                  </div>
-                </button>
-              ))}
-            </div>
+                  <Folder className="h-3.5 w-3.5" />
+                </div>
+                <div className="min-w-0">
+                  <TruncatedText
+                    text={folder.name}
+                    className="text-xs font-medium text-foreground"
+                  />
+                  <p className="text-[10px] text-muted-foreground">
+                    {folder.count} files
+                  </p>
+                </div>
+              </button>
+            ))}
           </div>
-        )}
+        </div>
+      )}
 
-        <DataTable
-          data={paginatedDocuments}
-          columns={columns}
-          getRowKey={(doc) => doc.id}
-          pagination={{
-            mode: "server",
-            page,
-            pageSize,
-            total: totalFiltered,
-            onPageChange,
-          }}
-          emptyState={emptyState}
-          footer={footer}
-          minWidth="640px"
-        />
-      </CardContent>
-    </Card>
+      <DataTable
+        data={paginatedDocuments}
+        columns={columns}
+        getRowKey={(doc) => doc.id}
+        pagination={{
+          mode: "server",
+          page,
+          pageSize,
+          total: totalFiltered,
+          onPageChange,
+        }}
+        emptyState={emptyState}
+        footer={footer}
+        minWidth="640px"
+        className="flex-1 min-h-0 border-0 rounded-none"
+      />
+    </div>
   );
 }

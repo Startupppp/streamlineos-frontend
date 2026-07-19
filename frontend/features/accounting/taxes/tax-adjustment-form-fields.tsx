@@ -51,19 +51,19 @@ export function TaxAdjustmentFormFields({ form }: TaxAdjustmentFormFieldsProps) 
     <>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
-          <Label>Entry Date</Label>
+          <Label>Entry Date <span className="text-destructive">*</span></Label>
           <Input type="date" {...form.register("entryDate")} />
           {form.formState.errors.entryDate && (
-            <p className="text-xs text-red-500">
+            <p className="text-xs text-destructive">
               {form.formState.errors.entryDate.message}
             </p>
           )}
         </div>
         <div className="space-y-1">
-          <Label>Description</Label>
+          <Label>Description <span className="text-destructive">*</span></Label>
           <Input placeholder="Adjustment reason" {...form.register("description")} />
           {form.formState.errors.description && (
-            <p className="text-xs text-red-500">
+            <p className="text-xs text-destructive">
               {form.formState.errors.description.message}
             </p>
           )}
@@ -105,7 +105,7 @@ export function TaxAdjustmentFormFields({ form }: TaxAdjustmentFormFieldsProps) 
                 {...form.register(`${lineKey}.debit`)}
               />
               {form.formState.errors[lineKey]?.debit && (
-                <p className="text-xs text-red-500">
+                <p className="text-xs text-destructive">
                   {form.formState.errors[lineKey]?.debit?.message}
                 </p>
               )}
@@ -118,7 +118,7 @@ export function TaxAdjustmentFormFields({ form }: TaxAdjustmentFormFieldsProps) 
                 {...form.register(`${lineKey}.credit`)}
               />
               {form.formState.errors[lineKey]?.credit && (
-                <p className="text-xs text-red-500">
+                <p className="text-xs text-destructive">
                   {form.formState.errors[lineKey]?.credit?.message}
                 </p>
               )}
@@ -131,7 +131,7 @@ export function TaxAdjustmentFormFields({ form }: TaxAdjustmentFormFieldsProps) 
               {...form.register(`${lineKey}.lineDescription`)}
             />
             {form.formState.errors[lineKey]?.lineDescription && (
-              <p className="text-xs text-red-500">
+              <p className="text-xs text-destructive">
                 {form.formState.errors[lineKey]?.lineDescription?.message}
               </p>
             )}

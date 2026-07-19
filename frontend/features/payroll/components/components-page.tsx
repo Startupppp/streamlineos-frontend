@@ -9,6 +9,7 @@ import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { SearchInput } from "@/components/ui/search-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -126,7 +127,7 @@ export function ComponentsPageContent() {
         className="w-48"
       />
       <Select value={typeFilter || "all"} onValueChange={handleTypeChange}>
-        <SelectTrigger className="h-9 w-44">
+        <SelectTrigger className={`${FILTER_SELECT_TRIGGER} h-9 w-44`}>
           <SelectValue placeholder="All types" />
         </SelectTrigger>
         <SelectContent>
@@ -137,7 +138,7 @@ export function ComponentsPageContent() {
         </SelectContent>
       </Select>
       <Select value={activeFilter || "all"} onValueChange={handleActiveChange}>
-        <SelectTrigger className="h-9 w-32">
+        <SelectTrigger className={`${FILTER_SELECT_TRIGGER} h-9 w-32`}>
           <SelectValue placeholder="All status" />
         </SelectTrigger>
         <SelectContent>

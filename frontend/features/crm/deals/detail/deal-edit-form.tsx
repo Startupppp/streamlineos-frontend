@@ -89,7 +89,7 @@ export function DealEditForm({ deal, isPending, onSubmit, onCancel }: DealEditFo
               <div className="col-span-2">
                 <FormField control={form.control} name="name" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Deal Name</FormLabel>
+                    <FormLabel>Deal Name <span className="text-destructive">*</span></FormLabel>
                     <FormControl><Input {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
@@ -176,9 +176,9 @@ export function DealEditForm({ deal, isPending, onSubmit, onCancel }: DealEditFo
             </div>
             <div className="flex justify-end gap-3">
               <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-              <Button type="submit" disabled={isPending}>
-                {isPending ?"Saving..." :"Save Changes"}
-              </Button>
+              <LoadingButton type="submit" isPending={isPending} loadingText="Saving...">
+                Save Changes
+              </LoadingButton>
             </div>
           </form>
         </Form>

@@ -101,7 +101,7 @@ function TemplatesPageSkeleton() {
       subtitle="Manage reusable HTML templates for offer letters, NDAs, and policies."
       actions={<Skeleton className="h-8 w-[140px] rounded-md" />}
     >
-      <div className="flex flex-1 min-h-0 flex-col gap-6">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <div
@@ -381,7 +381,7 @@ export default function DocumentTemplatesPage() {
         </Button>
       }
     >
-      <div className="flex flex-1 min-h-0 flex-col gap-6">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         <StatCardGrid cols={4}>
           <StatCard label="Total Templates" value={total} icon={FileText} tone="blue" />
           <StatCard label="Active" value={active} icon={FileCheck} tone="emerald" />

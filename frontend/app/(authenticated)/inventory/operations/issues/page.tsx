@@ -167,6 +167,7 @@ export default function IssuesPage() {
       <DataTable
         data={items}
         columns={columns}
+        className="flex-1 min-h-0"
         getRowKey={(tx) => tx.id}
         isLoading={query.isLoading}
         emptyState={

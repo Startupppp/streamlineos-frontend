@@ -252,6 +252,7 @@ function ThreePlContent() {
             <DataTable<ThreePlConnection>
               data={connections}
               columns={columns}
+              className="flex-1 min-h-0"
               getRowKey={(row) => row.id}
               onRowClick={handleRowClick}
             />

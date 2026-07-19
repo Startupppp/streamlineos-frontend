@@ -14,7 +14,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Label } from "@/components/ui/label";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useDuplicateTemplate } from "@/hooks/api/payroll";
 import type { TemplateRow } from "@/types/payroll/setup";
 
@@ -63,7 +65,7 @@ export function DuplicateTemplateDialog({
           handleOpenChange(false);
           onSuccess?.(result);
         },
-        onError: () => toast.error("Failed to duplicate template"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }
@@ -101,9 +103,9 @@ export function DuplicateTemplateDialog({
             >
               Cancel
             </Button>
-            <Button type="submit" size="sm" disabled={duplicate.isPending}>
-              {duplicate.isPending ? "Duplicating…" : "Duplicate"}
-            </Button>
+            <LoadingButton type="submit" size="sm" isPending={duplicate.isPending} loadingText="Duplicating…">
+              Duplicate
+            </LoadingButton>
           </DialogFooter>
         </form>
       </DialogContent>

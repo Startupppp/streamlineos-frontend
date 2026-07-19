@@ -1,5 +1,9 @@
 "use client";
 
+import { useCallback } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
   Dialog,
   DialogContent,
@@ -10,6 +14,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -17,11 +29,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useOrgBranches, useOrgDepartments } from "@/hooks/api/org-hierarchy";
-import { useState, useCallback } from "react";
 import { useBulkUpdateUsers } from "@/hooks/api/users";
 import type { BulkUpdatePayload } from "@/hooks/api/users";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
+
+const KEEP = "all";
+
+const bulkAssignSchema = z.object({
+  role: z.string(),
+  branchId: z.string(),
+  departmentId: z.string(),
+});
+
+type BulkAssignValues = z.infer<typeof bulkAssignSchema>;
 
 interface UserBulkAssignDialogProps {
   open: boolean;
@@ -36,27 +57,31 @@ export function UserBulkAssignDialog({
   selectedIds,
   onSuccess,
 }: UserBulkAssignDialogProps) {
-  const [assignRole, setAssignRole] = useState("all");
-  const [assignBranchId, setAssignBranchId] = useState("all");
-  const [assignDeptId, setAssignDeptId] = useState("all");
-
   const { data: branchesData } = useOrgBranches();
   const { data: departmentsData } = useOrgDepartments();
   const { mutate: bulkUpdate, isPending } = useBulkUpdateUsers();
 
-  const handleClose = useCallback(() => {
-    onOpenChange(false);
-    setAssignRole("all");
-    setAssignBranchId("all");
-    setAssignDeptId("all");
-  }, [onOpenChange]);
+  const form = useForm<BulkAssignValues>({
+    resolver: zodResolver(bulkAssignSchema),
+    defaultValues: { role: KEEP, branchId: KEEP, departmentId: KEEP },
+  });
 
-  function handleApply() {
+  const handleClose = useCallback(() => {
+    form.reset();
+    onOpenChange(false);
+  }, [form, onOpenChange]);
+
+  const handleOpenChange = useCallback((open: boolean) => {
+    if (!open) form.reset();
+    onOpenChange(open);
+  }, [form, onOpenChange]);
+
+  function handleSubmit(values: BulkAssignValues) {
     const payload: BulkUpdatePayload = {
       userIds: Array.from(selectedIds),
-      ...(assignRole !== "all" ? { role: assignRole } : {}),
-      ...(assignBranchId !== "all" ? { branchId: Number(assignBranchId) } : {}),
-      ...(assignDeptId !== "all" ? { departmentId: Number(assignDeptId) } : {}),
+      ...(values.role !== KEEP ? { role: values.role } : {}),
+      ...(values.branchId !== KEEP ? { branchId: Number(values.branchId) } : {}),
+      ...(values.departmentId !== KEEP ? { departmentId: Number(values.departmentId) } : {}),
     };
     bulkUpdate(payload, {
       onSuccess: () => {
@@ -64,78 +89,114 @@ export function UserBulkAssignDialog({
         onSuccess();
         handleClose();
       },
-      onError: (e) => toast.error(getApiError(e)),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
 
+  const values = form.watch();
   const nothingSelected =
-    assignRole === "all" && assignBranchId === "all" && assignDeptId === "all";
+    values.role === KEEP && values.branchId === KEEP && values.departmentId === KEEP;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-[95vw] sm:max-w-sm">
         <DialogHeader>
           <DialogTitle className="text-sm">
             Bulk Assign — {selectedIds.size} user(s)
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-3">
-          <div className="space-y-1.5">
-            <p className="text-xs font-medium">Role</p>
-            <Select value={assignRole} onValueChange={setAssignRole}>
-              <SelectTrigger>
-                <SelectValue placeholder="Keep unchanged" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Keep unchanged</SelectItem>
-                <SelectItem value="MEMBER">Member</SelectItem>
-                <SelectItem value="ADMIN">Admin</SelectItem>
-                <SelectItem value="MANAGER">Manager</SelectItem>
-                <SelectItem value="HR">HR</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <p className="text-xs font-medium">Branch</p>
-            <Select value={assignBranchId} onValueChange={setAssignBranchId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Keep unchanged" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Keep unchanged</SelectItem>
-                {(branchesData?.data ?? []).map((b) => (
-                  <SelectItem key={b.id} value={String(b.id)}>
-                    {b.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <p className="text-xs font-medium">Department</p>
-            <Select value={assignDeptId} onValueChange={setAssignDeptId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Keep unchanged" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Keep unchanged</SelectItem>
-                {(departmentsData?.data ?? []).map((d) => (
-                  <SelectItem key={d.id} value={String(d.id)}>
-                    {d.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="ghost" size="sm" onClick={handleClose}>
-            Cancel
-          </Button>
-          <Button size="sm" onClick={handleApply} disabled={isPending || nothingSelected}>
-            {isPending ? "Applying..." : "Apply"}
-          </Button>
-        </DialogFooter>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3">
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs font-medium">Role</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Keep unchanged" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value={KEEP}>Keep unchanged</SelectItem>
+                      <SelectItem value="MEMBER">Member</SelectItem>
+                      <SelectItem value="ADMIN">Admin</SelectItem>
+                      <SelectItem value="MANAGER">Manager</SelectItem>
+                      <SelectItem value="HR">HR</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="branchId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs font-medium">Branch</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Keep unchanged" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value={KEEP}>Keep unchanged</SelectItem>
+                      {(branchesData?.data ?? []).map((b) => (
+                        <SelectItem key={b.id} value={String(b.id)}>
+                          {b.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="departmentId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs font-medium">Department</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Keep unchanged" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value={KEEP}>Keep unchanged</SelectItem>
+                      {(departmentsData?.data ?? []).map((d) => (
+                        <SelectItem key={d.id} value={String(d.id)}>
+                          {d.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <DialogFooter>
+              <Button variant="ghost" size="sm" type="button" onClick={handleClose}>
+                Cancel
+              </Button>
+              <LoadingButton
+                type="submit"
+                size="sm"
+                isPending={isPending}
+                loadingText="Applying…"
+                disabled={nothingSelected}
+              >
+                Apply
+              </LoadingButton>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

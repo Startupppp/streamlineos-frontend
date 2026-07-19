@@ -136,7 +136,7 @@ export function ReminderPolicyDialog({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>Name <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <Input placeholder="Standard overdue reminder" {...field} />
                   </FormControl>
@@ -149,7 +149,7 @@ export function ReminderPolicyDialog({
               name="offsets"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Day offsets</FormLabel>
+                  <FormLabel>Day offsets <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <Input placeholder="-3, 0, 7, 14" {...field} />
                   </FormControl>

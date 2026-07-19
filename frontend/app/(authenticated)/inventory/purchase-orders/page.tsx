@@ -415,6 +415,7 @@ export default function PurchaseOrdersListPage() {
         <DataTable
           data={filteredItems}
           columns={columns}
+          className="flex-1 min-h-0"
           getRowKey={(po) => po.id}
           onRowClick={handleRowClick}
           isLoading={query.isLoading}

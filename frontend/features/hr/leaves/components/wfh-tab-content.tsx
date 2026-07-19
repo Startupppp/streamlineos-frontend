@@ -112,7 +112,7 @@ export function WfhTabContent() {
               <SelectTrigger className="w-[130px] text-sm">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="w-[var(--radix-select-trigger-width)]">
+              <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                 <SelectItem value="ALL">All Status</SelectItem>
                 <SelectItem value="PENDING">Pending</SelectItem>
                 <SelectItem value="APPROVED">Approved</SelectItem>

@@ -332,7 +332,7 @@ export function RecurringJournalSheet({
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Name</FormLabel>
+                <FormLabel>Name <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
                   <Input {...field} placeholder="e.g. Monthly depreciation" />
                 </FormControl>
@@ -364,7 +364,7 @@ export function RecurringJournalSheet({
               name="frequency"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Frequency</FormLabel>
+                  <FormLabel>Frequency <span className="text-destructive">*</span></FormLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
                     <FormControl>
                       <SelectTrigger>
@@ -388,7 +388,7 @@ export function RecurringJournalSheet({
               name="nextRunDate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Next run date</FormLabel>
+                  <FormLabel>Next run date <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <DatePicker
                       value={field.value}

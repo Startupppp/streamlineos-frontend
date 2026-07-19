@@ -23,7 +23,7 @@ import {
   type KbArticleVisibility,
   type KbCategory,
 } from "@/hooks/api/support/kb";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { toast } from "sonner";
 import { KbFeedbackPanel } from "./kb-feedback-panel";
@@ -230,7 +230,7 @@ export function KbArticleEditor({
           setPendingDraft(null);
           toast.success("Article saved");
         },
-        onError: (e) => toast.error(getApiError(e)),
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }

@@ -29,8 +29,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { useBulkInviteUsers } from "@/hooks/api/users";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { CheckCircle2, XCircle } from "lucide-react";
 
@@ -110,7 +111,7 @@ export function UserBulkInviteDialog({ open, onOpenChange }: UserBulkInviteDialo
           toast.success(`${invited} invitation(s) sent`);
         },
         onError: (error) => {
-          toast.error(getApiError(error));
+          toast.error(getErrorMessage(error));
         },
       }
     );
@@ -165,7 +166,7 @@ export function UserBulkInviteDialog({ open, onOpenChange }: UserBulkInviteDialo
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Email addresses
+                      Email addresses <span className="text-destructive">*</span>
                       {parsedEmails.length > 0 && (
                         <span className="ml-2 text-xs text-muted-foreground font-normal">
                           ({parsedEmails.length} detected)
@@ -189,7 +190,7 @@ export function UserBulkInviteDialog({ open, onOpenChange }: UserBulkInviteDialo
                 name="role"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Role for all invitees</FormLabel>
+                    <FormLabel>Role for all invitees <span className="text-destructive">*</span></FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
@@ -218,13 +219,16 @@ export function UserBulkInviteDialog({ open, onOpenChange }: UserBulkInviteDialo
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isPending || parsedEmails.length === 0}>
-                  {isPending
-                    ? "Sending..."
-                    : parsedEmails.length > 0
+                <LoadingButton
+                  type="submit"
+                  isPending={isPending}
+                  loadingText="Sending…"
+                  disabled={parsedEmails.length === 0}
+                >
+                  {parsedEmails.length > 0
                     ? `Invite ${parsedEmails.length} user${parsedEmails.length !== 1 ? "s" : ""}`
                     : "Send invitations"}
-                </Button>
+                </LoadingButton>
               </DialogFooter>
             </form>
           </Form>

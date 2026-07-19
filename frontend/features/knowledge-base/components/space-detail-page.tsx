@@ -72,7 +72,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
       subtitle={space.description ?? undefined}
       backHref={KB_SPACES}
     >
-      <div className="space-y-6">
+      <div className="space-y-4">
         <div className="bg-card border border-border rounded-xl p-4 flex items-start gap-4">
           <span className="text-3xl shrink-0">{space.icon ?? "📚"}</span>
           <div className="flex-1 min-w-0">

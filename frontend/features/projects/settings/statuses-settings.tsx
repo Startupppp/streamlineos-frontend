@@ -150,7 +150,7 @@ export function StatusesSettings({ projectId }: { projectId: number }) {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="flex flex-col items-center gap-2 py-8 text-center"
+                className="flex flex-col items-center gap-2 py-4 text-center"
               >
                 <Columns3 className="w-8 text-muted-foreground/30" />
                 <p className="text-sm text-muted-foreground">

@@ -1,6 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { toast } from "sonner";
 import {
   Sheet,
@@ -13,8 +16,15 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
   Select,
@@ -46,16 +56,18 @@ const LAYOUT_OPTIONS: { value: PayslipLayout; label: string }[] = [
   { value: "COMPLIANCE", label: "Compliance" },
 ];
 
-interface TemplateFormState {
-  name: string;
-  layout: PayslipLayout;
-  accent: string;
-  showEmployerContributions: boolean;
-  showYtd: boolean;
-  isDefault: boolean;
-}
+const templateEditSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100),
+  layout: z.enum(["CLASSIC", "MODERN", "COMPLIANCE"]),
+  accent: z.string().min(1),
+  showEmployerContributions: z.boolean(),
+  showYtd: z.boolean(),
+  isDefault: z.boolean(),
+});
 
-function buildDefaultState(template?: PayslipTemplate): TemplateFormState {
+type TemplateEditFormValues = z.infer<typeof templateEditSchema>;
+
+function buildDefaultValues(template?: PayslipTemplate): TemplateEditFormValues {
   return {
     name: template?.name ?? "",
     layout: template?.layout ?? "CLASSIC",
@@ -74,59 +86,34 @@ interface TemplateEditSheetProps {
 
 export function TemplateEditSheet({ open, onOpenChange, template }: TemplateEditSheetProps) {
   const isEdit = template !== undefined;
-  const [form, setForm] = useState<TemplateFormState>(() => buildDefaultState(template));
-  const [prevOpen, setPrevOpen] = useState(open);
-  if (open !== prevOpen) {
-    setPrevOpen(open);
-    if (open) {
-      setForm(buildDefaultState(template));
-    }
-  }
-
   const createMutation = useCreatePayslipTemplate();
   const updateMutation = useUpdatePayslipTemplate();
   const isPending = createMutation.isPending || updateMutation.isPending;
 
-  function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setForm((prev) => ({ ...prev, name: e.target.value }));
-  }
+  const form = useForm<TemplateEditFormValues>({
+    resolver: zodResolver(templateEditSchema),
+    defaultValues: buildDefaultValues(template),
+  });
 
-  function handleLayoutChange(value: string) {
-    setForm((prev) => ({ ...prev, layout: value as PayslipLayout }));
-  }
+  useEffect(() => {
+    if (open) form.reset(buildDefaultValues(template));
+  }, [open, template, form]);
 
-  function handleAccentSelect(preset: string) {
-    setForm((prev) => ({ ...prev, accent: preset }));
-  }
-
-  function handleEmployerContribChange(checked: boolean) {
-    setForm((prev) => ({ ...prev, showEmployerContributions: checked }));
-  }
-
-  function handleYtdChange(checked: boolean) {
-    setForm((prev) => ({ ...prev, showYtd: checked }));
-  }
-
-  function handleIsDefaultChange(checked: boolean) {
-    setForm((prev) => ({ ...prev, isDefault: checked }));
-  }
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  function handleSubmit(values: TemplateEditFormValues) {
     const config: PayslipTemplateConfig = {
-      accent: form.accent,
-      showEmployerContributions: form.showEmployerContributions,
-      showYtd: form.showYtd,
+      accent: values.accent,
+      showEmployerContributions: values.showEmployerContributions,
+      showYtd: values.showYtd,
     };
 
     if (isEdit && template) {
       updateMutation.mutate(
         {
           templateId: template.id,
-          name: form.name,
-          layout: form.layout,
+          name: values.name,
+          layout: values.layout,
           config,
-          isDefault: form.isDefault,
+          isDefault: values.isDefault,
         },
         {
           onSuccess: () => {
@@ -139,10 +126,10 @@ export function TemplateEditSheet({ open, onOpenChange, template }: TemplateEdit
     } else {
       createMutation.mutate(
         {
-          name: form.name,
-          layout: form.layout,
+          name: values.name,
+          layout: values.layout,
           config,
-          isDefault: form.isDefault,
+          isDefault: values.isDefault,
         },
         {
           onSuccess: () => {
@@ -164,99 +151,152 @@ export function TemplateEditSheet({ open, onOpenChange, template }: TemplateEdit
             {isEdit ? "Update payslip template settings." : "Add a new payslip template."}
           </SheetDescription>
         </SheetHeader>
-        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-          <SheetBody className="px-6 py-4 space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="template-name">Name</Label>
-              <Input
-                id="template-name"
-                value={form.name}
-                onChange={handleNameChange}
-                placeholder="e.g. Standard Monthly"
-                required
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <SheetBody className="px-6 py-4 space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Name <span className="text-destructive">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        id="template-name"
+                        placeholder="e.g. Standard Monthly"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="template-layout">Layout</Label>
-              <Select value={form.layout} onValueChange={handleLayoutChange}>
-                <SelectTrigger id="template-layout">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {LAYOUT_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label>Accent Color</Label>
-              <div className="flex items-center gap-2 flex-wrap">
-                {ACCENT_PRESETS.map((preset) => (
-                  <button
-                    key={preset}
-                    type="button"
-                    role="radio"
-                    aria-checked={form.accent === preset}
-                    aria-label={`Color ${preset}`}
-                    onClick={() => handleAccentSelect(preset)}
-                    className={cn(
-                      "h-6 w-6 rounded-full border-2 transition-all",
-                      form.accent === preset
-                        ? "border-foreground ring-2 ring-foreground ring-offset-2"
-                        : "border-transparent hover:border-muted-foreground",
-                    )}
-                    style={{ backgroundColor: preset }}
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <Label htmlFor="show-employer">Show Employer Contributions</Label>
-              <Switch
-                id="show-employer"
-                checked={form.showEmployerContributions}
-                onCheckedChange={handleEmployerContribChange}
+              <FormField
+                control={form.control}
+                name="layout"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Layout</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger id="template-layout">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {LAYOUT_OPTIONS.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
 
-            <div className="flex items-center justify-between">
-              <Label htmlFor="show-ytd">Show YTD</Label>
-              <Switch
-                id="show-ytd"
-                checked={form.showYtd}
-                onCheckedChange={handleYtdChange}
+              <FormField
+                control={form.control}
+                name="accent"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Accent Color</FormLabel>
+                    <FormControl>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {ACCENT_PRESETS.map((preset) => (
+                          <button
+                            key={preset}
+                            type="button"
+                            role="radio"
+                            aria-checked={field.value === preset}
+                            aria-label={`Color ${preset}`}
+                            onClick={() => field.onChange(preset)}
+                            className={cn(
+                              "h-6 w-6 rounded-full border-2 transition-all",
+                              field.value === preset
+                                ? "border-foreground ring-2 ring-foreground ring-offset-2"
+                                : "border-transparent hover:border-muted-foreground",
+                            )}
+                            style={{ backgroundColor: preset }}
+                          />
+                        ))}
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
 
-            <div className="flex items-center justify-between">
-              <Label htmlFor="is-default">Set as Default</Label>
-              <Switch
-                id="is-default"
-                checked={form.isDefault}
-                onCheckedChange={handleIsDefaultChange}
+              <FormField
+                control={form.control}
+                name="showEmployerContributions"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between">
+                    <FormLabel>Show Employer Contributions</FormLabel>
+                    <FormControl>
+                      <Switch
+                        id="show-employer"
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
               />
-            </div>
-          </SheetBody>
-          <SheetFooter className="flex justify-end gap-2 px-6 py-4 border-t">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isPending}
-            >
-              Cancel
-            </Button>
-            <LoadingButton type="submit" isPending={isPending} disabled={!form.name.trim()}>
-              {isEdit ? "Save" : "Create"}
-            </LoadingButton>
-          </SheetFooter>
-        </form>
+
+              <FormField
+                control={form.control}
+                name="showYtd"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between">
+                    <FormLabel>Show YTD</FormLabel>
+                    <FormControl>
+                      <Switch
+                        id="show-ytd"
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="isDefault"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between">
+                    <FormLabel>Set as Default</FormLabel>
+                    <FormControl>
+                      <Switch
+                        id="is-default"
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </SheetBody>
+            <SheetFooter className="flex justify-end gap-2 px-6 py-4 border-t">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={isPending}
+              >
+                Cancel
+              </Button>
+              <LoadingButton type="submit" isPending={isPending} loadingText={isEdit ? "Saving…" : "Creating…"}>
+                {isEdit ? "Save" : "Create"}
+              </LoadingButton>
+            </SheetFooter>
+          </form>
+        </Form>
       </SheetContent>
     </Sheet>
   );

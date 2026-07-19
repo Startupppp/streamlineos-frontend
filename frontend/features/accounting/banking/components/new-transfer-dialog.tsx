@@ -104,7 +104,7 @@ export function NewTransferDialog({ open, onOpenChange, accounts }: Props) {
             name="fromBankAccountId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>From Account</FormLabel>
+                <FormLabel>From Account <span className="text-destructive">*</span></FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
@@ -129,7 +129,7 @@ export function NewTransferDialog({ open, onOpenChange, accounts }: Props) {
             name="toBankAccountId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>To Account</FormLabel>
+                <FormLabel>To Account <span className="text-destructive">*</span></FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
@@ -155,7 +155,7 @@ export function NewTransferDialog({ open, onOpenChange, accounts }: Props) {
               name="amount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Amount</FormLabel>
+                  <FormLabel>Amount <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <Input placeholder="0.00" {...field} />
                   </FormControl>
@@ -168,7 +168,7 @@ export function NewTransferDialog({ open, onOpenChange, accounts }: Props) {
               name="transferDate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Date</FormLabel>
+                  <FormLabel>Date <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <Input type="date" {...field} />
                   </FormControl>

@@ -431,7 +431,7 @@ export function InterviewFormSheet({
               <SelectTrigger className="">
                 <SelectValue placeholder="Select position..." />
               </SelectTrigger>
-              <SelectContent className="w-[var(--radix-select-trigger-width)] max-h-[200px] overflow-y-auto">
+              <SelectContent className="min-w-[var(--radix-select-trigger-width)] max-h-[200px] overflow-y-auto">
                 {jobPostings?.map((jp: { id: number; title: string }) => (
                   <SelectItem key={jp.id} value={String(jp.id)}>
                     {jp.title}
@@ -466,7 +466,7 @@ export function InterviewFormSheet({
                     <SelectTrigger className="">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                    <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                       {INTERVIEW_FORMATS.map((f) => (
                         <SelectItem key={f.value} value={f.value}>
                           {f.label}

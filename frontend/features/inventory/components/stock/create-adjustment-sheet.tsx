@@ -1,17 +1,24 @@
 "use client";
 
 import { useCallback } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetBody } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { useCreateAdjustment, type AdjustmentReason } from "@/hooks/api/inventory/stock";
 import { useWarehouses, useLocations } from "@/hooks/api/inventory/warehouses";
 import { useProductVariants } from "@/hooks/api/inventory/products";
@@ -46,13 +53,12 @@ export function CreateAdjustmentSheet({ open, onOpenChange }: CreateAdjustmentSh
   const { data: variants = [], isLoading: vLoading } = useProductVariants({ activeOnly: true });
   const createMutation = useCreateAdjustment();
 
-  const {
-    control, handleSubmit, watch, reset, resetField, register,
-    formState: { errors },
-  } = useForm<FormValues>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { adjustmentType: "IN", reason: "RECOUNT" },
   });
+
+  const { control, handleSubmit, watch, reset, resetField } = form;
 
   const warehouseId = watch("warehouseId");
   const { data: locations = [], isLoading: lLoading } = useLocations(warehouseId ?? 0);
@@ -101,161 +107,174 @@ export function CreateAdjustmentSheet({ open, onOpenChange }: CreateAdjustmentSh
           <SheetDescription>Manually adjust stock quantities to correct discrepancies.</SheetDescription>
         </SheetHeader>
 
-        <SheetBody className="space-y-4 px-6 py-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="adj-warehouse" className="text-[13px] font-medium">
-              Warehouse <span className="text-destructive">*</span>
-            </Label>
-            <Controller
+        <Form {...form}>
+          <SheetBody className="space-y-4 px-6 py-4">
+            <FormField
               control={control}
               name="warehouseId"
               render={({ field }) => (
-                <Select
-                  value={field.value ? String(field.value) : ""}
-                  disabled={wLoading}
-                  onValueChange={(v) => { field.onChange(Number(v)); resetField("locationId"); }}
-                >
-                  <SelectTrigger id="adj-warehouse">
-                    <SelectValue placeholder={wLoading ? "Loading…" : "Select warehouse"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {warehouses.map((wh) => (
-                      <SelectItem key={wh.id} value={String(wh.id)}>{wh.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormItem>
+                  <FormLabel>Warehouse <span className="text-destructive">*</span></FormLabel>
+                  <Select
+                    value={field.value ? String(field.value) : ""}
+                    disabled={wLoading}
+                    onValueChange={(v) => { field.onChange(Number(v)); resetField("locationId"); }}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder={wLoading ? "Loading…" : "Select warehouse"} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {warehouses.map((wh) => (
+                        <SelectItem key={wh.id} value={String(wh.id)}>{wh.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
               )}
             />
-            {errors.warehouseId && <p className="text-xs text-destructive">{errors.warehouseId.message}</p>}
-          </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="adj-location" className="text-[13px] font-medium">
-              Location <span className="text-destructive">*</span>
-            </Label>
-            <Controller
+            <FormField
               control={control}
               name="locationId"
               render={({ field }) => (
-                <Select
-                  value={field.value ? String(field.value) : ""}
-                  disabled={!warehouseId || lLoading}
-                  onValueChange={(v) => field.onChange(Number(v))}
-                >
-                  <SelectTrigger id="adj-location">
-                    <SelectValue
-                      placeholder={
-                        !warehouseId ? "Select warehouse first" : lLoading ? "Loading…" : "Select location"
-                      }
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {locations.map((loc) => (
-                      <SelectItem key={loc.id} value={String(loc.id)}>
-                        {loc.name} ({loc.code})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormItem>
+                  <FormLabel>Location <span className="text-destructive">*</span></FormLabel>
+                  <Select
+                    value={field.value ? String(field.value) : ""}
+                    disabled={!warehouseId || lLoading}
+                    onValueChange={(v) => field.onChange(Number(v))}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={
+                            !warehouseId ? "Select warehouse first" : lLoading ? "Loading…" : "Select location"
+                          }
+                        />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {locations.map((loc) => (
+                        <SelectItem key={loc.id} value={String(loc.id)}>
+                          {loc.name} ({loc.code})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
               )}
             />
-            {errors.locationId && <p className="text-xs text-destructive">{errors.locationId.message}</p>}
-          </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="adj-variant" className="text-[13px] font-medium">
-              Product Variant <span className="text-destructive">*</span>
-            </Label>
-            <Controller
+            <FormField
               control={control}
               name="productVariantId"
               render={({ field }) => (
-                <Select
-                  value={field.value ? String(field.value) : ""}
-                  disabled={vLoading}
-                  onValueChange={(v) => field.onChange(Number(v))}
-                >
-                  <SelectTrigger id="adj-variant">
-                    <SelectValue placeholder={vLoading ? "Loading…" : "Select product variant"} />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-72">
-                    {variants.map((v) => (
-                      <SelectItem key={v.id} value={String(v.id)}>
-                        {v.productName} — {v.name} ({v.sku})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormItem>
+                  <FormLabel>Product Variant <span className="text-destructive">*</span></FormLabel>
+                  <Select
+                    value={field.value ? String(field.value) : ""}
+                    disabled={vLoading}
+                    onValueChange={(v) => field.onChange(Number(v))}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder={vLoading ? "Loading…" : "Select product variant"} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="max-h-72">
+                      {variants.map((v) => (
+                        <SelectItem key={v.id} value={String(v.id)}>
+                          {v.productName} — {v.name} ({v.sku})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
               )}
             />
-            {errors.productVariantId && <p className="text-xs text-destructive">{errors.productVariantId.message}</p>}
-          </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="adj-type" className="text-[13px] font-medium">
-              Direction <span className="text-destructive">*</span>
-            </Label>
-            <Controller
+            <FormField
               control={control}
               name="adjustmentType"
               render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger id="adj-type"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="IN">In (Add stock)</SelectItem>
-                    <SelectItem value="OUT">Out (Remove stock)</SelectItem>
-                  </SelectContent>
-                </Select>
+                <FormItem>
+                  <FormLabel>Direction <span className="text-destructive">*</span></FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="IN">In (Add stock)</SelectItem>
+                      <SelectItem value="OUT">Out (Remove stock)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
               )}
             />
-          </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="adj-qty" className="text-[13px] font-medium">
-              Quantity <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              {...register("quantity", { valueAsNumber: true })}
-              id="adj-qty"
-              type="number"
-              min="0.0001"
-              step="0.0001"
-              placeholder="0"
+            <FormField
+              control={control}
+              name="quantity"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Quantity <span className="text-destructive">*</span></FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min="0.0001"
+                      step="0.0001"
+                      placeholder="0"
+                      value={field.value ?? ""}
+                      onChange={(e) => field.onChange(Number(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-            {errors.quantity && <p className="text-xs text-destructive">{errors.quantity.message}</p>}
-          </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="adj-reason" className="text-[13px] font-medium">
-              Reason <span className="text-destructive">*</span>
-            </Label>
-            <Controller
+            <FormField
               control={control}
               name="reason"
               render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger id="adj-reason"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {REASONS.map((r) => (
-                      <SelectItem key={r} value={r}>{REASON_LABELS[r]}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormItem>
+                  <FormLabel>Reason <span className="text-destructive">*</span></FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {REASONS.map((r) => (
+                        <SelectItem key={r} value={r}>{REASON_LABELS[r]}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
               )}
             />
-          </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="adj-notes" className="text-[13px] font-medium">Notes</Label>
-            <Textarea
-              {...register("notes")}
-              id="adj-notes"
-              placeholder="Additional details…"
-              rows={3}
+            <FormField
+              control={control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Notes</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Additional details…" rows={3} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-            {errors.notes && <p className="text-xs text-destructive">{errors.notes.message}</p>}
-          </div>
-        </SheetBody>
+          </SheetBody>
+        </Form>
 
         <SheetFooter className="gap-2 border-t border-border bg-muted/30 px-6 py-4">
           <Button variant="outline" className="flex-1" onClick={handleClose} disabled={createMutation.isPending}>

@@ -251,7 +251,7 @@ export function InventoryDashboardClient() {
       subtitle="Track stock levels, movements, and reorder alerts."
       actions={<AddProductLink />}
     >
-      <div className="space-y-6">
+      <div className="space-y-4">
         {isKpiLoading ? (
           <KpiSkeletons />
         ) : kpiError ? (

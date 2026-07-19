@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   FormControl,
   FormField,
@@ -90,7 +91,7 @@ export function CallLogDialog({
             toast.success("Call logged");
             onOpenChange(false);
           },
-          onError: () => toast.error("Failed to log call"),
+          onError: (err) => toast.error(getErrorMessage(err)),
         }
       );
     },

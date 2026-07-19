@@ -186,10 +186,10 @@ export function StepToggles({ draft, updateDraft, goNext, goBack }: StepTogglesP
             <PackStatutorySection pack={packPreview.data.statutoryPack} />
           )}
           {!packPreview.isPending && !packPreview.data?.statutoryPack && !packPreview.isError && (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {TOGGLE_GROUPS.map((group, gIdx) => (
                 <div key={group.id}>
-                  {gIdx > 0 && <Separator className="mb-6" />}
+                  {gIdx > 0 && <Separator className="mb-4" />}
                   <div className="mb-3">
                     <p className="text-sm font-semibold text-foreground">{group.label}</p>
                     <p className="text-xs text-muted-foreground">{group.description}</p>
@@ -215,10 +215,10 @@ export function StepToggles({ draft, updateDraft, goNext, goBack }: StepTogglesP
           )}
         </>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {TOGGLE_GROUPS.map((group, gIdx) => (
             <div key={group.id}>
-              {gIdx > 0 && <Separator className="mb-6" />}
+              {gIdx > 0 && <Separator className="mb-4" />}
               <div className="mb-3">
                 <p className="text-sm font-semibold text-foreground">{group.label}</p>
                 <p className="text-xs text-muted-foreground">{group.description}</p>

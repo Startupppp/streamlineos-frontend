@@ -280,7 +280,7 @@ export function CandidateCard({
           <SelectTrigger className="flex-1 text-xs bg-muted/40 border-border/50">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="w-[var(--radix-select-trigger-width)]">
+          <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
             {STAGE_CONFIG.map((s) => (
               <SelectItem key={s.value} value={s.value}>
                 <span className="flex items-center gap-1.5">

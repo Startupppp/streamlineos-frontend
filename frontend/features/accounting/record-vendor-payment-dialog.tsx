@@ -128,7 +128,7 @@ export function RecordVendorPaymentDialog({
             name="amount"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Amount</FormLabel>
+                <FormLabel>Amount <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
                   <Input
                     type="number"
@@ -147,7 +147,7 @@ export function RecordVendorPaymentDialog({
             name="paymentDate"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Payment date</FormLabel>
+                <FormLabel>Payment date <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
                   <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
                 </FormControl>
@@ -160,7 +160,7 @@ export function RecordVendorPaymentDialog({
             name="paymentMethod"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Method</FormLabel>
+                <FormLabel>Method <span className="text-destructive">*</span></FormLabel>
                 <Select value={field.value} onValueChange={field.onChange}>
                   <FormControl>
                     <SelectTrigger>

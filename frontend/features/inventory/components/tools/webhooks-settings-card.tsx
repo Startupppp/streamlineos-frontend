@@ -488,7 +488,7 @@ export function WebhooksSettingsCard() {
                   name="url"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Endpoint URL</FormLabel>
+                      <FormLabel>Endpoint URL <span className="text-destructive">*</span></FormLabel>
                       <FormControl>
                         <Input
                           placeholder="https://your-server.com/webhook"
@@ -504,7 +504,7 @@ export function WebhooksSettingsCard() {
                   name="events"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Events</FormLabel>
+                      <FormLabel>Events <span className="text-destructive">*</span></FormLabel>
                       <div className="space-y-2">
                         {ALL_WEBHOOK_EVENTS.map((evt) => (
                           <EventCheckbox

@@ -60,49 +60,49 @@ export default function LiveSessionHostPage() {
             {isLoading || !session ? (
               <Skeleton className="h-64 w-full" />
             ) : (
-              <div className="flex flex-col gap-4">
-              <Card>
-                <CardContent className="flex flex-wrap items-center gap-4 pt-6">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Join code</p>
-                    <p className="font-mono text-2xl font-bold tracking-widest">{session.sessionCode}</p>
-                  </div>
-                  <AnimatedIconButton icon={CopyIcon} iconSize={14} iconClassName="mr-1.5" variant="outline" size="sm" onClick={handleCopyLink}>
-                    Copy join link
-                  </AnimatedIconButton>
-                  <div className="ml-auto text-sm text-muted-foreground">
-                    {results?.participantCount ?? 0} joined
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="flex flex-col gap-3">
+                <Card>
+                  <CardContent className="flex flex-wrap items-center gap-3 pt-4">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Join code</p>
+                      <p className="font-mono text-2xl font-bold tracking-widest">{session.sessionCode}</p>
+                    </div>
+                    <AnimatedIconButton icon={CopyIcon} iconSize={14} iconClassName="mr-1.5" variant="outline" size="sm" onClick={handleCopyLink}>
+                      Copy join link
+                    </AnimatedIconButton>
+                    <div className="ml-auto text-sm text-muted-foreground">
+                      {results?.participantCount ?? 0} joined
+                    </div>
+                  </CardContent>
+                </Card>
 
-              <Card>
-                <CardContent className="space-y-4 pt-6">
-                  <div className="flex flex-wrap gap-2">
-                    {session.status !== "active" && session.status !== "ended" && (
-                      <AnimatedIconButton icon={PlayIcon} iconSize={14} iconClassName="mr-1.5" size="sm" onClick={() => run(start, "start")} disabled={start.isPending}>
-                        Start
-                      </AnimatedIconButton>
-                    )}
-                    {session.status === "active" && (
-                      <>
-                        <Button size="sm" variant="outline" onClick={() => run(next, "advance")} disabled={next.isPending}>
-                          <SkipForward className="h-3.5 w-3.5" /> Next question
-                        </Button>
-                        <AnimatedIconButton icon={EyeIcon} iconSize={14} iconClassName="mr-1.5" size="sm" variant="outline" onClick={() => run(reveal, "reveal")} disabled={reveal.isPending}>
-                          Reveal
+                <Card>
+                  <CardContent className="flex flex-col gap-3 pt-4">
+                    <div className="flex flex-wrap gap-2">
+                      {session.status !== "active" && session.status !== "ended" && (
+                        <AnimatedIconButton icon={PlayIcon} iconSize={14} iconClassName="mr-1.5" size="sm" onClick={() => run(start, "start")} disabled={start.isPending}>
+                          Start
                         </AnimatedIconButton>
-                        <Button size="sm" variant="destructive" onClick={() => run(end, "end")} disabled={end.isPending}>
-                          <Square className="h-3.5 w-3.5" /> End session
-                        </Button>
-                      </>
-                    )}
-                  </div>
+                      )}
+                      {session.status === "active" && (
+                        <>
+                          <Button size="sm" variant="outline" onClick={() => run(next, "advance")} disabled={next.isPending}>
+                            <SkipForward className="h-3.5 w-3.5" /> Next question
+                          </Button>
+                          <AnimatedIconButton icon={EyeIcon} iconSize={14} iconClassName="mr-1.5" size="sm" variant="outline" onClick={() => run(reveal, "reveal")} disabled={reveal.isPending}>
+                            Reveal
+                          </AnimatedIconButton>
+                          <Button size="sm" variant="destructive" onClick={() => run(end, "end")} disabled={end.isPending}>
+                            <Square className="h-3.5 w-3.5" /> End session
+                          </Button>
+                        </>
+                      )}
+                    </div>
 
-                  {results && <LiveResultBars results={results} />}
-                </CardContent>
-              </Card>
-            </div>
+                    {results && <LiveResultBars results={results} />}
+                  </CardContent>
+                </Card>
+              </div>
             )}
           </div>
         </PageWrapper>

@@ -34,7 +34,6 @@ import { cn } from "@/lib/utils";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import {
   PmPageShell,
-  PmPanel,
   PmSection,
   PM_FILL_PANEL,
 } from "@/features/projects/shared/pm-chrome";
@@ -308,9 +307,8 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
               onRetry={handleRetry}
             />
           ) : (
-            <PmPanel className={PM_FILL_PANEL}>
-              <DataTable
-                className="min-h-0 flex-1 border-0 bg-transparent shadow-none"
+            <DataTable
+                className={PM_FILL_PANEL}
                 data={releases ?? []}
                 columns={columns}
                 getRowKey={(r) => r.id}
@@ -326,7 +324,6 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
                   />
                 }
               />
-            </PmPanel>
           )}
         </PmSection>
 

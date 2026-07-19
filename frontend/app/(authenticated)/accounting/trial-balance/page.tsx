@@ -85,7 +85,7 @@ export default function TrialBalancePage() {
       title="Trial Balance"
       subtitle="Ledger balances as of a chosen date."
       filters={
-        <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+        <div className={FILTER_TOOLBAR_ROW}>
           <div className="flex flex-col gap-1">
             <label
               htmlFor="tb-as-of"
@@ -98,7 +98,7 @@ export default function TrialBalancePage() {
               value={asOf ?? ""}
               onChange={handleAsOfChange}
               placeholder="Pick a date"
-              className="w-full sm:w-[160px]"
+              className="w-[160px]"
             />
           </div>
           {tb ? (

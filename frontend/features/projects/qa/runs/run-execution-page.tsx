@@ -1,6 +1,9 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { useTestRunDetail, useUpdateTestRun, useCreateBugFromResult } from "@/hooks/api/projects/qa";
 import { useCan } from "@/hooks/api/access";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -14,8 +17,15 @@ import { Badge } from "@/components/ui/badge";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose,
 } from "@/components/ui/sheet";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CircleCheckIcon } from "@animateicons/react/lucide";
@@ -33,6 +43,13 @@ import {
 import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 import { ResultRow } from "./result-row";
 import type { TestRunStatus, TestRunCounts } from "@/types/projects";
+
+const createBugFromResultSchema = z.object({
+  bugTitle: z.string().min(1, "Title is required"),
+  bugSeverity: z.string(),
+});
+
+type CreateBugFromResultFormValues = z.infer<typeof createBugFromResultSchema>;
 
 const STATUS_STYLES: Record<TestRunStatus, string> = {
   not_started: "text-muted-foreground border-border",
@@ -100,8 +117,11 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
 
   const [bugSheetOpen, setBugSheetOpen] = useState(false);
   const [bugResultId, setBugResultId] = useState<number | null>(null);
-  const [bugTitle, setBugTitle] = useState("");
-  const [bugSeverity, setBugSeverity] = useState("major");
+
+  const bugForm = useForm<CreateBugFromResultFormValues>({
+    resolver: zodResolver(createBugFromResultSchema),
+    defaultValues: { bugTitle: "", bugSeverity: "major" },
+  });
 
   const handleCompleteRun = useCallback(() => {
     if (!run) return;
@@ -117,15 +137,18 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
   const handleOpenCreateBug = useCallback((resultId: number) => {
     const result = run?.results.find((r) => r.id === resultId);
     const tc = result?.testCase;
-    setBugTitle(tc ? `Bug in TC-${tc.caseNumber}: ${tc.title}` : "");
+    bugForm.reset({
+      bugTitle: tc ? `Bug in TC-${tc.caseNumber}: ${tc.title}` : "",
+      bugSeverity: "major",
+    });
     setBugResultId(resultId);
     setBugSheetOpen(true);
-  }, [run]);
+  }, [run, bugForm]);
 
-  const handleSubmitBug = useCallback(() => {
+  const handleSubmitBug = useCallback((values: CreateBugFromResultFormValues) => {
     if (!bugResultId) return;
     createBugFromResult.mutate(
-      { projectId, runId, resultId: bugResultId, title: bugTitle || undefined, severity: bugSeverity },
+      { projectId, runId, resultId: bugResultId, title: values.bugTitle || undefined, severity: values.bugSeverity },
       {
         onSuccess: () => {
           toast.success("Bug created");
@@ -135,11 +158,7 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
         onError: (error) => toast.error(getErrorMessage(error)),
       },
     );
-  }, [bugResultId, bugTitle, bugSeverity, createBugFromResult, projectId, runId]);
-
-  const handleBugTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setBugTitle(e.target.value);
-  }, []);
+  }, [bugResultId, createBugFromResult, projectId, runId]);
 
   const handleRetry = useCallback(() => {
     void refetch();
@@ -226,47 +245,63 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
           <SheetHeader className="shrink-0 border-b px-5 py-4">
             <SheetTitle>Create Bug from Result</SheetTitle>
           </SheetHeader>
-          <ScrollArea className="flex-1">
-            <div className="space-y-4 px-5 py-4">
-              <div className="space-y-1.5">
-                <Label className="text-[11px]">Title *</Label>
-                <Input
-                  value={bugTitle}
-                  onChange={handleBugTitleChange}
+          <Form {...bugForm}>
+            <form onSubmit={bugForm.handleSubmit(handleSubmitBug)} className="flex min-h-0 flex-1 flex-col">
+              <ScrollArea className="flex-1">
+                <div className="space-y-4 px-5 py-4">
+                  <FormField
+                    control={bugForm.control}
+                    name="bugTitle"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[11px]">Title <span className="text-destructive">*</span></FormLabel>
+                        <FormControl>
+                          <Input {...field} className="text-[11px]" placeholder="Bug title" />
+                        </FormControl>
+                        <FormMessage className="text-[10px]" />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={bugForm.control}
+                    name="bugSeverity"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[11px]">Severity</FormLabel>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <FormControl>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="blocker">Blocker</SelectItem>
+                            <SelectItem value="critical">Critical</SelectItem>
+                            <SelectItem value="major">Major</SelectItem>
+                            <SelectItem value="minor">Minor</SelectItem>
+                            <SelectItem value="trivial">Trivial</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage className="text-[10px]" />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </ScrollArea>
+              <SheetFooter className="flex shrink-0 gap-2 border-t px-5 py-3">
+                <SheetClose asChild>
+                  <Button type="button" variant="outline" size="sm" className="text-[11px]">Cancel</Button>
+                </SheetClose>
+                <LoadingButton
+                  type="submit"
+                  size="sm"
                   className="text-[11px]"
-                  placeholder="Bug title"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[11px]">Severity</Label>
-                <Select value={bugSeverity} onValueChange={setBugSeverity}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="blocker">Blocker</SelectItem>
-                    <SelectItem value="critical">Critical</SelectItem>
-                    <SelectItem value="major">Major</SelectItem>
-                    <SelectItem value="minor">Minor</SelectItem>
-                    <SelectItem value="trivial">Trivial</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </ScrollArea>
-          <SheetFooter className="flex shrink-0 gap-2 border-t px-5 py-3">
-            <SheetClose asChild>
-              <Button variant="outline" size="sm" className="text-[11px]">Cancel</Button>
-            </SheetClose>
-            <LoadingButton
-              size="sm"
-              className="text-[11px]"
-              onClick={handleSubmitBug}
-              disabled={!bugTitle.trim()}
-              isPending={createBugFromResult.isPending}
-              loadingText="Creating…"
-            >
-              Create Bug
-            </LoadingButton>
-          </SheetFooter>
+                  isPending={createBugFromResult.isPending}
+                  loadingText="Creating…"
+                >
+                  Create Bug
+                </LoadingButton>
+              </SheetFooter>
+            </form>
+          </Form>
         </SheetContent>
       </Sheet>
     </PageWrapper>

@@ -137,7 +137,7 @@ export default function QuestionBankPage() {
             <SelectTrigger className={cn("w-[150px]", FILTER_SELECT_TRIGGER)}>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="w-[var(--radix-select-trigger-width)]">
+            <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
               <SelectItem value="ALL">All Categories</SelectItem>
               {CATEGORIES.map((c) => (
                 <SelectItem key={c} value={c}>
@@ -150,7 +150,7 @@ export default function QuestionBankPage() {
             <SelectTrigger className={cn("w-[120px]", FILTER_SELECT_TRIGGER)}>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="w-[var(--radix-select-trigger-width)]">
+            <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
               <SelectItem value="ALL">All Levels</SelectItem>
               {DIFFICULTIES.map((d) => (
                 <SelectItem key={d} value={d}>

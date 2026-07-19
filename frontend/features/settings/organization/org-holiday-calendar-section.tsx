@@ -1,16 +1,23 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CalendarDays } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -18,7 +25,8 @@ import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
-import { apiClient, getApiError } from "@/lib/api-client";
+import { apiClient } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { format, parseISO } from "date-fns";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
@@ -54,7 +62,7 @@ function useCreateHoliday() {
       qc.invalidateQueries({ queryKey: ["org", "holidays"] });
       toast.success("Holiday added");
     },
-    onError: (err) => toast.error(getApiError(err)),
+    onError: (err) => toast.error(getErrorMessage(err)),
   });
 }
 
@@ -66,7 +74,7 @@ function useDeleteHoliday() {
       qc.invalidateQueries({ queryKey: ["org", "holidays"] });
       toast.success("Holiday removed");
     },
-    onError: (err) => toast.error(getApiError(err)),
+    onError: (err) => toast.error(getErrorMessage(err)),
   });
 }
 
@@ -134,38 +142,61 @@ export function OrgHolidayCalendarSection({ canEdit }: OrgHolidayCalendarSection
       </CardHeader>
       <CardContent className="pb-5 space-y-3">
         {showAdd && (
-          <form onSubmit={form.handleSubmit(handleAdd)} className="border rounded-lg p-3 space-y-3 bg-muted/30">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label className="text-sm font-medium">Holiday name *</Label>
-                <Input {...form.register("name")} placeholder="Republic Day" />
-                {form.formState.errors.name && <p className="text-[11px] text-destructive">{form.formState.errors.name.message}</p>}
-              </div>
-              <div className="space-y-1">
-                <Label className="text-sm font-medium">Date *</Label>
-                <Controller
-                  name="date"
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleAdd)} className="border rounded-lg p-3 space-y-3 bg-muted/30">
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
                   control={form.control}
+                  name="name"
                   render={({ field }) => (
-                    <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" />
+                    <FormItem>
+                      <FormLabel>Holiday name <span className="text-destructive">*</span></FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Republic Day" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
                 />
-                {form.formState.errors.date && <p className="text-[11px] text-destructive">{form.formState.errors.date.message}</p>}
+                <FormField
+                  control={form.control}
+                  name="date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Date <span className="text-destructive">*</span></FormLabel>
+                      <FormControl>
+                        <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
-            </div>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <Checkbox {...form.register("recurring")} id="recurring" />
-              <span className="text-sm">Repeat annually</span>
-            </label>
-            <div className="flex gap-2">
-              <LoadingButton type="submit" size="sm" isPending={createMutation.isPending} className="gap-1.5 h-8" loadingText="Saving…">
-                Save
-              </LoadingButton>
-              <Button type="button" variant="ghost" size="sm" className="h-8" onClick={handleCancelAdd}>
-                Cancel
-              </Button>
-            </div>
-          </form>
+              <FormField
+                control={form.control}
+                name="recurring"
+                render={({ field }) => (
+                  <FormItem>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <FormControl>
+                        <Checkbox checked={field.value ?? false} onCheckedChange={field.onChange} id="recurring" />
+                      </FormControl>
+                      <span className="text-sm">Repeat annually</span>
+                    </label>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex gap-2">
+                <LoadingButton type="submit" size="sm" isPending={createMutation.isPending} className="gap-1.5 h-8" loadingText="Saving…">
+                  Save
+                </LoadingButton>
+                <Button type="button" variant="ghost" size="sm" className="h-8" onClick={handleCancelAdd}>
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </Form>
         )}
 
         {isLoading ? (

@@ -182,7 +182,7 @@ export function RuleSheet({ open, onOpenChange, editing, entityType, rulesCount,
                 name="field"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs">Field</FormLabel>
+                    <FormLabel className="text-xs">Field <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <>
                         <Input {...field} list="crm-fields-datalist" placeholder="e.g. email" className="text-xs" />

@@ -206,7 +206,7 @@ export function RecordPaymentDialog({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label htmlFor="amount" className="text-xs">
-                Amount
+                Amount <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="amount"
@@ -224,17 +224,20 @@ export function RecordPaymentDialog({
             </div>
 
             <div className="space-y-1">
-              <Label className="text-xs">Payment Date</Label>
+              <Label className="text-xs">Payment Date <span className="text-destructive">*</span></Label>
               <DatePicker
                 value={form.watch("paymentDate")}
                 onChange={handleDateChange}
                 className="text-sm w-full"
               />
+              {form.formState.errors.paymentDate && (
+                <p className="text-[10px] text-destructive">{form.formState.errors.paymentDate.message}</p>
+              )}
             </div>
           </div>
 
           <div className="space-y-1">
-            <Label className="text-xs">Payment Method</Label>
+            <Label className="text-xs">Payment Method <span className="text-destructive">*</span></Label>
             <Select
               value={form.watch("paymentMethod")}
               onValueChange={handleMethodChange}
@@ -250,6 +253,9 @@ export function RecordPaymentDialog({
                 ))}
               </SelectContent>
             </Select>
+            {form.formState.errors.paymentMethod && (
+              <p className="text-[10px] text-destructive">{form.formState.errors.paymentMethod.message}</p>
+            )}
           </div>
 
           <div className="space-y-1">

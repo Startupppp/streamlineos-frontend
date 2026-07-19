@@ -114,7 +114,7 @@ export function CreateTicketDialog({ open, onClose }: Props) {
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Title</FormLabel>
+                  <FormLabel>Title <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <Input
                       {...field}

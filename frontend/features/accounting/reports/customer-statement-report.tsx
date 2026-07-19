@@ -13,6 +13,7 @@ import { useCustomersOutstanding } from "@/hooks/api/accounting";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { downloadCsv } from "@/features/accounting/shared";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { formatCurrencyFull } from "@/lib/format-utils";
 
 type CustomerStatementRow =
@@ -198,24 +199,19 @@ export function CustomerStatementReport() {
       subtitle="Chronological AR activity for a customer with running balance."
       onExport={clientId ? handleExport : undefined}
       filters={
-        <div className="flex min-w-0 flex-nowrap items-center gap-3 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-          <div className="flex flex-col gap-1">
-            <label htmlFor="cs-client" className="text-[11px] font-medium text-muted-foreground leading-none">
-              Customer
-            </label>
-            <Select value={clientId ? String(clientId) : ""} onValueChange={handleClientChange}>
-              <SelectTrigger id="cs-client" className="w-[200px] text-sm">
-                <SelectValue placeholder="Select customer…" />
-              </SelectTrigger>
-              <SelectContent>
-                {(customersQuery.data?.items ?? []).map((c) => (
-                  <SelectItem key={c.clientId} value={String(c.clientId)}>
-                    {c.clientName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        <div className={FILTER_TOOLBAR_ROW}>
+          <Select value={clientId ? String(clientId) : ""} onValueChange={handleClientChange}>
+            <SelectTrigger id="cs-client" className={`w-[200px] ${FILTER_SELECT_TRIGGER}`}>
+              <SelectValue placeholder="Select customer…" />
+            </SelectTrigger>
+            <SelectContent>
+              {(customersQuery.data?.items ?? []).map((c) => (
+                <SelectItem key={c.clientId} value={String(c.clientId)}>
+                  {c.clientName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <DateRangeFilter
             from={from}
             to={to}

@@ -6,7 +6,6 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -14,6 +13,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { usePickSalesOrder, useWarehouses, useLocations } from "@/hooks/api/inventory";
@@ -121,90 +128,88 @@ export function PickSheet({ open, onOpenChange, soId, lines }: PickSheetProps) {
 
   return (
     <AppSheet open={open} onOpenChange={handleOpenChange} title="Pick Order" footer={footer}>
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <Label>Warehouse</Label>
-            <Controller
+      <Form {...form}>
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <FormField
+              control={form.control}
               name="warehouseId"
-              control={form.control}
               render={({ field }) => (
-                <Select
-                  value={field.value ? String(field.value) : ""}
-                  onValueChange={(val) => handleWarehouseChange(val, field.onChange)}
-                >
-                  <SelectTrigger className="text-sm">
-                    <SelectValue placeholder="Select…" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {warehouses.map((w) => (
-                      <SelectItem key={w.id} value={String(w.id)}>
-                        {w.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormItem>
+                  <FormLabel>Warehouse <span className="text-destructive">*</span></FormLabel>
+                  <Select
+                    value={field.value ? String(field.value) : ""}
+                    onValueChange={(val) => handleWarehouseChange(val, field.onChange)}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="text-sm">
+                        <SelectValue placeholder="Select…" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {warehouses.map((w) => (
+                        <SelectItem key={w.id} value={String(w.id)}>
+                          {w.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
               )}
             />
-            {form.formState.errors.warehouseId && (
-              <p className="text-xs text-destructive">
-                {form.formState.errors.warehouseId.message}
-              </p>
-            )}
-          </div>
-          <div className="space-y-1.5">
-            <Label>Location</Label>
-            <Controller
+            <FormField
+              control={form.control}
               name="locationId"
-              control={form.control}
               render={({ field }) => (
-                <Select
-                  value={field.value ? String(field.value) : ""}
-                  onValueChange={(val) => field.onChange(Number(val))}
-                  disabled={!watchedWarehouseId}
-                >
-                  <SelectTrigger className="text-sm">
-                    <SelectValue placeholder="Select…" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {locations.map((loc) => (
-                      <SelectItem key={loc.id} value={String(loc.id)}>
-                        {loc.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormItem>
+                  <FormLabel>Location <span className="text-destructive">*</span></FormLabel>
+                  <Select
+                    value={field.value ? String(field.value) : ""}
+                    onValueChange={(val) => field.onChange(Number(val))}
+                    disabled={!watchedWarehouseId}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="text-sm">
+                        <SelectValue placeholder="Select…" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {locations.map((loc) => (
+                        <SelectItem key={loc.id} value={String(loc.id)}>
+                          {loc.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
               )}
             />
-            {form.formState.errors.locationId && (
-              <p className="text-xs text-destructive">
-                {form.formState.errors.locationId.message}
-              </p>
-            )}
           </div>
-        </div>
 
-        <div className="space-y-1">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Lines</p>
-          <div className="rounded border divide-y divide-border">
-            {fields.map((field, idx) => (
-              <div
-                key={field.id}
-                className="grid grid-cols-[1fr_96px] gap-2 items-center px-3 py-2"
-              >
-                <TruncatedText text={lines[idx]?.productName ?? "—"} className="text-xs" />
-                <Input
-                  type="number"
-                  min="0"
-                  step="0.001"
-                  className="text-xs text-right"
-                  {...form.register(`lines.${idx}.quantityPicked`, { valueAsNumber: true })}
-                />
-              </div>
-            ))}
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Lines</p>
+            <div className="rounded border divide-y divide-border">
+              {fields.map((field, idx) => (
+                <div
+                  key={field.id}
+                  className="grid grid-cols-[1fr_96px] gap-2 items-center px-3 py-2"
+                >
+                  <TruncatedText text={lines[idx]?.productName ?? "—"} className="text-xs" />
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.001"
+                    className="text-xs text-right"
+                    {...form.register(`lines.${idx}.quantityPicked`, { valueAsNumber: true })}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      </Form>
     </AppSheet>
   );
 }

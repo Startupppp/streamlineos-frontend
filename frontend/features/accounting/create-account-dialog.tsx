@@ -117,7 +117,7 @@ export function CreateAccountDialog({
               name="code"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Code</FormLabel>
+                  <FormLabel>Code <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <Input {...field} placeholder="e.g. 6000" />
                   </FormControl>
@@ -137,7 +137,7 @@ export function CreateAccountDialog({
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Name</FormLabel>
+                <FormLabel>Name <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
                   <Input {...field} placeholder="e.g. Office Supplies" />
                 </FormControl>

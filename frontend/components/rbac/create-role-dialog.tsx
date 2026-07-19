@@ -15,7 +15,6 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -25,8 +24,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { toast } from "sonner";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateRole, useRoles, useRoleTemplates, useRolePermissionGrants } from "@/hooks/api/roles";
 
 const CLONE_NONE = "none";
@@ -69,17 +76,12 @@ export function CreateRoleDialog({
   const { data: roles } = useRoles();
   const { data: templates } = useRoleTemplates();
 
-  const {
-    register,
-    handleSubmit,
-    watch,
-    setValue,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm<FormValues>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(createRoleSchema),
     defaultValues: { name: "", slug: "", cloneFrom: CLONE_NONE },
   });
+
+  const { setValue, reset, handleSubmit, watch, formState: { isSubmitting } } = form;
 
   const cloneFrom = watch("cloneFrom");
 
@@ -104,9 +106,7 @@ export function CreateRoleDialog({
 
   const handleNameChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
-      const value = event.target.value;
-      setValue("name", value, { shouldValidate: true });
-      setValue("slug", slugify(value), { shouldValidate: false });
+      setValue("slug", slugify(event.target.value), { shouldValidate: false });
     },
     [setValue],
   );
@@ -116,9 +116,7 @@ export function CreateRoleDialog({
       setValue(
         "slug",
         event.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, ""),
-        {
-          shouldValidate: true,
-        },
+        { shouldValidate: true },
       );
     },
     [setValue],
@@ -175,7 +173,7 @@ export function CreateRoleDialog({
             onOpenChange(false);
             reset();
           },
-          onError: (error) => toast.error(getApiError(error)),
+          onError: (error) => toast.error(getErrorMessage(error)),
         },
       );
     },
@@ -192,126 +190,137 @@ export function CreateRoleDialog({
             template.
           </DialogDescription>
         </DialogHeader>
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          noValidate
-          className="space-y-4"
-        >
-          <div className="space-y-1.5">
-            <Label htmlFor="role-name" className="text-xs">
-              Role name
-            </Label>
-            <Input
-              id="role-name"
-              placeholder="e.g. Finance Manager"
-              aria-required="true"
-              aria-invalid={Boolean(errors.name)}
-              aria-describedby={errors.name ? "role-name-error" : undefined}
-              {...register("name")}
-              onChange={handleNameChange}
+        <Form {...form}>
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            noValidate
+            className="space-y-4"
+          >
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">
+                    Role name <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="e.g. Finance Manager"
+                      {...field}
+                      onChange={(e) => {
+                        field.onChange(e);
+                        handleNameChange(e);
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-            {errors.name && (
-              <p id="role-name-error" className="text-xs text-destructive">
-                {errors.name.message}
-              </p>
-            )}
-          </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="role-slug" className="text-xs">
-              Slug (auto-generated)
-            </Label>
-            <Input
-              id="role-slug"
-              placeholder="FINANCE_MANAGER"
-              className="font-mono text-xs"
-              aria-required="true"
-              aria-invalid={Boolean(errors.slug)}
-              aria-describedby={errors.slug ? "role-slug-error" : undefined}
-              {...register("slug")}
-              onChange={handleSlugChange}
+            <FormField
+              control={form.control}
+              name="slug"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">
+                    Slug (auto-generated) <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="FINANCE_MANAGER"
+                      className="font-mono text-xs"
+                      {...field}
+                      onChange={(e) => {
+                        field.onChange(e);
+                        handleSlugChange(e);
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-            {errors.slug && (
-              <p id="role-slug-error" className="text-xs text-destructive">
-                {errors.slug.message}
-              </p>
-            )}
-          </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="role-clone" className="text-xs">
-              Clone from
-            </Label>
-            <Select value={cloneFrom} onValueChange={handleCloneChange}>
-              <SelectTrigger
-                id="role-clone"
-                className="w-full"
-                aria-label="Clone permissions from"
+            <FormField
+              control={form.control}
+              name="cloneFrom"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">Clone from</FormLabel>
+                  <Select value={field.value} onValueChange={handleCloneChange}>
+                    <FormControl>
+                      <SelectTrigger className="w-full" aria-label="Clone permissions from">
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value={CLONE_NONE}>Start from scratch</SelectItem>
+                      {roles && roles.length > 0 && (
+                        <SelectGroup>
+                          <SelectLabel>Existing roles</SelectLabel>
+                          {roles.map((role) => (
+                            <SelectItem
+                              key={`role:${role.id}`}
+                              value={`role:${role.id}`}
+                            >
+                              {role.name}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      )}
+                      {templates && templates.length > 0 && (
+                        <SelectGroup>
+                          <SelectLabel>Templates</SelectLabel>
+                          {templates.map((template) => (
+                            <SelectItem
+                              key={`template:${template.id}`}
+                              value={`template:${template.id}`}
+                            >
+                              {template.name}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  {cloneFrom.startsWith("role:") && cloneGrantsQuery.isLoading ? (
+                    <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      Loading permissions…
+                    </p>
+                  ) : clonedPermissions.length > 0 ? (
+                    <p className="text-xs text-muted-foreground">
+                      {clonedPermissions.length} permission
+                      {clonedPermissions.length === 1 ? "" : "s"} will be copied. You can adjust permissions and scopes after creating.
+                    </p>
+                  ) : null}
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleClose}
+                disabled={create.isPending || isSubmitting}
               >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={CLONE_NONE}>Start from scratch</SelectItem>
-                {roles && roles.length > 0 && (
-                  <SelectGroup>
-                    <SelectLabel>Existing roles</SelectLabel>
-                    {roles.map((role) => (
-                      <SelectItem
-                        key={`role:${role.id}`}
-                        value={`role:${role.id}`}
-                      >
-                        {role.name}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                )}
-                {templates && templates.length > 0 && (
-                  <SelectGroup>
-                    <SelectLabel>Templates</SelectLabel>
-                    {templates.map((template) => (
-                      <SelectItem
-                        key={`template:${template.id}`}
-                        value={`template:${template.id}`}
-                      >
-                        {template.name}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                )}
-              </SelectContent>
-            </Select>
-            {cloneFrom.startsWith("role:") && cloneGrantsQuery.isLoading ? (
-              <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                <Loader2 className="h-3 w-3 animate-spin" />
-                Loading permissions…
-              </p>
-            ) : clonedPermissions.length > 0 ? (
-              <p className="text-xs text-muted-foreground">
-                {clonedPermissions.length} permission
-                {clonedPermissions.length === 1 ? "" : "s"} will be copied. You can adjust permissions and scopes after creating.
-              </p>
-            ) : null}
-          </div>
-
-          <div className="flex justify-end gap-2 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              disabled={create.isPending || isSubmitting}
-            >
-              Cancel
-            </Button>
-            <LoadingButton
-              type="submit"
-              isPending={create.isPending || isSubmitting}
-              loadingText="Creating…"
-              className="bg-primary hover:bg-primary/90 text-primary-foreground"
-            >
-              Create role
-            </LoadingButton>
-          </div>
-        </form>
+                Cancel
+              </Button>
+              <LoadingButton
+                type="submit"
+                isPending={create.isPending || isSubmitting}
+                loadingText="Creating…"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+              >
+                Create role
+              </LoadingButton>
+            </div>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

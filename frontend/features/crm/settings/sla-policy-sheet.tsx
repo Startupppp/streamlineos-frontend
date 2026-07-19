@@ -130,7 +130,7 @@ export function SlaPolicySheet({
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Policy Name</FormLabel>
+                    <FormLabel>Policy Name <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <Input {...field} placeholder="e.g. Hot Lead SLA" className="" />
                     </FormControl>

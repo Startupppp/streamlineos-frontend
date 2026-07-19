@@ -373,7 +373,7 @@ export default function ReimbursementsPage() {
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="w-[var(--radix-select-trigger-width)]">
+            <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
               {CATEGORIES.map((c) => (
                 <SelectItem key={c} value={c}>{c}</SelectItem>
               ))}

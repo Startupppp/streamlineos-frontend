@@ -8,6 +8,8 @@ import { motion } from "framer-motion";
 import { Landmark, Eye, EyeOff, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetBody } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -153,8 +155,8 @@ function BankSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
       toast.success("Bank details updated");
       form.reset();
       onClose();
-    } catch {
-      toast.error("Failed to update bank details");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     }
   };
 
@@ -292,9 +294,9 @@ function BankSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
           </SheetBody>
           <div className="shrink-0 px-6 py-4 border-t grid grid-cols-2 gap-2">
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? "Saving…" : "Save Details"}
-            </Button>
+            <LoadingButton type="submit" isPending={mutation.isPending} loadingText="Saving…">
+              Save Details
+            </LoadingButton>
           </div>
           </form>
         </Form>

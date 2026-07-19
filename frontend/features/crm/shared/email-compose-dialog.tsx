@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   FormControl,
   FormField,
@@ -61,7 +62,7 @@ export function EmailComposeDialog({
             toast.success("Email logged as activity");
             onOpenChange(false);
           },
-          onError: () => toast.error("Failed to log email"),
+          onError: (err) => toast.error(getErrorMessage(err)),
         }
       );
     },
@@ -88,7 +89,7 @@ export function EmailComposeDialog({
             name="to"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>To</FormLabel>
+                <FormLabel>To <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
                   <Input {...field} type="email" placeholder="recipient@example.com" />
                 </FormControl>
@@ -101,7 +102,7 @@ export function EmailComposeDialog({
             name="subject"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Subject</FormLabel>
+                <FormLabel>Subject <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
                   <Input {...field} placeholder="Email subject" maxLength={200} />
                 </FormControl>
@@ -114,7 +115,7 @@ export function EmailComposeDialog({
             name="body"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Message</FormLabel>
+                <FormLabel>Message <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
                   <Textarea {...field} rows={6} placeholder="Write your message..." />
                 </FormControl>

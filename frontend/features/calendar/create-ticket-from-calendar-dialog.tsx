@@ -7,6 +7,7 @@ import { z } from "zod";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   Dialog,
   DialogContent,
@@ -15,6 +16,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
@@ -128,8 +130,8 @@ export function CreateTicketFromCalendarDialog({
           },
         });
         handleOpenChange(false);
-      } catch {
-        toast.error("Failed to create ticket");
+      } catch (error) {
+        toast.error(getErrorMessage(error));
       }
     },
     [createTicket, queryClient, router, handleOpenChange],
@@ -151,7 +153,9 @@ export function CreateTicketFromCalendarDialog({
               name="projectId"
               render={({ field }) => (
                 <FormItem className="gap-1">
-                  <FormLabel className="text-xs font-medium">Project</FormLabel>
+                  <FormLabel className="text-xs font-medium">
+                    Project <span className="text-destructive">*</span>
+                  </FormLabel>
                   <FormControl>
                     {projectsLoading ? (
                       <Skeleton className="h-4 w-full" />
@@ -194,7 +198,9 @@ export function CreateTicketFromCalendarDialog({
               name="title"
               render={({ field }) => (
                 <FormItem className="gap-1">
-                  <FormLabel className="text-xs font-medium">Title</FormLabel>
+                  <FormLabel className="text-xs font-medium">
+                    Title <span className="text-destructive">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input
                       {...field}
@@ -213,7 +219,9 @@ export function CreateTicketFromCalendarDialog({
               name="dueDate"
               render={({ field }) => (
                 <FormItem className="gap-1">
-                  <FormLabel className="text-xs font-medium">Due date</FormLabel>
+                  <FormLabel className="text-xs font-medium">
+                    Due date <span className="text-destructive">*</span>
+                  </FormLabel>
                   <FormControl>
                     <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
                   </FormControl>
@@ -258,14 +266,16 @@ export function CreateTicketFromCalendarDialog({
           >
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             size="sm"
             className="text-xs"
             onClick={form.handleSubmit(handleSubmit)}
-            disabled={isPending || projects.length === 0}
+            isPending={isPending}
+            loadingText="Creating…"
+            disabled={projects.length === 0}
           >
-            {isPending ? "Creating…" : "Create ticket"}
-          </Button>
+            Create ticket
+          </LoadingButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

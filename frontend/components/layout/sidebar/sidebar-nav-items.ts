@@ -2424,6 +2424,22 @@ export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
   { key: "sign", label: "SignOS", href: "/sign", icon: PenTool },
 ];
 
+export const PRODUCT_DESCRIPTIONS: Record<ProductKey, string> = {
+  home: "Overview & activity",
+  crm: "Leads, deals & contacts",
+  hrms: "People & payroll",
+  projects: "Plan & deliver work",
+  timesheets: "Track, approve & bill time",
+  inventory: "Stock & orders",
+  finance: "Accounts & books",
+  helpdesk: "Tickets & support",
+  documents: "Knowledge base",
+  surveys: "Surveys & feedback",
+  administration: "Settings & access",
+  payroll: "Runs, payslips & compliance",
+  sign: "Envelopes & e-signatures",
+};
+
 export interface ModuleAccent {
   text: string;
   bg: string;

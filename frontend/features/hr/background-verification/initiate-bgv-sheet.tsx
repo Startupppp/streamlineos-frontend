@@ -147,7 +147,7 @@ export function InitiateBgvSheet({ open, onOpenChange, employeeOptions }: Props)
                       <SelectValue />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                  <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                     {BGV_TYPES.map((t) => (
                       <SelectItem key={t} value={t}>
                         {t}

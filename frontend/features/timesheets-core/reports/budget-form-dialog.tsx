@@ -31,6 +31,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useProjects } from "@/hooks/api/projects";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateBudget, useUpdateBudget } from "@/hooks/api/timesheets-core/budgets";
 import type { TimesheetBudget } from "@/features/timesheets-core/types";
 
@@ -101,10 +103,11 @@ export function BudgetFormDialog({ open, onOpenChange, budget }: BudgetFormDialo
       endsAt: values.endsAt || undefined,
     };
     const onDone = () => onOpenChange(false);
+    const onFail = (err: unknown) => toast.error(getErrorMessage(err));
     if (isEdit && budget) {
-      updateBudget.mutate({ budgetId: budget.id, data: payload }, { onSuccess: onDone });
+      updateBudget.mutate({ budgetId: budget.id, data: payload }, { onSuccess: onDone, onError: onFail });
     } else {
-      createBudget.mutate(payload, { onSuccess: onDone });
+      createBudget.mutate(payload, { onSuccess: onDone, onError: onFail });
     }
   });
 
@@ -121,7 +124,7 @@ export function BudgetFormDialog({ open, onOpenChange, budget }: BudgetFormDialo
               name="projectId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-[13px]">Project</FormLabel>
+                  <FormLabel className="text-[13px]">Project <span className="text-destructive">*</span></FormLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
                     <FormControl>
                       <SelectTrigger className="h-9">
@@ -169,7 +172,7 @@ export function BudgetFormDialog({ open, onOpenChange, budget }: BudgetFormDialo
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-[13px]">
-                      {budgetType === "AMOUNT" ? "Amount" : "Hours"}
+                      {budgetType === "AMOUNT" ? "Amount" : "Hours"} <span className="text-destructive">*</span>
                     </FormLabel>
                     <FormControl>
                       <Input type="number" min="0" step="0.01" className="h-9" {...field} />
@@ -206,6 +209,7 @@ export function BudgetFormDialog({ open, onOpenChange, budget }: BudgetFormDialo
                     <FormControl>
                       <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-9" />
                     </FormControl>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -218,6 +222,7 @@ export function BudgetFormDialog({ open, onOpenChange, budget }: BudgetFormDialo
                     <FormControl>
                       <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-9" />
                     </FormControl>
+                    <FormMessage />
                   </FormItem>
                 )}
               />

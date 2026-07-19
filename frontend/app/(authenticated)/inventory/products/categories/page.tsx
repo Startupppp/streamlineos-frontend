@@ -450,28 +450,27 @@ function CategoriesPageInner() {
             onRetry={handleRetry}
           />
         ) : (
-          <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
-            <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
-              <DataTable
-                data={filteredCategories}
-                getRowKey={(cat) => cat.id}
-                isLoading={query.isLoading}
-                rowClassName={(cat) => (!cat.isActive ? "opacity-60" : "")}
-                emptyState={
-                  <InventoryEmptyState
-                    illustration={
-                      hasFilters ? (
-                        <EmptySearchIllustration />
-                      ) : (
-                        <EmptyProductsIllustration />
-                      )
-                    }
-                    title={
-                      hasFilters ? "No categories found" : "No categories yet"
-                    }
-                    description={
-                      hasFilters
-                        ? "Try adjusting your search or filters."
+          <DataTable
+            data={filteredCategories}
+            className="flex-1 min-h-0"
+            getRowKey={(cat) => cat.id}
+            isLoading={query.isLoading}
+            rowClassName={(cat) => (!cat.isActive ? "opacity-60" : "")}
+            emptyState={
+              <InventoryEmptyState
+                illustration={
+                  hasFilters ? (
+                    <EmptySearchIllustration />
+                  ) : (
+                    <EmptyProductsIllustration />
+                  )
+                }
+                title={
+                  hasFilters ? "No categories found" : "No categories yet"
+                }
+                description={
+                  hasFilters
+                    ? "Try adjusting your search or filters."
                         : "Use the form above to add your first product category."
                     }
                     className="border-0 bg-transparent"
@@ -484,8 +483,6 @@ function CategoriesPageInner() {
                 )}
                 minWidth="560px"
               />
-            </CardContent>
-          </Card>
         )}
       </div>
 

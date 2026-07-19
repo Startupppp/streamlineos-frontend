@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { EntityFormDialog, MemberPicker } from "@/components/shared";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -80,7 +81,7 @@ export function CreateTaskDialog({ open, onOpenChange, task, defaultEntityType, 
               toast.success("Task updated");
               onOpenChange(false);
             },
-            onError: () => toast.error("Failed to update task"),
+            onError: (err) => toast.error(getErrorMessage(err)),
           },
         );
       } else {
@@ -98,7 +99,7 @@ export function CreateTaskDialog({ open, onOpenChange, task, defaultEntityType, 
             toast.success("Task created");
             onOpenChange(false);
           },
-          onError: () => toast.error("Failed to create task"),
+          onError: (err) => toast.error(getErrorMessage(err)),
         });
       }
     },
@@ -124,7 +125,7 @@ export function CreateTaskDialog({ open, onOpenChange, task, defaultEntityType, 
             name="title"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Title</FormLabel>
+                <FormLabel>Title <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
                   <Input placeholder="Task title" {...field} />
                 </FormControl>

@@ -12,6 +12,7 @@ import {
   Clock,
 } from "lucide-react";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
@@ -112,7 +113,7 @@ function QuoteRow({ quote, dealId, onDeleteRequest }: QuoteRowProps) {
         {
           onSuccess: () =>
             toast.success(`Quote marked as ${STATUS_CONFIG[status].label}`),
-          onError: () => toast.error("Failed to update quote status"),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -228,7 +229,7 @@ export function DealQuotesSection({ dealId }: DealQuotesSectionProps) {
       },
       {
         onSuccess: () => toast.success("Quote created"),
-        onError: () => toast.error("Failed to create quote"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }, [dealId, createQuote]);
@@ -248,7 +249,7 @@ export function DealQuotesSection({ dealId }: DealQuotesSectionProps) {
           toast.success("Quote deleted");
           setDeleteId(null);
         },
-        onError: () => toast.error("Failed to delete quote"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }, [deleteId, dealId, deleteQuote]);

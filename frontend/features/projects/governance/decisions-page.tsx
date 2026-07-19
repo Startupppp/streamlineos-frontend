@@ -27,7 +27,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { DecisionFormSheet } from "./decision-form-sheet";
 import {
   PmPageShell,
-  PmPanel,
   PmSection,
   PM_FILL_PANEL,
 } from "@/features/projects/shared/pm-chrome";
@@ -276,15 +275,13 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
                 }
               />
           ) : (
-            <PmPanel className={PM_FILL_PANEL} solid>
-              <DataTable
-                data={displayed}
-                columns={columns}
-                getRowKey={(row) => row.id}
-                minWidth="720px"
-                className="min-h-0 flex-1 border-0"
-              />
-            </PmPanel>
+            <DataTable
+              data={displayed}
+              columns={columns}
+              getRowKey={(row) => row.id}
+              minWidth="720px"
+              className={PM_FILL_PANEL}
+            />
           )}
         </PmSection>
       </PmPageShell>

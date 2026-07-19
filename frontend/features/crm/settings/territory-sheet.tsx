@@ -303,7 +303,7 @@ export function TerritorySheet({
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Name</FormLabel>
+                    <FormLabel>Name <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <Input {...field} placeholder="e.g. West India" className="" />
                     </FormControl>

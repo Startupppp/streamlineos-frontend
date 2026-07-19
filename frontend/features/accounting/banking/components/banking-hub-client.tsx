@@ -146,7 +146,7 @@ export function BankingHubClient() {
         ) : undefined
       }
     >
-      <div className="flex flex-1 min-h-0 flex-col space-y-6">
+      <div className="flex flex-1 min-h-0 flex-col space-y-4">
         <StatCardGrid cols={4}>
           <StatCard
             label="Total Cash Balance"

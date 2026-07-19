@@ -159,7 +159,7 @@ export function TaxSummaryReport() {
             onRetry={handleRetry}
           />
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-4">
             {!isLoading && (data?.length ?? 0) > 0 && (
               <TaxSummaryChart chartData={chartData} />
             )}

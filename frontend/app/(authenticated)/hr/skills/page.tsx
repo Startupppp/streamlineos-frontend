@@ -309,7 +309,7 @@ export default function SkillsPage() {
           <label className="text-sm font-medium">Proficiency Level</label>
           <Select value={level} onValueChange={setLevel}>
             <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent className="w-[var(--radix-select-trigger-width)]">
+            <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
               {LEVELS.map((l) => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}
             </SelectContent>
           </Select>

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { KbImageIcon, KbXIcon } from "@/features/knowledge-base/lib/kb-icons";
 import { uploadKbMedia } from "@/features/knowledge-base/lib/upload-kb-media";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const GRADIENT_PRESETS = [
   { key: "slate", css: "linear-gradient(135deg, #1e293b 0%, #334155 100%)" },
@@ -119,7 +119,7 @@ export default function PageCover({
       onCoverChange(result.url);
       setPickerOpen(false);
     } catch (error) {
-      toast.error("Failed to upload cover", { description: getApiError(error) });
+      toast.error("Failed to upload cover", { description: getErrorMessage(error) });
     } finally {
       setUploading(false);
     }

@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
+import { useState } from "react";
 import { LogoutIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { useSessions, useRevokeSession, useRevokeAllSessions, type UserSession } from "@/hooks/api/hr/sessions";
 import { getApiError } from "@/lib/api-client";
+import { formatIpAddress } from "@/lib/format-utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
 import { SearchInput } from "@/components/ui/search-input";
@@ -113,7 +113,7 @@ export default function SessionsPage() {
       header: "IP Address",
       cell: (s) => (
         <span className="text-muted-foreground font-mono text-xs">
-          {s.ipAddress ?? "—"}
+          {formatIpAddress(s.ipAddress)}
         </span>
       ),
     },

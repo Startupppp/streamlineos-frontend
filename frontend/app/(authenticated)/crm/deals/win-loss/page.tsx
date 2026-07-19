@@ -62,14 +62,14 @@ export default function WinLossAnalysisPage() {
         title="Win/Loss Analysis"
         subtitle="Deal outcome breakdown and lost reason attribution"
       >
-        <div className="space-y-6">
+        <div className="space-y-4">
           <StatCardGrid cols={4}>
             <StatCard label="Won Deals" value="" isLoading icon={Trophy} tone="emerald" />
             <StatCard label="Lost Deals" value="" isLoading icon={TrendingDown} tone="red" />
             <StatCard label="Win Rate" value="" isLoading icon={Target} tone="amber" />
             <StatCard label="Won Value" value="" isLoading icon={IndianRupee} tone="blue" />
           </StatCardGrid>
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2">
             <Skeleton className="h-64 rounded-lg" />
             <Skeleton className="h-64 rounded-lg" />
           </div>
@@ -129,7 +129,7 @@ export default function WinLossAnalysisPage() {
       subtitle="Deal outcome breakdown and lost reason attribution"
     >
       <motion.div
-        className="space-y-6"
+        className="space-y-4"
         variants={staggerContainer}
         initial="hidden"
         animate="visible"
@@ -143,7 +143,7 @@ export default function WinLossAnalysisPage() {
           </StatCardGrid>
         </motion.div>
 
-        <motion.div variants={itemVariants} className="grid gap-6 md:grid-cols-2">
+        <motion.div variants={itemVariants} className="grid gap-4 md:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">

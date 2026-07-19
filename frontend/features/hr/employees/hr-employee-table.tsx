@@ -4,7 +4,6 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Pencil } from "lucide-react";
 import { UserXIcon } from "@animateicons/react/lucide";
@@ -189,24 +188,20 @@ export function HrEmployeeTable({
   ], [currentUserId, canManageEmployees, onRequestDelete]);
 
   return (
-    <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden flex flex-col flex-1 min-h-0">
-      <CardContent className="p-0 flex flex-col flex-1 min-h-0">
-        <DataTable
-          data={employees}
-          columns={columns}
-          getRowKey={(user) => user.id}
-          minWidth="700px"
-          pagination={{
-            mode: "server",
-            page,
-            pageSize,
-            total: totalCount,
-            onPageChange,
-            onPageSizeChange,
-          }}
-          className="border-0 rounded-none flex-1"
-        />
-      </CardContent>
-    </Card>
+    <DataTable
+      data={employees}
+      columns={columns}
+      getRowKey={(user) => user.id}
+      minWidth="700px"
+      pagination={{
+        mode: "server",
+        page,
+        pageSize,
+        total: totalCount,
+        onPageChange,
+        onPageSizeChange,
+      }}
+      className="flex-1 min-h-0"
+    />
   );
 }

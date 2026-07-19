@@ -175,7 +175,7 @@ export function InputsPageContent() {
       )}
 
       {!isLoading && (
-        <div className="space-y-4">
+        <div className="flex flex-1 min-h-0 flex-col gap-3">
           {currentPeriod ? (
             <>
               <div className="flex items-center gap-3 text-sm">
@@ -205,8 +205,8 @@ export function InputsPageContent() {
               </div>
 
               {!isBuilt && currentPeriod.status !== "building" && (
-                <div className="border border-dashed border-border rounded-lg p-6 text-center">
-                  <p className="text-sm text-muted-foreground mb-3">
+                <div className="border border-dashed border-border rounded-lg p-4 text-center">
+                  <p className="text-sm text-muted-foreground mb-2">
                     Period is open. Click <strong>Build Inputs</strong> to
                     snapshot attendance, leave, overtime, reimbursements, and
                     deductions for {formatPeriodLabel(month)}.
@@ -215,7 +215,7 @@ export function InputsPageContent() {
               )}
 
               {isBuilding && (
-                <div className="border border-amber-200 bg-amber-50 rounded-lg p-4 text-sm text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+                <div className="border border-amber-200 bg-amber-50 rounded-lg p-3 text-sm text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
                   Building snapshots — this may take a moment...
                 </div>
               )}
@@ -229,8 +229,8 @@ export function InputsPageContent() {
               )}
             </>
           ) : (
-            <div className="border border-dashed border-border rounded-lg p-10 text-center">
-              <p className="text-sm text-muted-foreground mb-4">
+            <div className="border border-dashed border-border rounded-lg p-6 text-center">
+              <p className="text-sm text-muted-foreground mb-3">
                 No input period found for{" "}
                 <strong>{formatPeriodLabel(month)}</strong>.
               </p>

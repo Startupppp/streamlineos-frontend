@@ -141,7 +141,7 @@ export function EditVerificationSheet({ bgv, onClose }: Props) {
                       <SelectValue />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                  <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                     <SelectItem value="PENDING">Pending</SelectItem>
                     <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
                     <SelectItem value="PASSED">Passed</SelectItem>

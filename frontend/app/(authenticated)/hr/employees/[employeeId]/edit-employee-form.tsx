@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useRouter } from "next/navigation";
 import { useUpdateProfile } from "@/hooks/api/hr";
 import { Save } from "lucide-react";
@@ -187,7 +188,7 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
             router.refresh();
             return "Employee updated successfully!";
           },
-          error: "Failed to update employee",
+          error: (err: unknown) => getErrorMessage(err),
         },
       );
     },

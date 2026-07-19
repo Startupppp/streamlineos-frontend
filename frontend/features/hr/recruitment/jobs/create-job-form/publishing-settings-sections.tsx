@@ -52,7 +52,7 @@ export function Section9({ form }: SectionProps) {
             render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                   <SelectItem value="DRAFT">Draft</SelectItem>
                   <SelectItem value="OPEN">Published</SelectItem>
                   <SelectItem value="CLOSED">Closed</SelectItem>
@@ -69,7 +69,7 @@ export function Section9({ form }: SectionProps) {
             render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                   <SelectItem value="PUBLIC">Public</SelectItem>
                   <SelectItem value="INTERNAL">Internal Only</SelectItem>
                 </SelectContent>

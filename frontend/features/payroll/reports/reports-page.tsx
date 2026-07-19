@@ -183,10 +183,10 @@ export function ReportsPageContent() {
       filters={filtersNode}
       actions={actionsNode}
     >
-      <div className="flex flex-col gap-3 lg:flex-row lg:gap-6 min-h-0">
+      <div className="flex flex-1 min-h-0 flex-col gap-3 lg:flex-row lg:gap-4">
         <ReportSelector activeReport={activeReport} onSelect={handleReportSelect} />
 
-        <div className="flex-1 min-w-0 flex flex-col gap-3">
+        <div className="flex-1 min-w-0 min-h-0 flex flex-col gap-3">
           <ActiveReport
             activeReport={activeReport}
             month={month}

@@ -16,6 +16,7 @@ import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { useGstr3B } from "@/hooks/api/accounting";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { Gstr3BTaxBlock } from "@/types/accounting";
@@ -78,7 +79,7 @@ export default function Gstr3BPage() {
       title="GSTR-3B"
       subtitle="Consolidated monthly GST return summary. Outward minus ITC equals tax payable."
       filters={
-        <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+        <div className={FILTER_TOOLBAR_ROW}>
           <div className="flex flex-col gap-1">
             <label
               htmlFor="gstr3b-from"
@@ -86,7 +87,7 @@ export default function Gstr3BPage() {
             >
               From
             </label>
-            <DatePicker id="gstr3b-from" value={from ?? ""} onChange={handleFromChange} placeholder="Pick a date" className="w-full sm:w-[160px]" />
+            <DatePicker id="gstr3b-from" value={from ?? ""} onChange={handleFromChange} placeholder="Pick a date" className="w-[160px]" />
           </div>
           <div className="flex flex-col gap-1">
             <label
@@ -95,7 +96,7 @@ export default function Gstr3BPage() {
             >
               To
             </label>
-            <DatePicker id="gstr3b-to" value={to ?? ""} onChange={handleToChange} placeholder="Pick a date" className="w-full sm:w-[160px]" />
+            <DatePicker id="gstr3b-to" value={to ?? ""} onChange={handleToChange} placeholder="Pick a date" className="w-[160px]" />
           </div>
         </div>
       }

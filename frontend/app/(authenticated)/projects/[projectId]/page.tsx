@@ -5,12 +5,23 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useProject, useSprints, useBulkUpdateTickets } from "@/hooks/api";
 import type { BulkUpdateTicketsInput } from "@/hooks/api";
 import { useViews, useCreateView, useProjectBoardTickets } from "@/hooks/api/projects";
-import { KanbanBoard } from "@/features/projects/views/kanban-board";
-import { ListView } from "@/features/projects/views/list-view";
+import dynamic from "next/dynamic";
+import { KanbanBoardSkeleton as KanbanBoardSkeletonInline } from "@/components/ui/kanban-skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 import { TableView } from "@/features/projects/views/table-view";
 import { CalendarView } from "@/features/projects/views/calendar-view";
 import { GanttView } from "@/features/projects/views/gantt-view";
 import { WorkloadView } from "@/features/projects/views/workload-view";
+
+const KanbanBoard = dynamic(
+  () => import("@/features/projects/views/kanban-board").then((m) => m.KanbanBoard),
+  { ssr: false, loading: () => <KanbanBoardSkeletonInline /> },
+);
+
+const ListView = dynamic(
+  () => import("@/features/projects/views/list-view").then((m) => m.ListView),
+  { ssr: false, loading: () => <Skeleton className="flex-1 min-h-[400px] rounded-xl" /> },
+);
 import { WorkloadFilterBar } from "@/features/projects/views/workload-filter-bar";
 import {
   INITIAL_FILTERS,
@@ -41,12 +52,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { UploadIcon, DownloadIcon, BookmarkIcon } from "@animateicons/react/lucide";
+import { UploadIcon, DownloadIcon, BookmarkIcon, SettingsIcon } from "@animateicons/react/lucide";
 import { X, SearchX } from "lucide-react";
 import { exportToCsv } from "@/lib/export-csv";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import Link from "next/link";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
+import { useCan } from "@/hooks/api/access";
 import type { KanbanTicket } from "@/features/projects/shared/types";
 import {
   filterHiddenCompletedTickets,
@@ -116,6 +129,28 @@ interface SaveViewButtonProps {
   onClick: () => void;
 }
 
+interface SettingsButtonProps {
+  href: string;
+}
+
+function SettingsButton({ href }: SettingsButtonProps) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button
+      variant="outline"
+      size="icon"
+      className="w-8 shrink-0 border-border/70 bg-background/60 backdrop-blur-sm"
+      aria-label="Project settings"
+      asChild
+      {...hoverHandlers}
+    >
+      <Link href={href}>
+        <SettingsIcon ref={iconRef} size={14} />
+      </Link>
+    </Button>
+  );
+}
+
 function SaveViewButton({ onClick }: SaveViewButtonProps) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
@@ -142,6 +177,10 @@ export default function ProjectBoardPage({ params }: PageProps) {
   const isLoading = projectLoading || ticketsLoading;
   const searchParams = useSearchParams();
   const router = useRouter();
+  const canUpdateProject = useCan("projects:update");
+  const canManageProject = useCan("projects:manage");
+  const canDeleteProject = useCan("projects:delete");
+  const showSettingsAction = canUpdateProject || canManageProject || canDeleteProject;
   const shouldReduceMotion = useReducedMotion();
   const viewVariants = shouldReduceMotion ? viewSwapReduced : viewSwap;
 
@@ -579,6 +618,9 @@ export default function ProjectBoardPage({ params }: PageProps) {
       actions={
         <div className="flex items-center gap-2">
           <ProjectAiMenu projectId={projectId} />
+          {showSettingsAction ? (
+            <SettingsButton href={`/projects/${projectId}/settings`} />
+          ) : null}
           <CreateTicketDialog
             projectId={projectId}
             defaultCycleId={createDefaultCycleId}

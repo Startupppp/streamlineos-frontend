@@ -22,6 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useCan } from "@/hooks/api/access";
 import {
   useAiCreditsWallet,
   useAiCreditTransactions,
@@ -114,14 +115,14 @@ function PackBuyButton({ pack, isPending, onBuy }: { pack: AiCreditPack; isPendi
   );
 }
 
-const TXN_PAGE_SIZES = [10, 20, 50] as const;
-type TxnPageSize = (typeof TXN_PAGE_SIZES)[number];
+type TxnPageSize = 10 | 20 | 50;
 
 export default function AiCreditsPage() {
   const { data, isLoading, isError, refetch } = useAiCreditsWallet();
   const configureTopUp = useConfigureAutoTopUp();
   const purchaseMutation = usePurchaseAiCredits();
   const verifyMutation = useVerifyAiCreditPurchase();
+  const canPurchase = useCan("billing:ai-credits:purchase");
 
   const [txnPage, setTxnPage] = useState(1);
   const [txnLimit, setTxnLimit] = useState<TxnPageSize>(20);
@@ -145,7 +146,16 @@ export default function AiCreditsPage() {
 
   function handleAutoTopUpToggle(enabled: boolean) {
     setLocalAutoTopUp(enabled);
-    configureTopUp.mutate({ enabled });
+    const defaultPackId = wallet?.autoTopUpPackId ?? packs[0]?.id;
+    configureTopUp.mutate({
+      enabled,
+      ...(enabled && defaultPackId
+        ? {
+            packId: defaultPackId,
+            threshold: wallet?.autoTopUpThreshold ?? 100,
+          }
+        : {}),
+    });
   }
 
   function handleRefresh() {
@@ -256,8 +266,66 @@ export default function AiCreditsPage() {
                 </StatCardGrid>
               )}
 
+              <div>
+                <p className="text-sm font-semibold mb-2">Credit Packs</p>
+                {isLoading ? (
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {Array.from({ length: 3 }, (_, i) => (
+                      <div
+                        key={`pack-skel-${i}`}
+                        className="h-[116px] rounded-lg border border-border bg-card animate-pulse"
+                      />
+                    ))}
+                  </div>
+                ) : packs.length === 0 ? (
+                  <EmptyState
+                    illustrationPreset="report"
+                    title="No credit packs available"
+                    description="Top-up packs could not be loaded. Refresh the page or try again shortly."
+                    className="border border-border bg-card py-8"
+                    compact
+                    action={{ label: "Refresh", onClick: handleRefresh }}
+                  />
+                ) : (
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {packs.map((pack) => (
+                      <div key={pack.id} className="rounded-lg border border-border bg-card p-4">
+                        <div className="flex items-start gap-3">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                            <Package className="h-4 w-4 text-primary" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold">{pack.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {pack.credits.toLocaleString()} credits
+                              {pack.bonusCredits > 0 && (
+                                <Badge variant="secondary" className="ml-1.5 text-[10px]">
+                                  +{pack.bonusCredits.toLocaleString()} bonus
+                                </Badge>
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+                          <span className="text-sm font-medium">
+                            ₹{(pack.priceInPaise / 100).toLocaleString("en-IN")}
+                          </span>
+                          {canPurchase ? (
+                            <PackBuyButton
+                              pack={pack}
+                              isPending={purchaseMutation.isPending && selectedPack?.id === pack.id}
+                              onBuy={handleBuyPack}
+                            />
+                          ) : null}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <div className="rounded-lg border border-border bg-card p-4">
-                <div className="flex items-center justify-between mb-3">
+                <div className="mb-3 flex items-center justify-between">
                   <p className="text-sm font-semibold">Auto Top-Up</p>
                   <div className="flex items-center gap-2">
                     <Label htmlFor="auto-topup" className="text-xs text-muted-foreground">
@@ -267,52 +335,15 @@ export default function AiCreditsPage() {
                       id="auto-topup"
                       checked={autoTopUp}
                       onCheckedChange={handleAutoTopUpToggle}
-                      disabled={configureTopUp.isPending}
+                      disabled={configureTopUp.isPending || packs.length === 0}
                     />
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Automatically purchase credits when your balance drops below the threshold.
+                  {autoTopUp && packs[0] ? ` Uses ${packs.find((p) => p.id === wallet?.autoTopUpPackId)?.name ?? packs[0].name} when balance is low.` : ""}
                 </p>
               </div>
-
-              {packs.length > 0 && (
-                <div>
-                  <p className="text-sm font-semibold mb-2">Credit Packs</p>
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {packs.map((pack) => (
-                      <div key={pack.id} className="rounded-lg border border-border bg-card p-4">
-                        <div className="flex items-start gap-3">
-                          <div className="w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                            <Package className="h-4 w-4 text-primary" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold">{pack.name}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {pack.credits.toLocaleString()} credits
-                              {pack.bonusCredits > 0 && (
-                                <Badge variant="secondary" className="ml-1.5 text-[10px]">
-                                  +{pack.bonusCredits} bonus
-                                </Badge>
-                              )}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
-                          <span className="text-sm font-medium">
-                            ₹{(pack.priceInPaise / 100).toLocaleString("en-IN")}
-                          </span>
-                          <PackBuyButton
-                            pack={pack}
-                            isPending={purchaseMutation.isPending && selectedPack?.id === pack.id}
-                            onBuy={handleBuyPack}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               <div className="rounded-lg border border-border bg-card overflow-hidden">
                 <div className="px-4 py-3 flex items-center justify-between border-b border-border">

@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyReportIllustration } from "@/components/illustrations";
+import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { useTaxDeclarationsAdmin, useExportTaxReport } from "@/hooks/api/payroll/tax-admin";
 import { useCan } from "@/hooks/api/access";
 import type { TaxDeclarationAdmin } from "@/types/payroll/reports";
@@ -92,10 +93,10 @@ export function TaxReportTab() {
   ];
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
+    <div className="flex flex-1 min-h-0 flex-col gap-3 pt-3">
+      <div className={FILTER_TOOLBAR_ROW}>
         <Select value={fy} onValueChange={handleFYChange}>
-          <SelectTrigger className="h-9 w-32">
+          <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-32`}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -113,7 +114,7 @@ export function TaxReportTab() {
             iconClassName="mr-1.5"
             size="sm"
             variant="outline"
-            className="text-xs"
+            className="ml-auto text-xs"
             onClick={handleExportClick}
             disabled={exportMutation.isPending}
           >
@@ -130,6 +131,7 @@ export function TaxReportTab() {
       </StatCardGrid>
 
       <DataTable
+        className="flex-1 min-h-0"
         data={declarations}
         columns={columns}
         getRowKey={(row) => row.id}

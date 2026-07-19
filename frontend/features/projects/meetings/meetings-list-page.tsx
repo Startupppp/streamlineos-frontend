@@ -26,7 +26,6 @@ import { generateAgenda, type AgendaSource } from "./generate-agenda";
 import type { Meeting, CreateMeetingInput } from "@/types/projects";
 import {
   PmPageShell,
-  PmPanel,
   PmSection,
   PM_FILL_PANEL,
 } from "@/features/projects/shared/pm-chrome";
@@ -341,9 +340,8 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
           {isError ? (
             <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
           ) : (
-            <PmPanel className={PM_FILL_PANEL}>
-              <DataTable
-                className="min-h-0 flex-1"
+            <DataTable
+                className={PM_FILL_PANEL}
                 data={displayed}
                 columns={columns}
                 getRowKey={(row) => row.id}
@@ -356,7 +354,6 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
                 }}
                 emptyState={emptyStateNode}
               />
-            </PmPanel>
           )}
         </PmSection>
       </PmPageShell>

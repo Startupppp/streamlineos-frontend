@@ -32,7 +32,7 @@ export function Section3({ form }: SectionProps) {
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger><SelectValue placeholder="Select currency" /></SelectTrigger>
-                  <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                  <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                     <SelectItem value="INR">INR</SelectItem>
                     <SelectItem value="USD">USD</SelectItem>
                     <SelectItem value="EUR">EUR</SelectItem>
@@ -51,7 +51,7 @@ export function Section3({ form }: SectionProps) {
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
-                  <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                  <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                     <SelectItem value="MONTHLY">Monthly</SelectItem>
                     <SelectItem value="ANNUAL">Annual</SelectItem>
                     <SelectItem value="HOURLY">Hourly</SelectItem>
@@ -100,7 +100,7 @@ export function Section4({ form }: SectionProps) {
             render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger><SelectValue placeholder="Select level" /></SelectTrigger>
-                <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                   <SelectItem value="HIGH_SCHOOL">High School</SelectItem>
                   <SelectItem value="DIPLOMA">Diploma</SelectItem>
                   <SelectItem value="BACHELORS">Bachelor&apos;s Degree</SelectItem>

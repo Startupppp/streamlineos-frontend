@@ -94,7 +94,7 @@ export function VendorCreditApplyDialog({
         </DialogHeader>
         <form className="flex flex-col gap-4" onSubmit={form.handleSubmit(handleSubmit)}>
           <div className="space-y-1.5">
-            <Label className="text-xs">Bill (Posted)</Label>
+            <Label className="text-xs">Bill (Posted) <span className="text-destructive">*</span></Label>
             <Controller
               control={form.control}
               name="billId"
@@ -120,7 +120,7 @@ export function VendorCreditApplyDialog({
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">Amount to apply</Label>
+            <Label className="text-xs">Amount to apply <span className="text-destructive">*</span></Label>
             <Input
               {...form.register("amount")}
               className="text-sm"

@@ -23,6 +23,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateTaxWindow, useUpdateTaxWindow } from "@/hooks/api/payroll/tax-windows";
 import type { TaxWindow } from "@/types/payroll/reports";
 
@@ -78,7 +80,7 @@ export function TaxWindowSheet({ window, onClose }: TaxWindowSheetProps) {
             toast.success("Declaration window updated");
             onClose();
           },
-          onError: () => toast.error("Failed to update window"),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     } else {
@@ -87,7 +89,7 @@ export function TaxWindowSheet({ window, onClose }: TaxWindowSheetProps) {
           toast.success("Declaration window created");
           onClose();
         },
-        onError: () => toast.error("Failed to create window"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       });
     }
   }
@@ -112,7 +114,7 @@ export function TaxWindowSheet({ window, onClose }: TaxWindowSheetProps) {
                 name="financialYear"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Financial Year</FormLabel>
+                    <FormLabel>Financial Year <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <Input placeholder="e.g. 2024-25" {...field} />
                     </FormControl>
@@ -125,7 +127,7 @@ export function TaxWindowSheet({ window, onClose }: TaxWindowSheetProps) {
                 name="opensAt"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Opens At</FormLabel>
+                    <FormLabel>Opens At <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
                     </FormControl>
@@ -138,7 +140,7 @@ export function TaxWindowSheet({ window, onClose }: TaxWindowSheetProps) {
                 name="closesAt"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Closes At</FormLabel>
+                    <FormLabel>Closes At <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
                     </FormControl>
@@ -178,9 +180,9 @@ export function TaxWindowSheet({ window, onClose }: TaxWindowSheetProps) {
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isPending}>
-                {isPending ? "Saving…" : "Save"}
-              </Button>
+              <LoadingButton type="submit" isPending={isPending} loadingText="Saving…">
+                Save
+              </LoadingButton>
             </SheetFooter>
           </form>
         </Form>

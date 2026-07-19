@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { KbAlertCircleIcon } from "@/features/knowledge-base/lib/kb-icons";
 import { Skeleton } from "@/components/ui/skeleton";
-import { apiClient, getApiError } from "@/lib/api-client";
+import { apiClient } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { KbPageNotFound } from "./kb-page-not-found";
 import { uploadKbMedia } from "@/features/knowledge-base/lib/upload-kb-media";
 import {
@@ -123,7 +124,7 @@ export default function PageDocument({ pageId }: PageDocumentProps) {
           onError: (error) => {
             setSaveState("idle");
             toast.error("Failed to save page", {
-              description: getApiError(error),
+              description: getErrorMessage(error),
             });
           },
         }
@@ -168,7 +169,7 @@ export default function PageDocument({ pageId }: PageDocumentProps) {
 
   if (isLoading) {
     return (
-      <div className="w-full px-3 py-8 space-y-4">
+      <div className="w-full px-3 py-4 space-y-4">
         <Skeleton className="h-4 w-3/4" />
         <Skeleton className="h-4 w-1/2" />
         <Skeleton className="h-64 w-full" />

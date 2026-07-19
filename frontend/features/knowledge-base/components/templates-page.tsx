@@ -242,7 +242,7 @@ export default function TemplatesPage() {
 
   return (
     <PageWrapper title="Templates" subtitle="Starter skeletons and your saved page templates">
-      <div className="space-y-8">
+      <div className="space-y-4">
         <PageSection
           title="Starter templates"
           description="Built-in skeletons ready to use — creates a new page with content pre-filled."

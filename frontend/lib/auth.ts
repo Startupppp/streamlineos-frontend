@@ -4,6 +4,7 @@ import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import axios from "axios";
 import { randomUUID } from "crypto";
+import { headers as nextHeaders } from "next/headers";
 import { SignJWT, decodeJwt } from "jose";
 import type { Plan } from "@/lib/billing/feature-gates";
 import { BACKEND_URL } from "@/lib/backend-url";
@@ -135,19 +136,30 @@ function unwrapBackend<T>(body: unknown): T {
   return body as T;
 }
 
+interface GoogleAuthResult {
+  userId: string;
+  sessionId: string | null;
+}
+
 async function resolveGoogleUser(
   email: string,
   googleId: string,
+  clientUserAgent: string | null,
+  clientIp: string | null,
   name?: string | null,
   image?: string | null,
-): Promise<string | null> {
+): Promise<GoogleAuthResult | null> {
   try {
+    const reqHeaders: Record<string, string> = {
+      "Content-Type": "application/json",
+      "x-internal-secret": INTERNAL_SECRET,
+    };
+    if (clientUserAgent) reqHeaders["x-client-user-agent"] = clientUserAgent;
+    if (clientIp) reqHeaders["x-client-ip"] = clientIp;
+
     const res = await fetch(`${BACKEND_URL}/auth/google`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-internal-secret": INTERNAL_SECRET,
-      },
+      headers: reqHeaders,
       body: JSON.stringify({
         email,
         googleId,
@@ -158,10 +170,14 @@ async function resolveGoogleUser(
     if (!res.ok) return null;
     const raw = (await res.json()) as {
       success?: boolean;
-      data?: { userId: string };
+      data?: { userId: string; sessionId?: string };
       userId?: string;
+      sessionId?: string;
     };
-    return raw?.data?.userId ?? raw?.userId ?? null;
+    const userId = raw?.data?.userId ?? raw?.userId ?? null;
+    if (!userId) return null;
+    const sessionId = raw?.data?.sessionId ?? raw?.sessionId ?? null;
+    return { userId, sessionId };
   } catch {
     return null;
   }
@@ -213,20 +229,37 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         magicToken: { label: "Magic token", type: "text" },
         totpCode: { label: "MFA code", type: "text" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
         if (credentials?.magicToken) {
           try {
+            const ua = request.headers.get("user-agent") ?? null;
+            const rawIp =
+              request.headers.get("x-forwarded-for") ??
+              request.headers.get("x-real-ip") ??
+              null;
+            const ip = rawIp ? rawIp.split(",")[0].trim() : null;
+
             const { data: raw } = await axios.post<unknown>(
               `${BACKEND_URL}/auth/magic-link/verify`,
               { token: credentials.magicToken },
+              {
+                headers: {
+                  ...(ua ? { "x-client-user-agent": ua } : {}),
+                  ...(ip ? { "x-client-ip": ip } : {}),
+                },
+              },
             );
             if (!raw) return null;
             const data = unwrapBackend<{
               userId: string;
+              sessionId?: string;
             }>(raw);
             const sessionData = await fetchSessionData(data.userId);
             if (!sessionData) return null;
-            return buildUserFromSessionData(data.userId, sessionData);
+            return {
+              ...buildUserFromSessionData(data.userId, sessionData),
+              sessionId: data.sessionId ?? undefined,
+            };
           } catch {
             return null;
           }
@@ -246,14 +279,27 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     async signIn({ user, account }) {
       if (account?.provider === "google") {
-        const userId = await resolveGoogleUser(
+        let clientUserAgent: string | null = null;
+        let clientIp: string | null = null;
+        try {
+          const h = await nextHeaders();
+          clientUserAgent = h.get("user-agent") ?? null;
+          const rawIp = h.get("x-forwarded-for") ?? h.get("x-real-ip") ?? null;
+          clientIp = rawIp ? rawIp.split(",")[0].trim() : null;
+        } catch {
+        }
+        const googleResult = await resolveGoogleUser(
           user.email ?? "",
           account.providerAccountId,
+          clientUserAgent,
+          clientIp,
           user.name,
           user.image,
         );
-        if (!userId) return false;
+        if (!googleResult) return false;
+        const { userId, sessionId } = googleResult;
         user.id = userId;
+        if (sessionId) user.sessionId = sessionId;
         const sessionData = await fetchSessionData(userId);
         if (sessionData) {
           user.name =

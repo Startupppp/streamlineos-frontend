@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -254,31 +253,28 @@ export function IncentivesTab() {
             </SelectContent>
           </Select>
         </div>
-        <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
-          <CardContent className="flex min-h-0 min-w-0 flex-col overflow-hidden p-0">
-            <DataTable
-              data={data?.incentives ?? []}
-              columns={columns}
-              getRowKey={(row) => row.id}
-              isLoading={isLoading}
-              minWidth="800px"
-              pagination={{
-                mode: "server",
-                page,
-                pageSize: 20,
-                total: data?.total ?? 0,
-                onPageChange: setPage,
-              }}
-              emptyState={
-                <EmptyState
-                  illustration={<EmptyTargetIllustration />}
-                  title="No incentives found"
-                  description="No sales incentives match the current filters."
-                />
-              }
+        <DataTable
+          className="flex-1 min-h-0"
+          data={data?.incentives ?? []}
+          columns={columns}
+          getRowKey={(row) => row.id}
+          isLoading={isLoading}
+          minWidth="800px"
+          pagination={{
+            mode: "server",
+            page,
+            pageSize: 20,
+            total: data?.total ?? 0,
+            onPageChange: setPage,
+          }}
+          emptyState={
+            <EmptyState
+              illustration={<EmptyTargetIllustration />}
+              title="No incentives found"
+              description="No sales incentives match the current filters."
             />
-          </CardContent>
-        </Card>
+          }
+        />
       </div>
 
       <Dialog open={approveTarget !== null} onOpenChange={handleApproveDialogChange}>

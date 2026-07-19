@@ -83,7 +83,7 @@ export function AutomationsTab({ survey }: { survey: SurveyForm }) {
   if (isLoading) return <Skeleton className="h-40 w-full" />;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {!rules?.length && !adding && (
         <EmptyState
           illustration={

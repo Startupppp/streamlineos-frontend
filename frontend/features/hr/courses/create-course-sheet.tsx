@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { getErrorMessage } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateCourse } from "@/hooks/api/hr/courses";
 import {
   Form,

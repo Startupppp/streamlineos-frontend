@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { Clock, X, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
@@ -209,9 +210,9 @@ export function BusinessHoursSheet({ open, onOpenChange, mode, form, onSubmit, i
           <Button type="button" variant="outline" className="flex-1 h-9" onClick={handleCancel}>
             Cancel
           </Button>
-          <Button type="submit" form="business-hours-form" className="flex-1 h-9" disabled={isPending}>
-            {isPending ? "Saving..." : mode === "create" ? "Create" : "Save Changes"}
-          </Button>
+          <LoadingButton type="submit" form="business-hours-form" className="flex-1 h-9" isPending={isPending} loadingText="Saving…">
+            {mode === "create" ? "Create" : "Save Changes"}
+          </LoadingButton>
         </SheetFooter>
       </SheetContent>
     </Sheet>

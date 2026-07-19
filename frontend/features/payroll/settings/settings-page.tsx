@@ -16,9 +16,9 @@ export function SettingsPageContent() {
   if (isLoading) {
     return (
       <PageWrapper title="Payroll Settings">
-        <div className="space-y-4">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="h-24 rounded-lg border border-border bg-card animate-pulse" />
+        <div className="flex flex-1 min-h-0 flex-col gap-3">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="h-20 rounded-lg border border-border bg-card animate-pulse" />
           ))}
         </div>
       </PageWrapper>
@@ -54,7 +54,7 @@ export function SettingsPageContent() {
       title="Payroll Settings"
       subtitle={`Policy #${data.policy.id} · ${data.policy.status}`}
     >
-      <div className="space-y-8">
+      <div className="flex flex-col gap-4">
         <PolicyProfileSection policy={data.policy} />
         <ToggleSettingsSection policy={data.policy} activeVersion={data.activeVersion} />
         {data.activeVersion?.toggles.multiCurrency && (

@@ -317,7 +317,7 @@ export function DataTable<T>({
             </Table>
           </div>
         ) : rows.length === 0 ? (
-          <div className="flex flex-1 flex-col justify-center p-2">
+          <div className="flex flex-1 flex-col justify-center p-2 [&>*]:!border-0 [&>*]:!bg-transparent [&>*]:!shadow-none">
             {emptyState ?? (
               <ChartEmptyState message="No results found." height={260} />
             )}

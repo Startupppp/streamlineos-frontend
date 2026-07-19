@@ -7,7 +7,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { usePatchSurvey, type SurveyForm } from "@/hooks/api/surveys/forms";
 import { AssessmentScoringCard } from "./assessment-scoring-card";
 import { CollectorsCard } from "./collectors-card";
@@ -29,7 +29,7 @@ export function OptionsTab({ survey }: { survey: SurveyForm }) {
       await patchSurvey.mutateAsync(values);
       toast.success("Options saved");
     } catch (error) {
-      toast.error(getApiError(error));
+      toast.error(getErrorMessage(error));
     }
   }
 
@@ -47,7 +47,9 @@ export function OptionsTab({ survey }: { survey: SurveyForm }) {
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Title</FormLabel>
+                    <FormLabel>
+                      Title <span className="text-destructive">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -73,7 +75,9 @@ export function OptionsTab({ survey }: { survey: SurveyForm }) {
                 name="defaultLanguage"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Default language</FormLabel>
+                    <FormLabel>
+                      Default language <span className="text-destructive">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Input {...field} className="w-24" />
                     </FormControl>

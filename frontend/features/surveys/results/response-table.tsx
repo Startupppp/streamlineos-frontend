@@ -41,7 +41,7 @@ export function ResponseTable({ surveyId }: { surveyId: number }) {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="flex flex-col gap-3">
       <div className="flex justify-end">
         <AnimatedIconButton icon={DownloadIcon} iconSize={14} iconClassName="mr-1.5" variant="outline" size="sm" onClick={handleExport} disabled={exportResponses.isPending}>
           Export CSV

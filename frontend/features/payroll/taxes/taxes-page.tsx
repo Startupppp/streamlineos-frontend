@@ -13,23 +13,23 @@ export function TaxesPageContent() {
       title="Tax & Statutory"
       subtitle="Manage declaration windows and employee tax declarations"
     >
-      <Tabs defaultValue="windows" className="flex flex-1 min-h-0 flex-col gap-4">
+      <Tabs defaultValue="windows" className="flex flex-1 min-h-0 flex-col gap-2">
         <TabsList className="w-fit">
           <TabsTrigger value="windows">Declaration Windows</TabsTrigger>
           <TabsTrigger value="declarations">Declarations</TabsTrigger>
           <TabsTrigger value="statutory">Statutory</TabsTrigger>
           <TabsTrigger value="report">Tax Report</TabsTrigger>
         </TabsList>
-        <TabsContent value="windows">
+        <TabsContent value="windows" className="flex flex-1 min-h-0 flex-col mt-0">
           <TaxWindowsTab />
         </TabsContent>
-        <TabsContent value="declarations">
+        <TabsContent value="declarations" className="flex flex-1 min-h-0 flex-col mt-0">
           <DeclarationsTab />
         </TabsContent>
-        <TabsContent value="statutory">
+        <TabsContent value="statutory" className="mt-0">
           <StatutoryOverviewTab />
         </TabsContent>
-        <TabsContent value="report">
+        <TabsContent value="report" className="flex flex-1 min-h-0 flex-col mt-0">
           <TaxReportTab />
         </TabsContent>
       </Tabs>

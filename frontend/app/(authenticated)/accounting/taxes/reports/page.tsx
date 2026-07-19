@@ -10,6 +10,7 @@ import {
 } from "@/components/illustrations";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { Money, downloadCsv } from "@/features/accounting/shared";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -275,7 +276,7 @@ export default function TaxReportsPage() {
   }, [inputQuery]);
 
   const filters = (
-    <div className="flex flex-wrap items-end gap-3">
+    <div className={FILTER_TOOLBAR_ROW}>
       <div className="flex flex-col gap-1">
         <Label htmlFor="filter-from" className="text-xs">
           From

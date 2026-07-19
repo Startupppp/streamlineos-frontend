@@ -158,7 +158,7 @@ function InboxContent() {
         filters={
           <>
             <Select value={statusFilter} onValueChange={handleStatusFilter}>
-              <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-full sm:w-[130px]`}>
+              <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-[130px]`}>
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -171,7 +171,7 @@ function InboxContent() {
               </SelectContent>
             </Select>
             <Select value={priorityFilter} onValueChange={handlePriorityFilter}>
-              <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-full sm:w-[120px]`}>
+              <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-[120px]`}>
                 <SelectValue placeholder="Priority" />
               </SelectTrigger>
               <SelectContent>

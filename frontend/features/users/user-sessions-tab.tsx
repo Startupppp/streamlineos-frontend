@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useUserSessions, useRevokeSession, useRevokeAllSessions } from "@/hooks/api/users";
 import { getApiError } from "@/lib/api-client";
+import { formatIpAddress } from "@/lib/format-utils";
 import { toast } from "sonner";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -96,7 +97,7 @@ export function UserSessionsTab({ userId }: UserSessionsTabProps) {
       key: "ip",
       header: "IP Address",
       cell: (row) => (
-        <span className="text-muted-foreground font-mono">{row.ipAddress ?? "—"}</span>
+        <span className="text-muted-foreground font-mono">{formatIpAddress(row.ipAddress)}</span>
       ),
     },
     {

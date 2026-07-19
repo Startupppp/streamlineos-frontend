@@ -3,8 +3,14 @@
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import {
   Select,
   SelectContent,
@@ -105,93 +111,143 @@ export function CategoryDialog({ open, onOpenChange, editing }: CategoryDialogPr
 
         return (
         <>
-          <div className="space-y-1.5">
-            <Label htmlFor="cat-name">Name</Label>
-            <Input id="cat-name" {...form.register("name")} placeholder="e.g. Machinery" />
-            {form.formState.errors.name && (
-              <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Name <span className="text-destructive">*</span></FormLabel>
+                <FormControl>
+                  <Input id="cat-name" {...field} placeholder="e.g. Machinery" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
-          </div>
-          <div className="space-y-1.5">
-            <Label>Asset Account</Label>
-            <Select
-              value={String(form.watch("assetAccountId") || "")}
-              onValueChange={(v) => form.setValue("assetAccountId", Number(v))}
-            >
-              <SelectTrigger className="text-sm">
-                <SelectValue placeholder="Select account" />
-              </SelectTrigger>
-              <SelectContent>
-                {accounts.map((a) => (
-                  <SelectItem key={a.id} value={String(a.id)}>
-                    {a.code} — {a.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Depreciation Expense Account</Label>
-            <Select
-              value={String(form.watch("depreciationExpenseAccountId") || "")}
-              onValueChange={(v) => form.setValue("depreciationExpenseAccountId", Number(v))}
-            >
-              <SelectTrigger className="text-sm">
-                <SelectValue placeholder="Select account" />
-              </SelectTrigger>
-              <SelectContent>
-                {accounts.map((a) => (
-                  <SelectItem key={a.id} value={String(a.id)}>
-                    {a.code} — {a.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Accumulated Depreciation Account</Label>
-            <Select
-              value={String(form.watch("accumulatedDepreciationAccountId") || "")}
-              onValueChange={(v) => form.setValue("accumulatedDepreciationAccountId", Number(v))}
-            >
-              <SelectTrigger className="text-sm">
-                <SelectValue placeholder="Select account" />
-              </SelectTrigger>
-              <SelectContent>
-                {accounts.map((a) => (
-                  <SelectItem key={a.id} value={String(a.id)}>
-                    {a.code} — {a.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Default Depreciation Method</Label>
-            <Select
-              value={form.watch("defaultMethod")}
-              onValueChange={handleDefaultMethodChange}
-            >
-              <SelectTrigger className="text-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {METHOD_OPTIONS.map((m) => (
-                  <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="cat-life">Default Useful Life (months)</Label>
-            <Input
-              id="cat-life"
-              type="number"
-              min={1}
-              {...form.register("defaultUsefulLifeMonths")}
-              placeholder="e.g. 60"
-            />
-          </div>
+          />
+          <FormField
+            control={form.control}
+            name="assetAccountId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Asset Account <span className="text-destructive">*</span></FormLabel>
+                <Select
+                  value={String(field.value || "")}
+                  onValueChange={(v) => field.onChange(Number(v))}
+                >
+                  <FormControl>
+                    <SelectTrigger className="text-sm">
+                      <SelectValue placeholder="Select account" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {accounts.map((a) => (
+                      <SelectItem key={a.id} value={String(a.id)}>
+                        {a.code} — {a.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="depreciationExpenseAccountId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Depreciation Expense Account <span className="text-destructive">*</span></FormLabel>
+                <Select
+                  value={String(field.value || "")}
+                  onValueChange={(v) => field.onChange(Number(v))}
+                >
+                  <FormControl>
+                    <SelectTrigger className="text-sm">
+                      <SelectValue placeholder="Select account" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {accounts.map((a) => (
+                      <SelectItem key={a.id} value={String(a.id)}>
+                        {a.code} — {a.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="accumulatedDepreciationAccountId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Accumulated Depreciation Account <span className="text-destructive">*</span></FormLabel>
+                <Select
+                  value={String(field.value || "")}
+                  onValueChange={(v) => field.onChange(Number(v))}
+                >
+                  <FormControl>
+                    <SelectTrigger className="text-sm">
+                      <SelectValue placeholder="Select account" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {accounts.map((a) => (
+                      <SelectItem key={a.id} value={String(a.id)}>
+                        {a.code} — {a.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="defaultMethod"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Default Depreciation Method</FormLabel>
+                <Select value={field.value} onValueChange={handleDefaultMethodChange}>
+                  <FormControl>
+                    <SelectTrigger className="text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {METHOD_OPTIONS.map((m) => (
+                      <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="defaultUsefulLifeMonths"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Default Useful Life (months)</FormLabel>
+                <FormControl>
+                  <Input
+                    id="cat-life"
+                    type="number"
+                    min={1}
+                    placeholder="e.g. 60"
+                    {...field}
+                    value={field.value ?? ""}
+                    onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </>
         );
       }}

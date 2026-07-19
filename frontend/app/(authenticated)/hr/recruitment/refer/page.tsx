@@ -91,8 +91,8 @@ export default function ReferPage() {
       subtitle="Know someone great? Submit a referral and earn a bonus if they're hired."
       variant="display"
     >
-      <div className="flex flex-1 min-h-0 flex-col gap-6">
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
+      <div className="grid gap-4 lg:grid-cols-2">
         <Card className="shadow-sm">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Submit a Referral</CardTitle>

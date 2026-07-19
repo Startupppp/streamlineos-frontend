@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { getErrorMessage } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateOvertimeRequest } from "@/hooks/api/hr/overtime";
 import {
   Form,
@@ -109,7 +109,7 @@ export function OvertimeRequestSheet({ open, onOpenChange }: Props) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
-                  Date
+                  Date <span className="text-destructive">*</span>
                 </FormLabel>
                 <FormControl>
                   <DatePicker value={field.value} onChange={field.onChange} placeholder="Select date" />
@@ -125,7 +125,7 @@ export function OvertimeRequestSheet({ open, onOpenChange }: Props) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
-                  Hours Worked Overtime
+                  Hours Worked Overtime <span className="text-destructive">*</span>
                 </FormLabel>
                 <FormControl>
                   <Input type="number" min="0.5" max="24" step="0.5" className="text-sm" {...field} />

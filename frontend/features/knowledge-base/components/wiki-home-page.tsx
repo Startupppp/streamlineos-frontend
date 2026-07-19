@@ -128,7 +128,7 @@ export default function WikiHomePage() {
   return (
     <PageWrapper title="Wiki" subtitle="Your team knowledge base" actions={newPageAction}>
       {recentPages.length > 0 && (
-        <section className="mb-6">
+        <section className="mb-4">
           <div className="flex items-center gap-2 mb-3">
             <KbClockIcon className="h-4 w-4 text-muted-foreground" />
             <h2 className="text-sm font-semibold text-foreground">Recently visited</h2>
@@ -148,7 +148,7 @@ export default function WikiHomePage() {
       )}
 
       {favoritePages.length > 0 && (
-        <section className="mb-6">
+        <section className="mb-4">
           <div className="flex items-center gap-2 mb-3">
             <KbStarIcon className="h-4 w-4 text-muted-foreground" />
             <h2 className="text-sm font-semibold text-foreground">Favorites</h2>

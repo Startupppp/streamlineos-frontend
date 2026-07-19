@@ -33,7 +33,7 @@ export function PayslipsContent() {
   return (
     <PageWrapper title="Payslips" subtitle="Manage payslip templates and publish to employees">
       <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-1 min-h-0 flex-col">
-        <TabsList className="mb-4">
+        <TabsList className="mb-2">
           <TabsTrigger value="publications">Publications</TabsTrigger>
           <TabsTrigger value="templates">Templates</TabsTrigger>
         </TabsList>

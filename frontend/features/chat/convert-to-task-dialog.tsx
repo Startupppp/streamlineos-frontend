@@ -1,6 +1,9 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -18,10 +21,26 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { useProjects } from "@/hooks/api/projects/projects";
 import { useCreateTaskFromMessage } from "@/hooks/api/chat";
 import { getErrorMessage } from "@/lib/get-error-message";
+
+const schema = z.object({
+  title: z.string().min(1, "Title is required").max(500),
+  projectId: z.string().min(1, "Select a project"),
+  type: z.enum(["TASK", "BUG"]),
+});
+
+type FormValues = z.infer<typeof schema>;
 
 interface Props {
   open: boolean;
@@ -38,54 +57,46 @@ export function ConvertToTaskDialog({
   messageId,
   defaultTitle,
 }: Props) {
-  const [projectId, setProjectId] = useState("");
-  const [type, setType] = useState<"TASK" | "BUG">("TASK");
-  const [title, setTitle] = useState(defaultTitle);
-
-  const [prevOpen, setPrevOpen] = useState(open);
-  if (open !== prevOpen) {
-    setPrevOpen(open);
-    if (open) {
-      setTitle(defaultTitle);
-      setProjectId("");
-      setType("TASK");
-    }
-  }
-
   const { data: projectsData, isLoading: loadingProjects } = useProjects(
     undefined,
     { enabled: open },
   );
   const createTask = useCreateTaskFromMessage();
 
-  const handleSubmit = useCallback(async () => {
-    if (!projectId) {
-      toast.error("Select a project first");
-      return;
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      title: defaultTitle,
+      projectId: "",
+      type: "TASK",
+    },
+  });
+
+  useEffect(() => {
+    if (open) {
+      form.reset({ title: defaultTitle, projectId: "", type: "TASK" });
     }
+  }, [open, defaultTitle, form]);
+
+  async function handleSubmit(values: FormValues) {
     try {
       await createTask.mutateAsync({
         channelId,
         messageId,
-        projectId: Number(projectId),
-        type,
-        title: title.trim() || undefined,
+        projectId: Number(values.projectId),
+        type: values.type,
+        title: values.title.trim() || undefined,
       });
-      toast.success(`Created ${type}`);
+      toast.success(`Created ${values.type}`);
       onOpenChange(false);
     } catch (e) {
       toast.error(getErrorMessage(e));
     }
-  }, [channelId, messageId, projectId, type, title, createTask, onOpenChange]);
+  }
 
-  const handleTitleChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value),
-    [],
-  );
-
-  const handleTypeChange = useCallback((v: string) => setType(v as "TASK" | "BUG"), []);
-
-  const handleCancel = useCallback(() => onOpenChange(false), [onOpenChange]);
+  function handleCancel() {
+    onOpenChange(false);
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -93,61 +104,86 @@ export function ConvertToTaskDialog({
         <DialogHeader>
           <DialogTitle>Convert to Task</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="ctd-title">Title</Label>
-            <Input
-              id="ctd-title"
-              value={title}
-              onChange={handleTitleChange}
-              placeholder="Task title"
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 py-2">
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Title <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Task title" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Project</Label>
-            <Select
-              value={projectId}
-              onValueChange={setProjectId}
-              disabled={loadingProjects}
-            >
-              <SelectTrigger>
-                <SelectValue
-                  placeholder={loadingProjects ? "Loading…" : "Select project"}
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {projectsData?.data.map((p) => (
-                  <SelectItem key={p.id} value={String(p.id)}>
-                    {p.key} — {p.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Type</Label>
-            <Select value={type} onValueChange={handleTypeChange}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="TASK">Task</SelectItem>
-                <SelectItem value="BUG">Bug</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={handleCancel}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={createTask.isPending || !projectId}
-          >
-            {createTask.isPending ? "Creating…" : "Create"}
-          </Button>
-        </DialogFooter>
+            <FormField
+              control={form.control}
+              name="projectId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Project <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    disabled={loadingProjects}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={loadingProjects ? "Loading…" : "Select project"}
+                        />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {projectsData?.data.map((p) => (
+                        <SelectItem key={p.id} value={String(p.id)}>
+                          {p.key} — {p.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Type</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="TASK">Task</SelectItem>
+                      <SelectItem value="BUG">Bug</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={handleCancel}>
+                Cancel
+              </Button>
+              <LoadingButton type="submit" isPending={createTask.isPending} loadingText="Creating…">
+                Create
+              </LoadingButton>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { kbCategorySchema, type KbCategoryFormValues } from "./kb-category-schema";
 import {
   Dialog,
   DialogContent,
@@ -9,16 +11,24 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import {
   useCreateKbCategory,
   useUpdateKbCategory,
   type KbCategory,
 } from "@/hooks/api/support/kb";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 
 export interface KbCategoryDialogProps {
@@ -28,54 +38,54 @@ export interface KbCategoryDialogProps {
 
 export function KbCategoryDialog({ category, onClose }: KbCategoryDialogProps) {
   const isEdit = !!category;
-  const [name, setName] = useState(category?.name ?? "");
-  const [description, setDescription] = useState(category?.description ?? "");
-  const [icon, setIcon] = useState(category?.icon ?? "");
-  const [isPublished, setIsPublished] = useState(category?.isPublished ?? false);
-
   const create = useCreateKbCategory();
   const update = useUpdateKbCategory();
   const isPending = create.isPending || update.isPending;
 
-  function handleNameChange(event: ChangeEvent<HTMLInputElement>) {
-    setName(event.target.value);
-  }
+  const form = useForm<KbCategoryFormValues>({
+    resolver: zodResolver(kbCategorySchema),
+    defaultValues: {
+      name: category?.name ?? "",
+      description: category?.description ?? "",
+      icon: category?.icon ?? "",
+      isPublished: category?.isPublished ?? false,
+    },
+  });
 
-  function handleDescriptionChange(event: ChangeEvent<HTMLTextAreaElement>) {
-    setDescription(event.target.value);
-  }
-
-  function handleIconChange(event: ChangeEvent<HTMLInputElement>) {
-    setIcon(event.target.value);
-  }
-
-  function handleSave() {
-    if (!name.trim()) return;
-    const payload = {
-      name: name.trim(),
-      description: description.trim() || undefined,
-      icon: icon.trim() || undefined,
-      isPublished,
-    };
+  function handleSave(values: KbCategoryFormValues) {
     if (isEdit) {
       update.mutate(
-        { id: category.id, ...payload, description: description.trim() || null, icon: icon.trim() || null },
+        {
+          id: category.id,
+          name: values.name,
+          description: values.description?.trim() || null,
+          icon: values.icon?.trim() || null,
+          isPublished: values.isPublished,
+        },
         {
           onSuccess: () => {
             toast.success("Category updated");
             onClose();
           },
-          onError: (e) => toast.error(getApiError(e)),
+          onError: (e) => toast.error(getErrorMessage(e)),
         },
       );
     } else {
-      create.mutate(payload, {
-        onSuccess: () => {
-          toast.success("Category created");
-          onClose();
+      create.mutate(
+        {
+          name: values.name,
+          description: values.description?.trim() || undefined,
+          icon: values.icon?.trim() || undefined,
+          isPublished: values.isPublished,
         },
-        onError: (e) => toast.error(getApiError(e)),
-      });
+        {
+          onSuccess: () => {
+            toast.success("Category created");
+            onClose();
+          },
+          onError: (e) => toast.error(getErrorMessage(e)),
+        },
+      );
     }
   }
 
@@ -85,45 +95,76 @@ export function KbCategoryDialog({ category, onClose }: KbCategoryDialogProps) {
         <DialogHeader>
           <DialogTitle>{isEdit ? "Edit Category" : "New Category"}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-2">
-          <div className="space-y-1">
-            <Label>Name *</Label>
-            <Input
-              placeholder="e.g. Getting Started"
-              value={name}
-              onChange={handleNameChange}
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSave)} className="space-y-4 py-2">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Name <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="e.g. Getting Started" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          <div className="space-y-1">
-            <Label>Description</Label>
-            <Textarea rows={2} value={description} onChange={handleDescriptionChange} />
-          </div>
-          <div className="space-y-1">
-            <Label>Icon name</Label>
-            <Input
-              placeholder="Optional lucide icon name"
-              value={icon}
-              onChange={handleIconChange}
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea rows={2} {...field} value={field.value ?? ""} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
-            <div>
-              <p className="text-sm font-medium">Published to help center</p>
-              <p className="text-xs text-muted-foreground">
-                Show this category on the public help center
-              </p>
-            </div>
-            <Switch checked={isPublished} onCheckedChange={setIsPublished} />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave} disabled={isPending || !name.trim()}>
-            {isPending ? "Saving…" : isEdit ? "Save Changes" : "Create Category"}
-          </Button>
-        </DialogFooter>
+            <FormField
+              control={form.control}
+              name="icon"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Icon name</FormLabel>
+                  <FormControl>
+                    <Input {...field} value={field.value ?? ""} placeholder="Optional lucide icon name" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="isPublished"
+              render={({ field }) => (
+                <FormItem className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
+                  <div>
+                    <FormLabel className="mb-0">Published to help center</FormLabel>
+                    <p className="text-xs text-muted-foreground">
+                      Show this category on the public help center
+                    </p>
+                  </div>
+                  <FormControl>
+                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
+              <LoadingButton type="submit" isPending={isPending} loadingText="Saving…">
+                {isEdit ? "Save Changes" : "Create Category"}
+              </LoadingButton>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

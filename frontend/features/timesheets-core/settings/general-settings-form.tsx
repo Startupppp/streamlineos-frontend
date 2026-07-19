@@ -11,6 +11,8 @@ import {
 } from "@/hooks/api/timesheets-core/settings";
 import { useCan } from "@/hooks/api/access";
 import type { RoundingRule, ApprovalMode, TimesheetSettings } from "@/features/timesheets-core/types";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
@@ -154,7 +156,11 @@ export function GeneralSettingsForm() {
   const handleSave = handleSubmit((values) => {
     if (!settings) return;
     const changes = buildChanges(values, settings);
-    if (Object.keys(changes).length > 0) update.mutate(changes);
+    if (Object.keys(changes).length > 0) {
+      update.mutate(changes, {
+        onError: (err) => toast.error(getErrorMessage(err)),
+      });
+    }
   });
 
   const handleRetry = () => { void refetch(); };

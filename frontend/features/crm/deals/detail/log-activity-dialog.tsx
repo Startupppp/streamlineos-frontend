@@ -66,7 +66,7 @@ export function LogActivityDialog({
           name="notes"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Details</FormLabel>
+              <FormLabel>Details <span className="text-destructive">*</span></FormLabel>
               <FormControl>
                 <Textarea
                   placeholder={`Enter ${actionLabel.toLowerCase()} details...`}

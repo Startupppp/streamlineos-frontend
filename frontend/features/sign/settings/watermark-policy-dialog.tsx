@@ -1,40 +1,46 @@
 "use client";
 
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateWatermarkPolicy } from "@/hooks/api/sign/settings";
-
-const ENVELOPE_STATES = ["draft", "sent", "completed", "voided", "expired"];
+import {
+  watermarkPolicySchema,
+  type WatermarkPolicyValues,
+  ENVELOPE_STATES,
+} from "./watermark-policy-schema";
 
 export function WatermarkPolicyDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
-  const [text, setText] = useState("CONFIDENTIAL");
-  const [states, setStates] = useState<string[]>(["draft"]);
-  const [showOnFinalPdf, setShowOnFinalPdf] = useState(false);
   const create = useCreateWatermarkPolicy();
 
-  function toggleState(state: string) {
-    setStates((prev) => (prev.includes(state) ? prev.filter((s) => s !== state) : [...prev, state]));
-  }
+  const form = useForm<WatermarkPolicyValues>({
+    resolver: zodResolver(watermarkPolicySchema),
+    defaultValues: {
+      text: "CONFIDENTIAL",
+      states: ["draft"],
+      showOnFinalPdf: false,
+    },
+  });
 
-  async function handleSubmit() {
+  async function handleSubmit(values: WatermarkPolicyValues) {
     try {
       await create.mutateAsync({
         scopeType: "tenant",
-        appliesStates: states,
-        text,
+        appliesStates: values.states,
+        text: values.text,
         opacity: 30,
         angle: 45,
         color: "#94A3B8",
         fontSize: 36,
-        showOnFinalPdf,
-        previewOnly: !showOnFinalPdf,
+        showOnFinalPdf: values.showOnFinalPdf,
+        previewOnly: !values.showOnFinalPdf,
         enabled: true,
       });
       toast.success("Watermark policy created");
@@ -44,39 +50,88 @@ export function WatermarkPolicyDialog({ open, onOpenChange }: { open: boolean; o
     }
   }
 
+  function handleOpenChange(next: boolean) {
+    if (!next) form.reset();
+    onOpenChange(next);
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>New watermark policy</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
-          <div className="space-y-1.5">
-            <Label>Text</Label>
-            <Input value={text} onChange={(e) => setText(e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <Label>Apply to states</Label>
-            {ENVELOPE_STATES.map((state) => (
-              <label key={state} className="flex items-center gap-2 text-sm capitalize cursor-pointer">
-                <Checkbox checked={states.includes(state)} onCheckedChange={() => toggleState(state)} />
-                {state}
-              </label>
-            ))}
-          </div>
-          <label className="flex items-center gap-2 text-sm cursor-pointer">
-            <Checkbox checked={showOnFinalPdf} onCheckedChange={(v) => setShowOnFinalPdf(v === true)} />
-            Include on the final signed PDF (not just preview)
-          </label>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <LoadingButton onClick={handleSubmit} isPending={create.isPending} loadingText="Creating…">
-            Create
-          </LoadingButton>
-        </DialogFooter>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="text"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Text <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="states"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Apply to states <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <div className="space-y-2">
+                    {ENVELOPE_STATES.map((state) => (
+                      <label key={state} className="flex items-center gap-2 text-sm capitalize cursor-pointer">
+                        <Checkbox
+                          checked={field.value.includes(state)}
+                          onCheckedChange={(checked) => {
+                            const next = checked
+                              ? [...field.value, state]
+                              : field.value.filter((s) => s !== state);
+                            field.onChange(next);
+                          }}
+                        />
+                        {state}
+                      </label>
+                    ))}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="showOnFinalPdf"
+              render={({ field }) => (
+                <FormItem>
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={(v) => field.onChange(v === true)}
+                    />
+                    Include on the final signed PDF (not just preview)
+                  </label>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
+                Cancel
+              </Button>
+              <LoadingButton type="submit" isPending={create.isPending} loadingText="Creating…">
+                Create
+              </LoadingButton>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

@@ -8,7 +8,6 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { ChevronLeftIcon, ChevronRightIcon } from "@animateicons/react/lucide";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -276,17 +275,13 @@ export function TeamView() {
             className="min-h-[30dvh]"
           />
         ) : (
-          <Card>
-            <CardContent className="p-0">
-              <TeamTable
-                rows={filteredRows}
-                weekStart={weekStart}
-                isLoading={isLoading}
-                onRowClick={handleRowClick}
-                onRemindAll={handleRemindAll}
-              />
-            </CardContent>
-          </Card>
+          <TeamTable
+            rows={filteredRows}
+            weekStart={weekStart}
+            isLoading={isLoading}
+            onRowClick={handleRowClick}
+            onRemindAll={handleRemindAll}
+          />
         )}
       </motion.div>
 

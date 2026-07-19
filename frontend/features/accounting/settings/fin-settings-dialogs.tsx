@@ -7,6 +7,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -101,19 +108,45 @@ export function SequenceEditDialog({
     >
       {(form) => (
         <>
-          <div className="space-y-1.5">
-            <Label>Prefix</Label>
-            <Input {...form.register("prefix")} placeholder="INV-" />
-            {form.formState.errors.prefix && <p className="text-xs text-destructive">{form.formState.errors.prefix.message}</p>}
-          </div>
-          <div className="space-y-1.5">
-            <Label>Padding digits</Label>
-            <Input {...form.register("padding")} type="number" min={1} max={10} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Next number</Label>
-            <Input {...form.register("nextNumber")} type="number" min={1} />
-          </div>
+          <FormField
+            control={form.control}
+            name="prefix"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Prefix <span className="text-destructive">*</span></FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="INV-" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="padding"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Padding digits <span className="text-destructive">*</span></FormLabel>
+                <FormControl>
+                  <Input {...field} type="number" min={1} max={10} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="nextNumber"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Next number <span className="text-destructive">*</span></FormLabel>
+                <FormControl>
+                  <Input {...field} type="number" min={1} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </>
       )}
     </EntityFormDialog>
@@ -260,10 +293,22 @@ export function PolicyDialog({
             <Label>Approver role (optional)</Label>
             <Input {...form.register("approverRole")} placeholder="e.g. FINANCE_MANAGER" />
           </div>
-          <div className="flex items-center gap-2">
-            <input type="checkbox" id="policy-isActive" className="h-4 w-4" {...form.register("isActive")} />
-            <Label htmlFor="policy-isActive">Active</Label>
-          </div>
+          <FormField
+            control={form.control}
+            name="isActive"
+            render={({ field }) => (
+              <FormItem className="flex items-center gap-2">
+                <FormControl>
+                  <Checkbox
+                    id="policy-isActive"
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <FormLabel htmlFor="policy-isActive" className="!mt-0">Active</FormLabel>
+              </FormItem>
+            )}
+          />
         </>
         );
       }}
@@ -387,20 +432,48 @@ export function PaymentTermDialog({
     >
       {(form) => (
         <>
-          <div className="space-y-1.5">
-            <Label>Label</Label>
-            <Input {...form.register("label")} placeholder="Net 30" />
-            {form.formState.errors.label && <p className="text-xs text-destructive">{form.formState.errors.label.message}</p>}
-          </div>
-          <div className="space-y-1.5">
-            <Label>Days</Label>
-            <Input {...form.register("days")} type="number" min={0} placeholder="30" />
-            {form.formState.errors.days && <p className="text-xs text-destructive">{form.formState.errors.days.message}</p>}
-          </div>
-          <div className="flex items-center gap-2">
-            <input type="checkbox" id="term-isDefault" className="h-4 w-4" {...form.register("isDefault")} />
-            <Label htmlFor="term-isDefault">Set as default</Label>
-          </div>
+          <FormField
+            control={form.control}
+            name="label"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Label <span className="text-destructive">*</span></FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="Net 30" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="days"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Days <span className="text-destructive">*</span></FormLabel>
+                <FormControl>
+                  <Input {...field} type="number" min={0} placeholder="30" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="isDefault"
+            render={({ field }) => (
+              <FormItem className="flex items-center gap-2">
+                <FormControl>
+                  <Checkbox
+                    id="term-isDefault"
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <FormLabel htmlFor="term-isDefault" className="!mt-0">Set as default</FormLabel>
+              </FormItem>
+            )}
+          />
         </>
       )}
     </EntityFormDialog>

@@ -22,6 +22,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { HrSheet } from "@/features/hr/hr-sheet";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useReportIncident } from "@/hooks/api/hr/safety";
 import type { IncidentType, IncidentSeverity } from "@/hooks/api/hr/safety";
 
@@ -74,9 +76,11 @@ export function ReportIncidentSheet({ open, onOpenChange }: Props) {
   function handleSubmit(values: FormValues) {
     report.mutate(values, {
       onSuccess: () => {
+        toast.success("Incident reported successfully");
         onOpenChange(false);
         form.reset();
       },
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }
 
@@ -143,7 +147,7 @@ export function ReportIncidentSheet({ open, onOpenChange }: Props) {
             name="location"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Location</FormLabel>
+                <FormLabel>Location <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
                   <Input className="" placeholder="Where did this occur?" {...field} />
                 </FormControl>
@@ -157,7 +161,7 @@ export function ReportIncidentSheet({ open, onOpenChange }: Props) {
             name="occurredAt"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Date & Time</FormLabel>
+                <FormLabel>Date & Time <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
                   <Input type="datetime-local" className="" {...field} />
                 </FormControl>
@@ -171,7 +175,7 @@ export function ReportIncidentSheet({ open, onOpenChange }: Props) {
             name="description"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Description</FormLabel>
+                <FormLabel>Description <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
                   <Textarea rows={5} placeholder="Describe what happened..." {...field} />
                 </FormControl>

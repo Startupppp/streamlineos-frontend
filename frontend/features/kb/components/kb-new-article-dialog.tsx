@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { kbArticleSchema, type KbArticleFormValues } from "./kb-new-article-schema";
 import {
   Dialog,
   DialogContent,
@@ -10,8 +12,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -20,18 +22,22 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
   useCreateKbArticle,
   type KbCategory,
   type KbArticleVisibility,
 } from "@/hooks/api/support/kb";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 
-const CATEGORY_ALL = "all";
-
-function isKbArticleVisibility(v: string): v is KbArticleVisibility {
-  return v === "public" || v === "internal";
-}
+const CATEGORY_NONE = "none";
 
 export interface KbNewArticleDialogProps {
   categories: KbCategory[];
@@ -40,26 +46,23 @@ export interface KbNewArticleDialogProps {
 
 export function KbNewArticleDialog({ categories, onClose }: KbNewArticleDialogProps) {
   const router = useRouter();
-  const [title, setTitle] = useState("");
-  const [categoryId, setCategoryId] = useState<string>(CATEGORY_ALL);
-  const [visibility, setVisibility] = useState<KbArticleVisibility>("internal");
   const create = useCreateKbArticle();
 
-  function handleTitleChange(event: ChangeEvent<HTMLInputElement>) {
-    setTitle(event.target.value);
-  }
+  const form = useForm<KbArticleFormValues>({
+    resolver: zodResolver(kbArticleSchema),
+    defaultValues: {
+      title: "",
+      categoryId: CATEGORY_NONE,
+      visibility: "internal",
+    },
+  });
 
-  function handleVisibilityChange(v: string) {
-    if (isKbArticleVisibility(v)) setVisibility(v);
-  }
-
-  function handleCreate() {
-    if (!title.trim()) return;
+  function handleCreate(values: KbArticleFormValues) {
     create.mutate(
       {
-        title: title.trim(),
-        categoryId: categoryId === CATEGORY_ALL ? null : Number(categoryId),
-        visibility,
+        title: values.title.trim(),
+        categoryId: values.categoryId === CATEGORY_NONE ? null : Number(values.categoryId),
+        visibility: values.visibility as KbArticleVisibility,
       },
       {
         onSuccess: (article) => {
@@ -67,7 +70,7 @@ export function KbNewArticleDialog({ categories, onClose }: KbNewArticleDialogPr
           onClose();
           router.push(`/support/kb/${article.id}`);
         },
-        onError: (e) => toast.error(getApiError(e)),
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }
@@ -78,54 +81,81 @@ export function KbNewArticleDialog({ categories, onClose }: KbNewArticleDialogPr
         <DialogHeader>
           <DialogTitle>New Article</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-2">
-          <div className="space-y-1">
-            <Label>Title *</Label>
-            <Input
-              placeholder="e.g. How to reset your password"
-              value={title}
-              onChange={handleTitleChange}
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleCreate)} className="space-y-4 py-2">
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Title <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="e.g. How to reset your password" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label>Category</Label>
-              <Select value={categoryId} onValueChange={setCategoryId}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={CATEGORY_ALL}>Uncategorized</SelectItem>
-                  {categories.map((c) => (
-                    <SelectItem key={c.id} value={String(c.id)}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-3">
+              <FormField
+                control={form.control}
+                name="categoryId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value={CATEGORY_NONE}>Uncategorized</SelectItem>
+                        {categories.map((c) => (
+                          <SelectItem key={c.id} value={String(c.id)}>
+                            {c.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="visibility"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Visibility</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="internal">Internal</SelectItem>
+                        <SelectItem value="public">Public</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
-            <div className="space-y-1">
-              <Label>Visibility</Label>
-              <Select value={visibility} onValueChange={handleVisibilityChange}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="internal">Internal</SelectItem>
-                  <SelectItem value="public">Public</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button onClick={handleCreate} disabled={create.isPending || !title.trim()}>
-            {create.isPending ? "Creating…" : "Create & Edit"}
-          </Button>
-        </DialogFooter>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
+              <LoadingButton type="submit" isPending={create.isPending} loadingText="Creating…">
+                Create &amp; Edit
+              </LoadingButton>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

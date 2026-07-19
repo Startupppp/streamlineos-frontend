@@ -188,7 +188,7 @@ export default function InterviewerPerformancePage() {
             <SelectTrigger className={cn("w-40", FILTER_SELECT_TRIGGER)}>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="w-[var(--radix-select-trigger-width)]">
+            <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
               {PERIOD_OPTIONS.map((opt) => (
                 <SelectItem key={opt.value} value={opt.value} className="text-xs">
                   {opt.label}

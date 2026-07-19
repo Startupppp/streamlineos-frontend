@@ -82,7 +82,7 @@ export function VendorPaymentAllocationDialog({
         <form onSubmit={form.handleSubmit(handleAllocate)} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="vendorPaymentId" className="text-xs font-medium">
-              Vendor Payment ID
+              Vendor Payment ID <span className="text-destructive">*</span>
             </Label>
             <Input
               id="vendorPaymentId"
@@ -103,7 +103,7 @@ export function VendorPaymentAllocationDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs font-medium">Bill</Label>
+            <Label className="text-xs font-medium">Bill <span className="text-destructive">*</span></Label>
             <Controller
               control={form.control}
               name="billId"
@@ -129,7 +129,7 @@ export function VendorPaymentAllocationDialog({
 
           <div className="space-y-1.5">
             <Label htmlFor="amount" className="text-xs font-medium">
-              Amount
+              Amount <span className="text-destructive">*</span>
             </Label>
             <Input
               id="amount"

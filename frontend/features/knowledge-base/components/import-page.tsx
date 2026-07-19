@@ -221,7 +221,7 @@ export default function ImportPage() {
 
   return (
     <PageWrapper title="Import & Export">
-      <div className="space-y-6">
+      <div className="space-y-4">
         <PageSection title="Import Pages">
           <div className="space-y-4">
             <div className="flex gap-2">

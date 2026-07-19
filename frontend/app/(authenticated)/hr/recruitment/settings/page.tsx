@@ -76,7 +76,7 @@ export default function RecruitmentSettingsPage() {
       title="Settings"
       subtitle="Configure hiring flows, scorecards, communication templates, and reports for TalentOS."
  variant="display">
-      <div className="space-y-8">
+      <div className="space-y-4">
         {SECTIONS.map((section) => (
           <div key={section.title}>
             <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">

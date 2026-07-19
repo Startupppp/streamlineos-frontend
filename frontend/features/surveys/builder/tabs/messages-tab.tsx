@@ -8,15 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { usePatchSurvey, type SurveyForm } from "@/hooks/api/surveys/forms";
 import { messagesSchema, type MessagesValues } from "./messages-schema";
 
-type SurveyMessages = MessagesValues;
-
 export function MessagesTab({ survey }: { survey: SurveyForm }) {
   const patchSurvey = usePatchSurvey(survey.id);
-  const existing = (survey.settings.messages as SurveyMessages | undefined) ?? {};
+  const existing = (survey.settings.messages as MessagesValues | undefined) ?? {};
 
   const form = useForm<MessagesValues>({
     resolver: zodResolver(messagesSchema),
@@ -34,7 +32,7 @@ export function MessagesTab({ survey }: { survey: SurveyForm }) {
       await patchSurvey.mutateAsync({ settings: { ...survey.settings, messages: values } });
       toast.success("Messages saved");
     } catch (error) {
-      toast.error(getApiError(error));
+      toast.error(getErrorMessage(error));
     }
   }
 

@@ -260,6 +260,7 @@ function SalesOrdersContent() {
       <DataTable
         data={items}
         columns={columns}
+        className="flex-1 min-h-0"
         getRowKey={(so) => so.id}
         isLoading={query.isLoading}
         emptyState={

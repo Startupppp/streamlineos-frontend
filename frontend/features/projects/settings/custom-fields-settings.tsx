@@ -1,15 +1,25 @@
 "use client";
 
 import { memo, useState, useCallback } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
   useProjectCustomFields,
   useCreateProjectCustomField,
   useDeleteProjectCustomField,
 } from "@/hooks/api/projects/custom-fields";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -40,6 +50,14 @@ import type { CustomFieldType } from "@/types/projects/tasks";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { TEXT_ONE_LINE, TEXT_BODY } from "@/features/projects/shared/text-overflow";
+
+const customFieldSchema = z.object({
+  fieldName: z.string().min(1, "Field name is required"),
+  fieldType: z.string(),
+  options: z.string(),
+});
+
+type CustomFieldFormValues = z.infer<typeof customFieldSchema>;
 
 const FIELD_TYPES: Array<{ value: CustomFieldType; label: string }> = [
   { value: "text", label: "Text" },
@@ -159,60 +177,41 @@ interface CustomFieldsSettingsProps {
 
 export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
   const [showForm, setShowForm] = useState(false);
-  const [fieldName, setFieldName] = useState("");
-  const [fieldType, setFieldType] = useState<CustomFieldType>("text");
-  const [options, setOptions] = useState("");
 
   const { data: fields = [], isLoading } = useProjectCustomFields(projectId);
   const createField = useCreateProjectCustomField(projectId);
   const deleteField = useDeleteProjectCustomField(projectId);
 
-  const handleFieldNameChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setFieldName(e.target.value),
-    [],
-  );
+  const form = useForm<CustomFieldFormValues>({
+    resolver: zodResolver(customFieldSchema),
+    defaultValues: { fieldName: "", fieldType: "text", options: "" },
+  });
 
-  const handleOptionsChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setOptions(e.target.value),
-    [],
-  );
-
-  const handleFieldTypeChange = useCallback((v: string) => {
-    const found = FIELD_TYPES.find((t) => t.value === v);
-    if (found) setFieldType(found.value);
-  }, []);
+  const currentFieldType = form.watch("fieldType");
 
   const handleCancelForm = useCallback(() => {
     setShowForm(false);
-    setFieldName("");
-    setOptions("");
-    setFieldType("text");
-  }, []);
+    form.reset();
+  }, [form]);
 
-  const handleCreate = useCallback(() => {
-    if (!fieldName.trim()) return;
+  const handleCreate = useCallback((values: CustomFieldFormValues) => {
     const parsedOptions =
-      (fieldType === "select" || fieldType === "multi_select") && options.trim()
-        ? options
-            .split(",")
-            .map((s) => s.trim())
-            .filter(Boolean)
+      (values.fieldType === "select" || values.fieldType === "multi_select") && values.options.trim()
+        ? values.options.split(",").map((s) => s.trim()).filter(Boolean)
         : null;
 
     createField.mutate(
-      { name: fieldName.trim(), type: fieldType, options: parsedOptions },
+      { name: values.fieldName.trim(), type: values.fieldType as CustomFieldType, options: parsedOptions },
       {
         onSuccess: () => {
-          setFieldName("");
-          setFieldType("text");
-          setOptions("");
+          form.reset();
           setShowForm(false);
           toast.success("Custom field created");
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [fieldName, fieldType, options, createField]);
+  }, [createField, form]);
 
   const handleDelete = useCallback(
     (fieldId: number) => {
@@ -263,7 +262,7 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="flex flex-col items-center gap-2 py-8 text-center"
+                className="flex flex-col items-center gap-2 py-4 text-center"
               >
                 <Sliders className="w-8 text-muted-foreground/30" />
                 <p className="text-sm text-muted-foreground">
@@ -291,75 +290,73 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                className="p-4 rounded-lg border border-border bg-muted/30 space-y-3 overflow-hidden"
+                className="overflow-hidden"
               >
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label className="text-xs">Field Name</Label>
-                    <Input
-                      value={fieldName}
-                      onChange={handleFieldNameChange}
-                      placeholder="e.g. Story Points"
-                      className="text-sm"
-                      autoFocus
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Type</Label>
-                    <Select
-                      value={fieldType}
-                      onValueChange={handleFieldTypeChange}
-                    >
-                      <SelectTrigger className="text-sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {FIELD_TYPES.map((t) => (
-                          <SelectItem
-                            key={t.value}
-                            value={t.value}
-                            className="text-sm"
-                          >
-                            {t.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                {(fieldType === "select" || fieldType === "multi_select") && (
-                  <div className="space-y-1">
-                    <Label className="text-xs">
-                      Options (comma-separated)
-                    </Label>
-                    <Input
-                      value={options}
-                      onChange={handleOptionsChange}
-                      placeholder="Option 1, Option 2, Option 3"
-                      className="text-sm"
-                    />
-                  </div>
-                )}
-                <div className="flex gap-2">
-                  <LoadingButton
-                    size="sm"
-                    onClick={handleCreate}
-                    disabled={!fieldName.trim()}
-                    isPending={createField.isPending}
-                    loadingText="Creating…"
-                    className="text-xs"
+                <Form {...form}>
+                  <form
+                    onSubmit={form.handleSubmit(handleCreate)}
+                    className="p-4 rounded-lg border border-border bg-muted/30 space-y-3"
                   >
-                    Create Field
-                  </LoadingButton>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={handleCancelForm}
-                    className="text-xs"
-                  >
-                    Cancel
-                  </Button>
-                </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <FormField
+                        control={form.control}
+                        name="fieldName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">Field Name <span className="text-destructive">*</span></FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="e.g. Story Points" className="text-sm" autoFocus />
+                            </FormControl>
+                            <FormMessage className="text-[10px]" />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="fieldType"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">Type</FormLabel>
+                            <Select value={field.value} onValueChange={field.onChange}>
+                              <FormControl>
+                                <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {FIELD_TYPES.map((t) => (
+                                  <SelectItem key={t.value} value={t.value} className="text-sm">{t.label}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage className="text-[10px]" />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    {(currentFieldType === "select" || currentFieldType === "multi_select") && (
+                      <FormField
+                        control={form.control}
+                        name="options"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">Options (comma-separated)</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="Option 1, Option 2, Option 3" className="text-sm" />
+                            </FormControl>
+                            <FormMessage className="text-[10px]" />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+                    <div className="flex gap-2">
+                      <LoadingButton type="submit" size="sm" isPending={createField.isPending} loadingText="Creating…" className="text-xs">
+                        Create Field
+                      </LoadingButton>
+                      <Button type="button" size="sm" variant="ghost" onClick={handleCancelForm} className="text-xs">
+                        Cancel
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
               </motion.div>
             )}
           </AnimatePresence>

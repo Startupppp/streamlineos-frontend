@@ -337,7 +337,7 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                        <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                           {TEMPLATE_TYPES.map((t) => (
                             <SelectItem key={t.value} value={t.value}>
                               {t.label}

@@ -6,13 +6,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Card, CardContent } from "@/components/ui/card";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Input } from "@/components/ui/input";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import { Switch } from "@/components/ui/switch";
@@ -193,7 +194,7 @@ function CreateBonusDialog({ open, onOpenChange }: CreateBonusDialogProps) {
           form.reset();
           onOpenChange(false);
         },
-        onError: () => toast.error("Failed to create bonus"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   });
@@ -215,7 +216,7 @@ function CreateBonusDialog({ open, onOpenChange }: CreateBonusDialogProps) {
               name="userId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Employee</FormLabel>
+                  <FormLabel>Employee <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <UserCombobox
                       value={field.value}
@@ -256,7 +257,7 @@ function CreateBonusDialog({ open, onOpenChange }: CreateBonusDialogProps) {
               name="amount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Amount</FormLabel>
+                  <FormLabel>Amount <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <Input type="number" min="0" step="0.01" placeholder="0.00" {...field} />
                   </FormControl>
@@ -317,9 +318,9 @@ function CreateBonusDialog({ open, onOpenChange }: CreateBonusDialogProps) {
               <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={createBonus.isPending}>
-                {createBonus.isPending ? "Creating…" : "Create Bonus"}
-              </Button>
+              <LoadingButton type="submit" isPending={createBonus.isPending} loadingText="Creating…">
+                Create Bonus
+              </LoadingButton>
             </DialogFooter>
           </form>
         </Form>
@@ -521,24 +522,21 @@ export function BonusesTab() {
   return (
     <div className="flex flex-1 min-h-0 flex-col gap-0 pt-3">
       {filterBar}
-      <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
-        <CardContent className="flex min-h-0 min-w-0 flex-col overflow-hidden p-0">
-          <DataTable
-            data={filtered}
-            columns={columns}
-            getRowKey={(row) => row.id}
-            isLoading={isLoading}
-            minWidth="700px"
-            emptyState={
-              <EmptyState
-                illustration={<EmptyReportIllustration />}
-                title="No bonuses found"
-                description="No bonuses match the current filters."
-              />
-            }
+      <DataTable
+        className="flex-1 min-h-0"
+        data={filtered}
+        columns={columns}
+        getRowKey={(row) => row.id}
+        isLoading={isLoading}
+        minWidth="700px"
+        emptyState={
+          <EmptyState
+            illustration={<EmptyReportIllustration />}
+            title="No bonuses found"
+            description="No bonuses match the current filters."
           />
-        </CardContent>
-      </Card>
+        }
+      />
 
       <CreateBonusDialog open={createOpen} onOpenChange={setCreateOpen} />
     </div>

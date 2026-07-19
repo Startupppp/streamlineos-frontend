@@ -1,6 +1,9 @@
 "use client";
 
 import { memo, useState, useCallback } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
   Sheet,
   SheetContent,
@@ -9,11 +12,18 @@ import {
   SheetFooter,
   SheetBody,
 } from "@/components/ui/sheet";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -30,14 +40,22 @@ import {
   useCreateGoal,
   useUpdateGoal,
   type GoalDetail,
-  type GoalLevel,
-  type GoalStatus,
   type KeyResultMetric,
   type KeyResultInput,
 } from "@/hooks/api/goals";
 import { useChatOrgUsers } from "@/hooks/api/chat";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { LEVEL_OPTIONS, STATUS_OPTIONS, METRIC_OPTIONS } from "./constants";
+
+const goalSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string(),
+  level: z.enum(["company", "team", "individual"]),
+  status: z.enum(["not_started", "on_track", "at_risk", "off_track", "completed"]),
+  ownerId: z.string(),
+  startDate: z.string(),
+  dueDate: z.string(),
+});
 
 interface GoalFormSheetProps {
   open: boolean;
@@ -146,21 +164,14 @@ const KeyResultRow = memo(function KeyResultRow({ kr, index, onUpdate, onRemove 
   );
 });
 
+type GoalFormValues = z.infer<typeof goalSchema>;
+
 export function GoalFormSheet({
   open,
   onOpenChange,
   goal,
 }: GoalFormSheetProps) {
   const isEdit = !!goal;
-  const [title, setTitle] = useState(goal?.title ?? "");
-  const [description, setDescription] = useState(goal?.description ?? "");
-  const [level, setLevel] = useState<GoalLevel>(goal?.level ?? "company");
-  const [status, setStatus] = useState<GoalStatus>(
-    goal?.status ?? "not_started",
-  );
-  const [ownerId, setOwnerId] = useState<string>(goal?.ownerId ?? "unassigned");
-  const [startDate, setStartDate] = useState(goal?.startDate ?? "");
-  const [dueDate, setDueDate] = useState(goal?.dueDate ?? "");
   const [keyResults, setKeyResults] = useState<DraftKeyResult[]>([]);
 
   const { data: orgUsers } = useChatOrgUsers(open);
@@ -168,29 +179,18 @@ export function GoalFormSheet({
   const updateGoal = useUpdateGoal();
   const isPending = createGoal.isPending || updateGoal.isPending;
 
-  function handleTitleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setTitle(e.target.value);
-  }
-  function handleDescriptionChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    setDescription(e.target.value);
-  }
-  function handleLevelChange(v: string) {
-    const found = LEVEL_OPTIONS.find((o) => o.value === v);
-    if (found) setLevel(found.value);
-  }
-  function handleGoalStatusChange(v: string) {
-    const found = STATUS_OPTIONS.find((o) => o.value === v);
-    if (found) setStatus(found.value);
-  }
-  function handleStartDateChange(value: string) {
-    setStartDate(value);
-  }
-  function handleDueDateChange(value: string) {
-    setDueDate(value);
-  }
-  function handleClose() {
-    onOpenChange(false);
-  }
+  const form = useForm<GoalFormValues>({
+    resolver: zodResolver(goalSchema),
+    defaultValues: {
+      title: goal?.title ?? "",
+      description: goal?.description ?? "",
+      level: goal?.level ?? "company",
+      status: goal?.status ?? "not_started",
+      ownerId: goal?.ownerId ?? "unassigned",
+      startDate: goal?.startDate ?? "",
+      dueDate: goal?.dueDate ?? "",
+    },
+  });
 
   function handleAddKeyResult() {
     setKeyResults((prev) => [...prev, { ...EMPTY_KR }]);
@@ -219,21 +219,20 @@ export function GoalFormSheet({
       }));
   }
 
-  function handleSubmit() {
-    if (!title.trim()) return;
-    const resolvedOwner = ownerId === "unassigned" ? null : ownerId;
+  function handleSubmit(values: GoalFormValues) {
+    const resolvedOwner = values.ownerId === "unassigned" ? null : values.ownerId;
 
     if (isEdit) {
       updateGoal.mutate(
         {
           id: goal.id,
-          title: title.trim(),
-          description: description.trim() || null,
-          level,
-          status,
+          title: values.title.trim(),
+          description: values.description.trim() || null,
+          level: values.level,
+          status: values.status,
           ownerId: resolvedOwner,
-          startDate: startDate || null,
-          dueDate: dueDate || null,
+          startDate: values.startDate || null,
+          dueDate: values.dueDate || null,
         },
         {
           onSuccess: () => {
@@ -248,13 +247,13 @@ export function GoalFormSheet({
 
     createGoal.mutate(
       {
-        title: title.trim(),
-        description: description.trim() || undefined,
-        level,
-        status,
+        title: values.title.trim(),
+        description: values.description.trim() || undefined,
+        level: values.level,
+        status: values.status,
         ownerId: resolvedOwner ?? undefined,
-        startDate: startDate || undefined,
-        dueDate: dueDate || undefined,
+        startDate: values.startDate || undefined,
+        dueDate: values.dueDate || undefined,
         keyResults: buildKeyResults(),
       },
       {
@@ -288,185 +287,219 @@ export function GoalFormSheet({
           </div>
         </SheetHeader>
 
-        <SheetBody>
-          <div className="px-6 py-4 space-y-5">
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <Target className="h-4 w-4" />
-                <span>Objective</span>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="goal-title" className="text-xs font-medium">
-                  Title <span className="text-red-400">*</span>
-                </Label>
-                <Input
-                  id="goal-title"
-                  placeholder="e.g. Grow monthly active users"
-                  className=""
-                  value={title}
-                  onChange={handleTitleChange}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label
-                  htmlFor="goal-description"
-                  className="text-xs font-medium"
-                >
-                  Description
-                </Label>
-                <Textarea
-                  id="goal-description"
-                  rows={2}
-                  className="resize-none"
-                  value={description}
-                  onChange={handleDescriptionChange}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium">Level</Label>
-                  <Select value={level} onValueChange={handleLevelChange}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {LEVEL_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium">Status</Label>
-                  <Select value={status} onValueChange={handleGoalStatusChange}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {STATUS_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <User className="h-4 w-4" />
-                <span>Ownership & Timeline</span>
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium">Owner</Label>
-                <Select value={ownerId} onValueChange={setOwnerId}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Unassigned" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="unassigned">Unassigned</SelectItem>
-                    {orgUsers?.map((user) => (
-                      <SelectItem key={user.id} value={user.id}>
-                        {user.name ?? user.email ?? user.id}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="goal-start" className="text-xs font-medium">
-                    Start Date
-                  </Label>
-                  <DatePicker
-                    id="goal-start"
-                    value={startDate}
-                    onChange={handleStartDateChange}
-                    placeholder="Pick a date"
-                    className="text-sm"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="goal-due" className="text-xs font-medium">
-                    Due Date
-                  </Label>
-                  <DatePicker
-                    id="goal-due"
-                    value={dueDate}
-                    onChange={handleDueDateChange}
-                    placeholder="Pick a date"
-                    className="text-sm"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {!isEdit && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col flex-1 min-h-0">
+            <SheetBody>
+              <div className="px-6 py-4 space-y-5">
+                <div className="space-y-3">
                   <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                    <ListChecks className="h-4 w-4" />
-                    <span>Key Results</span>
+                    <Target className="h-4 w-4" />
+                    <span>Objective</span>
                   </div>
-                  <AnimatedIconButton
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    icon={PlusIcon}
-                    iconSize={14}
-                    iconClassName="mr-1"
-                    onClick={handleAddKeyResult}
-                  >
-                    Add
-                  </AnimatedIconButton>
+                  <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-medium">
+                          Title <span className="text-destructive">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="e.g. Grow monthly active users" />
+                        </FormControl>
+                        <FormMessage className="text-xs" />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-medium">Description</FormLabel>
+                        <FormControl>
+                          <Textarea {...field} rows={2} className="resize-none" />
+                        </FormControl>
+                        <FormMessage className="text-xs" />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="grid grid-cols-2 gap-3">
+                    <FormField
+                      control={form.control}
+                      name="level"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs font-medium">Level</FormLabel>
+                          <Select value={field.value} onValueChange={field.onChange}>
+                            <FormControl>
+                              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {LEVEL_OPTIONS.map((opt) => (
+                                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage className="text-xs" />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="status"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs font-medium">Status</FormLabel>
+                          <Select value={field.value} onValueChange={field.onChange}>
+                            <FormControl>
+                              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {STATUS_OPTIONS.map((opt) => (
+                                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage className="text-xs" />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
 
-                {keyResults.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">
-                    Add measurable key results to track progress.
-                  </p>
-                ) : (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                    <User className="h-4 w-4" />
+                    <span>Ownership & Timeline</span>
+                  </div>
+                  <FormField
+                    control={form.control}
+                    name="ownerId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-medium">Owner</FormLabel>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <FormControl>
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Unassigned" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="unassigned">Unassigned</SelectItem>
+                            {orgUsers?.map((user) => (
+                              <SelectItem key={user.id} value={user.id}>
+                                {user.name ?? user.email ?? user.id}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage className="text-xs" />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="grid grid-cols-2 gap-3">
+                    <FormField
+                      control={form.control}
+                      name="startDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs font-medium">Start Date</FormLabel>
+                          <FormControl>
+                            <DatePicker
+                              value={field.value}
+                              onChange={field.onChange}
+                              placeholder="Pick a date"
+                              className="text-sm"
+                            />
+                          </FormControl>
+                          <FormMessage className="text-xs" />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="dueDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs font-medium">Due Date</FormLabel>
+                          <FormControl>
+                            <DatePicker
+                              value={field.value}
+                              onChange={field.onChange}
+                              placeholder="Pick a date"
+                              className="text-sm"
+                            />
+                          </FormControl>
+                          <FormMessage className="text-xs" />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                {!isEdit && (
                   <div className="space-y-3">
-                    {keyResults.map((kr, index) => (
-                      <KeyResultRow
-                        key={index}
-                        kr={kr}
-                        index={index}
-                        onUpdate={updateKeyResult}
-                        onRemove={handleRemoveKeyResult}
-                      />
-                    ))}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                        <ListChecks className="h-4 w-4" />
+                        <span>Key Results</span>
+                      </div>
+                      <AnimatedIconButton
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        icon={PlusIcon}
+                        iconSize={14}
+                        iconClassName="mr-1"
+                        onClick={handleAddKeyResult}
+                      >
+                        Add
+                      </AnimatedIconButton>
+                    </div>
+
+                    {keyResults.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">
+                        Add measurable key results to track progress.
+                      </p>
+                    ) : (
+                      <div className="space-y-3">
+                        {keyResults.map((kr, index) => (
+                          <KeyResultRow
+                            key={index}
+                            kr={kr}
+                            index={index}
+                            onUpdate={updateKeyResult}
+                            onRemove={handleRemoveKeyResult}
+                          />
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
-            )}
-          </div>
-        </SheetBody>
+            </SheetBody>
 
-        <SheetFooter className="px-6 py-3 border-t shrink-0">
-          <Button
-            type="button"
-            variant="outline"
-            className="flex-1 h-9"
-            onClick={handleClose}
-          >
-            Cancel
-          </Button>
-          <LoadingButton
-            type="button"
-            className="flex-1 h-9"
-            disabled={!title.trim()}
-            isPending={isPending}
-            loadingText="Saving…"
-            onClick={handleSubmit}
-          >
-            {isEdit ? "Save Changes" : "Create Goal"}
-          </LoadingButton>
-        </SheetFooter>
+            <SheetFooter className="px-6 py-3 border-t shrink-0">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1 h-9"
+                onClick={() => onOpenChange(false)}
+              >
+                Cancel
+              </Button>
+              <LoadingButton
+                type="submit"
+                className="flex-1 h-9"
+                isPending={isPending}
+                loadingText="Saving…"
+              >
+                {isEdit ? "Save Changes" : "Create Goal"}
+              </LoadingButton>
+            </SheetFooter>
+          </form>
+        </Form>
       </SheetContent>
     </Sheet>
   );

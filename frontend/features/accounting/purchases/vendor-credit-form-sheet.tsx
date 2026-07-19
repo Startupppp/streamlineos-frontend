@@ -10,6 +10,7 @@ import { AppSheet } from "@/components/shared/app-sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Select,
@@ -252,9 +253,10 @@ export function VendorCreditFormSheet({ open, onOpenChange }: VendorCreditFormSh
 
         <div className="space-y-1.5">
           <Label className="text-xs">Notes</Label>
-          <textarea
+          <Textarea
             {...form.register("notes")}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[64px] resize-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            className="text-sm resize-none"
+            rows={3}
             placeholder="Internal notes…"
           />
         </div>

@@ -436,7 +436,7 @@ export default function ExitManagementPage() {
             <SelectTrigger>
               <SelectValue placeholder="Select a category..." />
             </SelectTrigger>
-            <SelectContent className="w-[var(--radix-select-trigger-width)]">
+            <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
               {REASON_CATEGORIES.map((cat) => (
                 <SelectItem key={cat} value={cat}>
                   {cat}

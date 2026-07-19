@@ -337,7 +337,7 @@ export function ReviewsTab() {
           <label className="text-sm font-medium">Review Cycle (optional)</label>
           <Select value={cycleId} onValueChange={handleCycleChange}>
             <SelectTrigger><SelectValue placeholder="Ad-hoc review" /></SelectTrigger>
-            <SelectContent className="w-[var(--radix-select-trigger-width)]">
+            <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
               <SelectItem value="none">Ad-hoc (no cycle)</SelectItem>
               {(Array.isArray(cycles) ? cycles : [])
                 .filter((c: ReviewCycle) => c.id != null && String(c.id) !== "" && c.name && c.status !== "COMPLETED" && c.status !== "CANCELLED")

@@ -9,7 +9,6 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
 import { SearchInput } from "@/components/ui/search-input";
-import { Card, CardContent } from "@/components/ui/card";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared";
@@ -236,11 +235,10 @@ function ReorderReportContent() {
               action={{ label: "Clear search", onClick: handleClearSearch }}
             />
           ) : (
-            <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
-              <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
-                <DataTable
+            <DataTable
                   data={filtered}
                   columns={REORDER_COLUMNS}
+                  className="flex-1 min-h-0"
                   getRowKey={(row) => `${row.productId}-${row.warehouseName}`}
                   isLoading={query.isLoading}
                   minWidth="860px"
@@ -252,8 +250,6 @@ function ReorderReportContent() {
                     onPageChange: handlePageChange,
                   }}
                 />
-              </CardContent>
-            </Card>
           )}
         </div>
       )}

@@ -143,7 +143,7 @@ export function ReportsHubClient() {
     >
       <div className="flex flex-1 min-h-0 flex-col">
         {isLoading ? (
-          <div className="space-y-8">
+          <div className="space-y-4">
             {[0, 1, 2].map((group) => (
               <div key={group}>
                 <Skeleton className="h-4 w-24 mb-3" />
@@ -177,7 +177,7 @@ export function ReportsHubClient() {
             description={search ? "Try a different search term." : "Reports will appear here once the accounting module is configured."}
           />
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-4">
             {Object.entries(grouped).map(([category, items]) => (
               <motion.div
                 key={category}

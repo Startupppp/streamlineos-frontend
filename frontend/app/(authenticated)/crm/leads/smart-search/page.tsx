@@ -231,7 +231,7 @@ export default function SmartLeadSearchPage() {
         </Badge>
       }
     >
-      <div className="flex flex-1 min-h-0 flex-col space-y-6">
+      <div className="flex flex-1 min-h-0 flex-col space-y-4">
         <div className="space-y-3 rounded-lg bg-muted/40 p-3">
           <div className="flex flex-col sm:flex-row gap-2">
             <SearchInput

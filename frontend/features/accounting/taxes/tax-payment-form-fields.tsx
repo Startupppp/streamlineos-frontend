@@ -64,7 +64,7 @@ export function TaxPaymentFormFields({ form }: TaxPaymentFormFieldsProps) {
   return (
     <>
       <div className="space-y-1">
-        <Label>Tax Type</Label>
+        <Label>Tax Type <span className="text-destructive">*</span></Label>
         <Controller
           control={form.control}
           name="taxType"
@@ -84,25 +84,25 @@ export function TaxPaymentFormFields({ form }: TaxPaymentFormFieldsProps) {
           )}
         />
         {form.formState.errors.taxType && (
-          <p className="text-xs text-red-500">{form.formState.errors.taxType.message}</p>
+          <p className="text-xs text-destructive">{form.formState.errors.taxType.message}</p>
         )}
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
-          <Label>Period Start</Label>
+          <Label>Period Start <span className="text-destructive">*</span></Label>
           <Input type="date" {...form.register("periodStart")} />
           {form.formState.errors.periodStart && (
-            <p className="text-xs text-red-500">
+            <p className="text-xs text-destructive">
               {form.formState.errors.periodStart.message}
             </p>
           )}
         </div>
         <div className="space-y-1">
-          <Label>Period End</Label>
+          <Label>Period End <span className="text-destructive">*</span></Label>
           <Input type="date" {...form.register("periodEnd")} />
           {form.formState.errors.periodEnd && (
-            <p className="text-xs text-red-500">
+            <p className="text-xs text-destructive">
               {form.formState.errors.periodEnd.message}
             </p>
           )}
@@ -110,26 +110,26 @@ export function TaxPaymentFormFields({ form }: TaxPaymentFormFieldsProps) {
       </div>
 
       <div className="space-y-1">
-        <Label>Amount</Label>
+        <Label>Amount <span className="text-destructive">*</span></Label>
         <Input type="text" placeholder="e.g. 1500.00" {...form.register("amount")} />
         {form.formState.errors.amount && (
-          <p className="text-xs text-red-500">{form.formState.errors.amount.message}</p>
+          <p className="text-xs text-destructive">{form.formState.errors.amount.message}</p>
         )}
       </div>
 
       <div className="space-y-1">
-        <Label>Paid Date</Label>
+        <Label>Paid Date <span className="text-destructive">*</span></Label>
         <Input type="date" {...form.register("paidDate")} />
         {form.formState.errors.paidDate && (
-          <p className="text-xs text-red-500">{form.formState.errors.paidDate.message}</p>
+          <p className="text-xs text-destructive">{form.formState.errors.paidDate.message}</p>
         )}
       </div>
 
       <div className="space-y-1">
-        <Label>Reference</Label>
+        <Label>Reference <span className="text-destructive">*</span></Label>
         <Input placeholder="Challan / UTR number" {...form.register("reference")} />
         {form.formState.errors.reference && (
-          <p className="text-xs text-red-500">{form.formState.errors.reference.message}</p>
+          <p className="text-xs text-destructive">{form.formState.errors.reference.message}</p>
         )}
       </div>
     </>

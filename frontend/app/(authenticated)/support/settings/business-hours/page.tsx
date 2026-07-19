@@ -6,7 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Pencil } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -214,30 +213,24 @@ export default function BusinessHoursPage() {
             className={CONTENT_FILL_PANEL}
           />
         ) : (
-          <Card className="bg-card rounded-lg border border-border shadow-sm overflow-hidden">
-            <CardHeader className="px-4 py-3">
-              <CardTitle className="text-sm font-semibold">Calendars</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <DataTable
-                data={businessHoursList ?? []}
-                columns={columns}
-                getRowKey={(bh) => bh.id}
-                isLoading={isLoading}
-                emptyState={
-                  <div className="py-14 px-4">
-                    <EmptyState
-                      illustrationPreset="settings"
-                      title="No business hours calendars defined"
-                      description="Create a calendar to scope SLA targets to your team's working hours."
-                      action={{ label: "New Calendar", onClick: handleOpenCreate }}
-                      className="border-0 bg-transparent"
-                    />
-                  </div>
-                }
-              />
-            </CardContent>
-          </Card>
+          <DataTable
+            data={businessHoursList ?? []}
+            columns={columns}
+            getRowKey={(bh) => bh.id}
+            isLoading={isLoading}
+            className="flex-1 min-h-0"
+            emptyState={
+              <div className="py-14 px-4">
+                <EmptyState
+                  illustrationPreset="settings"
+                  title="No business hours calendars defined"
+                  description="Create a calendar to scope SLA targets to your team's working hours."
+                  action={{ label: "New Calendar", onClick: handleOpenCreate }}
+                  className="border-0 bg-transparent"
+                />
+              </div>
+            }
+          />
         )}
       </PageWrapper>
     </>

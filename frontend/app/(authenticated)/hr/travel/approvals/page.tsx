@@ -31,7 +31,7 @@ import {
 function ApprovalsLoading() {
   return (
     <PageWrapper title="Travel Approvals" subtitle="Review pending travel requests" variant="display">
-      <div className="flex flex-1 min-h-0 flex-col gap-6">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         {Array.from({ length: 8 }).map((_, si) => (
           <div key={si} className="space-y-3">
             <Skeleton className="h-5 w-48" />
@@ -319,7 +319,7 @@ export default function TravelApprovalsPage() {
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
-          className="flex flex-1 min-h-0 flex-col gap-8"
+          className="flex flex-1 min-h-0 flex-col gap-4"
         >
           {pendingManager.length > 0 && (
             <div>

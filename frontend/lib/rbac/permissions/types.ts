@@ -209,6 +209,7 @@ export type PermissionKey =
   | "billing:affiliate:manage"
   | "billing:analytics:view"
   | "billing:ai-credits:view"
+  | "billing:ai-credits:purchase"
   | "billing:marketplace:view"
   | "onboarding:org:manage"
   | "onboarding:module-checklists:view"

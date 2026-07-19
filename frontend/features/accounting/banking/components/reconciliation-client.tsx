@@ -20,11 +20,13 @@ import { BankTxnStatusBadge } from "./bank-txn-status-badge";
 import { ReconciliationMatchPanel } from "./reconciliation-match-panel";
 import { ReconciliationRulesSheet } from "./reconciliation-rules-sheet";
 import { useBankAccounts, useReconciliationWorkspace } from "@/hooks/api/accounting/banking";
+import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { useCan } from "@/hooks/api/access";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { ReconciliationTxn } from "@/hooks/api/accounting/banking";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { cn } from "@/lib/utils";
 
 type TabValue = "unmatched" | "suggested";
 
@@ -99,12 +101,12 @@ export function ReconciliationClient() {
       }
     >
       <div className="flex flex-1 min-h-0 flex-col space-y-4">
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className={`${FILTER_TOOLBAR_ROW} flex-wrap`}>
           <Select
             value={selectedAccountId ? String(selectedAccountId) : ""}
             onValueChange={handleAccountChange}
           >
-            <SelectTrigger className="w-[220px] text-sm">
+            <SelectTrigger className={`w-[220px] ${FILTER_SELECT_TRIGGER}`}>
               <SelectValue placeholder="Select account" />
             </SelectTrigger>
             <SelectContent>
@@ -164,28 +166,28 @@ export function ReconciliationClient() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 min-h-[400px]">
             <div className="flex flex-col border border-border rounded-xl overflow-hidden">
-              <div className="flex border-b border-border">
+              <div className="flex gap-1 p-1 border-b border-border bg-card">
                 <button
                   type="button"
                   onClick={() => setTab("unmatched")}
-                  className={[
-                    "flex-1 py-2 px-3 text-xs font-medium transition-colors",
+                  className={cn(
+                    "flex-1 inline-flex h-7 items-center justify-center rounded-md px-3 text-xs font-medium transition-colors",
                     tab === "unmatched"
-                      ? "bg-primary/10 text-foreground border-b-2 border-primary"
-                      : "text-muted-foreground hover:bg-muted/30",
-                  ].join(" ")}
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
                 >
                   Unmatched ({workspace?.unmatched.length ?? 0})
                 </button>
                 <button
                   type="button"
                   onClick={() => setTab("suggested")}
-                  className={[
-                    "flex-1 py-2 px-3 text-xs font-medium transition-colors",
+                  className={cn(
+                    "flex-1 inline-flex h-7 items-center justify-center rounded-md px-3 text-xs font-medium transition-colors",
                     tab === "suggested"
-                      ? "bg-primary/10 text-foreground border-b-2 border-primary"
-                      : "text-muted-foreground hover:bg-muted/30",
-                  ].join(" ")}
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
                 >
                   Suggested ({workspace?.suggested.length ?? 0})
                 </button>

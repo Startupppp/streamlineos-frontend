@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { usePatchNextStep } from "@/hooks/api/crm";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 interface DealNextStepInlineProps {
   dealId: number;
@@ -33,7 +34,7 @@ export function DealNextStepInline({ dealId, nextStep }: DealNextStepInlineProps
           toast.success("Next step saved");
           setEditing(false);
         },
-        onError: () => toast.error("Failed to save next step"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }, [patch, draft]);

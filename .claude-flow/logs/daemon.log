@@ -510,3 +510,343 @@
 [2026-07-17T03:06:26.768Z] [INFO] Stopped worker: backup
 [2026-07-17T03:06:26.774Z] [INFO] Stopped worker: harness
 [2026-07-17T03:06:26.781Z] [INFO] Daemon stopped
+[2026-07-18T18:37:26.665Z] [INFO] AI workers disabled (default) - all workers run local-only. Enable with `daemon start --headless`, daemon.aiWorkers.enabled=true, or RUFLO_DAEMON_AI_WORKERS=1 (#2661)
+[2026-07-18T18:37:26.668Z] [INFO] Scheduled map (interval: 900s, first run in 0s)
+[2026-07-18T18:37:26.668Z] [INFO] Scheduled audit (interval: 600s, first run in 120s)
+[2026-07-18T18:37:26.668Z] [INFO] Scheduled optimize (interval: 900s, first run in 240s)
+[2026-07-18T18:37:26.669Z] [INFO] Scheduled consolidate (interval: 1800s, first run in 360s)
+[2026-07-18T18:37:26.669Z] [INFO] Scheduled testgaps (interval: 1200s, first run in 480s)
+[2026-07-18T18:37:26.669Z] [INFO] Scheduled backup (interval: 86400s, first run in 600s)
+[2026-07-18T18:37:26.670Z] [INFO] Scheduled harness (interval: 21600s, first run in 720s)
+[2026-07-18T18:37:26.670Z] [INFO] Lifecycle monitor active (workspace-removal, ttl=43200s)
+[2026-07-18T18:37:26.674Z] [INFO] Daemon started (PID: 22120, CPUs: 12, workers: 7, maxCpuLoad: 9.600000000000001, minFreeMemoryPercent: 10%)
+[2026-07-18T18:37:26.694Z] [INFO] Starting worker: map (1/2 concurrent)
+[2026-07-18T18:37:26.696Z] [INFO] Worker map completed in 20ms
+[2026-07-18T18:39:26.687Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-18T18:39:26.688Z] [INFO] Worker audit completed in 3ms
+[2026-07-18T18:41:26.686Z] [INFO] Starting worker: optimize (1/2 concurrent)
+[2026-07-18T18:41:26.689Z] [INFO] Worker optimize completed in 6ms
+[2026-07-18T18:43:26.702Z] [INFO] Starting worker: consolidate (1/2 concurrent)
+[2026-07-18T18:43:26.705Z] [INFO] Consolidate worker: distillation skipped (no-db)
+[2026-07-18T18:43:26.707Z] [INFO] Worker consolidate completed in 16ms
+[2026-07-18T18:45:26.678Z] [INFO] Starting worker: testgaps (1/2 concurrent)
+[2026-07-18T18:45:26.680Z] [INFO] Worker testgaps completed in 5ms
+[2026-07-18T18:47:26.693Z] [INFO] Starting worker: backup (1/2 concurrent)
+[2026-07-18T18:47:26.695Z] [INFO] Worker backup completed in 5ms
+[2026-07-18T18:49:26.684Z] [INFO] Starting worker: harness (1/2 concurrent)
+[2026-07-18T18:49:26.715Z] [INFO] Worker harness completed in 34ms
+[2026-07-18T18:49:26.718Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-18T18:49:26.720Z] [INFO] Worker audit completed in 3ms
+[2026-07-18T18:52:26.704Z] [INFO] Worker map deferred: Memory too low: 7.5% free
+[2026-07-18T18:56:26.715Z] [INFO] Starting worker: optimize (1/2 concurrent)
+[2026-07-18T18:56:26.716Z] [INFO] Worker optimize completed in 3ms
+[2026-07-18T18:56:26.720Z] [INFO] Starting worker: map (1/2 concurrent)
+[2026-07-18T18:56:26.722Z] [INFO] Worker map completed in 4ms
+[2026-07-18T18:59:26.734Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-18T18:59:26.735Z] [INFO] Worker audit completed in 3ms
+[2026-07-18T19:05:26.694Z] [INFO] Starting worker: testgaps (1/2 concurrent)
+[2026-07-18T19:05:26.695Z] [INFO] Worker testgaps completed in 5ms
+[2026-07-18T19:07:26.744Z] [INFO] Starting worker: map (1/2 concurrent)
+[2026-07-18T19:07:26.746Z] [INFO] Worker map completed in 5ms
+[2026-07-18T19:09:26.745Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-18T19:09:26.751Z] [INFO] Worker audit completed in 9ms
+[2026-07-18T19:11:26.733Z] [INFO] Starting worker: optimize (1/2 concurrent)
+[2026-07-18T19:11:26.734Z] [INFO] Worker optimize completed in 2ms
+[2026-07-18T19:13:26.725Z] [INFO] Starting worker: consolidate (1/2 concurrent)
+[2026-07-18T19:13:26.726Z] [INFO] Consolidate worker: distillation skipped (no-db)
+[2026-07-18T19:13:26.726Z] [INFO] Worker consolidate completed in 5ms
+[2026-07-18T19:19:26.770Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-18T19:19:26.771Z] [INFO] Worker audit completed in 3ms
+[2026-07-18T19:22:26.757Z] [INFO] Starting worker: map (1/2 concurrent)
+[2026-07-18T19:22:26.758Z] [INFO] Worker map completed in 6ms
+[2026-07-18T19:25:26.704Z] [INFO] Starting worker: testgaps (1/2 concurrent)
+[2026-07-18T19:25:26.705Z] [INFO] Worker testgaps completed in 3ms
+[2026-07-18T19:26:26.748Z] [INFO] Starting worker: optimize (1/2 concurrent)
+[2026-07-18T19:26:26.749Z] [INFO] Worker optimize completed in 2ms
+[2026-07-18T19:29:26.784Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-18T19:29:26.785Z] [INFO] Worker audit completed in 2ms
+[2026-07-18T19:37:26.773Z] [INFO] Starting worker: map (1/2 concurrent)
+[2026-07-18T19:37:26.774Z] [INFO] Worker map completed in 4ms
+[2026-07-18T19:39:26.796Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-18T19:39:26.797Z] [INFO] Worker audit completed in 3ms
+[2026-07-18T19:41:26.754Z] [INFO] Starting worker: optimize (1/2 concurrent)
+[2026-07-18T19:41:26.755Z] [INFO] Worker optimize completed in 2ms
+[2026-07-18T19:43:26.739Z] [INFO] Starting worker: consolidate (1/2 concurrent)
+[2026-07-18T19:43:26.739Z] [INFO] Consolidate worker: distillation skipped (no-db)
+[2026-07-18T19:43:26.740Z] [INFO] Worker consolidate completed in 2ms
+[2026-07-18T19:45:26.714Z] [INFO] Starting worker: testgaps (1/2 concurrent)
+[2026-07-18T19:45:26.715Z] [INFO] Worker testgaps completed in 4ms
+[2026-07-18T19:49:26.807Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-18T19:49:26.807Z] [INFO] Worker audit completed in 1ms
+[2026-07-18T19:52:26.792Z] [INFO] Starting worker: map (1/2 concurrent)
+[2026-07-18T19:52:26.794Z] [INFO] Worker map completed in 4ms
+[2026-07-18T19:56:26.758Z] [INFO] Starting worker: optimize (1/2 concurrent)
+[2026-07-18T19:56:26.759Z] [INFO] Worker optimize completed in 2ms
+[2026-07-18T19:59:26.819Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-18T19:59:26.820Z] [INFO] Worker audit completed in 3ms
+[2026-07-18T20:05:26.726Z] [INFO] Starting worker: testgaps (1/2 concurrent)
+[2026-07-18T20:05:26.727Z] [INFO] Worker testgaps completed in 4ms
+[2026-07-18T20:07:26.809Z] [INFO] Starting worker: map (1/2 concurrent)
+[2026-07-18T20:07:26.810Z] [ERROR] Worker map failed: UNKNOWN: unknown error, open 'D:\projects\personal\Streamlineos\.claude-flow\metrics\codebase-map.json'
+[2026-07-18T20:09:26.830Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-18T20:09:26.831Z] [INFO] Worker audit completed in 2ms
+[2026-07-18T20:11:26.773Z] [INFO] Starting worker: optimize (1/2 concurrent)
+[2026-07-18T20:11:26.774Z] [INFO] Worker optimize completed in 3ms
+[2026-07-18T20:13:26.745Z] [INFO] Starting worker: consolidate (1/2 concurrent)
+[2026-07-18T20:13:26.745Z] [INFO] Consolidate worker: distillation skipped (no-db)
+[2026-07-18T20:13:26.746Z] [INFO] Worker consolidate completed in 3ms
+[2026-07-18T20:19:26.844Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-18T20:19:26.845Z] [INFO] Worker audit completed in 3ms
+[2026-07-18T20:22:26.813Z] [INFO] Starting worker: map (1/2 concurrent)
+[2026-07-18T20:22:26.814Z] [ERROR] Worker map failed: UNKNOWN: unknown error, open 'D:\projects\personal\Streamlineos\.claude-flow\metrics\codebase-map.json'
+[2026-07-18T20:25:26.735Z] [INFO] Starting worker: testgaps (1/2 concurrent)
+[2026-07-18T20:25:26.736Z] [INFO] Worker testgaps completed in 6ms
+[2026-07-18T20:26:26.790Z] [INFO] Starting worker: optimize (1/2 concurrent)
+[2026-07-18T20:26:26.791Z] [INFO] Worker optimize completed in 3ms
+[2026-07-18T20:29:26.858Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-18T20:29:26.858Z] [INFO] Worker audit completed in 2ms
+[2026-07-18T20:37:26.829Z] [INFO] Starting worker: map (1/2 concurrent)
+[2026-07-18T20:37:26.829Z] [ERROR] Worker map failed: UNKNOWN: unknown error, open 'D:\projects\personal\Streamlineos\.claude-flow\metrics\codebase-map.json'
+[2026-07-18T20:39:26.869Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-18T20:39:26.870Z] [INFO] Worker audit completed in 2ms
+[2026-07-18T20:41:26.808Z] [INFO] Starting worker: optimize (1/2 concurrent)
+[2026-07-18T20:41:26.809Z] [INFO] Worker optimize completed in 2ms
+[2026-07-18T20:43:26.763Z] [INFO] Starting worker: consolidate (1/2 concurrent)
+[2026-07-18T20:43:26.764Z] [INFO] Consolidate worker: distillation skipped (no-db)
+[2026-07-18T20:43:26.764Z] [INFO] Worker consolidate completed in 2ms
+[2026-07-18T20:45:26.754Z] [INFO] Starting worker: testgaps (1/2 concurrent)
+[2026-07-18T20:45:26.755Z] [INFO] Worker testgaps completed in 4ms
+[2026-07-18T20:49:26.882Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-18T20:49:26.882Z] [INFO] Worker audit completed in 1ms
+[2026-07-18T20:52:26.837Z] [INFO] Starting worker: map (1/2 concurrent)
+[2026-07-18T20:52:26.838Z] [INFO] Worker map completed in 3ms
+[2026-07-18T20:56:26.813Z] [INFO] Starting worker: optimize (1/2 concurrent)
+[2026-07-18T20:56:26.813Z] [INFO] Worker optimize completed in 3ms
+[2026-07-18T20:59:26.895Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-18T20:59:26.895Z] [INFO] Worker audit completed in 1ms
+[2026-07-18T21:05:26.764Z] [INFO] Starting worker: testgaps (1/2 concurrent)
+[2026-07-18T21:05:26.765Z] [INFO] Worker testgaps completed in 3ms
+[2026-07-18T21:07:26.848Z] [INFO] Starting worker: map (1/2 concurrent)
+[2026-07-18T21:07:26.848Z] [ERROR] Worker map failed: UNKNOWN: unknown error, open 'D:\projects\personal\Streamlineos\.claude-flow\metrics\codebase-map.json'
+[2026-07-18T21:09:26.905Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-18T21:09:26.906Z] [INFO] Worker audit completed in 2ms
+[2026-07-18T21:11:26.831Z] [INFO] Starting worker: optimize (1/2 concurrent)
+[2026-07-18T21:11:26.831Z] [INFO] Worker optimize completed in 2ms
+[2026-07-18T21:13:26.768Z] [INFO] Starting worker: consolidate (1/2 concurrent)
+[2026-07-18T21:13:26.768Z] [INFO] Consolidate worker: distillation skipped (no-db)
+[2026-07-18T21:13:26.769Z] [INFO] Worker consolidate completed in 3ms
+[2026-07-18T21:19:26.919Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-18T21:19:26.919Z] [INFO] Worker audit completed in 2ms
+[2026-07-18T21:22:26.853Z] [INFO] Starting worker: map (1/2 concurrent)
+[2026-07-18T21:22:26.854Z] [INFO] Worker map completed in 3ms
+[2026-07-18T21:25:26.769Z] [INFO] Starting worker: testgaps (1/2 concurrent)
+[2026-07-18T21:25:26.770Z] [INFO] Worker testgaps completed in 3ms
+[2026-07-18T21:26:26.834Z] [INFO] Starting worker: optimize (1/2 concurrent)
+[2026-07-18T21:26:26.835Z] [INFO] Worker optimize completed in 3ms
+[2026-07-18T21:29:26.931Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-18T21:29:26.932Z] [INFO] Worker audit completed in 2ms
+[2026-07-18T21:37:26.871Z] [INFO] Starting worker: map (1/2 concurrent)
+[2026-07-18T21:37:26.873Z] [INFO] Worker map completed in 3ms
+[2026-07-18T21:39:26.943Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-18T21:39:26.944Z] [INFO] Worker audit completed in 2ms
+[2026-07-18T21:41:26.850Z] [INFO] Starting worker: optimize (1/2 concurrent)
+[2026-07-18T21:41:26.850Z] [INFO] Worker optimize completed in 2ms
+[2026-07-18T21:43:26.772Z] [INFO] Starting worker: consolidate (1/2 concurrent)
+[2026-07-18T21:43:26.772Z] [INFO] Consolidate worker: distillation skipped (no-db)
+[2026-07-18T21:43:26.773Z] [INFO] Worker consolidate completed in 2ms
+[2026-07-18T21:45:26.779Z] [INFO] Starting worker: testgaps (1/2 concurrent)
+[2026-07-18T21:45:26.780Z] [INFO] Worker testgaps completed in 3ms
+[2026-07-18T21:49:26.956Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-18T21:49:26.957Z] [INFO] Worker audit completed in 3ms
+[2026-07-18T21:52:26.890Z] [INFO] Starting worker: map (1/2 concurrent)
+[2026-07-18T21:52:26.891Z] [ERROR] Worker map failed: UNKNOWN: unknown error, open 'D:\projects\personal\Streamlineos\.claude-flow\metrics\codebase-map.json'
+[2026-07-18T21:56:26.858Z] [INFO] Starting worker: optimize (1/2 concurrent)
+[2026-07-18T21:56:26.859Z] [INFO] Worker optimize completed in 2ms
+[2026-07-18T21:59:26.967Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-18T21:59:26.968Z] [INFO] Worker audit completed in 2ms
+[2026-07-18T22:05:26.786Z] [INFO] Starting worker: testgaps (1/2 concurrent)
+[2026-07-18T22:05:26.787Z] [INFO] Worker testgaps completed in 2ms
+[2026-07-18T22:07:26.907Z] [INFO] Starting worker: map (1/2 concurrent)
+[2026-07-18T22:07:26.908Z] [ERROR] Worker map failed: UNKNOWN: unknown error, open 'D:\projects\personal\Streamlineos\.claude-flow\metrics\codebase-map.json'
+[2026-07-18T22:09:26.981Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-18T22:09:26.982Z] [INFO] Worker audit completed in 3ms
+[2026-07-18T22:11:26.871Z] [INFO] Starting worker: optimize (1/2 concurrent)
+[2026-07-18T22:11:26.871Z] [INFO] Worker optimize completed in 2ms
+[2026-07-18T22:13:26.775Z] [INFO] Starting worker: consolidate (1/2 concurrent)
+[2026-07-18T22:13:26.776Z] [INFO] Consolidate worker: distillation skipped (no-db)
+[2026-07-18T22:13:26.776Z] [INFO] Worker consolidate completed in 2ms
+[2026-07-18T22:19:26.993Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-18T22:19:26.994Z] [INFO] Worker audit completed in 2ms
+[2026-07-18T22:22:26.911Z] [INFO] Starting worker: map (1/2 concurrent)
+[2026-07-18T22:22:26.912Z] [ERROR] Worker map failed: UNKNOWN: unknown error, open 'D:\projects\personal\Streamlineos\.claude-flow\metrics\codebase-map.json'
+[2026-07-18T22:25:26.792Z] [INFO] Starting worker: testgaps (1/2 concurrent)
+[2026-07-18T22:25:26.793Z] [INFO] Worker testgaps completed in 2ms
+[2026-07-18T22:26:26.889Z] [INFO] Starting worker: optimize (1/2 concurrent)
+[2026-07-18T22:26:26.890Z] [INFO] Worker optimize completed in 2ms
+[2026-07-18T22:29:27.005Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-18T22:29:27.006Z] [INFO] Worker audit completed in 2ms
+[2026-07-18T22:37:26.929Z] [INFO] Starting worker: map (1/2 concurrent)
+[2026-07-18T22:37:26.930Z] [ERROR] Worker map failed: UNKNOWN: unknown error, open 'D:\projects\personal\Streamlineos\.claude-flow\metrics\codebase-map.json'
+[2026-07-18T22:39:27.018Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-18T22:39:27.019Z] [INFO] Worker audit completed in 3ms
+[2026-07-18T22:41:26.908Z] [INFO] Starting worker: optimize (1/2 concurrent)
+[2026-07-18T22:41:26.909Z] [INFO] Worker optimize completed in 2ms
+[2026-07-18T22:43:26.779Z] [INFO] Starting worker: consolidate (1/2 concurrent)
+[2026-07-18T22:43:26.780Z] [INFO] Consolidate worker: distillation skipped (no-db)
+[2026-07-18T22:43:26.780Z] [INFO] Worker consolidate completed in 2ms
+[2026-07-18T22:45:26.812Z] [INFO] Starting worker: testgaps (1/2 concurrent)
+[2026-07-18T22:45:26.815Z] [INFO] Worker testgaps completed in 6ms
+[2026-07-18T22:49:27.023Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-18T22:49:27.024Z] [INFO] Worker audit completed in 3ms
+[2026-07-18T22:52:26.944Z] [INFO] Starting worker: map (1/2 concurrent)
+[2026-07-18T22:52:26.945Z] [INFO] Worker map completed in 3ms
+[2026-07-18T22:56:26.915Z] [INFO] Starting worker: optimize (1/2 concurrent)
+[2026-07-18T22:56:26.917Z] [INFO] Worker optimize completed in 4ms
+[2026-07-18T22:59:27.059Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-18T22:59:27.060Z] [INFO] Worker audit completed in 18ms
+[2026-07-18T23:05:26.820Z] [INFO] Starting worker: testgaps (1/2 concurrent)
+[2026-07-18T23:05:26.825Z] [INFO] Worker testgaps completed in 8ms
+[2026-07-18T23:07:26.957Z] [INFO] Starting worker: map (1/2 concurrent)
+[2026-07-18T23:07:26.958Z] [INFO] Worker map completed in 4ms
+[2026-07-18T23:09:27.070Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-18T23:09:27.071Z] [INFO] Worker audit completed in 3ms
+[2026-07-18T23:11:26.923Z] [INFO] Starting worker: optimize (1/2 concurrent)
+[2026-07-18T23:11:26.924Z] [INFO] Worker optimize completed in 2ms
+[2026-07-18T23:13:26.787Z] [INFO] Starting worker: consolidate (1/2 concurrent)
+[2026-07-18T23:13:26.788Z] [INFO] Consolidate worker: distillation skipped (no-db)
+[2026-07-18T23:13:26.789Z] [INFO] Worker consolidate completed in 4ms
+[2026-07-18T23:19:27.088Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-18T23:19:27.089Z] [INFO] Worker audit completed in 3ms
+[2026-07-18T23:22:26.963Z] [INFO] Starting worker: map (1/2 concurrent)
+[2026-07-18T23:22:26.964Z] [INFO] Worker map completed in 3ms
+[2026-07-18T23:25:26.845Z] [INFO] Starting worker: testgaps (1/2 concurrent)
+[2026-07-18T23:25:26.848Z] [INFO] Worker testgaps completed in 15ms
+[2026-07-18T23:26:26.930Z] [INFO] Starting worker: optimize (1/2 concurrent)
+[2026-07-18T23:26:26.931Z] [INFO] Worker optimize completed in 2ms
+[2026-07-18T23:29:27.106Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-18T23:29:27.107Z] [INFO] Worker audit completed in 3ms
+[2026-07-18T23:37:26.973Z] [INFO] Starting worker: map (1/2 concurrent)
+[2026-07-18T23:37:26.974Z] [INFO] Worker map completed in 3ms
+[2026-07-18T23:39:27.122Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-18T23:39:27.123Z] [INFO] Worker audit completed in 3ms
+[2026-07-18T23:41:26.957Z] [INFO] Starting worker: optimize (1/2 concurrent)
+[2026-07-18T23:41:26.957Z] [INFO] Worker optimize completed in 2ms
+[2026-07-18T23:43:26.792Z] [INFO] Starting worker: consolidate (1/2 concurrent)
+[2026-07-18T23:43:26.792Z] [INFO] Consolidate worker: distillation skipped (no-db)
+[2026-07-18T23:43:26.793Z] [INFO] Worker consolidate completed in 2ms
+[2026-07-18T23:45:26.857Z] [INFO] Starting worker: testgaps (1/2 concurrent)
+[2026-07-18T23:45:26.857Z] [INFO] Worker testgaps completed in 2ms
+[2026-07-18T23:49:27.139Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-18T23:49:27.140Z] [INFO] Worker audit completed in 2ms
+[2026-07-18T23:52:26.984Z] [INFO] Starting worker: map (1/2 concurrent)
+[2026-07-18T23:52:26.985Z] [ERROR] Worker map failed: UNKNOWN: unknown error, open 'D:\projects\personal\Streamlineos\.claude-flow\metrics\codebase-map.json'
+[2026-07-18T23:56:26.966Z] [INFO] Starting worker: optimize (1/2 concurrent)
+[2026-07-18T23:56:26.967Z] [INFO] Worker optimize completed in 2ms
+[2026-07-18T23:59:27.143Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-18T23:59:27.143Z] [INFO] Worker audit completed in 2ms
+[2026-07-19T00:05:33.904Z] [INFO] Starting worker: testgaps (1/2 concurrent)
+[2026-07-19T00:05:33.905Z] [INFO] Worker testgaps completed in 3ms
+[2026-07-19T00:07:34.012Z] [INFO] Starting worker: map (1/2 concurrent)
+[2026-07-19T00:07:34.013Z] [ERROR] Worker map failed: UNKNOWN: unknown error, open 'D:\projects\personal\Streamlineos\.claude-flow\metrics\codebase-map.json'
+[2026-07-19T00:09:34.178Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-19T00:09:34.179Z] [INFO] Worker audit completed in 2ms
+[2026-07-19T00:11:33.994Z] [INFO] Starting worker: optimize (1/2 concurrent)
+[2026-07-19T00:11:33.995Z] [INFO] Worker optimize completed in 2ms
+[2026-07-19T00:13:33.814Z] [INFO] Starting worker: consolidate (1/2 concurrent)
+[2026-07-19T00:13:33.814Z] [INFO] Consolidate worker: distillation skipped (no-db)
+[2026-07-19T00:13:33.815Z] [INFO] Worker consolidate completed in 2ms
+[2026-07-19T00:19:34.193Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-19T00:19:34.194Z] [INFO] Worker audit completed in 2ms
+[2026-07-19T00:22:34.036Z] [ERROR] Failed to save state: Error: EPERM: operation not permitted, rename 'D:\projects\personal\Streamlineos\.claude-flow\daemon-state.json.tmp' -> 'D:\projects\personal\Streamlineos\.claude-flow\daemon-state.json'
+[2026-07-19T00:22:34.036Z] [INFO] Starting worker: map (1/2 concurrent)
+[2026-07-19T00:22:34.037Z] [ERROR] Worker map failed: UNKNOWN: unknown error, open 'D:\projects\personal\Streamlineos\.claude-flow\metrics\codebase-map.json'
+[2026-07-19T00:25:33.912Z] [INFO] Starting worker: testgaps (1/2 concurrent)
+[2026-07-19T00:25:33.913Z] [INFO] Worker testgaps completed in 3ms
+[2026-07-19T00:26:34.005Z] [INFO] Starting worker: optimize (1/2 concurrent)
+[2026-07-19T00:26:34.005Z] [INFO] Worker optimize completed in 2ms
+[2026-07-19T00:29:34.196Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-19T00:29:34.197Z] [INFO] Worker audit completed in 2ms
+[2026-07-19T00:37:34.046Z] [INFO] Starting worker: map (1/2 concurrent)
+[2026-07-19T00:37:34.047Z] [ERROR] Worker map failed: UNKNOWN: unknown error, open 'D:\projects\personal\Streamlineos\.claude-flow\metrics\codebase-map.json'
+[2026-07-19T00:39:34.200Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-19T00:39:34.201Z] [INFO] Worker audit completed in 2ms
+[2026-07-19T00:41:34.014Z] [INFO] Starting worker: optimize (1/2 concurrent)
+[2026-07-19T00:41:34.015Z] [INFO] Worker optimize completed in 2ms
+[2026-07-19T00:43:33.817Z] [INFO] Starting worker: consolidate (1/2 concurrent)
+[2026-07-19T00:43:33.818Z] [INFO] Consolidate worker: distillation skipped (no-db)
+[2026-07-19T00:43:33.818Z] [INFO] Worker consolidate completed in 2ms
+[2026-07-19T00:45:33.916Z] [INFO] Starting worker: testgaps (1/2 concurrent)
+[2026-07-19T00:45:33.917Z] [INFO] Worker testgaps completed in 2ms
+[2026-07-19T00:49:33.747Z] [INFO] Starting worker: harness (1/2 concurrent)
+[2026-07-19T00:49:33.760Z] [INFO] Worker harness completed in 14ms
+[2026-07-19T00:49:34.211Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-19T00:49:34.212Z] [INFO] Worker audit completed in 2ms
+[2026-07-19T00:52:34.056Z] [INFO] Starting worker: map (1/2 concurrent)
+[2026-07-19T00:52:34.057Z] [ERROR] Worker map failed: UNKNOWN: unknown error, open 'D:\projects\personal\Streamlineos\.claude-flow\metrics\codebase-map.json'
+[2026-07-19T00:56:34.024Z] [INFO] Starting worker: optimize (1/2 concurrent)
+[2026-07-19T00:56:34.025Z] [INFO] Worker optimize completed in 3ms
+[2026-07-19T00:59:34.229Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-19T00:59:34.229Z] [INFO] Worker audit completed in 1ms
+[2026-07-19T01:05:33.932Z] [INFO] Starting worker: testgaps (1/2 concurrent)
+[2026-07-19T01:05:33.933Z] [INFO] Worker testgaps completed in 2ms
+[2026-07-19T01:07:34.066Z] [INFO] Starting worker: map (1/2 concurrent)
+[2026-07-19T01:07:34.067Z] [ERROR] Worker map failed: UNKNOWN: unknown error, open 'D:\projects\personal\Streamlineos\.claude-flow\metrics\codebase-map.json'
+[2026-07-19T01:09:34.246Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-19T01:09:34.247Z] [INFO] Worker audit completed in 2ms
+[2026-07-19T01:11:34.049Z] [INFO] Starting worker: optimize (1/2 concurrent)
+[2026-07-19T01:11:34.050Z] [INFO] Worker optimize completed in 2ms
+[2026-07-19T01:13:33.822Z] [INFO] Starting worker: consolidate (1/2 concurrent)
+[2026-07-19T01:13:33.822Z] [INFO] Consolidate worker: distillation skipped (no-db)
+[2026-07-19T01:13:33.823Z] [INFO] Worker consolidate completed in 3ms
+[2026-07-19T01:19:34.250Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-19T01:19:34.251Z] [INFO] Worker audit completed in 3ms
+[2026-07-19T01:22:34.075Z] [INFO] Starting worker: map (1/2 concurrent)
+[2026-07-19T01:22:34.076Z] [ERROR] Worker map failed: UNKNOWN: unknown error, open 'D:\projects\personal\Streamlineos\.claude-flow\metrics\codebase-map.json'
+[2026-07-19T01:25:33.938Z] [INFO] Starting worker: testgaps (1/2 concurrent)
+[2026-07-19T01:25:33.939Z] [INFO] Worker testgaps completed in 2ms
+[2026-07-19T01:26:34.058Z] [INFO] Starting worker: optimize (1/2 concurrent)
+[2026-07-19T01:26:34.059Z] [INFO] Worker optimize completed in 2ms
+[2026-07-19T01:29:34.256Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-19T01:29:34.256Z] [INFO] Worker audit completed in 2ms
+[2026-07-19T01:37:34.085Z] [INFO] Starting worker: map (1/2 concurrent)
+[2026-07-19T01:37:34.086Z] [ERROR] Worker map failed: UNKNOWN: unknown error, open 'D:\projects\personal\Streamlineos\.claude-flow\metrics\codebase-map.json'
+[2026-07-19T01:39:34.265Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-19T01:39:34.266Z] [INFO] Worker audit completed in 3ms
+[2026-07-19T01:41:34.069Z] [INFO] Starting worker: optimize (1/2 concurrent)
+[2026-07-19T01:41:34.070Z] [INFO] Worker optimize completed in 2ms
+[2026-07-19T01:43:33.836Z] [INFO] Starting worker: consolidate (1/2 concurrent)
+[2026-07-19T01:43:33.837Z] [INFO] Consolidate worker: distillation skipped (no-db)
+[2026-07-19T01:43:33.837Z] [INFO] Worker consolidate completed in 3ms
+[2026-07-19T01:45:33.964Z] [INFO] Starting worker: testgaps (1/2 concurrent)
+[2026-07-19T01:45:33.965Z] [INFO] Worker testgaps completed in 14ms
+[2026-07-19T01:49:34.283Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-19T01:49:34.283Z] [INFO] Worker audit completed in 2ms
+[2026-07-19T01:52:34.094Z] [INFO] Starting worker: map (1/2 concurrent)
+[2026-07-19T01:52:34.095Z] [ERROR] Worker map failed: UNKNOWN: unknown error, open 'D:\projects\personal\Streamlineos\.claude-flow\metrics\codebase-map.json'
+[2026-07-19T01:56:34.078Z] [INFO] Starting worker: optimize (1/2 concurrent)
+[2026-07-19T01:56:34.079Z] [INFO] Worker optimize completed in 3ms
+[2026-07-19T01:59:34.287Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-19T01:59:34.288Z] [INFO] Worker audit completed in 3ms
+[2026-07-19T02:05:33.972Z] [INFO] Starting worker: testgaps (1/2 concurrent)
+[2026-07-19T02:05:33.973Z] [ERROR] Worker testgaps failed: UNKNOWN: unknown error, open 'D:\projects\personal\Streamlineos\.claude-flow\metrics\test-gaps.json'
+[2026-07-19T02:07:34.105Z] [INFO] Starting worker: map (1/2 concurrent)
+[2026-07-19T02:07:34.106Z] [ERROR] Worker map failed: UNKNOWN: unknown error, open 'D:\projects\personal\Streamlineos\.claude-flow\metrics\codebase-map.json'
+[2026-07-19T02:09:34.298Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-19T02:09:34.299Z] [ERROR] Worker audit failed: UNKNOWN: unknown error, open 'D:\projects\personal\Streamlineos\.claude-flow\metrics\security-audit.json'
+[2026-07-19T02:11:34.089Z] [INFO] Starting worker: optimize (1/2 concurrent)
+[2026-07-19T02:11:34.090Z] [INFO] Worker optimize completed in 3ms
+[2026-07-19T02:13:33.842Z] [INFO] Starting worker: consolidate (1/2 concurrent)
+[2026-07-19T02:13:33.842Z] [INFO] Consolidate worker: distillation skipped (no-db)
+[2026-07-19T02:13:33.843Z] [INFO] Worker consolidate completed in 2ms
+[2026-07-19T02:19:34.306Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-19T02:19:34.306Z] [INFO] Worker audit completed in 2ms
+[2026-07-19T02:22:34.114Z] [INFO] Starting worker: map (1/2 concurrent)
+[2026-07-19T02:22:34.115Z] [ERROR] Worker map failed: UNKNOWN: unknown error, open 'D:\projects\personal\Streamlineos\.claude-flow\metrics\codebase-map.json'
+[2026-07-19T02:25:33.991Z] [INFO] Starting worker: testgaps (1/2 concurrent)
+[2026-07-19T02:25:33.993Z] [INFO] Worker testgaps completed in 5ms
+[2026-07-19T02:26:34.098Z] [INFO] Starting worker: optimize (1/2 concurrent)
+[2026-07-19T02:26:34.099Z] [INFO] Worker optimize completed in 3ms
+[2026-07-19T02:29:34.324Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-07-19T02:29:34.324Z] [INFO] Worker audit completed in 2ms
+[2026-07-19T02:37:34.124Z] [INFO] Starting worker: map (1/2 concurrent)
+[2026-07-19T02:37:34.125Z] [ERROR] Worker map failed: UNKNOWN: unknown error, open 'D:\projects\personal\Streamlineos\.claude-flow\metrics\codebase-map.json'

@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { getErrorMessage } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useCreateGeofence,
   useUpdateGeofence,
@@ -100,7 +100,7 @@ export function GeofenceFormSheet({ open, onOpenChange, fence }: Props) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
-                  Location Name
+                  Location Name <span className="text-destructive">*</span>
                 </FormLabel>
                 <FormControl>
                   <Input placeholder="e.g. Head Office" className="text-sm" {...field} />
@@ -117,7 +117,7 @@ export function GeofenceFormSheet({ open, onOpenChange, fence }: Props) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
-                    Latitude
+                    Latitude <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
                     <Input placeholder="12.9716" className="text-sm font-mono" {...field} />
@@ -132,7 +132,7 @@ export function GeofenceFormSheet({ open, onOpenChange, fence }: Props) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
-                    Longitude
+                    Longitude <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
                     <Input placeholder="77.5946" className="text-sm font-mono" {...field} />

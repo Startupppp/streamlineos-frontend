@@ -31,8 +31,11 @@ export default function CrmSettingsLayout({ children }: { children: React.ReactN
 
   return (
     <div className="flex flex-col h-full">
-      <div className="shrink-0 border-b bg-background/95 backdrop-blur-sm px-1">
-        <nav className="flex flex-wrap items-center gap-1" aria-label="CRM Settings">
+      <div className="shrink-0 border-b bg-background/95 backdrop-blur-sm px-3 py-1.5">
+        <nav
+          className="inline-flex items-center gap-1 rounded-lg border border-border bg-card p-1 overflow-x-auto scrollbar-hide"
+          aria-label="CRM Settings"
+        >
           {TABS.map((tab) => {
             const isActive = pathname === tab.href;
             return (
@@ -40,16 +43,13 @@ export default function CrmSettingsLayout({ children }: { children: React.ReactN
                 key={tab.href}
                 href={tab.href}
                 className={cn(
-                  "relative px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors",
+                  "inline-flex h-7 shrink-0 items-center rounded-md px-3 text-sm font-medium whitespace-nowrap transition-colors",
                   isActive
-                    ? "text-foreground"
+                    ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 {tab.label}
-                {isActive && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
-                )}
               </Link>
             );
           })}

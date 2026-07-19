@@ -129,7 +129,7 @@ export default function MyOnboardingTasksPage() {
           description="Your HR team hasn't set up any tasks for you. Check back soon."
         />
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4">
           <div className="flex flex-col items-center gap-2 pt-2 pb-1">
             <OnboardingProgressRing percentage={percentage} size={128} strokeWidth={11} />
             <p className="text-sm text-muted-foreground">

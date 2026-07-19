@@ -3,6 +3,7 @@
 import { useRef, useCallback } from "react";
 import { Paperclip, Upload, File, Trash2, Download } from "lucide-react";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -50,7 +51,7 @@ export function LeadAttachmentsSection({ leadId }: LeadAttachmentsSectionProps) 
       void qc.invalidateQueries({ queryKey: ["lead-attachments", leadId] });
       toast.success("File attached");
     },
-    onError: () => toast.error("Failed to upload file"),
+    onError: (err) => toast.error(getErrorMessage(err)),
   });
 
   const deleteMutation = useMutation({
@@ -61,7 +62,7 @@ export function LeadAttachmentsSection({ leadId }: LeadAttachmentsSectionProps) 
       void qc.invalidateQueries({ queryKey: ["lead-attachments", leadId] });
       toast.success("File removed");
     },
-    onError: () => toast.error("Failed to remove file"),
+    onError: (err) => toast.error(getErrorMessage(err)),
   });
 
   const handleFileInputChange = useCallback(

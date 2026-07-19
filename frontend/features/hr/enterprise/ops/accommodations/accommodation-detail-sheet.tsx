@@ -11,6 +11,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Lock } from "lucide-react";
 import { useCan } from "@/hooks/api/access";
@@ -59,7 +61,9 @@ export function AccommodationDetailSheet({ id, open, onOpenChange }: Props) {
   }
 
   function handleApprove() {
-    approve.mutate({ note: approvingNote || undefined });
+    approve.mutate({ note: approvingNote || undefined }, {
+      onError: (err) => toast.error(getErrorMessage(err)),
+    });
   }
 
   return (

@@ -23,7 +23,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import {
   PmPageShell,
-  PmPanel,
   PmSection,
   PM_FILL_PANEL,
 } from "@/features/projects/shared/pm-chrome";
@@ -230,16 +229,14 @@ export function ApprovalsInboxPage() {
                 description="You have no pending approvals across your projects."
               />
           ) : (
-            <PmPanel className={PM_FILL_PANEL}>
-              <DataTable
+            <DataTable
                 data={items}
                 columns={columns}
                 getRowKey={(row) => `${row.projectId}-${row.id}`}
                 pagination={{ pageSize: 25 }}
                 minWidth="680px"
-                className="min-h-0 flex-1"
+                className={PM_FILL_PANEL}
               />
-            </PmPanel>
           )}
         </PmSection>
       </PmPageShell>

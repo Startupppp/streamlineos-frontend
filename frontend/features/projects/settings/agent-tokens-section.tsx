@@ -17,6 +17,14 @@ import {
   type AgentToken,
   type CreateAgentTokenResponse,
 } from "@/hooks/api/projects/agent-tokens";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
@@ -335,46 +343,50 @@ function CreateTokenDialog({
                 Tokens grant AI agents access to your projects. Keep them secret.
               </DialogDescription>
             </DialogHeader>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="token-name">Name *</Label>
-                <Input
-                  id="token-name"
-                  placeholder="e.g. Cursor dev machine"
-                  {...form.register("name")}
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Name <span className="text-destructive">*</span></FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="e.g. Cursor dev machine" />
+                      </FormControl>
+                      <FormMessage className="text-xs" />
+                    </FormItem>
+                  )}
                 />
-                {form.formState.errors.name && (
-                  <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
-                )}
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="token-expiry">Expiry</Label>
-                <Select value={expiry} onValueChange={handleExpiryChange}>
-                  <SelectTrigger id="token-expiry">
-                    <SelectValue placeholder="Select expiry" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {EXPIRY_OPTIONS.map((o) => (
-                      <SelectItem key={o.value} value={o.value}>
-                        {o.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={handleDone}>
-                  Cancel
-                </Button>
-                <LoadingButton
-                  type="submit"
-                  isPending={createToken.isPending}
-                  loadingText="Creating…"
-                >
-                  Create token
-                </LoadingButton>
-              </DialogFooter>
-            </form>
+                <div className="space-y-1.5">
+                  <Label htmlFor="token-expiry">Expiry</Label>
+                  <Select value={expiry} onValueChange={handleExpiryChange}>
+                    <SelectTrigger id="token-expiry">
+                      <SelectValue placeholder="Select expiry" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {EXPIRY_OPTIONS.map((o) => (
+                        <SelectItem key={o.value} value={o.value}>
+                          {o.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={handleDone}>
+                    Cancel
+                  </Button>
+                  <LoadingButton
+                    type="submit"
+                    isPending={createToken.isPending}
+                    loadingText="Creating…"
+                  >
+                    Create token
+                  </LoadingButton>
+                </DialogFooter>
+              </form>
+            </Form>
           </>
         ) : (
           <>

@@ -285,7 +285,7 @@ export function InterviewFeedbackForm({ interview, open, onOpenChange }: Intervi
                     <SelectValue />
                   </SelectTrigger>
                 </FormControl>
-                <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                   {(Object.keys(RESULT_CONFIG) as InterviewResult[]).map((key) => (
                     <SelectItem key={key} value={key}>
                       <span className={cn(

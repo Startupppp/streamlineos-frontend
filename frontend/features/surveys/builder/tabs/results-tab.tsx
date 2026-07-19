@@ -60,7 +60,7 @@ export function ResultsTab({ survey }: { survey: SurveyForm }) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-4">
       <OverviewStats overview={overview} />
 
       {canUseAi && (
@@ -70,13 +70,13 @@ export function ResultsTab({ survey }: { survey: SurveyForm }) {
       )}
 
       {survey.mode === "assessment" && (
-        <div className="space-y-3">
+        <div className="flex flex-col gap-3">
           <h3 className="text-sm font-semibold text-foreground">Assessment</h3>
           <AssessmentResultsCard surveyId={survey.id} />
         </div>
       )}
 
-      <div className="space-y-3">
+      <div className="flex flex-col gap-3">
         <h3 className="text-sm font-semibold text-foreground">Question analytics</h3>
         {questionsLoading ? (
           <Skeleton className="h-32 w-full" />
@@ -89,7 +89,7 @@ export function ResultsTab({ survey }: { survey: SurveyForm }) {
         )}
       </div>
 
-      <div className="space-y-3">
+      <div className="flex flex-col gap-3">
         <h3 className="text-sm font-semibold text-foreground">Responses</h3>
         <ResponseTable surveyId={survey.id} />
       </div>

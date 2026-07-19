@@ -334,6 +334,7 @@ function StockSummaryContent() {
           <DataTable
             data={filtered}
             columns={STOCK_SUMMARY_COLUMNS}
+            className="flex-1 min-h-0"
             getRowKey={(row) => `${row.productId}-${row.warehouseName}`}
             isLoading={query.isLoading}
             minWidth="920px"

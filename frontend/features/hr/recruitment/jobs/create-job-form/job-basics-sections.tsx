@@ -115,7 +115,7 @@ export function Section1({ form, departments }: SectionProps) {
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
-                  <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                  <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                     {departments && departments.length > 0 ? (
                       departments.map((d) => (
                         <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>
@@ -149,7 +149,7 @@ export function Section1({ form, departments }: SectionProps) {
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
-                  <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                  <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                     <SelectItem value="FULL_TIME">Full-Time</SelectItem>
                     <SelectItem value="PART_TIME">Part-Time</SelectItem>
                     <SelectItem value="CONTRACT">Contract</SelectItem>
@@ -172,7 +172,7 @@ export function Section1({ form, departments }: SectionProps) {
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger><SelectValue placeholder="Select mode" /></SelectTrigger>
-                  <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                  <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                     <SelectItem value="ONSITE">On-site</SelectItem>
                     <SelectItem value="REMOTE">Remote</SelectItem>
                     <SelectItem value="HYBRID">Hybrid</SelectItem>
@@ -238,7 +238,7 @@ export function Section2({ form }: SectionProps) {
             render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger><SelectValue placeholder="e.g. India, USA, UK" /></SelectTrigger>
-                <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                   <SelectItem value="India">India</SelectItem>
                   <SelectItem value="United States">United States</SelectItem>
                   <SelectItem value="United Kingdom">United Kingdom</SelectItem>
