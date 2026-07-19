@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useMemo } from "react";
+import { memo, useCallback, useMemo, type ReactNode } from "react";
 import {
   Tooltip,
   TooltipContent,
@@ -34,6 +34,7 @@ interface WorkloadFilterBarProps {
   onFilterChange: <K extends keyof FilterState>(key: K, value: FilterState[K]) => void;
   onClearFilters: () => void;
   className?: string;
+  leading?: ReactNode;
 }
 
 function countBarFilters(filters: FilterState): number {
@@ -59,6 +60,7 @@ export const WorkloadFilterBar = memo(function WorkloadFilterBar({
   onFilterChange,
   onClearFilters,
   className,
+  leading,
 }: WorkloadFilterBarProps) {
   const { data: sprints = [] } = useSprints(projectId);
   const { data: cycles = [] } = useCycles(projectId);
@@ -103,81 +105,91 @@ export const WorkloadFilterBar = memo(function WorkloadFilterBar({
   const { iconRef: infoIconRef, hoverHandlers: infoHoverHandlers } = useAnimatedIcon();
 
   return (
-    <div className={cn("flex min-w-0 flex-col gap-1.5", className)}>
-      <div className="flex min-w-0 flex-nowrap items-center justify-end gap-2">
-        <WorkloadFilterMenu
-          filters={filters}
-          members={members}
-          sprints={sprints}
-          cycles={cycles}
-          projectStatuses={projectStatuses}
-          activeFilterCount={activeFilterCount}
-          onFilterChange={onFilterChange}
-        />
+    <div className={cn("flex w-full min-w-0 flex-col gap-1.5", className)}>
+      <div
+        className={cn(
+          "flex w-full min-w-0 flex-nowrap items-center gap-1 sm:gap-1.5",
+          leading ? "justify-between" : "justify-end",
+        )}
+      >
+        {leading}
 
-        {hasActiveFilters ? (
+        <div className="flex min-w-0 shrink-0 items-center gap-1 sm:gap-2">
+          <WorkloadFilterMenu
+            filters={filters}
+            members={members}
+            sprints={sprints}
+            cycles={cycles}
+            projectStatuses={projectStatuses}
+            activeFilterCount={activeFilterCount}
+            onFilterChange={onFilterChange}
+          />
+
+          <TooltipProvider delayDuration={200}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+                  aria-label="About workload metrics"
+                  {...infoHoverHandlers}
+                >
+                  <InfoIcon ref={infoIconRef} size={14} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-[16rem] text-xs">
+                Workload shows ticket count per member. Points are summed where set.
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      </div>
+
+      {hasActiveFilters && activeFilterCount > 0 ? (
+        <div className="flex w-full min-w-0 items-center gap-1.5">
+          <div className="flex min-w-0 flex-1 flex-nowrap items-center gap-1 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+            {filters.sprintId !== "all" ? (
+              <FilterChip
+                label={sprintMap.get(filters.sprintId)?.name ?? filters.sprintId}
+                onRemove={handleClearSprint}
+              />
+            ) : null}
+            {filters.cycleId !== "all" ? (
+              <FilterChip
+                label={cycleMap.get(filters.cycleId)?.name ?? filters.cycleId}
+                onRemove={handleClearCycle}
+              />
+            ) : null}
+            {filters.priority !== "all" ? (
+              <FilterChip
+                label={formatEnumLabel(filters.priority)}
+                onRemove={handleClearPriority}
+              />
+            ) : null}
+            {filters.type !== "all" ? (
+              <FilterChip label={formatEnumLabel(filters.type)} onRemove={handleClearType} />
+            ) : null}
+            {filters.status !== "all" ? (
+              <FilterChip
+                label={filters.status.replace(/_/g, " ")}
+                onRemove={handleClearStatus}
+              />
+            ) : null}
+            {filters.assigneeId !== "all" ? (
+              <FilterChip label={assigneeChipLabel} onRemove={handleClearAssignee} />
+            ) : null}
+          </div>
+
           <button
             type="button"
             onClick={onClearFilters}
-            className="flex h-9 shrink-0 items-center gap-1 rounded-md border border-transparent px-2 text-xs text-muted-foreground transition-colors hover:border-border hover:bg-muted/50 hover:text-foreground"
+            className="inline-flex h-6 shrink-0 items-center gap-1 rounded-md px-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+            aria-label="Clear all filters"
             {...clearHoverHandlers}
           >
             <XIcon ref={clearIconRef} size={12} className="shrink-0" />
-            Clear all
+            <span>Clear</span>
           </button>
-        ) : null}
-
-        <TooltipProvider delayDuration={200}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                className="inline-flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
-                aria-label="About workload metrics"
-                {...infoHoverHandlers}
-              >
-                <InfoIcon ref={infoIconRef} size={14} />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="max-w-[16rem] text-xs">
-              Workload shows ticket count per member. Points are summed where set.
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </div>
-
-      {activeFilterCount > 0 ? (
-        <div className="flex min-w-0 flex-nowrap items-center justify-end gap-1 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-          {filters.sprintId !== "all" ? (
-            <FilterChip
-              label={sprintMap.get(filters.sprintId)?.name ?? filters.sprintId}
-              onRemove={handleClearSprint}
-            />
-          ) : null}
-          {filters.cycleId !== "all" ? (
-            <FilterChip
-              label={cycleMap.get(filters.cycleId)?.name ?? filters.cycleId}
-              onRemove={handleClearCycle}
-            />
-          ) : null}
-          {filters.priority !== "all" ? (
-            <FilterChip
-              label={formatEnumLabel(filters.priority)}
-              onRemove={handleClearPriority}
-            />
-          ) : null}
-          {filters.type !== "all" ? (
-            <FilterChip label={formatEnumLabel(filters.type)} onRemove={handleClearType} />
-          ) : null}
-          {filters.status !== "all" ? (
-            <FilterChip
-              label={filters.status.replace(/_/g, " ")}
-              onRemove={handleClearStatus}
-            />
-          ) : null}
-          {filters.assigneeId !== "all" ? (
-            <FilterChip label={assigneeChipLabel} onRemove={handleClearAssignee} />
-          ) : null}
         </div>
       ) : null}
     </div>

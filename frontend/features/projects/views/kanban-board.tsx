@@ -568,7 +568,6 @@ export function KanbanBoard({
                             column={col}
                             projectId={projectId}
                             ticketCount={columnTickets.length}
-                            wipLimit={wip}
                             canManage={canManage}
                             existingNames={(optimisticStatuses ?? []).map((s) => s.name)}
                             onRename={handleColumnRename}
@@ -638,7 +637,6 @@ export function KanbanBoard({
                         column={col}
                         projectId={projectId}
                         ticketCount={columnTickets.length}
-                        wipLimit={wip}
                         canManage={canManage}
                         existingNames={(optimisticStatuses ?? []).map((s) => s.name)}
                         onRename={handleColumnRename}

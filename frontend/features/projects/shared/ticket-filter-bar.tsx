@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
   useTransition,
+  type ReactNode,
 } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
@@ -64,6 +65,7 @@ interface TicketFilterBarProps {
   doneCount?: number;
   className?: string;
   align?: "start" | "end";
+  leading?: ReactNode;
 }
 
 function parseMulti(param: string): string[] {
@@ -74,6 +76,12 @@ function toggleMulti(current: string[], value: string): string[] {
   return current.includes(value)
     ? current.filter((v) => v !== value)
     : [...current, value];
+}
+
+function formatDueRange(from: string, to: string): string {
+  if (from && to) return `${from} → ${to}`;
+  if (from) return `From ${from}`;
+  return `Until ${to}`;
 }
 
 export function TicketFilterBar({
@@ -91,6 +99,7 @@ export function TicketFilterBar({
   doneCount = 0,
   className,
   align = "start",
+  leading,
 }: TicketFilterBarProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -337,6 +346,21 @@ export function TicketFilterBar({
     };
   }
 
+  function handleRemoveSprint() {
+    setParam("sprintId", "");
+  }
+
+  function handleRemoveDueDate() {
+    startTransition(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("dueDateFrom");
+      params.delete("dueDateTo");
+      params.delete("page");
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    });
+  }
+
   const labelMap = useMemo(
     () => new Map(labels.map((l) => [String(l.id), l])),
     [labels],
@@ -353,6 +377,10 @@ export function TicketFilterBar({
     () => new Map((projectOptions ?? []).map((p) => [String(p.id), p])),
     [projectOptions],
   );
+  const sprintMap = useMemo(
+    () => new Map((sprints ?? []).map((s) => [String(s.id), s])),
+    [sprints],
+  );
 
   const filterState: FilterState = {
     selectedStatuses,
@@ -367,193 +395,211 @@ export function TicketFilterBar({
     dueDateTo,
   };
 
-  const hasFilterChips =
-    selectedStatuses.length > 0 ||
-    selectedPriorities.length > 0 ||
-    selectedTypes.length > 0 ||
-    selectedAssignees.length > 0 ||
-    selectedLabels.length > 0 ||
-    selectedCycles.length > 0 ||
-    selectedProjectIds.length > 0;
+  const hasFilterChips = activeFilterCount > 0;
 
-  return (
-    <div className={cn("flex min-w-0 flex-col gap-0.5", className)}>
+  const controls = (
+    <div
+      className={cn(
+        "flex min-w-0 items-center gap-0.5 sm:gap-1",
+        !leading && align === "end" && "sm:justify-end",
+        leading ? "shrink-0" : "flex-1",
+      )}
+    >
       <div
         className={cn(
-          "flex min-w-0 items-center gap-0.5 sm:gap-1",
-          align === "end" && "sm:justify-end",
+          "relative min-w-0",
+          leading
+            ? "w-[min(100%,240px)] min-w-[10rem] flex-1 sm:w-[220px] sm:flex-none md:w-[240px]"
+            : align === "end"
+              ? "w-full max-w-[240px] min-w-[10rem] flex-1 sm:w-[220px] sm:flex-none md:w-[240px]"
+              : "w-full max-w-[240px] min-w-[10rem] flex-1 sm:max-w-[220px] md:max-w-[240px]",
         )}
       >
-        <div
-          className={cn(
-            "relative min-w-0 flex-1",
-            align === "end"
-              ? "max-w-[120px] sm:max-w-[128px] sm:flex-none sm:shrink-0 md:w-[128px]"
-              : "max-w-[160px] sm:max-w-[180px]",
-          )}
-        >
-          <SearchInput
-            placeholder="Search..."
-            value={localSearch}
-            onValueChange={handleSearchChange}
-            className="[&_svg]:left-2 [&_svg]:h-3.5 [&_svg]:w-3.5"
-            inputClassName="h-9 pl-7 pr-7 text-xs"
-          />
-        </div>
-
-        <FilterCommandMenu
-          activeFilterCount={activeFilterCount}
-          statusItems={statusItems}
-          statusConfig={statusConfig}
-          members={members ?? []}
-          labels={labels}
-          cycles={cycles}
-          sprints={sprints ?? []}
-          projectOptions={projectOptions}
-          showTypeFilter={showTypeFilter}
-          showSprintFilter={showSprintFilter}
-          showAssigneeFilter={showAssigneeFilter}
-          filterState={filterState}
-          onToggleStatus={handleToggleStatus}
-          onTogglePriority={handleTogglePriority}
-          onToggleType={handleToggleType}
-          onToggleAssignee={handleToggleAssignee}
-          onToggleLabel={handleToggleLabel}
-          onToggleCycle={handleToggleCycle}
-          onToggleSprint={handleToggleSprint}
-          onToggleProject={handleToggleProject}
-          onDueDateFromChange={handleDueDateFromChange}
-          onDueDateToChange={handleDueDateToChange}
+        <SearchInput
+          placeholder="Search..."
+          value={localSearch}
+          onValueChange={handleSearchChange}
+          className="[&_svg]:left-2 [&_svg]:h-3.5 [&_svg]:w-3.5"
+          inputClassName="h-9 pl-7 pr-7 text-xs"
         />
+      </div>
 
-        {showDoneToggle &&
-          onHideCompletedChange !== undefined &&
-          hideCompleted !== undefined && (
-            <TooltipProvider delayDuration={200}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={handleHideDoneClick}
-                    className={cn(
-                      "size-9 shrink-0",
-                      hideCompleted &&
-                        "border-primary bg-primary/10 text-primary",
-                    )}
-                    aria-label={
-                      doneCount > 0 ? `Hide done (${doneCount})` : "Hide done"
-                    }
-                    aria-pressed={hideCompleted}
-                    {...hideDoneHoverHandlers}
-                  >
-                    <CircleCheckIcon
-                      ref={hideDoneIconRef}
-                      size={14}
-                      className={hideCompleted ? "text-primary" : undefined}
-                    />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="text-xs">
-                  {doneCount > 0 ? `Hide done (${doneCount})` : "Hide done"}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
+      <FilterCommandMenu
+        activeFilterCount={activeFilterCount}
+        statusItems={statusItems}
+        statusConfig={statusConfig}
+        members={members ?? []}
+        labels={labels}
+        cycles={cycles}
+        sprints={sprints ?? []}
+        projectOptions={projectOptions}
+        showTypeFilter={showTypeFilter}
+        showSprintFilter={showSprintFilter}
+        showAssigneeFilter={showAssigneeFilter}
+        filterState={filterState}
+        onToggleStatus={handleToggleStatus}
+        onTogglePriority={handleTogglePriority}
+        onToggleType={handleToggleType}
+        onToggleAssignee={handleToggleAssignee}
+        onToggleLabel={handleToggleLabel}
+        onToggleCycle={handleToggleCycle}
+        onToggleSprint={handleToggleSprint}
+        onToggleProject={handleToggleProject}
+        onDueDateFromChange={handleDueDateFromChange}
+        onDueDateToChange={handleDueDateToChange}
+      />
 
-        {activeFilterCount > 0 && (
+      {showDoneToggle &&
+        onHideCompletedChange !== undefined &&
+        hideCompleted !== undefined && (
+          <TooltipProvider delayDuration={200}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={handleHideDoneClick}
+                  className={cn(
+                    "size-9 shrink-0",
+                    hideCompleted &&
+                      "border-primary bg-primary/10 text-primary",
+                  )}
+                  aria-label={
+                    doneCount > 0 ? `Hide done (${doneCount})` : "Hide done"
+                  }
+                  aria-pressed={hideCompleted}
+                  {...hideDoneHoverHandlers}
+                >
+                  <CircleCheckIcon
+                    ref={hideDoneIconRef}
+                    size={14}
+                    className={hideCompleted ? "text-primary" : undefined}
+                  />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs">
+                {doneCount > 0 ? `Hide done (${doneCount})` : "Hide done"}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+    </div>
+  );
+
+  return (
+    <div className={cn("flex w-full min-w-0 flex-col gap-1.5", className)}>
+      <div
+        className={cn(
+          "flex w-full min-w-0 flex-nowrap items-center gap-1 sm:gap-1.5",
+          leading ? "justify-between" : align === "end" ? "sm:justify-end" : "justify-start",
+        )}
+      >
+        {leading}
+        {controls}
+      </div>
+
+      {hasFilterChips ? (
+        <div className="flex w-full min-w-0 items-center gap-1.5">
+          <div className="flex min-w-0 flex-1 flex-nowrap items-center gap-1 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+            {selectedStatuses.map((s) => (
+              <FilterChip
+                key={`status-${s}`}
+                label={s.replace(/_/g, " ")}
+                onRemove={makeRemoveStatus(s)}
+              />
+            ))}
+            {selectedPriorities.map((p) => (
+              <FilterChip
+                key={`priority-${p}`}
+                label={p.charAt(0) + p.slice(1).toLowerCase()}
+                onRemove={makeRemovePriority(p)}
+              />
+            ))}
+            {selectedTypes.map((t) => (
+              <FilterChip
+                key={`type-${t}`}
+                label={t.charAt(0) + t.slice(1).toLowerCase()}
+                onRemove={makeRemoveType(t)}
+              />
+            ))}
+            {selectedAssignees.map((id) => {
+              const member = memberMap.get(id);
+              const label =
+                id === "@me"
+                  ? "Me"
+                  : id === "__unassigned__"
+                    ? "Unassigned"
+                    : member
+                      ? getUserDisplayName(member)
+                      : id;
+              return (
+                <FilterChip
+                  key={`assignee-${id}`}
+                  label={label}
+                  onRemove={makeRemoveAssignee(id)}
+                />
+              );
+            })}
+            {selectedLabels.map((id) => {
+              const l = labelMap.get(id);
+              return (
+                <FilterChip
+                  key={`label-${id}`}
+                  label={l?.name ?? id}
+                  color={l?.color ?? undefined}
+                  onRemove={makeRemoveLabel(id)}
+                />
+              );
+            })}
+            {selectedCycles.map((id) => {
+              const c = cycleMap.get(id);
+              return (
+                <FilterChip
+                  key={`cycle-${id}`}
+                  label={c?.name ?? id}
+                  onRemove={makeRemoveCycle(id)}
+                />
+              );
+            })}
+            {selectedProjectIds.map((id) => {
+              const p = projectMap.get(id);
+              return (
+                <FilterChip
+                  key={`project-${id}`}
+                  label={p?.name ?? id}
+                  onRemove={makeRemoveProject(id)}
+                />
+              );
+            })}
+            {sprintParam ? (
+              <FilterChip
+                key={`sprint-${sprintParam}`}
+                label={sprintMap.get(sprintParam)?.name ?? `Sprint ${sprintParam}`}
+                onRemove={handleRemoveSprint}
+              />
+            ) : null}
+            {dueDateFrom || dueDateTo ? (
+              <FilterChip
+                key="due-date"
+                label={formatDueRange(dueDateFrom, dueDateTo)}
+                onRemove={handleRemoveDueDate}
+              />
+            ) : null}
+          </div>
+
           <button
             type="button"
             onClick={clearAll}
-            className="flex size-9 shrink-0 items-center justify-center gap-0.5 rounded-md border border-transparent text-xs text-muted-foreground transition-colors hover:border-border hover:bg-muted/50 hover:text-foreground sm:h-9 sm:w-auto sm:px-1.5"
+            className="inline-flex h-6 shrink-0 items-center gap-1 rounded-md px-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
             aria-label="Clear all filters"
             {...clearAllHoverHandlers}
           >
-            <XIcon ref={clearAllIconRef} size={14} className="shrink-0" />
-            <span className="hidden md:inline">Clear</span>
+            <XIcon ref={clearAllIconRef} size={12} className="shrink-0" />
+            <span>Clear</span>
           </button>
-        )}
-      </div>
-
-      {hasFilterChips && (
-        <div
-          className={cn(
-            "flex min-w-0 flex-nowrap items-center gap-1 overflow-x-auto scrollbar-hide [&>*]:shrink-0",
-            align === "end" && "sm:justify-end",
-          )}
-        >
-          {selectedStatuses.map((s) => (
-            <FilterChip
-              key={`status-${s}`}
-              label={s.replace(/_/g, " ")}
-              onRemove={makeRemoveStatus(s)}
-            />
-          ))}
-          {selectedPriorities.map((p) => (
-            <FilterChip
-              key={`priority-${p}`}
-              label={p.charAt(0) + p.slice(1).toLowerCase()}
-              onRemove={makeRemovePriority(p)}
-            />
-          ))}
-          {selectedTypes.map((t) => (
-            <FilterChip
-              key={`type-${t}`}
-              label={t.charAt(0) + t.slice(1).toLowerCase()}
-              onRemove={makeRemoveType(t)}
-            />
-          ))}
-          {selectedAssignees.map((id) => {
-            const label =
-              id === "@me"
-                ? "Me"
-                : id === "__unassigned__"
-                  ? "Unassigned"
-                  : memberMap.get(id)
-                    ? getUserDisplayName(memberMap.get(id)!)
-                    : id;
-            return (
-              <FilterChip
-                key={`assignee-${id}`}
-                label={label}
-                onRemove={makeRemoveAssignee(id)}
-              />
-            );
-          })}
-          {selectedLabels.map((id) => {
-            const l = labelMap.get(id);
-            return (
-              <FilterChip
-                key={`label-${id}`}
-                label={l?.name ?? id}
-                color={l?.color ?? undefined}
-                onRemove={makeRemoveLabel(id)}
-              />
-            );
-          })}
-          {selectedCycles.map((id) => {
-            const c = cycleMap.get(id);
-            return (
-              <FilterChip
-                key={`cycle-${id}`}
-                label={c?.name ?? id}
-                onRemove={makeRemoveCycle(id)}
-              />
-            );
-          })}
-          {selectedProjectIds.map((id) => {
-            const p = projectMap.get(id);
-            return (
-              <FilterChip
-                key={`project-${id}`}
-                label={p?.name ?? id}
-                onRemove={makeRemoveProject(id)}
-              />
-            );
-          })}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

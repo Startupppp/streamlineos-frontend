@@ -97,69 +97,70 @@ export function ProjectViewsToolbar({
     onOpenSaveView();
   }, [onOpenSaveView]);
 
-  return (
-    <div className="flex w-full min-w-0 flex-nowrap items-center justify-between gap-1 sm:gap-1.5">
-      <div className="flex min-w-0 shrink-0 items-center gap-1">
-        <ViewSwitcher activeView={view} onViewChange={onViewChange} />
+  const leading = (
+    <div className="flex min-w-0 shrink-0 items-center gap-1">
+      <ViewSwitcher activeView={view} onViewChange={onViewChange} />
 
-        <div className="flex items-center gap-0.5 sm:gap-1">
-          <DisplayOptionsPanel
-            viewType={view}
-            options={displayOptions}
-            onChange={onDisplayOptionsChange}
-          />
+      <div className="flex items-center gap-0.5 sm:gap-1">
+        <DisplayOptionsPanel
+          viewType={view}
+          options={displayOptions}
+          onChange={onDisplayOptionsChange}
+        />
 
-          <ToolbarIconButton
-            onClick={handleSaveViewClick}
-            ariaLabel="Save view"
-            Icon={BookmarkIcon}
-          />
-        </div>
+        <ToolbarIconButton
+          onClick={handleSaveViewClick}
+          ariaLabel="Save view"
+          Icon={BookmarkIcon}
+        />
+      </div>
 
-        {activeViewName && onClearView ? (
-          <Badge
-            variant="secondary"
-            className="h-6 max-w-[7rem] shrink-0 cursor-default gap-0.5 bg-card pl-1.5 pr-0.5 text-xs font-normal sm:max-w-[10rem]"
+      {activeViewName && onClearView ? (
+        <Badge
+          variant="secondary"
+          className="h-6 max-w-[7rem] shrink-0 cursor-default gap-0.5 bg-card pl-1.5 pr-0.5 text-xs font-normal sm:max-w-[10rem]"
+        >
+          <span className="min-w-0 truncate">{activeViewName}</span>
+          <button
+            type="button"
+            onClick={onClearView}
+            aria-label="Clear view"
+            className="ml-0.5 rounded-sm transition-colors hover:bg-muted"
           >
-            <span className="min-w-0 truncate">{activeViewName}</span>
-            <button
-              type="button"
-              onClick={onClearView}
-              aria-label="Clear view"
-              className="ml-0.5 rounded-sm transition-colors hover:bg-muted"
-            >
-              <X className="h-3 w-3" />
-            </button>
-          </Badge>
-        ) : null}
-      </div>
-
-      <div className="min-w-0 flex-1 md:max-w-md lg:max-w-lg md:flex md:justify-end">
-        {view === "workload" ? (
-          <WorkloadFilterBar
-            className="w-full"
-            projectId={projectId}
-            filters={workloadFilters}
-            members={members}
-            projectStatuses={statuses}
-            onFilterChange={onWorkloadFilterChange}
-            onClearFilters={onClearWorkloadFilters}
-          />
-        ) : (
-          <TicketFilterBar
-            className="w-full"
-            align="end"
-            members={members}
-            statuses={statuses}
-            projectId={projectId}
-            showSprintFilter={false}
-            showDoneToggle
-            hideCompleted={hideCompleted}
-            onHideCompletedChange={onHideCompletedChange}
-            doneCount={doneCount}
-          />
-        )}
-      </div>
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      ) : null}
     </div>
+  );
+
+  if (view === "workload") {
+    return (
+      <WorkloadFilterBar
+        className="w-full"
+        leading={leading}
+        projectId={projectId}
+        filters={workloadFilters}
+        members={members}
+        projectStatuses={statuses}
+        onFilterChange={onWorkloadFilterChange}
+        onClearFilters={onClearWorkloadFilters}
+      />
+    );
+  }
+
+  return (
+    <TicketFilterBar
+      className="w-full"
+      leading={leading}
+      members={members}
+      statuses={statuses}
+      projectId={projectId}
+      showSprintFilter={false}
+      showDoneToggle
+      hideCompleted={hideCompleted}
+      onHideCompletedChange={onHideCompletedChange}
+      doneCount={doneCount}
+    />
   );
 }

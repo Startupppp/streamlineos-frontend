@@ -57,7 +57,6 @@ interface KanbanColumnHeaderProps {
   column: KanbanColumn;
   projectId: number;
   ticketCount: number;
-  wipLimit?: number;
   canManage: boolean;
   existingNames?: string[];
   onRename?: (oldName: string, newName: string) => void;
@@ -70,7 +69,6 @@ export function KanbanColumnHeader({
   column,
   projectId,
   ticketCount,
-  wipLimit,
   canManage,
   existingNames = [],
   onRename,
@@ -287,7 +285,6 @@ export function KanbanColumnHeader({
         )}
         <span className="text-xs text-muted-foreground tabular-nums shrink-0">
           {ticketCount}
-          {wipLimit != null && `/${wipLimit}`}
         </span>
       </div>
 

@@ -1,30 +1,44 @@
 "use client";
 
+import type { MouseEvent, ReactNode } from "react";
 import { XIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 export interface FilterChipProps {
   label: string;
   color?: string;
   onRemove: () => void;
+  className?: string;
 }
 
-export function FilterChip({ label, color, onRemove }: FilterChipProps) {
+export function FilterChip({ label, color, onRemove, className }: FilterChipProps) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
+
+  function handleRemoveClick(event: MouseEvent<HTMLButtonElement>) {
+    event.stopPropagation();
+    onRemove();
+  }
+
   return (
-    <span className="inline-flex h-5 items-center gap-1 rounded-full border border-border bg-card pl-1.5 pr-1 text-[10px] text-foreground">
-      {color && (
+    <span
+      className={cn(
+        "inline-flex h-6 max-w-[12rem] items-center gap-1 rounded-md border border-border/80 bg-card px-1.5 text-xs text-foreground shadow-sm",
+        className,
+      )}
+    >
+      {color ? (
         <span
-          className="h-1.5 w-1.5 rounded-full shrink-0"
+          className="h-1.5 w-1.5 shrink-0 rounded-full"
           style={{ backgroundColor: color }}
         />
-      )}
-      {label}
+      ) : null}
+      <span className="min-w-0 truncate font-medium leading-none">{label}</span>
       <button
         type="button"
-        onClick={onRemove}
-        className="ml-0.5 rounded-full text-muted-foreground hover:text-foreground transition-colors"
+        onClick={handleRemoveClick}
+        className="inline-flex size-4 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         aria-label={`Remove ${label} filter`}
         {...hoverHandlers}
       >
@@ -36,7 +50,7 @@ export function FilterChip({ label, color, onRemove }: FilterChipProps) {
 
 export interface FilterSectionProps {
   label: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 export function FilterSection({ label, children }: FilterSectionProps) {

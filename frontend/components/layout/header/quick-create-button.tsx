@@ -24,6 +24,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon"
 import { useIsMobile } from "@/hooks/common/use-mobile"
 import { useCan } from "@/hooks/api/access"
@@ -141,43 +142,45 @@ export function QuickCreatePanel({
   onNavigate: () => void
 }) {
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-4 pb-6">
-      {groups.map((group, groupIndex) => (
-        <div key={group.id}>
-          {groupIndex > 0 ? <div className="my-1 h-px bg-border" /> : null}
-          <p className="mb-1 px-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            {group.label}
-          </p>
-          {group.items.map((action) => {
-            if (action.action === "create-issue") {
+    <ScrollArea fill className="min-h-0 flex-1">
+      <div className="flex flex-col gap-1 px-4 pb-6">
+        {groups.map((group, groupIndex) => (
+          <div key={group.id}>
+            {groupIndex > 0 ? <div className="my-1 h-px bg-border" /> : null}
+            <p className="mb-1 px-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              {group.label}
+            </p>
+            {group.items.map((action) => {
+              if (action.action === "create-issue") {
+                return (
+                  <button
+                    key={action.id}
+                    type="button"
+                    onClick={onCreateIssue}
+                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm text-foreground transition-colors hover:bg-muted"
+                  >
+                    <action.icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    {action.label}
+                  </button>
+                )
+              }
+              if (!action.href) return null
               return (
-                <button
+                <Link
                   key={action.id}
-                  type="button"
-                  onClick={onCreateIssue}
-                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm text-foreground transition-colors hover:bg-muted"
+                  href={action.href}
+                  onClick={onNavigate}
+                  className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-foreground transition-colors hover:bg-muted"
                 >
                   <action.icon className="h-4 w-4 shrink-0 text-muted-foreground" />
                   {action.label}
-                </button>
+                </Link>
               )
-            }
-            if (!action.href) return null
-            return (
-              <Link
-                key={action.id}
-                href={action.href}
-                onClick={onNavigate}
-                className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-foreground transition-colors hover:bg-muted"
-              >
-                <action.icon className="h-4 w-4 shrink-0 text-muted-foreground" />
-                {action.label}
-              </Link>
-            )
-          })}
-        </div>
-      ))}
-    </div>
+            })}
+          </div>
+        ))}
+      </div>
+    </ScrollArea>
   )
 }
 
@@ -372,15 +375,17 @@ export function QuickCreateButton() {
       <PopoverContent
         align="end"
         sideOffset={0}
-        className="w-52 max-h-[min(22rem,var(--radix-popover-content-available-height))] overflow-y-auto p-0"
+        className="w-52 max-h-[min(22rem,var(--radix-popover-content-available-height))] overflow-hidden p-0"
         onMouseEnter={handleHoverEnter}
         onMouseLeave={handleHoverLeave}
       >
-        <QuickCreateMenuItems
-          groups={groups}
-          onCreateIssue={handleCreateIssue}
-          onNavigate={handleNavigate}
-        />
+        <ScrollArea className="max-h-[min(22rem,var(--radix-popover-content-available-height))]">
+          <QuickCreateMenuItems
+            groups={groups}
+            onCreateIssue={handleCreateIssue}
+            onNavigate={handleNavigate}
+          />
+        </ScrollArea>
       </PopoverContent>
     </Popover>
   )
