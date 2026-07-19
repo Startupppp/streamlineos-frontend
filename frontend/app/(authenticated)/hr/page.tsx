@@ -41,6 +41,7 @@ import {
 } from "@/features/hr/employees/employee-list-filters";
 import { HrEmployeeTable } from "@/features/hr/employees/hr-employee-table";
 import { HrDashboardOverview } from "@/features/hr/hr-dashboard-overview";
+import { HrSetupProgressCard } from "@/features/hr/setup/hr-setup-progress-card";
 import {
   HrHero,
   HrPageContent,
@@ -327,6 +328,8 @@ export default function HRDashboardPage() {
             />
           </div>
         </HrHero>
+
+        <HrSetupProgressCard />
 
         <HrDashboardOverview />
 

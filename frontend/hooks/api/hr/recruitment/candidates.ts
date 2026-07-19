@@ -13,6 +13,11 @@ import type {
   Interview,
 } from "@/types/hr";
 import type { CandidateSlaRecord, InterviewScorecard } from "./interviews";
+import {
+  normalizeRecruitmentList,
+  unwrapRecruitmentItems,
+  type RecruitmentListResponse,
+} from "./list-response";
 
 interface AiScoreBreakdown {
   technicalSkills: number;
@@ -81,11 +86,73 @@ export interface RecruitmentAnalytics {
 
 const ATS_KANBAN_KEY = queryKeys.hr.atsKanban();
 
-export function useCandidates(params?: { status?: string; source?: string; jobId?: number }) {
+export type CandidatesParams = {
+  status?: string;
+  source?: string;
+  jobId?: number;
+  /** Server-side search (first/last name, email, company) */
+  search?: string;
+  page?: number;
+  pageSize?: number;
+};
+
+export type CandidatesListResponse = RecruitmentListResponse<Candidate> & {
+  statusCounts?: Record<string, number>;
+};
+
+/**
+ * Backend returns `{ items, total, page, pageSize, totalPages, statusCounts? }`.
+ * Hook normalizes to Candidate[] so existing list UIs keep working.
+ */
+export function useCandidates(params?: CandidatesParams) {
+  const page = params?.page ?? 1;
+  const pageSize = params?.pageSize ?? 100;
+  const queryParams: Record<string, unknown> = {
+    page,
+    pageSize,
+  };
+  if (params?.status) queryParams.status = params.status;
+  if (params?.source) queryParams.source = params.source;
+  if (params?.jobId) queryParams.jobId = params.jobId;
+  if (params?.search?.trim()) queryParams.search = params.search.trim();
+
   return useQuery({
-    queryKey: queryKeys.hr.candidates(params as Record<string, unknown> | undefined),
-    queryFn: () =>
-      apiClient.get<Candidate[]>("/hr/recruitment/candidates", params as Record<string, unknown> | undefined),
+    queryKey: queryKeys.hr.candidates(queryParams),
+    queryFn: async (): Promise<Candidate[]> => {
+      const res = await apiClient.get<Candidate[] | CandidatesListResponse>(
+        "/hr/recruitment/candidates",
+        queryParams,
+      );
+      return unwrapRecruitmentItems(res);
+    },
+    staleTime: 2 * 60_000,
+  });
+}
+
+/** Full paginated candidates payload (includes statusCounts for filter chips). */
+export function useCandidatesPage(params?: CandidatesParams) {
+  const page = params?.page ?? 1;
+  const pageSize = params?.pageSize ?? 20;
+  const queryParams: Record<string, unknown> = { page, pageSize };
+  if (params?.status) queryParams.status = params.status;
+  if (params?.source) queryParams.source = params.source;
+  if (params?.jobId) queryParams.jobId = params.jobId;
+  if (params?.search?.trim()) queryParams.search = params.search.trim();
+
+  return useQuery({
+    queryKey: [...queryKeys.hr.candidates(queryParams), "page"] as const,
+    queryFn: async (): Promise<CandidatesListResponse> => {
+      const res = await apiClient.get<Candidate[] | CandidatesListResponse>(
+        "/hr/recruitment/candidates",
+        queryParams,
+      );
+      const base = normalizeRecruitmentList(res, pageSize);
+      const statusCounts =
+        res && typeof res === "object" && !Array.isArray(res) && "statusCounts" in res
+          ? (res as CandidatesListResponse).statusCounts
+          : undefined;
+      return { ...base, statusCounts };
+    },
     staleTime: 2 * 60_000,
   });
 }
@@ -149,6 +216,7 @@ export function useBulkShortlistCandidates() {
 }
 
 export function useCandidate(id: number) {
+  const enabled = Number.isFinite(id) && id > 0;
   return useQuery({
     queryKey: queryKeys.hr.candidate(id),
     queryFn: () =>
@@ -160,7 +228,7 @@ export function useCandidate(id: number) {
         }
       >(`/hr/recruitment/candidates/${id}`),
     staleTime: 2 * 60_000,
-    enabled: !!id,
+    enabled,
   });
 }
 
@@ -242,11 +310,11 @@ export function useCreateApplication() {
   });
 }
 
+/** @deprecated Prefer useAtsKanban — pipeline returns { stages }, not a stage map. */
 export function useRecruitmentPipeline() {
   return useQuery({
     queryKey: queryKeys.hr.recruitmentPipeline(),
-    queryFn: () =>
-      apiClient.get<Record<string, Candidate[]>>("/hr/recruitment/pipeline"),
+    queryFn: () => apiClient.get<AtsPipelineResponse>("/hr/recruitment/pipeline"),
     staleTime: 2 * 60_000,
   });
 }
@@ -298,6 +366,7 @@ export function useUpdateCandidateStage() {
       void qc.invalidateQueries({ queryKey: ATS_KANBAN_KEY });
       void qc.invalidateQueries({ queryKey: queryKeys.hr.recruitmentPipeline() });
       void qc.invalidateQueries({ queryKey: queryKeys.hr.recruitmentStats() });
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.candidates() });
     },
   });
 }

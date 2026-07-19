@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ErrorState } from "@/components/shared/error-state";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -68,8 +69,8 @@ import {
 export default function CandidateDetailPage() {
   const { candidateId } = useParams<{ candidateId: string }>();
   const id = Number(candidateId);
-  const { data: candidate, isLoading } = useCandidate(id);
-  const { data: jobs } = useJobPostings();
+  const { data: candidate, isLoading, isError, refetch } = useCandidate(id);
+  const { data: jobs } = useJobPostings({ pageSize: 100 });
   const updateCandidate = useUpdateCandidate();
   const createInterview = useCreateInterview();
   const createApplication = useCreateApplication();
@@ -257,12 +258,29 @@ export default function CandidateDetailPage() {
     );
   }
 
+  if (isError) {
+    return (
+      <PageWrapper title="Candidate" subtitle="Unable to load candidate" variant="display">
+        <ErrorState
+          title="Unable to load candidate"
+          description="This candidate may no longer exist, or you do not have permission to view them. Try again."
+          onRetry={() => void refetch()}
+        />
+      </PageWrapper>
+    );
+  }
+
   if (!candidate) {
     return (
-      <PageWrapper title="Not Found" subtitle="Candidate not found" variant="display">
-        <Button asChild>
-          <Link href="/hr/recruitment/candidates">Back to Candidates</Link>
-        </Button>
+      <PageWrapper title="Not Found" subtitle="This candidate no longer exists" variant="display">
+        <div className="flex flex-col items-start gap-3">
+          <p className="text-sm text-muted-foreground">
+            The candidate may have been deleted or the link is invalid.
+          </p>
+          <Button asChild>
+            <Link href="/hr/recruitment/candidates">Back to Candidates</Link>
+          </Button>
+        </div>
       </PageWrapper>
     );
   }

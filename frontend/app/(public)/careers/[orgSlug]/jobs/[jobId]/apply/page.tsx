@@ -33,18 +33,71 @@ export default function ApplyPage({ params }: Props) {
   }, []);
 
   const handleSubmit = useCallback(async () => {
-    if (!name.trim()) { toast.error("Full name is required"); return; }
-    if (!email.trim()) { toast.error("Email is required"); return; }
+    const fullName = name.trim();
+    const emailValue = email.trim().toLowerCase();
+    if (!fullName) {
+      toast.error("Full name is required");
+      return;
+    }
+    if (fullName.length < 2) {
+      toast.error("Full name must be at least 2 characters");
+      return;
+    }
+    if (!emailValue) {
+      toast.error("Email is required");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)) {
+      toast.error("Enter a valid email address");
+      return;
+    }
+    if (phone.trim()) {
+      const digits = phone.replace(/\D/g, "");
+      if (digits.length < 8 || digits.length > 15) {
+        toast.error("Phone must be 8–15 digits");
+        return;
+      }
+    }
+    if (linkedinUrl.trim()) {
+      try {
+        const raw = linkedinUrl.trim().startsWith("www.")
+          ? `https://${linkedinUrl.trim()}`
+          : linkedinUrl.trim();
+        const parsed = new URL(raw);
+        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+          toast.error("LinkedIn URL must be a valid link");
+          return;
+        }
+      } catch {
+        toast.error("LinkedIn URL must be a valid link");
+        return;
+      }
+    }
+    if (resumeUrl.trim()) {
+      try {
+        const parsed = new URL(resumeUrl.trim());
+        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+          toast.error("Resume URL must be a valid link");
+          return;
+        }
+      } catch {
+        toast.error("Resume URL must be a valid link");
+        return;
+      }
+    }
 
     setSubmitting(true);
     try {
+      const linkedinRaw = linkedinUrl.trim() || undefined;
       const data = await apiClient.post<{ trackingToken: string }>(
         `/public/careers/${orgSlug}/jobs/${jobId}/apply`,
         {
-          name: name.trim(),
-          email: email.trim().toLowerCase(),
+          name: fullName,
+          email: emailValue,
           phone: phone.trim() || undefined,
-          linkedinUrl: linkedinUrl.trim() || undefined,
+          linkedinUrl: linkedinRaw?.startsWith("www.")
+            ? `https://${linkedinRaw}`
+            : linkedinRaw,
           coverLetter: coverLetter.trim() || undefined,
           resumeUrl: resumeUrl.trim() || undefined,
         },
@@ -52,7 +105,8 @@ export default function ApplyPage({ params }: Props) {
       setTrackingToken(data.trackingToken);
       setSubmitted(true);
     } catch (e) {
-      toast.error(getApiError(e) || "Failed to submit application");
+      const message = getApiError(e) || "Unable to submit application. Try again.";
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }

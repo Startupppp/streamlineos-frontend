@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { ErrorState } from "@/components/shared/error-state";
 
 const CREATE_ACTIONS = [
   { label: "New requisition", href: "/hr/recruitment/requisitions" },
@@ -163,13 +164,11 @@ export default function RecruitmentCommandCenterPage() {
     >
       <div className="flex flex-1 min-h-0 flex-col gap-5">
         {statsError ? (
-          <div className="flex flex-col items-center justify-center py-16 gap-4 rounded-2xl border border-border bg-card text-center">
-            <p className="text-sm font-semibold text-foreground">Failed to load recruitment data</p>
-            <p className="text-xs text-muted-foreground">An error occurred while fetching data.</p>
-            <Button size="sm" variant="outline" onClick={handleRetryStats}>
-              Try again
-            </Button>
-          </div>
+          <ErrorState
+            title="Unable to load recruitment data"
+            description="Try again. If this keeps happening, check your permissions or contact an admin."
+            onRetry={handleRetryStats}
+          />
         ) : (
           <>
             {statsLoading ? (

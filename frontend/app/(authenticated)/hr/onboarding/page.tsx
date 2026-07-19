@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   Settings,
@@ -144,8 +145,15 @@ function HrDocumentsTab() {
   );
 }
 
+const VALID_TABS = ["workflow", "plans", "wizard", "documents", "probation"] as const;
+
 export default function OnboardingPage() {
   const isHROrCEO = useCan("hr:employees:manage");
+  const searchParams = useSearchParams();
+  const requestedTab = searchParams.get("tab");
+  const initialTab = (VALID_TABS as readonly string[]).includes(requestedTab ?? "")
+    ? (requestedTab as (typeof VALID_TABS)[number])
+    : "wizard";
 
   return (
     <PageWrapper
@@ -169,7 +177,7 @@ export default function OnboardingPage() {
       }
     >
       {isHROrCEO ? (
-        <Tabs defaultValue="wizard" className="space-y-4">
+        <Tabs defaultValue={initialTab} className="space-y-4">
           <TabsList className="rounded-xl border border-border/70 p-1 h-auto bg-muted/30 backdrop-blur-sm">
             <TabsTrigger
               value="workflow"

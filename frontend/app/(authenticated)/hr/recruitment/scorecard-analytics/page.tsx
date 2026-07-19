@@ -19,6 +19,7 @@ import dynamic from "next/dynamic";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { BarChart3, Star, Users } from "lucide-react";
 import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import { ErrorState } from "@/components/shared/error-state";
 
 const ScorecardCharts = dynamic(
   () => import("@/features/hr/recruitment/components/scorecard-charts").then((m) => ({ default: m.ScorecardCharts })),
@@ -72,7 +73,7 @@ function initials(name: string | null, email: string) {
 export default function ScorecardAnalyticsPage() {
   const [days, setDays] = useState("90");
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: queryKeys.hr.scorecardAnalytics({ days }),
     queryFn: () => apiClient.get<ScorecardAnalytics>(`/hr/recruitment/scorecard-analytics?days=${days}`),
     staleTime: 5 * 60_000,
@@ -88,6 +89,18 @@ export default function ScorecardAnalyticsPage() {
           <Skeleton className="h-72 rounded-xl" />
           <Skeleton className="h-72 rounded-xl" />
         </div>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="Scorecard Analytics" subtitle="Interviewer performance and scoring patterns">
+        <ErrorState
+          title="Unable to load scorecard analytics"
+          description="Try again. If this keeps happening, check your permissions or contact an admin."
+          onRetry={() => void refetch()}
+        />
       </PageWrapper>
     );
   }

@@ -37,6 +37,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { format } from "date-fns";
+import { ErrorState } from "@/components/shared/error-state";
 
 const DEFAULT_TEMPLATE = `<h1>Offer Letter</h1>
 <p>Date: {{joining_date}}</p>
@@ -331,7 +332,7 @@ function TemplateCard({ template, onPreview, onEdit, onDelete }: TemplateCardPro
 }
 
 export default function OfferTemplatesPage() {
-  const { data: templates = [], isLoading } = useOfferTemplates();
+  const { data: templates = [], isLoading, isError, refetch } = useOfferTemplates();
   const deleteMutation = useDeleteOfferTemplate();
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -393,6 +394,23 @@ export default function OfferTemplatesPage() {
             <Skeleton key={i} className="h-20 rounded-xl" />
           ))}
         </div>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper
+        title="Offer Templates"
+        subtitle="Reusable offer letter templates with placeholders."
+        actions={pageActions}
+        variant="display"
+      >
+        <ErrorState
+          title="Unable to load offer templates"
+          description="Try again. If this keeps happening, check your permissions or contact an admin."
+          onRetry={() => void refetch()}
+        />
       </PageWrapper>
     );
   }

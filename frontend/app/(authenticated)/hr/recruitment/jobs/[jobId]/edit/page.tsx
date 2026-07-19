@@ -68,12 +68,35 @@ function EditJobContent({ jobId }: { jobId: number }) {
     );
   }
 
-  if (isError || !job) {
+  if (isError) {
     return (
       <>
         {backLink}
-        <div className="flex-1 flex items-center justify-center">
-          <p className="text-sm text-muted-foreground">Job posting not found.</p>
+        <div className="flex-1 flex flex-col items-center justify-center gap-3 p-6 text-center">
+          <p className="text-sm font-semibold text-foreground">Unable to load this job</p>
+          <p className="text-xs text-muted-foreground max-w-sm">
+            This job may no longer exist, or you do not have permission to view it.
+          </p>
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/hr/recruitment/jobs">Back to Jobs</Link>
+          </Button>
+        </div>
+      </>
+    );
+  }
+
+  if (!job) {
+    return (
+      <>
+        {backLink}
+        <div className="flex-1 flex flex-col items-center justify-center gap-3 p-6 text-center">
+          <p className="text-sm font-semibold text-foreground">This job no longer exists</p>
+          <p className="text-xs text-muted-foreground max-w-sm">
+            The job posting may have been deleted or the link is invalid.
+          </p>
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/hr/recruitment/jobs">Back to Jobs</Link>
+          </Button>
         </div>
       </>
     );

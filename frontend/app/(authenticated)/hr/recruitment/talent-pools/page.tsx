@@ -29,6 +29,7 @@ import {
 import { Plus, Trash2, UserPlus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { ErrorState } from "@/components/shared/error-state";
 
 function CreatePoolSheet() {
   const [open, setOpen] = useState(false);
@@ -242,7 +243,7 @@ function PoolMembersList({ poolId }: { poolId: number }) {
 }
 
 export default function TalentPoolsPage() {
-  const { data: pools, isLoading } = useTalentPools();
+  const { data: pools, isLoading, isError, refetch } = useTalentPools();
   const deletePool = useDeleteTalentPool();
   const [selectedPoolId, setSelectedPoolId] = useState<number | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
@@ -278,6 +279,12 @@ export default function TalentPoolsPage() {
               {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-32 w-full rounded-2xl" />)}
             </div>
           </div>
+        ) : isError ? (
+          <ErrorState
+            title="Unable to load talent pools"
+            description="Try again. If this keeps happening, check your permissions or contact an admin."
+            onRetry={() => void refetch()}
+          />
         ) : isEmpty ? (
           <RecruitmentEmptyState
             illustrationPreset="projects"

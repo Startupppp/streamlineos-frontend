@@ -26,6 +26,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { format } from "date-fns";
 import { Users2 } from "lucide-react";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { ErrorState } from "@/components/shared/error-state";
 
 const STATUS_CONFIG: Record<ExternalReferralStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   SUBMITTED: { label: "Submitted", variant: "secondary" },
@@ -237,7 +238,7 @@ function ExternalReferralCard({ referral, onStatusChange, onMarkReward, isUpdati
 }
 
 export function ExternalReferralsTab() {
-  const { data: referrals = [], isLoading } = useExternalReferrals();
+  const { data: referrals = [], isLoading, isError, refetch } = useExternalReferrals();
   const updateMutation = useUpdateExternalReferral();
   const [rewardReferral, setRewardReferral] = useState<ExternalReferral | null>(null);
   const [pendingId, setPendingId] = useState<number | null>(null);
@@ -261,6 +262,17 @@ export function ExternalReferralsTab() {
       <div className="space-y-3">
         {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        title="Unable to load external referrals"
+        description="Try again. If this keeps happening, check your permissions or contact an admin."
+        onRetry={() => void refetch()}
+        compact
+      />
     );
   }
 

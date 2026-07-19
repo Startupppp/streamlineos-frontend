@@ -22,6 +22,7 @@ import {
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptyActivityIllustration } from "@/components/illustrations";
 import { LoadingState } from "@/components/shared/loading-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { format } from "date-fns";
@@ -162,7 +163,7 @@ function AutomationCard({ auto, onToggle, onSetDeleteId, isTogglePending }: Auto
 }
 
 export default function RecruitmentAutomationsPage() {
-  const { data: automations, isLoading } = useAutomations();
+  const { data: automations, isLoading, isError, refetch } = useAutomations();
   const create = useCreateAutomation();
   const toggle = useToggleAutomation();
   const deleteAuto = useDeleteAutomation();
@@ -230,6 +231,12 @@ export default function RecruitmentAutomationsPage() {
       <div className="flex flex-1 min-h-0 flex-col">
         {isLoading ? (
         <LoadingState variant="list" rows={12} />
+      ) : isError ? (
+        <ErrorState
+          title="Unable to load automations"
+          description="Try again. If this keeps happening, check your permissions or contact an admin."
+          onRetry={() => void refetch()}
+        />
       ) : !automations?.length ? (
         <RecruitmentEmptyState
           illustration={<EmptyActivityIllustration />}

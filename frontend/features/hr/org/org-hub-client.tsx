@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -33,8 +34,15 @@ type CatalogMutation<T> = UseMutationResult<T, Error, OrgCatalogInput>;
 type CatalogUpdateMutation<T> = UseMutationResult<T, Error, OrgCatalogInput & { id: number }>;
 type DeleteMutation<T> = UseMutationResult<T, Error, number>;
 
+const VALID_TABS = ["departments", "teams", "locations", "roles", "levels"] as const;
+
 export function OrgHubClient() {
   const canManage = useCan("hr:employees:manage");
+  const searchParams = useSearchParams();
+  const requestedTab = searchParams.get("tab");
+  const initialTab = (VALID_TABS as readonly string[]).includes(requestedTab ?? "")
+    ? (requestedTab as (typeof VALID_TABS)[number])
+    : "departments";
 
   const locations = useOrgLocations();
   const createLocation = useCreateLocation();
@@ -65,7 +73,7 @@ export function OrgHubClient() {
       contentClassName="flex flex-col gap-4 sm:gap-5"
     >
       <HeadcountStats groupBy="department" />
-      <Tabs defaultValue="departments" className="flex flex-col flex-1 min-h-0">
+      <Tabs defaultValue={initialTab} className="flex flex-col flex-1 min-h-0">
         <TabsList className="shrink-0">
           <TabsTrigger value="departments" className="gap-1.5">
             <Building2 className="h-3 w-3" />

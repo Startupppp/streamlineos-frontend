@@ -16,6 +16,7 @@ import {
 } from "@/hooks/api/hr/recruitment";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { ErrorState } from "@/components/shared/error-state";
 
 const STATUS_BADGE: Record<HrBookingLink["status"], { label: string; className: string }> = {
   pending: { label: "Pending", className: "bg-yellow-500/10 text-yellow-700 border-yellow-500/20 dark:text-yellow-300 dark:border-yellow-500/30" },
@@ -72,7 +73,7 @@ function RevokeButton({
 }
 
 export function BookingLinksView({ baseUrl }: { baseUrl: string }) {
-  const { data: links, isLoading } = useHrBookingLinks();
+  const { data: links, isLoading, isError, refetch } = useHrBookingLinks();
   const revoke = useRevokeBookingLink();
 
   const handleRevoke = useCallback(
@@ -179,6 +180,21 @@ export function BookingLinksView({ baseUrl }: { baseUrl: string }) {
 
   function getRowKey(link: HrBookingLink) {
     return link.id;
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper
+        title="Interview Booking Links"
+        subtitle="Manage self-scheduling links sent to candidates"
+      >
+        <ErrorState
+          title="Unable to load booking links"
+          description="Try again. If this keeps happening, check your permissions or contact an admin."
+          onRetry={() => void refetch()}
+        />
+      </PageWrapper>
+    );
   }
 
   return (

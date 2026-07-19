@@ -186,6 +186,12 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
     routes: [
       {
+        label: "HR Setup",
+        icon: Sparkles,
+        href: "/hr/setup",
+        requiredPermission: "hr:employees:view",
+      },
+      {
         label: "Approvals Inbox",
         icon: ClipboardCheck,
         href: "/hr/approvals",

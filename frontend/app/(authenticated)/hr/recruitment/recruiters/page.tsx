@@ -17,6 +17,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { ErrorState } from "@/components/shared/error-state";
 
 const ACTION_LABELS: Record<string, string> = {
   CALL_MADE: "Call Made",
@@ -166,7 +167,7 @@ function RecruiterCard({
 }
 
 export default function RecruitersPage() {
-  const { data: recruiters = [], isLoading } = useRecruiters();
+  const { data: recruiters = [], isLoading, isError, refetch } = useRecruiters();
   const [selectedRecruiter, setSelectedRecruiter] = useState<RecruiterSummary | null>(null);
 
   const handleViewActivity = useCallback((r: RecruiterSummary) => {
@@ -185,6 +186,18 @@ export default function RecruitersPage() {
             {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-44 rounded-xl" />)}
           </div>
         </div>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="Recruiters" subtitle="Team members involved in hiring" variant="display">
+        <ErrorState
+          title="Unable to load recruiters"
+          description="Try again. If this keeps happening, check your permissions or contact an admin."
+          onRetry={() => void refetch()}
+        />
       </PageWrapper>
     );
   }

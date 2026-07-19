@@ -75,7 +75,7 @@ export default function OfferAcceptancePage({ params }: Props) {
       setDeclineOpen(false);
       setCounterOpen(false);
     } catch (e) {
-      toast.error(getApiError(e) || "Failed to respond to offer");
+      toast.error(getApiError(e) || "Unable to respond to this offer. Try again.");
     } finally {
       setResponding(false);
     }
@@ -88,9 +88,14 @@ export default function OfferAcceptancePage({ params }: Props) {
   }, [handleRespond, declineReason]);
   const handleOpenCounter = useCallback(() => setCounterOpen(true), []);
   const handleConfirmCounter = useCallback(() => {
+    const salaryNum = counterSalary ? Number(counterSalary) : undefined;
+    if (salaryNum === undefined || !Number.isFinite(salaryNum) || salaryNum <= 0) {
+      toast.error("Enter a valid counter salary");
+      return;
+    }
     void handleRespond("counter", {
-      counterSalary: counterSalary ? Number(counterSalary) : undefined,
-      counterMessage: counterMessage || undefined,
+      counterSalary: salaryNum,
+      counterMessage: counterMessage.trim() || undefined,
     });
   }, [handleRespond, counterSalary, counterMessage]);
   const handleDeclineReasonChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setDeclineReason(e.target.value), []);

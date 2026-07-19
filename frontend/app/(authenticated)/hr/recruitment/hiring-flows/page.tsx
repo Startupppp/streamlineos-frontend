@@ -39,6 +39,7 @@ import {
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { HiringFlow, HiringFlowRound } from "@/types/hr/recruitment";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { ErrorState } from "@/components/shared/error-state";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 
@@ -482,7 +483,7 @@ function RoundFormSheet({
 }
 
 export default function HiringFlowsPage() {
-  const { data: flows, isLoading } = useHiringFlows();
+  const { data: flows, isLoading, isError, refetch } = useHiringFlows();
   const deleteFlow = useDeleteHiringFlow();
 
   const [flowSheetOpen, setFlowSheetOpen] = useState(false);
@@ -536,6 +537,16 @@ export default function HiringFlowsPage() {
             ))}
           </div>
         </div>
+      );
+    }
+
+    if (isError) {
+      return (
+        <ErrorState
+          title="Unable to load hiring flows"
+          description="Try again. If this keeps happening, check your permissions or contact an admin."
+          onRetry={() => void refetch()}
+        />
       );
     }
 

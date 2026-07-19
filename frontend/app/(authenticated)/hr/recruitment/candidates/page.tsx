@@ -12,11 +12,11 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import Link from "next/link";
 import {
-  useCandidates,
   useUpdateCandidateStage,
   useDeleteCandidate,
   useBulkRejectCandidates,
 } from "@/hooks/api/hr";
+import { useCandidatesPage } from "@/hooks/api/hr/recruitment";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
@@ -40,6 +40,8 @@ import { AddCandidateSheet } from "@/features/hr/recruitment/candidates-list/add
 import { EditCandidateSheet } from "@/features/hr/recruitment/candidates-list/edit-candidate-sheet";
 import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { ErrorState } from "@/components/shared/error-state";
+import { RecruitmentListPagination } from "@/features/hr/recruitment/components/recruitment-list-pagination";
 import {
   CandidateCard,
   CandidateCardSkeleton,
@@ -56,9 +58,20 @@ export default function CandidatesPage() {
   );
   const debouncedSearch = useDebouncedValue(searchQuery, 300);
 
-  const { data: candidates, isLoading } = useCandidates(
-    statusFilter ? { status: statusFilter } : undefined,
-  );
+  const pageFromUrl = Math.max(1, Number(searchParams.get("page") ?? "1") || 1);
+
+  const {
+    data: candidatesPage,
+    isLoading,
+    isError,
+    refetch,
+  } = useCandidatesPage({
+    ...(statusFilter ? { status: statusFilter } : {}),
+    ...(debouncedSearch.trim() ? { search: debouncedSearch.trim() } : {}),
+    page: pageFromUrl,
+    pageSize: 24,
+  });
+  const candidates = candidatesPage?.items;
   const updateCandidateStage = useUpdateCandidateStage();
   const deleteCandidate = useDeleteCandidate();
   const bulkReject = useBulkRejectCandidates();
@@ -81,6 +94,8 @@ export default function CandidatesPage() {
       const params = new URLSearchParams(searchParams.toString());
       if (value && value !== "ALL") params.set(key, value);
       else params.delete(key);
+      // Reset to page 1 when filters change (except when setting page itself)
+      if (key !== "page") params.delete("page");
       router.replace(`?${params.toString()}`, { scroll: false });
     },
     [searchParams, router],
@@ -93,20 +108,14 @@ export default function CandidatesPage() {
     setFilter("q", debouncedSearch || null);
   }, [debouncedSearch, setFilter]);
 
-  const filteredCandidates = useMemo(() => {
-    if (!candidates) return [];
-    if (!debouncedSearch) return candidates;
-    const q = debouncedSearch.toLowerCase();
-    return candidates.filter(
-      (c) =>
-        c.firstName.toLowerCase().includes(q) ||
-        c.lastName.toLowerCase().includes(q) ||
-        c.email.toLowerCase().includes(q) ||
-        c.currentCompany?.toLowerCase().includes(q),
-    );
-  }, [candidates, debouncedSearch]);
+  // Search is server-side via the `search` query param.
+  const filteredCandidates = candidates ?? [];
 
   const stageCounts = useMemo(() => {
+    const counts = candidatesPage?.statusCounts;
+    if (counts && Object.keys(counts).length > 0) {
+      return counts as Record<CandidateStatus, number>;
+    }
     if (!candidates) return {} as Record<CandidateStatus, number>;
     return candidates.reduce(
       (acc, c) => {
@@ -115,7 +124,7 @@ export default function CandidatesPage() {
       },
       {} as Record<CandidateStatus, number>,
     );
-  }, [candidates]);
+  }, [candidates, candidatesPage?.statusCounts]);
 
   const handleStatusChange = useCallback(
     (id: number, status: CandidateStatus) => {
@@ -334,6 +343,12 @@ export default function CandidatesPage() {
               <CandidateCardSkeleton key={i} />
             ))}
           </div>
+        ) : isError ? (
+          <ErrorState
+            title="Unable to load candidates"
+            description="Try again. If this keeps happening, check your permissions or contact an admin."
+            onRetry={() => void refetch()}
+          />
         ) : filteredCandidates.length === 0 ? (
           <RecruitmentEmptyState
             illustration={
@@ -361,19 +376,28 @@ export default function CandidatesPage() {
             className={CONTENT_FILL_PANEL}
           />
         ) : (
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {filteredCandidates.map((candidate) => (
-              <CandidateCard
-                key={candidate.id}
-                candidate={candidate}
-                isSelected={selectedIds.has(candidate.id)}
-                onEdit={openEditSheet}
-                onDelete={openDeleteDialog}
-                onToggleSelect={handleToggleSelect}
-                onStatusChange={handleStatusChange}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+              {filteredCandidates.map((candidate) => (
+                <CandidateCard
+                  key={candidate.id}
+                  candidate={candidate}
+                  isSelected={selectedIds.has(candidate.id)}
+                  onEdit={openEditSheet}
+                  onDelete={openDeleteDialog}
+                  onToggleSelect={handleToggleSelect}
+                  onStatusChange={handleStatusChange}
+                />
+              ))}
+            </div>
+            <RecruitmentListPagination
+              page={candidatesPage?.page ?? 1}
+              pageSize={candidatesPage?.pageSize ?? 24}
+              total={candidatesPage?.total ?? 0}
+              totalPages={candidatesPage?.totalPages ?? 1}
+              onPageChange={(p) => setFilter("page", p <= 1 ? null : String(p))}
+            />
+          </>
         )}
         </div>
       </PageWrapper>

@@ -26,6 +26,7 @@ import { format } from "date-fns";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { ErrorState } from "@/components/shared/error-state";
 
 function candidateName(thread: MessageThread | CandidateMessage): string {
   const first = thread.candidateFirstName ?? "";
@@ -253,7 +254,7 @@ function ThreadPane({ thread }: { thread: MessageThread }) {
 }
 
 export default function InboxPage() {
-  const { data: threads = [], isLoading } = useMessageThreads();
+  const { data: threads = [], isLoading, isError, refetch } = useMessageThreads();
   const [activeThread, setActiveThread] = useState<MessageThread | null>(null);
 
   const handleSelectThread = useCallback(
@@ -272,6 +273,18 @@ export default function InboxPage() {
           </div>
           <Skeleton className="flex-1 rounded-xl" />
         </div>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="Candidate Inbox" subtitle="Messages with candidates" noInternalScroll variant="display">
+        <ErrorState
+          title="Unable to load inbox"
+          description="Try again. If this keeps happening, check your permissions or contact an admin."
+          onRetry={() => void refetch()}
+        />
       </PageWrapper>
     );
   }
