@@ -8,6 +8,7 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-client";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SearchInput } from "@/components/ui/search-input";
@@ -51,7 +52,7 @@ function VendorRowActions({ vendor }: { vendor: InventoryVendor }) {
       {
         onSuccess: () => toast.success("Vendor status updated"),
         onError: (err: unknown) => {
-          if (err instanceof Error && err.message.startsWith("409")) {
+          if (isApiError(err) && err.status === 409) {
             toast.error("Cannot deactivate — vendor has open purchase orders.");
           } else {
             toast.error(getErrorMessage(err));
@@ -271,7 +272,6 @@ export default function VendorsListPage() {
     <PageWrapper
       title="Vendors"
       subtitle="Manage your suppliers and purchase order vendors."
-      badge={query.data ? `${total}` : undefined}
       actions={
         <Button size="sm" onClick={handleNewVendor} {...plusHover}>
           <PlusIcon ref={plusRef} size={14} className="mr-1" />
@@ -295,7 +295,7 @@ export default function VendorsListPage() {
         emptyState={
           query.error ? (
             <ErrorState
-              description={query.error.message}
+              description={getErrorMessage(query.error)}
               onRetry={handleRetry}
               compact
             />

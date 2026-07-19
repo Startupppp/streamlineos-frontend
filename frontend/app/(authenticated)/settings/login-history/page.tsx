@@ -6,6 +6,7 @@ import { useLoginHistory } from "@/hooks/api/auth";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -128,7 +129,7 @@ export default function LoginHistoryPage() {
       title="Login History"
       subtitle="A record of all sign-in events for your account."
       filters={
-        <div className="flex items-center gap-1">
+        <div className={FILTER_TOOLBAR_ROW}>
           {(["all", "success", "failure"] as SuccessFilter[]).map((f) => (
             <FilterButton
               key={f}

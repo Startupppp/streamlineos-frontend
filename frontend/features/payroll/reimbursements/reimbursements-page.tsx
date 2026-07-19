@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -27,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { MonthPicker } from "@/features/payroll/shared/month-picker";
+import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { ReimbursementStatusBadge } from "./reimbursement-status-badge";
 import { formatMoney, formatMonth } from "@/features/payroll/shared/payroll-format";
 import {
@@ -253,10 +253,10 @@ export function ReimbursementsPageContent() {
   ];
 
   const filterBar = (
-    <div className="flex items-center gap-2 flex-wrap">
+    <div className={FILTER_TOOLBAR_ROW}>
       <MonthPicker value={month} onChange={handleMonthChange} yearRange={[-1, 0]} className="w-44" />
       <Select value={status} onValueChange={handleStatusChange}>
-        <SelectTrigger className="text-sm w-36">
+        <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-36`}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -268,7 +268,7 @@ export function ReimbursementsPageContent() {
         </SelectContent>
       </Select>
       <Select value={category} onValueChange={handleCategoryChange}>
-        <SelectTrigger className="text-sm w-44">
+        <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-44`}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -295,24 +295,21 @@ export function ReimbursementsPageContent() {
             <span className="font-medium">{formatMonth(month)}</span> payroll run automatically.
             Approved reimbursements are included as payroll inputs.
           </div>
-          <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
-            <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
-              <DataTable
-                data={filtered}
-                columns={columns}
-                getRowKey={(row) => row.id}
-                isLoading={isLoading}
-                minWidth="820px"
-                emptyState={
-                  <EmptyState
-                    illustration={<EmptyExpensesIllustration />}
-                    title="No claims found"
-                    description="No reimbursement claims match the current filters."
-                  />
-                }
+          <DataTable
+            className="flex-1 min-h-0"
+            data={filtered}
+            columns={columns}
+            getRowKey={(row) => row.id}
+            isLoading={isLoading}
+            minWidth="820px"
+            emptyState={
+              <EmptyState
+                illustration={<EmptyExpensesIllustration />}
+                title="No claims found"
+                description="No reimbursement claims match the current filters."
               />
-            </CardContent>
-          </Card>
+            }
+          />
         </div>
       </PageWrapper>
 

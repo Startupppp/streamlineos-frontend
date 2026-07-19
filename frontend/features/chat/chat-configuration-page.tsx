@@ -163,7 +163,7 @@ export function ChatConfigurationPage() {
                 onChange={(e) =>
                   setDraft({ ...draft, maxHuddleParticipants: Number(e.target.value) })
                 }
-                className="max-w-xs h-8"
+                className="max-w-xs"
               />
               <p className="text-[11px] text-muted-foreground/70">
                 Once a call reaches this many active participants, further join attempts are

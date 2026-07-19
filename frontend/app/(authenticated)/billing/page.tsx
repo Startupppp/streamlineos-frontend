@@ -86,7 +86,7 @@ export default function BillingPage() {
     <Suspense
       fallback={
         <PageWrapper title="Billing & Plan" subtitle="Manage your subscription, payments, and billing details">
-          <div className="space-y-3">
+          <div className="flex flex-1 min-h-0 flex-col gap-3">
             {Array.from({ length: 4 }).map((_, i) => (
               <Skeleton key={i} className="h-10 w-full rounded-lg" />
             ))}

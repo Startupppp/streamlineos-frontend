@@ -5,6 +5,7 @@ import { keepPreviousData } from "@tanstack/react-query";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -243,12 +244,14 @@ export function SuspendedUsersPage() {
         title="Suspended Users"
         subtitle="Users whose access has been temporarily suspended."
         filters={
-          <div className="min-w-0 flex-1 min-w-[180px] max-w-sm">
-            <SearchInput placeholder="Search suspended users..." value={search} onValueChange={handleSearchChange} />
+          <div className={FILTER_TOOLBAR_ROW}>
+            <div className="min-w-[180px] max-w-xs flex-1">
+              <SearchInput placeholder="Search suspended users..." value={search} onValueChange={handleSearchChange} />
+            </div>
           </div>
         }
       >
-        <div className="flex flex-1 min-h-0 flex-col space-y-3">
+        <div className="flex flex-1 min-h-0 flex-col gap-3">
           {someSelected && (
             <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-muted/60 border text-xs flex-wrap">
               <span className="font-medium text-muted-foreground">{selectedIds.size} selected</span>

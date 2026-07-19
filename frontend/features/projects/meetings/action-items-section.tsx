@@ -170,6 +170,12 @@ export function ActionItemsSection({
   const handleEditRow = useCallback((item: ActionItem) => setEditItem(item), []);
   const handleDeleteRow = useCallback((item: ActionItem) => setDeleteTarget(item), []);
   const handleOpenCreate = useCallback(() => setSheetOpen(true), []);
+  const handleSheetOpenChange = useCallback((open: boolean) => {
+    if (!open) { setSheetOpen(false); setEditItem(null); }
+  }, []);
+  const handleDeleteDialogChange = useCallback((open: boolean) => {
+    if (!open) setDeleteTarget(null);
+  }, []);
 
   return (
     <div className="space-y-3">
@@ -216,7 +222,7 @@ export function ActionItemsSection({
 
       <ActionItemFormSheet
         open={sheetOpen || !!editItem}
-        onOpenChange={(open) => { if (!open) { setSheetOpen(false); setEditItem(null); } }}
+        onOpenChange={handleSheetOpenChange}
         mode={editItem ? "edit" : "create"}
         defaultValues={editItem ?? undefined}
         onSubmitCreate={handleCreate}
@@ -225,7 +231,7 @@ export function ActionItemsSection({
         projectMembers={projectMembers}
       />
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+      <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteDialogChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this action item?</AlertDialogTitle>

@@ -150,7 +150,7 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
           <PopoverContent className="w-80 p-3 space-y-3" align="end">
             <p className="text-xs font-medium">Add Relation</p>
             <Select value={selectedType} onValueChange={handleTypeChange}>
-              <SelectTrigger className="text-xs"><SelectValue /></SelectTrigger>
+              <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {RELATION_TYPES.map((t) => (
                   <SelectItem key={t} value={t} className="text-xs">

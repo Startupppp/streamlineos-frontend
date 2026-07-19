@@ -68,7 +68,7 @@ function ReceiveTransferForm({
 
   const { fields } = useFieldArray({ control: form.control, name: "lines" });
 
-  function handleReceiveAll() {
+  function handleReceiveAll(): void {
     form.setValue(
       "lines",
       transfer.lines.map((l) => ({
@@ -79,7 +79,7 @@ function ReceiveTransferForm({
     );
   }
 
-  function handleFormSubmit(data: ReceiveFormValues) {
+  function handleFormSubmit(data: ReceiveFormValues): void {
     const invalidIdx = data.lines.findIndex((l, i) => {
       const expected = transfer.lines[i]?.quantity ?? 0;
       return Number(l.quantityReceived) > expected;
@@ -221,7 +221,7 @@ export function ReceiveTransferSheet({
   onSubmit: (lines: { transferLineId: number; quantityReceived: number }[]) => void;
   isPending: boolean;
 }) {
-  function handleClose() {
+  function handleClose(): void {
     onOpenChange(false);
   }
 

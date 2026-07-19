@@ -69,7 +69,7 @@ export function MessageTranslateControl({ ticketId, messageId }: MessageTranslat
         <PopoverContent className="w-56 p-2" align="start">
           <div className="flex items-center gap-1.5">
             <Select value={targetLanguage} onValueChange={handleLanguageChange}>
-              <SelectTrigger className="h-8 text-xs flex-1">
+              <SelectTrigger className="h-9 text-sm flex-1">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -83,7 +83,7 @@ export function MessageTranslateControl({ ticketId, messageId }: MessageTranslat
             <LoadingButton
               variant="outline"
               size="sm"
-              className="h-8 text-xs shrink-0"
+              className="h-9 text-sm shrink-0"
               isPending={translate.isPending}
               onClick={handleTranslate}
             >

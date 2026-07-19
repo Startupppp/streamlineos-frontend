@@ -7,9 +7,38 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Shield, Globe, Network, X, Users } from "lucide-react";
+import { Shield, Globe, Network, X, Users } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { LoadingButton } from "@/components/ui/loading-button";
+
+function RemoveDomainBadge({ domain, onRemove }: { domain: string; onRemove: (d: string) => void }) {
+  function handleClick() {
+    onRemove(domain);
+  }
+  return (
+    <Badge variant="secondary" className="gap-1 pr-1">
+      @{domain}
+      <button type="button" onClick={handleClick} className="ml-0.5 rounded-full hover:bg-muted p-0.5" aria-label={`Remove ${domain}`}>
+        <X className="h-3 w-3" />
+      </button>
+    </Badge>
+  );
+}
+
+function RemoveIpBadge({ ip, onRemove }: { ip: string; onRemove: (ip: string) => void }) {
+  function handleClick() {
+    onRemove(ip);
+  }
+  return (
+    <Badge variant="secondary" className="gap-1 pr-1 font-mono text-xs">
+      {ip}
+      <button type="button" onClick={handleClick} className="ml-0.5 rounded-full hover:bg-muted p-0.5" aria-label={`Remove ${ip}`}>
+        <X className="h-3 w-3" />
+      </button>
+    </Badge>
+  );
+}
 
 interface OrgSecuritySectionProps {
   mfaEnforced: boolean;
@@ -122,17 +151,7 @@ export function OrgSecuritySection({
             </p>
             <div className="flex flex-wrap gap-2 min-h-8">
               {allowedEmailDomains.map((domain) => (
-                <Badge key={domain} variant="secondary" className="gap-1 pr-1">
-                  @{domain}
-                  <button
-                    type="button"
-                    onClick={() => onRemoveDomain(domain)}
-                    className="ml-0.5 rounded-full hover:bg-muted p-0.5"
-                    aria-label={`Remove ${domain}`}
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
+                <RemoveDomainBadge key={domain} domain={domain} onRemove={onRemoveDomain} />
               ))}
             </div>
             <div className="flex gap-2">
@@ -152,16 +171,9 @@ export function OrgSecuritySection({
           </div>
 
           <div className="pt-1">
-            <Button onClick={onSaveSecurity} disabled={isUpdatingSecurity} size="sm">
-              {isUpdatingSecurity ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                "Save Security Settings"
-              )}
-            </Button>
+            <LoadingButton onClick={onSaveSecurity} isPending={isUpdatingSecurity} size="sm" loadingText="Saving…">
+              Save Security Settings
+            </LoadingButton>
           </div>
         </CardContent>
       </Card>
@@ -180,17 +192,7 @@ export function OrgSecuritySection({
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-2 min-h-8">
             {ipAllowlist.map((ip) => (
-              <Badge key={ip} variant="secondary" className="gap-1 pr-1 font-mono text-xs">
-                {ip}
-                <button
-                  type="button"
-                  onClick={() => onRemoveIp(ip)}
-                  className="ml-0.5 rounded-full hover:bg-muted p-0.5"
-                  aria-label={`Remove ${ip}`}
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
+              <RemoveIpBadge key={ip} ip={ip} onRemove={onRemoveIp} />
             ))}
             {ipAllowlist.length === 0 && (
               <span className="text-xs text-muted-foreground">No IP restrictions — all IPs allowed.</span>
@@ -210,16 +212,9 @@ export function OrgSecuritySection({
             </AnimatedIconButton>
           </div>
           <div className="pt-1">
-            <Button onClick={onSaveIpAllowlist} disabled={isUpdatingOrg} size="sm">
-              {isUpdatingOrg ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                "Save IP Allowlist"
-              )}
-            </Button>
+            <LoadingButton onClick={onSaveIpAllowlist} isPending={isUpdatingOrg} size="sm" loadingText="Saving…">
+              Save IP Allowlist
+            </LoadingButton>
           </div>
         </CardContent>
       </Card>

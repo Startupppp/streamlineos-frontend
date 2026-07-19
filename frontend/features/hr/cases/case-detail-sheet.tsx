@@ -133,7 +133,7 @@ function DocumentsList({ caseId }: { caseId: number }) {
           <FileText className="h-4 w-4 text-primary shrink-0" />
           <span className="flex-1 truncate">{doc.name}</span>
           {doc.restricted && (
-            <Lock className="h-3 w-3 text-amber-600 dark:text-amber-400 shrink-0" />
+            <Lock className="h-3 w-3 text-amber-600 dark:text-amber-300 shrink-0" />
           )}
         </a>
       ))}

@@ -31,6 +31,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { cn } from "@/lib/utils";
+import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { useQuotes, useUpdateQuoteStatus, useDeleteQuote } from "@/hooks/api/crm";
 import { downloadQuotesCsv } from "@/hooks/api/crm/quotes";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
@@ -308,12 +310,12 @@ export default function QuotesPage() {
         noInternalScroll
         contentClassName="flex flex-col"
         filters={
-          <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
-            <div className="min-w-0 flex-1 lg:max-w-[240px] w-full">
-          <SearchInput placeholder="Search quotes..." value={search} onValueChange={handleSearchChange} />
-        </div>
+          <div className={FILTER_TOOLBAR_ROW}>
+            <div className="min-w-0 flex-1 lg:max-w-[240px]">
+              <SearchInput placeholder="Search quotes..." value={search} onValueChange={handleSearchChange} />
+            </div>
             <Select value={statusFilter} onValueChange={handleStatusChange}>
-              <SelectTrigger className="w-[140px] text-xs">
+              <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[140px]")}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -327,7 +329,8 @@ export default function QuotesPage() {
             </Select>
             <Button
               variant="outline"
-              className="ml-auto h-8 text-xs"
+              size="sm"
+              className="ml-auto text-xs"
               onClick={handleExport}
               disabled={isExporting || total === 0}
             >

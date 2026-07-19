@@ -164,11 +164,11 @@ export function AdminExpenseItem({
             className={cn(
               "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
               status === "PENDING" &&
-                "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800",
+                "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800",
               status === "APPROVED" &&
-                "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800",
+                "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800",
               status === "REJECTED" &&
-                "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800",
+                "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-800",
               status === "PAID" &&
                 "bg-muted text-muted-foreground border-border",
             )}
@@ -257,7 +257,7 @@ export function AdminExpenseItem({
               placeholder="Reason for rejection (required)..."
               value={rejectionReason}
               onChange={handleRejectionReasonChange}
-              className="text-xs h-8"
+              className="text-xs"
             />
             <div className="flex justify-end gap-1.5">
               <Button
@@ -284,7 +284,7 @@ export function AdminExpenseItem({
             <Button
               variant="outline"
               size="sm"
-              className="text-xs gap-1.5 text-rose-600 border-rose-200 hover:bg-rose-50 dark:text-rose-400 dark:border-rose-800 dark:hover:bg-rose-950/30"
+              className="text-xs gap-1.5 text-rose-600 border-rose-200 hover:bg-rose-50 dark:text-rose-300 dark:border-rose-800 dark:hover:bg-rose-950/30"
               onClick={handleStartReject}
             >
               Reject

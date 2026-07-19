@@ -4,7 +4,6 @@ import * as React from "react";
 import Link from "next/link";
 import { WifiOff, Barcode, Clock } from "lucide-react";
 import { SearchIcon } from "@animateicons/react/lucide";
-import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Input } from "@/components/ui/input";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -196,11 +195,10 @@ function BarcodeResultSection({ code }: BarcodeResultSectionProps) {
   }
 
   if (isError || !data) {
-    toast.error(getErrorMessage(error));
     return (
       <Card>
         <CardContent className="py-6 text-center text-sm text-destructive">
-          Failed to look up barcode. Please try again.
+          {getErrorMessage(error) || "Failed to look up barcode. Please try again."}
         </CardContent>
       </Card>
     );

@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useCreateRoadmapItem,
   useUpdateRoadmapItem,
@@ -88,13 +89,13 @@ export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
         },
         {
           onSuccess: () => { toast.success("Roadmap item updated"); onClose(); },
-          onError: () => toast.error("Failed to update item"),
+          onError: (e) => toast.error(getErrorMessage(e)),
         },
       );
     } else {
       create.mutate(payload, {
         onSuccess: () => { toast.success("Roadmap item created"); onClose(); },
-        onError: () => toast.error("Failed to create item"),
+        onError: (e) => toast.error(getErrorMessage(e)),
       });
     }
   }

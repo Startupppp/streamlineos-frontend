@@ -3,8 +3,8 @@
 import { useEffect } from "react";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { generalSettingsSchema, type GeneralSettingsFormValues } from "./general-settings-schema";
 import {
   useTimesheetSettings,
   useUpdateTimesheetSettings,
@@ -62,31 +62,7 @@ const REQUIRED_FIELD_OPTIONS = [
   { key: "workLink", label: "Work link" },
 ];
 
-const schema = z.object({
-  workWeekStart: z.string(),
-  maxHoursPerDay: z.string().min(1),
-  allowOverlappingEntries: z.boolean(),
-  allowBackdatedEntries: z.boolean(),
-  backdateLimitDays: z.string(),
-  roundingRule: z.enum([
-    "NONE",
-    "NEAREST_5",
-    "NEAREST_6",
-    "NEAREST_10",
-    "NEAREST_15",
-    "ROUND_UP",
-    "ROUND_DOWN",
-  ]),
-  requiredFields: z.array(z.string()),
-  approvalMode: z.enum(["NONE", "MANAGER", "PROJECT", "CLIENT"]),
-  clientApprovalEnabled: z.boolean(),
-  lockAfterApproval: z.boolean(),
-  lockAfterInvoice: z.boolean(),
-});
-
-type FormValues = z.infer<typeof schema>;
-
-function toFormValues(s: TimesheetSettings): FormValues {
+function toFormValues(s: TimesheetSettings): GeneralSettingsFormValues {
   return {
     workWeekStart: String(s.workWeekStart),
     maxHoursPerDay: s.maxHoursPerDay,
@@ -103,7 +79,7 @@ function toFormValues(s: TimesheetSettings): FormValues {
 }
 
 function buildChanges(
-  values: FormValues,
+  values: GeneralSettingsFormValues,
   orig: TimesheetSettings,
 ): Partial<TimesheetSettings> {
   const changes: Partial<TimesheetSettings> = {};
@@ -152,8 +128,8 @@ export function GeneralSettingsForm() {
   const { data: settings, isLoading, isError, refetch } = useTimesheetSettings();
   const update = useUpdateTimesheetSettings();
 
-  const { control, handleSubmit, reset, register, formState: { isDirty, errors } } = useForm<FormValues>({
-    resolver: zodResolver(schema),
+  const { control, handleSubmit, reset, register, formState: { isDirty, errors } } = useForm<GeneralSettingsFormValues>({
+    resolver: zodResolver(generalSettingsSchema),
     defaultValues: {
       workWeekStart: "1",
       maxHoursPerDay: "8",
@@ -221,7 +197,7 @@ export function GeneralSettingsForm() {
                   onValueChange={field.onChange}
                   disabled={!canManage}
                 >
-                  <SelectTrigger className="h-8 text-xs w-44">
+                  <SelectTrigger className="h-9 w-44">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -250,7 +226,7 @@ export function GeneralSettingsForm() {
               min={0}
               max={24}
               step={0.5}
-              className="h-8 text-xs w-28"
+              className="w-28"
               disabled={!canManage}
               {...register("maxHoursPerDay")}
             />
@@ -290,7 +266,7 @@ export function GeneralSettingsForm() {
               <Input
                 type="number"
                 min={0}
-                className="h-8 text-xs w-28"
+                className="w-28"
                 placeholder="No limit"
                 disabled={!canManage}
                 {...register("backdateLimitDays")}
@@ -316,7 +292,7 @@ export function GeneralSettingsForm() {
                   onValueChange={field.onChange}
                   disabled={!canManage}
                 >
-                  <SelectTrigger className="h-8 text-xs w-52">
+                  <SelectTrigger className="h-9 w-52">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -392,7 +368,7 @@ export function GeneralSettingsForm() {
                   onValueChange={field.onChange}
                   disabled={!canManage}
                 >
-                  <SelectTrigger className="h-8 text-xs w-52">
+                  <SelectTrigger className="h-9 w-52">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -455,8 +431,6 @@ export function GeneralSettingsForm() {
         <div className="flex justify-end pb-2">
           <LoadingButton
             type="submit"
-            size="sm"
-            className="h-8 text-xs"
             isPending={update.isPending}
             disabled={!isDirty || update.isPending}
             loadingText="Saving…"

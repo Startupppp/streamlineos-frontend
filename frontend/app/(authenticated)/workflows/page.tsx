@@ -7,7 +7,6 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import {
@@ -23,6 +22,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
@@ -62,7 +62,7 @@ import {
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
-import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
+import { CONTENT_FILL_PANEL, FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { EmptyProjectsIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import {
@@ -74,6 +74,10 @@ import {
   type Workflow,
   type WorkflowStatus,
 } from "@/hooks/api/workflows";
+import {
+  createWorkflowSchema,
+  type CreateWorkflowValues,
+} from "./create-workflow-schema";
 
 type StatusFilter = WorkflowStatus | "all";
 
@@ -90,13 +94,6 @@ const STATUS_LEFT_BORDER: Record<WorkflowStatus, string> = {
   disabled: "border-l-yellow-400",
   archived: "border-l-red-400",
 };
-
-const createWorkflowSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  description: z.string().optional(),
-});
-
-type CreateWorkflowValues = z.infer<typeof createWorkflowSchema>;
 
 const WorkflowCard = memo(function WorkflowCard({
   workflow,
@@ -302,13 +299,14 @@ function CreateWorkflowDialog({ open, onClose }: CreateWorkflowDialogProps) {
               >
                 Cancel
               </Button>
-              <Button
+              <LoadingButton
                 type="submit"
-                disabled={create.isPending}
+                isPending={create.isPending}
+                loadingText="Creating…"
                 className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition-all duration-200"
               >
-                {create.isPending ? "Creating…" : "Create & Open Builder"}
-              </Button>
+                {"Create & Open Builder"}
+              </LoadingButton>
             </DialogFooter>
           </form>
         </Form>
@@ -407,12 +405,12 @@ export default function WorkflowsPage() {
         </AnimatedIconButton>
       }
       filters={
-        <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-          <div className="min-w-0 flex-1 min-w-[180px] max-w-xs">
+        <div className={FILTER_TOOLBAR_ROW}>
+          <div className="min-w-[180px] max-w-xs flex-1">
             <SearchInput placeholder="Search workflows…" value={search} onValueChange={handleSearchChange} />
           </div>
           <Select value={statusFilter} onValueChange={handleStatusChange}>
-            <SelectTrigger className="w-[140px] border-input bg-card text-foreground [&_svg:not([class*='text-'])]:text-muted-foreground">
+            <SelectTrigger className={`w-[140px] ${FILTER_SELECT_TRIGGER}`}>
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>
@@ -426,7 +424,7 @@ export default function WorkflowsPage() {
         </div>
       }
     >
-      <div className="flex flex-1 min-h-0 flex-col space-y-5">
+      <div className="flex flex-1 min-h-0 flex-col gap-5">
         <StatCardGrid cols={4}>
           <StatCard
             label="Total Workflows"

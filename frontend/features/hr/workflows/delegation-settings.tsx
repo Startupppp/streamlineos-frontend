@@ -142,7 +142,7 @@ export function DelegationSettings({ open, onOpenChange }: Props) {
                   <FormLabel className="text-xs">Process Type (leave blank for all)</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger className="text-xs"><SelectValue placeholder="All types" /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder="All types" /></SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="">All types</SelectItem>

@@ -35,7 +35,7 @@ const DraftProposalCard = memo(function DraftProposalCard({
     minute: "2-digit",
   });
 
-  function handleConfirmClick() {
+  function handleConfirmClick(): void {
     onConfirm(proposal.proposalId, proposal.token);
   }
 
@@ -84,9 +84,13 @@ export const ReorderProposalPanel = memo(function ReorderProposalPanel({
   const proposalMutation = useReorderProposal();
   const confirmMutation = useConfirmReorderProposal();
 
+  function handleToggle(): void {
+    setOpen((v) => !v);
+  }
+
   function handleExplain(): void {
     if (result) {
-      setOpen((v) => !v);
+      handleToggle();
       return;
     }
     setOpen(true);
@@ -141,7 +145,7 @@ export const ReorderProposalPanel = memo(function ReorderProposalPanel({
             )}
             {showToggle && (
               <button
-                onClick={() => setOpen((v) => !v)}
+                onClick={handleToggle}
                 className="h-6 w-6 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
                 aria-label={open ? "Collapse" : "Expand"}
               >

@@ -10,6 +10,7 @@ import { PlusIcon, XIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { AppSheet } from "@/components/shared";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -155,20 +156,15 @@ export function ThreePlConnectionSheet({
           <Button variant="outline" size="sm" onClick={handleCancel} disabled={isPending}>
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             type="submit"
             form="3pl-connection-form"
             size="sm"
-            disabled={isPending}
+            isPending={isPending}
+            loadingText={isEdit ? "Saving…" : "Creating…"}
           >
-            {isPending
-              ? isEdit
-                ? "Saving…"
-                : "Creating…"
-              : isEdit
-                ? "Save changes"
-                : "Add connection"}
-          </Button>
+            {isEdit ? "Save changes" : "Add connection"}
+          </LoadingButton>
         </div>
       }
     >

@@ -6,11 +6,12 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, Eye, EyeOff, Wand2, FileCode } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Wand2, FileCode } from "lucide-react";
 import Link from "next/link";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -283,24 +284,16 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
                 )}
               </Button>
             </div>
-            <Button
+            <LoadingButton
               size="sm"
               onClick={form.handleSubmit(handleSave)}
-              disabled={isSaving}
+              isPending={isSaving}
+              loadingText="Saving..."
               className="gap-1.5 h-8"
             >
-              {isSaving ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Wand2 className="h-3.5 w-3.5" />
-                  {isEdit ? "Save Changes" : "Create Template"}
-                </>
-              )}
-            </Button>
+              <Wand2 className="h-3.5 w-3.5" />
+              {isEdit ? "Save Changes" : "Create Template"}
+            </LoadingButton>
           </div>
         }
       >

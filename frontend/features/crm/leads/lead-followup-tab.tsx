@@ -245,7 +245,7 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
 
         <LoadingButton
           size="sm"
-          className="w-full h-8 text-xs gap-1.5"
+          className="w-full text-xs gap-1.5"
           onClick={handleScheduleFollowUp}
           isPending={createTask.isPending}
           loadingText="Scheduling..."

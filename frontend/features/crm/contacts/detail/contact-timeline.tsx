@@ -16,8 +16,8 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 
 const STATUS_CONFIG = {
-  completed: { icon: CheckCircle2, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-  pending: { icon: Clock, color: "text-amber-500", bg: "bg-amber-500/10" },
+  completed: { icon: CheckCircle2, color: "text-emerald-500 dark:text-emerald-400", bg: "bg-emerald-500/10" },
+  pending: { icon: Clock, color: "text-amber-500 dark:text-amber-400", bg: "bg-amber-500/10" },
   cancelled: { icon: XCircle, color: "text-muted-foreground", bg: "bg-muted" },
 } as const;
 

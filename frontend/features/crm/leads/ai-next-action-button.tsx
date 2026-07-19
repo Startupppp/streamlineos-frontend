@@ -48,10 +48,10 @@ export function AINextActionButton({
   }, [result, handleSuggest]);
 
   const urgencyColor = (u: string) => {
-    if (u === "critical") return "text-red-500";
-    if (u === "high") return "text-orange-500";
-    if (u === "medium") return "text-amber-500";
-    return "text-emerald-500";
+    if (u === "critical") return "text-red-500 dark:text-red-400";
+    if (u === "high") return "text-orange-500 dark:text-orange-400";
+    if (u === "medium") return "text-amber-500 dark:text-amber-400";
+    return "text-emerald-500 dark:text-emerald-400";
   };
 
   if (compact) {

@@ -1,15 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
 import { DatePicker } from "@/components/ui/date-picker";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { Badge } from "@/components/ui/badge";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { useOrgAuditLog } from "@/hooks/api/users";
+import { useOrgAuditLog, useUsers } from "@/hooks/api/users";
+import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
 import { History } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -29,56 +31,61 @@ function actionVariant(action: string): "default" | "secondary" | "outline" | "d
   return "secondary";
 }
 
-const columns: DataTableColumn<AuditEntry>[] = [
-  {
-    key: "actor",
-    header: "Actor",
-    cell: (row) => (
-      <span className="font-mono text-muted-foreground max-w-[140px] truncate block">
-        {row.actorUserId ?? "system"}
-      </span>
-    ),
-  },
-  {
-    key: "action",
-    header: "Action",
-    cell: (row) => (
-      <Badge
-        variant={actionVariant(row.action)}
-        className="text-[10px] h-5 px-1.5 font-normal font-mono"
-      >
-        {row.action}
-      </Badge>
-    ),
-  },
-  {
-    key: "resource",
-    header: "Resource",
-    cell: (row) => (
-      <span className="text-muted-foreground">
-        {row.resourceType
-          ? `${row.resourceType}${row.resourceId ? ` / ${row.resourceId.slice(0, 8)}` : ""}`
-          : "???"}
-      </span>
-    ),
-  },
-  {
-    key: "ip",
-    header: "IP",
-    cell: (row) => (
-      <span className="text-muted-foreground font-mono">{row.ipAddress ?? "???"}</span>
-    ),
-  },
-  {
-    key: "when",
-    header: "When",
-    cell: (row) => (
-      <span className="text-muted-foreground whitespace-nowrap">
-        {formatDistanceToNow(new Date(row.createdAt), { addSuffix: true })}
-      </span>
-    ),
-  },
-];
+function buildColumns(userMap: Map<string, string>): DataTableColumn<AuditEntry>[] {
+  return [
+    {
+      key: "actor",
+      header: "Actor",
+      cell: (row) => {
+        const name = row.actorUserId
+          ? (userMap.get(row.actorUserId) ?? "Unknown")
+          : "System";
+        return (
+          <span className="text-sm text-foreground max-w-[160px] truncate block">
+            {name}
+          </span>
+        );
+      },
+    },
+    {
+      key: "action",
+      header: "Action",
+      cell: (row) => (
+        <Badge
+          variant={actionVariant(row.action)}
+          className="text-[10px] h-5 px-1.5 font-normal font-mono"
+        >
+          {row.action}
+        </Badge>
+      ),
+    },
+    {
+      key: "resource",
+      header: "Resource",
+      cell: (row) => (
+        <span className="text-muted-foreground capitalize">
+          {row.resourceType ?? "—"}
+        </span>
+      ),
+    },
+    {
+      key: "ip",
+      header: "IP",
+      cell: (row) => (
+        <span className="text-muted-foreground font-mono">{row.ipAddress ?? "—"}</span>
+      ),
+    },
+    {
+      key: "when",
+      header: "When",
+      cell: (row) => (
+        <span className="text-muted-foreground whitespace-nowrap">
+          {formatDistanceToNow(new Date(row.createdAt), { addSuffix: true })}
+        </span>
+      ),
+    },
+  ];
+}
 
 export function OrgAuditLogPage() {
   const [page, setPage] = useState(1);
@@ -86,6 +93,19 @@ export function OrgAuditLogPage() {
   const [actionFilter, setActionFilter] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+
+  const handlePageChange = useCallback((p: number) => setPage(p), []);
+
+  const { data: usersData } = useUsers({ limit: 100 });
+  const userMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const u of usersData?.data ?? []) {
+      map.set(u.id, getUserDisplayName(u));
+    }
+    return map;
+  }, [usersData]);
+
+  const columns = useMemo(() => buildColumns(userMap), [userMap]);
 
   const { data, isLoading } = useOrgAuditLog({
     page,
@@ -99,28 +119,33 @@ export function OrgAuditLogPage() {
   const entries = data?.data ?? [];
   const pagination = data?.pagination;
 
-  function handleActorSearch(value: string) {
+  const handleActorSearch = useCallback((value: string) => {
     setActorSearch(value);
     setPage(1);
-  }
+  }, []);
 
-  function handleFromChange(value: string) {
+  const handleFromChange = useCallback((value: string) => {
     setFrom(value);
     setPage(1);
-  }
+  }, []);
 
-  function handleToChange(value: string) {
+  const handleToChange = useCallback((value: string) => {
     setTo(value);
     setPage(1);
-  }
+  }, []);
 
-  function handleClearFilters() {
+  const handleActionFilterChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setActionFilter(e.target.value);
+    setPage(1);
+  }, []);
+
+  const handleClearFilters = useCallback(() => {
     setActorSearch("");
     setActionFilter("");
     setFrom("");
     setTo("");
     setPage(1);
-  }
+  }, []);
 
   const hasFilters = actorSearch || actionFilter || from || to;
 
@@ -130,7 +155,7 @@ export function OrgAuditLogPage() {
       subtitle="Organization-wide audit trail of user management actions."
       badge={pagination?.total !== undefined ? String(pagination.total) : undefined}
       filters={
-        <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+        <div className={FILTER_TOOLBAR_ROW}>
           <SearchInput
             className="w-44"
             placeholder="Filter by actor ID..."
@@ -140,16 +165,15 @@ export function OrgAuditLogPage() {
           <Input
             placeholder="Action (e.g. user.invite)"
             value={actionFilter}
-            onChange={(e) => { setActionFilter(e.target.value); setPage(1); }}
-            className="h-8 text-xs w-44"
+            onChange={handleActionFilterChange}
+            className="w-44"
           />
-          <DatePicker value={from} onChange={handleFromChange} placeholder="From" className="h-8 text-xs w-36" />
-          <DatePicker value={to} onChange={handleToChange} placeholder="To" className="h-8 text-xs w-36" />
+          <DatePicker value={from} onChange={handleFromChange} placeholder="From" className="w-36" />
+          <DatePicker value={to} onChange={handleToChange} placeholder="To" className="w-36" />
           {hasFilters && (
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 text-xs"
               onClick={handleClearFilters}
             >
               Clear
@@ -185,7 +209,7 @@ export function OrgAuditLogPage() {
           page,
           pageSize: 20,
           total: pagination?.total ?? 0,
-          onPageChange: (p) => setPage(p),
+          onPageChange: handlePageChange,
         }}
       />
     </PageWrapper>

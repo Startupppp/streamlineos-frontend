@@ -165,7 +165,7 @@ export function CostingClient() {
   const rows = data?.items ?? [];
   const total = data?.total ?? 0;
 
-  function handleSearchChange(value: string) {
+  function handleSearchChange(value: string): void {
     setSearch(value);
     setPage(1);
   }
@@ -189,31 +189,33 @@ export function CostingClient() {
         </div>
       }
     >
-      <CostingGuidanceCard />
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
+        <CostingGuidanceCard />
 
-      {error ? (
-        <ErrorState onRetry={handleRetry} />
-      ) : !isLoading && rows.length === 0 ? (
-        <InventoryEmptyState
-          illustrationPreset="inventory"
-          title="No products found"
-          description={search ? "No products match your search." : "Add products to configure costing methods."}
-          className="flex-1 h-full"
-        />
-      ) : (
-        <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
-          <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
-            <DataTable
-              data={rows}
-              columns={columns}
-              getRowKey={(row) => row.variantId}
-              isLoading={isLoading}
-              pagination={{ mode: "server", page, pageSize: 20, total, onPageChange: setPage }}
-              minWidth="700px"
-            />
-          </CardContent>
-        </Card>
-      )}
+        {error ? (
+          <ErrorState onRetry={handleRetry} />
+        ) : !isLoading && rows.length === 0 ? (
+          <InventoryEmptyState
+            illustrationPreset="inventory"
+            title="No products found"
+            description={search ? "No products match your search." : "Add products to configure costing methods."}
+            className="flex-1 h-full"
+          />
+        ) : (
+          <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
+            <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
+              <DataTable
+                data={rows}
+                columns={columns}
+                getRowKey={(row) => row.variantId}
+                isLoading={isLoading}
+                pagination={{ mode: "server", page, pageSize: 20, total, onPageChange: setPage }}
+                minWidth="700px"
+              />
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </PageWrapper>
   );
 }

@@ -1,11 +1,7 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
+import { PAGE_CHROME_X, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  PmPageShell,
-  PmPanel,
-  PM_TOOLBAR,
-} from "@/features/projects/shared/pm-chrome";
+import { PmPageShell, PmPanel } from "@/features/projects/shared/pm-chrome";
 import { cn } from "@/lib/utils";
 
 export default function TimelineLoading() {
@@ -16,7 +12,7 @@ export default function TimelineLoading() {
       contentClassName="!p-0"
     >
       <PmPageShell className={cn(PAGE_CHROME_X, "min-h-0 pt-0")}>
-        <div className={cn(PM_TOOLBAR, "mb-2")}>
+        <div className={cn(FILTER_TOOLBAR_ROW, "mb-2")}>
           <div className="h-10 w-full animate-pulse rounded-md bg-muted/40" />
         </div>
         <PmPanel className="flex min-h-0 flex-1 flex-col p-3">

@@ -7,6 +7,7 @@ import { Monitor, Smartphone } from "lucide-react";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useSessions, useRevokeSession, useRevokeAllSessions } from "@/hooks/api/hr";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -85,17 +86,23 @@ function SessionsSection() {
   const handleRevokeOne = useCallback((sessionId: string) => {
     revokeOne.mutate(sessionId, {
       onSuccess: () => toast.success("Session revoked"),
-      onError: () => toast.error("Failed to revoke session"),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [revokeOne]);
 
   const handleRevokeAll = useCallback(() => {
     revokeAll.mutate(undefined, {
       onSuccess: (data) => {
-        const count = (data as { revokedCount?: number }).revokedCount ?? 0;
+        const count =
+          data !== null &&
+          typeof data === "object" &&
+          "revokedCount" in data &&
+          typeof (data as Record<string, unknown>).revokedCount === "number"
+            ? (data as Record<string, unknown>).revokedCount as number
+            : 0;
         toast.success(`Signed out ${count} other session${count !== 1 ? "s" : ""}`);
       },
-      onError: () => toast.error("Failed to revoke sessions"),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [revokeAll]);
 

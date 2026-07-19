@@ -7,10 +7,14 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { AppSheet, ErrorState } from "@/components/shared";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-client";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,6 +36,7 @@ import {
   useUpdateShipment,
   useShipShipment,
   useCancelShipment,
+  useCarriers,
 } from "@/hooks/api/inventory/shipping";
 
 interface ShipmentDetailSheetProps {
@@ -49,6 +54,7 @@ export function ShipmentDetailSheet({ open, onOpenChange, shipmentId }: Shipment
   const updateMutation = useUpdateShipment();
   const shipMutation = useShipShipment();
   const cancelMutation = useCancelShipment();
+  const carriersQuery = useCarriers();
 
   const [carrierId, setCarrierId] = useState<string>("");
   const [trackingNumber, setTrackingNumber] = useState<string>("");
@@ -57,8 +63,18 @@ export function ShipmentDetailSheet({ open, onOpenChange, shipmentId }: Shipment
 
   const shipment = shipmentQuery.data;
 
-  function handleCarrierIdChange(e: React.ChangeEvent<HTMLInputElement>): void {
-    setCarrierId(e.target.value);
+  const carrierOptions: ComboboxOption[] = (carriersQuery.data ?? []).map((c) => ({
+    value: String(c.id),
+    label: c.name,
+    sublabel: c.code,
+  }));
+
+  function handleRefetchShipment(): void {
+    void shipmentQuery.refetch();
+  }
+
+  function handleCarrierChange(val: string): void {
+    setCarrierId(val);
   }
 
   function handleTrackingNumberChange(e: React.ChangeEvent<HTMLInputElement>): void {
@@ -75,7 +91,7 @@ export function ShipmentDetailSheet({ open, onOpenChange, shipmentId }: Shipment
       },
       {
         onSuccess: () => toast.success("Shipment updated"),
-        onError: (error) => toast.error(error.message),
+        onError: (error) => toast.error(getErrorMessage(error)),
       },
     );
   }
@@ -96,7 +112,7 @@ export function ShipmentDetailSheet({ open, onOpenChange, shipmentId }: Shipment
         setShipConfirmOpen(false);
       },
       onError: (error) => {
-        if (error.message.includes("409") || error.message.toLowerCase().includes("conflict")) {
+        if (isApiError(error) && error.status === 409) {
           toast.error("Ship this order via the sales order first", {
             action: {
               label: "Go to Sales Orders",
@@ -104,7 +120,7 @@ export function ShipmentDetailSheet({ open, onOpenChange, shipmentId }: Shipment
             },
           });
         } else {
-          toast.error(error.message);
+          toast.error(getErrorMessage(error));
         }
         setShipConfirmOpen(false);
       },
@@ -127,7 +143,7 @@ export function ShipmentDetailSheet({ open, onOpenChange, shipmentId }: Shipment
         setCancelConfirmOpen(false);
       },
       onError: (error) => {
-        toast.error(error.message);
+        toast.error(getErrorMessage(error));
         setCancelConfirmOpen(false);
       },
     });
@@ -147,8 +163,8 @@ export function ShipmentDetailSheet({ open, onOpenChange, shipmentId }: Shipment
         ) : shipmentQuery.error || !shipment ? (
           <ErrorState
             title="Failed to load shipment"
-            description={shipmentQuery.error?.message ?? "Shipment not found"}
-            onRetry={() => void shipmentQuery.refetch()}
+            description={shipmentQuery.error ? getErrorMessage(shipmentQuery.error) : "Shipment not found"}
+            onRetry={handleRefetchShipment}
           />
         ) : (
           <div className="space-y-5">
@@ -191,15 +207,15 @@ export function ShipmentDetailSheet({ open, onOpenChange, shipmentId }: Shipment
               <p className="text-xs font-medium text-muted-foreground">Carrier & Tracking</p>
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
-                  <Label htmlFor="carrier-id-input" className="text-xs">Carrier ID</Label>
-                  <Input
-                    id="carrier-id-input"
-                    type="number"
-                    min="1"
-                    placeholder={shipment.carrierId ? String(shipment.carrierId) : "—"}
-                    value={carrierId}
-                    onChange={handleCarrierIdChange}
-                    className="text-xs"
+                  <Label className="text-xs">Carrier</Label>
+                  <Combobox
+                    options={carrierOptions}
+                    value={carrierId || (shipment.carrierId ? String(shipment.carrierId) : "")}
+                    onChange={handleCarrierChange}
+                    placeholder="Select carrier…"
+                    searchPlaceholder="Search carriers…"
+                    emptyText="No carriers found"
+                    disabled={carriersQuery.isLoading}
                   />
                 </div>
                 <div className="space-y-1">
@@ -216,16 +232,17 @@ export function ShipmentDetailSheet({ open, onOpenChange, shipmentId }: Shipment
               <p className="text-[10px] text-muted-foreground">
                 Carrier integrations coming soon — enter tracking manually
               </p>
-              <Button
+              <LoadingButton
                 type="button"
                 size="sm"
                 variant="outline"
                 className="w-full"
                 onClick={handleSaveCarrier}
-                disabled={updateMutation.isPending}
+                isPending={updateMutation.isPending}
+                loadingText="Saving…"
               >
-                {updateMutation.isPending ? "Saving…" : "Save"}
-              </Button>
+                Save
+              </LoadingButton>
             </div>
 
             {shipment.lines && shipment.lines.length > 0 && (
@@ -266,25 +283,27 @@ export function ShipmentDetailSheet({ open, onOpenChange, shipmentId }: Shipment
 
             <div className="flex flex-wrap gap-2 pt-2">
               {SHIPPABLE_STATUSES.has(shipment.status) && (
-                <Button
+                <LoadingButton
                   type="button"
                   size="sm"
                   onClick={handleOpenShipConfirm}
-                  disabled={shipMutation.isPending}
+                  isPending={shipMutation.isPending}
+                  loadingText="Processing…"
                 >
                   Mark as Shipped
-                </Button>
+                </LoadingButton>
               )}
               {!TERMINAL_STATUSES.has(shipment.status) && (
-                <Button
+                <LoadingButton
                   type="button"
                   size="sm"
                   variant="destructive"
                   onClick={handleOpenCancelConfirm}
-                  disabled={cancelMutation.isPending}
+                  isPending={cancelMutation.isPending}
+                  loadingText="Cancelling…"
                 >
                   Cancel
-                </Button>
+                </LoadingButton>
               )}
             </div>
           </div>

@@ -23,6 +23,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { LoadingState, ErrorState } from "@/components/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   usePurchaseOrder,
   useSendPurchaseOrder,
@@ -181,14 +182,14 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
   function handleSendPO(): void {
     sendMutation.mutate(undefined, {
       onSuccess: (result) => toast.success(`PO ${result.poNumber} sent`),
-      onError: (error) => toast.error(error.message),
+      onError: (error) => toast.error(getErrorMessage(error)),
     });
   }
 
   function handleApprovePO(): void {
     approveMutation.mutate(undefined, {
       onSuccess: (result) => toast.success(`PO ${result.poNumber} approved`),
-      onError: (error) => toast.error(error.message),
+      onError: (error) => toast.error(getErrorMessage(error)),
     });
   }
 
@@ -218,7 +219,7 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
         toast.success("Purchase order cancelled");
         setConfirmAction(null);
       },
-      onError: (error) => toast.error(error.message),
+      onError: (error) => toast.error(getErrorMessage(error)),
     });
   }
 
@@ -228,7 +229,7 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
         toast.success("Purchase order closed");
         setConfirmAction(null);
       },
-      onError: (error) => toast.error(error.message),
+      onError: (error) => toast.error(getErrorMessage(error)),
     });
   }
 
@@ -240,10 +241,22 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
     if (!open) setSelectedGrnId(null);
   }
 
+  function handleCancelDialogOpenChange(open: boolean): void {
+    if (!open) handleDismissConfirm();
+  }
+
+  function handleCloseDialogOpenChange(open: boolean): void {
+    if (!open) handleDismissConfirm();
+  }
+
+  function handleGrnTableRowClick(row: GrnRow): void {
+    handleGrnRowClick(row.id);
+  }
+
   const grnColumns = useMemo(() => buildGrnColumns(handleGrnRowClick), []);
 
   if (query.isLoading) return <LoadingState variant="form" />;
-  if (query.error) return <ErrorState description={query.error.message} onRetry={handleRetry} />;
+  if (query.error) return <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} />;
   if (!query.data) return <ErrorState title="Not found" description={`PO #${poId}`} />;
 
   const po = query.data;
@@ -319,7 +332,7 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
         ) : undefined
       }
     >
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         <Card className="p-4">
           <dl className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
             <dt className="text-muted-foreground">Status</dt>
@@ -395,7 +408,7 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
               data={grnRows}
               columns={grnColumns}
               getRowKey={(row) => row.id}
-              onRowClick={(row) => handleGrnRowClick(row.id)}
+              onRowClick={handleGrnTableRowClick}
               minWidth="520px"
             />
           </div>
@@ -420,7 +433,7 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
 
       <AlertDialog
         open={confirmAction === "cancel"}
-        onOpenChange={(open) => { if (!open) handleDismissConfirm(); }}
+        onOpenChange={handleCancelDialogOpenChange}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -444,7 +457,7 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
 
       <AlertDialog
         open={confirmAction === "close"}
-        onOpenChange={(open) => { if (!open) handleDismissConfirm(); }}
+        onOpenChange={handleCloseDialogOpenChange}
       >
         <AlertDialogContent>
           <AlertDialogHeader>

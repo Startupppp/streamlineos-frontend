@@ -14,12 +14,12 @@ import {
   FileImage,
   Upload,
   Pencil,
-  Loader2,
   FileSignature,
 } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -56,48 +56,48 @@ const FILE_ICON_CONFIG: Record<
   }
 > = {
   pdf: {
-    bg: "bg-rose-100 dark:bg-rose-950/40",
-    text: "text-rose-600 dark:text-rose-400",
+    bg: "bg-rose-100 dark:bg-rose-500/10",
+    text: "text-rose-600 dark:text-rose-300",
     icon: FileText,
   },
   docx: {
-    bg: "bg-blue-100 dark:bg-blue-950/40",
-    text: "text-blue-600 dark:text-blue-400",
+    bg: "bg-blue-100 dark:bg-blue-500/10",
+    text: "text-blue-600 dark:text-blue-300",
     icon: FileText,
   },
   doc: {
-    bg: "bg-blue-100 dark:bg-blue-950/40",
-    text: "text-blue-600 dark:text-blue-400",
+    bg: "bg-blue-100 dark:bg-blue-500/10",
+    text: "text-blue-600 dark:text-blue-300",
     icon: FileText,
   },
   xlsx: {
-    bg: "bg-emerald-100 dark:bg-emerald-950/40",
-    text: "text-emerald-600 dark:text-emerald-400",
+    bg: "bg-emerald-100 dark:bg-emerald-500/10",
+    text: "text-emerald-600 dark:text-emerald-300",
     icon: FileSpreadsheet,
   },
   xls: {
-    bg: "bg-emerald-100 dark:bg-emerald-950/40",
-    text: "text-emerald-600 dark:text-emerald-400",
+    bg: "bg-emerald-100 dark:bg-emerald-500/10",
+    text: "text-emerald-600 dark:text-emerald-300",
     icon: FileSpreadsheet,
   },
   csv: {
-    bg: "bg-emerald-100 dark:bg-emerald-950/40",
-    text: "text-emerald-600 dark:text-emerald-400",
+    bg: "bg-emerald-100 dark:bg-emerald-500/10",
+    text: "text-emerald-600 dark:text-emerald-300",
     icon: FileSpreadsheet,
   },
   png: {
-    bg: "bg-amber-100 dark:bg-amber-950/40",
-    text: "text-amber-600 dark:text-amber-400",
+    bg: "bg-amber-100 dark:bg-amber-500/10",
+    text: "text-amber-600 dark:text-amber-300",
     icon: FileImage,
   },
   jpg: {
-    bg: "bg-amber-100 dark:bg-amber-950/40",
-    text: "text-amber-600 dark:text-amber-400",
+    bg: "bg-amber-100 dark:bg-amber-500/10",
+    text: "text-amber-600 dark:text-amber-300",
     icon: FileImage,
   },
   jpeg: {
-    bg: "bg-amber-100 dark:bg-amber-950/40",
-    text: "text-amber-600 dark:text-amber-400",
+    bg: "bg-amber-100 dark:bg-amber-500/10",
+    text: "text-amber-600 dark:text-amber-300",
     icon: FileImage,
   },
 };
@@ -110,28 +110,28 @@ const DEFAULT_FILE_ICON = {
 
 const TYPE_BADGE_COLORS: Record<string, string> = {
   Contract:
-    "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800",
+    "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
   Certificate:
-    "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800",
+    "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
   "ID Proof":
-    "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-800",
+    "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
   Payslip:
-    "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800",
+    "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
   Policy:
-    "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800",
+    "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
   "Offer Letter":
-    "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800",
+    "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
   Resume:
-    "bg-muted text-foreground border-border dark:bg-slate-800/40 dark:text-slate-300 dark:border-slate-700",
+    "bg-muted text-foreground border-border",
   General:
-    "bg-muted text-foreground border-border dark:bg-slate-800/40 dark:text-slate-300 dark:border-slate-700",
+    "bg-muted text-foreground border-border",
 };
 
 const FOLDER_COLORS = [
-  "bg-blue-100 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400",
-  "bg-emerald-100 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400",
-  "bg-amber-100 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400",
-  "bg-blue-100 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400",
+  "bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300",
+  "bg-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300",
+  "bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300",
+  "bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300",
 ];
 
 function getFileIconConfig(fileName: string) {
@@ -260,7 +260,7 @@ export function DocumentTable({
                         className={cn(
                           "inline-flex items-center text-[10px] font-semibold px-1.5 py-0 rounded-full border",
                           tag.toLowerCase().includes("confidential")
-                            ? "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/40 dark:text-rose-300 dark:border-rose-800"
+                            ? "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30"
                             : "bg-muted text-muted-foreground border-border",
                         )}
                       >
@@ -463,20 +463,17 @@ export function DocumentTable({
   const footer =
     totalFiltered > 0 && filesWithUrl.length > 0 ? (
       <div className="flex items-center gap-2.5">
-        <Button
+        <LoadingButton
           variant="outline"
           size="sm"
           className="text-xs gap-1.5"
           onClick={handleDownloadZip}
-          disabled={isZipping}
+          isPending={isZipping}
+          loadingText="Zipping..."
         >
-          {isZipping ? (
-            <Loader2 className="h-3 w-3 animate-spin" />
-          ) : (
-            <Download className="h-3 w-3" />
-          )}
+          <Download className="h-3 w-3" />
           ZIP ({filesWithUrl.length})
-        </Button>
+        </LoadingButton>
       </div>
     ) : undefined;
 

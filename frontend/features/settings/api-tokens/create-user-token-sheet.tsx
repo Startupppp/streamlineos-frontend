@@ -11,7 +11,7 @@ import {
   type CreateUserApiTokenResponse,
 } from "@/hooks/api/user-api-tokens";
 import { getApiError } from "@/lib/api-client";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import {
   Sheet,
@@ -136,13 +136,14 @@ export function CreateUserTokenSheet({
           </Form>
         </SheetBody>
         <SheetFooter className="shrink-0 flex-row justify-end gap-2 border-t border-border bg-muted/30 px-6 py-4">
-          <Button
+          <LoadingButton
             type="submit"
             form="user-token-form"
-            disabled={create.isPending}
+            isPending={create.isPending}
+            loadingText="Creating…"
           >
-            {create.isPending ? "Creating…" : "Create Token"}
-          </Button>
+            Create Token
+          </LoadingButton>
         </SheetFooter>
       </SheetContent>
     </Sheet>

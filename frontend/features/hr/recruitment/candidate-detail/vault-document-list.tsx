@@ -108,6 +108,27 @@ function AvScanBadge({
   );
 }
 
+interface DeleteDocButtonProps {
+  docId: number;
+  filename: string;
+  onRequestDelete: (id: number) => void;
+}
+
+function DeleteDocButton({ docId, filename, onRequestDelete }: DeleteDocButtonProps) {
+  function handleClick() { onRequestDelete(docId); }
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="w-7 text-muted-foreground hover:text-destructive transition-colors duration-200"
+      aria-label={`Delete ${filename}`}
+      onClick={handleClick}
+    >
+      <Trash2 className="h-3.5 w-3.5" />
+    </Button>
+  );
+}
+
 interface VaultDocumentListProps {
   candidateId: number;
 }
@@ -260,15 +281,7 @@ export function VaultDocumentList({ candidateId }: VaultDocumentListProps) {
                     <Download className="h-3.5 w-3.5 text-muted-foreground" />
                   </a>
                 )}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="w-7 text-muted-foreground hover:text-destructive transition-colors duration-200"
-                  aria-label={`Delete ${doc.filename}`}
-                  onClick={() => handleRequestDelete(doc.id)}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
+                <DeleteDocButton docId={doc.id} filename={doc.filename} onRequestDelete={handleRequestDelete} />
               </div>
             </div>
           );
@@ -280,7 +293,7 @@ export function VaultDocumentList({ candidateId }: VaultDocumentListProps) {
         onOpenChange={handleCancelDelete}
         title="Delete Document"
         description="This will permanently delete the document from the vault. This action cannot be undone."
-        confirmLabel={deleteDoc.isPending ? "Deleting..." : "Delete"}
+        confirmLabel="Delete"
         destructive
         onConfirm={handleConfirmDelete}
       />

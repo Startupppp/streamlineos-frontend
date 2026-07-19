@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Textarea } from "@/components/ui/textarea";
@@ -60,7 +61,7 @@ function AddUpdateForm({ projectId, incidentId }: AddUpdateFormProps) {
       },
       {
         onSuccess: () => { toast.success("Update posted"); form.reset({ message: "", newStatus: "none" }); },
-        onError: () => toast.error("Failed to post update"),
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }
@@ -81,7 +82,7 @@ function AddUpdateForm({ projectId, incidentId }: AddUpdateFormProps) {
       <div className="flex items-center gap-2">
         <div className="w-44">
           <Select value={form.watch("newStatus")} onValueChange={(v) => form.setValue("newStatus", v)}>
-            <SelectTrigger className="text-[11px]"><SelectValue placeholder="Change status?" /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder="Change status?" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="none">No status change</SelectItem>
               {STATUSES.map((s) => <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>)}

@@ -53,8 +53,8 @@ export function HrHero({
     <div
       className={cn(
         "relative overflow-hidden rounded-2xl border border-blue-200/60 dark:border-blue-500/20",
-        "bg-gradient-to-br from-sky-50 via-blue-50 to-indigo-50/80",
-        "dark:from-slate-900/40 dark:via-blue-950/30 dark:to-indigo-950/20",
+        "bg-gradient-to-br from-sky-50 via-blue-50 to-blue-100/80",
+        "dark:from-slate-900/40 dark:via-blue-950/30 dark:to-blue-950/20",
         "text-foreground shadow-[0_8px_28px_-18px_rgba(59,130,246,0.22)]",
         className,
       )}
@@ -84,11 +84,11 @@ export function HrHero({
                 {eyebrow}
               </p>
             )}
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-balance leading-tight text-slate-900 dark:text-slate-50">
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-balance leading-tight text-foreground">
               {title}
             </h2>
             {description && (
-              <p className="mt-1.5 text-sm text-slate-600 dark:text-slate-300 leading-relaxed text-pretty">
+              <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed text-pretty">
                 {description}
               </p>
             )}
@@ -116,15 +116,15 @@ export function HrQuickAction({
   tone?: "blue" | "emerald" | "amber" | "rose" | "violet" | "sky";
 }) {
   const tones = {
-    blue: "from-blue-500/15 to-blue-500/5 text-blue-600 dark:text-blue-400 group-hover:border-blue-500/30",
+    blue: "from-blue-500/15 to-blue-500/5 text-blue-600 dark:text-blue-300 group-hover:border-blue-500/30",
     emerald:
-      "from-emerald-500/15 to-emerald-500/5 text-emerald-600 dark:text-emerald-400 group-hover:border-emerald-500/30",
+      "from-emerald-500/15 to-emerald-500/5 text-emerald-600 dark:text-emerald-300 group-hover:border-emerald-500/30",
     amber:
-      "from-amber-500/15 to-amber-500/5 text-amber-600 dark:text-amber-400 group-hover:border-amber-500/30",
-    rose: "from-rose-500/15 to-rose-500/5 text-rose-600 dark:text-rose-400 group-hover:border-rose-500/30",
+      "from-amber-500/15 to-amber-500/5 text-amber-600 dark:text-amber-300 group-hover:border-amber-500/30",
+    rose: "from-rose-500/15 to-rose-500/5 text-rose-600 dark:text-rose-300 group-hover:border-rose-500/30",
     violet:
-      "from-violet-500/15 to-violet-500/5 text-violet-600 dark:text-violet-400 group-hover:border-violet-500/30",
-    sky: "from-sky-500/15 to-sky-500/5 text-sky-600 dark:text-sky-400 group-hover:border-sky-500/30",
+      "from-blue-500/15 to-blue-500/5 text-blue-600 dark:text-blue-300 group-hover:border-blue-500/30",
+    sky: "from-sky-500/15 to-sky-500/5 text-sky-600 dark:text-sky-300 group-hover:border-sky-500/30",
   };
 
   return (
@@ -184,7 +184,7 @@ export function HrSectionHeader({
         (typeof action === "object" && action !== null && "href" in action ? (
           <Link
             href={action.href}
-            className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 transition-colors"
+            className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700 dark:text-blue-300 transition-colors"
           >
             {action.label}
             <ArrowRight className="h-3 w-3" />
@@ -196,27 +196,6 @@ export function HrSectionHeader({
   );
 }
 
-/** Unified filter toolbar shell — put search/selects inside */
-export function HrFilterToolbar({
-  children,
-  className,
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
-  return (
-    <div
-      className={cn(
-        "flex flex-wrap items-center gap-2 rounded-2xl border border-border/70",
-        "bg-muted/25 backdrop-blur-sm p-2 sm:p-2.5",
-        "shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] dark:shadow-none",
-        className,
-      )}
-    >
-      {children}
-    </div>
-  );
-}
 
 const STATUS_STYLES: Record<
   string,
@@ -224,37 +203,37 @@ const STATUS_STYLES: Record<
 > = {
   active: {
     bg: "bg-emerald-50 dark:bg-emerald-500/10",
-    text: "text-emerald-700 dark:text-emerald-400",
+    text: "text-emerald-700 dark:text-emerald-300",
     dot: "bg-emerald-500",
     border: "border-emerald-200/80 dark:border-emerald-800/50",
   },
   inactive: {
-    bg: "bg-slate-100 dark:bg-slate-800/50",
-    text: "text-slate-600 dark:text-slate-400",
-    dot: "bg-slate-400",
-    border: "border-slate-200 dark:border-slate-700",
+    bg: "bg-muted",
+    text: "text-muted-foreground",
+    dot: "bg-muted-foreground/40",
+    border: "border-border",
   },
   pending: {
     bg: "bg-amber-50 dark:bg-amber-500/10",
-    text: "text-amber-700 dark:text-amber-400",
+    text: "text-amber-700 dark:text-amber-300",
     dot: "bg-amber-500",
     border: "border-amber-200/80 dark:border-amber-800/50",
   },
   approved: {
     bg: "bg-emerald-50 dark:bg-emerald-500/10",
-    text: "text-emerald-700 dark:text-emerald-400",
+    text: "text-emerald-700 dark:text-emerald-300",
     dot: "bg-emerald-500",
     border: "border-emerald-200/80 dark:border-emerald-800/50",
   },
   rejected: {
     bg: "bg-rose-50 dark:bg-rose-500/10",
-    text: "text-rose-700 dark:text-rose-400",
+    text: "text-rose-700 dark:text-rose-300",
     dot: "bg-rose-500",
     border: "border-rose-200/80 dark:border-rose-800/50",
   },
   default: {
     bg: "bg-blue-50 dark:bg-blue-500/10",
-    text: "text-blue-700 dark:text-blue-400",
+    text: "text-blue-700 dark:text-blue-300",
     dot: "bg-blue-500",
     border: "border-blue-200/80 dark:border-blue-800/50",
   },
@@ -302,13 +281,13 @@ export function HrIconWell({
   size?: "sm" | "md" | "lg";
 }) {
   const tones = {
-    blue: "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400",
-    emerald: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400",
-    amber: "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400",
-    rose: "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400",
-    violet: "bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-400",
-    slate: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
-    sky: "bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-400",
+    blue: "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300",
+    emerald: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300",
+    amber: "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300",
+    rose: "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-300",
+    violet: "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300",
+    slate: "bg-muted text-muted-foreground",
+    sky: "bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-300",
   };
 
   const sizes = {
@@ -331,7 +310,7 @@ export function HrIconWell({
   );
 }
 
-/** Subtle page content container for denser HR list pages */
+/** Page content container — threads the fill-chain from PageWrapper to the primary data region */
 export function HrPageContent({
   children,
   className,
@@ -340,7 +319,7 @@ export function HrPageContent({
   className?: string;
 }) {
   return (
-    <div className={cn("space-y-4 sm:space-y-5 lg:space-y-6", className)}>
+    <div className={cn("flex flex-1 min-h-0 flex-col gap-4 sm:gap-5", className)}>
       {children}
     </div>
   );

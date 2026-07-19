@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
+import { CONTENT_FILL_PANEL, FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { EmptyActivityIllustration } from "@/components/illustrations";
 import {
   Select,
@@ -120,9 +120,9 @@ export default function CrmAuditLogPage() {
       title="Audit Log"
       subtitle={isLoading ? "Loading..." : `${total.toLocaleString()} entr${total !== 1 ? "ies" : "y"}`}
       filters={
-        <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+        <div className={FILTER_TOOLBAR_ROW}>
           <Select value={entityType} onValueChange={handleEntityTypeChange}>
-            <SelectTrigger className="w-36 text-xs">
+            <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-36`}>
               <SelectValue placeholder="Entity Type" />
             </SelectTrigger>
             <SelectContent>
@@ -137,7 +137,7 @@ export default function CrmAuditLogPage() {
           </Select>
 
           <Select value={action} onValueChange={handleActionChange}>
-            <SelectTrigger className="w-36 text-xs">
+            <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-36`}>
               <SelectValue placeholder="Action" />
             </SelectTrigger>
             <SelectContent>

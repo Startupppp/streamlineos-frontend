@@ -128,15 +128,7 @@ export function RolePicker({
             {options.length > 0 && (
               <CommandGroup heading="Roles">
                 {options.map((role) => (
-                  <CommandItem key={role} value={role} onSelect={() => onSelect(role)}>
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        value === role ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                    {role}
-                  </CommandItem>
+                  <RoleOption key={role} role={role} isSelected={value === role} onSelect={onSelect} />
                 ))}
               </CommandGroup>
             )}
@@ -153,6 +145,21 @@ interface QuestionFormBodyProps {
   roleOptions: string[];
   rolePickerOpen: boolean;
   onRolePickerOpenChange: (v: boolean) => void;
+}
+
+function RoleOption({ role, isSelected, onSelect }: { role: string; isSelected: boolean; onSelect: (role: string) => void }) {
+  function handleSelect() { onSelect(role); }
+  return (
+    <CommandItem value={role} onSelect={handleSelect}>
+      <Check
+        className={cn(
+          "mr-2 h-4 w-4",
+          isSelected ? "opacity-100" : "opacity-0"
+        )}
+      />
+      {role}
+    </CommandItem>
+  );
 }
 
 export function QuestionFormBody({
@@ -222,6 +229,20 @@ export function QuestionFormBody({
 
   const keywordsCount = countCommaSeparatedItems(form.keywords);
 
+  const handleCategoryChange = useCallback(
+    (v: string) => {
+      setForm((f) => ({ ...f, category: v }));
+    },
+    [setForm]
+  );
+
+  const handleDifficultyChange = useCallback(
+    (v: string) => {
+      setForm((f) => ({ ...f, difficulty: v as "EASY" | "MEDIUM" | "HARD" }));
+    },
+    [setForm]
+  );
+
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -253,7 +274,7 @@ export function QuestionFormBody({
           <label className="text-sm font-medium">Category</label>
           <Select
             value={form.category}
-            onValueChange={(v) => setForm((f) => ({ ...f, category: v }))}
+            onValueChange={handleCategoryChange}
           >
             <SelectTrigger>
               <SelectValue />
@@ -271,9 +292,7 @@ export function QuestionFormBody({
           <label className="text-sm font-medium">Difficulty</label>
           <Select
             value={form.difficulty}
-            onValueChange={(v) =>
-              setForm((f) => ({ ...f, difficulty: v as "EASY" | "MEDIUM" | "HARD" }))
-            }
+            onValueChange={handleDifficultyChange}
           >
             <SelectTrigger>
               <SelectValue />

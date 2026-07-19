@@ -2,6 +2,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export function EmployeesGridSkeleton({ count = 15 }: { count?: number }) {
   return (
@@ -30,16 +31,16 @@ export function EmployeesLoadingSkeleton() {
       subtitle="Manage your company directory and employee access"
       actions={
         <div className="flex items-center gap-2">
-          <Skeleton className="h-4 w-24 rounded-md" />{" "}
-          <Skeleton className="h-4 w-32 rounded-md" />
+          <Skeleton className="h-9 w-24 rounded-md" />
+          <Skeleton className="h-9 w-32 rounded-md" />
         </div>
       }
       filters={
-        <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-          <Skeleton className="h-8 w-[200px] rounded-md" />{" "}
-          <Skeleton className="h-8 w-[130px] rounded-md" />{" "}
-          <Skeleton className="h-8 w-[120px] rounded-md" />{" "}
-          <Skeleton className="h-8 w-[120px] rounded-md" />
+        <div className={FILTER_TOOLBAR_ROW}>
+          <Skeleton className="h-9 w-[200px] rounded-md" />
+          <Skeleton className="h-9 w-[130px] rounded-md" />
+          <Skeleton className="h-9 w-[120px] rounded-md" />
+          <Skeleton className="h-9 w-[120px] rounded-md" />
         </div>
       }
     >

@@ -1,10 +1,8 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTableSkeleton } from "@/components/ui/data-table";
-import {
-  PmPageShell,
-  PM_TOOLBAR,
-} from "@/features/projects/shared/pm-chrome";
+import { PmPageShell } from "@/features/projects/shared/pm-chrome";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export default function PortfoliosLoading() {
   return (
@@ -12,7 +10,7 @@ export default function PortfoliosLoading() {
       title="Portfolios"
       subtitle="Group related projects into portfolios"
       filters={
-        <div className={PM_TOOLBAR}>
+        <div className={FILTER_TOOLBAR_ROW}>
           <Skeleton className="h-9 w-40 rounded-md" />
           <Skeleton className="h-9 w-52 rounded-md" />
         </div>

@@ -269,7 +269,7 @@ export function DocumentFormFields({
             value={tagInput}
             onChange={onTagInputChange}
             onKeyDown={onTagKeyDown}
-            className="flex-1 h-8"
+            className="flex-1"
           />
           <AnimatedIconButton
             icon={PlusIcon}
@@ -306,12 +306,12 @@ export function DocumentFormFields({
             <div className="space-y-0.5">
               <FormLabel className="flex items-center gap-2 text-sm font-medium cursor-pointer">
                 {field.value ? (
-                  <div className="w-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/40 flex items-center justify-center">
-                    <Globe className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                  <div className="w-7 rounded-lg bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center">
+                    <Globe className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-300" />
                   </div>
                 ) : (
-                  <div className="w-7 rounded-lg bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center">
-                    <Shield className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                  <div className="w-7 rounded-lg bg-amber-100 dark:bg-amber-500/10 flex items-center justify-center">
+                    <Shield className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300" />
                   </div>
                 )}
                 {field.value ? "Public Document" : "Private Document"}

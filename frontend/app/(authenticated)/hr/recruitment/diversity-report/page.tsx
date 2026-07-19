@@ -8,9 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Label } from "@/components/ui/label";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,7 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
-import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
+import { CONTENT_FILL_PANEL, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { ChevronDown, AlertCircle, Users, BarChart3, MapPin, Globe } from "lucide-react";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { cn } from "@/lib/utils";
@@ -150,18 +148,11 @@ export default function DiversityReportPage() {
     <PageWrapper
       title="Diversity Report"
       subtitle="Anonymized applicant pool demographics"
- variant="display">
-      <div className="flex flex-wrap items-end gap-3 mb-6 p-4 rounded-lg border bg-card">
-        <div className="flex flex-col gap-1">
-          <Label className="text-xs">From Date</Label>
-          <DatePicker value={pendingFilters.from ?? ""} onChange={handleFromChange} placeholder="Pick a date" className="text-xs w-36" />
-        </div>
-        <div className="flex flex-col gap-1">
-          <Label className="text-xs">To Date</Label>
-          <DatePicker value={pendingFilters.to ?? ""} onChange={handleToChange} placeholder="Pick a date" className="text-xs w-36" />
-        </div>
-        <div className="flex flex-col gap-1">
-          <Label className="text-xs">Departments</Label>
+      variant="display"
+      filters={
+        <div className={FILTER_TOOLBAR_ROW}>
+          <DatePicker value={pendingFilters.from ?? ""} onChange={handleFromChange} placeholder="From date" className="text-xs w-36" />
+          <DatePicker value={pendingFilters.to ?? ""} onChange={handleToChange} placeholder="To date" className="text-xs w-36" />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -189,10 +180,8 @@ export default function DiversityReportPage() {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
-        <div className="flex items-end gap-2">
           <Button size="sm" className="text-xs" onClick={handleApply}>
-            Apply Filters
+            Apply
           </Button>
           {hasActiveFilters && (
             <Button
@@ -204,146 +193,140 @@ export default function DiversityReportPage() {
               Reset
             </Button>
           )}
+          {hasActiveFilters && filters.from && (
+            <Badge variant="secondary" className="text-[10px]">From: {filters.from}</Badge>
+          )}
+          {hasActiveFilters && filters.to && (
+            <Badge variant="secondary" className="text-[10px]">To: {filters.to}</Badge>
+          )}
+          {hasActiveFilters && filters.departmentIds.length > 0 && (
+            <Badge variant="secondary" className="text-[10px]">
+              {filters.departmentIds.length} dept{filters.departmentIds.length !== 1 ? "s" : ""}
+            </Badge>
+          )}
         </div>
-        {hasActiveFilters && (
-          <div className="flex flex-wrap gap-1 ml-auto">
-            {filters.from && (
-              <Badge variant="secondary" className="text-[10px]">
-                From: {filters.from}
-              </Badge>
-            )}
-            {filters.to && (
-              <Badge variant="secondary" className="text-[10px]">
-                To: {filters.to}
-              </Badge>
-            )}
-            {filters.departmentIds.length > 0 && (
-              <Badge variant="secondary" className="text-[10px]">
-                {filters.departmentIds.length} dept
-                {filters.departmentIds.length !== 1 ? "s" : ""}
-              </Badge>
-            )}
+      }
+    >
+
+      <div className="flex flex-1 min-h-0 flex-col">
+        {isLoading ? (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Card key={i}>
+                <CardContent className="pt-6">
+                  <Skeleton className="h-40 w-full" />
+                </CardContent>
+              </Card>
+            ))}
           </div>
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center flex-1 gap-3 py-16">
+            <AlertCircle className="h-10 w-10 text-destructive/50" />
+            <p className="text-sm text-muted-foreground">
+              Failed to load diversity report.
+            </p>
+            <Button variant="outline" size="sm" onClick={handleRetry}>
+              Try again
+            </Button>
+          </div>
+        ) : !data || data.total === 0 ? (
+          <RecruitmentEmptyState
+            illustrationPreset="chart"
+            title="No applicant data found"
+            description="Adjust the filters or wait for candidates to apply."
+            className={CONTENT_FILL_PANEL}
+          />
+        ) : (
+          <>
+            <StatCardGrid cols={4} className="mb-6">
+              <StatCard label="Total Applicants" value={data.total} icon={Users} tone="blue" />
+              <StatCard label="Gender Categories" value={data.genderBreakdown.length} icon={BarChart3} tone="default" />
+              <StatCard label="Locations" value={data.locationBreakdown.length} icon={MapPin} tone="emerald" />
+              <StatCard label="Sources" value={data.sourceBreakdown.length} icon={Globe} tone="amber" />
+            </StatCardGrid>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm">Gender Distribution</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {data.genderBreakdown.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      No gender data recorded yet.
+                    </p>
+                  ) : (
+                    <HorizontalBar
+                      items={data.genderBreakdown.map((g) => ({
+                        label: g.gender,
+                        count: g.count,
+                      }))}
+                      total={data.total}
+                      colorFn={(label) => GENDER_COLORS[label] ?? "bg-muted-foreground"}
+                    />
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm">Location Distribution</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {data.locationBreakdown.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      No location data recorded yet.
+                    </p>
+                  ) : (
+                    <HorizontalBar
+                      items={data.locationBreakdown.map((l) => ({
+                        label: l.location,
+                        count: l.count,
+                      }))}
+                      total={data.total}
+                      colorFn={() => "bg-emerald-500"}
+                    />
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm">Source Breakdown</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <HorizontalBar
+                    items={data.sourceBreakdown.map((s) => ({
+                      label: s.source,
+                      count: s.count,
+                    }))}
+                    total={data.total}
+                    colorFn={() => "bg-primary"}
+                  />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm">
+                    Pipeline Stage Distribution
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <HorizontalBar
+                    items={data.stageBreakdown.map((s) => ({
+                      label: s.stage,
+                      count: s.count,
+                    }))}
+                    total={data.total}
+                    colorFn={() => "bg-amber-500"}
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          </>
         )}
       </div>
-
-      {isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i}>
-              <CardContent className="pt-6">
-                <Skeleton className="h-40 w-full" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : isError ? (
-        <div className="flex flex-col items-center justify-center flex-1 gap-3 py-16">
-          <AlertCircle className="h-10 w-10 text-destructive/50" />
-          <p className="text-sm text-muted-foreground">
-            Failed to load diversity report.
-          </p>
-          <Button variant="outline" size="sm" onClick={handleRetry}>
-            Try again
-          </Button>
-        </div>
-      ) : !data || data.total === 0 ? (
-        <RecruitmentEmptyState
-          illustrationPreset="chart"
-          title="No applicant data found"
-          description="Adjust the filters or wait for candidates to apply."
-          className={CONTENT_FILL_PANEL}
-        />
-      ) : (
-        <>
-          <StatCardGrid cols={4} className="mb-6">
-            <StatCard label="Total Applicants" value={data.total} icon={Users} tone="blue" />
-            <StatCard label="Gender Categories" value={data.genderBreakdown.length} icon={BarChart3} tone="default" />
-            <StatCard label="Locations" value={data.locationBreakdown.length} icon={MapPin} tone="emerald" />
-            <StatCard label="Sources" value={data.sourceBreakdown.length} icon={Globe} tone="amber" />
-          </StatCardGrid>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm">Gender Distribution</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {data.genderBreakdown.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    No gender data recorded yet.
-                  </p>
-                ) : (
-                  <HorizontalBar
-                    items={data.genderBreakdown.map((g) => ({
-                      label: g.gender,
-                      count: g.count,
-                    }))}
-                    total={data.total}
-                    colorFn={(label) => GENDER_COLORS[label] ?? "bg-muted-foreground"}
-                  />
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm">Location Distribution</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {data.locationBreakdown.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    No location data recorded yet.
-                  </p>
-                ) : (
-                  <HorizontalBar
-                    items={data.locationBreakdown.map((l) => ({
-                      label: l.location,
-                      count: l.count,
-                    }))}
-                    total={data.total}
-                    colorFn={() => "bg-emerald-500"}
-                  />
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm">Source Breakdown</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <HorizontalBar
-                  items={data.sourceBreakdown.map((s) => ({
-                    label: s.source,
-                    count: s.count,
-                  }))}
-                  total={data.total}
-                  colorFn={() => "bg-primary"}
-                />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm">
-                  Pipeline Stage Distribution
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <HorizontalBar
-                  items={data.stageBreakdown.map((s) => ({
-                    label: s.stage,
-                    count: s.count,
-                  }))}
-                  total={data.total}
-                  colorFn={() => "bg-amber-500"}
-                />
-              </CardContent>
-            </Card>
-          </div>
-        </>
-      )}
     </PageWrapper>
   );
 }

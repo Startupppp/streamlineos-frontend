@@ -30,6 +30,7 @@ function buildCsp(nonce: string, apiUrl?: string): string {
     "https://fonts.googleapis.com",
     "https://fonts.gstatic.com",
     "https://*.r2.cloudflarestorage.com",
+    "https://*.r2.dev",
     "https://www.googletagmanager.com",
     "https://www.clarity.ms",
     "https://api.razorpay.com",
@@ -214,7 +215,13 @@ export default async function middleware(req: NextRequest) {
   const secret = process.env.NEXTAUTH_SECRET;
   let token: JWT | null = null;
   for (const cookieName of sessionCookieNames()) {
-    token = await getToken({ req, secret, cookieName });
+    token = await getToken({
+      req,
+      secret,
+      cookieName,
+      salt: cookieName,
+      secureCookie: cookieName.startsWith("__Secure-"),
+    });
     if (token) break;
   }
 

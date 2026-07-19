@@ -11,8 +11,8 @@ import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 const EVENT_TYPE_STYLES: Record<string, string> = {
-  document_expiry: "bg-amber-100 border-amber-200 text-amber-700 dark:bg-amber-900/40 dark:border-amber-800 dark:text-amber-300",
-  certification_expiry: "bg-rose-100 border-rose-200 text-rose-700 dark:bg-rose-900/40 dark:border-rose-800 dark:text-rose-300",
+  document_expiry: "bg-amber-100 border-amber-200 text-amber-700 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-300",
+  certification_expiry: "bg-rose-100 border-rose-200 text-rose-700 dark:bg-rose-500/10 dark:border-rose-500/30 dark:text-rose-300",
 };
 
 const EVENT_TYPE_LABELS: Record<string, string> = {

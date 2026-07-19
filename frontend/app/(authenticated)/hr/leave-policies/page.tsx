@@ -6,10 +6,12 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Pencil, Clock, Calendar } from "lucide-react";
 import { Trash2Icon, PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetBody } from "@/components/ui/sheet";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
@@ -213,7 +215,7 @@ export default function LeavePoliciesPage() {
   function handleDeleteClick(id: number) {
     deleteMutation.mutate(id, {
       onSuccess: () => toast.success("Policy deleted"),
-      onError: () => toast.error("Failed to delete policy"),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }
 
@@ -236,7 +238,7 @@ export default function LeavePoliciesPage() {
             setSheetOpen(false);
             setEditingPolicy(null);
           },
-          onError: () => toast.error("Failed to update policy"),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     } else {
@@ -246,7 +248,7 @@ export default function LeavePoliciesPage() {
           setSheetOpen(false);
           form.reset();
         },
-        onError: () => toast.error("Failed to create policy"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       });
     }
   }
@@ -430,9 +432,9 @@ export default function LeavePoliciesPage() {
               />
               </SheetBody>
               <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
-                <Button type="submit" disabled={isPending} className="w-full">
-                  {isPending ? "Saving..." : editingPolicy ? "Update Policy" : "Create Policy"}
-                </Button>
+                <LoadingButton type="submit" isPending={isPending} loadingText="Saving..." className="w-full">
+                  {editingPolicy ? "Update Policy" : "Create Policy"}
+                </LoadingButton>
               </SheetFooter>
             </form>
           </Form>

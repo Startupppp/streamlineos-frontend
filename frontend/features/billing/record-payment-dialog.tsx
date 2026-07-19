@@ -189,7 +189,7 @@ export function RecordPaymentDialog({
               name="paymentMethod"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger className="text-xs" aria-label="Payment method">
+                  <SelectTrigger aria-label="Payment method">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

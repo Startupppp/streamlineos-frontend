@@ -211,7 +211,8 @@ export function WebhookUpsertSheet({ open, onOpenChange, subscription }: Props) 
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Events</FormLabel>
-                        <div className="rounded-md border divide-y max-h-64 overflow-y-auto">
+                        <ScrollArea className="max-h-64 rounded-md border">
+                          <div className="divide-y">
                           {events.map((ev) => {
                             const checked = field.value.includes(ev.value);
                             return (
@@ -235,7 +236,8 @@ export function WebhookUpsertSheet({ open, onOpenChange, subscription }: Props) 
                               </label>
                             );
                           })}
-                        </div>
+                          </div>
+                        </ScrollArea>
                         <FormMessage />
                       </FormItem>
                     )}

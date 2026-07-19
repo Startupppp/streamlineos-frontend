@@ -14,11 +14,11 @@ import { LayoutGrid, Table2, AlertCircle } from "lucide-react";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 const LEVEL_COLORS: Record<number, string> = {
-  1: "bg-slate-100 text-slate-700 dark:bg-slate-900/30 dark:text-slate-400",
+  1: "bg-muted text-muted-foreground",
   2: "bg-primary/10 text-primary",
-  3: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-  4: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-  5: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+  3: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
+  4: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-300",
+  5: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
 };
 
 const LEVEL_SHORT: Record<number, string> = { 1: "B", 2: "E", 3: "I", 4: "A", 5: "X" };

@@ -278,11 +278,11 @@ export function WorkflowUpsertSheet({ open, onOpenChange, editDefinition }: Prop
                         <FormLabel className="text-[10px] font-medium text-muted-foreground">Approver</FormLabel>
                         <Select onValueChange={f.onChange} value={f.value}>
                           <FormControl>
-                            <SelectTrigger className="text-xs"><SelectValue /></SelectTrigger>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
                           </FormControl>
                           <SelectContent>
                             {HR_WORKFLOW_APPROVER_TYPES.map((t) => (
-                              <SelectItem key={t} value={t} className="text-xs">{HR_WORKFLOW_APPROVER_TYPE_LABELS[t]}</SelectItem>
+                              <SelectItem key={t} value={t}>{HR_WORKFLOW_APPROVER_TYPE_LABELS[t]}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -298,11 +298,11 @@ export function WorkflowUpsertSheet({ open, onOpenChange, editDefinition }: Prop
                         <FormLabel className="text-[10px] font-medium text-muted-foreground">Mode</FormLabel>
                         <Select onValueChange={f.onChange} value={f.value}>
                           <FormControl>
-                            <SelectTrigger className="text-xs"><SelectValue /></SelectTrigger>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
                           </FormControl>
                           <SelectContent>
                             {STEP_MODES.map((m) => (
-                              <SelectItem key={m} value={m} className="text-xs">{STEP_MODE_LABELS[m]}</SelectItem>
+                              <SelectItem key={m} value={m}>{STEP_MODE_LABELS[m]}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>

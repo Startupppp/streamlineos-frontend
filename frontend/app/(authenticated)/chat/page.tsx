@@ -129,7 +129,7 @@ export default function ChatPage() {
         activeChannelId={activeChannelId}
         currentUserId={currentUserId}
       />
-      <div className="flex flex-col h-full">
+      <div className="flex flex-1 min-h-0 flex-col">
         <div className="flex flex-1 min-h-0 min-w-0 bg-background">
         <div
           className={cn(

@@ -30,6 +30,7 @@ const TiptapEditor = dynamic(
   },
 );
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useSubmitPortalChangeRequest } from "@/hooks/api/projects/client-portal";
 
 const schema = z.object({
@@ -72,7 +73,7 @@ export function PortalCrSheet({ projectId, open, onOpenChange }: PortalCrSheetPr
           toast.success("Change request submitted");
           onOpenChange(false);
         },
-        onError: () => toast.error("Failed to submit change request"),
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }

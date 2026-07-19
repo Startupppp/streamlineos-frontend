@@ -145,6 +145,15 @@ export function TransitionsTable({ projectId, statuses }: TransitionsTableProps)
     });
   }
 
+  function handleSheetOpenChange(open: boolean) {
+    setSheetOpen(open);
+    if (!open) setEditTarget(null);
+  }
+
+  function handleDeleteDialogChange(open: boolean) {
+    if (!open) setDeleteTarget(null);
+  }
+
   const columns: DataTableColumn<WorkflowTransition>[] = [
     {
       key: "fromStatusId",
@@ -258,10 +267,7 @@ export function TransitionsTable({ projectId, statuses }: TransitionsTableProps)
 
       <TransitionFormSheet
         open={sheetOpen}
-        onOpenChange={(open) => {
-          setSheetOpen(open);
-          if (!open) setEditTarget(null);
-        }}
+        onOpenChange={handleSheetOpenChange}
         onSubmit={handleSubmit}
         isPending={createTransition.isPending || updateTransition.isPending}
         statuses={statuses}
@@ -270,7 +276,7 @@ export function TransitionsTable({ projectId, statuses }: TransitionsTableProps)
 
       <AlertDialog
         open={!!deleteTarget}
-        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        onOpenChange={handleDeleteDialogChange}
       >
         <AlertDialogContent>
           <AlertDialogHeader>

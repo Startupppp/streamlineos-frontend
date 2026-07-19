@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -259,12 +260,12 @@ export function UserInvitationsPanel() {
           </AnimatedIconButton>
         }
         filters={
-          <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-            <div className="min-w-0 flex-1 min-w-[180px] max-w-xs">
+          <div className={FILTER_TOOLBAR_ROW}>
+            <div className="min-w-[180px] max-w-xs flex-1">
               <SearchInput value={localSearch} onValueChange={handleSearchChange} placeholder="Search by email…" />
             </div>
             <Select value={status} onValueChange={handleStatusChange}>
-              <SelectTrigger className="w-[140px] border-input bg-card text-foreground [&_svg:not([class*='text-'])]:text-muted-foreground"><SelectValue /></SelectTrigger>
+              <SelectTrigger className={`w-[140px] ${FILTER_SELECT_TRIGGER}`}><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All statuses</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>

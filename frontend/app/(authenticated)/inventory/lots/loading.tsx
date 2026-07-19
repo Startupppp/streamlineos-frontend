@@ -16,7 +16,9 @@ export default function LotsLoading() {
         </div>
       }
     >
-      <DataTableSkeleton rows={10} columns={8} className="flex-1 min-h-0" />
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
+        <DataTableSkeleton rows={10} columns={8} />
+      </div>
     </PageWrapper>
   );
 }

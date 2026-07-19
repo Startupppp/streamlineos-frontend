@@ -148,7 +148,7 @@ export function PermissionMatrix({
   }, [effective, role.id, setRolePermissions]);
 
   const handleRetry = useCallback(() => {
-    grantsQuery.refetch();
+    void grantsQuery.refetch();
   }, [grantsQuery]);
 
   return (

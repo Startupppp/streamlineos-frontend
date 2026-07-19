@@ -157,7 +157,7 @@ export function OrgLocalizationSection({ org, canEdit }: OrgLocalizationSectionP
     updateOrg(
       {
         timezone: values.timezone,
-        currency: values.currency as "USD" | "EUR" | "INR" | "GBP" | "AED",
+        currency: values.currency,
         fiscalYearStart: values.fiscalYearStart,
         language: values.language,
         dateFormat: values.dateFormat,

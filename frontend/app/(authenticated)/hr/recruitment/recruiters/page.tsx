@@ -54,8 +54,10 @@ function ActivitySheet({ recruiter, onClose }: ActivitySheetProps) {
     limit: 100,
   });
 
+  function handleSheetOpenChange(v: boolean) { if (!v) onClose(); }
+
   return (
-    <Sheet open onOpenChange={(v) => { if (!v) onClose(); }}>
+    <Sheet open onOpenChange={handleSheetOpenChange}>
       <SheetContent className="w-full sm:max-w-lg p-0 flex flex-col gap-0">
         <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle>{recruiter.name ?? recruiter.email} — Activity</SheetTitle>
@@ -116,6 +118,8 @@ function RecruiterCard({
   recruiter: RecruiterSummary;
   onViewActivity: (r: RecruiterSummary) => void;
 }) {
+  function handleViewActivity() { onViewActivity(recruiter); }
+
   return (
     <Card className="shadow-sm hover:shadow-md transition-shadow">
       <CardHeader className="pb-3">
@@ -152,7 +156,7 @@ function RecruiterCard({
           variant="outline"
           size="sm"
           className="w-full"
-          onClick={() => onViewActivity(recruiter)}
+          onClick={handleViewActivity}
         >
           View Activity
         </Button>
@@ -176,8 +180,10 @@ export default function RecruitersPage() {
   if (isLoading) {
     return (
       <PageWrapper title="Recruiters" subtitle="Team members involved in hiring" variant="display">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-44 rounded-xl" />)}
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-44 rounded-xl" />)}
+          </div>
         </div>
       </PageWrapper>
     );
@@ -187,7 +193,8 @@ export default function RecruitersPage() {
     <PageWrapper
       title="Recruiters"
       subtitle="HR team members with active job assignments and activity tracking"
- variant="display">
+      variant="display"
+    >
       {recruiters.length === 0 ? (
         <RecruitmentEmptyState
           illustration={<EmptyTeamIllustration />}
@@ -195,14 +202,16 @@ export default function RecruitersPage() {
           description="Users with HR, HR_MANAGER, CEO, ADMIN, or RECRUITER roles will appear here."
         />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {recruiters.map((recruiter) => (
-            <RecruiterCard
-              key={recruiter.userId}
-              recruiter={recruiter}
-              onViewActivity={handleViewActivity}
-            />
-          ))}
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {recruiters.map((recruiter) => (
+              <RecruiterCard
+                key={recruiter.userId}
+                recruiter={recruiter}
+                onViewActivity={handleViewActivity}
+              />
+            ))}
+          </div>
         </div>
       )}
 

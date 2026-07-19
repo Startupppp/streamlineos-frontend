@@ -21,7 +21,7 @@ export default function DealsLoading() {
           <Skeleton className="h-9 w-[140px] rounded-md" />
           <Skeleton className="h-9 w-[140px] rounded-md" />
           <Skeleton className="h-9 w-[74px] rounded-md" />
-          <Skeleton className="h-8 w-20 rounded-md" />
+          <Skeleton className="h-9 w-20 rounded-md" />
         </div>
       }
     >

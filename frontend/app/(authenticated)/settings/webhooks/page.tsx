@@ -24,6 +24,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const AVAILABLE_EVENTS = [
   { id: "lead.created", label: "Lead Created" },
@@ -140,7 +141,7 @@ export default function WebhooksPage() {
           setSheetOpen(false);
           setUrl(""); setDescription(""); setSelectedEvents([]);
         },
-        onError: () => toast.error("Failed to create webhook"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       }
     );
   }, [url, description, selectedEvents, createWebhook]);
@@ -148,7 +149,7 @@ export default function WebhooksPage() {
   const handleToggle = useCallback((id: number, isActive: boolean) => {
     toggleWebhook.mutate({ id, isActive: !isActive }, {
       onSuccess: () => toast.success(isActive ? "Webhook disabled" : "Webhook enabled"),
-      onError: () => toast.error("Failed to update webhook"),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [toggleWebhook]);
 
@@ -156,7 +157,7 @@ export default function WebhooksPage() {
     if (!deleteId) return;
     deleteWebhook.mutate(deleteId, {
       onSuccess: () => { toast.success("Webhook deleted"); setDeleteId(null); },
-      onError: () => toast.error("Failed to delete webhook"),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [deleteId, deleteWebhook]);
 
@@ -206,6 +207,7 @@ export default function WebhooksPage() {
           title="Couldn't load webhooks"
           description="Failed to fetch webhooks. Please try again."
           onRetry={handleRetry}
+          className="flex-1"
         />
       ) : (
         <motion.div className="space-y-4" variants={staggerContainer} initial="hidden" animate="visible">

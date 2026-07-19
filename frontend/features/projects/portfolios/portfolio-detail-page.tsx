@@ -317,7 +317,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
             {canManage && availableProjects.length > 0 ? (
               <div className="flex min-w-0 flex-wrap items-center gap-2">
                 <Select value={linkProjectId} onValueChange={setLinkProjectId}>
-                  <SelectTrigger className="w-48 text-xs">
+                  <SelectTrigger className="w-48">
                     <SelectValue placeholder="Link a project…" />
                   </SelectTrigger>
                   <SelectContent>

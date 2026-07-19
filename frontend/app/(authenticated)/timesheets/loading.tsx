@@ -13,7 +13,7 @@ export default function TimesheetsLoading() {
         </div>
       }
     >
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         <div className="flex gap-1">
           <Skeleton className="h-9 w-14 rounded-md" />
           <Skeleton className="h-9 w-14 rounded-md" />

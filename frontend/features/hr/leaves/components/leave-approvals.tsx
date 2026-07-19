@@ -29,17 +29,17 @@ function LeaveStatusBadge({ status }: { status: string }) {
   const config: Record<string, { label: string; className: string; icon: React.ComponentType<{ className?: string }> }> = {
     PENDING: {
       label: "Pending",
-      className: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800",
+      className: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300 border-amber-200 dark:border-amber-500/30",
       icon: Clock,
     },
     APPROVED: {
       label: "Approved",
-      className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800",
+      className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30",
       icon: CheckCircle2,
     },
     REJECTED: {
       label: "Rejected",
-      className: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 border-rose-200 dark:border-rose-800",
+      className: "bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300 border-rose-200 dark:border-rose-500/30",
       icon: XCircle,
     },
   };
@@ -102,7 +102,7 @@ function LeaveApprovalItem({
                 {pConfig.label}
               </span>
               {lopDays > 0 && (
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-950/20 text-orange-600 dark:text-orange-400">
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-orange-200 dark:border-orange-500/30 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-300">
                   <AlertTriangle className="h-2.5 w-2.5" />
                   LOP: {lopDays}d
                 </span>
@@ -141,7 +141,7 @@ function LeaveApprovalItem({
                 </LoadingButton>
                 <Button
                   size="sm"
-                  className="h-7 rounded-full bg-transparent border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 text-[11px] font-semibold px-3 gap-1 transition-colors duration-200"
+                  className="h-7 rounded-full bg-transparent border border-rose-200 dark:border-rose-500/30 text-rose-600 dark:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/20 text-[11px] font-semibold px-3 gap-1 transition-colors duration-200"
                   disabled={processingId === req.id}
                   onClick={handleReject}
                 >
@@ -171,7 +171,7 @@ function LeaveApprovalsList({ requests, currentUserId }: { requests: LeaveReques
         { leaveId: requestId },
         {
           onSuccess: () => toast.success("Request approved successfully"),
-          onError: (err) => toast.error(err.message || "Failed to approve"),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     } else {
@@ -179,7 +179,7 @@ function LeaveApprovalsList({ requests, currentUserId }: { requests: LeaveReques
         { leaveId: requestId, reason: "" },
         {
           onSuccess: () => toast.success("Request rejected successfully"),
-          onError: (err) => toast.error(err.message || "Failed to reject"),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     }
@@ -379,7 +379,7 @@ export function LeaveApprovalsContent({
               </div>
               Pending WFH Requests
               {pendingWfhRequests && pendingWfhRequests.length > 0 && (
-                <span className="ml-1 inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-[10px] font-semibold text-amber-700 dark:text-amber-400">
+                <span className="ml-1 inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-amber-100 dark:bg-amber-500/10 text-[10px] font-semibold text-amber-700 dark:text-amber-300">
                   {pendingWfhRequests.length}
                 </span>
               )}
@@ -494,7 +494,7 @@ function WfhApprovalActions({
       </LoadingButton>
       <Button
         size="sm"
-        className="h-7 rounded-full bg-transparent border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 text-[11px] font-semibold px-3 gap-1 transition-colors duration-200"
+        className="h-7 rounded-full bg-transparent border border-rose-200 dark:border-rose-500/30 text-rose-600 dark:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/20 text-[11px] font-semibold px-3 gap-1 transition-colors duration-200"
         onClick={handleReject}
         disabled={isPending}
       >

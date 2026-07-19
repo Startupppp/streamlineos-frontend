@@ -35,6 +35,8 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { ErrorState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { cn } from "@/lib/utils";
 import { useUom, useCreateUom } from "@/hooks/api/inventory";
 import type { InventoryUom } from "@/types/inventory";
 
@@ -290,7 +292,7 @@ function UomPageInner() {
     }
   }, [debouncedSearch]);
 
-  function handleSearchChange(value: string) {
+  function handleSearchChange(value: string): void {
     setSearch(value);
   }
 
@@ -315,7 +317,7 @@ function UomPageInner() {
         </div>
       <div className="hidden min-w-0 items-center gap-2 sm:flex">
         <Select value={statusParam} onValueChange={handleStatusChange}>
-          <SelectTrigger className="w-[140px] text-xs">
+          <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[140px] text-xs")}>
             <SelectValue placeholder="All" />
           </SelectTrigger>
           <SelectContent>
@@ -331,14 +333,10 @@ function UomPageInner() {
   return (
     <PageWrapper
       title="Units of Measure"
-      subtitle={
-        uomList.length > 0
-          ? `${uomList.length} ${uomList.length === 1 ? "unit" : "units"}`
-          : "Define units used across product catalogues and transactions."
-      }
+      subtitle="Define units used across product catalogues and transactions."
       filters={filtersRow}
     >
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         <Card>
           <CardHeader>
             <CardTitle className="text-sm font-semibold">Add Unit of Measure</CardTitle>
@@ -351,7 +349,7 @@ function UomPageInner() {
         {query.error ? (
           <ErrorState
             title="Failed to load units"
-            description={query.error.message}
+            description={getErrorMessage(query.error)}
             onRetry={handleRetry}
           />
         ) : (

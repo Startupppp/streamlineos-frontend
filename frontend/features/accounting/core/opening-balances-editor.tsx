@@ -127,7 +127,7 @@ export function OpeningBalancesEditor({ onSuccess }: OpeningBalancesEditorProps)
           value={row.accountId}
           onValueChange={(v) => handleAccountChange(row.id, v)}
         >
-          <SelectTrigger className="text-xs">
+          <SelectTrigger>
             <SelectValue placeholder="Select account…" />
           </SelectTrigger>
           <SelectContent>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -209,8 +210,8 @@ function EntriesTab() {
   );
 
   return (
-    <div className="space-y-4">
-      <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+    <div className="flex flex-1 min-h-0 flex-col gap-4">
+      <div className={FILTER_TOOLBAR_ROW}>
         <div className="flex items-center gap-1.5">
           <label
             htmlFor="journal-from"
@@ -223,7 +224,7 @@ function EntriesTab() {
             value={from}
             onChange={handleFromChange}
             placeholder="Pick a date"
-            className="text-xs w-[150px]"
+            className="w-[150px]"
           />
         </div>
         <div className="flex items-center gap-1.5">
@@ -238,11 +239,11 @@ function EntriesTab() {
             value={to}
             onChange={handleToChange}
             placeholder="Pick a date"
-            className="text-xs w-[150px]"
+            className="w-[150px]"
           />
         </div>
         <Select value={sourceType} onValueChange={handleSourceTypeChange}>
-          <SelectTrigger className="w-[140px] text-xs">
+          <SelectTrigger className={`w-[140px] ${FILTER_SELECT_TRIGGER}`}>
             <SelectValue placeholder="All sources" />
           </SelectTrigger>
           <SelectContent>
@@ -254,7 +255,7 @@ function EntriesTab() {
           </SelectContent>
         </Select>
         <Select value={statusFilter} onValueChange={handleStatusChange}>
-          <SelectTrigger className="w-[160px] text-xs">
+          <SelectTrigger className={`w-[160px] ${FILTER_SELECT_TRIGGER}`}>
             <SelectValue placeholder="All statuses" />
           </SelectTrigger>
           <SelectContent>
@@ -286,6 +287,7 @@ function EntriesTab() {
           isLoading={query.isLoading}
           emptyState={emptyStateNode}
           minWidth="580px"
+          className="flex-1 min-h-0"
         />
       )}
     </div>

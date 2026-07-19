@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { useWorkflowAnalytics } from "@/hooks/api/workflows";
 
 function TrendBar({ count, max, successCount }: { count: number; max: number; successCount: number }) {
@@ -45,92 +46,93 @@ export default function WorkflowAnalyticsPage() {
     void refetch();
   }
 
-  if (isLoading) return <LoadingState variant="page" />;
-  if (isError || !data) {
-    return (
-      <ErrorState
-        title="Failed to load analytics"
-        description="Something went wrong while fetching workflow analytics."
-        onRetry={handleRetry}
-        className="flex-1"
-      />
-    );
-  }
-
   const avgDurationLabel =
-    data.avgDuration === 0
+    !data || data.avgDuration === 0
       ? "—"
       : data.avgDuration < 60_000
       ? `${Math.round(data.avgDuration / 1000)}s`
       : `${Math.floor(data.avgDuration / 60_000)}m ${Math.round((data.avgDuration % 60_000) / 1000)}s`;
 
   const activeShare =
-    data.totalWorkflows > 0 ? Math.round((data.activeWorkflows / data.totalWorkflows) * 100) : 0;
+    data && data.totalWorkflows > 0
+      ? Math.round((data.activeWorkflows / data.totalWorkflows) * 100)
+      : 0;
 
-  const maxCount = Math.max(...(data.executionTrend?.map((t) => t.count) ?? [0]), 1);
+  const maxCount = data ? Math.max(...(data.executionTrend?.map((t) => t.count) ?? [0]), 1) : 1;
 
   return (
     <PageWrapper
       title="Workflow Analytics"
       subtitle="Execution trends and workflow performance metrics"
     >
-      <div className="flex flex-1 min-h-0 flex-col space-y-6">
-        <StatCardGrid cols={3}>
-          <StatCard label="Total Workflows" value={data.totalWorkflows} icon={GitBranch} tone="violet" />
-          <StatCard
-            label="Active Workflows"
-            value={data.activeWorkflows}
-            icon={CheckCircle2}
-            tone="emerald"
-            hint={`${activeShare}% of total`}
-          />
-          <StatCard label="Total Executions" value={data.totalExecutions.toLocaleString()} icon={Activity} tone="blue" />
-          <StatCard label="Success Rate" value={`${data.successRate.toFixed(1)}%`} icon={TrendingUp} tone="emerald" />
-          <StatCard label="Avg Duration" value={avgDurationLabel} icon={Clock} tone="amber" />
-          <StatCard label="Pending Approvals" value={data.pendingApprovals} icon={AlertCircle} tone="amber" />
-        </StatCardGrid>
+      {isLoading ? (
+        <LoadingState variant="page" />
+      ) : isError || !data ? (
+        <ErrorState
+          title="Failed to load analytics"
+          description="Something went wrong while fetching workflow analytics."
+          onRetry={handleRetry}
+          className={CONTENT_FILL_PANEL}
+        />
+      ) : (
+        <div className="flex flex-1 min-h-0 flex-col gap-6">
+          <StatCardGrid cols={3}>
+            <StatCard label="Total Workflows" value={data.totalWorkflows} icon={GitBranch} tone="violet" />
+            <StatCard
+              label="Active Workflows"
+              value={data.activeWorkflows}
+              icon={CheckCircle2}
+              tone="emerald"
+              hint={`${activeShare}% of total`}
+            />
+            <StatCard label="Total Executions" value={data.totalExecutions.toLocaleString()} icon={Activity} tone="blue" />
+            <StatCard label="Success Rate" value={`${data.successRate.toFixed(1)}%`} icon={TrendingUp} tone="emerald" />
+            <StatCard label="Avg Duration" value={avgDurationLabel} icon={Clock} tone="amber" />
+            <StatCard label="Pending Approvals" value={data.pendingApprovals} icon={AlertCircle} tone="amber" />
+          </StatCardGrid>
 
-        {data.executionTrend && data.executionTrend.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25, ease: "easeOut", delay: 0.36 }}
-          >
-            <Card className="bg-card rounded-xl border border-border shadow-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold">Execution Trend</CardTitle>
-                <div className="flex items-center gap-4 text-[11px] text-muted-foreground mt-1">
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-3 h-1.5 rounded-full bg-primary inline-block" />
-                    Total
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-3 h-1.5 rounded-full bg-green-400 inline-block" />
-                    Successful
-                  </span>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-2.5">
-                {data.executionTrend.map((item) => (
-                  <div key={item.date} className="flex items-center gap-3">
-                    <span className="text-[11px] text-muted-foreground tabular-nums w-20 shrink-0">
-                      {format(new Date(item.date), "MMM d")}
+          {data.executionTrend && data.executionTrend.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25, ease: "easeOut", delay: 0.36 }}
+            >
+              <Card className="bg-card rounded-xl border border-border shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-semibold">Execution Trend</CardTitle>
+                  <div className="flex items-center gap-4 text-[11px] text-muted-foreground mt-1">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-3 h-1.5 rounded-full bg-primary inline-block" />
+                      Total
                     </span>
-                    <TrendBar count={item.count} max={maxCount} successCount={item.successCount} />
-                    <span className="text-[11px] tabular-nums text-foreground w-8 text-right shrink-0">
-                      {item.count}
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-3 h-1.5 rounded-full bg-green-400 inline-block" />
+                      Successful
                     </span>
                   </div>
-                ))}
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
+                </CardHeader>
+                <CardContent className="space-y-2.5">
+                  {data.executionTrend.map((item) => (
+                    <div key={item.date} className="flex items-center gap-3">
+                      <span className="text-[11px] text-muted-foreground tabular-nums w-20 shrink-0">
+                        {format(new Date(item.date), "MMM d")}
+                      </span>
+                      <TrendBar count={item.count} max={maxCount} successCount={item.successCount} />
+                      <span className="text-[11px] tabular-nums text-foreground w-8 text-right shrink-0">
+                        {item.count}
+                      </span>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
 
-        <p className="text-[11px] text-muted-foreground text-center">
-          Analytics data refreshes every hour
-        </p>
-      </div>
+          <p className="text-[11px] text-muted-foreground text-center">
+            Analytics data refreshes every hour
+          </p>
+        </div>
+      )}
     </PageWrapper>
   );
 }

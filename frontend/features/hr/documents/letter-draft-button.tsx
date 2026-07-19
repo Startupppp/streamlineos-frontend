@@ -161,7 +161,7 @@ export function LetterDraftButton({ userId, userName }: LetterDraftButtonProps) 
                     <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Letter Body</p>
                     <pre className="text-xs leading-relaxed whitespace-pre-wrap font-sans">{result.body}</pre>
                   </div>
-                  <p className="text-[10px] text-amber-600 dark:text-amber-400 italic border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 rounded p-2">
+                  <p className="text-[10px] text-amber-600 dark:text-amber-300 italic border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 rounded p-2">
                     {result.disclaimer}
                   </p>
                   <div className="flex gap-2">

@@ -51,7 +51,7 @@ export function QuoteDetailContent({ quote, subtotal }: QuoteDetailContentProps)
                 </div>
               )}
               {parseFloat(quote.discountAmount) > 0 && (
-                <div className="flex justify-between text-xs text-emerald-600">
+                <div className="flex justify-between text-xs text-emerald-600 dark:text-emerald-400">
                   <span>Discount</span>
                   <span className="tabular-nums">
                     −{formatCurrency(quote.discountAmount, quote.currency)}

@@ -7,10 +7,15 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { AppSheet } from "@/components/shared";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useCreateCarrier, useUpdateCarrier, type Carrier } from "@/hooks/api/inventory/shipping";
+import {
+  useCreateCarrier,
+  useUpdateCarrier,
+  type Carrier,
+} from "@/hooks/api/inventory/shipping";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 const carrierSchema = z.object({
@@ -28,7 +33,11 @@ interface CarrierSheetProps {
   carrier?: Carrier;
 }
 
-export function CarrierSheet({ open, onOpenChange, carrier }: CarrierSheetProps) {
+export function CarrierSheet({
+  open,
+  onOpenChange,
+  carrier,
+}: CarrierSheetProps) {
   const createMutation = useCreateCarrier();
   const updateMutation = useUpdateCarrier();
   const isEdit = carrier !== undefined;
@@ -101,26 +110,42 @@ export function CarrierSheet({ open, onOpenChange, carrier }: CarrierSheetProps)
       open={open}
       onOpenChange={handleOpenChange}
       title={isEdit ? `Edit ${carrier?.name}` : "Add Carrier"}
-      description={isEdit ? "Update carrier details." : "Add a shipping carrier for tracking."}
+      description={
+        isEdit
+          ? "Update carrier details."
+          : "Add a shipping carrier for tracking."
+      }
       footer={
         <div className="grid grid-cols-2 gap-2 w-full">
-          <Button type="button" variant="outline" size="sm" onClick={handleClose}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleClose}
+          >
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             type="submit"
             form="carrier-form"
             size="sm"
-            disabled={isPending}
+            isPending={isPending}
+            loadingText={isEdit ? "Saving…" : "Creating…"}
           >
-            {isPending ? (isEdit ? "Saving…" : "Creating…") : (isEdit ? "Save Changes" : "Add Carrier")}
-          </Button>
+            {isEdit ? "Save Changes" : "Add Carrier"}
+          </LoadingButton>
         </div>
       }
     >
-      <form id="carrier-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form
+        id="carrier-form"
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="space-y-4"
+      >
         <div className="space-y-1.5">
-          <Label htmlFor="carrier-name" className="text-xs">Name *</Label>
+          <Label htmlFor="carrier-name" className="text-xs">
+            Name *
+          </Label>
           <Input
             id="carrier-name"
             placeholder="DHL Express"
@@ -128,12 +153,16 @@ export function CarrierSheet({ open, onOpenChange, carrier }: CarrierSheetProps)
             {...form.register("name")}
           />
           {form.formState.errors.name && (
-            <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
+            <p className="text-xs text-destructive">
+              {form.formState.errors.name.message}
+            </p>
           )}
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="carrier-code" className="text-xs">Code *</Label>
+          <Label htmlFor="carrier-code" className="text-xs">
+            Code *
+          </Label>
           <Input
             id="carrier-code"
             placeholder="DHL"
@@ -141,19 +170,25 @@ export function CarrierSheet({ open, onOpenChange, carrier }: CarrierSheetProps)
             {...form.register("code")}
           />
           {form.formState.errors.code && (
-            <p className="text-xs text-destructive">{form.formState.errors.code.message}</p>
+            <p className="text-xs text-destructive">
+              {form.formState.errors.code.message}
+            </p>
           )}
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="carrier-tracking-url" className="text-xs">Tracking URL Template</Label>
+          <Label htmlFor="carrier-tracking-url" className="text-xs">
+            Tracking URL Template
+          </Label>
           <Input
             id="carrier-tracking-url"
             placeholder="https://track.carrier.com/{tracking}"
             className="text-sm"
             {...form.register("trackingUrlTemplate")}
           />
-          <p className="text-[10px] text-muted-foreground">Use {"{tracking}"} as placeholder</p>
+          <p className="text-[10px] text-muted-foreground">
+            Use {"{tracking}"} as placeholder
+          </p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -162,7 +197,9 @@ export function CarrierSheet({ open, onOpenChange, carrier }: CarrierSheetProps)
             checked={form.watch("isActive")}
             onCheckedChange={handleIsActiveChange}
           />
-          <Label htmlFor="carrier-active" className="text-sm cursor-pointer">Active</Label>
+          <Label htmlFor="carrier-active" className="text-sm cursor-pointer">
+            Active
+          </Label>
         </div>
       </form>
     </AppSheet>

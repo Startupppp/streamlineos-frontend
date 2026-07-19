@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import type { ChangeEvent } from "react";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
@@ -100,7 +101,7 @@ export function CreateTemplateSheet({ open, onClose }: CreateTemplateSheetProps)
           toast.success("Template created");
           onClose();
         },
-        onError: () => toast.error("Failed to create template"),
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }, [name, tickets, description, category, create, onClose]);

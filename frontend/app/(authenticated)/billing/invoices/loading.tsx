@@ -1,6 +1,7 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 
 export default function InvoicesLoading() {
   return (
@@ -12,13 +13,7 @@ export default function InvoicesLoading() {
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
         <StatCardGridSkeleton cols={4} />
-        <div className="flex-1 min-h-0 rounded-xl border border-border bg-card">
-          <div className="space-y-3 p-4">
-            {Array.from({ length: 9 }).map((_, i) => (
-              <Skeleton key={i} className="h-9 w-full" />
-            ))}
-          </div>
-        </div>
+        <DataTableSkeleton rows={10} columns={7} className="flex-1 min-h-0" />
       </div>
     </PageWrapper>
   );

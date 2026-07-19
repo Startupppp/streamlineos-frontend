@@ -16,7 +16,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { StateIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
-import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { useCan } from "@/hooks/api/access";
 import { useSafetyIncidents } from "@/hooks/api/hr/safety";
 import type { SafetyIncident, IncidentStatus, IncidentType, IncidentSeverity } from "@/hooks/api/hr/safety";
@@ -53,6 +53,14 @@ const TYPE_OPTIONS: { value: IncidentType | typeof SENTINEL; label: string }[] =
   { value: "hazard", label: "Hazard" },
   { value: "environmental", label: "Environmental" },
   { value: "other", label: "Other" },
+];
+
+const SEVERITY_OPTIONS: { value: IncidentSeverity | typeof SENTINEL; label: string }[] = [
+  { value: SENTINEL, label: "All Severities" },
+  { value: "low", label: "Low" },
+  { value: "medium", label: "Medium" },
+  { value: "high", label: "High" },
+  { value: "critical", label: "Critical" },
 ];
 
 type ActiveTab = "incidents" | "wellness";
@@ -121,10 +129,8 @@ export function SafetyPageContent() {
   ];
 
   const filters = (
-    <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-      <div className="min-w-0 w-44">
-          <SearchInput placeholder="Search..." value={search} onValueChange={handleSearchChange} />
-        </div>
+    <div className={FILTER_TOOLBAR_ROW}>
+      <SearchInput placeholder="Search..." value={search} onValueChange={handleSearchChange} className="w-44" />
       <Select
         value={status || SENTINEL}
         onValueChange={(v) => { setStatus(v === SENTINEL ? "" : (v as IncidentStatus)); setPage(1); }}
@@ -147,6 +153,19 @@ export function SafetyPageContent() {
         </SelectTrigger>
         <SelectContent>
           {TYPE_OPTIONS.map((o) => (
+            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select
+        value={severity || SENTINEL}
+        onValueChange={(v) => { setSeverity(v === SENTINEL ? "" : (v as IncidentSeverity)); setPage(1); }}
+      >
+        <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {SEVERITY_OPTIONS.map((o) => (
             <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
           ))}
         </SelectContent>

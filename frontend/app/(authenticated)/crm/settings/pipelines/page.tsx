@@ -151,7 +151,7 @@ export default function PipelinesPage() {
       >
         <div className="flex min-h-0 flex-1 flex-col">
         {isLoading ? (
-          <div className="flex gap-4 h-full">
+          <div className="flex gap-4 flex-1 min-h-0">
             <div className="w-[280px] shrink-0 space-y-2">
               {[0, 1, 2].map((i) => <Skeleton key={i} className="h-14 w-full rounded-lg" />)}
             </div>

@@ -1,5 +1,6 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { NotificationListSkeleton } from "@/features/notifications/notification-list-skeleton";
 
 export default function NotificationsLoading() {
@@ -9,7 +10,7 @@ export default function NotificationsLoading() {
       subtitle="Stay up to date with everything happening in your workspace"
       actions={<Skeleton className="h-9 w-32 rounded-md" />}
       filters={
-        <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+        <div className={FILTER_TOOLBAR_ROW}>
           <Skeleton className="h-9 w-48 rounded-md" />
           {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-9 w-20 rounded-full" />
@@ -17,7 +18,9 @@ export default function NotificationsLoading() {
         </div>
       }
     >
-      <NotificationListSkeleton count={12} />
+      <div className="flex flex-1 min-h-0 flex-col gap-2">
+        <NotificationListSkeleton count={12} />
+      </div>
     </PageWrapper>
   );
 }

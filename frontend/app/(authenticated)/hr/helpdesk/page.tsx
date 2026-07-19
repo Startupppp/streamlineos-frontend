@@ -15,18 +15,18 @@ export default function HrHelpdeskPage() {
       title="HR Helpdesk"
       subtitle="Submit and track HR support requests"
  variant="display">
-      <Tabs defaultValue="my-tickets" className="space-y-4">
+      <Tabs defaultValue="my-tickets" className="flex flex-1 min-h-0 flex-col gap-4">
         <TabsList>
           <TabsTrigger value="my-tickets" className="text-xs">My Tickets</TabsTrigger>
           {canManage && (
             <TabsTrigger value="queue" className="text-xs">Queue</TabsTrigger>
           )}
         </TabsList>
-        <TabsContent value="my-tickets">
+        <TabsContent value="my-tickets" className="mt-0 flex flex-1 min-h-0 flex-col">
           <MyTicketsTab />
         </TabsContent>
         {canManage && (
-          <TabsContent value="queue">
+          <TabsContent value="queue" className="mt-0 flex flex-1 min-h-0 flex-col">
             <QueueTab />
           </TabsContent>
         )}

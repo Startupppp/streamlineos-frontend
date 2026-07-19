@@ -3,7 +3,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "sonner";
 import { Settings2, Bell } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
@@ -53,6 +52,7 @@ import {
   useEmitNotificationEvent,
 } from "@/hooks/api/notifications";
 import { useCan } from "@/hooks/api/access";
+import { policySchema, type PolicyFormValues } from "@/features/notifications/policy-schema";
 import type {
   NotificationEventDefinition,
   NotificationChannel,
@@ -89,18 +89,6 @@ const priorityBadgeClass: Record<NotificationPriority, string> = {
   NORMAL: "bg-muted text-muted-foreground border-border",
   LOW: "bg-muted text-muted-foreground border-border",
 };
-
-const policySchema = z.object({
-  enabled: z.boolean(),
-  defaultPriority: z.enum(["LOW", "NORMAL", "HIGH", "CRITICAL"]),
-  defaultChannels: z.array(z.enum(["IN_APP", "EMAIL", "PUSH", "SMS", "WHATSAPP", "SLACK", "TEAMS", "WEBHOOK"])),
-  quietHoursBehavior: z.enum(["respect", "bypass_if_high", "always_bypass"]),
-  dedupeWindowSeconds: z.string(),
-  rateLimitWindowSeconds: z.string(),
-  rateLimitMax: z.string(),
-});
-
-type PolicyFormValues = z.infer<typeof policySchema>;
 
 function PolicySheet({
   open,
@@ -625,7 +613,7 @@ export default function NotificationEventsPage() {
           className={CONTENT_FILL_PANEL}
         />
       ) : (
-        <div className="space-y-4 flex flex-1 min-h-0 flex-col">
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
           {grouped.map(([module, moduleEvents], groupIdx) => (
             <motion.div
               key={module}

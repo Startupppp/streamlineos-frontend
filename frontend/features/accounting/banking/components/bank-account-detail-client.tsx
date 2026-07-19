@@ -198,7 +198,7 @@ export function BankAccountDetailClient({ bankAccountId }: Props) {
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
           <Select value={statusFilter} onValueChange={handleStatusChange}>
-            <SelectTrigger className={`w-[160px] text-xs ${FILTER_SELECT_TRIGGER}`}>
+            <SelectTrigger className={`w-[160px] ${FILTER_SELECT_TRIGGER}`}>
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>

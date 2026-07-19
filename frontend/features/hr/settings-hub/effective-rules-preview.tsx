@@ -58,7 +58,7 @@ function RuleCard({ item }: { item: EffectiveRuleItem }) {
       </div>
 
       <details className="group">
-        <summary className="text-xs text-blue-600 dark:text-blue-400 cursor-pointer select-none list-none flex items-center gap-1">
+        <summary className="text-xs text-blue-600 dark:text-blue-300 cursor-pointer select-none list-none flex items-center gap-1">
           <span className="group-open:hidden">▶ Show rules</span>
           <span className="hidden group-open:inline">▼ Hide rules</span>
         </summary>

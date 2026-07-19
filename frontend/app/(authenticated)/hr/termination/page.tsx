@@ -313,7 +313,7 @@ export default function TerminationPage() {
         title="Termination Management"
         subtitle="Manage employee terminations"
  variant="display">
-        <div className="space-y-3">
+        <div className="flex flex-1 min-h-0 flex-col gap-3">
           {Array.from({ length: 10 }).map((_, i) => (
             <Skeleton key={i} className="h-20 rounded-2xl" />
           ))}

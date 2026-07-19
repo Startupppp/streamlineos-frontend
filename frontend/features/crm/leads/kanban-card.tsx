@@ -194,7 +194,7 @@ function ScoreExplainerBadge({
                     className="flex items-center justify-between gap-2 text-[11px]"
                   >
                     <span className="truncate">{r.name}</span>
-                    <span className="font-semibold text-emerald-500 shrink-0">
+                    <span className="font-semibold text-emerald-500 dark:text-emerald-400 shrink-0">
                       +{r.points}
                     </span>
                   </div>

@@ -70,7 +70,7 @@ export function PolicyScopesEditor({ value, onChange, disabled }: Props) {
             onValueChange={(v) => { if (isScopeType(v)) handleTypeChange(index, v); }}
             disabled={disabled}
           >
-            <SelectTrigger className="text-xs w-44 shrink-0">
+            <SelectTrigger className="w-44 shrink-0">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

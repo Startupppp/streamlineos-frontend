@@ -86,7 +86,7 @@ export default function DealForecastPage() {
           title="No open deals to forecast"
           description="Create deals in your pipeline to see revenue forecasts here."
           action={{ label: "Go to Deals", href: "/crm/deals" }}
-          className="flex-1 min-h-[50vh]"
+          className="flex-1"
         />
       ) : (
         <motion.div

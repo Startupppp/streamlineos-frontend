@@ -47,7 +47,7 @@ export default function WorkforceCostPage() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.22, ease: "easeOut" }}
-          className="space-y-6"
+          className="flex flex-1 min-h-0 flex-col gap-6"
         >
           {/* Summary */}
           {summaryLoading ? (
@@ -63,7 +63,7 @@ export default function WorkforceCostPage() {
           {/* Period selector */}
           <div className="flex items-center gap-3">
             <Input
-              className="w-36 h-8 text-sm"
+              className="w-36 text-sm"
               placeholder="YYYY-MM"
               value={periodInput}
               onChange={(e) => setPeriodInput(e.target.value)}

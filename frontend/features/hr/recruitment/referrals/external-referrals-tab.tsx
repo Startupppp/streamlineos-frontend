@@ -10,6 +10,7 @@ import {
   type ExternalReferralStatus,
 } from "@/hooks/api/hr/recruitment/external-referrals";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -87,9 +88,9 @@ function RewardSheet({ referral, onClose }: RewardSheetProps) {
         </SheetBody>
         <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
           <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleMarkPaid} disabled={updateMutation.isPending}>
-            {updateMutation.isPending ? "Saving..." : "Mark Paid"}
-          </Button>
+          <LoadingButton onClick={handleMarkPaid} isPending={updateMutation.isPending} loadingText="Saving...">
+            Mark Paid
+          </LoadingButton>
         </SheetFooter>
       </SheetContent>
     </Sheet>
@@ -152,9 +153,9 @@ function ReferrerRow({ id, name, email, status, referralCount }: { id: number; n
       </div>
       <div className="flex items-center gap-2 shrink-0">
         <Badge variant={status === "ACTIVE" ? "secondary" : "destructive"} className="text-[10px]">{status}</Badge>
-        <Button variant="outline" size="sm" className="text-xs" onClick={handleToggle} disabled={updateStatus.isPending}>
+        <LoadingButton variant="outline" size="sm" className="text-xs" onClick={handleToggle} isPending={updateStatus.isPending} loadingText={status === "ACTIVE" ? "Blocking…" : "Unblocking…"}>
           {status === "ACTIVE" ? "Block" : "Unblock"}
-        </Button>
+        </LoadingButton>
       </div>
     </div>
   );

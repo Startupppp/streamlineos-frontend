@@ -6,7 +6,6 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
-import { Card, CardContent } from "@/components/ui/card";
 import { ErrorState } from "@/components/shared";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -125,7 +124,7 @@ export function ForecastingClient() {
       }
     >
       {error ? (
-        <ErrorState onRetry={handleRetry} />
+        <ErrorState onRetry={handleRetry} className="flex-1" />
       ) : !isLoading && rows.length === 0 ? (
         <InventoryEmptyState
           illustrationPreset="chart"
@@ -134,18 +133,15 @@ export function ForecastingClient() {
           className="flex-1 h-full"
         />
       ) : (
-        <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
-          <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
-            <DataTable
-              data={rows}
-              columns={columns}
-              getRowKey={(row) => row.variantId}
-              isLoading={isLoading}
-              pagination={{ mode: "server", page, pageSize: 25, total, onPageChange: setPage }}
-              minWidth="800px"
-            />
-          </CardContent>
-        </Card>
+        <DataTable
+          data={rows}
+          columns={columns}
+          className="flex-1 min-h-0"
+          getRowKey={(row) => row.variantId}
+          isLoading={isLoading}
+          pagination={{ mode: "server", page, pageSize: 25, total, onPageChange: setPage }}
+          minWidth="800px"
+        />
       )}
     </PageWrapper>
   );

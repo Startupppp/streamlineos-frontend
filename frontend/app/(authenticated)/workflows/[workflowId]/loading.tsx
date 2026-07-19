@@ -14,7 +14,7 @@ export default function WorkflowDetailLoading() {
         </div>
       }
     >
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         <div className="flex gap-1 border-b border-border pb-0">
           <Skeleton className="h-9 w-24 rounded-t-md" />
           <Skeleton className="h-9 w-28 rounded-t-md" />

@@ -28,6 +28,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { FileUpload } from "@/components/storage/file-upload";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { AlertCircle } from "lucide-react";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useRequestLeave, useLeavePolicy } from "@/hooks/api/hr";
 import type {
   LeaveType,
@@ -233,7 +234,7 @@ export function LeaveRequestSheet({
             onOpenChange(false);
           },
           onError: (err) =>
-            toast.error(err.message || "Failed to submit request"),
+            toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -272,7 +273,7 @@ export function LeaveRequestSheet({
                 </FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger className="text-sm h-8">
+                    <SelectTrigger className="text-sm">
                       <SelectValue placeholder="Select leave type" />
                     </SelectTrigger>
                   </FormControl>
@@ -375,7 +376,7 @@ export function LeaveRequestSheet({
                     </FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger className="text-sm h-8">
+                        <SelectTrigger className="text-sm">
                           <SelectValue />
                         </SelectTrigger>
                       </FormControl>
@@ -405,7 +406,7 @@ export function LeaveRequestSheet({
                 </FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger className="text-sm h-8">
+                    <SelectTrigger className="text-sm">
                       <SelectValue placeholder="Select priority" />
                     </SelectTrigger>
                   </FormControl>
@@ -446,7 +447,7 @@ export function LeaveRequestSheet({
                   </FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger className="text-sm h-8">
+                      <SelectTrigger className="text-sm">
                         <SelectValue placeholder="Select approver" />
                       </SelectTrigger>
                     </FormControl>

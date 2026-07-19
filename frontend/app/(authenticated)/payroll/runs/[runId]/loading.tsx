@@ -11,7 +11,7 @@ export default function PayrollRunDetailLoading() {
       backHref="/payroll/runs"
       actions={<Skeleton className="h-9 w-28 rounded-md" />}
     >
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         <Skeleton className="h-24 rounded-xl" />
         <StatCardGridSkeleton cols={4} count={4} />
         <div className="flex gap-1 border-b border-border pb-0">

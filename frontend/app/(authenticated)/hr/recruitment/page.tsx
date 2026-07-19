@@ -161,7 +161,7 @@ export default function RecruitmentCommandCenterPage() {
         </DropdownMenu>
       }
     >
-      <div className="space-y-5">
+      <div className="flex flex-1 min-h-0 flex-col gap-5">
         {statsError ? (
           <div className="flex flex-col items-center justify-center py-16 gap-4 rounded-2xl border border-border bg-card text-center">
             <p className="text-sm font-semibold text-foreground">Failed to load recruitment data</p>

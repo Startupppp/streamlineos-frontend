@@ -83,37 +83,39 @@ export default function TeamExpensesPage() {
         />
       }
     >
-      <ExpenseStatsGrid stats={query.data?.stats} isLoading={query.isLoading} />
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
+        <ExpenseStatsGrid stats={query.data?.stats} isLoading={query.isLoading} />
 
-      {query.isLoading && <LoadingState variant="table" rows={12} />}
+        {query.isLoading && <LoadingState variant="table" rows={12} />}
 
-      {query.error && (
-        <ErrorState
-          title="Failed to load expenses"
-          description={getErrorMessage(query.error)}
-          onRetry={handleRetry}
-        />
-      )}
+        {query.error && (
+          <ErrorState
+            title="Failed to load expenses"
+            description={getErrorMessage(query.error)}
+            onRetry={handleRetry}
+          />
+        )}
 
-      {!query.isLoading && !query.error && (
-        <ExpenseTable
-          data={expenses}
-          isLoading={false}
-          onRowClick={handleRowClick}
-          page={pagination?.page ?? 1}
-          pageSize={pagination?.pageSize ?? 25}
-          total={pagination?.total ?? 0}
-          onPageChange={setPage}
-          className="flex-1 min-h-0"
-          emptyState={
-            <EmptyState
-              illustration={<EmptyExpensesIllustration />}
-              title="No expenses found"
-              description="Employee expenses will appear here once submitted."
-            />
-          }
-        />
-      )}
+        {!query.isLoading && !query.error && (
+          <ExpenseTable
+            data={expenses}
+            isLoading={false}
+            onRowClick={handleRowClick}
+            page={pagination?.page ?? 1}
+            pageSize={pagination?.pageSize ?? 25}
+            total={pagination?.total ?? 0}
+            onPageChange={setPage}
+            className="flex-1 min-h-0"
+            emptyState={
+              <EmptyState
+                illustration={<EmptyExpensesIllustration />}
+                title="No expenses found"
+                description="Employee expenses will appear here once submitted."
+              />
+            }
+          />
+        )}
+      </div>
 
       <ExpenseDetailSheet
         expense={selected}

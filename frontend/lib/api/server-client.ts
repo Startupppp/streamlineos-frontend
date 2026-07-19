@@ -3,15 +3,13 @@ import axios, { isAxiosError, type AxiosRequestConfig } from "axios";
 import { SignJWT } from "jose";
 import { getServerAuth } from "@/lib/get-server-auth";
 import { ApiError } from "@/lib/api-client";
-
-const BACKEND = process.env.NEXT_PUBLIC_API_URL;
+import { BACKEND_URL as BACKEND } from "@/lib/backend-url";
 
 const NETWORK_ERROR_PATTERN =
   /ECONNREFUSED|ENOTFOUND|ETIMEDOUT|EHOSTUNREACH|ECONNRESET|socket hang up|Network Error|fetch failed/i;
 
 function backendUnreachableMessage(): string {
-  const target = BACKEND ?? "NEXT_PUBLIC_API_URL";
-  return `Backend API is unreachable at ${target}. Start the NestJS server (pnpm -C backend dev) and confirm NEXT_PUBLIC_API_URL.`;
+  return `Backend API is unreachable at ${BACKEND}. Start the NestJS server (pnpm -C backend dev) and confirm NEXT_PUBLIC_API_URL.`;
 }
 
 function extractNestedErrorMessage(error: unknown): string {
@@ -121,7 +119,6 @@ async function mintBackendToken(): Promise<string | null> {
 }
 
 function buildUrl(path: string, params?: Record<string, unknown>): string {
-  if (!BACKEND) throw new Error("NEXT_PUBLIC_API_URL is not configured");
   const url = new URL(`${BACKEND}${path}`);
   if (params) {
     for (const [key, value] of Object.entries(params)) {

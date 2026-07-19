@@ -170,7 +170,7 @@ export default function FinanceSettingsPage() {
                     onValueChange={(v) => companyForm.setValue("fiscalYearStartMonth", v, { shouldValidate: true })}
                     disabled={!canManage}
                   >
-                    <SelectTrigger className="text-xs">
+                    <SelectTrigger>
                       <SelectValue placeholder="Select month" />
                     </SelectTrigger>
                     <SelectContent>
@@ -189,7 +189,7 @@ export default function FinanceSettingsPage() {
                     }
                     disabled={!canManage}
                   >
-                    <SelectTrigger className="text-xs">
+                    <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -217,15 +217,15 @@ export default function FinanceSettingsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-1.5">
                   <Label>GSTIN</Label>
-                  <Input {...taxForm.register("gstin")} disabled={!canManage} className="text-xs" placeholder="22AAAAA0000A1Z5" />
+                  <Input {...taxForm.register("gstin")} disabled={!canManage} placeholder="22AAAAA0000A1Z5" />
                 </div>
                 <div className="space-y-1.5">
                   <Label>PAN</Label>
-                  <Input {...taxForm.register("pan")} disabled={!canManage} className="text-xs" placeholder="AAAAA0000A" />
+                  <Input {...taxForm.register("pan")} disabled={!canManage} placeholder="AAAAA0000A" />
                 </div>
                 <div className="space-y-1.5">
                   <Label>State code</Label>
-                  <Input {...taxForm.register("stateCode")} disabled={!canManage} className="text-xs" placeholder="22" />
+                  <Input {...taxForm.register("stateCode")} disabled={!canManage} placeholder="22" />
                 </div>
               </div>
               {canManage && (

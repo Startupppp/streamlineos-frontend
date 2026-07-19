@@ -33,12 +33,12 @@ export function SimulatorPageContent() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-4 shrink-0">
-          <TabsTrigger value="policy" className="text-xs">Policy</TabsTrigger>
-          <TabsTrigger value="leave" className="text-xs">Leave Balance</TabsTrigger>
-          <TabsTrigger value="approval" className="text-xs">Approval Routing</TabsTrigger>
-          <TabsTrigger value="payroll" className="text-xs">Payroll Impact</TabsTrigger>
-          <TabsTrigger value="compare" className="text-xs">Compare</TabsTrigger>
-          <TabsTrigger value="history" className="text-xs">History</TabsTrigger>
+          <TabsTrigger value="policy">Policy</TabsTrigger>
+          <TabsTrigger value="leave">Leave Balance</TabsTrigger>
+          <TabsTrigger value="approval">Approval Routing</TabsTrigger>
+          <TabsTrigger value="payroll">Payroll Impact</TabsTrigger>
+          <TabsTrigger value="compare">Compare</TabsTrigger>
+          <TabsTrigger value="history">History</TabsTrigger>
         </TabsList>
 
         <TabsContent value="policy"><PolicySimulator /></TabsContent>

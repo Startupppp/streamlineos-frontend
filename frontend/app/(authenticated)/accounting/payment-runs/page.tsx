@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -141,7 +142,7 @@ export default function PaymentRunsPage() {
       }
       filters={
         <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
-          <SelectTrigger className="w-[160px] text-xs">
+          <SelectTrigger className={`w-[160px] ${FILTER_SELECT_TRIGGER}`}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

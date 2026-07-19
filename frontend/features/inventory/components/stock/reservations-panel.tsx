@@ -37,6 +37,7 @@ import type { StockReservationStatus } from "@/types/inventory";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { LoadingButton } from "@/components/ui/loading-button";
 
 type ReservationItem = {
   id: number;
@@ -95,6 +96,10 @@ export function ReservationsPanel() {
 
   function handleCancelRelease(): void {
     setReleaseId(null);
+  }
+
+  function handleDialogOpenChange(open: boolean): void {
+    if (!open) setReleaseId(null);
   }
 
   const columns = useMemo<DataTableColumn<ReservationItem>[]>(() => [
@@ -228,7 +233,7 @@ export function ReservationsPanel() {
         }}
       />
 
-      <AlertDialog open={releaseId !== null} onOpenChange={(o) => { if (!o) setReleaseId(null); }}>
+      <AlertDialog open={releaseId !== null} onOpenChange={handleDialogOpenChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Release Reservation</AlertDialogTitle>
@@ -238,8 +243,10 @@ export function ReservationsPanel() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={handleCancelRelease}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmRelease} disabled={releaseMutation.isPending}>
-              {releaseMutation.isPending ? "Releasing…" : "Release"}
+            <AlertDialogAction asChild>
+              <LoadingButton isPending={releaseMutation.isPending} loadingText="Releasing…" onClick={handleConfirmRelease}>
+                Release
+              </LoadingButton>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

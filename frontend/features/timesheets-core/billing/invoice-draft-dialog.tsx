@@ -93,12 +93,11 @@ export function InvoiceDraftDialog({
         </div>
 
         <DialogFooter className="grid grid-cols-2 gap-2">
-          <Button variant="outline" size="sm" className="h-8 text-xs" onClick={handleClose}>
+          <Button variant="outline" onClick={handleClose}>
             Cancel
           </Button>
           <Button
-            size="sm"
-            className="h-8 text-xs gap-1.5"
+            className="gap-1.5"
             onClick={handleConfirm}
             disabled={hasMissingRates || createDraft.isPending}
           >

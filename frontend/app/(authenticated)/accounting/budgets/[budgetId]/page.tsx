@@ -481,7 +481,7 @@ export default function BudgetDetailPage() {
               <Label className="text-xs font-medium">New Name</Label>
               <Input
                 {...form.register("newName")}
-                className="mt-1 h-8 text-sm"
+                className="mt-1"
                 placeholder="Budget name"
               />
               {form.formState.errors.newName?.message && (
@@ -492,7 +492,7 @@ export default function BudgetDetailPage() {
               <Label className="text-xs font-medium">New Fiscal Year</Label>
               <Input
                 {...form.register("newFiscalYear")}
-                className="mt-1 h-8 text-sm"
+                className="mt-1"
                 placeholder="2026-27"
               />
               {form.formState.errors.newFiscalYear?.message && (
@@ -505,7 +505,7 @@ export default function BudgetDetailPage() {
                 {...form.register("upliftPct")}
                 type="number"
                 step="0.1"
-                className="mt-1 h-8 text-sm"
+                className="mt-1"
                 placeholder="0"
               />
               <p className="text-[11px] text-muted-foreground mt-1">

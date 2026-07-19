@@ -17,7 +17,7 @@ import { TemplateDeleteDialog } from "./template-delete-dialog";
 
 const LAYOUT_BADGE: Record<PayslipLayout, string> = {
   CLASSIC: "bg-blue-50 text-blue-700 border border-blue-200/70 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  MODERN: "bg-violet-50 text-violet-700 border border-violet-200/70 dark:bg-violet-500/10 dark:text-violet-300 dark:border-violet-500/30",
+  MODERN: "bg-blue-50 text-blue-700 border border-blue-200/70 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
   COMPLIANCE: "bg-muted text-muted-foreground border border-border",
 };
 

@@ -3,8 +3,8 @@
 import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "sonner";
+import { exportSchema, type ExportFormValues } from "./payroll-export-schema";
 import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Dialog,
@@ -26,14 +26,6 @@ import {
   summaryRowToExportRow,
 } from "./lib/build-payroll-file";
 import type { PayrollSummaryRow, PayrollMapping, ExportFormat } from "./types";
-
-const exportSchema = z.object({
-  format: z.enum(["CSV", "XLSX"]),
-  includeExported: z.boolean(),
-  note: z.string().max(500),
-});
-
-type ExportFormValues = z.infer<typeof exportSchema>;
 
 interface PayrollExportDialogProps {
   open: boolean;
@@ -174,7 +166,6 @@ export function PayrollExportDialog({
             <Label htmlFor="export-note" className="text-xs font-medium">Note (optional)</Label>
             <Input
               id="export-note"
-              className="h-8 text-xs"
               placeholder="e.g. June 2026 payroll"
               {...form.register("note")}
             />
@@ -198,16 +189,12 @@ export function PayrollExportDialog({
             <Button
               type="button"
               variant="outline"
-              size="sm"
-              className="h-8 text-xs"
               onClick={handleClose}
             >
               Cancel
             </Button>
             <LoadingButton
               type="submit"
-              size="sm"
-              className="h-8 text-xs"
               isPending={createExport.isPending}
               disabled={createExport.isPending || targetRows.length === 0}
               loadingText="Exporting…"

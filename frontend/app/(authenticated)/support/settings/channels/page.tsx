@@ -3,7 +3,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -62,6 +61,7 @@ import {
 } from "@/hooks/api/support/channels";
 import { getApiError } from "@/lib/api-client";
 import { toast } from "sonner";
+import { channelSchema, type ChannelForm } from "@/features/support/settings/channel-form.schema";
 
 const CHANNEL_TYPES: { value: SupportChannelType; label: string }[] = [
   { value: "email", label: "Email" },
@@ -79,15 +79,6 @@ function ChannelTypeIcon({ type, className }: { type: string; className?: string
   if (type === "chat") return <MessageCircleIcon className={className} />;
   return <PhoneIcon className={className} />;
 }
-
-const channelSchema = z.object({
-  type: z.enum(["email", "chat", "whatsapp", "sms"]),
-  name: z.string().min(1, "Name required").max(100),
-  ownerUserId: z.string(),
-  configJson: z.string(),
-  isActive: z.boolean(),
-});
-type ChannelForm = z.infer<typeof channelSchema>;
 
 function stringifyConfig(config: Record<string, unknown>) {
   try {
@@ -418,7 +409,7 @@ export default function SupportChannelsPage() {
       ) : isError ? (
         <ErrorState onRetry={handleRetry} />
       ) : channels && channels.length > 0 ? (
-        <div className="space-y-3">
+        <div className="flex flex-1 min-h-0 flex-col gap-3">
           {channels.map((channel) => (
             <ChannelCard
               key={channel.id}

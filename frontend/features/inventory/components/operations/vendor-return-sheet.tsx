@@ -20,9 +20,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { useVendors } from "@/hooks/api/inventory/vendors";
 import { useWarehouses, useLocations } from "@/hooks/api/inventory/warehouses";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { useCreateVendorReturn } from "@/hooks/api/inventory/operations";
+import { usePurchaseOrders } from "@/hooks/api/inventory/purchase-orders";
+import { useProductVariants } from "@/hooks/api/inventory/products";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 const RETURN_REASONS = [
@@ -55,10 +59,47 @@ export interface VendorReturnSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
+interface RemoveLineButtonProps {
+  index: number;
+  onRemove: (index: number) => void;
+}
+
+function RemoveLineButton({ index, onRemove }: RemoveLineButtonProps) {
+  function handleClick(): void {
+    onRemove(index);
+  }
+
+  return (
+    <AnimatedIconButton
+      type="button"
+      icon={Trash2Icon}
+      iconSize={12}
+      variant="ghost"
+      size="sm"
+      className="h-6 w-6 p-0 text-red-500"
+      onClick={handleClick}
+    />
+  );
+}
+
 export function VendorReturnSheet({ open, onOpenChange }: VendorReturnSheetProps) {
   const vendorsQuery = useVendors({ isActive: true, limit: 100 });
   const warehousesQuery = useWarehouses();
   const createMutation = useCreateVendorReturn();
+  const purchaseOrdersQuery = usePurchaseOrders({ pageSize: 100 });
+  const variantsQuery = useProductVariants({ activeOnly: true });
+
+  const poOptions: ComboboxOption[] = (purchaseOrdersQuery.data?.items ?? []).map((po) => ({
+    value: String(po.id),
+    label: po.poNumber,
+    sublabel: po.vendor?.name,
+  }));
+
+  const variantOptions: ComboboxOption[] = (variantsQuery.data ?? []).map((v) => ({
+    value: String(v.id),
+    label: v.sku,
+    sublabel: `${v.productName} — ${v.name}`,
+  }));
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -124,14 +165,15 @@ export function VendorReturnSheet({ open, onOpenChange }: VendorReturnSheetProps
           <Button variant="outline" size="sm" onClick={handleClose}>
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             type="submit"
             form="vendor-return-form"
             size="sm"
-            disabled={createMutation.isPending}
+            isPending={createMutation.isPending}
+            loadingText="Creating…"
           >
-            {createMutation.isPending ? "Creating…" : "Create Return"}
-          </Button>
+            Create Return
+          </LoadingButton>
         </div>
       }
     >
@@ -169,14 +211,16 @@ export function VendorReturnSheet({ open, onOpenChange }: VendorReturnSheetProps
             name="poId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>PO ID (optional)</FormLabel>
+                <FormLabel>Purchase Order (optional)</FormLabel>
                 <FormControl>
-                  <Input
-                    type="number"
-                    min="1"
-                    placeholder="Purchase order ID"
-                    value={field.value ?? ""}
-                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                  <Combobox
+                    options={poOptions}
+                    value={field.value ? String(field.value) : ""}
+                    onChange={(val) => field.onChange(val ? Number(val) : undefined)}
+                    placeholder="Search purchase orders…"
+                    searchPlaceholder="Search by PO number…"
+                    emptyText="No purchase orders found"
+                    disabled={purchaseOrdersQuery.isLoading}
                   />
                 </FormControl>
                 <FormMessage />
@@ -214,15 +258,7 @@ export function VendorReturnSheet({ open, onOpenChange }: VendorReturnSheetProps
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted-foreground">Line {index + 1}</span>
                   {fields.length > 1 && (
-                    <AnimatedIconButton
-                      type="button"
-                      icon={Trash2Icon}
-                      iconSize={12}
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 w-6 p-0 text-red-500"
-                      onClick={() => handleRemoveLine(index)}
-                    />
+                    <RemoveLineButton index={index} onRemove={handleRemoveLine} />
                   )}
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -231,14 +267,16 @@ export function VendorReturnSheet({ open, onOpenChange }: VendorReturnSheetProps
                     name={`lines.${index}.productVariantId`}
                     render={({ field: f }) => (
                       <FormItem>
-                        <FormLabel className="text-xs">Variant ID *</FormLabel>
+                        <FormLabel className="text-xs">Product Variant *</FormLabel>
                         <FormControl>
-                          <Input
-                            type="number"
-                            min="1"
-                            placeholder="Product variant ID"
-                            value={f.value || ""}
-                            onChange={(e) => f.onChange(Number(e.target.value))}
+                          <Combobox
+                            options={variantOptions}
+                            value={f.value ? String(f.value) : ""}
+                            onChange={(val) => f.onChange(val ? Number(val) : 0)}
+                            placeholder="Search variants…"
+                            searchPlaceholder="Search by SKU…"
+                            emptyText="No variants found"
+                            disabled={variantsQuery.isLoading}
                           />
                         </FormControl>
                         <FormMessage />

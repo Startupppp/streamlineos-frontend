@@ -23,6 +23,14 @@ export function TestPaymentTab({ providerKey }: { providerKey: string }) {
   const [timelineStep, setTimelineStep] = useState(0);
   const [failed, setFailed] = useState(false);
 
+  function handleAmountChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setAmount(e.target.value);
+  }
+
+  function handleRazorpayLoad() {
+    setRazorpayLoaded(true);
+  }
+
   const createTransaction = useCreateTestTransaction(providerKey);
   const verifyTransaction = useVerifyTestTransaction(providerKey);
   const { data: transactions } = useTestTransactions(providerKey);
@@ -85,7 +93,7 @@ export function TestPaymentTab({ providerKey }: { providerKey: string }) {
 
   return (
     <div className="space-y-4">
-      <Script src="https://checkout.razorpay.com/v1/checkout.js" onLoad={() => setRazorpayLoaded(true)} />
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" onLoad={handleRazorpayLoad} />
 
       <p className="text-[13px] text-muted-foreground">
         Runs a real order against your test credentials — no money moves. Use this to prove the
@@ -98,7 +106,7 @@ export function TestPaymentTab({ providerKey }: { providerKey: string }) {
           <Input
             id="test-amount"
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            onChange={handleAmountChange}
             className="text-sm w-32"
           />
         </div>

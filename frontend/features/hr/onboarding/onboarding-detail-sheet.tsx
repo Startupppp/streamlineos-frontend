@@ -86,7 +86,7 @@ function useSubmitOnboardingDoc() {
 }
 
 function docStatusIcon(status: OnboardingDoc["status"]) {
-  if (status === "APPROVED") return <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />;
+  if (status === "APPROVED") return <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-300" />;
   if (status === "SUBMITTED") return <Clock className="h-4 w-4 text-amber-500" />;
   if (status === "REJECTED") return <AlertCircle className="h-4 w-4 text-rose-500" />;
   if (status === "RE_UPLOAD_REQUESTED") return <RefreshCw className="h-4 w-4 text-amber-500" />;
@@ -94,11 +94,11 @@ function docStatusIcon(status: OnboardingDoc["status"]) {
 }
 
 function docStatusBadgeClass(status: OnboardingDoc["status"]): string {
-  if (status === "APPROVED") return "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800";
-  if (status === "SUBMITTED") return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800";
-  if (status === "REJECTED") return "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800";
-  if (status === "RE_UPLOAD_REQUESTED") return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800";
-  return "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700";
+  if (status === "APPROVED") return "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800";
+  if (status === "SUBMITTED") return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800";
+  if (status === "REJECTED") return "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-800";
+  if (status === "RE_UPLOAD_REQUESTED") return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800";
+  return "bg-muted text-muted-foreground border-border";
 }
 
 function docStatusLabel(status: OnboardingDoc["status"]): string {
@@ -218,9 +218,9 @@ function UploadSheet({
       isPending={isPending || isUploading}
     >
       {existingDoc?.status === "RE_UPLOAD_REQUESTED" && existingDoc.remarks && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900 px-3 py-2.5 text-[12px] text-amber-800 dark:text-amber-300">
+        <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-500/10 dark:border-amber-900 px-3 py-2.5 text-[12px] text-amber-800 dark:text-amber-300">
           <p className="font-semibold mb-0.5">Reviewer remarks</p>
-          <p className="text-amber-700 dark:text-amber-400">{existingDoc.remarks}</p>
+          <p className="text-amber-700 dark:text-amber-300">{existingDoc.remarks}</p>
         </div>
       )}
 
@@ -231,7 +231,7 @@ function UploadSheet({
         <div
           className={cn(
             "rounded-lg border border-dashed p-6 transition-colors duration-200",
-            fileError ? "border-rose-400 bg-rose-50 dark:bg-rose-950/10" : "border-border hover:border-muted-foreground/40"
+            fileError ? "border-rose-400 bg-rose-50 dark:bg-rose-500/10" : "border-border hover:border-muted-foreground/40"
           )}
         >
           <label className="flex flex-col items-center gap-2.5 cursor-pointer">
@@ -265,7 +265,7 @@ function UploadSheet({
           )}
         </div>
         {fileError && (
-          <p className="text-[11px] text-rose-600 dark:text-rose-400" role="alert">
+          <p className="text-[11px] text-rose-600 dark:text-rose-300" role="alert">
             {fileError}
           </p>
         )}
@@ -367,8 +367,8 @@ export function EmployeeDocumentsTab({ onBack, onContinue }: EmployeeDocumentsTa
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <div className="w-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/40 flex items-center justify-center">
-                <FileText className="h-3.5 w-3.5 text-emerald-700 dark:text-emerald-400" />
+              <div className="w-7 rounded-lg bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center">
+                <FileText className="h-3.5 w-3.5 text-emerald-700 dark:text-emerald-300" />
               </div>
               <p className="text-sm font-semibold text-foreground">Document Checklist</p>
             </div>
@@ -381,7 +381,7 @@ export function EmployeeDocumentsTab({ onBack, onContinue }: EmployeeDocumentsTa
             className="h-1.5 [&>div]:bg-emerald-500 [&>div]:transition-all [&>div]:duration-500"
           />
           {progressPct === 100 && (
-            <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold mt-1.5 flex items-center gap-1">
+            <p className="text-[11px] text-emerald-600 dark:text-emerald-300 font-semibold mt-1.5 flex items-center gap-1">
               <CheckCircle2 className="h-3 w-3" />
               All documents approved
             </p>
@@ -424,7 +424,7 @@ export function EmployeeDocumentsTab({ onBack, onContinue }: EmployeeDocumentsTa
                         {docType.name}
                       </p>
                       {docType.isMandatory && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700 shrink-0">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border shrink-0">
                           Required
                         </span>
                       )}
@@ -467,7 +467,7 @@ export function EmployeeDocumentsTab({ onBack, onContinue }: EmployeeDocumentsTa
                     )}
 
                     {submission?.status === "RE_UPLOAD_REQUESTED" && submission.remarks && (
-                      <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-0.5">
+                      <p className="text-[11px] text-amber-600 dark:text-amber-300 mt-0.5">
                         Remarks: {submission.remarks}
                       </p>
                     )}

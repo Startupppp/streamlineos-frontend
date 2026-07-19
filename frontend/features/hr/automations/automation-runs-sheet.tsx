@@ -63,7 +63,7 @@ function RunRow({ run }: { run: HrAutomationRun }) {
       {expanded && (
         <div className="px-3 pb-3 pt-1 border-t border-border space-y-2">
           {run.error && (
-            <div className="text-xs text-red-600 bg-red-50 dark:bg-red-500/10 dark:text-red-400 rounded p-2 font-mono">{run.error}</div>
+            <div className="text-xs text-red-600 bg-red-50 dark:bg-red-500/10 dark:text-red-300 rounded p-2 font-mono">{run.error}</div>
           )}
           {run.actionResults && run.actionResults.length > 0 && (
             <div className="space-y-1">

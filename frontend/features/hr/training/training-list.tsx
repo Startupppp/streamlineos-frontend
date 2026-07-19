@@ -16,7 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { CONTENT_FILL_PANEL, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { CONTENT_FILL_PANEL, FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -45,7 +45,7 @@ const STATUS_COLORS: Record<TrainingProgram["status"], string> = {
   SCHEDULED: "bg-blue-50 text-blue-700 border-blue-200/70 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
   IN_PROGRESS: "bg-amber-50 text-amber-700 border-amber-200/70 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
   COMPLETED: "bg-emerald-50 text-emerald-700 border-emerald-200/70 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  CANCELLED: "bg-muted text-muted-foreground border-border dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700",
+  CANCELLED: "bg-muted text-muted-foreground border-border",
 };
 
 const TYPE_COLORS: Record<TrainingProgram["type"], string> = {
@@ -82,9 +82,9 @@ export function TrainingList({ canManage, onSelectProgram, selectedProgramId }: 
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="flex gap-2">
-          {Array.from({ length: 9 }).map((_, i) => (
-            <Skeleton key={i} className="h-8 w-28 rounded-md" />
+        <div className={FILTER_TOOLBAR_ROW}>
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-9 w-36 rounded-md" />
           ))}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -105,7 +105,7 @@ export function TrainingList({ canManage, onSelectProgram, selectedProgramId }: 
 
   return (
     <div className="space-y-4">
-      <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+      <div className={FILTER_TOOLBAR_ROW}>
         <Select value={typeFilter} onValueChange={setTypeFilter}>
           <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
             <SelectValue placeholder="Type" />
@@ -212,7 +212,7 @@ export function TrainingList({ canManage, onSelectProgram, selectedProgramId }: 
                       href={program.virtualLink}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 dark:text-blue-400 hover:underline truncate"
+                      className="text-blue-600 dark:text-blue-300 hover:underline truncate"
                       onClick={(e) => e.stopPropagation()}
                     >
                       Join link

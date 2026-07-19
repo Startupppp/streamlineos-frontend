@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   Dialog,
   DialogContent,
@@ -112,7 +113,7 @@ export function LoanAdjustmentDialog({
           onClose();
         },
         onError: (err) => {
-          toast.error(err.message ?? "Failed to create adjustment");
+          toast.error(getErrorMessage(err));
         },
       },
     );

@@ -16,6 +16,7 @@ import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { downloadXlsx } from "@/lib/export/xlsx-utils";
@@ -557,7 +558,7 @@ export function BulkOnboardPanel() {
         header: "Status",
         cell: (row) =>
           row.valid ? (
-            <Badge variant="secondary" className="text-[10px] h-5 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-0">
+            <Badge variant="secondary" className="text-[10px] h-5 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-0">
               Ready
             </Badge>
           ) : (
@@ -691,7 +692,7 @@ export function BulkOnboardPanel() {
                 <CardTitle className="text-sm">Preview · {fileName}</CardTitle>
                 <CardDescription className="text-xs mt-0.5">
                   {previewRows.length} row{previewRows.length === 1 ? "" : "s"} ·{" "}
-                  <span className="text-emerald-600 dark:text-emerald-400">{validCount} ready</span>
+                  <span className="text-emerald-600 dark:text-emerald-300">{validCount} ready</span>
                   {invalidCount > 0 && (
                     <>
                       {" · "}
@@ -728,25 +729,18 @@ export function BulkOnboardPanel() {
               <Button type="button" variant="outline" size="sm" className="h-8" onClick={reset}>
                 Back
               </Button>
-              <Button
+              <LoadingButton
                 type="button"
                 size="sm"
                 className="h-8 gap-1.5 min-w-[140px]"
-                disabled={payloads.length === 0 || bulkOnboard.isPending}
+                disabled={payloads.length === 0}
+                isPending={bulkOnboard.isPending}
+                loadingText="Onboarding…"
                 onClick={handleImport}
               >
-                {bulkOnboard.isPending ? (
-                  <>
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    Onboarding…
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="h-3.5 w-3.5" />
-                    Onboard {payloads.length} employee{payloads.length === 1 ? "" : "s"}
-                  </>
-                )}
-              </Button>
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                Onboard {payloads.length} employee{payloads.length === 1 ? "" : "s"}
+              </LoadingButton>
             </div>
           </CardContent>
         </Card>
@@ -760,12 +754,12 @@ export function BulkOnboardPanel() {
                 className={cn(
                   "w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3",
                   result.created > 0
-                    ? "bg-emerald-100 dark:bg-emerald-900/30"
+                    ? "bg-emerald-100 dark:bg-emerald-500/10"
                     : "bg-destructive/10",
                 )}
               >
                 {result.created > 0 ? (
-                  <CheckCircle2 className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
+                  <CheckCircle2 className="h-7 w-7 text-emerald-600 dark:text-emerald-300" />
                 ) : (
                   <AlertCircle className="h-7 w-7 text-destructive" />
                 )}
@@ -780,7 +774,7 @@ export function BulkOnboardPanel() {
 
             <div className="flex justify-center gap-8 mb-6">
               <div className="text-center">
-                <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
+                <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-300 tabular-nums">
                   {result.created}
                 </p>
                 <p className="text-[11px] text-muted-foreground">Created</p>

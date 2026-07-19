@@ -217,7 +217,7 @@ export function TicketDetailRelations({ ticketId }: TicketDetailRelationsProps) 
             </div>
             <div className="flex items-center gap-2">
               <Select value={selectedTagId} onValueChange={handleTagSelectChange} disabled={!availableTags.length}>
-                <SelectTrigger className="h-8 text-xs flex-1 min-w-0">
+                <SelectTrigger className="h-9 text-sm flex-1 min-w-0">
                   <SelectValue placeholder="Add a tag" />
                 </SelectTrigger>
                 <SelectContent>
@@ -258,10 +258,10 @@ export function TicketDetailRelations({ ticketId }: TicketDetailRelationsProps) 
                 onChange={handleLinkedTicketIdChange}
                 excludeTicketId={ticketId}
                 placeholder="Search ticket…"
-                className="h-8 text-xs flex-1 min-w-0"
+                className="h-9 text-sm flex-1 min-w-0"
               />
               <Select value={linkRelation} onValueChange={handleLinkRelationChange}>
-                <SelectTrigger className="h-8 text-xs w-[110px]">
+                <SelectTrigger className="h-9 text-sm w-[110px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -292,7 +292,7 @@ export function TicketDetailRelations({ ticketId }: TicketDetailRelationsProps) 
                 onChange={handleMergeTargetChange}
                 excludeTicketId={ticketId}
                 placeholder="Search target ticket…"
-                className="h-8 text-xs flex-1 min-w-0"
+                className="h-9 text-sm flex-1 min-w-0"
               />
               <Button
                 type="button"
@@ -316,7 +316,7 @@ export function TicketDetailRelations({ ticketId }: TicketDetailRelationsProps) 
                 value={splitTitle}
                 onChange={handleSplitTitleChange}
                 placeholder="New ticket title"
-                className="h-8 text-xs"
+                className="h-9 text-sm"
               />
               <Textarea
                 value={splitDescription}

@@ -13,6 +13,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Loader2, AlertTriangle } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { DownloadIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
@@ -169,14 +170,14 @@ export function OrgDataPrivacySection({ canEdit }: OrgDataPrivacySectionProps) {
             <Button variant="outline" onClick={handleCloseDeleteDialog}>
               Cancel
             </Button>
-            <Button
+            <LoadingButton
               variant="destructive"
               onClick={handleDeleteRequest}
-              disabled={isRequestingDelete}
+              isPending={isRequestingDelete}
+              loadingText="Submitting…"
             >
-              {isRequestingDelete && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
               Submit deletion request
-            </Button>
+            </LoadingButton>
           </div>
         </DialogContent>
       </Dialog>

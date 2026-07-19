@@ -321,7 +321,7 @@ export function MyCareerPlan() {
                     }`}
                   >
                     <div
-                      className={`text-[10px] font-bold mb-0.5 ${isCurrent ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground"}`}
+                      className={`text-[10px] font-bold mb-0.5 ${isCurrent ? "text-blue-600 dark:text-blue-300" : "text-muted-foreground"}`}
                     >
                       Level {level.level}
                     </div>

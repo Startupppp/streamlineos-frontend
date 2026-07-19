@@ -1,5 +1,6 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export default function CoursesLoading() {
   return (
@@ -16,7 +17,7 @@ export default function CoursesLoading() {
         </div>
 
         {/* Filter toolbar */}
-        <div className="flex min-w-0 flex-nowrap items-center gap-3">
+        <div className={FILTER_TOOLBAR_ROW}>
           <Skeleton className="h-9 w-40 rounded-md" />
           <Skeleton className="h-9 w-36 rounded-md" />
           <Skeleton className="h-9 w-40 rounded-md" />

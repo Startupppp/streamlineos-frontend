@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Dialog,
   DialogContent,
@@ -44,6 +45,8 @@ export function OrgDangerZoneSection({ org }: Props) {
     setNewOwnerUserId("");
     setTransferOpen(true);
   }, []);
+
+  const handleTransferClose = useCallback(() => setTransferOpen(false), []);
 
   const handleTransferOpenChange = useCallback((open: boolean) => {
     setTransferOpen(open);
@@ -180,16 +183,18 @@ export function OrgDangerZoneSection({ org }: Props) {
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setTransferOpen(false)}>
+            <Button variant="outline" onClick={handleTransferClose}>
               Cancel
             </Button>
-            <Button
+            <LoadingButton
               variant="destructive"
-              disabled={!newOwnerUserId || transferMutation.isPending}
+              disabled={!newOwnerUserId}
+              isPending={transferMutation.isPending}
+              loadingText="Transferring…"
               onClick={handleConfirmTransfer}
             >
-              {transferMutation.isPending ? "Transferring…" : "Transfer Ownership"}
-            </Button>
+              Transfer Ownership
+            </LoadingButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

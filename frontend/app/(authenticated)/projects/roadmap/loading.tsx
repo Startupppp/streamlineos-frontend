@@ -1,11 +1,8 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import {
-  PmPageShell,
-  PM_PANEL,
-  PM_TOOLBAR,
-} from "@/features/projects/shared/pm-chrome";
+import { PmPageShell, PM_PANEL } from "@/features/projects/shared/pm-chrome";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export default function RoadmapLoading() {
   return (
@@ -13,11 +10,11 @@ export default function RoadmapLoading() {
       title="Roadmap"
       subtitle="Plan publicly, collect feedback and ship a changelog"
       filters={
-        <div className={PM_TOOLBAR}>
+        <div className={FILTER_TOOLBAR_ROW}>
           <div className="flex gap-0.5">
-            <Skeleton className="h-7 w-24 rounded-md" />
-            <Skeleton className="h-7 w-20 rounded-md" />
-            <Skeleton className="h-7 w-16 rounded-md" />
+            <Skeleton className="h-9 w-24 rounded-md" />
+            <Skeleton className="h-9 w-20 rounded-md" />
+            <Skeleton className="h-9 w-16 rounded-md" />
           </div>
           <Skeleton className="h-9 w-64 rounded-md" />
         </div>

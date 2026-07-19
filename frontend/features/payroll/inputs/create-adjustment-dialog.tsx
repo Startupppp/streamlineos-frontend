@@ -2,7 +2,6 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import {
   Dialog,
   DialogContent,
@@ -29,26 +28,7 @@ import {
 import { LoadingButton } from "@/components/ui/loading-button";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import { useCreatePayrollAdjustment } from "@/hooks/api/payroll/payroll-inputs";
-
-const schema = z.object({
-  userId: z.string().min(1, "Required"),
-  adjustmentType: z.enum(["arrears", "recovery", "correction"] as const),
-  section: z.enum([
-    "employee_master",
-    "compensation",
-    "attendance",
-    "leave",
-    "overtime",
-    "reimbursement",
-    "deduction",
-    "lifecycle",
-  ] as const),
-  amountCents: z.string().optional(),
-  days: z.string().optional(),
-  reason: z.string().min(1, "Required").max(1000),
-});
-
-type FormValues = z.infer<typeof schema>;
+import { createAdjustmentSchema, type CreateAdjustmentFormValues } from "./create-adjustment-schema";
 
 interface CreateAdjustmentDialogProps {
   open: boolean;
@@ -59,8 +39,8 @@ interface CreateAdjustmentDialogProps {
 export function CreateAdjustmentDialog({ open, onOpenChange, periodId }: CreateAdjustmentDialogProps) {
   const create = useCreatePayrollAdjustment();
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+  const form = useForm<CreateAdjustmentFormValues>({
+    resolver: zodResolver(createAdjustmentSchema),
     defaultValues: {
       adjustmentType: "correction",
       section: "attendance",
@@ -71,7 +51,7 @@ export function CreateAdjustmentDialog({ open, onOpenChange, periodId }: CreateA
     },
   });
 
-  function handleSubmit(values: FormValues) {
+  function handleSubmit(values: CreateAdjustmentFormValues) {
     create.mutate(
       {
         periodId,

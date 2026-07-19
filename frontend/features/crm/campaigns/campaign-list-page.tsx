@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { staggerContainer } from "@/lib/motion-variants";
 import { EmptyReportIllustration } from "@/components/illustrations";
@@ -168,8 +169,8 @@ export function CampaignListPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Campaigns" subtitle="Track lead sources and ROI">
-        <div className="space-y-3">
+      <PageWrapper title="Campaigns" subtitle="Track lead sources and ROI" noInternalScroll>
+        <div className="flex flex-col flex-1 min-h-0 space-y-3">
           {Array.from({ length: 9 }).map((_, i) => (
             <Skeleton key={i} className="h-10 w-full" />
           ))}
@@ -183,18 +184,20 @@ export function CampaignListPage() {
       title="Campaigns"
       subtitle="Track lead sources and ROI"
       filters={
-        <Select value={statusFilter} onValueChange={handleStatusChange}>
-          <SelectTrigger className="text-xs w-36">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {STATUS_OPTIONS.map((o) => (
-              <SelectItem key={o.value} value={o.value} className="text-xs">
-                {o.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className={FILTER_TOOLBAR_ROW}>
+          <Select value={statusFilter} onValueChange={handleStatusChange}>
+            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-36")}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUS_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={o.value} className="text-xs">
+                  {o.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       }
       actions={
         <LoadingButton size="sm" onClick={handleOpenSheet}>

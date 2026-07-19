@@ -6,7 +6,10 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState } from "@/components/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { cn } from "@/lib/utils";
 import { useVendors } from "@/hooks/api/inventory/vendors";
 import { useGoodsReceipts } from "@/hooks/api/inventory/operations";
 import { GrnDetailSheet } from "@/features/inventory/components/procurement/grn-detail-sheet";
@@ -108,7 +111,7 @@ export default function ReceiptsPage() {
   const filterBar = (
     <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
       <Select value={vendorParam} onValueChange={handleVendorChange}>
-        <SelectTrigger className="min-w-0 flex-1 max-w-xs text-xs">
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "min-w-0 flex-1 max-w-xs text-xs")}>
           <SelectValue placeholder="All vendors" />
         </SelectTrigger>
         <SelectContent className="max-h-72">
@@ -124,9 +127,10 @@ export default function ReceiptsPage() {
   return (
     <PageWrapper
       title="Receipts"
-      subtitle={query.data ? `${total} ${total === 1 ? "receipt" : "receipts"}` : undefined}
+      subtitle="Goods receipt notes from received purchase orders."
       filters={filterBar}
     >
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
       <DataTable
         data={items}
         columns={columns}
@@ -135,7 +139,7 @@ export default function ReceiptsPage() {
         onRowClick={handleRowClick}
         emptyState={
           query.error ? (
-            <ErrorState description={query.error.message} onRetry={handleRetry} compact />
+            <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} compact />
           ) : (
             <InventoryEmptyState
               title="No receipts found"
@@ -150,8 +154,8 @@ export default function ReceiptsPage() {
             : undefined
         }
         minWidth="640px"
-        className="flex-1 min-h-0"
       />
+      </div>
       <GrnDetailSheet
         grnId={selectedGrnId ?? 0}
         open={selectedGrnId !== null}

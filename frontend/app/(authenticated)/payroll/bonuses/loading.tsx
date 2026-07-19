@@ -4,7 +4,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 export function BonusesPageSkeleton() {
   return (
     <PageWrapper title="Bonuses & Incentives" subtitle="Manage variable pay and sales commissions.">
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         <div className="flex gap-1">
           <Skeleton className="h-9 w-24 rounded-md" />
           <Skeleton className="h-9 w-28 rounded-md" />

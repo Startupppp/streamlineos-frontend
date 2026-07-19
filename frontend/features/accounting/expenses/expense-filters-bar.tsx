@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, type ChangeEvent } from "react";
-import { Input } from "@/components/ui/input";
+import { useCallback } from "react";
 import { SearchInput } from "@/components/ui/search-input";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
   SelectContent,
@@ -64,27 +64,13 @@ export function ExpenseFiltersBar({
     [onStatusChange],
   );
 
-  const handleStartDateChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      onStartDateChange(e.target.value);
-    },
-    [onStartDateChange],
-  );
-
-  const handleEndDateChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      onEndDateChange(e.target.value);
-    },
-    [onEndDateChange],
-  );
-
   return (
     <div className={FILTER_TOOLBAR_ROW}>
       <div className="w-[220px] max-w-[min(220px,70vw)]">
-          <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search merchant or description" />
-        </div>
+        <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search merchant or description" />
+      </div>
       <Select value={status} onValueChange={handleStatusChange}>
-        <SelectTrigger className={`w-[170px] text-xs ${FILTER_SELECT_TRIGGER}`}>
+        <SelectTrigger className={`w-[170px] ${FILTER_SELECT_TRIGGER}`}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -95,17 +81,17 @@ export function ExpenseFiltersBar({
           ))}
         </SelectContent>
       </Select>
-      <Input
-        type="date"
+      <DatePicker
         value={startDate}
-        onChange={handleStartDateChange}
-        className="w-[140px] text-xs"
+        onChange={onStartDateChange}
+        placeholder="Start date"
+        className="w-[140px]"
       />
-      <Input
-        type="date"
+      <DatePicker
         value={endDate}
-        onChange={handleEndDateChange}
-        className="w-[140px] text-xs"
+        onChange={onEndDateChange}
+        placeholder="End date"
+        className="w-[140px]"
       />
     </div>
   );

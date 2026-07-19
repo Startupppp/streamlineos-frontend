@@ -11,6 +11,7 @@ import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { UserCombobox } from "@/components/ui/user-combobox";
@@ -88,12 +89,12 @@ const STATUS_OPTIONS = [
 
 const TYPE_COLORS: Record<string, string> = {
   PERFORMANCE: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  FESTIVAL: "bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-500/10 dark:text-violet-300 dark:border-violet-500/30",
+  FESTIVAL: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
   REFERRAL: "bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-500/10 dark:text-cyan-300 dark:border-cyan-500/30",
   SPOT: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
   ANNUAL: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
   JOINING: "bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-500/10 dark:text-teal-300 dark:border-teal-500/30",
-  RETENTION: "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-300 dark:border-indigo-500/30",
+  RETENTION: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
   COMMISSION: "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/30",
   ADJUSTMENT: "bg-muted text-muted-foreground border-border",
 };
@@ -483,10 +484,10 @@ export function BonusesTab() {
   ];
 
   const filterBar = (
-    <div className="flex items-center gap-2 flex-wrap mb-3">
+    <div className={`${FILTER_TOOLBAR_ROW} mb-3`}>
       <MonthPicker value={month} onChange={handleMonthChange} yearRange={[-1, 0]} className="w-44" />
       <Select value={type} onValueChange={handleTypeChange}>
-        <SelectTrigger className="text-sm w-36">
+        <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-36`}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -498,7 +499,7 @@ export function BonusesTab() {
         </SelectContent>
       </Select>
       <Select value={status} onValueChange={handleStatusChange}>
-        <SelectTrigger className="text-sm w-36">
+        <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-36`}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

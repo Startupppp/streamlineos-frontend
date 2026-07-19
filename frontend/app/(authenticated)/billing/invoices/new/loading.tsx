@@ -6,7 +6,7 @@ export default function NewInvoiceLoading() {
     <PageWrapper
       title="New Invoice"
       subtitle="Create a new invoice for a client"
-      actions={<Skeleton className="h-8 w-20 rounded-md" />}
+      actions={<Skeleton className="h-9 w-20 rounded-md" />}
     >
       <div className="space-y-6">
         <div className="rounded-lg border border-border bg-card overflow-hidden">
@@ -55,8 +55,8 @@ export default function NewInvoiceLoading() {
         </div>
 
         <div className="flex justify-end gap-2">
-          <Skeleton className="h-8 w-20 rounded-md" />
-          <Skeleton className="h-8 w-32 rounded-md" />
+          <Skeleton className="h-9 w-20 rounded-md" />
+          <Skeleton className="h-9 w-32 rounded-md" />
         </div>
       </div>
     </PageWrapper>

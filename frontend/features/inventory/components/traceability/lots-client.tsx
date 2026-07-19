@@ -32,6 +32,8 @@ import {
 } from "@/features/inventory/lib";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { cn } from "@/lib/utils";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 
 function LotViewButton({ id, lotNumber }: { id: number; lotNumber: string }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -151,7 +153,7 @@ export function LotsClient() {
     void refetch();
   }
 
-  function handleSearchChange(value: string) {
+  function handleSearchChange(value: string): void {
     setSearch(value);
     setPage(1);
   }
@@ -196,7 +198,7 @@ export function LotsClient() {
             onValueChange={handleSearchChange}
           />
           <Select value={status} onValueChange={handleStatusChange}>
-            <SelectTrigger className="text-xs w-[140px]">
+            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "text-xs w-[140px]")}>
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>
@@ -209,7 +211,7 @@ export function LotsClient() {
             </SelectContent>
           </Select>
           <Select value={expiringWithinDays} onValueChange={handleExpiryFilterChange}>
-            <SelectTrigger className="text-xs w-[170px]">
+            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "text-xs w-[170px]")}>
               <SelectValue placeholder="Expiring within" />
             </SelectTrigger>
             <SelectContent>

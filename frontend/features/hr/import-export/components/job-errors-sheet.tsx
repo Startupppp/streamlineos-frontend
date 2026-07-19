@@ -27,7 +27,7 @@ type ErrorRow = { row: number; field?: string | null; message: string; _idx: num
 const errorColumns: DataTableColumn<ErrorRow>[] = [
   { key: "row", header: "Row", cell: (r) => <span className="tabular-nums text-muted-foreground">{r.row}</span> },
   { key: "field", header: "Field", cell: (r) => <span className="font-mono text-muted-foreground">{r.field ?? "—"}</span> },
-  { key: "message", header: "Message", cell: (r) => <span className="text-red-700 dark:text-red-400">{r.message}</span> },
+  { key: "message", header: "Message", cell: (r) => <span className="text-red-700 dark:text-red-300">{r.message}</span> },
 ];
 
 interface JobErrorsSheetProps {

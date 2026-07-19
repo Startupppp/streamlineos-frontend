@@ -17,6 +17,8 @@ import {
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { usePickSalesOrder, useWarehouses, useLocations } from "@/hooks/api/inventory";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { LoadingButton } from "@/components/ui/loading-button";
 
 const pickSchema = z.object({
   warehouseId: z.number().int().min(1, "Select a warehouse"),
@@ -79,7 +81,7 @@ export function PickSheet({ open, onOpenChange, soId, lines }: PickSheetProps) {
           toast.success("Order picked");
           onOpenChange(false);
         },
-        onError: (err) => toast.error(err.message),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }
@@ -91,6 +93,10 @@ export function PickSheet({ open, onOpenChange, soId, lines }: PickSheetProps) {
     onOpenChange(next);
   }
 
+  function handleClose(): void {
+    handleOpenChange(false);
+  }
+
   function handleWarehouseChange(val: string, fieldOnChange: (v: number) => void): void {
     fieldOnChange(Number(val));
     form.setValue("locationId", 0);
@@ -98,17 +104,18 @@ export function PickSheet({ open, onOpenChange, soId, lines }: PickSheetProps) {
 
   const footer = (
     <>
-      <Button variant="outline" size="sm" type="button" onClick={() => handleOpenChange(false)}>
+      <Button variant="outline" size="sm" type="button" onClick={handleClose}>
         Cancel
       </Button>
-      <Button
+      <LoadingButton
         size="sm"
         type="button"
-        disabled={pickMutation.isPending}
+        isPending={pickMutation.isPending}
+        loadingText="Picking…"
         onClick={form.handleSubmit(handleSubmit)}
       >
-        {pickMutation.isPending ? "Picking…" : "Confirm Pick"}
-      </Button>
+        Confirm Pick
+      </LoadingButton>
     </>
   );
 

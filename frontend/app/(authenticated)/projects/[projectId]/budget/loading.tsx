@@ -8,7 +8,7 @@ export default function BudgetLoading() {
     <PageWrapper
       title="Budget"
       subtitle="Planned budget vs actual cost from billable timesheets"
-      actions={<Skeleton className="h-8 w-32 rounded-md" />}
+      actions={<Skeleton className="h-9 w-32 rounded-md" />}
     >
       <PmPageShell>
         <StatCardGridSkeleton cols={3} className="mb-4" />

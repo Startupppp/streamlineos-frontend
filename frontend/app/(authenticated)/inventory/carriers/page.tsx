@@ -90,11 +90,7 @@ function CarriersPageInner() {
     <>
       <PageWrapper
         title="Carriers"
-        subtitle={
-          items.length > 0
-            ? `${items.length} ${items.length === 1 ? "carrier" : "carriers"}`
-            : "Manage shipping carriers and tracking"
-        }
+        subtitle="Manage shipping carriers and tracking"
         actions={
           <Button size="sm" onClick={handleAddCarrier} {...hoverHandlers}>
             <PlusIcon ref={iconRef} size={14} className="mr-1.5" />
@@ -102,32 +98,33 @@ function CarriersPageInner() {
           </Button>
         }
       >
-        {carriersQuery.error ? (
-          <ErrorState
-            title="Failed to load carriers"
-            description={getErrorMessage(carriersQuery.error)}
-            onRetry={handleRetry}
-          />
-        ) : (
-          <DataTable
-            className="flex-1 min-h-0"
-            data={items}
-            columns={columns}
-            getRowKey={(c) => c.id}
-            isLoading={carriersQuery.isLoading}
-            onRowClick={handleRowClick}
-            emptyState={
-              <InventoryEmptyState
-                illustration={<EmptyProductsIllustration />}
-                title="No carriers yet"
-                description="Add a carrier to assign tracking numbers to shipments."
-                action={{ label: "Add Carrier", onClick: handleAddCarrier }}
-                className="border-0 bg-transparent"
-              />
-            }
-            minWidth="480px"
-          />
-        )}
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+          {carriersQuery.error ? (
+            <ErrorState
+              title="Failed to load carriers"
+              description={getErrorMessage(carriersQuery.error)}
+              onRetry={handleRetry}
+            />
+          ) : (
+            <DataTable
+              data={items}
+              columns={columns}
+              getRowKey={(c) => c.id}
+              isLoading={carriersQuery.isLoading}
+              onRowClick={handleRowClick}
+              emptyState={
+                <InventoryEmptyState
+                  illustration={<EmptyProductsIllustration />}
+                  title="No carriers yet"
+                  description="Add a carrier to assign tracking numbers to shipments."
+                  action={{ label: "Add Carrier", onClick: handleAddCarrier }}
+                  className="border-0 bg-transparent"
+                />
+              }
+              minWidth="480px"
+            />
+          )}
+        </div>
       </PageWrapper>
 
       <CarrierSheet

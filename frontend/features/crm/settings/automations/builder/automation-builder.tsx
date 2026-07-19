@@ -462,7 +462,7 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
                 </Button>
                 {testResult && (
                   <div className="space-y-2 pt-2 border-t border-border">
-                    <div className={`text-xs font-medium ${testResult.matched ? "text-emerald-600" : "text-red-500"}`}>
+                    <div className={`text-xs font-medium ${testResult.matched ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
                       {testResult.matched ? "Conditions matched" : "Conditions did not match"}
                     </div>
                     <div className="space-y-1">

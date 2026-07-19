@@ -7,6 +7,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { AppSheet } from "@/components/shared";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -147,14 +148,15 @@ export function ChannelSheet({ open, onOpenChange, channel }: ChannelSheetProps)
           <Button variant="outline" size="sm" onClick={handleCancel} disabled={isPending}>
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             type="submit"
             form="channel-form"
             size="sm"
-            disabled={isPending}
+            isPending={isPending}
+            loadingText={isEdit ? "Saving…" : "Creating…"}
           >
-            {isPending ? (isEdit ? "Saving…" : "Creating…") : isEdit ? "Save changes" : "Create channel"}
-          </Button>
+            {isEdit ? "Save changes" : "Create channel"}
+          </LoadingButton>
         </div>
       }
     >

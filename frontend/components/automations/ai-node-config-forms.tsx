@@ -16,6 +16,7 @@ import {
 import { Sparkles, Plus, Trash2, Info } from "lucide-react";
 import type { AutomationAction } from "@/hooks/api/automations";
 import type { AiAutomationAction, AiExtractField } from "@/hooks/api/automation-ai-nodes";
+import { useSupportTags } from "@/hooks/api/support/tags";
 
 interface FormProps {
   config: Record<string, unknown>;
@@ -243,6 +244,35 @@ export function AiActionConfigRenderer({
   }
 }
 
+function SupportTagSelect({
+  tagId,
+  onChange,
+}: {
+  tagId: number;
+  onChange: (patch: Record<string, unknown>) => void;
+}) {
+  const { data: tags } = useSupportTags();
+
+  function handleTagChange(value: string) {
+    onChange({ tagId: Number(value) || 0 });
+  }
+
+  return (
+    <Select value={tagId > 0 ? String(tagId) : ""} onValueChange={handleTagChange}>
+      <SelectTrigger>
+        <SelectValue placeholder="Select tag…" />
+      </SelectTrigger>
+      <SelectContent>
+        {(tags ?? []).map((t) => (
+          <SelectItem key={t.id} value={String(t.id)}>
+            {t.name}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
 export function StandardActionConfigRenderer({
   action,
   onChange,
@@ -381,15 +411,7 @@ export function StandardActionConfigRenderer({
         </Select>
       );
     case "support_add_tag":
-      return (
-        <Input
-          type="number"
-          min={1}
-          placeholder="Tag ID"
-          value={action.config.tagId === 0 ? "" : String(action.config.tagId)}
-          onChange={(e) => onChange({ tagId: Number(e.target.value) || 0 })}
-        />
-      );
+      return <SupportTagSelect tagId={action.config.tagId} onChange={onChange} />;
     case "support_internal_note":
       return (
         <Textarea

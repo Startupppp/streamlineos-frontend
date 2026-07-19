@@ -89,6 +89,10 @@ export function CategorySelect({ value, onChange }: CategorySelectProps) {
     setDialogOpen(open);
   }
 
+  function handleCancelCategory(): void {
+    setDialogOpen(false);
+  }
+
   return (
     <>
       <Select value={value} onValueChange={handleValueChange} disabled={categoriesQuery.isLoading}>
@@ -140,7 +144,7 @@ export function CategorySelect({ value, onChange }: CategorySelectProps) {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setDialogOpen(false)}
+                  onClick={handleCancelCategory}
                   disabled={createMutation.isPending}
                 >
                   Cancel
@@ -203,6 +207,10 @@ export function UomSelect({
   function handleDialogOpenChange(open: boolean): void {
     if (!open) form.reset();
     setDialogOpen(open);
+  }
+
+  function handleCancelUom(): void {
+    setDialogOpen(false);
   }
 
   const isLoading = uomQuery.isLoading;
@@ -275,7 +283,7 @@ export function UomSelect({
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setDialogOpen(false)}
+                  onClick={handleCancelUom}
                   disabled={createMutation.isPending}
                 >
                   Cancel

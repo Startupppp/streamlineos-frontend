@@ -4,6 +4,7 @@ import { memo, useCallback, useState } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { AppSheet } from "@/components/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -127,7 +128,7 @@ export function InspectionDetailSheet({ open, onOpenChange, inspectionId }: Prop
     if (!inspectionId) return;
     startMut.mutate(inspectionId, {
       onSuccess: () => toast.success("Inspection started"),
-      onError: (e) => toast.error(e.message),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
 
@@ -135,8 +136,12 @@ export function InspectionDetailSheet({ open, onOpenChange, inspectionId }: Prop
     if (!inspectionId) return;
     passMut.mutate(inspectionId, {
       onSuccess: () => toast.success("Inspection passed"),
-      onError: (e) => toast.error(e.message),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
+  }
+
+  function handleHideFail(): void {
+    setShowFailForm(false);
   }
 
   function handleShowFail(): void {
@@ -165,7 +170,7 @@ export function InspectionDetailSheet({ open, onOpenChange, inspectionId }: Prop
           toast.success("Inspection failed and dispositions set");
           setShowFailForm(false);
         },
-        onError: (e) => toast.error(e.message),
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }
@@ -176,7 +181,7 @@ export function InspectionDetailSheet({ open, onOpenChange, inspectionId }: Prop
       { inspectionId },
       {
         onSuccess: () => toast.success("Disposition applied"),
-        onError: (e) => toast.error(e.message),
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }
@@ -188,7 +193,7 @@ export function InspectionDetailSheet({ open, onOpenChange, inspectionId }: Prop
         toast.success("Inspection cancelled");
         onOpenChange(false);
       },
-      onError: (e) => toast.error(e.message),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
 
@@ -228,7 +233,7 @@ export function InspectionDetailSheet({ open, onOpenChange, inspectionId }: Prop
       )}
       {status === "IN_PROGRESS" && showFailForm && (
         <>
-          <Button size="sm" variant="outline" onClick={() => setShowFailForm(false)} disabled={isBusy}>Back</Button>
+          <Button size="sm" variant="outline" onClick={handleHideFail} disabled={isBusy}>Back</Button>
           <Button size="sm" variant="destructive" onClick={handleSubmitFail} disabled={isBusy}>Submit Fail</Button>
         </>
       )}

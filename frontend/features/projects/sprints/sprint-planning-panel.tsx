@@ -441,7 +441,7 @@ export function SprintPlanningPanel({
 
                 <div className="flex gap-1.5 flex-wrap">
                   <Select value={backlogFilters.filterPriority} onValueChange={backlogFilters.setFilterPriority}>
-                    <SelectTrigger className="text-xs w-[90px]" aria-label="Filter by priority">
+                    <SelectTrigger className="w-[90px]" aria-label="Filter by priority">
                       <SelectValue placeholder="Priority" />
                     </SelectTrigger>
                     <SelectContent>
@@ -453,7 +453,7 @@ export function SprintPlanningPanel({
                   </Select>
 
                   <Select value={backlogFilters.filterType} onValueChange={backlogFilters.setFilterType}>
-                    <SelectTrigger className="text-xs w-[80px]" aria-label="Filter by type">
+                    <SelectTrigger className="w-[80px]" aria-label="Filter by type">
                       <SelectValue placeholder="Type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -465,7 +465,7 @@ export function SprintPlanningPanel({
                   </Select>
 
                   <Select value={backlogFilters.filterStatus} onValueChange={backlogFilters.setFilterStatus}>
-                    <SelectTrigger className="text-xs w-[80px]" aria-label="Filter by status">
+                    <SelectTrigger className="w-[80px]" aria-label="Filter by status">
                       <SelectValue placeholder="Status" />
                     </SelectTrigger>
                     <SelectContent>
@@ -478,7 +478,7 @@ export function SprintPlanningPanel({
 
                   {backlogFilters.assigneeOptions.length > 0 && (
                     <Select value={backlogFilters.filterAssignee} onValueChange={backlogFilters.setFilterAssignee}>
-                      <SelectTrigger className="text-xs w-[90px]" aria-label="Filter by assignee">
+                      <SelectTrigger className="w-[90px]" aria-label="Filter by assignee">
                         <SelectValue placeholder="Assignee" />
                       </SelectTrigger>
                       <SelectContent>

@@ -22,7 +22,9 @@ export default function StockLoading() {
         </div>
       }
     >
-      <DataTableSkeleton rows={12} columns={12} className="flex-1 min-h-0" />
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
+        <DataTableSkeleton rows={12} columns={12} />
+      </div>
     </PageWrapper>
   );
 }

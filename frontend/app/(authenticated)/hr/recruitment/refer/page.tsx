@@ -6,6 +6,7 @@ import { z } from "zod";
 import { useAllReferrals, useSubmitReferral } from "@/hooks/api/hr/recruitment/referrals";
 import { useJobPostings } from "@/hooks/api/hr/recruitment";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -88,7 +89,9 @@ export default function ReferPage() {
     <PageWrapper
       title="Refer a Candidate"
       subtitle="Know someone great? Submit a referral and earn a bonus if they're hired."
- variant="display">
+      variant="display"
+    >
+      <div className="flex flex-1 min-h-0 flex-col gap-6">
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="shadow-sm">
           <CardHeader className="pb-3">
@@ -145,9 +148,9 @@ export default function ReferPage() {
                 <Textarea id="notes" {...register("notes")} placeholder="Brief note about this candidate..." rows={3} />
               </div>
 
-              <Button type="submit" className="w-full" disabled={createMutation.isPending}>
-                {createMutation.isPending ? "Submitting..." : "Submit Referral"}
-              </Button>
+              <LoadingButton type="submit" className="w-full" isPending={createMutation.isPending} loadingText="Submitting...">
+                Submit Referral
+              </LoadingButton>
             </form>
           </CardContent>
         </Card>
@@ -198,6 +201,7 @@ export default function ReferPage() {
             </div>
           )}
         </div>
+      </div>
       </div>
     </PageWrapper>
   );

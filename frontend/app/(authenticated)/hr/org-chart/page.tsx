@@ -247,7 +247,7 @@ export default function OrgChartPage() {
   if (isLoading) {
     return (
       <PageWrapper title="Organization" subtitle="Team structure and departments" variant="display">
-        <div className="space-y-3">
+        <div className="flex flex-1 min-h-0 flex-col gap-3">
           {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-2xl" />)}
         </div>
       </PageWrapper>

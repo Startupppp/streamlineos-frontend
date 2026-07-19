@@ -3,7 +3,6 @@
 import { useState, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AlertTriangle } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
@@ -14,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EmptyPersonIllustration } from "@/components/illustrations";
+import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { useAdminLoans, type LoanAdminItem, type LoanStatus } from "@/hooks/api/payroll/loans-admin";
 import { usePayrollRuns } from "@/hooks/api/payroll/runs";
 import { useCan } from "@/hooks/api/access";
@@ -122,9 +122,9 @@ export function LoansTable() {
           No active payroll run for this period. Loan adjustments are unavailable.
         </div>
       )}
-      <div className="flex items-center gap-2 mb-3">
+      <div className={`${FILTER_TOOLBAR_ROW} mb-3`}>
         <Select value={statusFilter} onValueChange={handleStatusChange}>
-          <SelectTrigger className="w-44 text-[12px]">
+          <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-44`}>
             <SelectValue placeholder="All statuses" />
           </SelectTrigger>
           <SelectContent>
@@ -137,25 +137,22 @@ export function LoansTable() {
           </SelectContent>
         </Select>
       </div>
-      <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
-        <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
-          <DataTable
-            data={filtered}
-            columns={columns}
-            getRowKey={(row) => row.id}
-            isLoading={isLoading}
-            minWidth="780px"
-            pagination={{ pageSize: 20 }}
-            emptyState={
-              <EmptyState
-                illustration={<EmptyPersonIllustration />}
-                title="No active loans"
-                description="Employee salary loans and advances will appear here"
-              />
-            }
+      <DataTable
+        className="flex-1 min-h-0"
+        data={filtered}
+        columns={columns}
+        getRowKey={(row) => row.id}
+        isLoading={isLoading}
+        minWidth="780px"
+        pagination={{ pageSize: 20 }}
+        emptyState={
+          <EmptyState
+            illustration={<EmptyPersonIllustration />}
+            title="No active loans"
+            description="Employee salary loans and advances will appear here"
           />
-        </CardContent>
-      </Card>
+        }
+      />
       <LoanAdjustmentDialog
         loanId={adjustState?.loanId ?? 0}
         loanEmployeeName={adjustState?.employeeName ?? ""}

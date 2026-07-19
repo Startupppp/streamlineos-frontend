@@ -20,6 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import dynamic from "next/dynamic";
 
 const TiptapEditor = dynamic(
@@ -146,13 +147,13 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
         { ...input, id: editBug.id },
         {
           onSuccess: () => { toast.success("Bug updated"); onOpenChange(false); },
-          onError: () => toast.error("Failed to update bug"),
+          onError: (e) => toast.error(getErrorMessage(e)),
         },
       );
     } else {
       create.mutate(input, {
         onSuccess: () => { toast.success("Bug reported"); onOpenChange(false); },
-        onError: () => toast.error("Failed to report bug"),
+        onError: (e) => toast.error(getErrorMessage(e)),
       });
     }
   }
@@ -205,7 +206,7 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
               <div className="space-y-1.5">
                 <Label className="text-[11px]">Severity</Label>
                 <Select value={form.watch("severity")} onValueChange={handleSeverityChange}>
-                  <SelectTrigger className="text-[11px]"><SelectValue /></SelectTrigger>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {SEVERITIES.map((s) => (
                       <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>
@@ -216,7 +217,7 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
               <div className="space-y-1.5">
                 <Label className="text-[11px]">Priority</Label>
                 <Select value={form.watch("priority")} onValueChange={handlePriorityChange}>
-                  <SelectTrigger className="text-[11px]"><SelectValue /></SelectTrigger>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {PRIORITIES.map((p) => (
                       <SelectItem key={p} value={p} className="capitalize">{p}</SelectItem>
@@ -227,7 +228,7 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
               <div className="space-y-1.5">
                 <Label className="text-[11px]">Status</Label>
                 <Select value={form.watch("status")} onValueChange={handleStatusChange}>
-                  <SelectTrigger className="text-[11px]"><SelectValue /></SelectTrigger>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {STATUSES.map((s) => (
                       <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>

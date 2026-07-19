@@ -15,6 +15,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import {
   CONTENT_FILL_PANEL,
   FILTER_SELECT_TRIGGER,
+  FILTER_TOOLBAR_ROW,
 } from "@/components/ui/content-fill-panel";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
@@ -51,7 +52,7 @@ const GRADIENT_COLORS = [
   "from-emerald-500 to-teal-600",
   "from-rose-500 to-pink-600",
   "from-amber-500 to-orange-600",
-  "from-blue-500 to-indigo-600",
+  "from-blue-500 to-blue-700",
 ];
 
 function CourseCardSkeleton() {
@@ -116,7 +117,7 @@ export function CourseCatalog({ canManage }: Props) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
-      <div className="flex min-w-0 flex-nowrap items-center gap-3 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+      <div className={FILTER_TOOLBAR_ROW}>
         <Select value={categoryFilter} onValueChange={handleCategoryChange}>
           <SelectTrigger className={cn("w-40", FILTER_SELECT_TRIGGER)}>
             <SelectValue placeholder="Category" />

@@ -1,5 +1,6 @@
 "use client";
 
+import "@/lib/dom-mutation-guard";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";

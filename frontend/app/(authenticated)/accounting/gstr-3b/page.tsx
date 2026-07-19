@@ -86,7 +86,7 @@ export default function Gstr3BPage() {
             >
               From
             </label>
-            <DatePicker id="gstr3b-from" value={from ?? ""} onChange={handleFromChange} placeholder="Pick a date" className="w-full sm:w-[160px] h-8 text-sm" />
+            <DatePicker id="gstr3b-from" value={from ?? ""} onChange={handleFromChange} placeholder="Pick a date" className="w-full sm:w-[160px]" />
           </div>
           <div className="flex flex-col gap-1">
             <label
@@ -95,7 +95,7 @@ export default function Gstr3BPage() {
             >
               To
             </label>
-            <DatePicker id="gstr3b-to" value={to ?? ""} onChange={handleToChange} placeholder="Pick a date" className="w-full sm:w-[160px] h-8 text-sm" />
+            <DatePicker id="gstr3b-to" value={to ?? ""} onChange={handleToChange} placeholder="Pick a date" className="w-full sm:w-[160px]" />
           </div>
         </div>
       }

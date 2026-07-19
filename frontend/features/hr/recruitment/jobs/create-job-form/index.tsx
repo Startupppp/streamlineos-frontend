@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useCreateJobPosting, useUpdateJobPosting } from "@/hooks/api/hr/recruitment";
 import { useHrDepartments } from "@/hooks/api/hr";
@@ -26,6 +27,36 @@ import { Save } from "lucide-react";
 import { SendIcon, ChevronLeftIcon, ChevronRightIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+
+interface StepIndicatorButtonProps {
+  idx: number;
+  isActive: boolean;
+  isCompleted: boolean;
+  hasError: boolean;
+  title: string;
+  onStepClick: (i: number) => void;
+}
+
+function StepIndicatorButton({ idx, isActive, isCompleted, hasError, title, onStepClick }: StepIndicatorButtonProps) {
+  function handleClick() { onStepClick(idx); }
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className={cn(
+        "h-1.5 rounded-full transition-all duration-200 cursor-pointer",
+        isActive
+          ? "w-6 bg-primary"
+          : isCompleted && !hasError
+            ? "w-1.5 bg-emerald-500"
+            : hasError
+              ? "w-1.5 bg-rose-500"
+              : "w-1.5 bg-muted-foreground/20 hover:bg-muted-foreground/40"
+      )}
+      aria-label={`Go to step ${idx + 1}: ${title}`}
+    />
+  );
+}
 
 const STEPS = [
   { title: "Basic Job Details", subtitle: "Title, dept, type" },
@@ -207,22 +238,15 @@ export function CreateJobForm({ job }: CreateJobFormProps) {
         <div className="shrink-0 flex items-center justify-between px-6 py-3 border-b bg-card gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <div className="flex items-center gap-1.5">
-              {STEPS.map((_, i) => (
-                <button
+              {STEPS.map((s, i) => (
+                <StepIndicatorButton
                   key={i}
-                  type="button"
-                  onClick={() => setActiveStep(i)}
-                  className={cn(
-                    "h-1.5 rounded-full transition-all duration-200 cursor-pointer",
-                    i === activeStep
-                      ? "w-6 bg-primary"
-                      : steps[i].completed && !steps[i].hasError
-                        ? "w-1.5 bg-emerald-500"
-                        : steps[i].hasError
-                          ? "w-1.5 bg-rose-500"
-                          : "w-1.5 bg-muted-foreground/20 hover:bg-muted-foreground/40"
-                  )}
-                  aria-label={`Go to step ${i + 1}: ${STEPS[i].title}`}
+                  idx={i}
+                  isActive={i === activeStep}
+                  isCompleted={steps[i]?.completed ?? false}
+                  hasError={steps[i]?.hasError ?? false}
+                  title={s.title}
+                  onStepClick={setActiveStep}
                 />
               ))}
             </div>
@@ -242,16 +266,16 @@ export function CreateJobForm({ job }: CreateJobFormProps) {
             />
             <div className="w-px h-5 bg-border/60 shrink-0" />
             {isEdit ? (
-              <Button size="sm" onClick={handleSaveDraft} disabled={isPending} className="gap-1.5">
+              <LoadingButton size="sm" onClick={handleSaveDraft} isPending={isPending} loadingText="Saving…" className="gap-1.5">
                 <Save className="h-3.5 w-3.5" />
                 Save Changes
-              </Button>
+              </LoadingButton>
             ) : (
               <>
-                <Button variant="outline" size="sm" onClick={handleSaveDraft} disabled={isPending} className="gap-1.5">
+                <LoadingButton variant="outline" size="sm" onClick={handleSaveDraft} isPending={isPending} loadingText="Saving…" className="gap-1.5">
                   <Save className="h-3.5 w-3.5" />
                   Save Draft
-                </Button>
+                </LoadingButton>
                 <AnimatedIconButton icon={SendIcon} size="sm" onClick={handlePublish} disabled={isPending} className="gap-1.5">
                   Publish Job
                 </AnimatedIconButton>

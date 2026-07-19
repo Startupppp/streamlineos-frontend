@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { logTimeSchema, type LogTimeValues } from "./log-time-schema";
 import { format } from "date-fns";
 import {
   Form,
@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { ProjectTicketSelect } from "./project-ticket-select";
 import {
@@ -23,20 +24,6 @@ import {
   useUpdateTimesheetEntry,
 } from "@/hooks/api/timesheets-core";
 import type { TimesheetEntry } from "@/features/timesheets-core";
-
-const logTimeSchema = z.object({
-  date: z.string().min(1, "Date is required"),
-  hours: z
-    .string()
-    .min(1, "Hours is required")
-    .regex(/^\d+(\.\d{1,2})?$/, "Enter a valid number (e.g. 1.5)"),
-  projectId: z.number().nullable(),
-  ticketId: z.number().nullable(),
-  description: z.string(),
-  isBillable: z.boolean(),
-});
-
-type LogTimeValues = z.infer<typeof logTimeSchema>;
 
 export interface LogTimeSheetProps {
   open: boolean;
@@ -133,9 +120,9 @@ export function LogTimeSheet({
       <Button variant="outline" size="sm" onClick={handleClose} disabled={isPending}>
         Cancel
       </Button>
-      <Button size="sm" onClick={handleSubmitClick} disabled={isPending}>
-        {isPending ? "Saving…" : isEdit ? "Save changes" : "Log time"}
-      </Button>
+      <LoadingButton size="sm" onClick={handleSubmitClick} isPending={isPending} loadingText="Saving…">
+        {isEdit ? "Save changes" : "Log time"}
+      </LoadingButton>
     </>
   );
 
@@ -155,7 +142,7 @@ export function LogTimeSheet({
               <FormItem>
                 <FormLabel className="text-xs">Date</FormLabel>
                 <FormControl>
-                  <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+                  <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-9 text-sm" />
                 </FormControl>
                 <FormMessage className="text-xs" />
               </FormItem>
@@ -174,7 +161,7 @@ export function LogTimeSheet({
                     step="0.25"
                     placeholder="0.0"
                     {...field}
-                    className="h-8 text-sm"
+                    className="h-9 text-sm"
                   />
                 </FormControl>
                 <FormMessage className="text-xs" />
@@ -200,7 +187,7 @@ export function LogTimeSheet({
                   <Input
                     placeholder="What did you work on?"
                     {...field}
-                    className="h-8 text-sm"
+                    className="h-9 text-sm"
                   />
                 </FormControl>
                 <FormMessage className="text-xs" />

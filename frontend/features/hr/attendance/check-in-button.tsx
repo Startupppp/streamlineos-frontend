@@ -34,6 +34,7 @@ import {
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { formatDuration, formatTimerSegment } from "./attendance-utils";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 export const TimerCard = memo(function TimerCard() {
   const [now, setNow] = useState(new Date());
@@ -72,7 +73,7 @@ export const TimerCard = memo(function TimerCard() {
       toast.success("Clocked in successfully");
       setLocalCooldown(0);
     },
-    onError: (err) => toast.error(err.message),
+    onError: (err) => toast.error(getErrorMessage(err)),
   });
 
   const checkOutMutation = useHrCheckOut({
@@ -80,7 +81,7 @@ export const TimerCard = memo(function TimerCard() {
       toast.success("Clocked out successfully");
       setLocalCooldown(120);
     },
-    onError: (err) => toast.error(err.message),
+    onError: (err) => toast.error(getErrorMessage(err)),
   });
 
   const [localBreakOverride, setLocalBreakOverride] = useState<boolean | null>(
@@ -284,10 +285,10 @@ export const TimerCard = memo(function TimerCard() {
         <p
           className={cn(
             "text-sm text-center",
-            isOnBreak && "text-amber-600 dark:text-amber-400 font-medium",
+            isOnBreak && "text-amber-600 dark:text-amber-300 font-medium",
             isCheckedIn &&
               !isOnBreak &&
-              "text-emerald-600 dark:text-emerald-400 font-medium",
+              "text-emerald-600 dark:text-emerald-300 font-medium",
             !isActive &&
               !isInCooldown &&
               !isBlockedDay &&
@@ -295,7 +296,7 @@ export const TimerCard = memo(function TimerCard() {
             !isActive &&
               isInCooldown &&
               "text-muted-foreground font-medium",
-            isBlockedDay && "text-amber-600 dark:text-amber-400 font-medium",
+            isBlockedDay && "text-amber-600 dark:text-amber-300 font-medium",
           )}
         >
           {isOnBreak && "On break"}
@@ -317,7 +318,7 @@ export const TimerCard = memo(function TimerCard() {
           <div className="flex justify-center">
             <Badge
               variant="outline"
-              className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800"
+              className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800"
             >
               <Coffee className="h-3 w-3" /> On Break
             </Badge>
@@ -380,7 +381,7 @@ export const TimerCard = memo(function TimerCard() {
             variant="outline"
             onClick={handleBreakToggle}
             disabled={breakMutation.isPending || isBlockedDay}
-            className="w-full gap-1.5 h-9 border-amber-200 text-amber-700 hover:bg-amber-50 dark:border-amber-800 dark:text-amber-400 dark:hover:bg-amber-950/20 duration-200"
+            className="w-full gap-1.5 h-9 border-amber-200 text-amber-700 hover:bg-amber-50 dark:border-amber-800 dark:text-amber-300 dark:hover:bg-amber-950/20 duration-200"
           >
             {breakMutation.isPending ? (
               <Loader2 className="h-4 w-4 animate-spin" />

@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { Loader2, Send, Paperclip, X, FileText, Image as ImageIcon, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -401,9 +402,9 @@ export function TicketReplyComposer({ ticketId }: TicketReplyComposerProps) {
             <Button variant="outline" onClick={handleClosePreview}>
               Cancel
             </Button>
-            <Button onClick={handleConfirmApplyMacro} disabled={applyMacro.isPending}>
-              {applyMacro.isPending ? "Applying…" : "Apply & Insert"}
-            </Button>
+            <LoadingButton onClick={handleConfirmApplyMacro} isPending={applyMacro.isPending} loadingText="Applying…">
+              Apply & Insert
+            </LoadingButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

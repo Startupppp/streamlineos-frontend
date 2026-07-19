@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -114,9 +115,9 @@ export function OfferNegotiationSheet({ candidateId, offer, onClose }: Props) {
                 <Button variant="outline" size="sm" className="flex-1" onClick={handleAcknowledge} disabled={respond.isPending}>
                   Log Response Only
                 </Button>
-                <Button size="sm" className="flex-1" onClick={handleSendNewTerms} disabled={respond.isPending || !proposedSalary}>
-                  {respond.isPending ? "Sending…" : "Send New Terms"}
-                </Button>
+                <LoadingButton size="sm" className="flex-1" onClick={handleSendNewTerms} isPending={respond.isPending} loadingText="Sending…" disabled={respond.isPending || !proposedSalary}>
+                  Send New Terms
+                </LoadingButton>
               </div>
             </div>
           )}

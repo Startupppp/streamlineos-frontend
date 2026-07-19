@@ -31,7 +31,7 @@ export function InventoryDetailPageLoading({
       backHref={backHref}
       actions={actions !== undefined ? actions : <DetailActionSkeleton />}
     >
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         <StatCardGridSkeleton cols={statCols} count={statCount} />
         <InventoryTableSkeleton rows={contentRows} />
       </div>

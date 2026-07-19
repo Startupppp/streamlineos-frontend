@@ -363,14 +363,14 @@ export function BillingPageSkeleton() {
       title="Billing Queue"
       actions={
         <div className="flex items-center gap-2">
-          <Skeleton className="h-8 w-20 rounded-md" />
-          <Skeleton className="h-8 w-36 rounded-md" />
+          <Skeleton className="h-9 w-20 rounded-md" />
+          <Skeleton className="h-9 w-36 rounded-md" />
         </div>
       }
       filters={
         <div className="flex items-center gap-2">
-          <Skeleton className="h-8 w-48 rounded-md" />
-          <Skeleton className="h-8 w-36 rounded-md" />
+          <Skeleton className="h-9 w-48 rounded-md" />
+          <Skeleton className="h-9 w-36 rounded-md" />
         </div>
       }
     >

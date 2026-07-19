@@ -2,6 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export function PayrollPageSkeleton() {
   return (
@@ -9,15 +10,15 @@ export function PayrollPageSkeleton() {
       title="Payroll"
       actions={
         <div className="flex items-center gap-2">
-          <Skeleton className="h-8 w-24 rounded-md" />
-          <Skeleton className="h-8 w-24 rounded-md" />
+          <Skeleton className="h-9 w-24 rounded-md" />
+          <Skeleton className="h-9 w-24 rounded-md" />
         </div>
       }
       filters={
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-8 w-36 rounded-md" />
-          <Skeleton className="h-8 w-48 rounded-md" />
-          <Skeleton className="h-8 w-36 rounded-md" />
+        <div className={FILTER_TOOLBAR_ROW}>
+          <Skeleton className="h-9 w-36 rounded-md" />
+          <Skeleton className="h-9 w-48 rounded-md" />
+          <Skeleton className="h-9 w-36 rounded-md" />
         </div>
       }
     >

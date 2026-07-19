@@ -145,9 +145,9 @@ export function OrgBusinessHoursSection({ org, canEdit }: OrgBusinessHoursSectio
                   </div>
                   {h.enabled ? (
                     <div className="flex items-center gap-2">
-                      <Input type="time" value={h.open} onChange={(e) => handleTimeChange(d.key, "open", e.target.value)} className="h-8 w-28 text-sm font-mono" />
+                      <Input type="time" value={h.open} onChange={(e) => handleTimeChange(d.key, "open", e.target.value)} className="w-28 font-mono" />
                       <span className="text-muted-foreground text-xs">to</span>
-                      <Input type="time" value={h.close} onChange={(e) => handleTimeChange(d.key, "close", e.target.value)} className="h-8 w-28 text-sm font-mono" />
+                      <Input type="time" value={h.close} onChange={(e) => handleTimeChange(d.key, "close", e.target.value)} className="w-28 font-mono" />
                     </div>
                   ) : (
                     <span className="text-xs text-muted-foreground">Closed</span>

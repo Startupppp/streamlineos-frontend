@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { useCan } from "@/hooks/api/access";
 import { useQualityHold, useReleaseQualityHold } from "@/hooks/api/inventory/quality";
 import type { QualityHold } from "@/hooks/api/inventory/quality";
+import { useProductVariants } from "@/hooks/api/inventory/products";
 import { QUALITY_HOLD_STATUS_BADGE, QUALITY_HOLD_STATUS_LABEL } from "@/features/inventory/lib";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
@@ -46,9 +47,15 @@ export function HoldDetailSheet({ open, onOpenChange, holdId }: Props) {
 
   const holdQuery = useQualityHold(holdId ?? 0);
   const releaseMut = useReleaseQualityHold();
+  const variantsQuery = useProductVariants();
 
   const hold = holdQuery.data;
   const isLoading = holdQuery.isLoading;
+
+  function resolveVariantLabel(variantId: number): string {
+    const variant = (variantsQuery.data ?? []).find((v) => v.id === variantId);
+    return variant ? `${variant.sku} — ${variant.productName}` : `Variant #${variantId}`;
+  }
 
   function handleOpenConfirm(): void {
     setConfirmOpen(true);
@@ -74,9 +81,9 @@ export function HoldDetailSheet({ open, onOpenChange, holdId }: Props) {
 
   const footer =
     hold && hold.status === "ACTIVE" && canRelease ? (
-      <Button size="sm" onClick={handleOpenConfirm} disabled={releaseMut.isPending}>
+      <LoadingButton size="sm" onClick={handleOpenConfirm} isPending={releaseMut.isPending} loadingText="Releasing…">
         Release Hold
-      </Button>
+      </LoadingButton>
     ) : undefined;
 
   return (
@@ -111,7 +118,7 @@ export function HoldDetailSheet({ open, onOpenChange, holdId }: Props) {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <HoldInfoRow label="Variant ID" value={String(hold.productVariantId)} />
+              <HoldInfoRow label="Product Variant" value={resolveVariantLabel(hold.productVariantId)} />
               <HoldInfoRow
                 label="Quantity"
                 value={<span className="tabular-nums font-mono">{hold.quantity}</span>}

@@ -30,12 +30,10 @@ import {
   PmPanel,
   PmSection,
   PM_FILL_PANEL,
-  PM_TOOLBAR,
 } from "@/features/projects/shared/pm-chrome";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { TABLE_TITLE_CELL } from "@/features/projects/shared/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { cn } from "@/lib/utils";
-
 const DEC_STATUS_LABEL: Record<DecisionStatus, string> = {
   proposed: "Proposed", accepted: "Accepted", superseded: "Superseded", revisit: "Revisit",
 };
@@ -226,32 +224,30 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
       subtitle="Log and track key project decisions for accountability and audit"
       actions={canManage ? <NewDecisionButton onClick={handleNewDecision} /> : undefined}
       filters={
-        <div className={cn(PM_TOOLBAR, "sm:justify-start")}>
-          <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-40 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {STATUS_OPTS.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>
-                    {o.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <SearchInput
-              className="w-52"
-              placeholder="Search decisions..."
-              value={search}
-              onValueChange={handleSearchChange}
-            />
-            {isFiltered ? (
-              <Button size="sm" variant="ghost" className="text-xs" onClick={handleClearFilters}>
-                Clear
-              </Button>
-            ) : null}
-          </div>
+        <div className={FILTER_TOOLBAR_ROW}>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUS_OPTS.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <SearchInput
+            className="w-52"
+            placeholder="Search decisions..."
+            value={search}
+            onValueChange={handleSearchChange}
+          />
+          {isFiltered ? (
+            <Button size="sm" variant="ghost" className="text-xs" onClick={handleClearFilters}>
+              Clear
+            </Button>
+          ) : null}
         </div>
       }
     >

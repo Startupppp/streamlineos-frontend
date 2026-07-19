@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -88,9 +89,9 @@ function ApplySheet({ job, onClose, onSuccess }: ApplySheetProps) {
         </SheetBody>
         <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
           <Button variant="outline" onClick={onClose} disabled={mutation.isPending}>Cancel</Button>
-          <Button onClick={handleSubmitApplication} disabled={mutation.isPending}>
-            {mutation.isPending ? "Submitting..." : "Submit Application"}
-          </Button>
+          <LoadingButton onClick={handleSubmitApplication} isPending={mutation.isPending} loadingText="Submitting...">
+            Submit Application
+          </LoadingButton>
         </SheetFooter>
       </SheetContent>
     </Sheet>
@@ -169,8 +170,10 @@ export default function InternalJobsPage() {
   if (isLoading) {
     return (
       <PageWrapper title="Internal Openings" subtitle="Open positions available exclusively for employees." variant="display">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-48 rounded-xl" />)}
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-48 rounded-xl" />)}
+          </div>
         </div>
       </PageWrapper>
     );
@@ -180,7 +183,8 @@ export default function InternalJobsPage() {
     <PageWrapper
       title="Internal Openings"
       subtitle="Open positions available exclusively for existing employees. Apply directly without going through external recruitment."
- variant="display">
+      variant="display"
+    >
       {jobs.length === 0 ? (
         <RecruitmentEmptyState
           illustration={<EmptySearchIllustration />}
@@ -188,10 +192,12 @@ export default function InternalJobsPage() {
           description="There are no internal job openings available at this time. Check back later."
         />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {jobs.map((job) => (
-            <JobCardItem key={job.id} job={job} onApply={setApplyingJob} />
-          ))}
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {jobs.map((job) => (
+              <JobCardItem key={job.id} job={job} onApply={setApplyingJob} />
+            ))}
+          </div>
         </div>
       )}
 

@@ -82,11 +82,11 @@ export function WarehouseStockTab({ warehouseId }: WarehouseStockTabProps) {
     limit: 20,
   });
 
-  function handleRetry() {
+  function handleRetry(): void {
     void refetch();
   }
 
-  function handlePageChange(newPage: number) {
+  function handlePageChange(newPage: number): void {
     setPage(newPage);
   }
 

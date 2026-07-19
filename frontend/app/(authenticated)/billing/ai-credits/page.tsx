@@ -242,7 +242,7 @@ export default function AiCreditsPage() {
               title="Failed to load AI credits"
               description="Something went wrong fetching your credit balance."
               onRetry={handleRefresh}
-              className="flex-1 min-h-[40vh]"
+              className="flex-1"
             />
           ) : (
             <>

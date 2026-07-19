@@ -122,7 +122,7 @@ function MappingForm({
               <FormLabel className="text-[11px]">Component (optional)</FormLabel>
               <Select value={field.value} onValueChange={field.onChange}>
                 <FormControl>
-                  <SelectTrigger className="text-xs">
+                  <SelectTrigger>
                     <SelectValue placeholder="None" />
                   </SelectTrigger>
                 </FormControl>

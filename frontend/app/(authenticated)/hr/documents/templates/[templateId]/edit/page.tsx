@@ -17,13 +17,13 @@ function EditTemplateSkeleton() {
       title="Edit Template"
       actions={
         <div className="flex items-center gap-2">
-          <Skeleton className="h-8 w-16 rounded-md" />
-          <Skeleton className="h-8 w-28 rounded-md" />
-          <Skeleton className="h-8 w-28 rounded-md" />
+          <Skeleton className="h-9 w-16 rounded-md" />
+          <Skeleton className="h-9 w-28 rounded-md" />
+          <Skeleton className="h-9 w-28 rounded-md" />
         </div>
       }
     >
-      <div className="space-y-5">
+      <div className="flex flex-1 min-h-0 flex-col gap-5">
         <Card>
           <CardHeader>
             <Skeleton className="h-4 w-32" />

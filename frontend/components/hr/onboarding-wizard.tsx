@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useMemo, useCallback, useRef } from "react";
-import { useForm, type FieldPath, type DefaultValues, type Resolver } from "react-hook-form";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { useForm, type FieldPath, type DefaultValues } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { onboardEmployeeInputSchema } from "@/lib/validation/hr";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Form } from "@/components/ui/form";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
@@ -76,7 +78,7 @@ export function OnboardingWizard() {
   }, [departments]);
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(onboardEmployeeInputSchema) as unknown as Resolver<FormValues>,
+    resolver: zodResolver(onboardEmployeeInputSchema),
     defaultValues: {
       firstName: "", lastName: "", email: "", phone: "",
       whatsappSameAsPhone: true, whatsappNumber: "", gender: "MALE",
@@ -134,13 +136,13 @@ export function OnboardingWizard() {
           lastName: toTitleCase(data.lastName),
           designation: formatDesignation(data.designation),
           password: data.password ?? "",
-        } as import("@/types/hr").OnboardEmployeeInput,
+        },
         {
           onSuccess: (result) => {
             toast.success("Employee created successfully");
             router.push(result.userId ? `/hr/employees/${result.userId}` : "/hr/employees");
           },
-          onError: (err) => toast.error(err.message || "Failed to onboard employee"),
+          onError: (err) => toast.error(getErrorMessage(err)),
         }
       );
     },
@@ -225,13 +227,9 @@ export function OnboardingWizard() {
                 {isCheckingEmail ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Checking...</> : <>Next<ChevronRight className="h-3.5 w-3.5" /></>}
               </Button>
             ) : (
-              <Button type="submit" size="sm" disabled={onboardEmployee.isPending} className="gap-1 min-w-[100px]">
-                {onboardEmployee.isPending ? (
-                  <><Loader2 className="h-3.5 w-3.5 animate-spin" />Saving...</>
-                ) : (
-                  <><Check className="h-3.5 w-3.5" />Submit</>
-                )}
-              </Button>
+              <LoadingButton type="submit" size="sm" isPending={onboardEmployee.isPending} loadingText="Saving..." className="gap-1 min-w-[100px]">
+                <Check className="h-3.5 w-3.5" />Submit
+              </LoadingButton>
             )}
           </div>
         </form>

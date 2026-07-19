@@ -285,13 +285,12 @@ export default function DealDetailPage({
   if (!deal) {
     return (
       <PageWrapper title="Deal Not Found" backHref="/crm/deals">
-        <div className="flex-1 flex items-center justify-center min-h-[50vh]">
-          <EmptyState
-            title="Deal not found"
-            description="This deal may have been deleted or you may not have access."
-            action={{ label: "Back to Deals", href: "/crm/deals" }}
-          />
-        </div>
+        <EmptyState
+          title="Deal not found"
+          description="This deal may have been deleted or you may not have access."
+          action={{ label: "Back to Deals", href: "/crm/deals" }}
+          className="flex-1"
+        />
       </PageWrapper>
     );
   }

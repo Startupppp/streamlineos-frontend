@@ -34,6 +34,7 @@ import {
 } from "@/hooks/api/payroll/bonuses-admin";
 import { useCan } from "@/hooks/api/access";
 import { EmptyTargetIllustration } from "@/components/illustrations";
+import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All Statuses" },
@@ -239,9 +240,9 @@ export function IncentivesTab() {
   return (
     <>
       <div className="flex flex-1 min-h-0 flex-col gap-0 pt-3">
-        <div className="flex items-center gap-2 flex-wrap mb-3">
+        <div className={`${FILTER_TOOLBAR_ROW} mb-3`}>
           <Select value={istatus} onValueChange={handleStatusChange}>
-            <SelectTrigger className="text-sm w-40">
+            <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-40`}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

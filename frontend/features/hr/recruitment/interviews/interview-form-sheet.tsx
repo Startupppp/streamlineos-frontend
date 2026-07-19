@@ -4,8 +4,9 @@ import { useState, useMemo, useCallback } from "react";
 import { useScheduleInterview, useCandidates, useJobPostings } from "@/hooks/api/hr";
 import { useInterviewerAvailability } from "@/hooks/api/hr/recruitment";
 import { InterviewerAvailabilityGrid } from "@/components/hr/recruitment/interviewer-availability-grid";
-import { useCalendarOrgMembers } from "@/hooks/api/calendar";
+import { useCalendarOrgMembers, type CalendarOrgMember } from "@/hooks/api/calendar";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -95,6 +96,88 @@ function FieldGroup({
       </div>
       {children}
     </div>
+  );
+}
+
+interface CandidateCommandItemProps {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string | null;
+  activeCandidateId: string;
+  onSelect: (idStr: string) => void;
+}
+
+function CandidateCommandItem({ id, firstName, lastName, email, activeCandidateId, onSelect }: CandidateCommandItemProps) {
+  const label = `${firstName} ${lastName}`.trim();
+  const idStr = String(id);
+  function handleSelect() { onSelect(idStr); }
+  return (
+    <CommandItem
+      value={`${label} ${email ?? ""}`}
+      onSelect={handleSelect}
+    >
+      <Check
+        className={cn(
+          "mr-2 h-4 w-4",
+          activeCandidateId === idStr ? "opacity-100" : "opacity-0",
+        )}
+      />
+      <span className="truncate">{label}</span>
+    </CommandItem>
+  );
+}
+
+interface InterviewerChipProps {
+  member: CalendarOrgMember;
+  onRemove: (id: string) => void;
+}
+
+function InterviewerChip({ member: m, onRemove }: InterviewerChipProps) {
+  function handleClick() { onRemove(m.id); }
+  return (
+    <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-primary/10 text-foreground border-primary/20">
+      {m.name ?? m.email}
+      <button
+        type="button"
+        onClick={handleClick}
+        className="hover:text-destructive transition-colors duration-200 ml-0.5 rounded"
+        aria-label={`Remove ${m.name ?? m.email}`}
+      >
+        <X className="h-2.5 w-2.5" />
+      </button>
+    </span>
+  );
+}
+
+interface InterviewerCommandItemProps {
+  member: CalendarOrgMember;
+  isSelected: boolean;
+  onToggle: (id: string) => void;
+}
+
+function InterviewerCommandItem({ member: m, isSelected, onToggle }: InterviewerCommandItemProps) {
+  const label = m.name ?? m.email;
+  function handleSelect() { onToggle(m.id); }
+  return (
+    <CommandItem
+      key={m.id}
+      value={`${label} ${m.email}`}
+      onSelect={handleSelect}
+    >
+      <Check
+        className={cn(
+          "mr-2 h-4 w-4",
+          isSelected ? "opacity-100" : "opacity-0",
+        )}
+      />
+      <div className="flex flex-col">
+        <span className="text-sm">{label}</span>
+        <span className="text-xs text-muted-foreground">
+          {m.role}
+        </span>
+      </div>
+    </CommandItem>
   );
 }
 
@@ -257,13 +340,15 @@ export function InterviewFormSheet({
     setCandidatePickerOpen(false);
   }
 
+  function handleSheetOpenChange(v: boolean) {
+    onOpenChange(v);
+    if (!v) resetForm();
+  }
+
   return (
     <Sheet
       open={open}
-      onOpenChange={(v) => {
-        onOpenChange(v);
-        if (!v) resetForm();
-      }}
+      onOpenChange={handleSheetOpenChange}
     >
       <SheetTrigger asChild>
         <Button size="sm" className="gap-1.5">
@@ -298,7 +383,7 @@ export function InterviewFormSheet({
                   variant="outline"
                   role="combobox"
                   aria-expanded={candidatePickerOpen}
-                  className="w-full justify-between font-normal h-8"
+                  className="w-full justify-between font-normal"
                 >
                   <span className="truncate text-sm">
                     {selectedCandidate
@@ -317,27 +402,17 @@ export function InterviewFormSheet({
                   <CommandList>
                     <CommandEmpty>No candidate found.</CommandEmpty>
                     <CommandGroup>
-                      {allCandidates?.map((c) => {
-                        const label = `${c.firstName} ${c.lastName}`.trim();
-                        const idStr = String(c.id);
-                        return (
-                          <CommandItem
-                            key={c.id}
-                            value={`${label} ${c.email ?? ""}`}
-                            onSelect={() => handleSelectCandidate(idStr)}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                candidateId === idStr
-                                  ? "opacity-100"
-                                  : "opacity-0",
-                              )}
-                            />
-                            <span className="truncate">{label}</span>
-                          </CommandItem>
-                        );
-                      })}
+                      {allCandidates?.map((c) => (
+                        <CandidateCommandItem
+                          key={c.id}
+                          id={c.id}
+                          firstName={c.firstName ?? ""}
+                          lastName={c.lastName ?? ""}
+                          email={c.email ?? null}
+                          activeCandidateId={candidateId}
+                          onSelect={handleSelectCandidate}
+                        />
+                      ))}
                     </CommandGroup>
                   </CommandList>
                 </Command>
@@ -453,20 +528,7 @@ export function InterviewFormSheet({
               {selectedInterviewers.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
                   {selectedInterviewers.map((m) => (
-                    <span
-                      key={m.id}
-                      className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-primary/10 text-foreground border-primary/20"
-                    >
-                      {m.name ?? m.email}
-                      <button
-                        type="button"
-                        onClick={() => toggleInterviewer(m.id)}
-                        className="hover:text-destructive transition-colors duration-200 ml-0.5 rounded"
-                        aria-label={`Remove ${m.name ?? m.email}`}
-                      >
-                        <X className="h-2.5 w-2.5" />
-                      </button>
-                    </span>
+                    <InterviewerChip key={m.id} member={m} onRemove={toggleInterviewer} />
                   ))}
                 </div>
               )}
@@ -478,7 +540,7 @@ export function InterviewFormSheet({
                   <Button
                     type="button"
                     variant="outline"
-                    className="w-full justify-start font-normal text-muted-foreground gap-1.5 h-8"
+                    className="w-full justify-start font-normal text-muted-foreground gap-1.5"
                     size="sm"
                   >
                     <Plus className="h-3.5 w-3.5" />
@@ -494,30 +556,14 @@ export function InterviewFormSheet({
                     <CommandList>
                       <CommandEmpty>No members found.</CommandEmpty>
                       <CommandGroup>
-                        {orgMembers?.map((m) => {
-                          const label = m.name ?? m.email;
-                          const selected = interviewerIds.includes(m.id);
-                          return (
-                            <CommandItem
-                              key={m.id}
-                              value={`${label} ${m.email}`}
-                              onSelect={() => toggleInterviewer(m.id)}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  selected ? "opacity-100" : "opacity-0",
-                                )}
-                              />
-                              <div className="flex flex-col">
-                                <span className="text-sm">{label}</span>
-                                <span className="text-xs text-muted-foreground">
-                                  {m.role}
-                                </span>
-                              </div>
-                            </CommandItem>
-                          );
-                        })}
+                        {orgMembers?.map((m) => (
+                          <InterviewerCommandItem
+                            key={m.id}
+                            member={m}
+                            isSelected={interviewerIds.includes(m.id)}
+                            onToggle={toggleInterviewer}
+                          />
+                        ))}
                       </CommandGroup>
                     </CommandList>
                   </Command>
@@ -578,15 +624,14 @@ export function InterviewFormSheet({
           >
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             className="flex-1 h-9"
             onClick={handleCreate}
-            disabled={scheduleInterview.isPending}
+            isPending={scheduleInterview.isPending}
+            loadingText="Scheduling..."
           >
-            {scheduleInterview.isPending
-              ? "Scheduling..."
-              : "Schedule Interview"}
-          </Button>
+            Schedule Interview
+          </LoadingButton>
         </SheetFooter>
       </SheetContent>
     </Sheet>

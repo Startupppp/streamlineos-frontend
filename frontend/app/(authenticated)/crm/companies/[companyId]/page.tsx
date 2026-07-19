@@ -198,7 +198,7 @@ export default function CompanyDetailPage({
           title="Company not found"
           description="This company may have been deleted or you don't have access."
           action={{ label: "Back to Companies", href: "/crm/companies" }}
-          className="min-h-[50vh]"
+          className="flex-1"
         />
       </PageWrapper>
     );

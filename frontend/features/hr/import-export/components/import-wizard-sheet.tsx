@@ -297,7 +297,7 @@ export function ImportWizardSheet({
                       className="rounded-md border border-red-200 bg-red-50/50 dark:bg-red-500/10 dark:border-red-500/30 px-3 py-2 text-xs text-red-700 dark:text-red-300"
                     >
                       <span className="font-medium">Row {err.row}</span>
-                      {err.field && <span className="text-red-500 dark:text-red-400"> · {err.field}</span>}
+                      {err.field && <span className="text-red-500 dark:text-red-300"> · {err.field}</span>}
                       {" — "}
                       {err.message}
                     </div>

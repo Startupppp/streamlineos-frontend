@@ -15,7 +15,6 @@ export {
   HrHero,
   HrQuickAction,
   HrSectionHeader,
-  HrFilterToolbar,
   HrStatusBadge,
   HrIconWell,
   HrPageContent,

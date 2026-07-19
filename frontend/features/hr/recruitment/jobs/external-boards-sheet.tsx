@@ -3,13 +3,23 @@
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import {
-  Sheet, SheetBody, SheetContent, SheetHeader, SheetTitle, SheetDescription,
+  Sheet,
+  SheetBody,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Loader2, Plus, ExternalLink, Trash2 } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { EllipsisIcon } from "@animateicons/react/lucide";
@@ -22,14 +32,22 @@ import {
   useUpdateJobBoardPosting,
   useDeleteJobBoardPosting,
   type JobBoardPostingStatus,
+  type JobBoardPosting,
 } from "@/hooks/api/hr/recruitment";
 
-const STATUS_OPTIONS: JobBoardPostingStatus[] = ["DRAFT", "POSTED", "EXPIRED", "CLOSED"];
+const STATUS_OPTIONS: JobBoardPostingStatus[] = [
+  "DRAFT",
+  "POSTED",
+  "EXPIRED",
+  "CLOSED",
+];
 
 const STATUS_BADGE: Record<JobBoardPostingStatus, string> = {
   DRAFT: "bg-muted text-muted-foreground dark:bg-slate-800 dark:text-slate-300",
-  POSTED: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
-  EXPIRED: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+  POSTED:
+    "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
+  EXPIRED:
+    "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
   CLOSED: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300",
 };
 
@@ -38,7 +56,67 @@ interface ExternalBoardsSheetProps {
   onClose: () => void;
 }
 
-export function ExternalBoardsSheet({ jobId, onClose }: ExternalBoardsSheetProps) {
+interface PostingStatusItemProps {
+  status: JobBoardPostingStatus;
+  postingId: number;
+  onStatusChange: (id: number, status: JobBoardPostingStatus) => void;
+}
+
+function PostingStatusItem({ status, postingId, onStatusChange }: PostingStatusItemProps) {
+  function handleClick() { onStatusChange(postingId, status); }
+  return (
+    <DropdownMenuItem onClick={handleClick}>
+      Mark as {status}
+    </DropdownMenuItem>
+  );
+}
+
+interface PostingDeleteItemProps {
+  postingId: number;
+  onDelete: (id: number) => void;
+}
+
+function PostingDeleteItem({ postingId, onDelete }: PostingDeleteItemProps) {
+  function handleClick() { onDelete(postingId); }
+  return (
+    <DropdownMenuItem variant="destructive" onClick={handleClick}>
+      <Trash2 className="mr-2 h-3.5 w-3.5" /> Remove
+    </DropdownMenuItem>
+  );
+}
+
+interface PostingActionsMenuProps {
+  posting: JobBoardPosting;
+  onStatusChange: (id: number, status: JobBoardPostingStatus) => void;
+  onDelete: (id: number) => void;
+}
+
+function PostingActionsMenu({ posting, onStatusChange, onDelete }: PostingActionsMenuProps) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <AnimatedIconButton
+          icon={EllipsisIcon}
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6"
+          aria-label="Posting actions"
+        />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {STATUS_OPTIONS.filter((s) => s !== posting.status).map((s) => (
+          <PostingStatusItem key={s} status={s} postingId={posting.id} onStatusChange={onStatusChange} />
+        ))}
+        <PostingDeleteItem postingId={posting.id} onDelete={onDelete} />
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+export function ExternalBoardsSheet({
+  jobId,
+  onClose,
+}: ExternalBoardsSheetProps) {
   const { data: postings, isLoading } = useJobBoardPostings(jobId);
   const createPosting = useCreateJobBoardPosting(jobId);
   const updatePosting = useUpdateJobBoardPosting(jobId);
@@ -47,13 +125,32 @@ export function ExternalBoardsSheet({ jobId, onClose }: ExternalBoardsSheetProps
   const [platform, setPlatform] = useState("");
   const [url, setUrl] = useState("");
 
+  const handleOpenChange = useCallback(
+    (v: boolean) => {
+      if (!v) onClose();
+    },
+    [onClose],
+  );
+  const handlePlatformChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setPlatform(e.target.value),
+    [],
+  );
+  const handleUrlChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setUrl(e.target.value),
+    [],
+  );
+
   const handleAdd = useCallback(() => {
     if (!platform.trim()) {
       toast.error("Enter a platform name");
       return;
     }
     createPosting.mutate(
-      { platform: platform.trim().toUpperCase(), externalPostUrl: url.trim() || undefined, status: "POSTED" },
+      {
+        platform: platform.trim().toUpperCase(),
+        externalPostUrl: url.trim() || undefined,
+        status: "POSTED",
+      },
       {
         onSuccess: () => {
           toast.success("Posting tracked");
@@ -67,7 +164,10 @@ export function ExternalBoardsSheet({ jobId, onClose }: ExternalBoardsSheetProps
 
   const handleStatusChange = useCallback(
     (id: number, status: JobBoardPostingStatus) => {
-      updatePosting.mutate({ id, status }, { onError: (e) => toast.error(getErrorMessage(e)) });
+      updatePosting.mutate(
+        { id, status },
+        { onError: (e) => toast.error(getErrorMessage(e)) },
+      );
     },
     [updatePosting],
   );
@@ -83,12 +183,15 @@ export function ExternalBoardsSheet({ jobId, onClose }: ExternalBoardsSheetProps
   );
 
   return (
-    <Sheet open onOpenChange={(v) => { if (!v) onClose(); }}>
+    <Sheet open onOpenChange={handleOpenChange}>
       <SheetContent className="sm:max-w-md flex flex-col gap-0 overflow-hidden p-0">
         <SheetHeader className="shrink-0 px-6 py-4 border-b">
-          <SheetTitle className="text-base">External Job Board Postings</SheetTitle>
+          <SheetTitle className="text-base">
+            External Job Board Postings
+          </SheetTitle>
           <SheetDescription className="text-xs">
-            Track where this role has been posted manually, and how it&apos;s performing.
+            Track where this role has been posted manually, and how it&apos;s
+            performing.
           </SheetDescription>
         </SheetHeader>
 
@@ -98,7 +201,7 @@ export function ExternalBoardsSheet({ jobId, onClose }: ExternalBoardsSheetProps
             <Input
               placeholder="e.g. LinkedIn, Naukri, Indeed"
               value={platform}
-              onChange={(e) => setPlatform(e.target.value)}
+              onChange={handlePlatformChange}
               className="text-sm"
             />
           </div>
@@ -106,10 +209,16 @@ export function ExternalBoardsSheet({ jobId, onClose }: ExternalBoardsSheetProps
           <Input
             placeholder="https://..."
             value={url}
-            onChange={(e) => setUrl(e.target.value)}
+            onChange={handleUrlChange}
             className="text-sm"
           />
-          <LoadingButton size="sm" className="w-full h-8 gap-1.5" onClick={handleAdd} isPending={createPosting.isPending} loadingText="Adding…">
+          <LoadingButton
+            size="sm"
+            className="w-full gap-1.5"
+            onClick={handleAdd}
+            isPending={createPosting.isPending}
+            loadingText="Adding…"
+          >
             <Plus className="h-3.5 w-3.5" />
             Track posting
           </LoadingButton>
@@ -126,39 +235,40 @@ export function ExternalBoardsSheet({ jobId, onClose }: ExternalBoardsSheetProps
             </p>
           ) : (
             postings.map((posting) => (
-              <div key={posting.id} className="rounded-xl border border-border p-3 space-y-2">
+              <div
+                key={posting.id}
+                className="rounded-xl border border-border p-3 space-y-2"
+              >
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 min-w-0">
-                    <TruncatedText text={posting.platform} className="text-sm font-semibold text-foreground" />
-                    <Badge className={STATUS_BADGE[posting.status]} variant="outline">
+                    <TruncatedText
+                      text={posting.platform}
+                      className="text-sm font-semibold text-foreground"
+                    />
+                    <Badge
+                      className={STATUS_BADGE[posting.status]}
+                      variant="outline"
+                    >
                       {posting.status}
                     </Badge>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     {posting.externalPostUrl && (
-                      <a href={posting.externalPostUrl} target="_blank" rel="noopener noreferrer">
+                      <a
+                        href={posting.externalPostUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         <Button variant="ghost" size="icon" className="h-6 w-6">
                           <ExternalLink className="h-3 w-3" />
                         </Button>
                       </a>
                     )}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <AnimatedIconButton icon={EllipsisIcon} variant="ghost" size="icon" className="h-6 w-6" aria-label="Posting actions" />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {STATUS_OPTIONS.filter((s) => s !== posting.status).map((s) => (
-                          <DropdownMenuItem key={s} onClick={() => handleStatusChange(posting.id, s)}>
-                            Mark as {s}
-                          </DropdownMenuItem>
-                        ))}
-                        <DropdownMenuItem variant="destructive"
-                          onClick={() => handleDelete(posting.id)}
-                        >
-                          <Trash2 className="mr-2 h-3.5 w-3.5" /> Remove
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <PostingActionsMenu
+                      posting={posting}
+                      onStatusChange={handleStatusChange}
+                      onDelete={handleDelete}
+                    />
                   </div>
                 </div>
                 <div className="flex items-center gap-3 text-[11px] text-muted-foreground">

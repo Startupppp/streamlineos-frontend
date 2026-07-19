@@ -36,7 +36,9 @@ import {
   useCancelLoad,
   type Load,
 } from "@/hooks/api/inventory/shipping";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const PAGE_LIMIT = 20;
 
@@ -82,7 +84,7 @@ function LoadDetailPanel({ loadId, onClose }: LoadDetailPanelProps) {
           toast.success("Load dispatched");
           setConfirmAction(null);
         },
-        onError: (error) => toast.error(error.message),
+        onError: (error) => toast.error(getErrorMessage(error)),
       });
     } else if (confirmAction === "close") {
       closeMutation.mutate(id, {
@@ -90,7 +92,7 @@ function LoadDetailPanel({ loadId, onClose }: LoadDetailPanelProps) {
           toast.success("Load closed");
           setConfirmAction(null);
         },
-        onError: (error) => toast.error(error.message),
+        onError: (error) => toast.error(getErrorMessage(error)),
       });
     } else if (confirmAction === "cancel") {
       cancelMutation.mutate(id, {
@@ -99,7 +101,7 @@ function LoadDetailPanel({ loadId, onClose }: LoadDetailPanelProps) {
           setConfirmAction(null);
           onClose();
         },
-        onError: (error) => toast.error(error.message),
+        onError: (error) => toast.error(getErrorMessage(error)),
       });
     }
   }
@@ -118,12 +120,16 @@ function LoadDetailPanel({ loadId, onClose }: LoadDetailPanelProps) {
     );
   }
 
+  function handleRetryLoad(): void {
+    void loadQuery.refetch();
+  }
+
   if (loadQuery.error || !load) {
     return (
       <ErrorState
         title="Failed to load details"
-        description={loadQuery.error?.message ?? "Load not found"}
-        onRetry={() => void loadQuery.refetch()}
+        description={loadQuery.error != null ? getErrorMessage(loadQuery.error) : "Load not found"}
+        onRetry={handleRetryLoad}
       />
     );
   }
@@ -220,8 +226,10 @@ function LoadDetailPanel({ loadId, onClose }: LoadDetailPanelProps) {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel onClick={handleDismissConfirm}>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleConfirmAction} disabled={isPending}>
-                {isPending ? "Processing…" : confirmLabels[confirmAction].action}
+              <AlertDialogAction asChild>
+                <LoadingButton onClick={handleConfirmAction} isPending={isPending} loadingText="Processing…">
+                  {confirmLabels[confirmAction].action}
+                </LoadingButton>
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -262,6 +270,10 @@ function LoadsPageInner() {
   function handleDetailClose(open: boolean): void {
     setDetailOpen(open);
     if (!open) setSelectedId(null);
+  }
+
+  function handleDetailPanelClose(): void {
+    handleDetailClose(false);
   }
 
   const loadsQuery = useLoads({ page, limit: PAGE_LIMIT });
@@ -312,46 +324,47 @@ function LoadsPageInner() {
     <>
       <PageWrapper
         title="Loads"
-        subtitle={total > 0 ? `${total} ${total === 1 ? "load" : "loads"}` : "Group shipments into transport loads"}
+        subtitle="Group shipments into transport loads"
         actions={
           <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1.5" size="sm" onClick={handleNewLoad}>
             New Load
           </AnimatedIconButton>
         }
       >
-        {loadsQuery.error ? (
-          <ErrorState
-            title="Failed to load loads"
-            description={loadsQuery.error.message}
-            onRetry={handleRetry}
-          />
-        ) : (
-          <DataTable
-            className="flex-1 min-h-0"
-            data={items}
-            columns={columns}
-            getRowKey={(l) => l.id}
-            isLoading={loadsQuery.isLoading}
-            onRowClick={handleRowClick}
-            emptyState={
-              <InventoryEmptyState
-                illustration={<EmptyTransferIllustration />}
-                title="No loads yet"
-                description="Create a load to group shipments for transport."
-                action={{ label: "New Load", onClick: handleNewLoad }}
-                className="border-0 bg-transparent"
-              />
-            }
-            pagination={{
-              mode: "server",
-              page,
-              pageSize: PAGE_LIMIT,
-              total,
-              onPageChange: handlePageChange,
-            }}
-            minWidth="560px"
-          />
-        )}
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+          {loadsQuery.error ? (
+            <ErrorState
+              title="Failed to load loads"
+              description={getErrorMessage(loadsQuery.error)}
+              onRetry={handleRetry}
+            />
+          ) : (
+            <DataTable
+              data={items}
+              columns={columns}
+              getRowKey={(l) => l.id}
+              isLoading={loadsQuery.isLoading}
+              onRowClick={handleRowClick}
+              emptyState={
+                <InventoryEmptyState
+                  illustration={<EmptyTransferIllustration />}
+                  title="No loads yet"
+                  description="Create a load to group shipments for transport."
+                  action={{ label: "New Load", onClick: handleNewLoad }}
+                  className="border-0 bg-transparent"
+                />
+              }
+              pagination={{
+                mode: "server",
+                page,
+                pageSize: PAGE_LIMIT,
+                total,
+                onPageChange: handlePageChange,
+              }}
+              minWidth="560px"
+            />
+          )}
+        </div>
       </PageWrapper>
 
       <AppSheet
@@ -361,7 +374,7 @@ function LoadsPageInner() {
         description={selectedLoad ? `Status: ${LOAD_STATUS_LABEL[selectedLoad.status]}` : undefined}
       >
         {selectedId !== null && (
-          <LoadDetailPanel loadId={selectedId} onClose={() => handleDetailClose(false)} />
+          <LoadDetailPanel loadId={selectedId} onClose={handleDetailPanelClose} />
         )}
       </AppSheet>
 

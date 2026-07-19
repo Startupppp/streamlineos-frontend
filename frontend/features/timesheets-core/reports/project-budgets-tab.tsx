@@ -199,7 +199,7 @@ export function ProjectBudgetsTab() {
             iconSize={14}
             iconClassName="mr-1.5"
             size="sm"
-            className="h-8 text-xs shrink-0"
+            className="shrink-0"
             onClick={handleAdd}
           >
             Add budget

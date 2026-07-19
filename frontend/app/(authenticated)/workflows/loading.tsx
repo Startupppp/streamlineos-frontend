@@ -16,7 +16,7 @@ export default function WorkflowsLoading() {
         </div>
       }
     >
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         <StatCardGridSkeleton cols={4} count={4} />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 9 }).map((_, i) => (

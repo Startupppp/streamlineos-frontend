@@ -11,7 +11,7 @@ import {
   type CreateApiTokenResponse,
 } from "@/hooks/api/api-tokens";
 import { getApiError } from "@/lib/api-client";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -156,13 +156,14 @@ export function CreateOrgTokenSheet({
           </Form>
         </SheetBody>
         <SheetFooter className="shrink-0 flex-row justify-end gap-2 border-t border-border bg-muted/30 px-6 py-4">
-          <Button
+          <LoadingButton
             type="submit"
             form="org-token-form"
-            disabled={create.isPending}
+            isPending={create.isPending}
+            loadingText="Creating…"
           >
-            {create.isPending ? "Creating…" : "Create Token"}
-          </Button>
+            Create Token
+          </LoadingButton>
         </SheetFooter>
       </SheetContent>
     </Sheet>

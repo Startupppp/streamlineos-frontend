@@ -81,14 +81,20 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
     mutationFn: (variables: { email: string; code: string }) =>
       apiClient.post<{ autoLoginToken: string }>("/auth/email-otp/verify", variables),
     onSuccess: async (data) => {
-      const result = await signIn("credentials", {
-        magicToken: data.autoLoginToken,
-        redirect: false,
-      });
-      if (result?.ok) {
-        window.location.assign(getCallbackUrl());
-      } else {
+      try {
+        const result = await signIn("credentials", {
+          magicToken: data.autoLoginToken,
+          redirect: false,
+        });
+        if (result?.ok && !result.error) {
+          window.location.assign(getCallbackUrl());
+        } else {
+          toast.error("Sign-in failed. Please try again.");
+          setOtpValue("");
+        }
+      } catch {
         toast.error("Sign-in failed. Please try again.");
+        setOtpValue("");
       }
     },
     onError: (error) => {

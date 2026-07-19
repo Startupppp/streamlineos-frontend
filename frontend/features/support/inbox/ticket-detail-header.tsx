@@ -212,7 +212,7 @@ export function TicketDetailHeader({ ticket, onBack, onInsertReply, replyDraftCo
           )}
           {canViewTicket && <AiActionsMenu actions={aiActions} menuLabel="AI assist" align="end" />}
           <Select value={ticket.queueId ? String(ticket.queueId) : "none"} onValueChange={handleQueueValueChange}>
-            <SelectTrigger className="h-8 text-xs w-[130px]">
+            <SelectTrigger className="h-9 text-sm w-[130px]">
               <SelectValue placeholder="Queue" />
             </SelectTrigger>
             <SelectContent>
@@ -225,7 +225,7 @@ export function TicketDetailHeader({ ticket, onBack, onInsertReply, replyDraftCo
             </SelectContent>
           </Select>
           <Select value={ticket.status} onValueChange={handleStatusValueChange}>
-            <SelectTrigger className="h-8 text-xs w-[120px]">
+            <SelectTrigger className="h-9 text-sm w-[120px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

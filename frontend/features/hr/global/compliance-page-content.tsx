@@ -88,9 +88,9 @@ export function CompliancePageContent() {
     >
       <Tabs defaultValue="calendar" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="calendar" className="text-xs">Calendar</TabsTrigger>
-          <TabsTrigger value="requirements" className="text-xs">Requirements</TabsTrigger>
-          <TabsTrigger value="work-auth" className="text-xs">Work Authorizations</TabsTrigger>
+          <TabsTrigger value="calendar">Calendar</TabsTrigger>
+          <TabsTrigger value="requirements">Requirements</TabsTrigger>
+          <TabsTrigger value="work-auth">Work Authorizations</TabsTrigger>
         </TabsList>
 
         <TabsContent value="calendar" className="mt-0">
@@ -112,7 +112,7 @@ export function CompliancePageContent() {
           <div className="flex justify-end gap-2 mb-4">
             <div className="flex items-center gap-2">
               <Select value={seedCountry} onValueChange={setSeedCountry}>
-                <SelectTrigger className="w-24 text-xs">
+                <SelectTrigger className="w-24">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

@@ -19,7 +19,7 @@ export function QuoteSheetTotals({
         Subtotal: {currency} {subtotal.toFixed(2)}
       </span>
       {discountAmt > 0 && (
-        <span className="text-amber-700">
+        <span className="text-amber-700 dark:text-amber-300">
           Discount: -{currency} {discountAmt.toFixed(2)}
         </span>
       )}

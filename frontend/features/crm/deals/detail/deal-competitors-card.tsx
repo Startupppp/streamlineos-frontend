@@ -77,7 +77,7 @@ export function DealCompetitorsCard({ dealId }: DealCompetitorsCardProps) {
               value={draft}
               onChange={handleDraftChange}
               placeholder="Competitor name..."
-              className="text-sm h-8"
+              className="text-sm"
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleAdd();
                 if (e.key === "Escape") handleCancelAdding();

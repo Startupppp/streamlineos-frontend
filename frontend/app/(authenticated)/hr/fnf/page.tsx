@@ -47,10 +47,10 @@ const fnfKeys = {
 };
 
 function fnfStatusBadgeClass(status: string | null): string {
-  if (status === "PAID") return "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800";
-  if (status === "APPROVED") return "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800";
-  if (status === "PENDING_APPROVAL") return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800";
-  return "bg-muted text-muted-foreground border-border dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700";
+  if (status === "PAID") return "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800";
+  if (status === "APPROVED") return "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-800";
+  if (status === "PENDING_APPROVAL") return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800";
+  return "bg-muted text-muted-foreground border-border";
 }
 
 function fnfStatusLabel(status: string | null): string {
@@ -89,24 +89,24 @@ function FnfCard({ item, onMarkPaid, isPending }: FnfCardProps) {
             className={cn(
               "h-7 w-7 rounded-lg flex items-center justify-center shrink-0",
               item.status === "PAID"
-                ? "bg-emerald-100 dark:bg-emerald-950/40"
+                ? "bg-emerald-100 dark:bg-emerald-500/10"
                 : item.status === "APPROVED"
-                  ? "bg-blue-100 dark:bg-blue-950/40"
+                  ? "bg-blue-100 dark:bg-blue-500/10"
                   : item.status === "PENDING_APPROVAL"
-                    ? "bg-amber-100 dark:bg-amber-950/40"
-                    : "bg-slate-100 dark:bg-slate-800/40"
+                    ? "bg-amber-100 dark:bg-amber-500/10"
+                    : "bg-muted"
             )}
           >
             <FileSpreadsheet
               className={cn(
                 "h-3.5 w-3.5",
                 item.status === "PAID"
-                  ? "text-emerald-700 dark:text-emerald-400"
+                  ? "text-emerald-700 dark:text-emerald-300"
                   : item.status === "APPROVED"
-                    ? "text-blue-700 dark:text-blue-400"
+                    ? "text-blue-700 dark:text-blue-300"
                     : item.status === "PENDING_APPROVAL"
-                      ? "text-amber-700 dark:text-amber-400"
-                      : "text-muted-foreground dark:text-slate-400"
+                      ? "text-amber-700 dark:text-amber-300"
+                      : "text-muted-foreground"
               )}
             />
           </div>
@@ -134,7 +134,7 @@ function FnfCard({ item, onMarkPaid, isPending }: FnfCardProps) {
                 </span>
               )}
               {item.deductions && Number(item.deductions) > 0 && (
-                <span className="text-rose-600 dark:text-rose-400">
+                <span className="text-rose-600 dark:text-rose-300">
                   −₹{Number(item.deductions).toLocaleString("en-IN")} deductions
                 </span>
               )}
@@ -290,7 +290,7 @@ function FnfContent() {
   if (isLoading) {
     return (
       <PageWrapper title="Full & Final Settlement" subtitle="Employee separation settlements" variant="display">
-        <div className="space-y-3">
+        <div className="flex flex-1 min-h-0 flex-col gap-3">
           {Array.from({ length: 10 }).map((_, i) => (
             <Skeleton key={i} className="h-20 rounded-2xl" />
           ))}
@@ -331,7 +331,7 @@ function FnfContent() {
           compact
         />
       ) : (
-        <div className="space-y-2">
+        <div className="flex flex-1 min-h-0 flex-col gap-2">
           {items.map((item: FnfSettlement) => (
             <FnfCard key={item.id} item={item} onMarkPaid={setCompleteId} isPending={complete.isPending} />
           ))}

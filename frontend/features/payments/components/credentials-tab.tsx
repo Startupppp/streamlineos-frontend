@@ -39,6 +39,18 @@ export function CredentialsTab({ providerKey, environment, credential }: Credent
   const save = useSavePaymentCredentials(providerKey);
   const disconnect = useDisconnectPaymentCredentials(providerKey);
 
+  function handleKeyIdChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setKeyId(e.target.value);
+  }
+
+  function handleSecretChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setSecret(e.target.value);
+  }
+
+  function handleWebhookSecretChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setWebhookSecret(e.target.value);
+  }
+
   function handleSave() {
     if (!keyId.trim() && !secret.trim() && !webhookSecret.trim()) {
       toast.error("Enter at least one field to save");
@@ -110,7 +122,7 @@ export function CredentialsTab({ providerKey, environment, credential }: Credent
         <Input
           id={`${environment}-key-id`}
           value={keyId}
-          onChange={(e) => setKeyId(e.target.value)}
+          onChange={handleKeyIdChange}
           placeholder={credential?.maskedKeyHint ? `Currently ****${credential.maskedKeyHint.slice(-4)}` : "rzp_test_..."}
           className="text-sm font-mono"
         />
@@ -122,7 +134,7 @@ export function CredentialsTab({ providerKey, environment, credential }: Credent
           id={`${environment}-secret`}
           type="password"
           value={secret}
-          onChange={(e) => setSecret(e.target.value)}
+          onChange={handleSecretChange}
           placeholder={credential?.hasSecret ? "Saved — enter a new value to replace" : "Enter key secret"}
           className="text-sm font-mono"
         />
@@ -134,7 +146,7 @@ export function CredentialsTab({ providerKey, environment, credential }: Credent
           id={`${environment}-webhook-secret`}
           type="password"
           value={webhookSecret}
-          onChange={(e) => setWebhookSecret(e.target.value)}
+          onChange={handleWebhookSecretChange}
           placeholder={credential?.hasWebhookSecret ? "Saved — enter a new value to replace" : "Enter webhook secret"}
           className="text-sm font-mono"
         />

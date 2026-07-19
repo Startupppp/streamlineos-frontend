@@ -156,7 +156,7 @@ export default function CrmHubPage() {
           title="Failed to load CRM data"
           description="Something went wrong while loading your dashboard. Please try again."
           onRetry={handleRetry}
-          className="flex-1 min-h-[40vh]"
+          className="flex-1"
         />
       </PageWrapper>
     );

@@ -34,7 +34,7 @@ function buildTimeline(quote: Quote): TimelineEvent[] {
       label: "Approved",
       date: quote.approvedAt,
       icon: <CheckCircle2 className="h-3.5 w-3.5" />,
-      className: "text-emerald-600",
+      className: "text-emerald-600 dark:text-emerald-400",
     });
   }
 
@@ -43,7 +43,7 @@ function buildTimeline(quote: Quote): TimelineEvent[] {
       label: "Approval Rejected",
       date: quote.approvedAt,
       icon: <XCircle className="h-3.5 w-3.5" />,
-      className: "text-red-600",
+      className: "text-red-600 dark:text-red-400",
     });
   }
 
@@ -52,7 +52,7 @@ function buildTimeline(quote: Quote): TimelineEvent[] {
       label: "Accepted",
       date: quote.acceptedAt,
       icon: <CheckCircle2 className="h-3.5 w-3.5" />,
-      className: "text-emerald-600",
+      className: "text-emerald-600 dark:text-emerald-400",
     });
   }
 
@@ -61,7 +61,7 @@ function buildTimeline(quote: Quote): TimelineEvent[] {
       label: "Rejected",
       date: quote.rejectedAt,
       icon: <XCircle className="h-3.5 w-3.5" />,
-      className: "text-red-600",
+      className: "text-red-600 dark:text-red-400",
     });
   }
 
@@ -70,7 +70,7 @@ function buildTimeline(quote: Quote): TimelineEvent[] {
       label: "Signed",
       date: quote.signedAt,
       icon: <FileCheck className="h-3.5 w-3.5" />,
-      className: "text-emerald-600",
+      className: "text-emerald-600 dark:text-emerald-400",
     });
   }
 

@@ -44,7 +44,7 @@ export default function NewSurveyPage() {
               ))}
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="flex flex-1 min-h-0 flex-col gap-6">
               <div>
                 <p className="text-sm font-medium text-foreground mb-2">Start from scratch</p>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

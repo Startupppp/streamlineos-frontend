@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { ShieldCheck, Clock, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -28,7 +29,7 @@ import type { BgvStatus as CandidateBgvStatus } from "@/types/hr";
 
 const BGV_STATUSES: Array<{ value: BgvStatus; label: string; color: string }> = [
   { value: "NOT_INITIATED", label: "Not Initiated", color: "bg-muted text-muted-foreground border-border" },
-  { value: "INITIATED", label: "Initiated", color: "bg-blue/10 text-blue border-blue/20" },
+  { value: "INITIATED", label: "Initiated", color: "bg-primary/10 text-primary border-primary/20" },
   { value: "PENDING", label: "Pending", color: "bg-amber-500/10 text-amber-600 border-amber-500/20" },
   { value: "CLEARED", label: "Cleared", color: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" },
   { value: "FAILED", label: "Failed", color: "bg-destructive/10 text-destructive border-destructive/20" },
@@ -62,6 +63,10 @@ export function BgvTracker({
 
   const update = useUpdateCandidateBgv(candidateId);
   const style = getBgvStyle(bgvStatus);
+
+  const handleStatusChange = useCallback((v: string) => setStatus(v as BgvStatus), []);
+  const handleAgencyChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setAgency(e.target.value), []);
+  const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value), []);
 
   const handleSave = useCallback(() => {
     update.mutate(
@@ -137,8 +142,8 @@ export function BgvTracker({
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">Status</Label>
-                <Select value={status} onValueChange={(v) => setStatus(v as BgvStatus)}>
-                  <SelectTrigger className="text-xs">
+                <Select value={status} onValueChange={handleStatusChange}>
+                  <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -153,10 +158,9 @@ export function BgvTracker({
               <div className="space-y-1">
                 <Label className="text-xs">Agency</Label>
                 <Input
-                  className="text-xs"
                   placeholder="e.g. AuthBridge"
                   value={agency}
-                  onChange={(e) => setAgency(e.target.value)}
+                  onChange={handleAgencyChange}
                 />
               </div>
             </div>
@@ -167,17 +171,18 @@ export function BgvTracker({
                 rows={2}
                 placeholder="Internal notes about the verification..."
                 value={notes}
-                onChange={(e) => setNotes(e.target.value)}
+                onChange={handleNotesChange}
               />
             </div>
-            <Button
+            <LoadingButton
               size="sm"
               className="text-xs"
               onClick={handleSave}
-              disabled={update.isPending}
+              isPending={update.isPending}
+              loadingText="Saving..."
             >
-              {update.isPending ? "Saving..." : "Save"}
-            </Button>
+              Save
+            </LoadingButton>
           </div>
         )}
       </CardContent>

@@ -73,22 +73,22 @@ const STATUS_META: Record<string, { label: string; badge: string }> = {
   AVAILABLE: {
     label: "Available",
     badge:
-      "bg-emerald-100 border-emerald-200 text-emerald-700 dark:bg-emerald-900/40 dark:border-emerald-800 dark:text-emerald-300",
+      "bg-emerald-100 border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-500/30 dark:text-emerald-300",
   },
   ASSIGNED: {
     label: "Assigned",
     badge:
-      "bg-blue-100 border-blue-200 text-blue-700 dark:bg-blue-900/40 dark:border-blue-800 dark:text-blue-300",
+      "bg-blue-100 border-blue-200 text-blue-700 dark:bg-blue-500/10 dark:border-blue-500/30 dark:text-blue-300",
   },
   MAINTENANCE: {
     label: "Maintenance",
     badge:
-      "bg-amber-100 border-amber-200 text-amber-700 dark:bg-amber-900/40 dark:border-amber-800 dark:text-amber-300",
+      "bg-amber-100 border-amber-200 text-amber-700 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-300",
   },
   RETIRED: {
     label: "Retired",
     badge:
-      "bg-rose-100 border-rose-200 text-rose-700 dark:bg-rose-900/40 dark:border-rose-800 dark:text-rose-300",
+      "bg-rose-100 border-rose-200 text-rose-700 dark:bg-rose-500/10 dark:border-rose-500/30 dark:text-rose-300",
   },
 };
 
@@ -178,7 +178,7 @@ function ASSET_COLUMNS(
       key: "type",
       header: "Type",
       cell: (asset) => (
-        <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted border-border text-foreground dark:bg-slate-900/40 dark:border-slate-700 dark:text-slate-300">
+        <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted border-border text-foreground">
           {asset.type}
         </span>
       ),

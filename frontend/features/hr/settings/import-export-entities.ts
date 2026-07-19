@@ -9,7 +9,7 @@ export const HR_IMPORT_EXPORT_ENTITIES: ImportEntity[] = [
     description:
       "Export employee directory with roles, departments, and contact info.",
     exportEndpoint: "/hr/export/employees",
-    accent: "text-violet-600 bg-violet-500/10",
+    accent: "text-blue-600 bg-blue-500/10",
     supported: { import: false, export: true },
   },
   {

@@ -105,7 +105,7 @@ export default function SupportDashboardPage() {
         title="Support Analytics"
         subtitle="Real-time insights into customer support performance across all channels"
       >
-        <div className="flex flex-1 min-h-0 flex-col space-y-4">
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
           <StatCardGridSkeleton cols={4} />
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-12">
             <Skeleton className="h-72 lg:col-span-5" />
@@ -143,7 +143,7 @@ export default function SupportDashboardPage() {
       subtitle="Real-time insights into customer support performance across all channels"
     >
     <motion.div
-      className="space-y-4"
+      className="flex flex-1 min-h-0 flex-col gap-4"
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
@@ -180,8 +180,8 @@ export default function SupportDashboardPage() {
             value={supportDashboardStats.responseRate.value}
             icon={Zap}
             trend={supportDashboardStats.responseRate.trend}
-            sparkColor={sparkColors.purple}
-            tone="violet"
+            sparkColor={sparkColors.blue}
+            tone="blue"
           />
         </StatCardGrid>
       </motion.div>

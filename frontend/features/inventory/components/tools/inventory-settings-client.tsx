@@ -8,9 +8,11 @@ import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCan } from "@/hooks/api/access";
 import { useInventorySettings, useUpdateInventorySettings } from "@/hooks/api/inventory/admin";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type { InventorySettings } from "@/hooks/api/inventory/admin";
 import { InventorySettingsForm } from "./inventory-settings-form";
 import { NumberSequencesCard } from "./number-sequences-card";
@@ -68,26 +70,33 @@ export function InventorySettingsClient() {
   if (!canManage) {
     return (
       <PageWrapper title="Settings" subtitle="">
-        <InventoryEmptyState
-          title="Access Denied"
-          description="You don't have permission to manage inventory settings."
-        />
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+          <InventoryEmptyState
+            title="Access Denied"
+            description="You don't have permission to manage inventory settings."
+          />
+        </div>
       </PageWrapper>
     );
   }
 
-  async function onSubmit(values: SettingsFormValues) {
+  async function onSubmit(values: SettingsFormValues): Promise<void> {
     try {
       await updateMutation.mutateAsync(values as InventorySettings);
       toast.success("Settings saved.");
       reset(values);
-    } catch {
-      toast.error("Failed to save settings.");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     }
+  }
+
+  function handleDiscard(): void {
+    reset();
   }
 
   return (
     <PageWrapper title="Settings" subtitle="Configure stock policies, procurement rules, and system sequences.">
+      <div className="flex flex-1 min-h-0 flex-col gap-6">
       <FormProvider {...methods}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {isLoading ? (
@@ -104,23 +113,24 @@ export function InventorySettingsClient() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => reset()}
+                  onClick={handleDiscard}
                 >
                   Discard
                 </Button>
-                <Button type="submit" size="sm" disabled={updateMutation.isPending}>
-                  {updateMutation.isPending ? "Saving…" : "Save changes"}
-                </Button>
+                <LoadingButton type="submit" size="sm" isPending={updateMutation.isPending} loadingText="Saving…">
+                  Save changes
+                </LoadingButton>
               </div>
             </div>
           )}
         </form>
       </FormProvider>
 
-      <div className="mt-6 space-y-6">
+      <div className="space-y-6">
         <NumberSequencesCard />
         <SettingsHealthCard />
         <WebhooksSettingsCard />
+      </div>
       </div>
     </PageWrapper>
   );

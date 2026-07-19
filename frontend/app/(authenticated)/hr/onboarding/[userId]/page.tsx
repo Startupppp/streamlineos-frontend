@@ -112,7 +112,7 @@ function TaskCard({
                 </span>
               )}
               {done && task.completedAt && (
-                <span className="text-[11px] text-green-600 dark:text-green-400">
+                <span className="text-[11px] text-green-600 dark:text-green-300">
                   Completed {formatDate(task.completedAt)}
                 </span>
               )}

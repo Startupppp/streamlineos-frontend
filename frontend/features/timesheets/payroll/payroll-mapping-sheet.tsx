@@ -3,7 +3,7 @@
 import { useCallback, useEffect } from "react";
 import { useForm, useFieldArray, type UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { mappingFormSchema, type MappingFormValues } from "./payroll-mapping-schema";
 import {
   Sheet,
   SheetBody,
@@ -99,19 +99,6 @@ const PROVIDER_HEADER_PRESETS: Record<PayrollProvider, Record<string, string>> =
   },
 };
 
-const columnSchema = z.object({
-  key: z.string(),
-  header: z.string().min(1, "Header required"),
-  enabled: z.boolean(),
-});
-
-const mappingFormSchema = z.object({
-  provider: z.enum(["GENERIC", "ZOHO_PAYROLL", "RAZORPAYX", "ADP", "GUSTO"]),
-  columns: z.array(columnSchema),
-});
-
-type MappingFormValues = z.infer<typeof mappingFormSchema>;
-
 interface PayrollMappingSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -143,7 +130,7 @@ function MappingColumnRow({ form, index, columnKey }: MappingColumnRowProps) {
         {columnKey}
       </span>
       <Input
-        className="h-8 text-xs flex-1"
+        className="flex-1"
         {...form.register(`columns.${index}.header`)}
         aria-label={`Header for ${columnKey}`}
       />
@@ -221,7 +208,7 @@ export function PayrollMappingSheet({
             <div className="space-y-1.5">
               <Label className="text-xs font-medium">Provider</Label>
               <Select value={form.watch("provider")} onValueChange={handleProviderChange}>
-                <SelectTrigger className="h-8 text-xs" aria-label="Payroll provider">
+                <SelectTrigger className="h-9" aria-label="Payroll provider">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -253,16 +240,12 @@ export function PayrollMappingSheet({
             <Button
               type="button"
               variant="outline"
-              size="sm"
-              className="h-8 text-xs"
               onClick={handleClose}
             >
               Cancel
             </Button>
             <LoadingButton
               type="submit"
-              size="sm"
-              className="h-8 text-xs"
               isPending={updateSettings.isPending}
               loadingText="Saving…"
             >

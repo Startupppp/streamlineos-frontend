@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -269,7 +270,7 @@ export default function PaymentsReceivedPage() {
       subtitle="All payments collected against invoices"
       filters={
         <Select value={methodFilter} onValueChange={handleMethodFilterChange}>
-          <SelectTrigger className="w-[160px] text-xs">
+          <SelectTrigger className={`w-[160px] ${FILTER_SELECT_TRIGGER}`}>
             <SelectValue placeholder="All methods" />
           </SelectTrigger>
           <SelectContent>
@@ -284,28 +285,30 @@ export default function PaymentsReceivedPage() {
         </Select>
       }
     >
-      {data?.items.length === 0 && !isLoading ? (
-        <EmptyState
-          illustrationPreset="expenses"
-          title="No payments received"
-          description="Record payments on invoices to see them here"
-        />
-      ) : (
-        <DataTable
-          data={data?.items ?? []}
-          columns={columns}
-          getRowKey={(row) => String(row.id)}
-          isLoading={isLoading}
-          onRowClick={handleViewPayment}
-          className="flex-1 min-h-0"
-          pagination={{
-            pageSize: 50,
-            page,
-            total: data?.total ?? 0,
-            onPageChange: setPage,
-          }}
-        />
-      )}
+      <div className="flex flex-1 min-h-0 flex-col">
+        {data?.items.length === 0 && !isLoading ? (
+          <EmptyState
+            illustrationPreset="expenses"
+            title="No payments received"
+            description="Record payments on invoices to see them here"
+          />
+        ) : (
+          <DataTable
+            data={data?.items ?? []}
+            columns={columns}
+            getRowKey={(row) => String(row.id)}
+            isLoading={isLoading}
+            onRowClick={handleViewPayment}
+            className="flex-1 min-h-0"
+            pagination={{
+              pageSize: 50,
+              page,
+              total: data?.total ?? 0,
+              onPageChange: setPage,
+            }}
+          />
+        )}
+      </div>
 
       <PaymentDetailSheet payment={selectedPayment} onClose={handleCloseDetail} />
     </PageWrapper>

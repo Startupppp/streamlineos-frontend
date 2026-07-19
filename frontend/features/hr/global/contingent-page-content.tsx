@@ -43,8 +43,8 @@ function ContractTypeBadge({ type }: { type: HrContract["contractType"] }) {
 
 function ContractStatusBadge({ status }: { status: HrContract["status"] }) {
   if (status === "expiring") return <Badge className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">Expiring</Badge>;
-  if (status === "ended") return <Badge className="bg-muted text-muted-foreground border-border dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700">Ended</Badge>;
-  if (status === "converted") return <Badge className="bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-300 dark:border-indigo-500/30">Converted</Badge>;
+  if (status === "ended") return <Badge className="bg-muted text-muted-foreground border-border">Ended</Badge>;
+  if (status === "converted") return <Badge className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30">Converted</Badge>;
   if (status === "renewed") return <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">Renewed</Badge>;
   return <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">Active</Badge>;
 }

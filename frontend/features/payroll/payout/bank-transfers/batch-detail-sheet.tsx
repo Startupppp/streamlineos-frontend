@@ -21,7 +21,7 @@ const ITEM_STATUS_STYLES: Record<BankItemStatus, string> = {
   SENT: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
   PAID: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
   FAILED: "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-300",
-  HELD: "bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-300",
+  HELD: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
 };
 
 const BATCH_STATUS_STYLES: Record<BankBatchStatus, string> = {

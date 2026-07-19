@@ -31,6 +31,7 @@ const TiptapEditor = dynamic(
   },
 );
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateChangeRequest, useUpdateChangeRequest } from "@/hooks/api/projects/change-requests";
 import { ProjectMemberSelect } from "@/components/members/project-member-select";
 import type { ChangeRequest, ChangeRequestStatus } from "@/types/projects";
@@ -121,12 +122,12 @@ export function ChangeRequestSheet({ projectId, open, onOpenChange, editCr }: Ch
     if (editCr) {
       update.mutate({ ...payload, id: editCr.id }, {
         onSuccess: () => { toast.success("Change request updated"); onOpenChange(false); },
-        onError: () => toast.error("Failed to update change request"),
+        onError: (e) => toast.error(getErrorMessage(e)),
       });
     } else {
       create.mutate({ title: payload.title, description: payload.description, impact: payload.impact }, {
         onSuccess: () => { toast.success("Change request created"); onOpenChange(false); },
-        onError: () => toast.error("Failed to create change request"),
+        onError: (e) => toast.error(getErrorMessage(e)),
       });
     }
   }
@@ -173,7 +174,7 @@ export function ChangeRequestSheet({ projectId, open, onOpenChange, editCr }: Ch
                 <div className="space-y-1.5">
                   <Label className="text-[11px]">Status</Label>
                   <Select value={form.watch("status")} onValueChange={(v) => form.setValue("status", v)}>
-                    <SelectTrigger className="text-[11px]"><SelectValue /></SelectTrigger>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {CR_STATUSES.map((s) => (
                         <SelectItem key={s} value={s}>{CR_STATUS_LABELS[s]}</SelectItem>

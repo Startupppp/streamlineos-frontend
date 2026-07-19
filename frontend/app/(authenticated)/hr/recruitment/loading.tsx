@@ -9,7 +9,7 @@ export default function RecruitmentLoading() {
       subtitle="Today's recruiting operations, in one place"
       actions={<Skeleton className="h-9 w-20 rounded-md" />}
     >
-      <div className="space-y-5">
+      <div className="flex flex-1 min-h-0 flex-col gap-5">
         <StatCardGridSkeleton cols={6} count={6} />
         <div className="grid lg:grid-cols-3 gap-4 items-start">
           <div className="lg:col-span-2 space-y-4">

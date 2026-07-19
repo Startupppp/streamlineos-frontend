@@ -342,9 +342,9 @@ export default function LeadsPipelinePage() {
 
   if (boardLoading || statsLoading) {
     return (
-      <PageWrapper title="Lead Pipeline">
-        <div className="space-y-3">
-          <div className="flex gap-2">
+      <PageWrapper title="Lead Pipeline" noInternalScroll>
+        <div className="flex flex-col flex-1 min-h-0 space-y-3">
+          <div className="flex gap-2 shrink-0">
             {[1, 2, 3, 4, 5].map((i) => (
               <Skeleton key={i} className="h-[52px] flex-1 rounded-lg" />
             ))}
@@ -362,7 +362,7 @@ export default function LeadsPipelinePage() {
           title="Failed to load leads"
           description="There was an error loading the lead pipeline. Please try again."
           onRetry={() => void refetchBoard()}
-          className="flex-1 min-h-[50vh]"
+          className="flex-1"
         />
       </PageWrapper>
     );
@@ -404,7 +404,7 @@ export default function LeadsPipelinePage() {
         />
       }
     >
-      <div className="flex flex-col h-full min-h-0">
+      <div className="flex flex-col flex-1 min-h-0">
         {stats && (
           <div className="shrink-0">
             <LeadsStatsBar stats={stats} />

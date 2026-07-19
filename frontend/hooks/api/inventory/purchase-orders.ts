@@ -106,7 +106,7 @@ export function useCreatePurchaseOrder() {
       return apiClient.post<PurchaseOrderSummary>("/inventory/purchase-orders", body);
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
+      qc.invalidateQueries({ queryKey: [...queryKeys.inventory.all, "purchaseOrders"] });
     },
   });
 }
@@ -121,7 +121,7 @@ export function useSendPurchaseOrder(poId?: number) {
       return apiClient.post<PurchaseOrderSummary>(`/inventory/purchase-orders/${id}/send`, {});
     },
     onSuccess: (result) => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
+      qc.invalidateQueries({ queryKey: [...queryKeys.inventory.all, "purchaseOrders"] });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrder(result.id) });
     },
   });
@@ -134,7 +134,7 @@ export function useReceiveGoods(poId: number) {
     mutationFn: (data) =>
       apiClient.post<GoodsReceiptNote>(`/inventory/purchase-orders/${poId}/receive`, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
+      qc.invalidateQueries({ queryKey: [...queryKeys.inventory.all, "purchaseOrders"] });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrder(poId) });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
     },
@@ -156,7 +156,7 @@ export function useApprovePurchaseOrder(poId: number) {
         { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
+      qc.invalidateQueries({ queryKey: [...queryKeys.inventory.all, "purchaseOrders"] });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrder(poId) });
     },
   });
@@ -173,7 +173,7 @@ export function useClosePurchaseOrder(poId: number) {
         { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
+      qc.invalidateQueries({ queryKey: [...queryKeys.inventory.all, "purchaseOrders"] });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrder(poId) });
     },
   });
@@ -190,7 +190,7 @@ export function useCancelPurchaseOrder(poId: number) {
         { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
+      qc.invalidateQueries({ queryKey: [...queryKeys.inventory.all, "purchaseOrders"] });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrder(poId) });
     },
   });
@@ -235,7 +235,7 @@ export function useUpdatePurchaseOrder(poId: number) {
           : {}),
       }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
+      qc.invalidateQueries({ queryKey: [...queryKeys.inventory.all, "purchaseOrders"] });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrder(poId) });
     },
   });

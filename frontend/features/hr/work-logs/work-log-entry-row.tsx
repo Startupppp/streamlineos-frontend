@@ -5,7 +5,8 @@ import { format, isWeekend, isToday as isDateToday } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, Save, Link2, ExternalLink, Ticket, Plus, X } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { Save, Link2, ExternalLink, Ticket, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
@@ -31,11 +32,11 @@ const MAX_LINKS = 5;
 
 const statusPillClass: Record<string, string> = {
   APPROVED:
-    "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800",
+    "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800",
   PENDING:
-    "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800",
+    "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800",
   REJECTED:
-    "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800",
+    "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-800",
 };
 
 function parseLinks(raw: string | undefined): string[] {
@@ -389,19 +390,16 @@ export function WorkLogEntryRow({
               <div className="flex items-center gap-2">
                 {hasUnsavedChanges && !readOnly && (
                   <>
-                    <Button
+                    <LoadingButton
                       size="sm"
                       className="h-7 gap-1.5 text-xs"
                       onClick={handleSave}
-                      disabled={isSaving}
+                      isPending={isSaving}
+                      loadingText="Saving..."
                     >
-                      {isSaving ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                      ) : (
-                        <Save className="h-3 w-3" />
-                      )}
+                      <Save className="h-3 w-3" />
                       Save
-                    </Button>
+                    </LoadingButton>
                     <Button
                       size="sm"
                       variant="ghost"

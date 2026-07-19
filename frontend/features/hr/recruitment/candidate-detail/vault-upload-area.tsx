@@ -105,11 +105,15 @@ export function VaultUploadArea({ candidateId }: VaultUploadAreaProps) {
     setDocType(v as VaultDocumentType);
   }
 
+  function handleDropZoneKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Enter" || e.key === " ") handleDropZoneClick();
+  }
+
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <Select value={docType} onValueChange={handleDocTypeChange}>
-          <SelectTrigger className="text-xs flex-1 min-w-0">
+          <SelectTrigger className="flex-1 min-w-0">
             <SelectValue placeholder="Document type" />
           </SelectTrigger>
           <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -153,9 +157,7 @@ export function VaultUploadArea({ candidateId }: VaultUploadAreaProps) {
         role="button"
         tabIndex={0}
         aria-label="Drop zone for document upload"
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") handleDropZoneClick();
-        }}
+        onKeyDown={handleDropZoneKeyDown}
       >
         {addDoc.isPending ? (
           <Loader2

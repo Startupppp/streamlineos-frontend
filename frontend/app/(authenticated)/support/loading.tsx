@@ -9,7 +9,7 @@ export default function SupportLoading() {
       title="Support Analytics"
       subtitle="Real-time insights into customer support performance across all channels."
     >
-      <div className="space-y-6">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         <StatCardGridSkeleton cols={4} count={4} />
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-12">

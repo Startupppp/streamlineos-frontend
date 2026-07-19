@@ -313,12 +313,13 @@ function ImproveDescDialog({
   onApply,
   onDiscard,
 }: ImproveDescDialogProps) {
+  function handleOpenChange(v: boolean) {
+    if (!v) onDiscard();
+  }
   return (
     <Dialog
       open={open}
-      onOpenChange={(v) => {
-        if (!v) onDiscard();
-      }}
+      onOpenChange={handleOpenChange}
     >
       <DialogContent className="flex max-h-[min(80dvh,calc(100vh-100px))] max-w-2xl flex-col gap-0 overflow-hidden p-0 pb-0 md:!flex md:grid-cols-none md:max-w-2xl md:overflow-hidden md:pb-0 md:sm:max-w-2xl">
         <DialogHeader className="shrink-0 gap-1 border-b border-border px-5 pb-2 pt-4 text-left">
@@ -395,12 +396,13 @@ function SubtaskSuggestionsDialog({
   onConfirm,
   onDiscard,
 }: SubtaskSuggestionsDialogProps) {
+  function handleOpenChange(v: boolean) {
+    if (!v) onDiscard();
+  }
   return (
     <Dialog
       open={open}
-      onOpenChange={(v) => {
-        if (!v) onDiscard();
-      }}
+      onOpenChange={handleOpenChange}
     >
       <DialogContent className="max-w-md flex flex-col gap-0 p-0">
         <DialogHeader className="px-5 pt-5 pb-3 border-b border-border shrink-0">

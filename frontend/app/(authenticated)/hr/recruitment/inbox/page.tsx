@@ -8,6 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptyInboxIllustration } from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
@@ -193,14 +194,16 @@ function ComposeBar({
           onChange={handleBodyChange}
           onKeyDown={handleKeyDown}
         />
-        <Button
+        <LoadingButton
           size="sm"
           className="self-end shrink-0"
           onClick={handleSend}
           disabled={!body.trim() || send.isPending}
+          isPending={send.isPending}
+          loadingText="Sending..."
         >
-          {send.isPending ? "Sending..." : "Send"}
-        </Button>
+          Send
+        </LoadingButton>
       </div>
       <p className="text-[10px] text-muted-foreground">Cmd+Enter to send</p>
     </div>

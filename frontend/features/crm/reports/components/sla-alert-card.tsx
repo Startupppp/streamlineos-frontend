@@ -13,7 +13,7 @@ export function SlaAlertCard({ slaData }: SlaAlertCardProps) {
   return (
     <Card className="border-red-500/20 bg-red-500/5">
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm flex items-center gap-2 text-red-500">
+        <CardTitle className="text-sm flex items-center gap-2 text-red-500 dark:text-red-400">
           <AlertTriangle className="h-4 w-4" />
           SLA Breached — {slaData.total} leads not contacted in 24h+
         </CardTitle>
@@ -36,9 +36,9 @@ export function SlaAlertCard({ slaData }: SlaAlertCardProps) {
                     className={cn(
                       "text-[10px] shrink-0",
                       lead.priority === "HOT" &&
-                        "border-red-500/50 text-red-500",
+                        "border-red-500/50 text-red-500 dark:text-red-400",
                       lead.priority === "WARM" &&
-                        "border-amber-500/50 text-amber-500",
+                        "border-amber-500/50 text-amber-500 dark:text-amber-400",
                       lead.priority === "COLD" &&
                         "border-primary/50 text-primary",
                     )}

@@ -13,7 +13,7 @@ export function TaxesPageContent() {
       title="Tax & Statutory"
       subtitle="Manage declaration windows and employee tax declarations"
     >
-      <Tabs defaultValue="windows" className="flex flex-col gap-4">
+      <Tabs defaultValue="windows" className="flex flex-1 min-h-0 flex-col gap-4">
         <TabsList className="w-fit">
           <TabsTrigger value="windows">Declaration Windows</TabsTrigger>
           <TabsTrigger value="declarations">Declarations</TabsTrigger>

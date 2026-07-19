@@ -150,16 +150,12 @@ export function BillingExportDialog({
             <Button
               type="button"
               variant="outline"
-              size="sm"
-              className="h-8 text-xs"
               onClick={handleClose}
             >
               Cancel
             </Button>
             <LoadingButton
               type="submit"
-              size="sm"
-              className="h-8 text-xs"
               isPending={billingExport.isPending}
               disabled={billingExport.isPending || groups.length === 0}
               loadingText="Exporting…"

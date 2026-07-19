@@ -92,21 +92,21 @@ export function TicketSnoozeControl({ ticketId, snoozedUntil }: TicketSnoozeCont
       </PopoverTrigger>
       <PopoverContent className="w-56 p-2" align="end">
         <div className="flex flex-col gap-1">
-          <Button variant="ghost" size="sm" className="justify-start h-8 text-xs" onClick={handleSnoozeThreeHours}>
+          <Button variant="ghost" size="sm" className="justify-start h-9 text-sm" onClick={handleSnoozeThreeHours}>
             In 3 hours
           </Button>
-          <Button variant="ghost" size="sm" className="justify-start h-8 text-xs" onClick={handleSnoozeTomorrow}>
+          <Button variant="ghost" size="sm" className="justify-start h-9 text-sm" onClick={handleSnoozeTomorrow}>
             Tomorrow, 9:00 AM
           </Button>
-          <Button variant="ghost" size="sm" className="justify-start h-8 text-xs" onClick={handleSnoozeNextWeek}>
+          <Button variant="ghost" size="sm" className="justify-start h-9 text-sm" onClick={handleSnoozeNextWeek}>
             Next Monday, 9:00 AM
           </Button>
           <div className="border-t border-border/60 mt-1 pt-2 flex items-center gap-1.5">
-            <DatePicker value={customDate} onChange={handleCustomDateChange} className="h-8 text-xs flex-1" />
+            <DatePicker value={customDate} onChange={handleCustomDateChange} className="h-9 text-sm flex-1" />
             <Button
               variant="outline"
               size="sm"
-              className="h-8 text-xs shrink-0"
+              className="h-9 text-sm shrink-0"
               disabled={!customDate || snooze.isPending}
               onClick={handleCustomDateConfirm}
             >

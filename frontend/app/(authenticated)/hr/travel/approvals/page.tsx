@@ -31,7 +31,7 @@ import {
 function ApprovalsLoading() {
   return (
     <PageWrapper title="Travel Approvals" subtitle="Review pending travel requests" variant="display">
-      <div className="space-y-6">
+      <div className="flex flex-1 min-h-0 flex-col gap-6">
         {Array.from({ length: 8 }).map((_, si) => (
           <div key={si} className="space-y-3">
             <Skeleton className="h-5 w-48" />
@@ -99,7 +99,7 @@ function RejectInline({
       <Button
         size="sm"
         variant="outline"
-        className="gap-1 text-xs border-rose-200 text-rose-600 hover:bg-rose-50 dark:border-rose-500/30 dark:text-rose-400 dark:hover:bg-rose-500/10"
+        className="gap-1 text-xs border-rose-200 text-rose-600 hover:bg-rose-50 dark:border-rose-500/30 dark:text-rose-300 dark:hover:bg-rose-500/10"
         onClick={handleExpand}
       >
         <XCircle className="h-3.5 w-3.5" />
@@ -329,7 +329,7 @@ export default function TravelApprovalsPage() {
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
-          className="space-y-8"
+          className="flex flex-1 min-h-0 flex-col gap-8"
         >
           {pendingManager.length > 0 && (
             <div>

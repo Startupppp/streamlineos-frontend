@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -68,7 +69,7 @@ function CriterionRow({ criterion, onUpdate, onRemove, canRemove }: CriterionRow
         <circle cx="9" cy="19" r="1" fill="currentColor" /><circle cx="15" cy="19" r="1" fill="currentColor" />
       </svg>
       <Input
-        className="flex-1 h-8 text-xs"
+        className="flex-1"
         placeholder="Criterion name (e.g. Technical Skills)"
         value={criterion.name}
         onChange={handleNameChange}
@@ -77,7 +78,7 @@ function CriterionRow({ criterion, onUpdate, onRemove, canRemove }: CriterionRow
         <Label className="text-[10px] text-muted-foreground">Weight</Label>
         <Input
           type="number"
-          className="w-16 h-8 text-xs"
+          className="w-16"
           min={1}
           max={10}
           value={criterion.weight}
@@ -118,7 +119,6 @@ function TemplateSheet({ open, onClose, editTemplate }: TemplateSheetProps) {
   useEffect(() => {
     if (open) {
       if (editTemplate) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setName(editTemplate.name);
         setCriteria(
           editTemplate.criteria.map((c) => ({ ...c, _key: nextKey() }))
@@ -208,7 +208,7 @@ function TemplateSheet({ open, onClose, editTemplate }: TemplateSheetProps) {
             <Button
               variant="outline"
               size="sm"
-              className="w-full h-8 text-xs border-dashed"
+              className="w-full border-dashed"
               onClick={handleAdd}
               type="button"
             >
@@ -221,9 +221,9 @@ function TemplateSheet({ open, onClose, editTemplate }: TemplateSheetProps) {
         </SheetBody>
         <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
           <Button variant="outline" onClick={onClose} disabled={isPending} type="button">Cancel</Button>
-          <Button onClick={handleSubmit} disabled={isPending} type="button">
-            {isPending ? "Saving…" : editTemplate ? "Save Changes" : "Create Template"}
-          </Button>
+          <LoadingButton onClick={handleSubmit} isPending={isPending} loadingText="Saving…" type="button">
+            {editTemplate ? "Save Changes" : "Create Template"}
+          </LoadingButton>
         </SheetFooter>
       </SheetContent>
     </Sheet>
@@ -349,31 +349,33 @@ export default function ScorecardTemplatesPage() {
           </Button>
         }
       >
-        {isError ? (
-          <ErrorState description="Failed to load scorecard templates" onRetry={handleRetry} />
-        ) : isLoading ? (
-          <div className="grid gap-4 sm:grid-cols-2">
-            {[1, 2, 3].map((i) => <Skeleton key={i} className="h-36 w-full rounded-xl" />)}
-          </div>
-        ) : !templates?.length ? (
-          <RecruitmentEmptyState
-            illustration={<EmptyDocumentsIllustration />}
-            title="No Scorecard Templates"
-            description="Create a template to standardize how interviewers evaluate candidates."
-            action={{ label: "Create Template", onClick: handleOpenCreate }}
-          />
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2">
-            {templates.map((template) => (
-              <TemplateCard
-                key={template.id}
-                template={template}
-                onEdit={handleOpenEdit}
-                onDelete={setDeleteId}
-              />
-            ))}
-          </div>
-        )}
+        <div className="flex flex-1 min-h-0 flex-col">
+          {isError ? (
+            <ErrorState description="Failed to load scorecard templates" onRetry={handleRetry} />
+          ) : isLoading ? (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {[1, 2, 3].map((i) => <Skeleton key={i} className="h-36 w-full rounded-xl" />)}
+            </div>
+          ) : !templates?.length ? (
+            <RecruitmentEmptyState
+              illustration={<EmptyDocumentsIllustration />}
+              title="No Scorecard Templates"
+              description="Create a template to standardize how interviewers evaluate candidates."
+              action={{ label: "Create Template", onClick: handleOpenCreate }}
+            />
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {templates.map((template) => (
+                <TemplateCard
+                  key={template.id}
+                  template={template}
+                  onEdit={handleOpenEdit}
+                  onDelete={setDeleteId}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </PageWrapper>
 
       <TemplateSheet

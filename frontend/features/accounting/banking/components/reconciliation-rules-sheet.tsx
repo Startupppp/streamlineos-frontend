@@ -315,7 +315,7 @@ export function ReconciliationRulesSheet({ bankAccountId, open, onOpenChange }: 
                     value={cond.field}
                     onValueChange={(v) => handleConditionChange(i, "field", v)}
                   >
-                    <SelectTrigger className="w-[110px] text-xs">
+                    <SelectTrigger className="w-[110px]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -330,7 +330,7 @@ export function ReconciliationRulesSheet({ bankAccountId, open, onOpenChange }: 
                     value={cond.op}
                     onValueChange={(v) => handleConditionChange(i, "op", v)}
                   >
-                    <SelectTrigger className="w-[110px] text-xs">
+                    <SelectTrigger className="w-[110px]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -365,7 +365,7 @@ export function ReconciliationRulesSheet({ bankAccountId, open, onOpenChange }: 
             <div className="space-y-1">
               <Label className="text-xs">Action</Label>
               <Select value={form.actionType} onValueChange={handleActionTypeChange}>
-                <SelectTrigger className="text-xs">
+                <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

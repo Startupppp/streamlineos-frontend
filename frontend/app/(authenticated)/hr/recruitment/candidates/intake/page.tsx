@@ -12,6 +12,7 @@ import {
 } from "@/hooks/api/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,7 +29,63 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { DuplicateResolutionDialog } from "@/features/hr/recruitment/candidates-list/duplicate-resolution-dialog";
 import type { DuplicateCandidateGroup } from "@/hooks/api/hr/recruitment";
+import type { Candidate } from "@/types/hr";
 import { formatDistanceToNow } from "date-fns";
+
+interface CandidateIntakeRowProps {
+  candidate: Candidate;
+  isSelected: boolean;
+  duplicate: DuplicateCandidateGroup | undefined;
+  onToggle: (id: number) => void;
+  onShowDuplicate: (group: DuplicateCandidateGroup) => void;
+}
+
+function CandidateIntakeRow({ candidate: c, isSelected, duplicate, onToggle, onShowDuplicate }: CandidateIntakeRowProps) {
+  function handleCheckedChange() {
+    onToggle(c.id);
+  }
+  function handleDuplicateClick() {
+    if (duplicate) onShowDuplicate(duplicate);
+  }
+  return (
+    <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors">
+      <Checkbox checked={isSelected} onCheckedChange={handleCheckedChange} />
+      <div className="w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 text-[11px] font-bold text-primary">
+        {c.firstName?.[0]}{c.lastName?.[0]}
+      </div>
+      <Link href={`/hr/recruitment/candidates/${c.id}`} className="flex-1 min-w-0 group">
+        <TruncatedText text={`${c.firstName ?? ""} ${c.lastName ?? ""}`.trim()} className="text-sm font-medium text-foreground group-hover:text-primary transition-colors" />
+        <p className="text-[11px] text-muted-foreground mt-0.5">{c.email}</p>
+      </Link>
+      <div className="flex items-center gap-2 shrink-0">
+        {c.source && (
+          <Badge variant="outline" className="text-[10px]">{c.source.replace(/_/g, " ")}</Badge>
+        )}
+        {typeof c.aiScore === "number" && (
+          <Badge variant="secondary" className="text-[10px] gap-1">
+            <Sparkles className="h-2.5 w-2.5" />
+            {c.aiScore}
+          </Badge>
+        )}
+        {duplicate && !c.duplicateOfId && (
+          <button
+            type="button"
+            onClick={handleDuplicateClick}
+            className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 hover:bg-amber-200 transition-colors"
+          >
+            <AlertTriangle className="h-2.5 w-2.5" />
+            Possible duplicate
+          </button>
+        )}
+        {c.createdAt && (
+          <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+            {formatDistanceToNow(new Date(c.createdAt), { addSuffix: true })}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
 
 const SOURCE_OPTIONS = [
   { value: "ALL", label: "All sources" },
@@ -108,6 +165,10 @@ export default function IntakeInboxPage() {
 
   const isEmpty = !isLoading && !isError && (!candidates || candidates.length === 0);
 
+  function handleOpenReject() { setRejectOpen(true); }
+  function handleRetry() { void refetch(); }
+  function handleCloseDuplicateDialog() { setDuplicateGroup(null); }
+
   return (
     <>
       <PageWrapper
@@ -142,11 +203,11 @@ export default function IntakeInboxPage() {
           selectedIds.size > 0 ? (
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground">{selectedIds.size} selected</span>
-              <Button size="sm" variant="outline" className="gap-1.5" onClick={handleBulkShortlist} disabled={bulkShortlist.isPending}>
+              <LoadingButton size="sm" variant="outline" className="gap-1.5" onClick={handleBulkShortlist} isPending={bulkShortlist.isPending} loadingText="Shortlisting…">
                 <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
                 Shortlist
-              </Button>
-              <Button size="sm" variant="outline" className="gap-1.5 text-destructive" onClick={() => setRejectOpen(true)}>
+              </LoadingButton>
+              <Button size="sm" variant="outline" className="gap-1.5 text-destructive" onClick={handleOpenReject}>
                 <XCircle className="h-3.5 w-3.5" />
                 Reject
               </Button>
@@ -161,7 +222,7 @@ export default function IntakeInboxPage() {
         ) : isError ? (
           <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
             <p className="text-sm font-semibold text-foreground">Failed to load applicants</p>
-            <Button size="sm" variant="outline" onClick={() => void refetch()}>Try again</Button>
+            <Button size="sm" variant="outline" onClick={handleRetry}>Try again</Button>
           </div>
         ) : isEmpty ? (
           <RecruitmentEmptyState
@@ -179,47 +240,16 @@ export default function IntakeInboxPage() {
               </span>
             </div>
             <div className="divide-y divide-border/50">
-              {candidates?.map((c) => {
-                const duplicate = duplicateByCandidateId.get(c.id);
-                return (
-                  <div key={c.id} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors">
-                    <Checkbox checked={selectedIds.has(c.id)} onCheckedChange={() => handleToggle(c.id)} />
-                    <div className="w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 text-[11px] font-bold text-primary">
-                      {c.firstName?.[0]}{c.lastName?.[0]}
-                    </div>
-                    <Link href={`/hr/recruitment/candidates/${c.id}`} className="flex-1 min-w-0 group">
-                      <TruncatedText text={`${c.firstName ?? ""} ${c.lastName ?? ""}`.trim()} className="text-sm font-medium text-foreground group-hover:text-primary transition-colors" />
-                      <p className="text-[11px] text-muted-foreground mt-0.5">{c.email}</p>
-                    </Link>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {c.source && (
-                        <Badge variant="outline" className="text-[10px]">{c.source.replace(/_/g, " ")}</Badge>
-                      )}
-                      {typeof c.aiScore === "number" && (
-                        <Badge variant="secondary" className="text-[10px] gap-1">
-                          <Sparkles className="h-2.5 w-2.5" />
-                          {c.aiScore}
-                        </Badge>
-                      )}
-                      {duplicate && !c.duplicateOfId && (
-                        <button
-                          type="button"
-                          onClick={() => setDuplicateGroup(duplicate)}
-                          className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 hover:bg-amber-200 transition-colors"
-                        >
-                          <AlertTriangle className="h-2.5 w-2.5" />
-                          Possible duplicate
-                        </button>
-                      )}
-                      {c.createdAt && (
-                        <span className="text-[11px] text-muted-foreground whitespace-nowrap">
-                          {formatDistanceToNow(new Date(c.createdAt), { addSuffix: true })}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+              {candidates?.map((c) => (
+                <CandidateIntakeRow
+                  key={c.id}
+                  candidate={c}
+                  isSelected={selectedIds.has(c.id)}
+                  duplicate={duplicateByCandidateId.get(c.id)}
+                  onToggle={handleToggle}
+                  onShowDuplicate={setDuplicateGroup}
+                />
+              ))}
             </div>
           </div>
         )}
@@ -230,13 +260,13 @@ export default function IntakeInboxPage() {
         onOpenChange={setRejectOpen}
         title={`Reject ${selectedIds.size} candidate${selectedIds.size !== 1 ? "s" : ""}?`}
         description="This will notify each candidate and remove them from active consideration."
-        confirmLabel={bulkReject.isPending ? "Rejecting…" : "Reject"}
+        confirmLabel="Reject"
         destructive
         onConfirm={handleBulkReject}
       />
 
       {duplicateGroup && (
-        <DuplicateResolutionDialog group={duplicateGroup} onClose={() => setDuplicateGroup(null)} />
+        <DuplicateResolutionDialog group={duplicateGroup} onClose={handleCloseDuplicateDialog} />
       )}
     </>
   );

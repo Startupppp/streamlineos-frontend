@@ -1,9 +1,11 @@
 "use client";
 
+import { useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -60,8 +62,8 @@ function useUnlinkAccount() {
       toast.success("Account unlinked");
       queryClient.invalidateQueries({ queryKey: ["connected-accounts"] });
     },
-    onError: (err: Error) => {
-      toast.error(err.message);
+    onError: (err) => {
+      toast.error(getErrorMessage(err));
     },
   });
 }
@@ -76,6 +78,76 @@ function useLinkAccount() {
   });
 }
 
+interface ProviderRowProps {
+  provider: typeof SUPPORTED_PROVIDERS[number];
+  isConnected: boolean;
+  isOnlyConnected: boolean;
+  isUnlinking: boolean;
+  isLinking: boolean;
+  onUnlink: (id: string) => void;
+  onLink: (id: string) => void;
+}
+
+function ProviderRow({
+  provider,
+  isConnected,
+  isOnlyConnected,
+  isUnlinking,
+  isLinking,
+  onUnlink,
+  onLink,
+}: ProviderRowProps) {
+  const handleUnlink = useCallback(() => onUnlink(provider.id), [provider.id, onUnlink]);
+  const handleLink = useCallback(() => onLink(provider.id), [provider.id, onLink]);
+
+  return (
+    <div className="flex items-center gap-4 py-4 first:pt-0 last:pb-0">
+      <div className="h-9 w-9 rounded-full border border-border flex items-center justify-center shrink-0 bg-muted/50">
+        {provider.icon}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium">{provider.label}</p>
+        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+          {isConnected ? (
+            <>
+              <CheckCircle2 className="h-3 w-3 text-green-500" />
+              Connected
+            </>
+          ) : (
+            <>
+              <XCircle className="h-3 w-3 text-muted-foreground/50" />
+              Not connected
+            </>
+          )}
+        </p>
+      </div>
+      {isConnected ? (
+        <Button
+          size="sm"
+          variant="outline"
+          className="text-destructive hover:text-destructive border-destructive/30 hover:border-destructive/60 hover:bg-destructive/5"
+          disabled={isOnlyConnected || isUnlinking}
+          onClick={handleUnlink}
+          title={isOnlyConnected ? "Cannot unlink the only connected account" : undefined}
+        >
+          {isUnlinking && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
+          Unlink
+        </Button>
+      ) : (
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={isLinking}
+          onClick={handleLink}
+        >
+          {isLinking && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
+          Connect
+        </Button>
+      )}
+    </div>
+  );
+}
+
 export default function ConnectedAccountsPage() {
   const { data: connected, isLoading } = useConnectedAccounts();
   const unlinkMutation = useUnlinkAccount();
@@ -83,6 +155,14 @@ export default function ConnectedAccountsPage() {
 
   const connectedSet = new Set(connected?.map((a) => a.provider) ?? []);
   const visibleProviders = SUPPORTED_PROVIDERS.filter((p) => p.envFlag);
+
+  const handleUnlink = useCallback((id: string) => {
+    unlinkMutation.mutate(id);
+  }, [unlinkMutation]);
+
+  const handleLink = useCallback((id: string) => {
+    linkMutation.mutate(id);
+  }, [linkMutation]);
 
   return (
     <PageWrapper title="Connected Accounts" subtitle="Manage your linked sign-in providers">
@@ -117,61 +197,18 @@ export default function ConnectedAccountsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="divide-y">
-              {visibleProviders.map((provider) => {
-                const isConnected = connectedSet.has(provider.id);
-                const isOnlyConnected = connected?.length === 1 && isConnected;
-                const isUnlinking =
-                  unlinkMutation.isPending && unlinkMutation.variables === provider.id;
-                const isLinking =
-                  linkMutation.isPending && linkMutation.variables === provider.id;
-
-                return (
-                  <div key={provider.id} className="flex items-center gap-4 py-4 first:pt-0 last:pb-0">
-                    <div className="h-9 w-9 rounded-full border border-border flex items-center justify-center shrink-0 bg-muted/50">
-                      {provider.icon}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">{provider.label}</p>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                        {isConnected ? (
-                          <>
-                            <CheckCircle2 className="h-3 w-3 text-green-500" />
-                            Connected
-                          </>
-                        ) : (
-                          <>
-                            <XCircle className="h-3 w-3 text-muted-foreground/50" />
-                            Not connected
-                          </>
-                        )}
-                      </p>
-                    </div>
-                    {isConnected ? (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-destructive hover:text-destructive border-destructive/30 hover:border-destructive/60 hover:bg-destructive/5"
-                        disabled={isOnlyConnected || isUnlinking}
-                        onClick={() => unlinkMutation.mutate(provider.id)}
-                        title={isOnlyConnected ? "Cannot unlink the only connected account" : undefined}
-                      >
-                        {isUnlinking && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
-                        Unlink
-                      </Button>
-                    ) : (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={isLinking}
-                        onClick={() => linkMutation.mutate(provider.id)}
-                      >
-                        {isLinking && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
-                        Connect
-                      </Button>
-                    )}
-                  </div>
-                );
-              })}
+              {visibleProviders.map((provider) => (
+                <ProviderRow
+                  key={provider.id}
+                  provider={provider}
+                  isConnected={connectedSet.has(provider.id)}
+                  isOnlyConnected={connected?.length === 1 && connectedSet.has(provider.id)}
+                  isUnlinking={unlinkMutation.isPending && unlinkMutation.variables === provider.id}
+                  isLinking={linkMutation.isPending && linkMutation.variables === provider.id}
+                  onUnlink={handleUnlink}
+                  onLink={handleLink}
+                />
+              ))}
             </CardContent>
           </Card>
         )}

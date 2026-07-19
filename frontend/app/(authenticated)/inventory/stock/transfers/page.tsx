@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, type MouseEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { PlusIcon, XIcon } from "@animateicons/react/lucide";
@@ -11,6 +11,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
@@ -104,17 +105,23 @@ function buildTransferColumns(
       key: "actions",
       header: "",
       className: "w-8",
-      cell: (row) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="px-2 text-[11px] text-primary hover:text-primary/80"
-          onClick={(e) => { e.stopPropagation(); onView(row.id); }}
-          aria-label={`View transfer ${row.referenceNumber}`}
-        >
-          View
-        </Button>
-      ),
+      cell: (row) => {
+        function handleViewClick(e: MouseEvent): void {
+          e.stopPropagation();
+          onView(row.id);
+        }
+        return (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="px-2 text-[11px] text-primary hover:text-primary/80"
+            onClick={handleViewClick}
+            aria-label={`View transfer ${row.referenceNumber}`}
+          >
+            View
+          </Button>
+        );
+      },
     },
   ];
 }
@@ -155,7 +162,6 @@ export default function TransfersPage() {
     [warehouses],
   );
 
-  const totalPages = transfersData?.totalPages ?? 1;
   const total = transfersData?.total ?? 0;
   const transfers = transfersData?.items ?? [];
 
@@ -196,17 +202,24 @@ export default function TransfersPage() {
 
   const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
 
-  function handleRetry() {
+  function handleRetry(): void {
     void refetch();
+  }
+
+  function handleSearchChange(val: string): void {
+    updateParams({ q: val || undefined });
   }
 
   function handleRowClick(row: TransferRow): void {
     router.push(`/inventory/stock/transfers/${row.id}`);
   }
 
-  function handleView(id: number): void {
-    router.push(`/inventory/stock/transfers/${id}`);
-  }
+  const handleView = useCallback(
+    (id: number): void => {
+      router.push(`/inventory/stock/transfers/${id}`);
+    },
+    [router],
+  );
 
   const handleClearFilters = useCallback(() => {
     setPage(1);
@@ -216,7 +229,7 @@ export default function TransfersPage() {
   const hasActiveFilters =
     !!searchQ || statusParam !== "all" || !!fromWarehouseParam || !!toWarehouseParam || !!fromDateParam || !!toDateParam;
 
-  const columns = useMemo(() => buildTransferColumns(handleView), []);
+  const columns = useMemo(() => buildTransferColumns(handleView), [handleView]);
 
   return (
     <PageWrapper
@@ -225,7 +238,7 @@ export default function TransfersPage() {
       filters={
         <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
           <Select value={statusParam} onValueChange={handleStatusChange}>
-            <SelectTrigger className="w-[140px] text-xs">
+            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[140px] text-xs")}>
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>
@@ -277,6 +290,7 @@ export default function TransfersPage() {
         </AnimatedIconButton>
       }
     >
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
       {isError ? (
         <ErrorState
           title="Failed to load transfers"
@@ -312,6 +326,7 @@ export default function TransfersPage() {
               getRowKey={(row) => row.id}
               onRowClick={handleRowClick}
               isLoading={isLoading}
+              minWidth="700px"
               pagination={{
                 mode: "server",
                 page,
@@ -321,13 +336,14 @@ export default function TransfersPage() {
               }}
               search={{
                 value: searchQ,
-                onChange: (val) => updateParams({ q: val || undefined }),
+                onChange: handleSearchChange,
                 placeholder: "Search by ref, warehouse, product, SKU, notes…",
               }}
             />
           </motion.div>
         </motion.div>
       )}
+      </div>
       <NewTransferSheet open={sheetOpen} onOpenChange={setSheetOpen} />
     </PageWrapper>
   );

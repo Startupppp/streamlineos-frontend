@@ -48,7 +48,7 @@ export function ProjectTicketSelect({
         onValueChange={handleProjectChange}
         disabled={disabled}
       >
-        <SelectTrigger className="h-8 text-xs">
+        <SelectTrigger className="h-9">
           <SelectValue placeholder="Select project" />
         </SelectTrigger>
         <SelectContent>
@@ -69,7 +69,7 @@ export function ProjectTicketSelect({
           onValueChange={handleTicketChange}
           disabled={disabled || ticketsLoading}
         >
-          <SelectTrigger className="h-8 text-xs">
+          <SelectTrigger className="h-9">
             <SelectValue placeholder={ticketsLoading ? "Loading…" : "Select ticket"} />
           </SelectTrigger>
           <SelectContent>

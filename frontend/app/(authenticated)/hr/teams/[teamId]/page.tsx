@@ -41,9 +41,9 @@ import type { Employee } from "@/types/hr";
 import type { NodeStatus } from "@/types/org-hierarchy";
 
 const STATUS_STYLES: Record<NodeStatus, string> = {
-  ACTIVE: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800",
-  DISABLED: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800",
-  ARCHIVED: "bg-muted text-muted-foreground border-border dark:bg-slate-900/30 dark:text-slate-400 dark:border-slate-700",
+  ACTIVE: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  DISABLED: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  ARCHIVED: "bg-muted text-muted-foreground border-border",
 };
 
 const editSchema = z.object({
@@ -158,7 +158,7 @@ export default function TeamDetailPage({ params }: { params: Promise<{ teamId: s
   if (isLoading) {
     return (
       <PageWrapper title="Team" variant="display">
-        <div className="space-y-4">
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
           <Skeleton className="h-28 w-full rounded-xl" />
           <div className="grid gap-3 sm:grid-cols-2">
             <Skeleton className="h-36 w-full rounded-xl" />
@@ -230,7 +230,7 @@ export default function TeamDetailPage({ params }: { params: Promise<{ teamId: s
           </div>
         }
       >
-        <div className="space-y-4">
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
           <PageSection title="Team Info">
             <Card className="rounded-xl border border-border">
               <CardContent className="p-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

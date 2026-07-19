@@ -27,7 +27,9 @@ import {
   type SlaPolicy, type SlaPolicyPriority,
 } from "@/hooks/api/support/sla-policies";
 import { useBusinessHoursList } from "@/hooks/api/support/business-hours";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
+import { getApiError } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 import {
   policySchema, DEFAULT_FORM_VALUES, policyToFormValues, buildCreatePayload, buildUpdatePayload,
@@ -77,7 +79,7 @@ export default function SupportSlaPage() {
   const onCreateSubmit = useCallback((data: PolicyForm) => {
     createPolicy.mutate(buildCreatePayload(data), {
       onSuccess: () => { toast.success("SLA policy created"); setCreateOpen(false); createForm.reset(DEFAULT_FORM_VALUES); },
-      onError: (err) => toast.error(err.message),
+      onError: (err) => toast.error(getApiError(err)),
     });
   }, [createPolicy, createForm]);
 
@@ -87,7 +89,7 @@ export default function SupportSlaPage() {
       { id: editingId, ...buildUpdatePayload(data) },
       {
         onSuccess: () => { toast.success("Policy updated"); setEditingId(null); },
-        onError: (err) => toast.error(err.message),
+        onError: (err) => toast.error(getApiError(err)),
       },
     );
   }, [editingId, updatePolicy]);
@@ -104,7 +106,7 @@ export default function SupportSlaPage() {
     if (deleteTargetId === null) return;
     deletePolicy.mutate(deleteTargetId, {
       onSuccess: () => { toast.success("Policy deleted"); setDeleteTargetId(null); },
-      onError: (err) => { toast.error(err.message); setDeleteTargetId(null); },
+      onError: (err) => { toast.error(getApiError(err)); setDeleteTargetId(null); },
     });
   }, [deletePolicy, deleteTargetId]);
 
@@ -244,9 +246,9 @@ export default function SupportSlaPage() {
               <Form {...createForm}>
                 <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4">
                   <PolicyFormFields form={createForm} businessHoursOptions={businessHoursOptions} idPrefix="create" />
-                  <Button type="submit" className="w-full" disabled={createPolicy.isPending}>
-                    {createPolicy.isPending ? "Creating..." : "Create Policy"}
-                  </Button>
+                  <LoadingButton type="submit" className="w-full" isPending={createPolicy.isPending} loadingText="Creating…">
+                    Create Policy
+                  </LoadingButton>
                 </form>
               </Form>
             </DialogContent>
@@ -262,7 +264,7 @@ export default function SupportSlaPage() {
             className={CONTENT_FILL_PANEL}
           />
         ) : (
-          <div className="space-y-6">
+          <div className="flex flex-1 min-h-0 flex-col gap-6">
             <StatCardGrid cols={2}>
               <StatCard label="Total Policies" value={count} icon={Shield} tone="blue" />
               <StatCard label="Enabled" value={enabledCount} icon={Shield} tone="emerald" />
@@ -304,9 +306,9 @@ export default function SupportSlaPage() {
                       <PolicyFormFields form={editForm} businessHoursOptions={businessHoursOptions} idPrefix="edit" />
                       <div className="flex justify-end gap-3">
                         <Button type="button" variant="outline" onClick={handleCancelEdit}>Cancel</Button>
-                        <Button type="submit" disabled={updatePolicy.isPending}>
-                          {updatePolicy.isPending ? "Saving..." : "Save Changes"}
-                        </Button>
+                        <LoadingButton type="submit" isPending={updatePolicy.isPending} loadingText="Saving…">
+                          Save Changes
+                        </LoadingButton>
                       </div>
                     </form>
                   </Form>

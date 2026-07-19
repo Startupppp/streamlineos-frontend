@@ -97,7 +97,7 @@ export function LetterEmailEditor({
       <Card className="rounded-xl border border-border overflow-hidden">
         <CardHeader className="pb-2 border-b px-4 pt-3">
           <div className="flex items-center gap-2">
-            <Braces className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+            <Braces className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300" />
             <CardTitle className="text-xs font-semibold">Variable Tokens</CardTitle>
           </div>
         </CardHeader>

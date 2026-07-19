@@ -69,7 +69,7 @@ function CopyButton({ text }: { text: string }) {
       className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
     >
       {copied ? (
-        <CheckCheck className="h-3 w-3 text-emerald-500" />
+        <CheckCheck className="h-3 w-3 text-emerald-500 dark:text-emerald-400" />
       ) : (
         <Copy className="h-3 w-3" />
       )}
@@ -256,7 +256,7 @@ function NotesSummaryTab({ aiEnabled }: { aiEnabled: boolean }) {
               <ul className="space-y-0.5">
                 {result.objections.map((obj, i) => (
                   <li key={i} className="text-xs text-foreground flex gap-1.5">
-                    <span className="text-amber-500 shrink-0">•</span>
+                    <span className="text-amber-500 dark:text-amber-400 shrink-0">•</span>
                     {obj}
                   </li>
                 ))}
@@ -351,7 +351,7 @@ function ObjectionHelpTab({ aiEnabled }: { aiEnabled: boolean }) {
               <ul className="space-y-0.5">
                 {result.talkingPoints.map((pt, i) => (
                   <li key={i} className="text-xs text-foreground flex gap-1.5">
-                    <span className="text-emerald-500 shrink-0">•</span>
+                    <span className="text-emerald-500 dark:text-emerald-400 shrink-0">•</span>
                     {pt}
                   </li>
                 ))}

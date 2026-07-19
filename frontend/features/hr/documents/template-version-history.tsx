@@ -2,6 +2,7 @@
 
 import { useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { History, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -86,8 +87,8 @@ export function TemplateVersionHistory({ versions, onRestore }: TemplateVersionH
     <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
       <CardHeader className="pb-3 border-b px-5 pt-4">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center shrink-0">
-            <History className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+          <div className="w-7 rounded-lg bg-blue-100 dark:bg-blue-500/10 flex items-center justify-center shrink-0">
+            <History className="h-3.5 w-3.5 text-blue-600 dark:text-blue-300" />
           </div>
           <div>
             <CardTitle className="text-sm font-semibold text-foreground">Version History</CardTitle>
@@ -98,7 +99,7 @@ export function TemplateVersionHistory({ versions, onRestore }: TemplateVersionH
         </div>
       </CardHeader>
       <CardContent className="p-4">
-        <div className="max-h-[260px] overflow-y-auto pr-1">
+        <ScrollArea className="max-h-[260px]">
           {versions.map((v, i) => (
             <VersionItem
               key={v.id}
@@ -108,7 +109,7 @@ export function TemplateVersionHistory({ versions, onRestore }: TemplateVersionH
               onRestore={onRestore}
             />
           ))}
-        </div>
+        </ScrollArea>
       </CardContent>
     </Card>
   );

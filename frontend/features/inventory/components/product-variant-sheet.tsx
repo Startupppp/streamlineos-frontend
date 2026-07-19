@@ -30,6 +30,7 @@ import {
   useUpdateProductVariant,
 } from "@/hooks/api/inventory";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { LoadingButton } from "@/components/ui/loading-button";
 
 const variantSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -164,9 +165,9 @@ function VariantFormBody({ form, isPending, onCancel }: VariantFormBodyProps) {
           >
             Cancel
           </Button>
-          <Button type="submit" disabled={isPending}>
-            {isPending ? "Saving…" : "Save"}
-          </Button>
+          <LoadingButton type="submit" isPending={isPending} loadingText="Saving…">
+            Save
+          </LoadingButton>
         </div>
       </SheetFooter>
     </>

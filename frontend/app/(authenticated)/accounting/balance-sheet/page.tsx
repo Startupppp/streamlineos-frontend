@@ -4,6 +4,7 @@ import { useState, memo } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card } from "@/components/ui/card";
 import { DatePicker } from "@/components/ui/date-picker";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -130,7 +131,7 @@ export default function BalanceSheetPage() {
       title="Balance Sheet"
       subtitle="Snapshot of assets, liabilities, and equity as of a chosen date."
       filters={
-        <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+        <div className={FILTER_TOOLBAR_ROW}>
           <div className="flex flex-col gap-1">
             <label
               htmlFor="balance-sheet-asof"
@@ -138,7 +139,7 @@ export default function BalanceSheetPage() {
             >
               As of
             </label>
-            <DatePicker id="balance-sheet-asof" value={asOf ?? ""} onChange={handleAsOfChange} placeholder="Pick a date" className="w-full sm:w-[160px] h-8 text-sm" />
+            <DatePicker id="balance-sheet-asof" value={asOf ?? ""} onChange={handleAsOfChange} placeholder="Pick a date" className="w-full sm:w-[160px]" />
           </div>
           {report && (
             <div className="ml-auto text-sm">

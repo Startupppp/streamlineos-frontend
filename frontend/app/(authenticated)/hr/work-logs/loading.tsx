@@ -1,6 +1,5 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent } from "@/components/ui/card";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export default function WorkLogsLoading() {
@@ -16,18 +15,17 @@ export default function WorkLogsLoading() {
       }
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
-          <Skeleton className="h-9 w-[220px] rounded-md" />
+          <Skeleton className="h-9 w-[84px] rounded-md" />
+          <Skeleton className="h-9 w-[130px] rounded-md" />
+          <Skeleton className="h-9 w-[180px] rounded-md" />
         </div>
       }
     >
-      <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-        <CardContent className="py-12">
-          <div className="flex flex-col items-center justify-center gap-3">
-            <Skeleton className="h-8 w-8 rounded-full" />
-            <Skeleton className="h-3 w-32" />
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex flex-col flex-1 min-h-0 space-y-3">
+        {Array.from({ length: 9 }).map((_, i) => (
+          <Skeleton key={i} className="h-20 w-full rounded-xl" />
+        ))}
+      </div>
     </PageWrapper>
   );
 }

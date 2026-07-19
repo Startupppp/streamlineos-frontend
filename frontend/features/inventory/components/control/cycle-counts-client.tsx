@@ -42,6 +42,8 @@ import {
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { cn } from "@/lib/utils";
 
 function ViewCountButton({ href }: { href: string }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -280,7 +282,7 @@ export function CycleCountsClient() {
 
   const filtersRow = (
     <Select value={statusFilter} onValueChange={handleStatusChange}>
-      <SelectTrigger className="w-[160px] text-xs">
+      <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[160px] text-xs")}>
         <SelectValue placeholder="All statuses" />
       </SelectTrigger>
       <SelectContent>

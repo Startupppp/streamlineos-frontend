@@ -153,7 +153,7 @@ export function VendorCreditFormSheet({ open, onOpenChange }: VendorCreditFormSh
           name={`items.${row._index}.gstRate`}
           render={({ field: f }) => (
             <Select value={f.value} onValueChange={f.onChange}>
-              <SelectTrigger className="text-xs border-0 shadow-none focus:ring-0">
+              <SelectTrigger className="border-0 shadow-none focus:ring-0">
                 <SelectValue placeholder="0" />
               </SelectTrigger>
               <SelectContent>

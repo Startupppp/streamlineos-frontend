@@ -218,12 +218,12 @@ export function CyclesTab() {
                 : "border-l-border";
             const badgeClass =
               cycle.status === "ACTIVE"
-                ? "border-emerald-200 bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800"
+                ? "border-emerald-200 bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800"
                 : cycle.status === "COMPLETED"
-                ? "border-blue-200 bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800"
+                ? "border-blue-200 bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-800"
                 : cycle.status === "CANCELLED"
-                ? "border-rose-200 bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800"
-                : "border-border bg-muted text-muted-foreground dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700";
+                ? "border-rose-200 bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-800"
+                : "border-border bg-muted text-muted-foreground";
             const progressBarClass =
               cycle.status === "ACTIVE"
                 ? "bg-emerald-500"
@@ -247,7 +247,7 @@ export function CyclesTab() {
                           {cycle.status ?? "DRAFT"}
                         </Badge>
                         {cycle.type && (
-                          <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border border-border bg-muted text-muted-foreground dark:bg-slate-800/60 dark:text-slate-400 dark:border-slate-700">
+                          <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border border-border bg-muted text-muted-foreground">
                             {cycle.type.replace("_", " ")}
                           </span>
                         )}

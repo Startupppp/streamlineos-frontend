@@ -29,6 +29,14 @@ export function LiveActivationPanel({ providerKey }: { providerKey: string }) {
 
   if (!readiness) return null;
 
+  function handleConfirmTextChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setConfirmText(e.target.value);
+  }
+
+  function handleCancelActivation() {
+    setConfirmText("");
+  }
+
   function handleActivate() {
     activate.mutate(undefined, {
       onSuccess: () => {
@@ -69,13 +77,13 @@ export function LiveActivationPanel({ providerKey }: { providerKey: string }) {
             <Input
               id="confirm-activate"
               value={confirmText}
-              onChange={(e) => setConfirmText(e.target.value)}
+              onChange={handleConfirmTextChange}
               placeholder={CONFIRM_PHRASE}
               className="text-sm font-mono"
             />
           </div>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setConfirmText("")}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={handleCancelActivation}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               disabled={confirmText !== CONFIRM_PHRASE || activate.isPending}
               onClick={handleActivate}

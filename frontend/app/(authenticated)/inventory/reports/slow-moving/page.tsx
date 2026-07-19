@@ -10,10 +10,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyReportIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { useSlowMovingReport, type SlowMovingRow } from "@/hooks/api/inventory/reports";
 import { downloadCsv } from "@/features/inventory/lib";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { cn } from "@/lib/utils";
 
 const DAYS_OPTIONS = [
   { value: "30", label: "Inactive >30 days" },
@@ -165,7 +168,7 @@ function SlowMovingReportContent() {
       filters={
         <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
           <Select value={daysParam} onValueChange={handleDaysChange}>
-            <SelectTrigger className="w-[180px] min-w-0 text-xs shrink-0">
+            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[180px] min-w-0 text-xs shrink-0")}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -192,44 +195,46 @@ function SlowMovingReportContent() {
         </div>
       }
     >
-      {query.isLoading && <DataTableSkeleton rows={12} columns={6} />}
-      {query.error && (
-        <ErrorState description={query.error.message} onRetry={handleRetry} className="flex-1" />
-      )}
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
+        {query.isLoading && <DataTableSkeleton rows={12} columns={6} />}
+        {query.error && (
+          <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} />
+        )}
 
-      {isEmpty && (
-        <InventoryEmptyState
-          illustration={<EmptyReportIllustration />}
-          title="No slow-moving inventory"
-          description="Products appear here when they have stock on hand but no sales or outbound transfers within the selected window."
-        />
-      )}
+        {isEmpty && (
+          <InventoryEmptyState
+            illustration={<EmptyReportIllustration />}
+            title="No slow-moving inventory"
+            description="Products appear here when they have stock on hand but no sales or outbound transfers within the selected window."
+          />
+        )}
 
-      {hasRows && (
-        <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
-          <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
-            <DataTable
-              data={items}
-              columns={columns}
-              getRowKey={handleGetRowKey}
-              pagination={{
-                mode: "server",
-                page: currentPage,
-                pageSize: LIMIT,
-                total,
-                onPageChange: handlePageChange,
-              }}
-              emptyState={
-                <InventoryEmptyState
-                  illustration={<EmptySearchIllustration />}
-                  title="No results"
-                  description="No products match the current filter."
-                />
-              }
-            />
-          </CardContent>
-        </Card>
-      )}
+        {hasRows && (
+          <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
+            <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
+              <DataTable
+                data={items}
+                columns={columns}
+                getRowKey={handleGetRowKey}
+                pagination={{
+                  mode: "server",
+                  page: currentPage,
+                  pageSize: LIMIT,
+                  total,
+                  onPageChange: handlePageChange,
+                }}
+                emptyState={
+                  <InventoryEmptyState
+                    illustration={<EmptySearchIllustration />}
+                    title="No results"
+                    description="No products match the current filter."
+                  />
+                }
+              />
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </PageWrapper>
   );
 }

@@ -11,6 +11,7 @@ import { SearchInput } from "@/components/ui/search-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyOrdersIllustration } from "@/components/illustrations";
 import { useQualityInspections } from "@/hooks/api/inventory/quality";
@@ -20,6 +21,7 @@ import { CreateInspectionSheet } from "@/features/inventory/components/quality/c
 import { INSPECTION_STATUS_BADGE, INSPECTION_STATUS_LABEL } from "@/features/inventory/lib";
 import type { InspectionStatus } from "@/features/inventory/lib";
 import { cn } from "@/lib/utils";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 
 const PAGE_LIMIT = 20;
 
@@ -149,7 +151,7 @@ function InspectionsPageInner() {
         className="flex-1 max-w-xs"
       />
       <Select value={statusParam || "all"} onValueChange={handleStatusChange}>
-        <SelectTrigger className="text-xs w-48">
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "text-xs w-48")}>
           <SelectValue placeholder="All statuses" />
         </SelectTrigger>
         <SelectContent>
@@ -166,7 +168,7 @@ function InspectionsPageInner() {
     <>
       <PageWrapper
         title="Inspections"
-        subtitle={total > 0 ? `${total} ${total === 1 ? "inspection" : "inspections"}` : "Manage quality inspections"}
+        subtitle="Manage quality inspections"
         actions={
           <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1.5" size="sm" onClick={handleOpenCreate}>
             New Inspection
@@ -174,43 +176,44 @@ function InspectionsPageInner() {
         }
         filters={filtersRow}
       >
-        {inspectionsQuery.error ? (
-          <ErrorState
-            title="Failed to load inspections"
-            description={inspectionsQuery.error.message}
-            onRetry={handleRetry}
-          />
-        ) : (
-          <DataTable
-            className="flex-1 min-h-0"
-            data={items}
-            columns={columns}
-            getRowKey={(r) => r.id}
-            onRowClick={handleRowClick}
-            isLoading={inspectionsQuery.isLoading}
-            emptyState={
-              <InventoryEmptyState
-                illustration={<EmptyOrdersIllustration />}
-                title={hasFilters ? "No inspections found" : "No inspections yet"}
-                description={hasFilters ? "Try adjusting your filters." : "Create your first quality inspection."}
-                action={
-                  hasFilters
-                    ? { label: "Clear filters", onClick: handleClearFilters }
-                    : { label: "New Inspection", onClick: handleOpenCreate }
-                }
-                className="border-0 bg-transparent"
-              />
-            }
-            pagination={{
-              mode: "server",
-              page,
-              pageSize: PAGE_LIMIT,
-              total,
-              onPageChange: handlePageChange,
-            }}
-            minWidth="560px"
-          />
-        )}
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+          {inspectionsQuery.error ? (
+            <ErrorState
+              title="Failed to load inspections"
+              description={getErrorMessage(inspectionsQuery.error)}
+              onRetry={handleRetry}
+            />
+          ) : (
+            <DataTable
+              data={items}
+              columns={columns}
+              getRowKey={(r) => r.id}
+              onRowClick={handleRowClick}
+              isLoading={inspectionsQuery.isLoading}
+              emptyState={
+                <InventoryEmptyState
+                  illustration={<EmptyOrdersIllustration />}
+                  title={hasFilters ? "No inspections found" : "No inspections yet"}
+                  description={hasFilters ? "Try adjusting your filters." : "Create your first quality inspection."}
+                  action={
+                    hasFilters
+                      ? { label: "Clear filters", onClick: handleClearFilters }
+                      : { label: "New Inspection", onClick: handleOpenCreate }
+                  }
+                  className="border-0 bg-transparent"
+                />
+              }
+              pagination={{
+                mode: "server",
+                page,
+                pageSize: PAGE_LIMIT,
+                total,
+                onPageChange: handlePageChange,
+              }}
+              minWidth="560px"
+            />
+          )}
+        </div>
       </PageWrapper>
 
       <InspectionDetailSheet

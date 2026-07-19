@@ -85,22 +85,22 @@ export function CalendarView({ tickets, onTicketClick, projectId }: CalendarView
       <div className="flex shrink-0 items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-1.5">
           <Select value={String(month)} onValueChange={handleMonthChange}>
-            <SelectTrigger className="w-[120px] text-xs">
+            <SelectTrigger className="w-[120px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {MONTHS.map((m, i) => (
-                <SelectItem key={m} value={String(i)} className="text-xs">{m}</SelectItem>
+                <SelectItem key={m} value={String(i)}>{m}</SelectItem>
               ))}
             </SelectContent>
           </Select>
           <Select value={String(year)} onValueChange={handleYearChange}>
-            <SelectTrigger className="w-[80px] text-xs">
+            <SelectTrigger className="w-[80px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {yearOptions.map((y) => (
-                <SelectItem key={y} value={String(y)} className="text-xs">{y}</SelectItem>
+                <SelectItem key={y} value={String(y)}>{y}</SelectItem>
               ))}
             </SelectContent>
           </Select>

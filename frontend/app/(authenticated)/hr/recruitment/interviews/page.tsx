@@ -6,7 +6,6 @@ import { useInterviews } from "@/hooks/api/hr";
 import type { Interview } from "@/types/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Settings,
@@ -113,7 +112,7 @@ export default function InterviewsPage() {
 
   if (isError) {
     return (
-      <PageWrapper title="Interviews" subtitle="Schedule and track interviews" variant="display">
+      <PageWrapper title="Interviews" subtitle="Schedule and track interviews">
         <ErrorState description="Failed to load interviews" onRetry={refetch} />
       </PageWrapper>
     );
@@ -121,14 +120,12 @@ export default function InterviewsPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Interviews" subtitle="Schedule and track interviews" variant="display">
-        <Card>
-          <CardContent className="pt-6 space-y-3">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-12 w-full" />
-            ))}
-          </CardContent>
-        </Card>
+      <PageWrapper title="Interviews" subtitle="Schedule and track interviews">
+        <div className="flex flex-1 min-h-0 flex-col gap-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full" />
+          ))}
+        </div>
       </PageWrapper>
     );
   }
@@ -167,7 +164,7 @@ export default function InterviewsPage() {
         </div>
       }
     >
-      <div className="flex flex-1 min-h-0 flex-col space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="bg-muted/40 rounded-lg p-3 text-center">
           <p className="text-xl font-bold tabular-nums text-foreground">{interviewStats.total}</p>
@@ -262,29 +259,27 @@ export default function InterviewsPage() {
       </div>
 
       {pageView === "calendar" ? (
-        <Card>
-          <CardContent className="p-4 h-[520px]">
-            <BigCalendarWrapper
-              events={calEvents}
-              date={calDate}
-              view={calView}
-              calHeight={520}
-              onView={setCalView}
-              onNavigate={setCalDate}
-              onSelectEvent={handleCalEventSelect}
-              eventPropGetter={(e) => ({
-                style: {
-                  backgroundColor:
-                    (e as BigCalEvent).resource?.color ?? "#1e40af",
-                  color: "#fff",
-                  borderRadius: 4,
-                  border: "none",
-                  fontSize: 11,
-                },
-              })}
-            />
-          </CardContent>
-        </Card>
+        <div className="flex-1 min-h-0 rounded-xl border border-border overflow-hidden">
+          <BigCalendarWrapper
+            events={calEvents}
+            date={calDate}
+            view={calView}
+            calHeight={520}
+            onView={setCalView}
+            onNavigate={setCalDate}
+            onSelectEvent={handleCalEventSelect}
+            eventPropGetter={(e) => ({
+              style: {
+                backgroundColor:
+                  (e as BigCalEvent).resource?.color ?? "#1e40af",
+                color: "#fff",
+                borderRadius: 4,
+                border: "none",
+                fontSize: 11,
+              },
+            })}
+          />
+        </div>
       ) : (
         <InterviewList />
       )}

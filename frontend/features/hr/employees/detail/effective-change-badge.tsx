@@ -25,7 +25,7 @@ export function EffectiveChangeBadge({ userId, changeType }: Props) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Badge variant="outline" className="h-5 gap-1 border-amber-300 bg-amber-50 text-amber-700 text-[10px] dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-700">
+        <Badge variant="outline" className="h-5 gap-1 border-amber-300 bg-amber-50 text-amber-700 text-[10px] dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-700">
           <Clock className="h-2.5 w-2.5" />
           {pending.length} pending
         </Badge>

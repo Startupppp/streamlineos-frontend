@@ -83,7 +83,7 @@ export default function ViewsPage({
     return (
       <PageWrapper title="Views">
         <PmPageShell>
-          <div className="space-y-2">
+          <div className="flex flex-1 min-h-0 flex-col gap-2">
             {Array.from({ length: 4 }).map((_, i) => (
               <Skeleton key={i} className="h-14 w-full rounded-xl" />
             ))}
@@ -113,7 +113,7 @@ export default function ViewsPage({
               action={{ label: "Create First View", onClick: handleOpenCreate }}
             />
         ) : (
-          <div className="space-y-4">
+          <div className="flex flex-1 min-h-0 flex-col gap-4">
             {pinnedViews.length > 0 ? (
               <PmSection index={0}>
                 <h2 className={`mb-2 px-0.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground ${TEXT_ONE_LINE}`}>

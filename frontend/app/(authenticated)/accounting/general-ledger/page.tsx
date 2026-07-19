@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { ErrorState } from "@/components/shared";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -270,7 +271,7 @@ export default function GeneralLedgerPage() {
       }
       filters={
         <div className="space-y-2">
-          <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+          <div className={FILTER_TOOLBAR_ROW}>
             <div className="flex items-center gap-1.5">
               <label
                 htmlFor="gl-from"
@@ -283,7 +284,7 @@ export default function GeneralLedgerPage() {
                 value={from}
                 onChange={handleFromChange}
                 placeholder="Start"
-                className="text-xs w-[150px]"
+                className="w-[150px]"
               />
             </div>
             <div className="flex items-center gap-1.5">
@@ -298,7 +299,7 @@ export default function GeneralLedgerPage() {
                 value={to}
                 onChange={handleToChange}
                 placeholder="End"
-                className="text-xs w-[150px]"
+                className="w-[150px]"
               />
             </div>
             <Select
@@ -306,7 +307,7 @@ export default function GeneralLedgerPage() {
               onValueChange={handleAccountChange}
               disabled={!hasDateRange || glAccountsQuery.isLoading}
             >
-              <SelectTrigger className="text-xs w-[220px]">
+              <SelectTrigger className={`w-[220px] ${FILTER_SELECT_TRIGGER}`}>
                 <SelectValue
                   placeholder={
                     hasDateRange ? "Select account…" : "Set date range first"
@@ -325,19 +326,18 @@ export default function GeneralLedgerPage() {
             <Button
               variant="ghost"
               size="sm"
-              className="text-xs h-8"
               onClick={handleToggleMoreFilters}
             >
               {showMoreFilters ? "Fewer filters" : "More filters"}
             </Button>
           </div>
           {showMoreFilters && (
-            <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+            <div className={FILTER_TOOLBAR_ROW}>
               <Select
                 value={clientId || "__none__"}
                 onValueChange={handleClientChange}
               >
-                <SelectTrigger className="text-xs w-[180px]">
+                <SelectTrigger className={`w-[180px] ${FILTER_SELECT_TRIGGER}`}>
                   <SelectValue placeholder="All clients" />
                 </SelectTrigger>
                 <SelectContent>
@@ -353,7 +353,7 @@ export default function GeneralLedgerPage() {
                 value={vendorId || "__none__"}
                 onValueChange={handleVendorChange}
               >
-                <SelectTrigger className="text-xs w-[180px]">
+                <SelectTrigger className={`w-[180px] ${FILTER_SELECT_TRIGGER}`}>
                   <SelectValue placeholder="All vendors" />
                 </SelectTrigger>
                 <SelectContent>

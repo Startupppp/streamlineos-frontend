@@ -12,7 +12,7 @@ export const statusConfig = {
   leave: { label: "Leave", bg: "bg-amber-100 dark:bg-amber-900/30", text: "text-amber-800 dark:text-amber-300", dot: "bg-amber-500" },
   absent: { label: "Absent", bg: "bg-red-100 dark:bg-red-900/30", text: "text-red-800 dark:text-red-300", dot: "bg-red-400" },
   weekend: { label: "Weekend", bg: "bg-muted/20", text: "text-muted-foreground", dot: "bg-muted-foreground/40" },
-  holiday: { label: "Holiday", bg: "bg-violet-100 dark:bg-violet-900/30", text: "text-violet-800 dark:text-violet-300", dot: "bg-violet-500" },
+  holiday: { label: "Holiday", bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-800 dark:text-blue-300", dot: "bg-blue-500" },
   future: { label: "", bg: "", text: "", dot: "" },
   none: { label: "", bg: "", text: "", dot: "" },
 } as const;

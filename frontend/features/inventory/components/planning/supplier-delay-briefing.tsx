@@ -93,7 +93,7 @@ export const SupplierDelayBriefing = memo(function SupplierDelayBriefing({
   const { data, isLoading, isError, error, refetch, isFetching } =
     useSupplierDelayBriefing(vendorId);
 
-  function handleRefetch() {
+  function handleRefetch(): void {
     void refetch();
   }
 

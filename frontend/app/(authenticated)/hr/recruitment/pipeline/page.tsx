@@ -54,6 +54,9 @@ export default function PipelinePage() {
     [router, searchParams],
   );
 
+  function handleViewKanban() { handleViewChange("kanban"); }
+  function handleViewTable() { handleViewChange("table"); }
+
   if (isError) {
     return (
       <PageWrapper
@@ -74,7 +77,7 @@ export default function PipelinePage() {
         <div className="flex items-center gap-0.5 rounded-lg border border-border p-0.5">
           <button
             type="button"
-            onClick={() => handleViewChange("kanban")}
+            onClick={handleViewKanban}
             className={cn(
               "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors",
               view === "kanban" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground",
@@ -85,7 +88,7 @@ export default function PipelinePage() {
           </button>
           <button
             type="button"
-            onClick={() => handleViewChange("table")}
+            onClick={handleViewTable}
             className={cn(
               "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors",
               view === "table" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground",

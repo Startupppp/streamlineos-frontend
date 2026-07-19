@@ -5,6 +5,7 @@ import Image from "next/image";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -604,18 +605,15 @@ export function ChannelInfoPanel({
                             ? new Date(mutedUntil).toLocaleString()
                             : ""}
                       </p>
-                      <Button
+                      <LoadingButton
                         variant="outline"
                         size="sm"
                         className="w-full h-8 text-[12px]"
                         onClick={() => unmuteChannel.mutate(channelId)}
-                        disabled={unmuteChannel.isPending}
+                        isPending={unmuteChannel.isPending}
                       >
-                        {unmuteChannel.isPending ? (
-                          <Loader2 className="h-3 w-3 animate-spin mr-1.5" />
-                        ) : null}
                         Unmute
-                      </Button>
+                      </LoadingButton>
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 gap-1.5">
@@ -652,35 +650,27 @@ export function ChannelInfoPanel({
 
           <div className="mt-4 pt-4 border-t border-border/30">
             {isArchivedForMe ? (
-              <Button
+              <LoadingButton
                 variant="outline"
                 size="sm"
                 className="w-full h-8 text-[12px]"
                 onClick={handleUnarchive}
-                disabled={unarchiveChannel.isPending}
+                isPending={unarchiveChannel.isPending}
               >
-                {unarchiveChannel.isPending ? (
-                  <Loader2 className="h-3 w-3 animate-spin mr-1.5" />
-                ) : (
-                  <ArchiveRestore className="h-3.5 w-3.5 mr-1.5" />
-                )}
+                {!unarchiveChannel.isPending && <ArchiveRestore className="h-3.5 w-3.5 mr-1.5" />}
                 Unarchive chat
-              </Button>
+              </LoadingButton>
             ) : (
-              <Button
+              <LoadingButton
                 variant="outline"
                 size="sm"
                 className="w-full h-8 text-[12px]"
                 onClick={handleArchive}
-                disabled={archiveChannel.isPending}
+                isPending={archiveChannel.isPending}
               >
-                {archiveChannel.isPending ? (
-                  <Loader2 className="h-3 w-3 animate-spin mr-1.5" />
-                ) : (
-                  <Archive className="h-3.5 w-3.5 mr-1.5" />
-                )}
+                {!archiveChannel.isPending && <Archive className="h-3.5 w-3.5 mr-1.5" />}
                 Archive chat
-              </Button>
+              </LoadingButton>
             )}
           </div>
         </div>

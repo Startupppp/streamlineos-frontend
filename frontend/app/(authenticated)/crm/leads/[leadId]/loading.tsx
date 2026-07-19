@@ -6,6 +6,7 @@ export default function LeadDetailLoading() {
   return (
     <PageWrapper
       title="Lead"
+      backHref="/crm/leads"
       actions={<Skeleton className="h-8 w-36 rounded-md" />}
     >
       <div className="space-y-4">

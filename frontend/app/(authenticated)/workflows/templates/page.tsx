@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { SearchInput } from "@/components/ui/search-input";
 import { EmptyState } from "@/components/ui/empty-state";
-import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
+import { CONTENT_FILL_PANEL, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptySearchIllustration } from "@/components/illustrations";
@@ -117,8 +117,8 @@ export default function WorkflowTemplatesPage() {
   }
 
   const filtersBar = (
-    <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-      <div className="min-w-0 flex-1 min-w-[200px] max-w-xs">
+    <div className={FILTER_TOOLBAR_ROW}>
+      <div className="min-w-[200px] max-w-xs flex-1">
         <SearchInput placeholder="Search templates..." value={search} onValueChange={handleSearchChange} />
       </div>
       <div className="flex items-center gap-1">
@@ -173,7 +173,7 @@ export default function WorkflowTemplatesPage() {
           className={CONTENT_FILL_PANEL}
         />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 content-start">
           {filtered.map((template) => (
             <TemplateCard
               key={template.id}

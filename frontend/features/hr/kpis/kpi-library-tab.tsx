@@ -11,6 +11,7 @@ import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { Label } from "@/components/ui/label";
 import {
   Sheet,
@@ -34,7 +35,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 function getCategoryColor(category: string) {
-  return CATEGORY_COLORS[category] ?? "bg-muted text-muted-foreground dark:bg-slate-800/40 dark:text-slate-400";
+  return CATEGORY_COLORS[category] ?? "bg-muted text-muted-foreground";
 }
 
 interface KpiFormState {
@@ -147,8 +148,8 @@ export function KpiLibraryTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex min-w-0 flex-nowrap items-center justify-between gap-3 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-        <div className="flex min-w-0 flex-nowrap items-center gap-3 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+      <div className="flex items-center gap-2 justify-between">
+        <div className={FILTER_TOOLBAR_ROW}>
           <SearchInput
             className="w-60"
             placeholder="Search KPIs…"
@@ -247,7 +248,7 @@ export function KpiLibraryTab() {
               </div>
               <div className="flex flex-wrap gap-1.5">
                 <Badge className={`text-xs ${getCategoryColor(kpi.category)}`}>{kpi.category}</Badge>
-                <Badge className={`text-xs ${kpi.isActive ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground dark:bg-slate-800/40 dark:text-slate-400"}`}>
+                <Badge className={`text-xs ${kpi.isActive ? "bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-300" : "bg-muted text-muted-foreground"}`}>
                   {kpi.isActive ? "Active" : "Inactive"}
                 </Badge>
               </div>
@@ -259,7 +260,7 @@ export function KpiLibraryTab() {
               <Button
                 size="sm"
                 variant="outline"
-                className={`w-full text-xs ${kpi.isActive ? "text-red-500 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-500/30 dark:hover:bg-red-500/10" : "text-green-600 border-green-200 hover:bg-green-50 dark:text-green-400 dark:border-green-500/30 dark:hover:bg-green-500/10"}`}
+                className={`w-full text-xs ${kpi.isActive ? "text-red-500 border-red-200 hover:bg-red-50 dark:text-red-300 dark:border-red-500/30 dark:hover:bg-red-500/10" : "text-green-600 border-green-200 hover:bg-green-50 dark:text-green-300 dark:border-green-500/30 dark:hover:bg-green-500/10"}`}
                 onClick={() => handleToggleActive(kpi.id, kpi.isActive)}
               >
                 {kpi.isActive ? "Deactivate" : "Activate"}

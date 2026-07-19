@@ -53,10 +53,10 @@ export function AIPredictDealButton({
   }, [result, handlePredict]);
 
   const probColor = (prob: number) => {
-    if (prob >= 75) return "text-emerald-500";
-    if (prob >= 50) return "text-amber-500";
-    if (prob >= 25) return "text-orange-500";
-    return "text-red-500";
+    if (prob >= 75) return "text-emerald-500 dark:text-emerald-400";
+    if (prob >= 50) return "text-amber-500 dark:text-amber-400";
+    if (prob >= 25) return "text-orange-500 dark:text-orange-400";
+    return "text-red-500 dark:text-red-400";
   };
 
   const probBg = (prob: number) => {
@@ -199,7 +199,7 @@ function PredictDetails({
           </p>
           {result.positiveSignals.map((s, i) => (
             <div key={i} className="flex items-start gap-1.5 text-[11px]">
-              <TrendingUp className="h-3 w-3 text-emerald-500 mt-0.5 shrink-0" />
+              <TrendingUp className="h-3 w-3 text-emerald-500 dark:text-emerald-400 mt-0.5 shrink-0" />
               <span>{s}</span>
             </div>
           ))}

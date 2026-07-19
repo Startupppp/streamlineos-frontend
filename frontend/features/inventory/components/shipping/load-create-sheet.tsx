@@ -8,6 +8,7 @@ import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { AppSheet } from "@/components/shared";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { InventoryReferenceCombobox } from "@/components/inventory/inventory-reference-combobox";
@@ -36,6 +37,30 @@ type LoadFormValues = z.infer<typeof loadSchema>;
 interface LoadCreateSheetProps {
   open: boolean;
   onOpenChange: (v: boolean) => void;
+}
+
+interface RemoveMemberButtonProps {
+  index: number;
+  onRemove: (index: number) => void;
+}
+
+function RemoveMemberButton({ index, onRemove }: RemoveMemberButtonProps) {
+  function handleClick(): void {
+    onRemove(index);
+  }
+
+  return (
+    <AnimatedIconButton
+      type="button"
+      icon={Trash2Icon}
+      iconSize={14}
+      iconClassName="text-destructive"
+      variant="ghost"
+      size="icon"
+      className="w-7 shrink-0"
+      onClick={handleClick}
+    />
+  );
 }
 
 export function LoadCreateSheet({ open, onOpenChange }: LoadCreateSheetProps) {
@@ -107,14 +132,15 @@ export function LoadCreateSheet({ open, onOpenChange }: LoadCreateSheetProps) {
           <Button type="button" variant="outline" size="sm" onClick={handleClose}>
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             type="submit"
             form="load-create-form"
             size="sm"
-            disabled={createMutation.isPending}
+            isPending={createMutation.isPending}
+            loadingText="Creating…"
           >
-            {createMutation.isPending ? "Creating…" : "Create Load"}
-          </Button>
+            Create Load
+          </LoadingButton>
         </div>
       }
     >
@@ -189,16 +215,7 @@ export function LoadCreateSheet({ open, onOpenChange }: LoadCreateSheetProps) {
                   </p>
                 )}
               </div>
-              <AnimatedIconButton
-                type="button"
-                icon={Trash2Icon}
-                iconSize={14}
-                iconClassName="text-destructive"
-                variant="ghost"
-                size="icon"
-                className="w-7 shrink-0"
-                onClick={() => handleRemoveMember(index)}
-              />
+              <RemoveMemberButton index={index} onRemove={handleRemoveMember} />
             </div>
           ))}
         </div>

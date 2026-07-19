@@ -65,7 +65,7 @@ export function ProjectFilterBar({
       </div>
 
       <Select value={status} onValueChange={handleStatusValueChange}>
-        <SelectTrigger className="w-[132px] text-xs">
+        <SelectTrigger className="w-[132px]">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

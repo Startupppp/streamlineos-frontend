@@ -166,14 +166,14 @@ export function BusinessHoursSheet({ open, onOpenChange, mode, form, onSubmit, i
                           </div>
                           <Input
                             type="time"
-                            className="h-8 text-xs"
+                            className="h-9 text-sm"
                             disabled={!enabled}
                             {...form.register(`${day}.start`)}
                           />
                           <span className="text-xs text-muted-foreground">to</span>
                           <Input
                             type="time"
-                            className="h-8 text-xs"
+                            className="h-9 text-sm"
                             disabled={!enabled}
                             {...form.register(`${day}.end`)}
                           />
@@ -190,8 +190,8 @@ export function BusinessHoursSheet({ open, onOpenChange, mode, form, onSubmit, i
                   <span>Holidays</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <DatePicker value={holidayInput ?? ""} onChange={handleHolidayInputChange} placeholder="Pick a date" className="h-8" />
-                  <AnimatedIconButton type="button" variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={handleAddHoliday} icon={PlusIcon} />
+                  <DatePicker value={holidayInput ?? ""} onChange={handleHolidayInputChange} placeholder="Pick a date" className="h-9" />
+                  <AnimatedIconButton type="button" variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={handleAddHoliday} icon={PlusIcon} />
                 </div>
                 {holidays.length > 0 && (
                   <div className="flex flex-wrap gap-1.5">

@@ -36,6 +36,7 @@ export function PortalTicketListPage() {
   const { data, isLoading, isError, refetch } = usePortalTickets();
 
   const handleOpenNewTicket = useCallback(() => setNewTicketOpen(true), []);
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   return (
     <PageWrapper
@@ -43,7 +44,7 @@ export function PortalTicketListPage() {
       title="My Support Tickets"
       subtitle="View and manage the support tickets you've raised"
       actions={
-        <AnimatedIconButton size="sm" className="h-8 text-xs" onClick={handleOpenNewTicket} icon={PlusIcon} iconClassName="mr-1.5">
+        <AnimatedIconButton size="sm" onClick={handleOpenNewTicket} icon={PlusIcon} iconClassName="mr-1.5">
           New Ticket
         </AnimatedIconButton>
       }
@@ -55,7 +56,7 @@ export function PortalTicketListPage() {
           ))}
         </div>
       ) : isError ? (
-        <ErrorState onRetry={refetch} />
+        <ErrorState onRetry={handleRetry} />
       ) : (data ?? []).length === 0 ? (
         <EmptyState
           illustrationPreset="ticket"

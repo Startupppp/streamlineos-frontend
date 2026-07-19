@@ -1,10 +1,9 @@
 "use client";
 
-import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
@@ -12,14 +11,7 @@ import { getApiError } from "@/lib/api-client";
 import { usePatchSurvey, type SurveyForm } from "@/hooks/api/surveys/forms";
 import { AssessmentScoringCard } from "./assessment-scoring-card";
 import { CollectorsCard } from "./collectors-card";
-
-const optionsSchema = z.object({
-  title: z.string().min(1, "Title is required").max(200),
-  description: z.string().max(2000).optional(),
-  defaultLanguage: z.string().min(2).max(10),
-});
-
-type OptionsValues = z.infer<typeof optionsSchema>;
+import { optionsSchema, type OptionsValues } from "./options-schema";
 
 export function OptionsTab({ survey }: { survey: SurveyForm }) {
   const patchSurvey = usePatchSurvey(survey.id);
@@ -89,9 +81,9 @@ export function OptionsTab({ survey }: { survey: SurveyForm }) {
                   </FormItem>
                 )}
               />
-              <Button type="submit" size="sm" disabled={patchSurvey.isPending}>
+              <LoadingButton type="submit" size="sm" isPending={patchSurvey.isPending}>
                 Save
-              </Button>
+              </LoadingButton>
             </form>
           </Form>
         </CardContent>

@@ -230,8 +230,8 @@ export function CustomFieldUpsertSheet({
             </SheetTitle>
             {isEdit && field.isSensitive && (
               <div className="flex items-center gap-1.5 mt-1">
-                <Lock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-                <span className="text-xs text-amber-700 dark:text-amber-400 font-medium">Sensitive field</span>
+                <Lock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300" />
+                <span className="text-xs text-amber-700 dark:text-amber-300 font-medium">Sensitive field</span>
               </div>
             )}
           </SheetHeader>
@@ -514,11 +514,11 @@ export function CustomFieldUpsertSheet({
                     <Label htmlFor="isSensitive" className="text-sm cursor-pointer">
                       Sensitive
                     </Label>
-                    {watchedIsSensitive && <Lock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />}
+                    {watchedIsSensitive && <Lock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300" />}
                   </div>
                   {watchedIsSensitive && (
                     <div className="flex gap-2 p-3 bg-amber-50 border border-amber-200 rounded-md dark:bg-amber-500/10 dark:border-amber-500/30">
-                      <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                      <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-300 shrink-0 mt-0.5" />
                       <p className="text-xs text-amber-800 dark:text-amber-300">{SENSITIVE_WARNING_TEXT}</p>
                     </div>
                   )}

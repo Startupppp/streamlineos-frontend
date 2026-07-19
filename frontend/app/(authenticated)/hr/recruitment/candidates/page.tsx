@@ -327,6 +327,7 @@ export default function CandidatesPage() {
           </>
         }
       >
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
         {isLoading ? (
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 12 }).map((_, i) => (
@@ -374,6 +375,7 @@ export default function CandidatesPage() {
             ))}
           </div>
         )}
+        </div>
       </PageWrapper>
 
       <ConfirmSheet
@@ -406,9 +408,7 @@ export default function CandidatesPage() {
         onOpenChange={handleCloseDeleteDialog}
         title="Delete candidate?"
         description={`This will permanently delete ${deletingCandidate?.firstName} ${deletingCandidate?.lastName} and all related data. This cannot be undone.`}
-        confirmLabel={
-          deleteCandidate.isPending ? "Deleting…" : "Delete Candidate"
-        }
+        confirmLabel="Delete Candidate"
         destructive
         onConfirm={handleDelete}
       />

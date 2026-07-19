@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type { ChangeEvent } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -69,7 +70,7 @@ export function ApplyTemplateDialog({ template, onClose }: ApplyTemplateDialogPr
           onClose();
           router.push(`/projects/${data.projectId}`);
         },
-        onError: () => toast.error("Failed to create project"),
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }, [name, description, startDate, endDate, template.id, apply, onClose, router]);

@@ -176,7 +176,7 @@ export function ContactRolesCard({ contactId }: ContactRolesCardProps) {
               <LoadingButton
                 type="submit"
                 size="sm"
-                className="w-full h-8 text-xs"
+                className="w-full text-xs"
                 isPending={addRole.isPending}
                 loadingText="Adding..."
               >

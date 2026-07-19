@@ -2,11 +2,8 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { cn } from "@/lib/utils";
-import {
-  PmPageShell,
-  PM_PANEL,
-  PM_TOOLBAR,
-} from "@/features/projects/shared/pm-chrome";
+import { PmPageShell, PM_PANEL } from "@/features/projects/shared/pm-chrome";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export default function GoalsLoading() {
   return (
@@ -15,7 +12,7 @@ export default function GoalsLoading() {
       subtitle="Track company, team, and individual objectives and their key results"
       actions={<Skeleton className="h-9 w-28 rounded-md" />}
       filters={
-        <div className={PM_TOOLBAR}>
+        <div className={FILTER_TOOLBAR_ROW}>
           <Skeleton className="h-9 w-full max-w-sm rounded-md" />
           <div className="flex gap-2">
             <Skeleton className="h-9 w-[130px] rounded-md" />

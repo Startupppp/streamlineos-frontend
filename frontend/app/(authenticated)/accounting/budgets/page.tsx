@@ -8,6 +8,7 @@ import { Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -248,15 +249,15 @@ export default function BudgetsListPage() {
         ) : undefined
       }
       filters={
-        <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+        <div className={FILTER_TOOLBAR_ROW}>
           <Input
             value={fiscalYear}
             onChange={handleFiscalYearChange}
             placeholder="Fiscal year (e.g. 2025-26)"
-            className="w-[200px] text-xs"
+            className="w-[200px]"
           />
           <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
-            <SelectTrigger className="w-[180px] text-xs">
+            <SelectTrigger className={`w-[180px] ${FILTER_SELECT_TRIGGER}`}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

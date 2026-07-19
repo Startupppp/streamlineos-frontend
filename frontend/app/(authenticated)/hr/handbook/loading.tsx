@@ -7,7 +7,7 @@ export default function HandbookLoading() {
     <PageWrapper
       title="Employee Handbook"
       subtitle="Manage and publish handbook versions"
-      actions={<Skeleton className="h-8 w-28 rounded-md" />}
+      actions={<Skeleton className="h-9 w-28 rounded-md" />}
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
           <Skeleton className="h-9 w-48 rounded-md" />

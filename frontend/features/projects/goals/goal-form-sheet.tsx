@@ -36,6 +36,7 @@ import {
   type KeyResultInput,
 } from "@/hooks/api/goals";
 import { useChatOrgUsers } from "@/hooks/api/chat";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { LEVEL_OPTIONS, STATUS_OPTIONS, METRIC_OPTIONS } from "./constants";
 
 interface GoalFormSheetProps {
@@ -109,7 +110,7 @@ const KeyResultRow = memo(function KeyResultRow({ kr, index, onUpdate, onRemove 
       </div>
       <div className="grid grid-cols-2 gap-2">
         <Select value={kr.metricType} onValueChange={handleMetricTypeChange}>
-          <SelectTrigger className="w-full text-xs">
+          <SelectTrigger className="w-full">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -239,7 +240,7 @@ export function GoalFormSheet({
             toast.success("Goal updated");
             onOpenChange(false);
           },
-          onError: () => toast.error("Failed to update goal"),
+          onError: (e) => toast.error(getErrorMessage(e)),
         },
       );
       return;
@@ -261,7 +262,7 @@ export function GoalFormSheet({
           toast.success("Goal created");
           onOpenChange(false);
         },
-        onError: () => toast.error("Failed to create goal"),
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }

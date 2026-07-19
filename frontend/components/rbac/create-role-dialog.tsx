@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Dialog,
   DialogContent,
@@ -301,16 +302,14 @@ export function CreateRoleDialog({
             >
               Cancel
             </Button>
-            <Button
+            <LoadingButton
               type="submit"
-              disabled={create.isPending || isSubmitting}
+              isPending={create.isPending || isSubmitting}
+              loadingText="Creating…"
               className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
-              {(create.isPending || isSubmitting) && (
-                <Loader2 className="h-4 w-4 animate-spin mr-1" />
-              )}
               Create role
-            </Button>
+            </LoadingButton>
           </div>
         </form>
       </DialogContent>

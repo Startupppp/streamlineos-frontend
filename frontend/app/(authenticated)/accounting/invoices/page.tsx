@@ -379,7 +379,7 @@ export default function AccountingInvoicesPage() {
           />
         </div>
 
-        <TabsContent value="invoices" className="space-y-4 mt-0">
+        <TabsContent value="invoices" className="flex flex-1 min-h-0 flex-col gap-4 mt-0">
           <StatCardGrid cols={4}>
             <StatCard
               label="Total Outstanding"

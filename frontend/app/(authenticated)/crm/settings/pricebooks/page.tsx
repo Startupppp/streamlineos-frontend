@@ -37,6 +37,7 @@ import {
 } from "@/features/crm/settings/pricebooks/pricebook-form";
 import { PricebookEntriesSheet } from "@/features/crm/settings/pricebooks/pricebook-entries-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import type { Pricebook } from "@/types/crm/pricebooks";
 
 export default function PricebooksPage() {
@@ -315,10 +316,10 @@ export default function PricebooksPage() {
           </Button>
         }
         filters={
-          <div className="flex w-full min-w-0 items-center gap-2">
-            <div className="min-w-0 flex-1 lg:max-w-sm w-full">
-          <SearchInput placeholder="Search pricebooks..." value={search} onValueChange={handleSearchChange} />
-        </div>
+          <div className={FILTER_TOOLBAR_ROW}>
+            <div className="min-w-0 flex-1 lg:max-w-sm">
+              <SearchInput placeholder="Search pricebooks..." value={search} onValueChange={handleSearchChange} />
+            </div>
           </div>
         }
       >

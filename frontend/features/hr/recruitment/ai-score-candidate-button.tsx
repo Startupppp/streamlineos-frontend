@@ -58,6 +58,15 @@ export function AIScoreCandidateButton({ candidateId, jobId, compact }: AIScoreC
     return "bg-red-500/10";
   };
 
+  function handleCompactClick(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (!result) handleScore();
+  }
+
+  function handlePopoverContentClick(e: React.MouseEvent) {
+    e.stopPropagation();
+  }
+
   if (compact) {
     return (
       <Popover open={open} onOpenChange={setOpen}>
@@ -66,10 +75,7 @@ export function AIScoreCandidateButton({ candidateId, jobId, compact }: AIScoreC
             variant="ghost"
             size="sm"
             className="px-2 text-xs gap-1"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (!result) handleScore();
-            }}
+            onClick={handleCompactClick}
             disabled={scoreMutation.isPending}
           >
             {scoreMutation.isPending ? (
@@ -81,7 +87,7 @@ export function AIScoreCandidateButton({ candidateId, jobId, compact }: AIScoreC
           </Button>
         </PopoverTrigger>
         {result && (
-          <PopoverContent className="w-80 p-3" align="start" onClick={(e) => e.stopPropagation()}>
+          <PopoverContent className="w-80 p-3" align="start" onClick={handlePopoverContentClick}>
             <ScoreDetails result={result} fitColor={fitColor} fitBg={fitBg} />
             <div className="mt-2 pt-2 border-t border-border flex items-center gap-2">
               <LoadingButton
@@ -89,7 +95,7 @@ export function AIScoreCandidateButton({ candidateId, jobId, compact }: AIScoreC
                 variant="default"
                 isPending={acceptMutation.isPending}
                 onClick={handleAccept}
-                className="h-7 text-xs"
+                className="text-xs"
               >
                 Accept AI Score
               </LoadingButton>

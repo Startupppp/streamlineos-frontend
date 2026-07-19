@@ -6,6 +6,7 @@ import { z } from "zod";
 import { FileText, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useCreateInvoice } from "@/hooks/api/invoice";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { formatCurrencyFull } from "@/lib/format-utils";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -189,7 +190,7 @@ export function CreateInvoiceDialog({
           reset(DIALOG_DEFAULT_VALUES);
           toast.success("Invoice created");
         },
-        onError: (err) => toast.error(err.message),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }

@@ -67,7 +67,7 @@ export function ProgressTimeline({ id }: { id: number }) {
                 className={cn(
                   "text-[11px] leading-tight",
                   step.status === "completed"
-                    ? "text-emerald-700 dark:text-emerald-400 font-medium"
+                    ? "text-emerald-700 dark:text-emerald-300 font-medium"
                     : step.status === "current"
                     ? "text-foreground font-semibold"
                     : "text-muted-foreground"

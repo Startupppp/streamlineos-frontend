@@ -25,7 +25,7 @@ export default function ExpensesLoading() {
             <Skeleton className="h-8 w-[92px] rounded-full" />
             <Skeleton className="h-8 w-[88px] rounded-full" />
           </div>
-          <Skeleton className="h-8 w-[180px] rounded-md" />
+          <Skeleton className="h-9 w-[180px] rounded-md" />
         </div>
 
         <div className="rounded-lg border border-border bg-card overflow-hidden">

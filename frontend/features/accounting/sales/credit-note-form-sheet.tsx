@@ -21,6 +21,9 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateCreditNote } from "@/hooks/api/accounting/ar";
+import { useCustomersOutstanding } from "@/hooks/api/accounting";
+import { useInvoices } from "@/hooks/api/invoice";
+import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 
 function toGstRate(value: number): 0 | 5 | 12 | 18 | 28 {
   if (value === 5) return 5;
@@ -154,6 +157,18 @@ interface CreditNoteFormSheetProps {
 
 export function CreditNoteFormSheet({ open, onOpenChange }: CreditNoteFormSheetProps) {
   const createMutation = useCreateCreditNote();
+  const { data: customersData } = useCustomersOutstanding();
+  const { data: invoicesData } = useInvoices();
+
+  const customerOptions: ComboboxOption[] = (customersData?.items ?? []).map((c) => ({
+    value: String(c.clientId),
+    label: c.clientName,
+  }));
+
+  const invoiceOptions: ComboboxOption[] = (invoicesData?.items ?? []).map((inv) => ({
+    value: String(inv.id),
+    label: `${inv.invoiceNumber}${inv.client ? ` — ${inv.client.name}` : ""}`,
+  }));
 
   const form = useForm<CreditNoteFormValues>({
     resolver: zodResolver(creditNoteSchema),
@@ -238,27 +253,27 @@ export function CreditNoteFormSheet({ open, onOpenChange }: CreditNoteFormSheetP
       <div className="space-y-4 px-6 py-4">
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <Label htmlFor="clientId" className="text-xs font-medium">
-              Customer ID <span className="text-muted-foreground">(optional)</span>
+            <Label className="text-xs font-medium">
+              Customer <span className="text-muted-foreground">(optional)</span>
             </Label>
-            <Input
-              id="clientId"
-              type="number"
-              className="text-sm"
-              placeholder="Client ID"
-              {...form.register("clientId")}
+            <Combobox
+              options={customerOptions}
+              value={form.watch("clientId") ?? ""}
+              onChange={(v) => form.setValue("clientId", v, { shouldValidate: true })}
+              placeholder="Select customer…"
+              searchPlaceholder="Search customers…"
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="invoiceId" className="text-xs font-medium">
+            <Label className="text-xs font-medium">
               Linked invoice <span className="text-muted-foreground">(optional)</span>
             </Label>
-            <Input
-              id="invoiceId"
-              type="number"
-              className="text-sm"
-              placeholder="Invoice ID"
-              {...form.register("invoiceId")}
+            <Combobox
+              options={invoiceOptions}
+              value={form.watch("invoiceId") ?? ""}
+              onChange={(v) => form.setValue("invoiceId", v, { shouldValidate: true })}
+              placeholder="Select invoice…"
+              searchPlaceholder="Search invoices…"
             />
           </div>
         </div>

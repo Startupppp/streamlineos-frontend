@@ -21,6 +21,8 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useExpiryItems } from "@/hooks/api/inventory/traceability";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { cn } from "@/lib/utils";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 
 function ExpiryLotViewButton({ lotId, lotNumber }: { lotId: number; lotNumber: string }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -161,7 +163,7 @@ export function ExpiryClient() {
         <div className="flex w-full min-w-0 items-center gap-2">
           <span className="text-xs text-muted-foreground shrink-0">Expiring within</span>
           <Select value={days} onValueChange={handleDaysChange}>
-            <SelectTrigger className="text-xs w-[110px]">
+            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "text-xs w-[110px]")}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

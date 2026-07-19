@@ -30,6 +30,18 @@ const INTEGRATIONS: Integration[] = [
   },
 ];
 
+function IntegrationConnectButton({ integration }: { integration: Integration }) {
+  function handleConnect() {
+    window.location.href = integration.connectPath;
+  }
+  return (
+    <Button variant="outline" size="sm" className="gap-1.5 shrink-0" onClick={handleConnect}>
+      <ExternalLink className="h-3.5 w-3.5" />
+      {integration.connected ? "Manage" : "Connect"}
+    </Button>
+  );
+}
+
 interface OrgIntegrationsSectionProps {
   canEdit: boolean;
 }
@@ -70,15 +82,7 @@ export function OrgIntegrationsSection({ canEdit }: OrgIntegrationsSectionProps)
                 </div>
               </div>
               {canEdit && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5 shrink-0"
-                  onClick={() => { window.location.href = integration.connectPath; }}
-                >
-                  <ExternalLink className="h-3.5 w-3.5" />
-                  {integration.connected ? "Manage" : "Connect"}
-                </Button>
+                <IntegrationConnectButton integration={integration} />
               )}
             </div>
           ))}

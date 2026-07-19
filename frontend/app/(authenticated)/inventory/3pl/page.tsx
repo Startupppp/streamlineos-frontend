@@ -14,6 +14,7 @@ import { ErrorState } from "@/components/shared";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptySearchIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { SYNC_STATUS_BADGE, SYNC_STATUS_LABEL } from "@/features/inventory/lib";
 import {
   useThreePlConnections,
@@ -55,16 +56,17 @@ function SyncButtonCell({ connectionId }: SyncButtonCellProps) {
   }
 
   return (
-    <Button
+    <LoadingButton
       size="sm"
       variant="outline"
       className="text-xs gap-1.5"
       onClick={handleSync}
-      disabled={syncMutation.isPending}
+      isPending={syncMutation.isPending}
+      loadingText="Syncing…"
     >
       <RefreshCw className="h-3 w-3" />
-      {syncMutation.isPending ? "Syncing…" : "Sync"}
-    </Button>
+      Sync
+    </LoadingButton>
   );
 }
 
@@ -213,7 +215,9 @@ function ThreePlContent() {
         subtitle="Manage third-party logistics provider connections"
         actions={actions}
       >
-        <SkeletonRows />
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+          <SkeletonRows />
+        </div>
       </PageWrapper>
     );
   }
@@ -225,11 +229,13 @@ function ThreePlContent() {
         subtitle="Manage third-party logistics provider connections"
         actions={actions}
       >
-        <ErrorState
-          title="Failed to load 3PL connections"
-          description="An error occurred while fetching connection data."
-          onRetry={handleRetry}
-        />
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+          <ErrorState
+            title="Failed to load 3PL connections"
+            description="An error occurred while fetching connection data."
+            onRetry={handleRetry}
+          />
+        </div>
       </PageWrapper>
     );
   }
@@ -239,25 +245,25 @@ function ThreePlContent() {
       <PageWrapper
         title="3PL Connections"
         subtitle="Manage third-party logistics provider connections"
-        badge={connections.length > 0 ? String(connections.length) : undefined}
         actions={actions}
       >
-        {connections.length > 0 ? (
-          <DataTable<ThreePlConnection>
-            className="flex-1 min-h-0"
-            data={connections}
-            columns={columns}
-            getRowKey={(row) => row.id}
-            onRowClick={handleRowClick}
-          />
-        ) : (
-          <InventoryEmptyState
-            illustration={<EmptySearchIllustration />}
-            title="No 3PL connections"
-            description="Add a third-party logistics provider to enable fulfilment integrations."
-            action={{ label: "Add Connection", onClick: handleAddConnection }}
-          />
-        )}
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+          {connections.length > 0 ? (
+            <DataTable<ThreePlConnection>
+              data={connections}
+              columns={columns}
+              getRowKey={(row) => row.id}
+              onRowClick={handleRowClick}
+            />
+          ) : (
+            <InventoryEmptyState
+              illustration={<EmptySearchIllustration />}
+              title="No 3PL connections"
+              description="Add a third-party logistics provider to enable fulfilment integrations."
+              action={{ label: "Add Connection", onClick: handleAddConnection }}
+            />
+          )}
+        </div>
       </PageWrapper>
 
       <ThreePlConnectionSheet

@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useCreateChangelogEntry,
   useUpdateChangelogEntry,
@@ -69,7 +70,7 @@ export function ChangelogSheet({ entry, onClose }: ChangelogSheetProps) {
         },
         {
           onSuccess: () => { toast.success("Changelog entry updated"); onClose(); },
-          onError: () => toast.error("Failed to update entry"),
+          onError: (e) => toast.error(getErrorMessage(e)),
         },
       );
     } else {
@@ -83,7 +84,7 @@ export function ChangelogSheet({ entry, onClose }: ChangelogSheetProps) {
         },
         {
           onSuccess: () => { toast.success("Changelog entry created"); onClose(); },
-          onError: () => toast.error("Failed to create entry"),
+          onError: (e) => toast.error(getErrorMessage(e)),
         },
       );
     }

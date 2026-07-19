@@ -1,8 +1,8 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTableSkeleton } from "@/components/ui/data-table";
-import { PM_TOOLBAR, PmPageShell, PmSection } from "@/features/projects/shared/pm-chrome";
-import { cn } from "@/lib/utils";
+import { PmPageShell, PmSection } from "@/features/projects/shared/pm-chrome";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export default function BugsLoading() {
   return (
@@ -11,13 +11,11 @@ export default function BugsLoading() {
       subtitle="Track and triage project bugs"
       actions={<Skeleton className="h-9 w-28 rounded-md" />}
       filters={
-        <div className={cn(PM_TOOLBAR, "w-full")}>
-          <div className="flex flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-            <Skeleton className="h-9 w-44 rounded-md" />
-            <Skeleton className="h-9 w-32 rounded-md" />
-            <Skeleton className="h-9 w-28 rounded-md" />
-            <Skeleton className="h-9 w-32 rounded-md" />
-          </div>
+        <div className={FILTER_TOOLBAR_ROW}>
+          <Skeleton className="h-9 w-44 rounded-md" />
+          <Skeleton className="h-9 w-32 rounded-md" />
+          <Skeleton className="h-9 w-28 rounded-md" />
+          <Skeleton className="h-9 w-32 rounded-md" />
         </div>
       }
     >

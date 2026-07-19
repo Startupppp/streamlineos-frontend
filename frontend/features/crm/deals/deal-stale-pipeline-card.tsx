@@ -70,7 +70,7 @@ export function DealStalePipelineCard({ inactiveDays = 14 }: StalePipelineCardPr
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="text-sm flex items-center gap-2">
-            <TrendingDown className="h-4 w-4 text-amber-500" />
+            <TrendingDown className="h-4 w-4 text-amber-500 dark:text-amber-400" />
             Stale Pipeline Digest
           </CardTitle>
           <LoadingButton
@@ -119,7 +119,7 @@ export function DealStalePipelineCard({ inactiveDays = 14 }: StalePipelineCardPr
 
                 {result.digest.topRisk && (
                   <div className="flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200 dark:bg-amber-500/10 dark:border-amber-500/30 p-2">
-                    <AlertTriangle className="h-3.5 w-3.5 text-amber-500 mt-0.5 shrink-0" />
+                    <AlertTriangle className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400 mt-0.5 shrink-0" />
                     <p className="text-xs text-amber-700 dark:text-amber-300">{result.digest.topRisk}</p>
                   </div>
                 )}

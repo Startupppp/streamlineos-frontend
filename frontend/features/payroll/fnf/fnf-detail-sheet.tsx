@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCan } from "@/hooks/api/access";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useFnfSettlement, useFnfStatement, useApproveFnf, downloadFnfStatement } from "@/hooks/api/payroll/fnf";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { FnfStatusBadge } from "./fnf-status-badge";
@@ -72,7 +73,7 @@ function FnfDetailSheetInner({ settlementId, onClose }: FnfDetailSheetInnerProps
           onClose();
         },
         onError: (error) => {
-          toast.error(error.message ?? "Something went wrong");
+          toast.error(getErrorMessage(error));
         },
       },
     );

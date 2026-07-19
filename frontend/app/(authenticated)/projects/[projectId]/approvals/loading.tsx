@@ -1,8 +1,8 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTableSkeleton } from "@/components/ui/data-table";
-import { PM_TOOLBAR, PmPageShell, PmPanel, PmSection } from "@/features/projects/shared/pm-chrome";
-import { cn } from "@/lib/utils";
+import { PmPageShell, PmPanel, PmSection } from "@/features/projects/shared/pm-chrome";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export default function ProjectApprovalsLoading() {
   return (
@@ -11,11 +11,9 @@ export default function ProjectApprovalsLoading() {
       subtitle="Review and manage approval requests for this project"
       actions={<Skeleton className="h-9 w-36 rounded-md" />}
       filters={
-        <div className={cn(PM_TOOLBAR, "w-full")}>
-          <div className="flex items-center gap-2">
-            <Skeleton className="h-9 w-40 rounded-md" />
-            <Skeleton className="h-9 w-40 rounded-md" />
-          </div>
+        <div className={FILTER_TOOLBAR_ROW}>
+          <Skeleton className="h-9 w-40 rounded-md" />
+          <Skeleton className="h-9 w-40 rounded-md" />
         </div>
       }
     >

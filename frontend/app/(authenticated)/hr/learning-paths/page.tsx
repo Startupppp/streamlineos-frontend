@@ -44,15 +44,15 @@ const lpKeys = {
 
 const LEVEL_CONFIG: Record<string, { badge: string; bar: string }> = {
   Beginner: {
-    badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800",
+    badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30",
     bar: "bg-emerald-500",
   },
   Intermediate: {
-    badge: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-amber-200 dark:border-amber-800",
+    badge: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300 border-amber-200 dark:border-amber-500/30",
     bar: "bg-amber-500",
   },
   Advanced: {
-    badge: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 border-rose-200 dark:border-rose-800",
+    badge: "bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300 border-rose-200 dark:border-rose-500/30",
     bar: "bg-rose-500",
   },
 };
@@ -198,8 +198,8 @@ export default function LearningPathsPage() {
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/40 flex items-center justify-center shrink-0">
-                        <GraduationCap className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                      <div className="w-7 rounded-lg bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center shrink-0">
+                        <GraduationCap className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-300" />
                       </div>
                       <TruncatedText text={lp.title} className="text-sm font-semibold text-foreground leading-tight" />
                     </div>

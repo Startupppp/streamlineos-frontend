@@ -8,6 +8,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { EmptyActivityIllustration } from "@/components/illustrations";
@@ -16,6 +17,8 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useMovementsReport, type MovementType } from "@/hooks/api/inventory/reports";
 import { useWarehouses } from "@/hooks/api/inventory/warehouses";
 import { downloadCsv } from "@/features/inventory/lib";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { cn } from "@/lib/utils";
 
 const TYPE_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
   { value: "ALL", label: "All types" },
@@ -221,7 +224,7 @@ export default function MovementsReportPage() {
   const filterBar = (
     <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
       <Select value={warehouseId || "ALL"} onValueChange={handleWarehouseChange}>
-        <SelectTrigger className="w-full sm:max-w-[180px] text-xs">
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-full sm:max-w-[180px] text-xs")}>
           <SelectValue placeholder="All warehouses" />
         </SelectTrigger>
         <SelectContent>
@@ -234,7 +237,7 @@ export default function MovementsReportPage() {
         </SelectContent>
       </Select>
       <Select value={movementType} onValueChange={handleTypeChange}>
-        <SelectTrigger className="w-full sm:max-w-[160px] text-xs">
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-full sm:max-w-[160px] text-xs")}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -245,8 +248,8 @@ export default function MovementsReportPage() {
           ))}
         </SelectContent>
       </Select>
-      <DatePicker value={dateFrom} onChange={handleDateFromChange} placeholder="From" className="w-full sm:max-w-[160px] h-8 text-xs" />
-      <DatePicker value={dateTo} onChange={handleDateToChange} placeholder="To" className="w-full sm:max-w-[160px] h-8 text-xs" />
+      <DatePicker value={dateFrom} onChange={handleDateFromChange} placeholder="From" className="w-full sm:max-w-[160px]" />
+      <DatePicker value={dateTo} onChange={handleDateToChange} placeholder="To" className="w-full sm:max-w-[160px]" />
       <AnimatedIconButton
         icon={DownloadIcon}
         iconSize={14}
@@ -269,39 +272,41 @@ export default function MovementsReportPage() {
       subtitle="Full audit trail of all inventory movements — receipts, shipments, adjustments, and transfers."
       filters={filterBar}
     >
-      {query.error && (
-        <ErrorState description={query.error.message} onRetry={handleRetry} />
-      )}
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
+        {query.error && (
+          <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} />
+        )}
 
-      {!query.isLoading && !query.error && rows.length === 0 && (
-        <EmptyState
-          illustration={<EmptyActivityIllustration />}
-          title="No movements found"
-          description="No stock movements match the selected filters."
-          className={CONTENT_FILL_PANEL}
-        />
-      )}
+        {!query.isLoading && !query.error && rows.length === 0 && (
+          <EmptyState
+            illustration={<EmptyActivityIllustration />}
+            title="No movements found"
+            description="No stock movements match the selected filters."
+            className={CONTENT_FILL_PANEL}
+          />
+        )}
 
-      {!query.error && (query.isLoading || rows.length > 0) && (
-        <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
-          <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
-            <DataTable
-              data={rows}
-              columns={MOVEMENTS_COLUMNS}
-              getRowKey={(row) => row.id}
-              isLoading={query.isLoading}
-              minWidth="900px"
-              pagination={{
-                mode: "server",
-                page,
-                pageSize: 50,
-                total: query.data?.total ?? 0,
-                onPageChange: handlePageChange,
-              }}
-            />
-          </CardContent>
-        </Card>
-      )}
+        {!query.error && (query.isLoading || rows.length > 0) && (
+          <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
+            <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
+              <DataTable
+                data={rows}
+                columns={MOVEMENTS_COLUMNS}
+                getRowKey={(row) => row.id}
+                isLoading={query.isLoading}
+                minWidth="900px"
+                pagination={{
+                  mode: "server",
+                  page,
+                  pageSize: 50,
+                  total: query.data?.total ?? 0,
+                  onPageChange: handlePageChange,
+                }}
+              />
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </PageWrapper>
   );
 }

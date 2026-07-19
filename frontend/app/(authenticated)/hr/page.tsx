@@ -108,7 +108,7 @@ export default function HRDashboardPage() {
   });
 
   const employees = useMemo(
-    () => unwrapEmployees(employeesPage) as unknown as Employee[],
+    () => unwrapEmployees(employeesPage),
     [employeesPage],
   );
 
@@ -263,7 +263,7 @@ export default function HRDashboardPage() {
               <Button
                 size="sm"
                 variant="outline"
-                className="h-9 gap-1.5 border-blue-200 bg-white/80 text-slate-700 hover:bg-white dark:border-blue-800 dark:bg-slate-900/50 dark:text-slate-200"
+                className="h-9 gap-1.5 border-blue-200 bg-background/80 text-foreground hover:bg-background dark:border-blue-500/30"
                 asChild
               >
                 <Link href="/hr/employees">

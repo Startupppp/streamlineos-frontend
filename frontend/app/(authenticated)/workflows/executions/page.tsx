@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
+import { CONTENT_FILL_PANEL, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyActivityIllustration } from "@/components/illustrations";
@@ -139,7 +139,7 @@ export default function ExecutionsPage() {
   }
 
   const statusFilters = (
-    <div className="flex items-center gap-1 overflow-x-auto">
+    <div className={FILTER_TOOLBAR_ROW}>
       {STATUS_TABS.map((tab) => (
         <button
           key={tab.value}
@@ -175,8 +175,8 @@ export default function ExecutionsPage() {
           className={CONTENT_FILL_PANEL}
         />
       ) : (
-        <div className="space-y-1">
-          <div className="grid grid-cols-[2fr,1fr,1fr,1.5fr,1fr,auto] gap-3 px-4 py-2 text-xs font-medium text-muted-foreground border-b border-border/60">
+        <div className="flex flex-1 min-h-0 flex-col gap-1">
+          <div className="grid grid-cols-[2fr,1fr,1fr,1.5fr,1fr,auto] gap-3 px-4 py-2 text-xs font-medium text-muted-foreground border-b border-border/60 shrink-0">
             <span>Workflow</span>
             <span>Status</span>
             <span>Trigger</span>

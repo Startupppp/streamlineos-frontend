@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyActivityIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared/error-state";
@@ -324,9 +325,9 @@ export default function MovementsPage() {
     setPage(1);
   }, [router, searchParams]);
 
-  function handleRetry() { void refetch(); }
+  function handleRetry(): void { void refetch(); }
 
-  function handleResetFilters() {
+  function handleResetFilters(): void {
     router.replace("?");
     setPage(1);
   }
@@ -349,7 +350,7 @@ export default function MovementsPage() {
         <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
           <div className="hidden sm:flex min-w-0 flex-row flex-nowrap items-center gap-2">
             <Select value={txnTypeFilter} onValueChange={handleTypeChange}>
-              <SelectTrigger className="text-xs w-[150px]">
+              <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "text-xs w-[150px]")}>
                 <SelectValue placeholder="All types" />
               </SelectTrigger>
               <SelectContent>
@@ -362,7 +363,7 @@ export default function MovementsPage() {
               </SelectContent>
             </Select>
             <Select value={dirFilter} onValueChange={handleDirChange}>
-              <SelectTrigger className="text-xs w-[120px]">
+              <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "text-xs w-[120px]")}>
                 <SelectValue placeholder="Direction" />
               </SelectTrigger>
               <SelectContent>
@@ -372,7 +373,7 @@ export default function MovementsPage() {
               </SelectContent>
             </Select>
             <Select value={warehouseParam} onValueChange={handleWarehouseChange}>
-              <SelectTrigger className="text-xs w-[140px]">
+              <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "text-xs w-[140px]")}>
                 <SelectValue placeholder="All warehouses" />
               </SelectTrigger>
               <SelectContent>
@@ -385,7 +386,7 @@ export default function MovementsPage() {
               </SelectContent>
             </Select>
             <Select value={datePreset} onValueChange={handleDatePresetChange}>
-              <SelectTrigger className="text-xs w-[130px]">
+              <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "text-xs w-[130px]")}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -413,6 +414,7 @@ export default function MovementsPage() {
         </div>
       }
     >
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
       {isError ? (
         <ErrorState
           title="Failed to load movements"
@@ -489,6 +491,7 @@ export default function MovementsPage() {
           </motion.div>
         </motion.div>
       )}
+      </div>
     </PageWrapper>
   );
 }

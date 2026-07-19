@@ -20,6 +20,8 @@ import {
   useCreateRecurringTemplate,
   useUpdateRecurringTemplate,
 } from "@/hooks/api/accounting/ar";
+import { useCustomersOutstanding } from "@/hooks/api/accounting";
+import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import type { RecurringInvoiceTemplate } from "@/types/accounting/ar";
 
 const recurringTemplateSchema = z.object({
@@ -49,6 +51,11 @@ export function RecurringTemplateFormSheet({
   const isEdit = Boolean(template);
   const createMutation = useCreateRecurringTemplate();
   const updateMutation = useUpdateRecurringTemplate();
+  const { data: customersData } = useCustomersOutstanding();
+  const customerOptions: ComboboxOption[] = (customersData?.items ?? []).map((c) => ({
+    value: String(c.clientId),
+    label: c.clientName,
+  }));
 
   const defaultValues: TemplateFormValues = useMemo(
     () => {
@@ -162,15 +169,15 @@ export function RecurringTemplateFormSheet({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="clientId" className="text-xs font-medium">
-              Customer ID <span className="text-muted-foreground">(optional)</span>
+            <Label className="text-xs font-medium">
+              Customer <span className="text-muted-foreground">(optional)</span>
             </Label>
-            <Input
-              id="clientId"
-              type="number"
-              className="text-sm"
-              placeholder="Client ID"
-              {...form.register("clientId")}
+            <Combobox
+              options={customerOptions}
+              value={form.watch("clientId") ?? ""}
+              onChange={(v) => form.setValue("clientId", v, { shouldValidate: true })}
+              placeholder="Select customer…"
+              searchPlaceholder="Search customers…"
             />
           </div>
 

@@ -205,80 +205,87 @@ export default function WorkflowDetailPage() {
     );
   }
 
-  if (isLoading) return <LoadingState variant="page" />;
-  if (isError || !workflow) {
-    return (
-      <ErrorState
-        title="Workflow not found"
-        description="This workflow may have been deleted or you don't have access."
-        onRetry={handleRetry}
-        className="flex-1"
-      />
-    );
-  }
-
-  const statusCfg = STATUS_CONFIG[workflow.status];
+  const statusCfg = workflow ? STATUS_CONFIG[workflow.status] : null;
 
   return (
     <PageWrapper
-      title={workflow.name}
+      title={workflow?.name ?? "Workflow"}
       badge={
-        <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border", statusCfg.cls)}>
-          {statusCfg.label}
-        </span>
+        statusCfg ? (
+          <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border", statusCfg.cls)}>
+            {statusCfg.label}
+          </span>
+        ) : undefined
       }
-      subtitle={`Version ${workflow.version} · Updated ${formatDistanceToNow(new Date(workflow.updatedAt), { addSuffix: true })}`}
+      subtitle={
+        workflow
+          ? `Version ${workflow.version} · Updated ${formatDistanceToNow(new Date(workflow.updatedAt), { addSuffix: true })}`
+          : undefined
+      }
       actions={
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handleBack}>
-            <ArrowLeft className="h-3.5 w-3.5 mr-1.5" />
-            Back
-          </Button>
-          <AnimatedIconButton
-            icon={PlayIcon}
-            iconSize={14}
-            iconClassName="mr-1.5"
-            variant="outline"
-            size="sm"
-            onClick={handleTrigger}
-            disabled={workflow.status !== "published" || trigger.isPending}
-          >
-            {trigger.isPending ? "Triggering…" : "Run Now"}
-          </AnimatedIconButton>
-          <Button
-            size="sm"
-            asChild
-            className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition-all duration-200"
-          >
-            <Link href={`/workflows/${workflowId}/builder`}>
-              <Pencil className="h-3.5 w-3.5 mr-1.5" />
-              Edit in Builder
-            </Link>
-          </Button>
-        </div>
+        workflow ? (
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={handleBack}>
+              <ArrowLeft className="h-3.5 w-3.5 mr-1.5" />
+              Back
+            </Button>
+            <AnimatedIconButton
+              icon={PlayIcon}
+              iconSize={14}
+              iconClassName="mr-1.5"
+              variant="outline"
+              size="sm"
+              onClick={handleTrigger}
+              disabled={workflow.status !== "published" || trigger.isPending}
+            >
+              {trigger.isPending ? "Triggering…" : "Run Now"}
+            </AnimatedIconButton>
+            <Button
+              size="sm"
+              asChild
+              className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition-all duration-200"
+            >
+              <Link href={`/workflows/${workflowId}/builder`}>
+                <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                Edit in Builder
+              </Link>
+            </Button>
+          </div>
+        ) : undefined
       }
     >
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.22, ease: "easeOut" }}
-        className="flex min-h-0 flex-1 flex-col"
-      >
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex min-h-0 flex-1 flex-col gap-4">
-          <TabsList className="shrink-0">
-            <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
-            <TabsTrigger value="executions" className="text-xs">Executions</TabsTrigger>
-          </TabsList>
+      {isLoading ? (
+        <LoadingState variant="page" />
+      ) : isError || !workflow ? (
+        <ErrorState
+          title="Workflow not found"
+          description="This workflow may have been deleted or you don't have access."
+          onRetry={handleRetry}
+          className={CONTENT_FILL_PANEL}
+        />
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.22, ease: "easeOut" }}
+          className="flex min-h-0 flex-1 flex-col"
+        >
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex min-h-0 flex-1 flex-col gap-4">
+            <TabsList className="shrink-0">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="executions">Executions</TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="overview" className="mt-0">
-            <WorkflowOverviewTab workflow={workflow} />
-          </TabsContent>
+            <TabsContent value="overview" className="mt-0">
+              <WorkflowOverviewTab workflow={workflow} />
+            </TabsContent>
 
-          <TabsContent value="executions" className="mt-0">
-            <ExecutionsTab workflowId={workflowId} />
-          </TabsContent>
-        </Tabs>
-      </motion.div>
+            <TabsContent value="executions" className="mt-0">
+              <ExecutionsTab workflowId={workflowId} />
+            </TabsContent>
+          </Tabs>
+        </motion.div>
+      )}
     </PageWrapper>
   );
 }

@@ -3,7 +3,7 @@
 import { useCallback, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { rateFormSchema, type RateFormValues } from "./rate-form-schema";
 import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Sheet,
@@ -33,19 +33,7 @@ const BILLING_TYPE_OPTIONS: BillingType[] = ["BILLABLE", "NON_BILLABLE", "INTERN
 
 const SELECT_NONE = "__none__";
 
-const schema = z.object({
-  projectId: z.string(),
-  userId: z.string(),
-  billingType: z.enum(["BILLABLE", "NON_BILLABLE", "INTERNAL"]),
-  billRate: z.string().regex(/^\d+(\.\d+)?$/, "Enter a valid non-negative number").refine((v) => parseFloat(v) >= 0, "Must be non-negative"),
-  costRate: z.string(),
-  currency: z.string().min(1).max(10),
-  priority: z.string(),
-});
-
-type FormValues = z.infer<typeof schema>;
-
-function toInput(values: FormValues): CreateRateInput {
+function toInput(values: RateFormValues): CreateRateInput {
   return {
     billingType: values.billingType,
     billRate: parseFloat(values.billRate),
@@ -76,8 +64,8 @@ export function RateFormSheet({ open, onOpenChange, rate }: RateFormSheetProps) 
 
   const projectList = projectsData?.data ?? [];
 
-  const { control, handleSubmit, reset, register, formState: { errors } } = useForm<FormValues>({
-    resolver: zodResolver(schema),
+  const { control, handleSubmit, reset, register, formState: { errors } } = useForm<RateFormValues>({
+    resolver: zodResolver(rateFormSchema),
     defaultValues: {
       projectId: SELECT_NONE,
       userId: SELECT_NONE,
@@ -153,7 +141,7 @@ export function RateFormSheet({ open, onOpenChange, rate }: RateFormSheetProps) 
                 name="projectId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger className="h-8 text-xs">
+                    <SelectTrigger className="h-9 text-sm">
                       <SelectValue placeholder="Any project" />
                     </SelectTrigger>
                     <SelectContent>
@@ -182,7 +170,7 @@ export function RateFormSheet({ open, onOpenChange, rate }: RateFormSheetProps) 
                     onChange={(next) => field.onChange(next || SELECT_NONE)}
                     placeholder="Any user"
                     allowUnassigned
-                    className="h-8 text-xs"
+                    className="h-9 text-sm"
                   />
                 )}
               />
@@ -201,7 +189,7 @@ export function RateFormSheet({ open, onOpenChange, rate }: RateFormSheetProps) 
                     name="billingType"
                     render={({ field }) => (
                       <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger className="h-8 text-xs">
+                        <SelectTrigger className="h-9 text-sm">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -224,7 +212,7 @@ export function RateFormSheet({ open, onOpenChange, rate }: RateFormSheetProps) 
                       min={0}
                       step={0.01}
                       placeholder="0.00"
-                      className="h-8 text-xs"
+                      className="h-9 text-sm"
                       {...register("billRate")}
                     />
                     {errors.billRate && <p className="text-xs text-destructive">{errors.billRate.message}</p>}
@@ -236,7 +224,7 @@ export function RateFormSheet({ open, onOpenChange, rate }: RateFormSheetProps) 
                       min={0}
                       step={0.01}
                       placeholder="0.00"
-                      className="h-8 text-xs"
+                      className="h-9 text-sm"
                       {...register("costRate")}
                     />
                   </div>
@@ -246,7 +234,7 @@ export function RateFormSheet({ open, onOpenChange, rate }: RateFormSheetProps) 
                   <div className="space-y-1.5">
                     <Label className="text-xs font-medium">Currency</Label>
                     <Input
-                      className="h-8 text-xs"
+                      className="h-9 text-sm"
                       placeholder="USD"
                       {...register("currency")}
                     />
@@ -257,7 +245,7 @@ export function RateFormSheet({ open, onOpenChange, rate }: RateFormSheetProps) 
                     <Input
                       type="number"
                       min={0}
-                      className="h-8 text-xs"
+                      className="h-9 text-sm"
                       placeholder="0"
                       {...register("priority")}
                     />
@@ -272,7 +260,7 @@ export function RateFormSheet({ open, onOpenChange, rate }: RateFormSheetProps) 
               type="button"
               variant="outline"
               size="sm"
-              className="h-8 text-xs"
+              className="h-9 text-sm"
               onClick={handleClose}
               disabled={isPending}
             >
@@ -281,7 +269,7 @@ export function RateFormSheet({ open, onOpenChange, rate }: RateFormSheetProps) 
             <LoadingButton
               type="submit"
               size="sm"
-              className="h-8 text-xs"
+              className="h-9 text-sm"
               isPending={isPending}
               loadingText={rate ? "Saving…" : "Adding…"}
             >

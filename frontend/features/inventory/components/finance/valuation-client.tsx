@@ -22,6 +22,8 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useCan } from "@/hooks/api/access";
 import { useWarehouses } from "@/hooks/api/inventory/warehouses";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { cn } from "@/lib/utils";
 import {
   useValuationReport,
   useValuationLayers,
@@ -281,7 +283,7 @@ export function ValuationClient() {
           value={warehouseFilter ? String(warehouseFilter) : SENTINEL}
           onValueChange={handleWarehouseChange}
         >
-          <SelectTrigger className="w-48 text-sm">
+          <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-48 text-sm")}>
             <SelectValue placeholder="All warehouses" />
           </SelectTrigger>
           <SelectContent>
@@ -295,60 +297,62 @@ export function ValuationClient() {
         </Select>
       }
     >
-      <StatCardGrid cols={4} className="mb-4">
-        <StatCard
-          label="Total Value"
-          value={isLoading ? "—" : formatCents(totalValue)}
-          icon={DollarSign}
-          tone="blue"
-          isLoading={isLoading}
-        />
-        <StatCard
-          label="FIFO Value"
-          value={isLoading ? "—" : getMethodValue("FIFO")}
-          icon={Layers}
-          tone="default"
-          isLoading={isLoading}
-        />
-        <StatCard
-          label="Weighted Avg Value"
-          value={isLoading ? "—" : getMethodValue("WEIGHTED_AVG")}
-          icon={Layers}
-          tone="amber"
-          isLoading={isLoading}
-        />
-        <StatCard
-          label="Standard Value"
-          value={isLoading ? "—" : getMethodValue("STANDARD")}
-          icon={Layers}
-          tone="emerald"
-          isLoading={isLoading}
-        />
-      </StatCardGrid>
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
+        <StatCardGrid cols={4}>
+          <StatCard
+            label="Total Value"
+            value={isLoading ? "—" : formatCents(totalValue)}
+            icon={DollarSign}
+            tone="blue"
+            isLoading={isLoading}
+          />
+          <StatCard
+            label="FIFO Value"
+            value={isLoading ? "—" : getMethodValue("FIFO")}
+            icon={Layers}
+            tone="default"
+            isLoading={isLoading}
+          />
+          <StatCard
+            label="Weighted Avg Value"
+            value={isLoading ? "—" : getMethodValue("WEIGHTED_AVG")}
+            icon={Layers}
+            tone="amber"
+            isLoading={isLoading}
+          />
+          <StatCard
+            label="Standard Value"
+            value={isLoading ? "—" : getMethodValue("STANDARD")}
+            icon={Layers}
+            tone="emerald"
+            isLoading={isLoading}
+          />
+        </StatCardGrid>
 
-      {error ? (
-        <ErrorState onRetry={handleRetry} />
-      ) : !isLoading && rows.length === 0 ? (
-        <InventoryEmptyState
-          illustrationPreset="inventory"
-          title="No valuation data"
-          description="Stock valuation data will appear here once inventory is received."
-          className="flex-1 h-full"
-        />
-      ) : (
-        <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
-          <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
-            <DataTable
-              data={rows}
-              columns={columns}
-              getRowKey={(row) => `${row.variantId}-${row.warehouseId ?? "all"}`}
-              isLoading={isLoading}
-              pagination={{ pageSize: 25 }}
-              minWidth="760px"
-            />
-          </CardContent>
-        </Card>
-      )}
+        {error ? (
+          <ErrorState onRetry={handleRetry} />
+        ) : !isLoading && rows.length === 0 ? (
+          <InventoryEmptyState
+            illustrationPreset="inventory"
+            title="No valuation data"
+            description="Stock valuation data will appear here once inventory is received."
+            className="flex-1 h-full"
+          />
+        ) : (
+          <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
+            <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
+              <DataTable
+                data={rows}
+                columns={columns}
+                getRowKey={(row) => `${row.variantId}-${row.warehouseId ?? "all"}`}
+                isLoading={isLoading}
+                pagination={{ pageSize: 25 }}
+                minWidth="760px"
+              />
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
       <LayersSheet
         variantId={selectedVariantId}

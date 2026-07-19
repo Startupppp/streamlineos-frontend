@@ -36,7 +36,7 @@ export default function KbResearchBriefsPage() {
       title="Research Briefs"
       subtitle="AI-synthesized reports from your knowledge base"
     >
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         <KbResearchBriefForm />
 
         {isLoading ? (
@@ -48,7 +48,7 @@ export default function KbResearchBriefsPage() {
             description="Enter a topic above to generate your first AI research brief."
           />
         ) : (
-          <div className="space-y-2">
+          <div className="flex flex-1 min-h-0 flex-col gap-2">
             {allBriefs.map((brief) => (
               <KbResearchBriefCard key={brief.id} brief={brief} />
             ))}

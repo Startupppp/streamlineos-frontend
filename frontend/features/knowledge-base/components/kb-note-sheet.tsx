@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { AppSheet } from "@/components/shared/app-sheet";
@@ -69,14 +70,16 @@ export function KbNoteSheet({ open, onOpenChange }: KbNoteSheetProps) {
           <Button type="button" variant="outline" size="sm" onClick={handleClose}>
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             type="button"
             size="sm"
             onClick={handleSave}
-            disabled={createNote.isPending || !title.trim() || !text.trim()}
+            isPending={createNote.isPending}
+            loadingText="Saving…"
+            disabled={!title.trim() || !text.trim()}
           >
-            {createNote.isPending ? "Saving…" : "Save note"}
-          </Button>
+            Save note
+          </LoadingButton>
         </div>
       }
     >

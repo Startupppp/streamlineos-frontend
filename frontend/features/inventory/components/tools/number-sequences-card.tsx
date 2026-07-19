@@ -90,7 +90,7 @@ function SequenceRow({
             type="number"
             value={state.nextNumber}
             onChange={handleNextNumberChange}
-            className={`h-7 w-24 text-xs text-right ${state.nextNumberError ? "border-destructive" : ""}`}
+            className={`w-24 text-right ${state.nextNumberError ? "border-destructive" : ""}`}
             min={seq.nextNumber}
           />
           {state.nextNumberError && (

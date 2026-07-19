@@ -62,16 +62,16 @@ function ScheduleRow({ schedule, onToggle, onDelete, isToggling }: ScheduleRowPr
         <div className="flex items-start gap-4">
           <div className={cn(
             "h-8 w-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5",
-            schedule.isEnabled ? "bg-violet-50 dark:bg-violet-500/10" : "bg-muted",
+            schedule.isEnabled ? "bg-primary/10" : "bg-muted",
           )}>
-            <Clock className={cn("h-4 w-4", schedule.isEnabled ? "text-violet-600 dark:text-violet-400" : "text-muted-foreground")} />
+            <Clock className={cn("h-4 w-4", schedule.isEnabled ? "text-primary" : "text-muted-foreground")} />
           </div>
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap mb-1.5">
               <Link
                 href={`/workflows/${schedule.workflowId}`}
-                className="text-sm font-semibold text-foreground hover:text-violet-600 transition-colors inline-flex items-center gap-1"
+                className="text-sm font-semibold text-foreground hover:text-primary transition-colors inline-flex items-center gap-1"
               >
                 {schedule.workflowId.slice(0, 8)}…
                 <Link2 className="h-3 w-3" />
@@ -106,7 +106,7 @@ function ScheduleRow({ schedule, onToggle, onDelete, isToggling }: ScheduleRowPr
               aria-label={schedule.isEnabled ? "Pause schedule" : "Activate schedule"}
             >
               {schedule.isEnabled ? (
-                <ToggleRight className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+                <ToggleRight className="h-4 w-4 text-primary" />
               ) : (
                 <ToggleLeft className="h-4 w-4 text-muted-foreground" />
               )}
@@ -182,7 +182,7 @@ export default function SchedulerPage() {
       subtitle="Manage cron-based workflow schedules"
       actions={
         activeCount > 0 ? (
-          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-violet-50 text-violet-700 border border-violet-200 dark:bg-violet-500/10 dark:text-violet-300 dark:border-violet-500/30">
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-foreground border border-primary/20">
             {activeCount} active
           </span>
         ) : undefined
@@ -191,7 +191,7 @@ export default function SchedulerPage() {
       {isLoading ? (
         <LoadingState variant="list" rows={12} />
       ) : isError ? (
-        <ErrorState title="Failed to load schedules" onRetry={handleRetry} className="flex-1" />
+        <ErrorState title="Failed to load schedules" onRetry={handleRetry} className={CONTENT_FILL_PANEL} />
       ) : list.length === 0 ? (
         <EmptyState
           title="No schedules configured"
@@ -199,7 +199,7 @@ export default function SchedulerPage() {
           className={CONTENT_FILL_PANEL}
         />
       ) : (
-        <div className="space-y-3">
+        <div className="flex flex-1 min-h-0 flex-col gap-3">
           {list.map((schedule) => (
             <ScheduleRow
               key={schedule.id}

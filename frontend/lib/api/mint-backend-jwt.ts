@@ -1,15 +1,22 @@
 import { SignJWT } from "jose";
 import type { Session } from "next-auth";
+import { BACKEND_URL } from "@/lib/backend-url";
 
-if (!process.env.NEXT_PUBLIC_API_URL) {
-  throw new Error("NEXT_PUBLIC_API_URL is not set");
-}
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL;
 const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET ?? "";
 
 interface LiveOrgData {
   orgId: string | null;
   isOrgOwner: boolean;
+}
+
+function unwrapBackend<T>(body: unknown): T {
+  if (body !== null && typeof body === "object") {
+    const record = body as Record<string, unknown>;
+    if (record.success === true && "data" in record) {
+      return record.data as T;
+    }
+  }
+  return body as T;
 }
 
 async function fetchLiveOrgData(userId: string): Promise<LiveOrgData | null> {
@@ -20,8 +27,14 @@ async function fetchLiveOrgData(userId: string): Promise<LiveOrgData | null> {
       cache: "no-store",
     });
     if (!res.ok) return null;
-    const data = (await res.json()) as { orgId?: string | null; isOrgOwner?: boolean };
-    return { orgId: data.orgId ?? null, isOrgOwner: data.isOrgOwner ?? false };
+    const data = unwrapBackend<{
+      orgId?: string | null;
+      isOrgOwner?: boolean;
+    }>(await res.json());
+    return {
+      orgId: data.orgId ?? null,
+      isOrgOwner: data.isOrgOwner === true,
+    };
   } catch {
     return null;
   }
@@ -35,8 +48,6 @@ export async function mintBackendJwt(session: Session): Promise<string | null> {
   const sessionId = session.sessionId?.trim();
   if (!sessionId) return null;
 
-  // Prefer live DB membership over the NextAuth cookie — the cookie can lag or
-  // hold a stale orgId after a failed/partial setup attempt.
   const live = await fetchLiveOrgData(session.user.id);
   const orgId = live ? live.orgId : (session.orgId ?? null);
   const isOrgOwner = live ? live.isOrgOwner : session.user.isOrgOwner === true;

@@ -15,9 +15,9 @@ export default function CategoriesLoading() {
         </div>
       }
     >
-      <div className="space-y-4 flex-1 min-h-0 flex flex-col">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         <Skeleton className="h-48 w-full rounded-xl" />
-        <DataTableSkeleton rows={8} className="flex-1 min-h-0" />
+        <DataTableSkeleton rows={8} />
       </div>
     </PageWrapper>
   );

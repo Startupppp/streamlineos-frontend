@@ -1,6 +1,7 @@
 "use client";
 
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,7 +42,7 @@ export function LoanApprovalDialog({
           onClose();
         },
         onError: (err) => {
-          toast.error(err.message ?? `Failed to ${action} loan`);
+          toast.error(getErrorMessage(err));
         },
       },
     );

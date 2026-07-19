@@ -11,6 +11,7 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -303,8 +304,20 @@ export function AutomationBuilderSheet({
     );
   }
 
+  function handleSheetOpenChange(open: boolean) {
+    if (!open) onClose();
+  }
+
+  function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setName(e.target.value);
+  }
+
+  function handleDescriptionChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    setDescription(e.target.value);
+  }
+
   return (
-    <Sheet open onOpenChange={(open) => !open && onClose()}>
+    <Sheet open onOpenChange={handleSheetOpenChange}>
       <SheetContent side="right" className="flex w-full flex-col overflow-hidden p-0 gap-0 sm:max-w-xl">
         <SheetHeader className="shrink-0 border-b border-border px-6 py-4">
           <SheetTitle>{isEdit ? "Edit automation" : "New automation"}</SheetTitle>
@@ -320,7 +333,7 @@ export function AutomationBuilderSheet({
               <Input
                 placeholder="e.g. Notify sales on hot lead"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={handleNameChange}
               />
             </div>
 
@@ -330,7 +343,7 @@ export function AutomationBuilderSheet({
                 rows={2}
                 placeholder="What does this automation do?"
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={handleDescriptionChange}
               />
             </div>
 
@@ -543,9 +556,9 @@ export function AutomationBuilderSheet({
             <Button type="button" variant="ghost" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="button" onClick={handleSave} disabled={isSaving}>
-              {isSaving ? "Saving…" : isEdit ? "Save changes" : "Create"}
-            </Button>
+            <LoadingButton type="button" onClick={handleSave} isPending={isSaving} loadingText="Saving…">
+              {isEdit ? "Save changes" : "Create"}
+            </LoadingButton>
           </div>
         </SheetFooter>
       </SheetContent>

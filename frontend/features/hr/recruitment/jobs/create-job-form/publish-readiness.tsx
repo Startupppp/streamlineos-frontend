@@ -11,6 +11,34 @@ interface StepReadiness {
   hasError: boolean;
 }
 
+interface ReadinessStepButtonProps {
+  step: StepReadiness;
+  idx: number;
+  onStepClick: (index: number) => void;
+}
+
+function ReadinessStepButton({ step, idx, onStepClick }: ReadinessStepButtonProps) {
+  function handleClick() { onStepClick(idx); }
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className="flex items-center gap-2 w-full rounded-md px-2 py-1.5 text-xs text-left hover:bg-muted/60 transition-colors"
+    >
+      {step.completed && !step.hasError ? (
+        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+      ) : step.hasError ? (
+        <AlertCircle className="h-3.5 w-3.5 text-rose-500 shrink-0" />
+      ) : (
+        <Circle className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" />
+      )}
+      <span className={cn("truncate", step.completed && !step.hasError ? "text-foreground" : "text-muted-foreground")}>
+        {step.title}
+      </span>
+    </button>
+  );
+}
+
 interface PublishReadinessProps {
   steps: StepReadiness[];
   onStepClick: (index: number) => void;
@@ -28,7 +56,7 @@ export function PublishReadiness({ steps, onStepClick }: PublishReadinessProps) 
           variant="ghost"
           size="sm"
           className={cn(
-            "h-7 gap-1.5 text-[11px] font-semibold",
+            "gap-1.5 text-xs font-semibold",
             allReady ? "text-emerald-600" : hasErrors ? "text-rose-600" : "text-amber-600",
           )}
         >
@@ -42,23 +70,7 @@ export function PublishReadiness({ steps, onStepClick }: PublishReadinessProps) 
         </p>
         <div className="space-y-0.5">
           {steps.map((step, i) => (
-            <button
-              key={step.title}
-              type="button"
-              onClick={() => onStepClick(i)}
-              className="flex items-center gap-2 w-full rounded-md px-2 py-1.5 text-xs text-left hover:bg-muted/60 transition-colors"
-            >
-              {step.completed && !step.hasError ? (
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
-              ) : step.hasError ? (
-                <AlertCircle className="h-3.5 w-3.5 text-rose-500 shrink-0" />
-              ) : (
-                <Circle className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" />
-              )}
-              <span className={cn("truncate", step.completed && !step.hasError ? "text-foreground" : "text-muted-foreground")}>
-                {step.title}
-              </span>
-            </button>
+            <ReadinessStepButton key={step.title} step={step} idx={i} onStepClick={onStepClick} />
           ))}
         </div>
       </PopoverContent>

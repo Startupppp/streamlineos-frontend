@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { useCan } from "@/hooks/api/access";
 import { useRunApprovals, useApproveStage, useRejectStage } from "@/hooks/api/payroll";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type { PayrollApprovalRow } from "@/types/payroll";
 
 interface Props {
@@ -63,7 +64,7 @@ function StageRow({ row, canAct, isActive, runId, onChanged }: StageRowProps) {
       { runId, approvalId: row.id },
       {
         onSuccess: () => { toast.success("Stage approved"); onChanged?.(); },
-        onError: (err) => { toast.error(err.message); },
+        onError: (err) => { toast.error(getErrorMessage(err)); },
       },
     );
   }
@@ -77,7 +78,7 @@ function StageRow({ row, canAct, isActive, runId, onChanged }: StageRowProps) {
       { runId, approvalId: row.id, comment: comment.trim() },
       {
         onSuccess: () => { setRejectOpen(false); setComment(""); toast.success("Stage rejected"); onChanged?.(); },
-        onError: (err) => { toast.error(err.message); },
+        onError: (err) => { toast.error(getErrorMessage(err)); },
       },
     );
   }

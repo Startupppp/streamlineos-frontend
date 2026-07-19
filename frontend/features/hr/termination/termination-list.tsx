@@ -85,7 +85,7 @@ function TerminationCard({
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
           <Avatar className="h-9 w-9 shrink-0 mt-0.5">
-            <AvatarFallback className="text-xs font-semibold bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400">
+            <AvatarFallback className="text-xs font-semibold bg-rose-100 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300">
               {getInitials(employee?.name ?? null)}
             </AvatarFallback>
           </Avatar>
@@ -97,7 +97,7 @@ function TerminationCard({
               {emailStatus === "failed" && (
                 <Badge
                   variant="outline"
-                  className="text-[10px] font-semibold shrink-0 px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800"
+                  className="text-[10px] font-semibold shrink-0 px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-800"
                 >
                   Email Failed
                 </Badge>
@@ -125,12 +125,12 @@ function TerminationCard({
                 </span>
               )}
               {noticePeriodWaived && (
-                <span className="text-amber-600 dark:text-amber-400 font-medium">Notice waived</span>
+                <span className="text-amber-600 dark:text-amber-300 font-medium">Notice waived</span>
               )}
             </div>
 
             {status === "REJECTED" && record.ceoRemarks && (
-              <p className="text-[11px] text-rose-600 dark:text-rose-400 mt-1 line-clamp-2">
+              <p className="text-[11px] text-rose-600 dark:text-rose-300 mt-1 line-clamp-2">
                 CEO: {record.ceoRemarks}
               </p>
             )}
@@ -244,7 +244,7 @@ function TerminationCard({
             )}
 
             {status === "COMPLETED" && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800">
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800">
                 Completed
               </span>
             )}

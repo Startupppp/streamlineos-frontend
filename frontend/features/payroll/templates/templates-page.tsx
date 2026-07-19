@@ -24,11 +24,13 @@ import {
 import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { usePayrollTemplates, usePayrollPolicyCurrent, useDeleteTemplate } from "@/hooks/api/payroll";
 import { TemplateCard } from "@/features/payroll/shared/template-card";
 import { TemplatePreviewSheet } from "@/features/payroll/shared/template-preview-sheet";
 import { DuplicateTemplateDialog } from "@/features/payroll/shared/duplicate-template-dialog";
-import type { TemplateRow } from "@/types/payroll/setup";
+import type { TemplateRow } from "@/types/payroll/setup";
 import { toast } from "sonner";
 
 const CATEGORIES = [
@@ -144,7 +146,7 @@ export function TemplatesPageContent() {
         toast.success("Template deleted");
         setDeleteTemplate(null);
       },
-      onError: () => toast.error("Failed to delete template"),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [deleteTemplate, deleteTemplateMutation]);
 
@@ -162,12 +164,12 @@ export function TemplatesPageContent() {
   const hasActiveFilters = !!(search || category !== "all" || complexity !== "all");
 
   const filters = (
-    <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+    <div className={FILTER_TOOLBAR_ROW}>
       <div className="min-w-0 w-48">
-          <SearchInput value={searchInput} onValueChange={handleSearchChange} placeholder="Search templates…" />
-        </div>
+        <SearchInput value={searchInput} onValueChange={handleSearchChange} placeholder="Search templates…" />
+      </div>
       <Select value={category} onValueChange={handleCategoryChange}>
-        <SelectTrigger className="text-sm w-44">
+        <SelectTrigger className={FILTER_SELECT_TRIGGER + " w-44"}>
           <SelectValue placeholder="Category" />
         </SelectTrigger>
         <SelectContent>
@@ -179,7 +181,7 @@ export function TemplatesPageContent() {
         </SelectContent>
       </Select>
       <Select value={complexity} onValueChange={handleComplexityChange}>
-        <SelectTrigger className="text-sm w-40">
+        <SelectTrigger className={FILTER_SELECT_TRIGGER + " w-40"}>
           <SelectValue placeholder="Complexity" />
         </SelectTrigger>
         <SelectContent>

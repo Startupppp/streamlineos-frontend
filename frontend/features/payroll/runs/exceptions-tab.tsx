@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Button } from "@/components/ui/button";
+import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import {
   Select,
   SelectContent,
@@ -142,9 +143,9 @@ export function ExceptionsTab({ runId, isLocked }: ExceptionsTabProps) {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2">
+      <div className={FILTER_TOOLBAR_ROW}>
         <Select value={filterSeverity} onValueChange={handleSeverityChange}>
-          <SelectTrigger className="w-36 text-xs">
+          <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-36`}>
             <SelectValue placeholder="Severity" />
           </SelectTrigger>
           <SelectContent>
@@ -155,7 +156,7 @@ export function ExceptionsTab({ runId, isLocked }: ExceptionsTabProps) {
           </SelectContent>
         </Select>
         <Select value={filterStatus} onValueChange={handleStatusChange}>
-          <SelectTrigger className="w-32 text-xs">
+          <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-32`}>
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>

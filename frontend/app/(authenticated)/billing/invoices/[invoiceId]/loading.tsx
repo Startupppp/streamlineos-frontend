@@ -9,9 +9,9 @@ export default function InvoiceDetailLoading() {
       badge={<Skeleton className="h-4 w-12" />}
       actions={
         <div className="flex items-center gap-2 flex-wrap">
-          <Skeleton className="h-8 w-24 rounded-md" />
-          <Skeleton className="h-8 w-32 rounded-md" />
-          <Skeleton className="h-8 w-20 rounded-md" />
+          <Skeleton className="h-9 w-24 rounded-md" />
+          <Skeleton className="h-9 w-32 rounded-md" />
+          <Skeleton className="h-9 w-20 rounded-md" />
         </div>
       }
     >

@@ -9,7 +9,9 @@ export function FnfPageContent() {
       title="Full & Final Settlement"
       subtitle="Review and approve exit settlements"
     >
-      <FnfTable />
+      <div className="flex flex-1 min-h-0 flex-col gap-3">
+        <FnfTable />
+      </div>
     </PageWrapper>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -117,10 +118,25 @@ function AddSubmissionForm({ vendorId, onDone }: { vendorId: number; onDone: () 
           <Input type="number" min={0} value={payRate} onChange={handlePayRateChange} placeholder="e.g. 90" />
         </div>
       </div>
-      <Button size="sm" className="w-full h-8" onClick={handleSubmit} disabled={createSubmission.isPending}>
-        {createSubmission.isPending ? "Submitting…" : "Submit Candidate"}
-      </Button>
+      <LoadingButton size="sm" className="w-full" onClick={handleSubmit} isPending={createSubmission.isPending} loadingText="Submitting…">
+        Submit Candidate
+      </LoadingButton>
     </div>
+  );
+}
+
+interface MarkPaidButtonProps {
+  sub: VendorSubmission;
+  disabled: boolean;
+  onMarkPaid: (sub: VendorSubmission) => void;
+}
+
+function MarkPaidButton({ sub, disabled, onMarkPaid }: MarkPaidButtonProps) {
+  function handleClick() { onMarkPaid(sub); }
+  return (
+    <Button size="sm" variant="outline" className="text-xs" disabled={disabled} onClick={handleClick}>
+      Mark Invoice Paid
+    </Button>
   );
 }
 
@@ -205,9 +221,7 @@ export function SubmissionSheet({ vendor, onClose }: SubmissionSheetProps) {
                     </div>
                   )}
                   {sub.placementStatus === "PLACED" && sub.invoiceStatus !== "PAID" && (
-                    <Button size="sm" variant="outline" className="text-xs h-7" disabled={updatingId === sub.id} onClick={() => handleMarkPaid(sub)}>
-                      Mark Invoice Paid
-                    </Button>
+                    <MarkPaidButton sub={sub} disabled={updatingId === sub.id} onMarkPaid={handleMarkPaid} />
                   )}
                 </div>
               );

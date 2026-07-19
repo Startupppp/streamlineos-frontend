@@ -302,7 +302,7 @@ export default function DealsPage() {
           title="Failed to load deals"
           description="We couldn't load your deals. Please try again."
           onRetry={() => void refetch()}
-          className="flex-1 min-h-[60vh]"
+          className="flex-1"
         />
       </PageWrapper>
     );
@@ -417,9 +417,9 @@ export default function DealsPage() {
           )}
 
           {view === "kanban" && (
-            <motion.div variants={itemVariants}>
+            <motion.div variants={itemVariants} className="flex flex-1 min-h-0 flex-col">
               <DragDropContext onDragEnd={handleDragEnd}>
-                <ScrollArea className="w-full" type="auto">
+                <ScrollArea className="w-full flex-1 min-h-0" type="auto">
                   <div className="inline-flex gap-3 sm:gap-4 pb-4">
                     {kanbanStages.map((s) => (
                       <KanbanColumn

@@ -8,6 +8,7 @@ import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import {
@@ -296,12 +297,12 @@ export default function PurchaseBillsListPage() {
         ) : undefined
       }
       filters={
-        <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+        <div className={FILTER_TOOLBAR_ROW}>
           <div className="min-w-0 flex-1 max-w-[240px] w-full">
-          <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search by bill number" />
-        </div>
+            <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search by bill number" />
+          </div>
           <Select value={status} onValueChange={handleStatusChange}>
-            <SelectTrigger className="w-[180px] text-xs">
+            <SelectTrigger className={`w-[180px] ${FILTER_SELECT_TRIGGER}`}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

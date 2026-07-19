@@ -31,6 +31,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { useDealApprovals, useResolveDealApproval } from "@/hooks/api/crm";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -265,9 +266,9 @@ export default function DealApprovalsPage() {
   );
 
   const filterBar = (
-    <div className="flex w-full min-w-0 items-center gap-2">
+    <div className={FILTER_TOOLBAR_ROW}>
       <Select value={statusFilter} onValueChange={handleFilterChange}>
-        <SelectTrigger className="text-xs w-[160px]">
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[160px]")}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -305,7 +306,7 @@ export default function DealApprovalsPage() {
               title="No approvals found"
               description="There are no deal approvals matching the current filter."
               action={{ label: "Clear filter", onClick: handleClearFilter }}
-              className="border-0 bg-transparent min-h-[40vh]"
+              className="border-0 bg-transparent flex-1"
             />
           }
           minWidth="720px"

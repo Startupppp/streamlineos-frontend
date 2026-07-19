@@ -4,7 +4,6 @@ import { useTransition, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PlusIcon } from "@animateicons/react/lucide";
-import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +23,7 @@ import {
   EmptySearchIllustration,
 } from "@/components/illustrations";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { ErrorState } from "@/components/shared";
 import { cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -207,8 +207,8 @@ function SalesOrdersContent() {
     void query.refetch();
   }
 
-  if (query.error) {
-    toast.error(getErrorMessage(query.error));
+  function handleClearFilters(): void {
+    updateParams({ status: "ALL", dateFrom: "", dateTo: "", page: "1" });
   }
 
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -231,13 +231,13 @@ function SalesOrdersContent() {
         value={dateFrom}
         onChange={handleDateFromChange}
         placeholder="From"
-        className="w-[150px] h-8 text-xs"
+        className="w-[150px] text-xs"
       />
       <DatePicker
         value={dateTo}
         onChange={handleDateToChange}
         placeholder="To"
-        className="w-[150px] h-8 text-xs"
+        className="w-[150px] text-xs"
       />
     </div>
   );
@@ -256,34 +256,41 @@ function SalesOrdersContent() {
       }
       filters={filterBar}
     >
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
       <DataTable
         data={items}
         columns={columns}
         getRowKey={(so) => so.id}
         isLoading={query.isLoading}
         emptyState={
-          <EmptyState
-            illustration={
-              hasFilters ? <EmptySearchIllustration /> : <EmptyOrdersIllustration />
-            }
-            title={hasFilters ? "No orders match your filters" : "No sales orders yet"}
-            description={
-              hasFilters
-                ? "Try adjusting the status or date range."
-                : "Create a sales order to start fulfilling customer requests."
-            }
-            action={
-              hasFilters
-                ? {
-                    label: "Clear filters",
-                    onClick: () => {
-                      updateParams({ status: "ALL", dateFrom: "", dateTo: "", page: "1" });
-                    },
-                  }
-                : { label: "New SO", href: "/inventory/sales-orders/new" }
-            }
-            className={CONTENT_FILL_PANEL}
-          />
+          query.error ? (
+            <ErrorState
+              description={getErrorMessage(query.error)}
+              onRetry={handleRetry}
+              compact
+            />
+          ) : (
+            <EmptyState
+              illustration={
+                hasFilters ? <EmptySearchIllustration /> : <EmptyOrdersIllustration />
+              }
+              title={hasFilters ? "No orders match your filters" : "No sales orders yet"}
+              description={
+                hasFilters
+                  ? "Try adjusting the status or date range."
+                  : "Create a sales order to start fulfilling customer requests."
+              }
+              action={
+                hasFilters
+                  ? {
+                      label: "Clear filters",
+                      onClick: handleClearFilters,
+                    }
+                  : { label: "New SO", href: "/inventory/sales-orders/new" }
+              }
+              className={CONTENT_FILL_PANEL}
+            />
+          )
         }
         pagination={
           totalPages > 1
@@ -297,8 +304,8 @@ function SalesOrdersContent() {
             : undefined
         }
         minWidth="640px"
-        className="flex-1 min-h-0"
       />
+      </div>
     </PageWrapper>
   );
 }

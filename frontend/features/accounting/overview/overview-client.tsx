@@ -104,7 +104,7 @@ export function OverviewClient() {
               value={from}
               onChange={handleFromChange}
               placeholder="Start date"
-              className="w-[140px] text-sm"
+              className="w-[140px]"
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -116,7 +116,7 @@ export function OverviewClient() {
               value={to}
               onChange={handleToChange}
               placeholder="End date"
-              className="w-[140px] text-sm"
+              className="w-[140px]"
             />
           </div>
         </div>
@@ -129,6 +129,7 @@ export function OverviewClient() {
           title="Failed to load finance overview"
           description={getErrorMessage(error)}
           onRetry={handleRetry}
+          className="flex-1"
         />
       ) : isEmptyOrg ? (
         <EmptyState
@@ -137,6 +138,7 @@ export function OverviewClient() {
           description="Set up your chart of accounts and connect a bank account to start tracking finances."
           action={{ label: "Set up accounts", href: "/accounting/coa" }}
           secondaryAction={{ label: "Banking settings", href: "/accounting/settings" }}
+          className="flex-1"
         />
       ) : (
         <motion.div

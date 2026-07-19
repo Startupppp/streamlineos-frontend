@@ -17,13 +17,14 @@ import { DataTable } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { ShieldAlert } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
+import { StateIllustration } from "@/components/illustrations";
 import { useCan } from "@/hooks/api/access";
 import { useHrCases, useDisciplinaryActions } from "@/hooks/api/hr/cases";
 import type { HrCase, CaseCategory, CaseStatus, CaseSeverity } from "@/hooks/api/hr/cases";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
-import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { CaseStatusBadge, CaseSeverityBadge, CaseCategoryLabel } from "./case-badges";
 import { CaseDetailSheet } from "./case-detail-sheet";
@@ -53,6 +54,14 @@ const CATEGORY_OPTIONS: { value: CaseCategory | typeof SENTINEL; label: string }
   { value: "workplace_conflict", label: "Workplace Conflict" },
   { value: "policy_violation", label: "Policy Violation" },
   { value: "other", label: "Other" },
+];
+
+const SEVERITY_OPTIONS: { value: CaseSeverity | typeof SENTINEL; label: string }[] = [
+  { value: SENTINEL, label: "All Severities" },
+  { value: "low", label: "Low" },
+  { value: "medium", label: "Medium" },
+  { value: "high", label: "High" },
+  { value: "critical", label: "Critical" },
 ];
 
 type ActiveTab = "cases" | "disciplinary";
@@ -134,10 +143,8 @@ export function CasesPageContent() {
   ];
 
   const filters = (
-    <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-      <div className="min-w-0 w-48">
-          <SearchInput placeholder="Search cases..." value={search} onValueChange={handleSearchChange} />
-        </div>
+    <div className={FILTER_TOOLBAR_ROW}>
+      <SearchInput placeholder="Search cases..." value={search} onValueChange={handleSearchChange} className="w-48" />
       <Select
         value={status || SENTINEL}
         onValueChange={(v) => { setStatus(v === SENTINEL ? "" : (v as CaseStatus)); setPage(1); }}
@@ -160,6 +167,19 @@ export function CasesPageContent() {
         </SelectTrigger>
         <SelectContent>
           {CATEGORY_OPTIONS.map((o) => (
+            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select
+        value={severity || SENTINEL}
+        onValueChange={(v) => { setSeverity(v === SENTINEL ? "" : (v as CaseSeverity)); setPage(1); }}
+      >
+        <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {SEVERITY_OPTIONS.map((o) => (
             <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
           ))}
         </SelectContent>
@@ -222,7 +242,27 @@ export function CasesPageContent() {
             isLoading={casesLoading}
             getRowKey={(row) => row.id}
             onRowClick={(row) => setSelectedCaseId(row.id)}
-            emptyState={<p className="text-sm text-muted-foreground text-center py-8">No cases found</p>}
+            emptyState={
+              <div className="flex flex-col items-center justify-center gap-3 py-12">
+                <StateIllustration preset="ticket" className="h-28 w-28" />
+                <div className="text-center space-y-1">
+                  <p className="text-sm font-medium text-foreground">No cases found</p>
+                  <p className="text-xs text-muted-foreground">Report a grievance, harassment incident, or policy violation to open a case.</p>
+                </div>
+                {canManage && (
+                  <AnimatedIconButton
+                    icon={PlusIcon}
+                    iconSize={14}
+                    iconClassName="mr-1.5"
+                    size="sm"
+                    className="mt-1 gap-1.5 text-sm"
+                    onClick={() => setShowNew(true)}
+                  >
+                    New Case
+                  </AnimatedIconButton>
+                )}
+              </div>
+            }
           />
         )}
 
@@ -274,7 +314,27 @@ export function CasesPageContent() {
               data={disciplinaryData?.data ?? []}
               isLoading={discLoading}
               getRowKey={(row) => row.id}
-              emptyState={<p className="text-sm text-muted-foreground text-center py-8">No disciplinary actions</p>}
+              emptyState={
+                <div className="flex flex-col items-center justify-center gap-3 py-12">
+                  <StateIllustration preset="security" className="h-28 w-28" />
+                  <div className="text-center space-y-1">
+                    <p className="text-sm font-medium text-foreground">No disciplinary actions</p>
+                    <p className="text-xs text-muted-foreground">Formal disciplinary actions issued to employees will appear here.</p>
+                  </div>
+                  {canManage && (
+                    <AnimatedIconButton
+                      icon={PlusIcon}
+                      iconSize={14}
+                      iconClassName="mr-1.5"
+                      size="sm"
+                      className="mt-1 gap-1.5 text-sm"
+                      onClick={() => setShowWarning(true)}
+                    >
+                      Issue Action
+                    </AnimatedIconButton>
+                  )}
+                </div>
+              }
             />
           </div>
         )}

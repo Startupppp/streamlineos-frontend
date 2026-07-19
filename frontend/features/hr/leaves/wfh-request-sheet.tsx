@@ -169,7 +169,7 @@ export function WfhRequestSheet({
                 </FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger className="text-sm h-8">
+                    <SelectTrigger className="text-sm">
                       <SelectValue placeholder="Select reason" />
                     </SelectTrigger>
                   </FormControl>
@@ -196,7 +196,7 @@ export function WfhRequestSheet({
                 </FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger className="text-sm h-8">
+                    <SelectTrigger className="text-sm">
                       <SelectValue placeholder="Select approver" />
                     </SelectTrigger>
                   </FormControl>

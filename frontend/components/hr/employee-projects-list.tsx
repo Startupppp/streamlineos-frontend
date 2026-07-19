@@ -94,7 +94,7 @@ export function EmployeeProjectsList({ projects }: { projects: ProjectItem[] }) 
                                         <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
                                             Done
                                         </span>
-                                        <span className="font-bold text-sm text-emerald-600 dark:text-emerald-400">
+                                        <span className="font-bold text-sm text-emerald-600 dark:text-emerald-300">
                                             {item.stats?.done || 0}
                                         </span>
                                     </div>

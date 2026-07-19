@@ -32,6 +32,7 @@ import {
 } from "@/features/crm/settings/products/product-form";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import type { Product } from "@/types/crm/products";
 
 export default function ProductCatalogPage() {
@@ -262,10 +263,10 @@ export default function ProductCatalogPage() {
           </Button>
         }
         filters={
-          <div className="flex w-full min-w-0 items-center gap-2">
-            <div className="min-w-0 flex-1 lg:max-w-sm w-full">
-          <SearchInput placeholder="Search products..." value={search} onValueChange={handleSearchChange} />
-        </div>
+          <div className={FILTER_TOOLBAR_ROW}>
+            <div className="min-w-0 flex-1 lg:max-w-sm">
+              <SearchInput placeholder="Search products..." value={search} onValueChange={handleSearchChange} />
+            </div>
           </div>
         }
       >

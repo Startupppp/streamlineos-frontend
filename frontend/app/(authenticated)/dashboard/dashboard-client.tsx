@@ -292,7 +292,7 @@ export function DashboardClient() {
               <p className="text-sm text-foreground">
                 {getErrorMessage(error)}
               </p>
-              <Button onClick={() => refetch()} size="sm">
+              <Button onClick={handleRefresh} size="sm">
                 <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
                 Retry
               </Button>

@@ -73,8 +73,8 @@ export function NewFolderDialog({
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2.5 text-base">
-            <div className="w-7 rounded-lg bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center shrink-0">
-              <FolderPlus className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+            <div className="w-7 rounded-lg bg-amber-100 dark:bg-amber-500/10 flex items-center justify-center shrink-0">
+              <FolderPlus className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300" />
             </div>
             Create New Folder
           </DialogTitle>

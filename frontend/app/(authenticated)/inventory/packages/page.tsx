@@ -7,6 +7,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { EmptyOrdersIllustration } from "@/components/illustrations";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { ErrorState, AppDialog } from "@/components/shared";
 import { PackageDetailSheet } from "@/features/inventory/components/shipping/package-detail-sheet";
 import {
@@ -174,7 +176,7 @@ function PackagesPageInner() {
   const filtersRow = (
     <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
       <Select value={statusParam || "all"} onValueChange={handleStatusChange}>
-        <SelectTrigger className="min-w-0 w-[160px] text-xs">
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "min-w-0 w-[160px] text-xs")}>
           <SelectValue placeholder="All statuses" />
         </SelectTrigger>
         <SelectContent>
@@ -191,7 +193,7 @@ function PackagesPageInner() {
     <>
       <PageWrapper
         title="Packages"
-        subtitle={total > 0 ? `${total} ${total === 1 ? "package" : "packages"}` : "Manage shipping packages"}
+        subtitle="Manage shipping packages"
         actions={
           <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1.5" size="sm" onClick={handleNewPackage}>
             New Package
@@ -199,39 +201,40 @@ function PackagesPageInner() {
         }
         filters={filtersRow}
       >
-        {packagesQuery.error ? (
-          <ErrorState
-            title="Failed to load packages"
-            description={packagesQuery.error.message}
-            onRetry={handleRetry}
-          />
-        ) : (
-          <DataTable
-            className="flex-1 min-h-0"
-            data={items}
-            columns={columns}
-            getRowKey={(pkg) => pkg.id}
-            isLoading={packagesQuery.isLoading}
-            onRowClick={handleRowClick}
-            emptyState={
-              <InventoryEmptyState
-                illustration={<EmptyOrdersIllustration />}
-                title="No packages yet"
-                description="Create a package to start organising shipments."
-                action={{ label: "New Package", onClick: handleNewPackage }}
-                className="border-0 bg-transparent"
-              />
-            }
-            pagination={{
-              mode: "server",
-              page,
-              pageSize: PAGE_LIMIT,
-              total,
-              onPageChange: handlePageChange,
-            }}
-            minWidth="540px"
-          />
-        )}
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+          {packagesQuery.error ? (
+            <ErrorState
+              title="Failed to load packages"
+              description={getErrorMessage(packagesQuery.error)}
+              onRetry={handleRetry}
+            />
+          ) : (
+            <DataTable
+              data={items}
+              columns={columns}
+              getRowKey={(pkg) => pkg.id}
+              isLoading={packagesQuery.isLoading}
+              onRowClick={handleRowClick}
+              emptyState={
+                <InventoryEmptyState
+                  illustration={<EmptyOrdersIllustration />}
+                  title="No packages yet"
+                  description="Create a package to start organising shipments."
+                  action={{ label: "New Package", onClick: handleNewPackage }}
+                  className="border-0 bg-transparent"
+                />
+              }
+              pagination={{
+                mode: "server",
+                page,
+                pageSize: PAGE_LIMIT,
+                total,
+                onPageChange: handlePageChange,
+              }}
+              minWidth="540px"
+            />
+          )}
+        </div>
       </PageWrapper>
 
       <PackageDetailSheet
@@ -250,13 +253,14 @@ function PackagesPageInner() {
             <Button variant="outline" size="sm" onClick={handleCreateClose}>
               Cancel
             </Button>
-            <Button
+            <LoadingButton
               size="sm"
               onClick={handleCreateSubmit}
-              disabled={createMutation.isPending}
+              isPending={createMutation.isPending}
+              loadingText="Creating…"
             >
-              {createMutation.isPending ? "Creating…" : "Create"}
-            </Button>
+              Create
+            </LoadingButton>
           </div>
         }
       >

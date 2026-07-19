@@ -24,9 +24,13 @@ type ProviderCardProps = {
 
 export function ProviderCard({ catalogEntry, provider, selected, onSelect, onConnect, isConnecting }: ProviderCardProps) {
   const Icon = PROVIDER_ICONS[catalogEntry.key] ?? Wallet;
-  // Manual/offline methods have no provider row to connect — they're always selectable.
   const isManual = catalogEntry.key === "manual";
   const canSelect = isManual || !!provider;
+
+  function handleConnectClick(e: React.MouseEvent) {
+    e.stopPropagation();
+    onConnect();
+  }
 
   return (
     <button
@@ -67,10 +71,7 @@ export function ProviderCard({ catalogEntry, provider, selected, onSelect, onCon
           variant="outline"
           className="text-xs self-start"
           disabled={isConnecting}
-          onClick={(e) => {
-            e.stopPropagation();
-            onConnect();
-          }}
+          onClick={handleConnectClick}
         >
           Connect
         </Button>

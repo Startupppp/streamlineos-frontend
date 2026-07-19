@@ -19,9 +19,26 @@ import {
   type PaymentWebhookEvent,
 } from "@/hooks/api/payments";
 
-function buildWebhookColumns(
-  retry: { isPending: boolean; mutate: (id: number, opts: { onError: (err: unknown) => void }) => void },
-): DataTableColumn<PaymentWebhookEvent>[] {
+type RetryMutation = {
+  isPending: boolean;
+  mutate: (id: number, opts: { onError: (err: unknown) => void }) => void;
+};
+
+function RetryEventButton({ eventId, retry }: { eventId: number; retry: RetryMutation }) {
+  function handleRetry() {
+    retry.mutate(eventId, {
+      onError: (err) => toast.error(getErrorMessage(err)),
+    });
+  }
+
+  return (
+    <Button size="sm" variant="ghost" className="h-6 text-xs gap-1" onClick={handleRetry}>
+      <RefreshCw className="h-3 w-3" /> Retry
+    </Button>
+  );
+}
+
+function buildWebhookColumns(retry: RetryMutation): DataTableColumn<PaymentWebhookEvent>[] {
   return [
     {
       key: "eventType",
@@ -56,18 +73,7 @@ function buildWebhookColumns(
       className: "text-right",
       cell: (row) =>
         row.processingStatus === "failed" ? (
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-6 text-xs gap-1"
-            onClick={() =>
-              retry.mutate(row.id, {
-                onError: (err) => toast.error(getErrorMessage(err)),
-              })
-            }
-          >
-            <RefreshCw className="h-3 w-3" /> Retry
-          </Button>
+          <RetryEventButton eventId={row.id} retry={retry} />
         ) : null,
     },
   ];
@@ -91,8 +97,9 @@ export function WebhooksTab({ providerKey, environment }: { providerKey: string;
     });
   }
 
-  function handleCopy(url: string) {
-    navigator.clipboard.writeText(url).then(() => toast.success("Copied"));
+  function handleCopyUrl() {
+    if (!generatedUrl) return;
+    navigator.clipboard.writeText(generatedUrl).then(() => toast.success("Copied"));
   }
 
   const environmentEvents: PaymentWebhookEvent[] = (events ?? []).filter((e) => e.environment === environment);
@@ -109,7 +116,7 @@ export function WebhooksTab({ providerKey, environment }: { providerKey: string;
             <code className="flex-1 truncate text-[11px] bg-background border border-border rounded px-2 py-1.5 font-mono">
               {generatedUrl}
             </code>
-            <AnimatedIconButton icon={CopyIcon} iconSize={12} size="icon" variant="outline" className="w-7 shrink-0" onClick={() => handleCopy(generatedUrl)} />
+            <AnimatedIconButton icon={CopyIcon} iconSize={12} size="icon" variant="outline" className="w-7 shrink-0" onClick={handleCopyUrl} />
           </div>
         ) : (
           <p className="text-[11px] text-muted-foreground">

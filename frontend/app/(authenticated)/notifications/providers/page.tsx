@@ -3,9 +3,9 @@
 import { useState, useCallback } from "react";
 import { Plus, FlaskConical, Server } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
+import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -67,6 +67,7 @@ import {
 } from "@/hooks/api/notifications";
 import { useCan } from "@/hooks/api/access";
 import { formatRelativeTime } from "@/features/notifications/format-relative-time";
+import { providerSchema, type ProviderFormValues } from "@/features/notifications/provider-schema";
 import type {
   NotificationProvider,
   NotificationChannel,
@@ -96,40 +97,6 @@ const PROVIDERS: Array<{ value: NotificationProviderName; label: string }> = [
   { value: "INTERNAL", label: "Internal" },
   { value: "SANDBOX", label: "Sandbox" },
 ];
-
-const providerSchema = z.object({
-  channel: z.enum([
-    "IN_APP",
-    "EMAIL",
-    "PUSH",
-    "SMS",
-    "WHATSAPP",
-    "SLACK",
-    "TEAMS",
-    "WEBHOOK",
-  ]),
-  provider: z.enum([
-    "SMTP",
-    "SENDGRID",
-    "TWILIO",
-    "META_WHATSAPP",
-    "SLACK",
-    "TEAMS",
-    "WEBHOOK",
-    "WEB_PUSH",
-    "INTERNAL",
-    "SANDBOX",
-  ]),
-  displayName: z.string().min(1, "Display name is required"),
-  config: z.string().optional(),
-  enabled: z.boolean(),
-  sandboxMode: z.boolean(),
-  isDefault: z.boolean(),
-  dailySendLimit: z.string().optional(),
-  monthlyCostLimit: z.string().optional(),
-});
-
-type ProviderFormValues = z.infer<typeof providerSchema>;
 
 function ProviderSheet({
   open,
@@ -705,52 +672,54 @@ export default function NotificationProvidersPage() {
         ) : undefined
       }
     >
-      {isLoading ? (
-        <div className="flex-1 rounded-lg border border-border overflow-hidden divide-y divide-border">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="flex items-start gap-3 px-3 py-2.5">
-              <div className="flex-1 space-y-1.5">
-                <Skeleton className="h-3.5 w-40" />
-                <Skeleton className="h-3 w-24" />
+      <div className="flex flex-1 min-h-0 flex-col">
+        {isLoading ? (
+          <div className="flex-1 rounded-lg border border-border overflow-hidden divide-y divide-border">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-start gap-3 px-3 py-2.5">
+                <div className="flex-1 space-y-1.5">
+                  <Skeleton className="h-3.5 w-40" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
+                <Skeleton className="h-5 w-16 shrink-0" />
               </div>
-              <Skeleton className="h-5 w-16 shrink-0" />
-            </div>
-          ))}
-        </div>
-      ) : isError ? (
-        <ErrorState
-          title="Failed to load providers"
-          description={getErrorMessage(error)}
-          onRetry={handleRetry}
-        />
-      ) : !providers?.length ? (
-        <EmptyState
-          illustrationPreset="settings"
-          title="No providers configured"
-          description="Add a delivery provider to start sending notifications across channels."
-          action={
-            canManage
-              ? { label: "New Provider", onClick: handleCreate }
-              : undefined
-          }
-          className={CONTENT_FILL_PANEL}
-        />
-      ) : (
-        <div className="rounded-lg border border-border overflow-hidden divide-y divide-border">
-          {providers.map((p, idx) => (
-            <ProviderRow
-              key={p.id}
-              provider={p}
-              idx={idx}
-              canManage={canManage}
-              testingId={testingId}
-              onTest={handleTest}
-              onEdit={handleEdit}
-              onDelete={setDeleteTarget}
-            />
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        ) : isError ? (
+          <ErrorState
+            title="Failed to load providers"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+          />
+        ) : !providers?.length ? (
+          <EmptyState
+            illustrationPreset="settings"
+            title="No providers configured"
+            description="Add a delivery provider to start sending notifications across channels."
+            action={
+              canManage
+                ? { label: "New Provider", onClick: handleCreate }
+                : undefined
+            }
+            className={CONTENT_FILL_PANEL}
+          />
+        ) : (
+          <div className="rounded-lg border border-border overflow-hidden divide-y divide-border">
+            {providers.map((p, idx) => (
+              <ProviderRow
+                key={p.id}
+                provider={p}
+                idx={idx}
+                canManage={canManage}
+                testingId={testingId}
+                onTest={handleTest}
+                onEdit={handleEdit}
+                onDelete={setDeleteTarget}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
       <ProviderSheet
         open={sheetOpen}

@@ -31,6 +31,7 @@ import {
   SHIPMENT_STATUS_LABEL,
   type ShipmentStatus,
 } from "@/features/inventory/lib";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { useShipments, useCreateShipment, type Shipment } from "@/hooks/api/inventory/shipping";
 import { toast } from "sonner";
 
@@ -217,7 +218,7 @@ function ShipmentsPageInner() {
     <>
       <PageWrapper
         title="Shipments"
-        subtitle={total > 0 ? `${total} ${total === 1 ? "shipment" : "shipments"}` : "Track and manage outbound shipments"}
+        subtitle="Track and manage outbound shipments"
         actions={
           <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1.5" size="sm" onClick={handleNewShipment}>
             New Shipment
@@ -225,39 +226,40 @@ function ShipmentsPageInner() {
         }
         filters={filtersRow}
       >
-        {shipmentsQuery.error ? (
-          <ErrorState
-            title="Failed to load shipments"
-            description={shipmentsQuery.error.message}
-            onRetry={handleRetry}
-          />
-        ) : (
-          <DataTable
-            className="flex-1 min-h-0"
-            data={items}
-            columns={columns}
-            getRowKey={(s) => s.id}
-            isLoading={shipmentsQuery.isLoading}
-            onRowClick={handleRowClick}
-            emptyState={
-              <InventoryEmptyState
-                illustration={<EmptyOrdersIllustration />}
-                title="No shipments yet"
-                description="Create a shipment to track outbound deliveries."
-                action={{ label: "New Shipment", onClick: handleNewShipment }}
-                className="border-0 bg-transparent"
-              />
-            }
-            pagination={{
-              mode: "server",
-              page,
-              pageSize: PAGE_LIMIT,
-              total,
-              onPageChange: handlePageChange,
-            }}
-            minWidth="640px"
-          />
-        )}
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+          {shipmentsQuery.error ? (
+            <ErrorState
+              title="Failed to load shipments"
+              description={getErrorMessage(shipmentsQuery.error)}
+              onRetry={handleRetry}
+            />
+          ) : (
+            <DataTable
+              data={items}
+              columns={columns}
+              getRowKey={(s) => s.id}
+              isLoading={shipmentsQuery.isLoading}
+              onRowClick={handleRowClick}
+              emptyState={
+                <InventoryEmptyState
+                  illustration={<EmptyOrdersIllustration />}
+                  title="No shipments yet"
+                  description="Create a shipment to track outbound deliveries."
+                  action={{ label: "New Shipment", onClick: handleNewShipment }}
+                  className="border-0 bg-transparent"
+                />
+              }
+              pagination={{
+                mode: "server",
+                page,
+                pageSize: PAGE_LIMIT,
+                total,
+                onPageChange: handlePageChange,
+              }}
+              minWidth="640px"
+            />
+          )}
+        </div>
       </PageWrapper>
 
       <ShipmentDetailSheet
@@ -276,13 +278,14 @@ function ShipmentsPageInner() {
             <Button variant="outline" size="sm" onClick={handleCreateClose}>
               Cancel
             </Button>
-            <Button
+            <LoadingButton
               size="sm"
               onClick={handleCreateSubmit}
-              disabled={createMutation.isPending}
+              isPending={createMutation.isPending}
+              loadingText="Creating…"
             >
-              {createMutation.isPending ? "Creating…" : "Create"}
-            </Button>
+              Create
+            </LoadingButton>
           </div>
         }
       >

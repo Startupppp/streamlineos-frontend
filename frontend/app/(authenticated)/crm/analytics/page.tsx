@@ -134,7 +134,7 @@ export default function CrmAnalyticsPage() {
           title="Failed to load analytics"
           description="Check your connection and try again."
           onRetry={handleRetry}
-          className="flex-1 min-h-[50vh]"
+          className="flex-1"
         />
       </PageWrapper>
     );

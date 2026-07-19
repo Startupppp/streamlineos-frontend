@@ -52,14 +52,13 @@ import { DelegateDialog } from "./delegate-dialog";
 import { RequestApprovalSheet } from "./request-approval-sheet";
 import type { Approval, ApprovalEntityType, ApprovalStatus, CreateApprovalInput, DecideApprovalInput } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { cn } from "@/lib/utils";
 import {
   PmPageShell,
   PmPanel,
   PmSection,
   PM_FILL_PANEL,
-  PM_TOOLBAR,
 } from "@/features/projects/shared/pm-chrome";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { TABLE_TITLE_CELL } from "@/features/projects/shared/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
@@ -296,6 +295,22 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
     setEntityType("all");
   }, []);
 
+  const handleDecideDialogChange = useCallback((open: boolean) => {
+    if (!open) setDecideTarget(null);
+  }, []);
+
+  const handleDelegateDialogChange = useCallback((open: boolean) => {
+    if (!open) setDelegateTarget(null);
+  }, []);
+
+  const handleCancelDialogChange = useCallback((open: boolean) => {
+    if (!open) setCancelTarget(null);
+  }, []);
+
+  const handleDeleteDialogChange = useCallback((open: boolean) => {
+    if (!open) setDeleteTarget(null);
+  }, []);
+
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
@@ -377,29 +392,27 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
   ], [canDecide, canManage, currentUserId, memberName, handleEscalate]);
 
   const filtersBar = (
-    <div className={cn(PM_TOOLBAR, "w-full")}>
-      <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-        <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="w-40 text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {STATUS_OPTIONS.map((o) => (
-              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={entityType} onValueChange={setEntityType}>
-          <SelectTrigger className="w-40 text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {ENTITY_OPTIONS.map((o) => (
-              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+    <div className={FILTER_TOOLBAR_ROW}>
+      <Select value={status} onValueChange={setStatus}>
+        <SelectTrigger className="w-40">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {STATUS_OPTIONS.map((o) => (
+            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select value={entityType} onValueChange={setEntityType}>
+        <SelectTrigger className="w-40">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {ENTITY_OPTIONS.map((o) => (
+            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 
@@ -424,9 +437,7 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
           {isLoading ? (
-            <PmPanel className="p-2">
-              <DataTableSkeleton rows={12} columns={7} className="flex-1" />
-            </PmPanel>
+            <DataTableSkeleton rows={12} columns={7} className="flex-1" />
           ) : isError ? (
             <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
           ) : items.length === 0 ? (
@@ -462,20 +473,20 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
       />
       <DecideDialog
         open={!!decideTarget}
-        onOpenChange={(open) => { if (!open) setDecideTarget(null); }}
+        onOpenChange={handleDecideDialogChange}
         onConfirm={handleDecide}
         isPending={decideApproval.isPending}
         approvalTitle={decideTarget?.title}
       />
       <DelegateDialog
         open={!!delegateTarget}
-        onOpenChange={(open) => { if (!open) setDelegateTarget(null); }}
+        onOpenChange={handleDelegateDialogChange}
         onConfirm={handleDelegate}
         isPending={updateApproval.isPending}
         members={members}
         currentApproverId={delegateTarget?.approverId}
       />
-      <AlertDialog open={!!cancelTarget} onOpenChange={(open) => { if (!open) setCancelTarget(null); }}>
+      <AlertDialog open={!!cancelTarget} onOpenChange={handleCancelDialogChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Cancel this approval?</AlertDialogTitle>
@@ -491,7 +502,7 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+      <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteDialogChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this approval?</AlertDialogTitle>

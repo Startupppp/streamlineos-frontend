@@ -5,7 +5,6 @@ import { Plus, X } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -57,10 +56,10 @@ import {
 import {
   NOTIFICATION_CATEGORIES,
   NOTIFICATION_CATEGORY_CONFIG,
-  NOTIFICATION_CATEGORY_VALUES,
   NOTIFICATION_PRIORITIES,
   NOTIFICATION_PRIORITY_CONFIG,
 } from "@/features/notifications/notification-types";
+import { broadcastSchema, type BroadcastFormValues } from "@/features/notifications/broadcast-schema";
 import type { Broadcast, BroadcastStatus } from "@/types/notifications";
 
 const STATUS_TABS: Array<{ value: string; label: string }> = [
@@ -75,24 +74,12 @@ const STATUS_TABS: Array<{ value: string; label: string }> = [
 const STATUS_CONFIG: Record<BroadcastStatus, { label: string; className: string }> = {
   DRAFT: { label: "Draft", className: "border-border text-muted-foreground" },
   SCHEDULED: { label: "Scheduled", className: "border-blue-300 text-blue-600" },
-  QUEUED: { label: "Queued", className: "border-indigo-300 text-indigo-600" },
+  QUEUED: { label: "Queued", className: "border-blue-300 text-blue-600 dark:border-blue-500/40 dark:text-blue-400" },
   SENDING: { label: "Sending", className: "border-amber-300 text-amber-600" },
   SENT: { label: "Sent", className: "border-emerald-300 text-emerald-600" },
   CANCELLED: { label: "Cancelled", className: "border-border text-muted-foreground" },
   FAILED: { label: "Failed", className: "border-red-300 text-red-600" },
 };
-
-const broadcastSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  message: z.string().min(1, "Message is required"),
-  type: z.enum(["INFO", "SUCCESS", "WARNING", "ERROR"]),
-  priority: z.enum(["LOW", "NORMAL", "HIGH", "CRITICAL"]),
-  category: z.enum(NOTIFICATION_CATEGORY_VALUES),
-  audienceType: z.enum(["all", "roles", "departments", "users"]),
-  scheduledAt: z.string().optional(),
-});
-
-type BroadcastFormValues = z.infer<typeof broadcastSchema>;
 
 function BroadcastSheet({
   open,
@@ -278,7 +265,7 @@ function BroadcastSheet({
                       <input
                         type="datetime-local"
                         {...field}
-                        className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       />
                     </FormControl>
                     <p className="text-[11px] text-muted-foreground">Leave empty to send immediately on publish.</p>
@@ -479,7 +466,7 @@ export default function BroadcastsPage() {
     });
   }, [deleteBroadcast, deleteTarget]);
 
-  function handleRetry() { void refetch(); }
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   const items = broadcastData?.items ?? [];
 
@@ -530,7 +517,7 @@ export default function BroadcastsPage() {
             className={CONTENT_FILL_PANEL}
           />
         ) : (
-          <div className="rounded-lg border border-border overflow-hidden divide-y divide-border">
+          <div className="rounded-lg border border-border overflow-hidden divide-y divide-border flex-1 min-h-0">
             {items.map((b, idx) => (
               <BroadcastRow
                 key={b.id}

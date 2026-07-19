@@ -49,7 +49,6 @@ import { useSession } from "next-auth/react";
 import { useCan } from "@/hooks/api/access";
 import { resolveImageUrl, cn } from "@/lib/utils";
 import { format } from "date-fns";
-import type { Employee } from "@/types/hr";
 import { canDeleteEmployee } from "@/features/hr/employees/hr-types";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { AiActionsMenu } from "@/components/ai";
@@ -80,16 +79,16 @@ function profileCompletenessScore(employee: EmployeeData): {
     { label: "Designation", filled: !!employee.designation },
     {
       label: "Profile photo",
-      filled: !!(employee as Record<string, unknown>).image,
+      filled: !!employee.image,
     },
-    { label: "Bio", filled: !!(employee as Record<string, unknown>).bio },
+    { label: "Bio", filled: !!employee.bio },
     {
       label: "Skills",
       filled: (employee.skills ?? []).length > 0,
     },
     {
       label: "LinkedIn",
-      filled: !!(employee as Record<string, unknown>).linkedinUrl,
+      filled: !!employee.linkedinUrl,
     },
   ];
   const filled = fields.filter((f) => f.filled).length;
@@ -105,7 +104,7 @@ function AvailabilityBadge({ userId }: { userId: string }) {
   if (entry.status === "ON_LEAVE") {
     const label = `On Leave${entry.leaveType ? ` (${entry.leaveType})` : ""}`;
     return (
-      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/40 dark:text-rose-300 dark:border-rose-800">
+      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30">
         <XCircle className="h-3 w-3" />
         {label}
       </span>
@@ -113,14 +112,14 @@ function AvailabilityBadge({ userId }: { userId: string }) {
   }
   if (entry.status === "HALF_DAY") {
     return (
-      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-800">
+      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
         <AlertCircle className="h-3 w-3" />
         Half Day
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800">
+    <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
       <CheckCircle2 className="h-3 w-3" />
       Available
     </span>
@@ -290,12 +289,12 @@ function ManagerScorecardSection({ employeeId }: { employeeId: string }) {
                 ? `${scorecard.teamAttendanceRate}%`
                 : "N/A"
             }
-            colorClass="text-emerald-700 dark:text-emerald-400"
+            colorClass="text-emerald-700 dark:text-emerald-300"
           />
         </div>
         {scorecard.pendingLeaveRequests > 0 && (
-          <div className="mt-3 flex items-center gap-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 px-3 py-2">
-            <AlertCircle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+          <div className="mt-3 flex items-center gap-1.5 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 px-3 py-2">
+            <AlertCircle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300 shrink-0" />
             <p className="text-xs text-amber-700 dark:text-amber-300 font-medium">
               {scorecard.pendingLeaveRequests} pending leave request
               {scorecard.pendingLeaveRequests !== 1 ? "s" : ""} awaiting
@@ -376,12 +375,10 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
     ];
   }, [canManageEmployees, employee.id, attritionRiskMutation, generateReviewMutation]);
 
-  const employeeAsEmployee = employee as unknown as Employee;
+  const employmentStatusRaw = employee.employmentStatus;
   const employmentStatus =
-    typeof (employee as Record<string, unknown>).employmentStatus === "string"
-      ? (
-          (employee as Record<string, unknown>).employmentStatus as string
-        ).toUpperCase()
+    typeof employmentStatusRaw === "string"
+      ? employmentStatusRaw.toUpperCase()
       : null;
   const isAlreadyTerminated =
     employee.isActive === false || employmentStatus === "TERMINATED";
@@ -389,7 +386,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
     hydrated &&
     !isAlreadyTerminated &&
     canDeleteEmployee(
-      employeeAsEmployee.role ?? "",
+      employee.role ?? "",
       employee.id,
       true,
       session?.user?.id,
@@ -482,12 +479,12 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                   </div>
                   <div className="flex items-center gap-1.5 flex-wrap">
                     {isAlreadyTerminated ? (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/40 dark:text-rose-300 dark:border-rose-800">
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30">
                         <XCircle className="h-3 w-3" />
                         Terminated
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800">
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
                         <CheckCircle2 className="h-3 w-3" />
                         Active
                       </span>
@@ -540,9 +537,9 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                   <AvailabilityBadge userId={employee.id} />
                 </div>
 
-                {(employeeAsEmployee as Employee).bio && (
+                {typeof employee.bio === "string" && employee.bio && (
                   <TruncatedText
-                    text={(employeeAsEmployee as Employee).bio ?? ""}
+                    text={employee.bio}
                     lines={2}
                     className="text-sm text-muted-foreground"
                   />
@@ -574,7 +571,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                   <StatBlock
                     label="Present"
                     value={stats.attendance?.daysPresent ?? 0}
-                    colorClass="text-emerald-700 dark:text-emerald-400"
+                    colorClass="text-emerald-700 dark:text-emerald-300"
                   />
                   <StatBlock
                     label="Leaves"
@@ -584,7 +581,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                   <StatBlock
                     label="Pending"
                     value={stats.leaves.pending}
-                    colorClass="text-amber-700 dark:text-amber-400"
+                    colorClass="text-amber-700 dark:text-amber-300"
                   />
                 </div>
               )}
@@ -664,8 +661,8 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                 <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-2 mb-3">
-                      <div className="w-7 rounded-lg bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center">
-                        <Tag className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                      <div className="w-7 rounded-lg bg-amber-100 dark:bg-amber-500/10 flex items-center justify-center">
+                        <Tag className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300" />
                       </div>
                       <h3 className="text-sm font-semibold text-foreground">
                         Skills &amp; Expertise
@@ -675,7 +672,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                       {skillsList.map((skill) => (
                         <span
                           key={skill}
-                          className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-800"
+                          className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30"
                         >
                           {skill}
                         </span>
@@ -701,11 +698,19 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                       </h3>
                     </div>
                     <EmployeeProjectsList
-                      projects={
-                        (projects ?? []) as unknown as Parameters<
-                          typeof EmployeeProjectsList
-                        >[0]["projects"]
-                      }
+                      projects={(projects ?? []).map((p) => ({
+                        id: Number(p["id"]),
+                        name: String(p["name"] ?? ""),
+                        role: p["role"] != null ? String(p["role"]) : null,
+                        description: p["description"] != null ? String(p["description"]) : null,
+                        stats: p["stats"] != null
+                          ? {
+                              todo: Number((p["stats"] as Record<string, unknown>)["todo"] ?? 0),
+                              inProgress: Number((p["stats"] as Record<string, unknown>)["inProgress"] ?? 0),
+                              done: Number((p["stats"] as Record<string, unknown>)["done"] ?? 0),
+                            }
+                          : undefined,
+                      }))}
                     />
                   </CardContent>
                 </Card>
@@ -762,7 +767,18 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
             >
               <div className="pb-4">
                 <SelfEditProfileForm
-                  employee={employeeAsEmployee}
+                  employee={{
+                    id: employee.id,
+                    firstName: employee.firstName,
+                    lastName: employee.lastName,
+                    image: typeof employee.image === "string" ? employee.image : null,
+                    bio: typeof employee.bio === "string" ? employee.bio : null,
+                    linkedinUrl: typeof employee.linkedinUrl === "string" ? employee.linkedinUrl : null,
+                    twitterUrl: typeof employee.twitterUrl === "string" ? employee.twitterUrl : null,
+                    githubUrl: typeof employee.githubUrl === "string" ? employee.githubUrl : null,
+                    websiteUrl: typeof employee.websiteUrl === "string" ? employee.websiteUrl : null,
+                    skills: employee.skills,
+                  }}
                   onSaved={() => router.refresh()}
                 />
               </div>

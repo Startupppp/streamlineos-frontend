@@ -58,7 +58,7 @@ export default function OffersPage() {
   if (isLoading) {
     return (
       <PageWrapper title="Offers" subtitle="Track every offer across all candidates." variant="display">
-        <div className="space-y-3">
+        <div className="flex flex-1 min-h-0 flex-col gap-3">
           {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
         </div>
       </PageWrapper>
@@ -69,18 +69,20 @@ export default function OffersPage() {
     <PageWrapper
       title="Offers"
       subtitle="Track every offer across all candidates — status, terms, and approvals."
- variant="display">
-      {!offers?.length ? (
-        <RecruitmentEmptyState
-          illustration={<EmptyDocumentsIllustration />}
-          title="No offers yet"
-          description="Offers created from a candidate's profile will appear here."
-        />
-      ) : (
-        <div className="space-y-3">
-          {offers.map((offer) => <OfferRow key={offer.id} offer={offer} />)}
-        </div>
-      )}
+      variant="display">
+      <div className="flex flex-1 min-h-0 flex-col">
+        {!offers?.length ? (
+          <RecruitmentEmptyState
+            illustration={<EmptyDocumentsIllustration />}
+            title="No offers yet"
+            description="Offers created from a candidate's profile will appear here."
+          />
+        ) : (
+          <div className="flex flex-1 min-h-0 flex-col gap-3">
+            {offers.map((offer) => <OfferRow key={offer.id} offer={offer} />)}
+          </div>
+        )}
+      </div>
     </PageWrapper>
   );
 }

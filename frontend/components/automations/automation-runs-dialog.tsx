@@ -49,8 +49,16 @@ function StatusBadge({ status }: { status: AutomationRunStatus }) {
 export function AutomationRunsDialog({ ruleId, ruleName, onClose }: AutomationRunsDialogProps) {
   const { data: runs, isLoading, isError, refetch } = useAutomationRuns(ruleId);
 
+  function handleRetry() {
+    void refetch();
+  }
+
+  function handleOpenChange(open: boolean) {
+    if (!open) onClose();
+  }
+
   return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
+    <Dialog open onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Recent runs</DialogTitle>
@@ -64,7 +72,7 @@ export function AutomationRunsDialog({ ruleId, ruleName, onClose }: AutomationRu
             compact
             title="Couldn't load runs"
             description="Something went wrong fetching the run history."
-            onRetry={() => refetch()}
+            onRetry={handleRetry}
           />
         ) : !runs || runs.length === 0 ? (
           <EmptyState

@@ -17,6 +17,7 @@ import { Pencil, PartyPopper } from "lucide-react";
 import { PlusIcon, Trash2Icon, CheckIcon, XIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { EmptyState } from "@/components/ui/empty-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 interface EditState {
   id: number;
@@ -118,7 +119,7 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
           setPendingHoliday(null);
         },
         onError: (e) => {
-          toast.error(e.message);
+          toast.error(getErrorMessage(e));
           setPendingHoliday(null);
         },
       }
@@ -135,7 +136,7 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
           setDeleteConfirmId(null);
         },
         onError: (e) => {
-          toast.error(e.message);
+          toast.error(getErrorMessage(e));
           setDeleteConfirmId(null);
         },
       }
@@ -176,7 +177,7 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
           toast.success("Holiday updated");
           setEditState(null);
         },
-        onError: (e) => toast.error(e.message),
+        onError: (e) => toast.error(getErrorMessage(e)),
       }
     );
   }, [editState, holidaysList, updateMutation]);
@@ -186,13 +187,13 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
       <CardHeader className="pb-3 pt-5">
         <div className="flex items-center justify-between gap-3">
           <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <div className="w-7 rounded-lg bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center shrink-0">
-              <PartyPopper className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            <div className="w-7 rounded-lg bg-amber-100 dark:bg-amber-500/10 flex items-center justify-center shrink-0">
+              <PartyPopper className="h-4 w-4 text-amber-600 dark:text-amber-300" />
             </div>
             Company Holidays
           </CardTitle>
           <Select value={String(selectedYear)} onValueChange={handleYearChange}>
-            <SelectTrigger className="w-[100px] h-8 text-xs">
+            <SelectTrigger className="w-[100px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="w-[var(--radix-select-trigger-width)]">

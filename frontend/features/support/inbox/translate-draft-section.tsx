@@ -79,7 +79,7 @@ export function TranslateDraftSection({
       <div className="flex items-center gap-1.5">
         <Globe className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
         <Select value={language} onValueChange={handleLanguageChange}>
-          <SelectTrigger className="h-7 text-xs w-[120px] border-input bg-card">
+          <SelectTrigger className="h-9 text-sm w-[120px] border-input bg-card">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -94,7 +94,7 @@ export function TranslateDraftSection({
           type="button"
           variant="ghost"
           size="sm"
-          className="h-7 text-xs"
+          className="h-9 text-sm"
           isPending={translateDraft.isPending}
           loadingText="Translating…"
           onClick={handleTranslate}

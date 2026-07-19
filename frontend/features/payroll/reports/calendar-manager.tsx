@@ -145,7 +145,7 @@ function EventForm({ editing, defaultMonth, onSuccess, onCancel }: EventFormProp
               <FormLabel className="text-[11px]">Event Type</FormLabel>
               <Select value={field.value} onValueChange={field.onChange}>
                 <FormControl>
-                  <SelectTrigger className="text-xs">
+                  <SelectTrigger>
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                 </FormControl>

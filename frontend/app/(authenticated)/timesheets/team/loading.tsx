@@ -22,7 +22,7 @@ export default function TeamTimeLoading() {
         </div>
       }
     >
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         <StatCardGridSkeleton cols={4} count={4} />
         <DataTableSkeleton rows={12} columns={10} />
       </div>

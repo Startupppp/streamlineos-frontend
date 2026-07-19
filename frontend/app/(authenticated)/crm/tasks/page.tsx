@@ -281,7 +281,7 @@ function CrmTasksContent() {
             title="Failed to load tasks"
             description="Could not load tasks. Please try again."
             onRetry={handleRetry}
-            className="flex-1 min-h-[300px]"
+            className="flex-1"
           />
         ) : hasAnyTasks ? (
           <div className="space-y-3">

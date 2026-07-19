@@ -52,7 +52,7 @@ export function FormActionsEditor({ actions, fields, onChange }: FormActionsEdit
       {actions.map((action, idx) => (
         <div key={idx} className="rounded-lg border bg-card p-3 flex flex-wrap items-center gap-2">
           <Select value={action.type} onValueChange={(v) => handleTypeChange(idx, v)}>
-            <SelectTrigger className="w-44 text-xs">
+            <SelectTrigger className="w-44">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -68,7 +68,7 @@ export function FormActionsEditor({ actions, fields, onChange }: FormActionsEdit
                 value={getTitleField(action)}
                 onValueChange={(v) => handleTitleFieldChange(idx, v)}
               >
-                <SelectTrigger className="w-40 text-xs">
+                <SelectTrigger className="w-40">
                   <SelectValue placeholder="Select field…" />
                 </SelectTrigger>
                 <SelectContent>

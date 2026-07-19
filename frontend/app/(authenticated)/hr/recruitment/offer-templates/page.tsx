@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { useOfferTemplates, useCreateOfferTemplate, useUpdateOfferTemplate, useDeleteOfferTemplate, useGenerateOfferPdf } from "@/hooks/api/hr/recruitment/offer-templates";
 import type { OfferLetterTemplate } from "@/hooks/api/hr/recruitment/offer-templates";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -188,13 +189,9 @@ function TemplateSheet({ open, onOpenChange, template }: TemplateSheetProps) {
           >
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={isPending}>
-            {isPending
-              ? "Saving..."
-              : isEdit
-                ? "Save Changes"
-                : "Create Template"}
-          </Button>
+          <LoadingButton onClick={handleSubmit} isPending={isPending} loadingText="Saving...">
+            {isEdit ? "Save Changes" : "Create Template"}
+          </LoadingButton>
         </SheetFooter>
       </SheetContent>
     </Sheet>
@@ -261,7 +258,7 @@ function PreviewSheet({ template, onClose }: PreviewSheetProps) {
           <Button variant="outline" onClick={onClose}>
             Close
           </Button>
-          <Button onClick={handleDownloadPdf} disabled={generatePdf.isPending}>
+          <LoadingButton onClick={handleDownloadPdf} isPending={generatePdf.isPending} loadingText="Generating...">
             <svg
               className="h-4 w-4 mr-1.5"
               fill="none"
@@ -275,11 +272,61 @@ function PreviewSheet({ template, onClose }: PreviewSheetProps) {
                 d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
               />
             </svg>
-            {generatePdf.isPending ? "Generating..." : "Download Sample PDF"}
-          </Button>
+            Download Sample PDF
+          </LoadingButton>
         </SheetFooter>
       </SheetContent>
     </Sheet>
+  );
+}
+
+interface TemplateCardProps {
+  template: OfferLetterTemplate;
+  onPreview: (t: OfferLetterTemplate) => void;
+  onEdit: (t: OfferLetterTemplate) => void;
+  onDelete: (id: number) => void;
+}
+
+function TemplateCard({ template, onPreview, onEdit, onDelete }: TemplateCardProps) {
+  function handlePreview() { onPreview(template); }
+  function handleEdit() { onEdit(template); }
+  function handleDelete() { onDelete(template.id); }
+
+  return (
+    <Card className="shadow-sm">
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-medium text-sm">{template.name}</span>
+              {template.isDefault && (
+                <Badge variant="default" className="text-xs">Default</Badge>
+              )}
+            </div>
+            <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
+              {template.creator && <span>by {template.creator.name}</span>}
+              <span>{format(new Date(template.createdAt), "MMM d, yyyy")}</span>
+              <span>{template.htmlContent.length.toLocaleString()} chars</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-1 shrink-0">
+            <Button variant="ghost" size="sm" className="px-2 text-xs" onClick={handlePreview}>
+              Preview
+            </Button>
+            <Button variant="ghost" size="sm" className="w-8 p-0" onClick={handleEdit}>
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </Button>
+            <Button variant="ghost" size="sm" className="w-8 p-0 text-destructive hover:text-destructive" onClick={handleDelete}>
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -308,8 +355,14 @@ export default function OfferTemplatesPage() {
     [deleteMutation],
   );
 
+  function handleOpenCreate() { setIsCreateOpen(true); }
+  function handleCloseEditingTemplate(v: boolean) { if (!v) setEditingTemplate(null); }
+  function handleClosePreviewTemplate() { setPreviewTemplate(null); }
+  function handleCloseDeleteDialog(v: boolean) { if (!v) setDeletingId(null); }
+  function handleConfirmDelete() { if (deletingId !== null) void handleDelete(deletingId); }
+
   const pageActions = (
-    <Button size="sm" onClick={() => setIsCreateOpen(true)}>
+    <Button size="sm" onClick={handleOpenCreate}>
       <svg
         className="h-4 w-4 mr-1.5"
         fill="none"
@@ -333,8 +386,9 @@ export default function OfferTemplatesPage() {
         title="Offer Templates"
         subtitle="Reusable offer letter templates with placeholders."
         actions={pageActions}
- variant="display">
-        <div className="space-y-3">
+        variant="display"
+      >
+        <div className="flex flex-1 min-h-0 flex-col gap-3">
           {Array.from({ length: 12 }).map((_, i) => (
             <Skeleton key={i} className="h-20 rounded-xl" />
           ))}
@@ -348,7 +402,8 @@ export default function OfferTemplatesPage() {
       title="Offer Templates"
       subtitle="Create and manage reusable offer letter templates with dynamic placeholders."
       actions={pageActions}
- variant="display">
+      variant="display"
+    >
       {templates.length === 0 ? (
         <RecruitmentEmptyState
           illustration={<EmptyDocumentsIllustration />}
@@ -356,91 +411,19 @@ export default function OfferTemplatesPage() {
           description="Create a reusable offer letter template to speed up your hiring process."
           action={{
             label: "New Template",
-            onClick: () => setIsCreateOpen(true),
+            onClick: handleOpenCreate,
           }}
         />
       ) : (
-        <div className="space-y-3">
+        <div className="flex flex-1 min-h-0 flex-col gap-3">
           {templates.map((template) => (
-            <Card key={template.id} className="shadow-sm">
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-medium text-sm">
-                        {template.name}
-                      </span>
-                      {template.isDefault && (
-                        <Badge variant="default" className="text-xs">
-                          Default
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
-                      {template.creator && (
-                        <span>by {template.creator.name}</span>
-                      )}
-                      <span>
-                        {format(new Date(template.createdAt), "MMM d, yyyy")}
-                      </span>
-                      <span>
-                        {template.htmlContent.length.toLocaleString()} chars
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="px-2 text-xs"
-                      onClick={() => setPreviewTemplate(template)}
-                    >
-                      Preview
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-8 p-0"
-                      onClick={() => setEditingTemplate(template)}
-                    >
-                      <svg
-                        className="h-4 w-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                        />
-                      </svg>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-8 p-0 text-destructive hover:text-destructive"
-                      onClick={() => setDeletingId(template.id)}
-                    >
-                      <svg
-                        className="h-4 w-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <TemplateCard
+              key={template.id}
+              template={template}
+              onPreview={setPreviewTemplate}
+              onEdit={setEditingTemplate}
+              onDelete={setDeletingId}
+            />
           ))}
         </div>
       )}
@@ -450,9 +433,7 @@ export default function OfferTemplatesPage() {
       {editingTemplate && (
         <TemplateSheet
           open={!!editingTemplate}
-          onOpenChange={(v) => {
-            if (!v) setEditingTemplate(null);
-          }}
+          onOpenChange={handleCloseEditingTemplate}
           template={editingTemplate}
         />
       )}
@@ -460,16 +441,11 @@ export default function OfferTemplatesPage() {
       {previewTemplate && (
         <PreviewSheet
           template={previewTemplate}
-          onClose={() => setPreviewTemplate(null)}
+          onClose={handleClosePreviewTemplate}
         />
       )}
 
-      <AlertDialog
-        open={deletingId !== null}
-        onOpenChange={(v) => {
-          if (!v) setDeletingId(null);
-        }}
-      >
+      <AlertDialog open={deletingId !== null} onOpenChange={handleCloseDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Template</AlertDialogTitle>
@@ -481,7 +457,7 @@ export default function OfferTemplatesPage() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => deletingId !== null && handleDelete(deletingId)}
+              onClick={handleConfirmDelete}
               disabled={deleteMutation.isPending}
             >
               Delete

@@ -67,7 +67,7 @@ export function EmployeeRow({ employee: emp, department }: EmployeeRowProps) {
           className={cn(
             "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
             emp.isActive
-              ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800"
+              ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800"
               : "bg-muted text-muted-foreground border-border",
           )}
         >

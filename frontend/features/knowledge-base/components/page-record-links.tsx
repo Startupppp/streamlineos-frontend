@@ -36,9 +36,9 @@ const TARGET_TYPE_LABELS: Record<KbRecordTargetType, string> = {
   hr_employee: "HR Employee",
 };
 
-const FIELD_CLASS = "h-8 w-full text-[13px] bg-card border-input shadow-xs";
+const FIELD_CLASS = "h-9 w-full text-[13px] bg-card border-input shadow-xs";
 const ACTION_BTN_CLASS =
-  "h-8 w-full text-[13px] bg-card border border-input shadow-xs hover:bg-muted/50";
+  "h-9 w-full text-[13px] bg-card border border-input shadow-xs hover:bg-muted/50";
 
 const TARGET_TYPE_OPTIONS = Object.entries(TARGET_TYPE_LABELS).map(([value, label]) => ({
   value: value as KbRecordTargetType,

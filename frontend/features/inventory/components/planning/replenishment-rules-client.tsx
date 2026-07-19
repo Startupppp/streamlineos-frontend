@@ -23,6 +23,7 @@ import { ErrorState } from "@/components/shared";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useReplenishmentRules,
   useDeactivateReplenishmentRule,
@@ -182,8 +183,8 @@ export function ReplenishmentRulesClient() {
         toast.success("Rule deactivated");
         setDeactivateTarget(undefined);
       },
-      onError: () => {
-        toast.error("Failed to deactivate rule");
+      onError: (err) => {
+        toast.error(getErrorMessage(err));
       },
     });
   }

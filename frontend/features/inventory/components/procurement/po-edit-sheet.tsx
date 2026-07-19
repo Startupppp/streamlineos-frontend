@@ -53,6 +53,31 @@ type FormValues = z.infer<typeof schema>;
 
 type FieldRow = { id: string; index: number };
 
+interface RemoveLineButtonProps {
+  index: number;
+  disabled: boolean;
+  onRemove: (index: number) => void;
+}
+
+function RemoveLineButton({ index, disabled, onRemove }: RemoveLineButtonProps) {
+  function handleClick(): void {
+    onRemove(index);
+  }
+  return (
+    <AnimatedIconButton
+      type="button"
+      icon={Trash2Icon}
+      iconSize={14}
+      variant="ghost"
+      size="icon"
+      className="w-7"
+      onClick={handleClick}
+      disabled={disabled}
+      aria-label={`Remove line ${index + 1}`}
+    />
+  );
+}
+
 function toNum(v: string): number {
   const n = parseFloat(v);
   return Number.isFinite(n) && n >= 0 ? n : 0;
@@ -218,16 +243,10 @@ export function PoEditSheet({ open, onOpenChange, po }: PoEditSheetProps) {
       headerClassName: "w-[40px]",
       className: "w-[40px]",
       cell: (row) => (
-        <AnimatedIconButton
-          type="button"
-          icon={Trash2Icon}
-          iconSize={14}
-          variant="ghost"
-          size="icon"
-          className="w-7"
-          onClick={() => handleRemoveAt(row.index)}
+        <RemoveLineButton
+          index={row.index}
           disabled={fields.length === 1}
-          aria-label={`Remove line ${row.index + 1}`}
+          onRemove={handleRemoveAt}
         />
       ),
     },

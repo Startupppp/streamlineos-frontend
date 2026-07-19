@@ -237,7 +237,7 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
           className="w-48"
         />
         <Select value={suiteFilter} onValueChange={setSuiteFilter}>
-          <SelectTrigger className="w-36 text-[11px]">
+          <SelectTrigger className="w-36">
             <SelectValue placeholder="All suites" />
           </SelectTrigger>
           <SelectContent>

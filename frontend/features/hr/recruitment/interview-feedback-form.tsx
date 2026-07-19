@@ -27,6 +27,103 @@ import { Star, Plus, X, ClipboardList, BarChart3, MessageSquare } from "lucide-r
 import { cn } from "@/lib/utils";
 import type { Interview, InterviewResult, InterviewRubricEntry } from "@/types/hr";
 
+interface StarButtonProps {
+  starValue: number;
+  displayRating: number;
+  onStarClick: (star: number) => void;
+  onStarHover: (star: number) => void;
+}
+
+function StarButton({ starValue, displayRating, onStarClick, onStarHover }: StarButtonProps) {
+  function handleClick() { onStarClick(starValue); }
+  function handleMouseEnter() { onStarHover(starValue); }
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      onMouseEnter={handleMouseEnter}
+      className="transition-transform duration-200 hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 rounded"
+      aria-label={`Rate ${starValue} out of 5`}
+    >
+      <Star
+        className={cn(
+          "h-7 w-7 transition-colors duration-200",
+          starValue <= displayRating
+            ? "text-amber-400 fill-amber-400"
+            : "text-muted-foreground/30"
+        )}
+      />
+    </button>
+  );
+}
+
+interface RubricEntryRowProps {
+  entry: InterviewRubricEntry;
+  index: number;
+  onCategoryNameChange: (index: number, value: string) => void;
+  onScoreChange: (index: number, value: number[]) => void;
+  onCommentChange: (index: number, value: string) => void;
+  onRemove: (index: number) => void;
+}
+
+function RubricEntryRow({ entry, index, onCategoryNameChange, onScoreChange, onCommentChange, onRemove }: RubricEntryRowProps) {
+  function handleCategoryChange(e: React.ChangeEvent<HTMLInputElement>) {
+    onCategoryNameChange(index, e.target.value);
+  }
+  function handleScoreChange(v: number[]) {
+    onScoreChange(index, v);
+  }
+  function handleCommentChange(e: React.ChangeEvent<HTMLInputElement>) {
+    onCommentChange(index, e.target.value);
+  }
+  function handleRemoveClick() {
+    onRemove(index);
+  }
+  return (
+    <div
+      className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 border-l-primary"
+    >
+      <div className="p-3 space-y-2.5">
+        <div className="flex items-center gap-2">
+          <Input
+            value={entry.category}
+            onChange={handleCategoryChange}
+            placeholder="Category name"
+            className="text-xs font-medium flex-1"
+          />
+          <div className="flex items-center gap-1 shrink-0">
+            <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
+            <span className="text-sm font-bold tabular-nums text-foreground w-5 text-center">{entry.score}</span>
+            <span className="text-[10px] text-muted-foreground">/{entry.maxScore}</span>
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive transition-colors duration-200"
+            onClick={handleRemoveClick}
+          >
+            <X className="h-3 w-3" />
+          </Button>
+        </div>
+        <Slider
+          value={[entry.score]}
+          onValueChange={handleScoreChange}
+          max={entry.maxScore}
+          step={1}
+          className="w-full"
+        />
+        <Input
+          value={entry.comment ?? ""}
+          onChange={handleCommentChange}
+          placeholder="Notes for this category..."
+          className="text-xs"
+        />
+      </div>
+    </div>
+  );
+}
+
 const DEFAULT_RUBRIC_CATEGORIES = [
   "Technical Skills",
   "Communication",
@@ -153,28 +250,15 @@ export function InterviewFeedbackForm({ interview, open, onOpenChange }: Intervi
           </div>
           <div className="rounded-2xl border border-border bg-card shadow-sm p-4">
             <div className="flex items-center gap-1.5" onMouseLeave={handleStarLeave}>
-              {Array.from({ length: 5 }).map((_, i) => {
-                const starValue = i + 1;
-                return (
-                  <button
-                    key={starValue}
-                    type="button"
-                    onClick={() => handleStarClick(starValue)}
-                    onMouseEnter={() => handleStarHover(starValue)}
-                    className="transition-transform duration-200 hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 rounded"
-                    aria-label={`Rate ${starValue} out of 5`}
-                  >
-                    <Star
-                      className={cn(
-                        "h-7 w-7 transition-colors duration-200",
-                        starValue <= displayRating
-                          ? "text-amber-400 fill-amber-400"
-                          : "text-muted-foreground/30"
-                      )}
-                    />
-                  </button>
-                );
-              })}
+              {Array.from({ length: 5 }).map((_, i) => (
+                <StarButton
+                  key={i + 1}
+                  starValue={i + 1}
+                  displayRating={displayRating}
+                  onStarClick={handleStarClick}
+                  onStarHover={handleStarHover}
+                />
+              ))}
               {overallRating > 0 && (
                 <span className="ml-2 text-sm font-semibold text-amber-600 dark:text-amber-400 tabular-nums">
                   {overallRating}/5
@@ -245,48 +329,15 @@ export function InterviewFeedbackForm({ interview, open, onOpenChange }: Intervi
           </div>
           <div className="space-y-2">
             {rubric.map((entry, index) => (
-              <div
+              <RubricEntryRow
                 key={index}
-                className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 border-l-blue-400"
-              >
-                <div className="p-3 space-y-2.5">
-                  <div className="flex items-center gap-2">
-                    <Input
-                      value={entry.category}
-                      onChange={(e) => handleCategoryNameChange(index, e.target.value)}
-                      placeholder="Category name"
-                      className="text-xs font-medium flex-1"
-                    />
-                    <div className="flex items-center gap-1 shrink-0">
-                      <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
-                      <span className="text-sm font-bold tabular-nums text-foreground w-5 text-center">{entry.score}</span>
-                      <span className="text-[10px] text-muted-foreground">/{entry.maxScore}</span>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive transition-colors duration-200"
-                      onClick={() => handleRemoveCategory(index)}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
-                  <Slider
-                    value={[entry.score]}
-                    onValueChange={(v) => handleRubricScoreChange(index, v)}
-                    max={entry.maxScore}
-                    step={1}
-                    className="w-full"
-                  />
-                  <Input
-                    value={entry.comment ?? ""}
-                    onChange={(e) => handleRubricCommentChange(index, e.target.value)}
-                    placeholder="Notes for this category..."
-                    className="text-xs"
-                  />
-                </div>
-              </div>
+                entry={entry}
+                index={index}
+                onCategoryNameChange={handleCategoryNameChange}
+                onScoreChange={handleRubricScoreChange}
+                onCommentChange={handleRubricCommentChange}
+                onRemove={handleRemoveCategory}
+              />
             ))}
           </div>
         </div>

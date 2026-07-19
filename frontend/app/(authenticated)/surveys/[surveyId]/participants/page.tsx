@@ -9,9 +9,11 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { RequireModule } from "@/components/auth/require-module";
 import { getApiError } from "@/lib/api-client";
+import { cn } from "@/lib/utils";
 import {
   useParticipants,
   useInviteParticipants,
@@ -84,7 +86,7 @@ export default function SurveyParticipantsPage() {
             </AnimatedIconButton>
           }
           filters={
-            <div className="flex items-center gap-2">
+            <div className={FILTER_TOOLBAR_ROW}>
               {selected.size > 0 && (
                 <>
                   <AnimatedIconButton icon={SendIcon} iconSize={14} iconClassName="mr-1.5" variant="outline" size="sm" onClick={handleInvite} disabled={invite.isPending}>
@@ -96,7 +98,7 @@ export default function SurveyParticipantsPage() {
                 </>
               )}
               <Select value={status} onValueChange={(v) => setStatus(v as ParticipantStatus | "all")}>
-                <SelectTrigger className="w-40"><SelectValue placeholder="Status" /></SelectTrigger>
+                <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-40")}><SelectValue placeholder="Status" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All statuses</SelectItem>
                   <SelectItem value="invited">Invited</SelectItem>

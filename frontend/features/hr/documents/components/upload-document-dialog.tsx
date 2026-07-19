@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { Upload, FileText, FileSpreadsheet, FileImage, X, File } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { Form } from "@/components/ui/form";
 import { toast } from "sonner";
@@ -28,18 +29,18 @@ interface UploadDocumentDialogProps {
 
 function getFileTypeConfig(file: File): { icon: React.ComponentType<{ className?: string }>; bg: string; text: string; badge: string } {
   if (file.type === "application/pdf") {
-    return { icon: FileText, bg: "bg-rose-100 dark:bg-rose-950/40", text: "text-rose-600 dark:text-rose-400", badge: "PDF" };
+    return { icon: FileText, bg: "bg-rose-100 dark:bg-rose-500/10", text: "text-rose-600 dark:text-rose-300", badge: "PDF" };
   }
   if (file.type.includes("word") || file.name.endsWith(".doc") || file.name.endsWith(".docx")) {
-    return { icon: FileText, bg: "bg-blue-100 dark:bg-blue-950/40", text: "text-blue-600 dark:text-blue-400", badge: "DOC" };
+    return { icon: FileText, bg: "bg-blue-100 dark:bg-blue-500/10", text: "text-blue-600 dark:text-blue-300", badge: "DOC" };
   }
   if (file.type.includes("excel") || file.type.includes("spreadsheet") || file.name.endsWith(".xls") || file.name.endsWith(".xlsx") || file.name.endsWith(".csv")) {
-    return { icon: FileSpreadsheet, bg: "bg-emerald-100 dark:bg-emerald-950/40", text: "text-emerald-600 dark:text-emerald-400", badge: "XLS" };
+    return { icon: FileSpreadsheet, bg: "bg-emerald-100 dark:bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-300", badge: "XLS" };
   }
   if (file.type.startsWith("image/")) {
-    return { icon: FileImage, bg: "bg-amber-100 dark:bg-amber-950/40", text: "text-amber-600 dark:text-amber-400", badge: "IMG" };
+    return { icon: FileImage, bg: "bg-amber-100 dark:bg-amber-500/10", text: "text-amber-600 dark:text-amber-300", badge: "IMG" };
   }
-  return { icon: File, bg: "bg-slate-100 dark:bg-slate-800/40", text: "text-slate-500 dark:text-slate-400", badge: "FILE" };
+  return { icon: File, bg: "bg-muted", text: "text-muted-foreground", badge: "FILE" };
 }
 
 function formatBytes(bytes: number): string {
@@ -337,7 +338,8 @@ export function UploadDocumentDialog({
                   Clear all
                 </Button>
               </div>
-              <div className="max-h-[150px] overflow-y-auto space-y-1.5 pr-0.5">
+              <ScrollArea className="max-h-[150px]">
+                <div className="space-y-1.5 pr-0.5">
                 {files.map((f, i) => {
                   const config = getFileTypeConfig(f);
                   const IconComp = config.icon;
@@ -377,7 +379,8 @@ export function UploadDocumentDialog({
                     </div>
                   );
                 })}
-              </div>
+                </div>
+              </ScrollArea>
             </div>
           )}
 

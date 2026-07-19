@@ -92,13 +92,12 @@ export default function SecurityPage() {
         title="Security Policy"
         subtitle="Configure authentication and access controls for your organisation."
       >
-        <div className="pt-2">
-          <ErrorState
-            title="Failed to load security settings"
-            description="Could not retrieve your organisation's security policy. Please try again."
-            onRetry={refetch}
-          />
-        </div>
+        <ErrorState
+          title="Failed to load security settings"
+          description="Could not retrieve your organisation's security policy. Please try again."
+          onRetry={refetch}
+          className="flex-1"
+        />
       </PageWrapper>
     );
   }

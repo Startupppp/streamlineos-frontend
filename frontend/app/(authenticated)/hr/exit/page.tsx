@@ -350,7 +350,7 @@ export default function ExitManagementPage() {
   if (isLoading) {
     return (
       <PageWrapper title="Exit Management" subtitle="Resignations and offboarding" variant="display">
-        <div className="space-y-3">
+        <div className="flex flex-1 min-h-0 flex-col gap-3">
           {Array.from({ length: 10 }).map((_, i) => (
             <Skeleton key={i} className="h-24 rounded-2xl" />
           ))}
@@ -383,7 +383,7 @@ export default function ExitManagementPage() {
             Submit Resignation
           </Button>
         ) : hasActiveResignation ? (
-          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800">
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800">
             Resignation pending
           </span>
         ) : null
@@ -397,7 +397,7 @@ export default function ExitManagementPage() {
           compact
         />
       ) : (
-        <div className="space-y-2">
+        <div className="flex flex-1 min-h-0 flex-col gap-2">
           {resignations.map((r: Resignation) => (
             <ResignationCard
               key={r.id}
@@ -526,13 +526,13 @@ export default function ExitManagementPage() {
             <span className="text-muted-foreground font-normal">(optional)</span>
           </label>
           {resignationLetterUrl ? (
-            <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 dark:bg-emerald-950/20 dark:border-emerald-800 px-3 py-2 text-xs text-emerald-700 dark:text-emerald-400">
+            <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 dark:bg-emerald-500/10 dark:border-emerald-800 px-3 py-2 text-xs text-emerald-700 dark:text-emerald-300">
               <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
               <span className="flex-1 truncate">Letter uploaded successfully</span>
               <button
                 type="button"
                 onClick={handleRemoveLetterUrl}
-                className="text-emerald-600 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300 transition-colors duration-200"
+                className="text-emerald-600 hover:text-emerald-800 dark:text-emerald-300 dark:hover:text-emerald-300 transition-colors duration-200"
                 aria-label="Remove uploaded letter"
               >
                 ×

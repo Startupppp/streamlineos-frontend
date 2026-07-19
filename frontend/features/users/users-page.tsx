@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -415,12 +416,12 @@ export function UsersPage() {
           </>
         }
         filters={
-          <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-            <div className="min-w-0 flex-1 min-w-[160px] max-w-xs">
+          <div className={FILTER_TOOLBAR_ROW}>
+            <div className="min-w-[160px] max-w-xs flex-1">
               <SearchInput placeholder="Search users..." value={search} onValueChange={handleSearchChange} />
             </div>
             <Select value={status} onValueChange={handleStatusChange}>
-              <SelectTrigger className="w-32 border-input bg-card text-foreground [&_svg:not([class*='text-'])]:text-muted-foreground">
+              <SelectTrigger className={`w-32 ${FILTER_SELECT_TRIGGER}`}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -431,7 +432,7 @@ export function UsersPage() {
               </SelectContent>
             </Select>
             <Select value={role} onValueChange={handleRoleChange}>
-              <SelectTrigger className="w-32 border-input bg-card text-foreground [&_svg:not([class*='text-'])]:text-muted-foreground">
+              <SelectTrigger className={`w-32 ${FILTER_SELECT_TRIGGER}`}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -444,7 +445,7 @@ export function UsersPage() {
               </SelectContent>
             </Select>
             <Select value={departmentId} onValueChange={handleDeptChange}>
-              <SelectTrigger className="w-36 border-input bg-card text-foreground [&_svg:not([class*='text-'])]:text-muted-foreground">
+              <SelectTrigger className={`w-36 ${FILTER_SELECT_TRIGGER}`}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -457,7 +458,7 @@ export function UsersPage() {
               </SelectContent>
             </Select>
             <Select value={branchId} onValueChange={handleBranchChange}>
-              <SelectTrigger className="w-32 border-input bg-card text-foreground [&_svg:not([class*='text-'])]:text-muted-foreground">
+              <SelectTrigger className={`w-32 ${FILTER_SELECT_TRIGGER}`}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -472,7 +473,7 @@ export function UsersPage() {
           </div>
         }
       >
-        <div className="flex flex-1 min-h-0 flex-col space-y-3">
+        <div className="flex flex-1 min-h-0 flex-col gap-3">
           <UserStatsCards />
 
           {someSelected && (

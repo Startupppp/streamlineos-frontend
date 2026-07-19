@@ -40,6 +40,7 @@ import {
 } from "@/features/inventory/lib";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 
@@ -108,7 +109,11 @@ export function AdjustmentDetailSheet({ adjustmentId, open, onOpenChange }: Adju
   const isFinal = status === "POSTED" || status === "CANCELLED";
   const isPending = approveMutation.isPending || postMutation.isPending || cancelMutation.isPending;
 
-  function handleApprove() {
+  function handleClose(): void {
+    onOpenChange(false);
+  }
+
+  function handleApprove(): void {
     if (!detail) return;
     approveMutation.mutate(detail.id, {
       onSuccess: () => toast.success("Adjustment approved"),
@@ -116,7 +121,7 @@ export function AdjustmentDetailSheet({ adjustmentId, open, onOpenChange }: Adju
     });
   }
 
-  function handlePost() {
+  function handlePost(): void {
     if (!detail) return;
     setConfirmPost(false);
     postMutation.mutate(detail.id, {
@@ -125,7 +130,7 @@ export function AdjustmentDetailSheet({ adjustmentId, open, onOpenChange }: Adju
     });
   }
 
-  function handleCancel() {
+  function handleCancel(): void {
     if (!detail) return;
     setConfirmCancel(false);
     cancelMutation.mutate(detail.id, {
@@ -206,14 +211,15 @@ export function AdjustmentDetailSheet({ adjustmentId, open, onOpenChange }: Adju
           <div className="flex items-center gap-2 w-full justify-between">
             <div className="flex items-center gap-2">
               {canAdjust && status === "PENDING_APPROVAL" && (
-                <Button
+                <LoadingButton
                   size="sm"
                   className="text-xs"
                   onClick={handleApprove}
-                  disabled={isPending}
+                  isPending={approveMutation.isPending}
+                  loadingText="Approving…"
                 >
-                  {approveMutation.isPending ? "Approving…" : "Approve"}
-                </Button>
+                  Approve
+                </LoadingButton>
               )}
               {canAdjust && status === "APPROVED" && (
                 <AlertDialog open={confirmPost} onOpenChange={setConfirmPost}>
@@ -231,8 +237,10 @@ export function AdjustmentDetailSheet({ adjustmentId, open, onOpenChange }: Adju
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Back</AlertDialogCancel>
-                      <AlertDialogAction onClick={handlePost}>
-                        {postMutation.isPending ? "Posting…" : "Post Adjustment"}
+                      <AlertDialogAction asChild>
+                        <LoadingButton isPending={postMutation.isPending} loadingText="Posting…" onClick={handlePost}>
+                          Post Adjustment
+                        </LoadingButton>
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
@@ -274,7 +282,7 @@ export function AdjustmentDetailSheet({ adjustmentId, open, onOpenChange }: Adju
               variant="outline"
               size="sm"
               className="text-xs"
-              onClick={() => onOpenChange(false)}
+              onClick={handleClose}
             >
               Close
             </Button>

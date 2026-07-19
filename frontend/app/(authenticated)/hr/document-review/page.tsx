@@ -9,7 +9,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SearchInput } from "@/components/ui/search-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 import { ReviewTable, type EmployeeDocSummary } from "@/features/hr/document-review/review-table";
 import { ReviewSheet } from "@/features/hr/document-review/review-sheet";
@@ -89,10 +89,8 @@ export default function DocumentReviewPage() {
       title="Document Review"
       subtitle="Review employee onboarding documents"
       filters={
-        <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-          <div className="min-w-0 w-[200px]">
-          <SearchInput placeholder="Search employees..." value={searchQuery} onValueChange={handleSearchChange} />
-        </div>
+        <div className={FILTER_TOOLBAR_ROW}>
+          <SearchInput placeholder="Search employees..." value={searchQuery} onValueChange={handleSearchChange} className="w-[200px]" />
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className={cn("w-[140px]", FILTER_SELECT_TRIGGER)}>
               <SelectValue />

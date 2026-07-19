@@ -15,6 +15,7 @@ import { useHrDepartments, useCreateDepartment } from "@/hooks/api/hr";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 interface DepartmentComboboxProps {
   value?: number | null;
@@ -154,7 +155,7 @@ export function DepartmentCombobox({
           toast.success(`Department "${name}" added`);
         },
         onError: (err) => {
-          toast.error(err.message || "Failed to add department");
+          toast.error(getErrorMessage(err));
         },
       },
     );

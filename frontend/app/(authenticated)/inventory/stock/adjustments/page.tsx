@@ -9,6 +9,7 @@ import { EmptyActivityIllustration, EmptySearchIllustration } from "@/components
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { fadeUp, staggerContainer } from "@/lib/motion-variants";
 import {
   useAdjustments,
@@ -172,25 +173,21 @@ export default function AdjustmentsPage() {
     router.replace(`?${params.toString()}`);
   }
 
-  const subtitle = adjData?.total != null
-    ? `${adjData.total} adjustment${adjData.total !== 1 ? "s" : ""}`
-    : undefined;
-
   const hasActiveFilters = searchQ || reasonFilter !== "all" || statusFilter !== "all";
 
   return (
     <PageWrapper
       title="Stock Adjustments"
-      subtitle={subtitle}
+      subtitle="Create and review inventory quantity corrections."
       actions={
         <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1.5" size="sm" className="text-xs" onClick={handleOpenSheet}>
           New Adjustment
         </AnimatedIconButton>
       }
       filters={
-        <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
+        <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
           <Select value={reasonFilter} onValueChange={handleReasonChange}>
-            <SelectTrigger className="w-[160px] text-xs">
+            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[160px] text-xs")}>
               <SelectValue placeholder="All reasons" />
             </SelectTrigger>
             <SelectContent>
@@ -201,7 +198,7 @@ export default function AdjustmentsPage() {
             </SelectContent>
           </Select>
           <Select value={statusFilter} onValueChange={handleStatusChange}>
-            <SelectTrigger className="w-[160px] text-xs">
+            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[160px] text-xs")}>
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>
@@ -214,6 +211,7 @@ export default function AdjustmentsPage() {
         </div>
       }
     >
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
       {isError ? (
         <ErrorState
           title="Failed to load adjustments"
@@ -265,6 +263,7 @@ export default function AdjustmentsPage() {
           </motion.div>
         </motion.div>
       )}
+      </div>
 
       <CreateAdjustmentSheet open={sheetOpen} onOpenChange={setSheetOpen} />
 

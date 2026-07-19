@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import {
   AlertDialog,
@@ -223,7 +224,7 @@ export function CountDetailShared({
       <PageWrapper title={entityNoun} backHref={backHref}>
         <ErrorState
           title={`Failed to load ${entityNoun.toLowerCase()}`}
-          description={error.message}
+          description={getErrorMessage(error)}
           onRetry={onRetry}
           className="min-h-[40vh]"
         />

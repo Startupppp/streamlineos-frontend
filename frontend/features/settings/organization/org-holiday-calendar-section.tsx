@@ -74,12 +74,15 @@ interface OrgHolidayCalendarSectionProps {
   canEdit: boolean;
 }
 
-function DeleteHolidayButton({ onClick, disabled }: { onClick: () => void; disabled: boolean }) {
+function DeleteHolidayButton({ holidayId, onDelete, disabled }: { holidayId: string; onDelete: (id: string) => void; disabled: boolean }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
+  function handleClick() {
+    onDelete(holidayId);
+  }
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={handleClick}
       disabled={disabled}
       className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"
       {...hoverHandlers}
@@ -109,6 +112,10 @@ export function OrgHolidayCalendarSection({ canEdit }: OrgHolidayCalendarSection
     });
   }, [createMutation, form]);
 
+  const handleOpenAdd = useCallback(() => setShowAdd(true), []);
+  const handleCancelAdd = useCallback(() => { setShowAdd(false); form.reset(); }, [form]);
+  const handleDelete = useCallback((id: string) => { deleteMutation.mutate(id); }, [deleteMutation]);
+
   return (
     <Card className="rounded-lg border border-border">
       <CardHeader className="pb-2 flex flex-row items-start justify-between">
@@ -120,7 +127,7 @@ export function OrgHolidayCalendarSection({ canEdit }: OrgHolidayCalendarSection
           <CardDescription>Public holidays and non-working days for your organization.</CardDescription>
         </div>
         {canEdit && !showAdd && (
-          <AnimatedIconButton icon={PlusIcon} iconSize={12} iconClassName="mr-1.5" variant="outline" size="sm" onClick={() => setShowAdd(true)} className="h-8 text-xs">
+          <AnimatedIconButton icon={PlusIcon} iconSize={12} iconClassName="mr-1.5" variant="outline" size="sm" onClick={handleOpenAdd} className="h-8 text-xs">
             Add
           </AnimatedIconButton>
         )}
@@ -131,7 +138,7 @@ export function OrgHolidayCalendarSection({ canEdit }: OrgHolidayCalendarSection
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-sm font-medium">Holiday name *</Label>
-                <Input {...form.register("name")} placeholder="Republic Day" className="h-8 text-sm" />
+                <Input {...form.register("name")} placeholder="Republic Day" />
                 {form.formState.errors.name && <p className="text-[11px] text-destructive">{form.formState.errors.name.message}</p>}
               </div>
               <div className="space-y-1">
@@ -140,7 +147,7 @@ export function OrgHolidayCalendarSection({ canEdit }: OrgHolidayCalendarSection
                   name="date"
                   control={form.control}
                   render={({ field }) => (
-                    <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+                    <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" />
                   )}
                 />
                 {form.formState.errors.date && <p className="text-[11px] text-destructive">{form.formState.errors.date.message}</p>}
@@ -154,7 +161,7 @@ export function OrgHolidayCalendarSection({ canEdit }: OrgHolidayCalendarSection
               <LoadingButton type="submit" size="sm" isPending={createMutation.isPending} className="gap-1.5 h-8" loadingText="Saving…">
                 Save
               </LoadingButton>
-              <Button type="button" variant="ghost" size="sm" className="h-8" onClick={() => { setShowAdd(false); form.reset(); }}>
+              <Button type="button" variant="ghost" size="sm" className="h-8" onClick={handleCancelAdd}>
                 Cancel
               </Button>
             </div>
@@ -179,7 +186,7 @@ export function OrgHolidayCalendarSection({ canEdit }: OrgHolidayCalendarSection
                   </p>
                 </div>
                 {canEdit && (
-                  <DeleteHolidayButton onClick={() => deleteMutation.mutate(h.id)} disabled={deleteMutation.isPending} />
+                  <DeleteHolidayButton holidayId={h.id} onDelete={handleDelete} disabled={deleteMutation.isPending} />
                 )}
               </div>
             ))}

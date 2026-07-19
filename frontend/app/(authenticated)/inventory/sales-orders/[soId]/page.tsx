@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { LoadingState, ErrorState } from "@/components/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import { SO_STATUS_BADGE, SO_STATUS_LABEL, type SoStatus } from "@/features/inventory/lib";
 import { PickSheet } from "@/features/inventory/components/sales/pick-sheet";
@@ -226,7 +227,7 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
   function handleConfirm(): void {
     confirmMutation.mutate({ soId: id }, {
       onSuccess: () => toast.success("Order confirmed"),
-      onError: (err) => toast.error(err.message),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }
 
@@ -239,14 +240,14 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
           toast.success("Order reserved");
         }
       },
-      onError: (err) => toast.error(err.message),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }
 
   function handlePackConfirm(): void {
     packMutation.mutate({ soId: id }, {
       onSuccess: () => { setShowPackDialog(false); toast.success("Order packed"); },
-      onError: (err) => { toast.error(err.message); },
+      onError: (err) => { toast.error(getErrorMessage(err)); },
     });
   }
 
@@ -255,7 +256,7 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
       { soId: id, reason: cancelReason.trim() || undefined },
       {
         onSuccess: () => { setShowCancelDialog(false); toast.success("Order cancelled"); },
-        onError: (err) => { toast.error(err.message); },
+        onError: (err) => { toast.error(getErrorMessage(err)); },
       },
     );
   }
@@ -263,7 +264,7 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
   function handleInvoice(): void {
     invoiceMutation.mutate({ soId: id }, {
       onSuccess: () => toast.success("Invoice generated"),
-      onError: (err) => toast.error(err.message),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }
 
@@ -284,7 +285,7 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
   }
 
   if (query.isLoading) return <LoadingState variant="form" />;
-  if (query.error) return <ErrorState description={query.error.message} onRetry={handleRetry} />;
+  if (query.error) return <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} />;
   if (!so) return <ErrorState title="Not found" description={`Sales order #${soId} not found`} />;
 
   const status: SoStatus = so.status;
@@ -298,7 +299,7 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
       subtitle={`${so.customerName ?? "Unknown customer"} · ${formatDate(so.orderDate)}`}
       backHref="/inventory/sales-orders"
     >
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         <Card className="p-4">
           <FulfillmentStepper status={status} />
           <div className="mt-3 flex items-center justify-end gap-2 flex-wrap">

@@ -27,6 +27,7 @@ import {
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useCreateTestCase, useUpdateTestCase } from "@/hooks/api/projects/qa";
 import { useProject } from "@/hooks/api/projects/projects";
@@ -145,7 +146,7 @@ export function TestCaseSheet({
             toast.success("Test case updated");
             onOpenChange(false);
           },
-          onError: () => toast.error("Failed to update test case"),
+          onError: (e) => toast.error(getErrorMessage(e)),
         },
       );
     } else {
@@ -154,7 +155,7 @@ export function TestCaseSheet({
           toast.success("Test case created");
           onOpenChange(false);
         },
-        onError: () => toast.error("Failed to create test case"),
+        onError: (e) => toast.error(getErrorMessage(e)),
       });
     }
   }
@@ -208,7 +209,7 @@ export function TestCaseSheet({
                   value={form.watch("suiteId")}
                   onValueChange={(v) => form.setValue("suiteId", v)}
                 >
-                  <SelectTrigger className="text-[11px]">
+                  <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -227,7 +228,7 @@ export function TestCaseSheet({
                   value={form.watch("priority")}
                   onValueChange={handlePriorityChange}
                 >
-                  <SelectTrigger className="text-[11px]">
+                  <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -246,7 +247,7 @@ export function TestCaseSheet({
                   value={form.watch("automationStatus")}
                   onValueChange={handleAutomationStatusChange}
                 >
-                  <SelectTrigger className="text-[11px]">
+                  <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

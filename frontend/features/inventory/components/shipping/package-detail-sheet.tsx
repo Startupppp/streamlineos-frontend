@@ -7,6 +7,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { cn } from "@/lib/utils";
 import { AppSheet, ErrorState } from "@/components/shared";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,6 +41,8 @@ import {
   useClosePackage,
   useReopenPackage,
 } from "@/hooks/api/inventory/shipping";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-client";
 
 interface EditableLine {
   variantId: string;
@@ -191,6 +194,10 @@ export function PackageDetailSheet({ open, onOpenChange, packageId }: PackageDet
   const [reopenConfirmOpen, setReopenConfirmOpen] = useState<boolean>(false);
   const [hydratedPackageId, setHydratedPackageId] = useState<number | null>(null);
 
+  function handleRefetchPackage(): void {
+    void pkgQuery.refetch();
+  }
+
   const pkg = pkgQuery.data;
 
   if (pkg && hydratedPackageId !== pkg.id) {
@@ -226,7 +233,7 @@ export function PackageDetailSheet({ open, onOpenChange, packageId }: PackageDet
       { packageId, lines },
       {
         onSuccess: () => toast.success("Lines updated"),
-        onError: (error) => toast.error(error.message),
+        onError: (error) => toast.error(getErrorMessage(error)),
       },
     );
   }
@@ -247,10 +254,10 @@ export function PackageDetailSheet({ open, onOpenChange, packageId }: PackageDet
         setCloseConfirmOpen(false);
       },
       onError: (error) => {
-        if (error.message.includes("PACKAGE_CONTENT_MISMATCH")) {
+        if (isApiError(error) && error.status === 422) {
           toast.error("Package content exceeds picked quantity");
         } else {
-          toast.error(error.message);
+          toast.error(getErrorMessage(error));
         }
         setCloseConfirmOpen(false);
       },
@@ -273,7 +280,7 @@ export function PackageDetailSheet({ open, onOpenChange, packageId }: PackageDet
         setReopenConfirmOpen(false);
       },
       onError: (error) => {
-        toast.error(error.message);
+        toast.error(getErrorMessage(error));
         setReopenConfirmOpen(false);
       },
     });
@@ -296,8 +303,8 @@ export function PackageDetailSheet({ open, onOpenChange, packageId }: PackageDet
         ) : pkgQuery.error || !pkg ? (
           <ErrorState
             title="Failed to load package"
-            description={pkgQuery.error?.message ?? "Package not found"}
-            onRetry={() => void pkgQuery.refetch()}
+            description={pkgQuery.error ? getErrorMessage(pkgQuery.error) : "Package not found"}
+            onRetry={handleRefetchPackage}
           />
         ) : (
           <div className="space-y-5">
@@ -352,16 +359,17 @@ export function PackageDetailSheet({ open, onOpenChange, packageId }: PackageDet
                     />
                   ))}
                   {editableLines.length > 0 && (
-                    <Button
+                    <LoadingButton
                       type="button"
                       size="sm"
                       variant="outline"
                       className="w-full mt-2"
                       onClick={handleSaveLines}
-                      disabled={updateLinesMutation.isPending}
+                      isPending={updateLinesMutation.isPending}
+                      loadingText="Saving…"
                     >
-                      {updateLinesMutation.isPending ? "Saving…" : "Save Lines"}
-                    </Button>
+                      Save Lines
+                    </LoadingButton>
                   )}
                 </div>
               ) : (
@@ -390,25 +398,27 @@ export function PackageDetailSheet({ open, onOpenChange, packageId }: PackageDet
 
             <div className="flex gap-2 pt-2">
               {isOpen && (
-                <Button
+                <LoadingButton
                   type="button"
                   size="sm"
                   onClick={handleOpenCloseConfirm}
-                  disabled={closeMutation.isPending}
+                  isPending={closeMutation.isPending}
+                  loadingText="Closing…"
                 >
                   Close Package
-                </Button>
+                </LoadingButton>
               )}
               {isClosed && (
-                <Button
+                <LoadingButton
                   type="button"
                   size="sm"
                   variant="outline"
                   onClick={handleOpenReopenConfirm}
-                  disabled={reopenMutation.isPending}
+                  isPending={reopenMutation.isPending}
+                  loadingText="Reopening…"
                 >
                   Reopen
-                </Button>
+                </LoadingButton>
               )}
             </div>
           </div>

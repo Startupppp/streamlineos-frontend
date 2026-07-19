@@ -33,31 +33,31 @@ import { resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "@/lib/format-utils";
 
 const ACTION_COLORS: Record<string, string> = {
-  "user.login": "bg-emerald-500/10 text-emerald-600 border-emerald-200",
+  "user.login": "bg-emerald-500/10 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
   "user.logout": "bg-muted text-muted-foreground border-border",
-  "user.password_reset": "bg-amber-500/10 text-amber-700 border-amber-200",
-  "user.deactivated": "bg-red-500/10 text-red-600 border-red-200",
-  "org.member_invited": "bg-blue-500/10 text-blue-600 border-blue-200",
-  "org.member_removed": "bg-red-500/10 text-red-600 border-red-200",
-  "org.member_role_changed": "bg-purple-500/10 text-purple-600 border-purple-200",
-  "org.archived": "bg-red-500/10 text-red-600 border-red-200",
-  "org.restored": "bg-emerald-500/10 text-emerald-600 border-emerald-200",
-  "org.ownership_transferred": "bg-purple-500/10 text-purple-600 border-purple-200",
-  "org.businessUnit": "bg-blue-500/10 text-blue-600 border-blue-200",
-  "org.branch": "bg-indigo-500/10 text-indigo-600 border-indigo-200",
-  "org.department": "bg-violet-500/10 text-violet-600 border-violet-200",
-  "org.team": "bg-fuchsia-500/10 text-fuchsia-600 border-fuchsia-200",
-  "org.holiday": "bg-orange-500/10 text-orange-600 border-orange-200",
-  "org.domain": "bg-cyan-500/10 text-cyan-600 border-cyan-200",
-  "org.setup": "bg-teal-500/10 text-teal-600 border-teal-200",
-  "expense.approved": "bg-emerald-500/10 text-emerald-600 border-emerald-200",
-  "expense.rejected": "bg-red-500/10 text-red-600 border-red-200",
-  "hr.leave_approved": "bg-emerald-500/10 text-emerald-600 border-emerald-200",
-  "hr.leave_rejected": "bg-red-500/10 text-red-600 border-red-200",
-  "hr.payroll_generated": "bg-blue-500/10 text-blue-600 border-blue-200",
-  "role.changed": "bg-purple-500/10 text-purple-600 border-purple-200",
-  "settings.updated": "bg-amber-500/10 text-amber-700 border-amber-200",
-  "file.upload": "bg-sky-500/10 text-sky-600 border-sky-200",
+  "user.password_reset": "bg-amber-500/10 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  "user.deactivated": "bg-red-500/10 text-red-600 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  "org.member_invited": "bg-blue-500/10 text-blue-600 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  "org.member_removed": "bg-red-500/10 text-red-600 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  "org.member_role_changed": "bg-blue-500/10 text-blue-600 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  "org.archived": "bg-red-500/10 text-red-600 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  "org.restored": "bg-emerald-500/10 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  "org.ownership_transferred": "bg-blue-500/10 text-blue-600 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  "org.businessUnit": "bg-blue-500/10 text-blue-600 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  "org.branch": "bg-blue-500/10 text-blue-600 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  "org.department": "bg-blue-500/10 text-blue-600 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  "org.team": "bg-fuchsia-500/10 text-fuchsia-600 border-fuchsia-200 dark:bg-fuchsia-500/10 dark:text-fuchsia-300 dark:border-fuchsia-500/30",
+  "org.holiday": "bg-orange-500/10 text-orange-600 border-orange-200 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/30",
+  "org.domain": "bg-cyan-500/10 text-cyan-600 border-cyan-200 dark:bg-cyan-500/10 dark:text-cyan-300 dark:border-cyan-500/30",
+  "org.setup": "bg-teal-500/10 text-teal-600 border-teal-200 dark:bg-teal-500/10 dark:text-teal-300 dark:border-teal-500/30",
+  "expense.approved": "bg-emerald-500/10 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  "expense.rejected": "bg-red-500/10 text-red-600 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  "hr.leave_approved": "bg-emerald-500/10 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  "hr.leave_rejected": "bg-red-500/10 text-red-600 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  "hr.payroll_generated": "bg-blue-500/10 text-blue-600 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  "role.changed": "bg-blue-500/10 text-blue-600 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  "settings.updated": "bg-amber-500/10 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  "file.upload": "bg-sky-500/10 text-sky-600 border-sky-200 dark:bg-sky-500/10 dark:text-sky-300 dark:border-sky-500/30",
 };
 
 const ACTION_LABELS: Record<string, string> = {
@@ -155,10 +155,7 @@ function LogDetailSheet({ log, onClose }: { log: AuditLogRow; onClose: () => voi
           </DetailField>
           {log.targetType && (
             <DetailField label="Target">
-              <p className="text-sm">
-                <span className="font-medium capitalize">{log.targetType}</span>
-                {log.targetId && <span className="text-muted-foreground"> #{log.targetId}</span>}
-              </p>
+              <p className="text-sm font-medium capitalize">{log.targetType}</p>
             </DetailField>
           )}
           <DetailField label="Timestamp">
@@ -224,9 +221,6 @@ const AUDIT_LOG_COLUMNS: DataTableColumn<AuditLogRow>[] = [
     cell: (log) => (
       <span className="text-[12px] text-muted-foreground capitalize whitespace-nowrap">
         {log.targetType ?? "—"}
-        {log.targetId && (
-          <span className="text-[11px] opacity-60"> #{log.targetId}</span>
-        )}
       </span>
     ),
     className: "w-[110px]",

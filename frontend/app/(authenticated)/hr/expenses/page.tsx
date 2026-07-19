@@ -278,7 +278,7 @@ export default function ExpensesPage() {
         actions={
           <div className="flex items-center gap-2 flex-wrap">
             {pendingCount > 0 && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800">
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800">
                 {pendingCount} pending
               </span>
             )}
@@ -320,7 +320,7 @@ export default function ExpensesPage() {
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
-          className="space-y-4"
+          className="flex flex-1 min-h-0 flex-col gap-4"
         >
           <motion.div variants={fadeUp}>
             <AdminExpenseStats stats={stats} pendingCount={pendingCount} />
@@ -394,7 +394,7 @@ export default function ExpensesPage() {
         variants={staggerContainer}
         initial="hidden"
         animate="visible"
-        className="space-y-6"
+        className="flex flex-1 min-h-0 flex-col gap-6"
       >
         <motion.div variants={fadeUp}>
           <MemberExpenseStats stats={stats} />

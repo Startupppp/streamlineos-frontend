@@ -11,11 +11,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyReportIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { useExpiryReport, type ExpiryReportRow } from "@/hooks/api/inventory/reports";
 import { useWarehouses } from "@/hooks/api/inventory/warehouses";
 import { LOT_STATUS_BADGE, LOT_STATUS_LABEL, type LotStatus, downloadCsv } from "@/features/inventory/lib";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { cn } from "@/lib/utils";
 
 const LIMIT = 50;
 
@@ -219,7 +222,7 @@ function ExpiryReportContent() {
       filters={
         <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
           <Select value={withinDaysParam} onValueChange={handleWithinDaysChange}>
-            <SelectTrigger className="w-[160px] min-w-0 text-xs shrink-0">
+            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[160px] min-w-0 text-xs shrink-0")}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -232,7 +235,7 @@ function ExpiryReportContent() {
           </Select>
 
           <Select value={statusParam || "all"} onValueChange={handleStatusChange}>
-            <SelectTrigger className="w-[160px] min-w-0 text-xs shrink-0">
+            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[160px] min-w-0 text-xs shrink-0")}>
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>
@@ -246,7 +249,7 @@ function ExpiryReportContent() {
           </Select>
 
           <Select value={warehouseParam || "all"} onValueChange={handleWarehouseChange}>
-            <SelectTrigger className="w-[180px] min-w-0 text-xs shrink-0">
+            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[180px] min-w-0 text-xs shrink-0")}>
               <SelectValue placeholder="All warehouses" />
             </SelectTrigger>
             <SelectContent>
@@ -275,44 +278,46 @@ function ExpiryReportContent() {
         </div>
       }
     >
-      {query.isLoading && <DataTableSkeleton rows={12} columns={7} />}
-      {query.error && (
-        <ErrorState description={query.error.message} onRetry={handleRetry} className="flex-1" />
-      )}
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
+        {query.isLoading && <DataTableSkeleton rows={12} columns={7} />}
+        {query.error && (
+          <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} />
+        )}
 
-      {isEmpty && (
-        <InventoryEmptyState
-          illustration={<EmptyReportIllustration />}
-          title="No expiring lots"
-          description="Lots with tracked expiry dates will appear here as they approach their expiry window."
-        />
-      )}
+        {isEmpty && (
+          <InventoryEmptyState
+            illustration={<EmptyReportIllustration />}
+            title="No expiring lots"
+            description="Lots with tracked expiry dates will appear here as they approach their expiry window."
+          />
+        )}
 
-      {hasRows && (
-        <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
-          <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
-            <DataTable
-              data={items}
-              columns={columns}
-              getRowKey={handleGetRowKey}
-              pagination={{
-                mode: "server",
-                page: currentPage,
-                pageSize: LIMIT,
-                total,
-                onPageChange: handlePageChange,
-              }}
-              emptyState={
-                <InventoryEmptyState
-                  illustration={<EmptySearchIllustration />}
-                  title="No results"
-                  description="No lots match the current filters."
-                />
-              }
-            />
-          </CardContent>
-        </Card>
-      )}
+        {hasRows && (
+          <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
+            <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
+              <DataTable
+                data={items}
+                columns={columns}
+                getRowKey={handleGetRowKey}
+                pagination={{
+                  mode: "server",
+                  page: currentPage,
+                  pageSize: LIMIT,
+                  total,
+                  onPageChange: handlePageChange,
+                }}
+                emptyState={
+                  <InventoryEmptyState
+                    illustration={<EmptySearchIllustration />}
+                    title="No results"
+                    description="No lots match the current filters."
+                  />
+                }
+              />
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </PageWrapper>
   );
 }

@@ -303,7 +303,7 @@ export function AutomationUpsertSheet({ rule, onClose }: Props) {
                     name={`conditions.${idx}.operator`}
                     render={({ field }) => (
                       <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger className="w-28 text-xs">
+                        <SelectTrigger className="w-28">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -347,7 +347,7 @@ export function AutomationUpsertSheet({ rule, onClose }: Props) {
                         name={`actions.${idx}.type`}
                         render={({ field }) => (
                           <Select value={field.value} onValueChange={field.onChange}>
-                            <SelectTrigger className="flex-1 text-xs">
+                            <SelectTrigger className="flex-1">
                               <SelectValue placeholder="Action type" />
                             </SelectTrigger>
                             <SelectContent>

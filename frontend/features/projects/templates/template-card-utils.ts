@@ -38,7 +38,7 @@ export const ticketTypeColors: Record<string, string> = {
   TASK: "bg-blue-500/10 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
   STORY: "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
   BUG: "bg-red-500/10 text-red-700 dark:bg-red-500/10 dark:text-red-300",
-  EPIC: "bg-violet-500/10 text-violet-700 dark:bg-violet-500/10 dark:text-violet-300",
+  EPIC: "bg-blue-500/10 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
 };
 
 const PREVIEW_LIMIT = 4;

@@ -39,6 +39,38 @@ type IndexedRow = { [key: string]: string | number } & { _idx: number };
 
 type Step = "upload" | "map" | "preview" | "done";
 
+interface FieldMappingRowProps {
+  field: { key: string; label: string; required: boolean };
+  value: string;
+  headers: string[];
+  onChange: (fieldKey: string, value: string) => void;
+}
+
+function FieldMappingRow({ field, value, headers, onChange }: FieldMappingRowProps) {
+  function handleChange(v: string) {
+    onChange(field.key, v === "__none__" ? "" : v);
+  }
+  return (
+    <div className="grid grid-cols-2 gap-4 items-center">
+      <div className="flex items-center gap-1.5 text-sm">
+        <span>{field.label}</span>
+        {field.required && <Badge variant="outline" className="text-[10px] h-4 px-1">required</Badge>}
+      </div>
+      <Select value={value} onValueChange={handleChange}>
+        <SelectTrigger className="text-xs">
+          <SelectValue placeholder="— skip —" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="__none__" className="text-xs">— skip —</SelectItem>
+          {headers.map((h) => (
+            <SelectItem key={h} value={h} className="text-xs">{h}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
 export default function BulkImportPage() {
   const router = useRouter();
   const qc = useQueryClient();
@@ -204,6 +236,10 @@ export default function BulkImportPage() {
     [previewRows],
   );
 
+  const handleFieldMapChange = useCallback((fieldKey: string, value: string) => {
+    setFieldMap((prev) => ({ ...prev, [fieldKey]: value }));
+  }, []);
+
   function handleGoToUpload() { setStep("upload"); }
   function handleGoToPreview() { setStep("preview"); }
   function handleGoToMap() { setStep("map"); }
@@ -222,8 +258,9 @@ export default function BulkImportPage() {
       title="Bulk Import Candidates"
       subtitle="Upload a CSV or Excel file to import candidates"
       backHref="/hr/recruitment/candidates"
- variant="display">
-      <div className="space-y-6">
+      variant="display"
+    >
+      <div className="flex flex-1 min-h-0 flex-col gap-6">
       <div className="flex gap-2 text-xs">
         {(["upload", "map", "preview", "done"] as Step[]).map((s, i) => (
           <div key={s} className="flex items-center gap-2">
@@ -275,26 +312,13 @@ export default function BulkImportPage() {
           <CardContent>
             <div className="space-y-3 mb-6">
               {CANDIDATE_FIELDS.map((field) => (
-                <div key={field.key} className="grid grid-cols-2 gap-4 items-center">
-                  <div className="flex items-center gap-1.5 text-sm">
-                    <span>{field.label}</span>
-                    {field.required && <Badge variant="outline" className="text-[10px] h-4 px-1">required</Badge>}
-                  </div>
-                  <Select
-                    value={fieldMap[field.key] ?? "__none__"}
-                    onValueChange={(v) => setFieldMap((prev) => ({ ...prev, [field.key]: v === "__none__" ? "" : v }))}
-                  >
-                    <SelectTrigger className="text-xs">
-                      <SelectValue placeholder="— skip —" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__none__" className="text-xs">— skip —</SelectItem>
-                      {headers.map((h) => (
-                        <SelectItem key={h} value={h} className="text-xs">{h}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <FieldMappingRow
+                  key={field.key}
+                  field={field}
+                  value={fieldMap[field.key] ?? "__none__"}
+                  headers={headers}
+                  onChange={handleFieldMapChange}
+                />
               ))}
             </div>
             <div className="flex gap-2">

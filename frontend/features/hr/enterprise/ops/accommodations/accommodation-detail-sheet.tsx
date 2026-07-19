@@ -83,7 +83,7 @@ export function AccommodationDetailSheet({ id, open, onOpenChange }: Props) {
           {canSensitive && request.confidentialMedicalNote && (
             <div className="rounded-lg border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 p-3">
               <div className="flex items-center gap-1.5 mb-1.5">
-                <Lock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                <Lock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300" />
                 <span className="text-xs font-medium text-amber-700 dark:text-amber-300">Confidential Medical Note</span>
               </div>
               <p className="text-sm text-amber-800 dark:text-amber-300">{request.confidentialMedicalNote}</p>

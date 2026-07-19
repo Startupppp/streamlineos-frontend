@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -12,6 +12,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
@@ -82,7 +83,7 @@ export function UserInviteDialog({ open, onOpenChange }: UserInviteDialogProps) 
     },
   });
 
-  function handleOpenChange(isOpen: boolean) {
+  const handleOpenChange = useCallback((isOpen: boolean) => {
     if (!isOpen) {
       form.reset();
       setInvited(false);
@@ -90,7 +91,9 @@ export function UserInviteDialog({ open, onOpenChange }: UserInviteDialogProps) 
       setShowOptional(false);
     }
     onOpenChange(isOpen);
-  }
+  }, [form, onOpenChange]);
+
+  const handleCloseDialog = useCallback(() => handleOpenChange(false), [handleOpenChange]);
 
   function onSubmit(values: InviteFormValues) {
     inviteUser(
@@ -116,9 +119,16 @@ export function UserInviteDialog({ open, onOpenChange }: UserInviteDialogProps) 
     );
   }
 
-  function handleToggleOptional() {
+  const handleResetInvite = useCallback(() => {
+    form.reset();
+    setInvited(false);
+    setWasResent(false);
+    setShowOptional(false);
+  }, [form]);
+
+  const handleToggleOptional = useCallback(() => {
     setShowOptional((v) => !v);
-  }
+  }, []);
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -139,12 +149,7 @@ export function UserInviteDialog({ open, onOpenChange }: UserInviteDialogProps) 
             <Button
               size="sm"
               variant="outline"
-              onClick={() => {
-                form.reset();
-                setInvited(false);
-                setWasResent(false);
-                setShowOptional(false);
-              }}
+              onClick={handleResetInvite}
             >
               Invite another
             </Button>
@@ -320,14 +325,14 @@ export function UserInviteDialog({ open, onOpenChange }: UserInviteDialogProps) 
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => handleOpenChange(false)}
+                  onClick={handleCloseDialog}
                   disabled={isPending}
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isPending}>
-                  {isPending ? "Sending..." : "Send invitation"}
-                </Button>
+                <LoadingButton type="submit" isPending={isPending} loadingText="Sending…">
+                  Send invitation
+                </LoadingButton>
               </DialogFooter>
             </form>
           </Form>

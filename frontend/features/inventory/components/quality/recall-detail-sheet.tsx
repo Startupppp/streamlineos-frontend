@@ -15,6 +15,7 @@ import {
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useRecall, useUpdateRecall } from "@/hooks/api/inventory/quality";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   RECALL_STATUS_BADGE,
   RECALL_STATUS_LABEL,
@@ -74,7 +75,7 @@ export function RecallDetailSheet({ open, onOpenChange, recallId }: Props) {
           toast.success("Notes updated");
           setEditingNotes(false);
         },
-        onError: (e) => toast.error(e.message),
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }
@@ -85,7 +86,7 @@ export function RecallDetailSheet({ open, onOpenChange, recallId }: Props) {
       { recallId, status: "IN_PROGRESS" },
       {
         onSuccess: () => toast.success("Recall marked in progress"),
-        onError: (e) => toast.error(e.message),
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }
@@ -96,13 +97,17 @@ export function RecallDetailSheet({ open, onOpenChange, recallId }: Props) {
       { recallId, status: "CLOSED" },
       {
         onSuccess: () => toast.success("Recall closed"),
-        onError: (e) => toast.error(e.message),
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }
 
   function handleNotesChange(e: React.ChangeEvent<HTMLTextAreaElement>): void {
     setNotesValue(e.target.value);
+  }
+
+  function handleDiscardNotes(): void {
+    setEditingNotes(false);
   }
 
   const footer = recall && !isLoading ? (
@@ -210,7 +215,7 @@ export function RecallDetailSheet({ open, onOpenChange, recallId }: Props) {
                 />
                 <div className="flex gap-2">
                   <Button size="sm" className="h-6 text-xs px-2" onClick={handleSaveNotes} disabled={updateMut.isPending}>Save</Button>
-                  <Button size="sm" variant="ghost" className="h-6 text-xs px-2" onClick={() => setEditingNotes(false)}>Discard</Button>
+                  <Button size="sm" variant="ghost" className="h-6 text-xs px-2" onClick={handleDiscardNotes}>Discard</Button>
                 </div>
               </div>
             ) : (

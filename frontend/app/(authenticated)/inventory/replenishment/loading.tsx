@@ -9,7 +9,9 @@ export default function ReplenishmentLoading() {
       subtitle="Review suggestions and create draft purchase orders."
       actions={<Skeleton className="h-9 w-36" />}
     >
-      <DataTableSkeleton rows={10} columns={10} className="flex-1 min-h-0" />
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
+        <DataTableSkeleton rows={10} columns={10} />
+      </div>
     </PageWrapper>
   );
 }

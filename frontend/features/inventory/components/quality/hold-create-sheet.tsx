@@ -17,6 +17,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ProductVariantCombobox } from "@/components/inventory/product-variant-combobox";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateQualityHold } from "@/hooks/api/inventory/quality";
 import { useWarehouses, useLocations } from "@/hooks/api/inventory/warehouses";
 import { useLots, useSerials } from "@/hooks/api/inventory/traceability";
@@ -61,6 +63,10 @@ export function HoldCreateSheet({ open, onOpenChange }: Props) {
     },
   });
 
+  function handleClose(): void {
+    onOpenChange(false);
+  }
+
   const warehouseId = form.watch("warehouseId");
   const variantId = form.watch("variantId");
   const numericVariantId = Number(variantId);
@@ -93,17 +99,17 @@ export function HoldCreateSheet({ open, onOpenChange }: Props) {
           form.reset();
           onOpenChange(false);
         },
-        onError: (e) => toast.error(e.message),
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }
 
   const footer = (
     <>
-      <Button size="sm" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-      <Button size="sm" onClick={form.handleSubmit(handleSubmit)} disabled={createMut.isPending}>
-        {createMut.isPending ? "Creating…" : "Create Hold"}
-      </Button>
+      <Button size="sm" variant="outline" onClick={handleClose}>Cancel</Button>
+      <LoadingButton size="sm" onClick={form.handleSubmit(handleSubmit)} isPending={createMut.isPending} loadingText="Creating…">
+        Create Hold
+      </LoadingButton>
     </>
   );
 
