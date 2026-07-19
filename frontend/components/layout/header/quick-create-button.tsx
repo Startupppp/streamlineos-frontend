@@ -142,7 +142,10 @@ export function QuickCreatePanel({
   onNavigate: () => void
 }) {
   return (
-    <ScrollArea fill className="min-h-0 flex-1">
+    <ScrollArea
+      data-testid="quick-create-scrollport"
+      className="min-h-0 flex-1"
+    >
       <div className="flex flex-col gap-1 px-4 pb-6">
         {groups.map((group, groupIndex) => (
           <div key={group.id}>
@@ -346,7 +349,7 @@ export function QuickCreateButton() {
         <DrawerTrigger asChild>
           <QuickCreateTriggerButton iconRef={iconRef} hoverHandlers={hoverHandlers} />
         </DrawerTrigger>
-        <DrawerContent className="flex max-h-[min(85dvh,32rem)] flex-col gap-0 overflow-hidden rounded-t-xl border bg-card p-0 shadow-2xl">
+        <DrawerContent className="flex h-[min(85dvh,32rem)] flex-col gap-0 overflow-hidden rounded-t-xl border bg-card p-0 shadow-2xl">
           <DrawerHeader className="shrink-0 px-4 pb-2 pt-1">
             <DrawerTitle className="text-sm font-semibold text-foreground">
               Create

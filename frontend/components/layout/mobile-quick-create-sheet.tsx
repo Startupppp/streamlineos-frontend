@@ -58,7 +58,7 @@ export function MobileQuickCreateSheet() {
       <DrawerTrigger asChild>
         <MobileCreateTrigger />
       </DrawerTrigger>
-      <DrawerContent className="flex max-h-[min(85dvh,32rem)] flex-col gap-0 overflow-hidden rounded-t-xl border bg-card p-0 shadow-2xl">
+      <DrawerContent className="flex h-[min(85dvh,32rem)] flex-col gap-0 overflow-hidden rounded-t-xl border bg-card p-0 shadow-2xl">
         <DrawerHeader className="shrink-0 px-4 pb-2 pt-1">
           <DrawerTitle className="text-sm font-semibold text-foreground">
             Create

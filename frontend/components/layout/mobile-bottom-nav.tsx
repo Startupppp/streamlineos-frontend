@@ -1,15 +1,11 @@
 "use client"
 
 import { useCallback } from "react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
 import {
   MenuIcon,
   SearchIcon,
-  BellIcon,
 } from "@animateicons/react/lucide"
 import { cn } from "@/lib/utils"
-import { useUnreadNotificationCount } from "@/hooks/api/notifications"
 import { AnimatedLogo } from "@/features/landing/components/animated-logo"
 import { useAskOs } from "@/components/assistant/ask-os-context"
 import { UserAvatarMenu } from "./header/user-avatar-menu"
@@ -20,10 +16,7 @@ interface MobileBottomNavProps {
 }
 
 export function MobileBottomNav({ onOpenMobileMenu }: MobileBottomNavProps) {
-  const pathname = usePathname()
   const { open: askOsOpen, toggle: toggleAskOs } = useAskOs()
-  const { data: notifData } = useUnreadNotificationCount()
-  const unreadNotifCount = notifData?.count ?? 0
 
   const handleAskOsClick = useCallback(() => {
     toggleAskOs()
@@ -40,9 +33,6 @@ export function MobileBottomNav({ onOpenMobileMenu }: MobileBottomNavProps) {
       }),
     )
   }, [])
-
-  const isNotificationsActive =
-    pathname === "/notifications" || pathname.startsWith("/notifications/")
 
   return (
     <nav
@@ -70,6 +60,8 @@ export function MobileBottomNav({ onOpenMobileMenu }: MobileBottomNavProps) {
           <span className="text-[10px] leading-none">Search</span>
         </button>
 
+        <MobileQuickCreateSheet />
+
         <button
           type="button"
           onClick={handleAskOsClick}
@@ -85,27 +77,6 @@ export function MobileBottomNav({ onOpenMobileMenu }: MobileBottomNavProps) {
           <AnimatedLogo size={20} gradient className="rounded-full" />
           <span className="text-[10px] leading-none">Ask OS</span>
         </button>
-
-        <MobileQuickCreateSheet />
-
-        <Link
-          href="/notifications"
-          className={cn(
-            "flex flex-col items-center gap-0.5 min-w-[44px] py-1 transition-colors",
-            isNotificationsActive
-              ? "text-primary"
-              : "text-muted-foreground hover:text-foreground",
-          )}
-          aria-current={isNotificationsActive ? "page" : undefined}
-        >
-          <span className="relative">
-            <BellIcon size={20} />
-            {unreadNotifCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-primary ring-1 ring-background" />
-            )}
-          </span>
-          <span className="text-[10px] leading-none">Alerts</span>
-        </Link>
 
         <UserAvatarMenu variant="bottom-nav" />
       </div>

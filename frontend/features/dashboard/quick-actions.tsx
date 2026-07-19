@@ -63,11 +63,17 @@ export const QuickActions = memo(function QuickActions() {
   if (actions.length === 0) return null;
 
   return (
-    <div className={`grid grid-cols-2 gap-3 sm:grid-cols-3 ${actions.length >= 5 ? "md:grid-cols-5" : actions.length >= 4 ? "md:grid-cols-4" : "md:grid-cols-3"}`}>
+    <div
+      className={`flex min-w-0 gap-3 overflow-x-auto overscroll-x-contain snap-x snap-mandatory pb-1 scrollbar-hide sm:grid sm:overflow-visible sm:pb-0 ${actions.length >= 5 ? "sm:grid-cols-5" : actions.length >= 4 ? "sm:grid-cols-4" : "sm:grid-cols-3"}`}
+    >
       {actions.map((action) => {
         const ActionIcon = action.icon;
         return (
-          <motion.div key={action.label} variants={fadeUp}>
+          <motion.div
+            key={action.label}
+            variants={fadeUp}
+            className="min-w-[min(100%,11rem)] shrink-0 snap-start sm:min-w-0 sm:shrink"
+          >
             <Link href={action.href} aria-label={action.label}>
               <div className="group flex flex-col items-center gap-2 rounded-xl border border-border bg-card p-4 shadow-noir transition-all duration-200 hover:border-primary/40 hover:shadow-md hover:bg-primary/5 cursor-pointer">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 transition-colors group-hover:bg-primary/20">

@@ -106,12 +106,14 @@ export interface StatCardProps {
 export interface StatCardGridProps {
   children: ReactNode;
   cols?: 2 | 3 | 4 | 5 | 6;
+  mobileScroll?: boolean;
   className?: string;
 }
 
 export interface StatCardGridSkeletonProps {
   cols?: 2 | 3 | 4 | 5 | 6;
   count?: number;
+  mobileScroll?: boolean;
   className?: string;
 }
 
@@ -123,17 +125,33 @@ const STAT_GRID_COLS: Record<NonNullable<StatCardGridProps["cols"]>, string> = {
   6: "grid-cols-6",
 };
 
+const STAT_GRID_RESPONSIVE_COLS: Record<
+  NonNullable<StatCardGridProps["cols"]>,
+  string
+> = {
+  2: "sm:grid-cols-2",
+  3: "sm:grid-cols-3",
+  4: "sm:grid-cols-4",
+  5: "sm:grid-cols-5",
+  6: "sm:grid-cols-6",
+};
+
 export function StatCardGrid({
   children,
   cols = 4,
+  mobileScroll = false,
   className,
 }: StatCardGridProps) {
   return (
     <div
       className={cn(
-        "grid gap-3",
-        STAT_GRID_COLS[cols],
-        "[&>*]:min-w-0 [&>*]:h-full",
+        mobileScroll
+          ? "flex -mx-px gap-3 overflow-x-auto pb-1 snap-x snap-mandatory scrollbar-hide sm:mx-0 sm:grid sm:pb-0"
+          : "grid gap-3",
+        mobileScroll ? STAT_GRID_RESPONSIVE_COLS[cols] : STAT_GRID_COLS[cols],
+        mobileScroll
+          ? "[&>*]:h-full [&>*]:min-w-[150px] [&>*]:shrink-0 [&>*]:snap-start sm:[&>*]:min-w-0 sm:[&>*]:shrink"
+          : "[&>*]:min-w-0 [&>*]:h-full",
         className,
       )}
     >
@@ -162,11 +180,12 @@ export function StatCardSkeleton({ className }: { className?: string }) {
 export function StatCardGridSkeleton({
   cols = 4,
   count,
+  mobileScroll = false,
   className,
 }: StatCardGridSkeletonProps) {
   const itemCount = count ?? cols;
   return (
-    <StatCardGrid cols={cols} className={className}>
+    <StatCardGrid cols={cols} mobileScroll={mobileScroll} className={className}>
       {Array.from({ length: itemCount }).map((_, i) => (
         <StatCardSkeleton key={i} />
       ))}

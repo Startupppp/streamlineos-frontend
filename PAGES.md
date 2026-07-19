@@ -61,7 +61,7 @@ Ordered money-path first. Check off each page after fixing.
 ---
 
 ## Dashboard
-- [x] `/dashboard` — Access-driven rebuild: legacy `session.user.role` branching (CEO/HR/Sales/Employee dashboards) replaced by capability-driven composition (`useDashboardAccess`: module enablement + RBAC permissions gate every widget/stat-card/quick-action; queries `enabled`-gated so non-permitted endpoints are never called); backend `/dashboard/*` endpoints hardened with `ModuleGuard`/`PermissionGuard` (+`stats` permission-masked per user), zombie endpoints (`role-stats`, `manager`, `branch-overview`, `pending-requests`, `upcoming-leaves`) and dead role-dashboard files deleted
+- [x] `/dashboard` — Access-driven rebuild: legacy `session.user.role` branching (CEO/HR/Sales/Employee dashboards) replaced by capability-driven composition (`useDashboardAccess`: module enablement + RBAC permissions gate every widget/stat-card/quick-action; queries `enabled`-gated so non-permitted endpoints are never called); backend `/dashboard/*` endpoints hardened with `ModuleGuard`/`PermissionGuard` (+`stats` permission-masked per user), zombie endpoints (`role-stats`, `manager`, `branch-overview`, `pending-requests`, `upcoming-leaves`) and dead role-dashboard files deleted; quick actions use a touch-scrollable mobile row and restore the compact grid from tablet widths
 
 ---
 

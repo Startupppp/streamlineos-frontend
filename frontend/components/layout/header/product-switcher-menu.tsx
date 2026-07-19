@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import type { Variants } from "framer-motion";
-import { ChevronDown, Lock, Check } from "lucide-react";
+import { ChevronDown, Lock, CircleCheck } from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -110,6 +110,8 @@ function ProductTile({
       </div>
       {isActive && (
         <motion.span
+          role="img"
+          aria-label="Selected product"
           initial={
             shouldReduceMotion ? { opacity: 0 } : { scale: 0, opacity: 0 }
           }
@@ -122,7 +124,10 @@ function ProductTile({
               : { type: "spring", stiffness: 500, damping: 25 }
           }
         >
-          <Check className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+          <CircleCheck
+            aria-hidden="true"
+            className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+          />
         </motion.span>
       )}
       {!isEnabled && (
