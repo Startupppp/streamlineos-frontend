@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { HrProvider } from "@/features/hr/shared/hr-context";
 import { HrPathTracker } from "@/features/hr/shared/hr-path-tracker";
+import { HrWelcomeDialog } from "@/features/hr/setup/hr-welcome-dialog";
 
 /**
  * HR module layout — premium canvas with soft brand wash so every HRMS
@@ -33,6 +34,7 @@ export default function HrLayout({ children }: { children: ReactNode }) {
           />
         </div>
         <HrPathTracker />
+        <HrWelcomeDialog />
         {children}
       </div>
     </HrProvider>
