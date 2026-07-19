@@ -8,7 +8,7 @@ import { GlobalHeader } from "./header/global-header";
 import { MobileBottomNav } from "./mobile-bottom-nav";
 import { CommandPalette } from "./command-palette";
 import { NotActivatedPage } from "../auth/not-activated-page";
-import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { usePushSubscription } from "@/hooks/common/use-push-subscription";
 import { TrialBanner } from "@/components/billing/trial-banner";
 import { ProductSwitcherMenu } from "./header/product-switcher-menu";
@@ -165,24 +165,24 @@ export function DashboardShell({
             </div>
 
             {!hideSidebar && (
-              <Sheet
+              <Drawer
                 open={mobileMenuOpen}
                 onOpenChange={setMobileMenuOpen}
+                direction="left"
                 modal
               >
-                <SheetContent
-                  side="left"
+                <DrawerContent
                   className="z-[100] p-0 w-[17rem] border-r-sidebar-border"
                 >
-                  <SheetTitle className="sr-only">Navigation</SheetTitle>
+                  <DrawerTitle className="sr-only">Navigation</DrawerTitle>
                   <AppSidebar
                     isMobile
                     onNavigate={handleCloseMobileMenu}
                     onRequestProductSwitcher={handleRequestProductSwitcher}
                     onRequestWorkspaceSwitcher={handleRequestWorkspaceSwitcher}
                   />
-                </SheetContent>
-              </Sheet>
+                </DrawerContent>
+              </Drawer>
             )}
 
             <ProductSwitcherMenu

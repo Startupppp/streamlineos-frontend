@@ -1,0 +1,131 @@
+import { fireEvent, render, screen } from "@testing-library/react";
+import type { PropsWithChildren } from "react";
+import { DashboardShell } from "./dashboard-shell";
+
+const drawerCalls: Array<{ direction?: string; open?: boolean }> = [];
+
+jest.mock("next/dynamic", () => () => () => null);
+
+jest.mock("next/link", () => {
+  return function Link({
+    children,
+    href,
+    ...props
+  }: PropsWithChildren<React.AnchorHTMLAttributes<HTMLAnchorElement>>) {
+    return (
+      <a href={href} {...props}>
+        {children}
+      </a>
+    );
+  };
+});
+
+jest.mock("./app-sidebar", () => ({
+  AppSidebar: ({
+    onNavigate,
+  }: {
+    onNavigate?: () => void;
+  }) => (
+    <button type="button" onClick={onNavigate}>
+      Navigate
+    </button>
+  ),
+}));
+
+jest.mock("./header/global-header", () => ({
+  GlobalHeader: () => null,
+}));
+
+jest.mock("./mobile-bottom-nav", () => ({
+  MobileBottomNav: ({
+    onOpenMobileMenu,
+  }: {
+    onOpenMobileMenu: () => void;
+  }) => (
+    <button type="button" onClick={onOpenMobileMenu}>
+      Open menu
+    </button>
+  ),
+}));
+
+jest.mock("./command-palette", () => ({
+  CommandPalette: () => null,
+}));
+
+jest.mock("../auth/not-activated-page", () => ({
+  NotActivatedPage: () => null,
+}));
+
+jest.mock("@/components/ui/drawer", () => ({
+  Drawer: ({
+    children,
+    direction,
+    open,
+  }: PropsWithChildren<{ direction?: string; open?: boolean }>) => {
+    drawerCalls.push({ direction, open });
+    return <>{children}</>;
+  },
+  DrawerContent: ({ children }: PropsWithChildren) => <>{children}</>,
+  DrawerTitle: ({ children }: PropsWithChildren) => <>{children}</>,
+}));
+
+jest.mock("@/hooks/common/use-push-subscription", () => ({
+  usePushSubscription: jest.fn(),
+}));
+
+jest.mock("@/components/billing/trial-banner", () => ({
+  TrialBanner: () => null,
+}));
+
+jest.mock("./header/product-switcher-menu", () => ({
+  ProductSwitcherMenu: () => null,
+}));
+
+jest.mock("./header/workspace-switcher", () => ({
+  WorkspaceSwitcher: () => null,
+}));
+
+jest.mock("./sidebar/use-product-sidebar-visibility", () => ({
+  useProductSidebarVisibility: () => ({ hideSidebar: false }),
+}));
+
+jest.mock("@/components/assistant/ask-os-provider", () => ({
+  AskOsProvider: ({ children }: PropsWithChildren) => <>{children}</>,
+}));
+
+jest.mock("@/features/command-palette", () => ({
+  CommandPaletteProvider: ({ children }: PropsWithChildren) => <>{children}</>,
+}));
+
+describe("DashboardShell mobile navigation", () => {
+  beforeEach(() => {
+    drawerCalls.length = 0;
+  });
+
+  it("uses a left drawer and closes it after navigation", () => {
+    render(
+      <DashboardShell
+        userId="user-1"
+        hasDashboardAccess
+        defaultCollapsed={false}
+      >
+        <div>Content</div>
+      </DashboardShell>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Open menu" }));
+
+    expect(drawerCalls.at(-1)).toEqual({ direction: "left", open: true });
+
+    const navigationButtons = screen.getAllByRole("button", {
+      name: "Navigate",
+    });
+    const mobileNavigationButton = navigationButtons.at(-1);
+    if (!mobileNavigationButton) {
+      throw new Error("Mobile navigation button was not rendered");
+    }
+    fireEvent.click(mobileNavigationButton);
+
+    expect(drawerCalls.at(-1)).toEqual({ direction: "left", open: false });
+  });
+});
