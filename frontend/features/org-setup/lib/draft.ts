@@ -41,13 +41,6 @@ export function loadDraft(): WizardData {
         p.startingData === "clean" || p.startingData === "sample" || p.startingData === "import"
           ? p.startingData
           : DEFAULT_DATA.startingData,
-      paymentsChoice:
-        p.paymentsChoice === "razorpay" ||
-        p.paymentsChoice === "stripe" ||
-        p.paymentsChoice === "manual" ||
-        p.paymentsChoice === "skip"
-          ? p.paymentsChoice
-          : undefined,
       invitees: Array.isArray(p.invitees) ? p.invitees.filter(isInvitee) : DEFAULT_DATA.invitees,
     };
   } catch {
@@ -59,6 +52,24 @@ export function saveDraft(data: WizardData): void {
   try {
     localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
   } catch {}
+}
+
+export function hasDraftProgress(data: WizardData): boolean {
+  return (
+    data.goals.length > 0 ||
+    data.companyName.trim() !== "" ||
+    data.industry.trim() !== "" ||
+    data.teamSize.trim() !== "" ||
+    data.phone.trim() !== "" ||
+    data.invitees.length > 0 ||
+    (typeof data.country === "string" && data.country.trim() !== "") ||
+    (typeof data.businessAddress === "string" && data.businessAddress.trim() !== "")
+  );
+}
+
+export function clampStep(step: number, totalSteps: number): number {
+  if (!Number.isFinite(step) || totalSteps < 1) return 1;
+  return Math.min(Math.max(Math.trunc(step), 1), totalSteps);
 }
 
 export function loadStep(): number {

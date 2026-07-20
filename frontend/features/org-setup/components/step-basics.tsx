@@ -28,6 +28,7 @@ import { GOALS, INDUSTRIES, INDUSTRY_TEMPLATE_HINTS, TEAM_SIZES } from "../lib/c
 import type { WizardData } from "../lib/types";
 import { GoalChip } from "./goal-chip";
 import { NavButtons } from "./nav-buttons";
+import { StepBody } from "./step-body";
 
 type StepBasicsProps = {
   data: WizardData;
@@ -145,7 +146,7 @@ export function StepBasics({ data, patch, onToggleGoal, onBack, onNext }: StepBa
   }
 
   return (
-    <div className="space-y-5">
+    <StepBody footer={<NavButtons onBack={onBack} onNext={handleNext} />}>
       <section className="space-y-2">
         <p className="text-[13px] font-semibold text-foreground">What do you want to get done? *</p>
         <div
@@ -168,6 +169,10 @@ export function StepBasics({ data, patch, onToggleGoal, onBack, onNext }: StepBa
             );
           })}
         </div>
+        <p className="text-xs text-muted-foreground">
+          We&apos;ll enable matching modules (Chat &amp; Knowledge always included). You can change
+          modules later in Settings.
+        </p>
         <InlineError id="goals-error" message={errors.goals} />
       </section>
 
@@ -175,11 +180,11 @@ export function StepBasics({ data, patch, onToggleGoal, onBack, onNext }: StepBa
         <Label htmlFor="industry-select" className="text-[13px] font-semibold text-foreground">
           Industry *
         </Label>
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <div className={otherSelected ? "grid grid-cols-1 gap-2 sm:grid-cols-2" : "w-full"}>
           <Select value={industrySelectValue} onValueChange={handleIndustrySelect}>
             <SelectTrigger
               id="industry-select"
-              className="text-sm"
+              className="w-full text-sm"
               aria-invalid={!!errors.industry}
               aria-describedby={errors.industry ? "industry-error" : undefined}
             >
@@ -285,8 +290,6 @@ export function StepBasics({ data, patch, onToggleGoal, onBack, onNext }: StepBa
         </div>
         <p className="text-xs text-muted-foreground">You can change all of this later in Settings.</p>
       </section>
-
-      <NavButtons onBack={onBack} onNext={handleNext} />
-    </div>
+    </StepBody>
   );
 }

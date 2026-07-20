@@ -2,8 +2,6 @@ export type Invitee = { email: string; role: string; department?: string };
 
 export type StartingDataChoice = "clean" | "sample" | "import";
 
-export type PaymentsChoice = "razorpay" | "stripe" | "manual" | "skip";
-
 export type WizardData = {
   goals: string[];
   industry: string;
@@ -19,6 +17,5 @@ export type WizardData = {
   installedApps: string[];
   modules: string[];
   startingData: StartingDataChoice;
-  paymentsChoice?: PaymentsChoice;
   invitees: Invitee[];
 };

@@ -24,7 +24,7 @@ export function StepWelcome({
   const reduceMotion = useReducedMotion();
 
   return (
-    <div className="flex min-w-0 flex-col justify-center py-2 sm:py-4 md:py-8 xl:py-10">
+    <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col justify-center overflow-y-auto overscroll-contain scrollbar-hide py-2 sm:py-4 md:py-8 xl:py-10">
       <motion.div
         initial={{ opacity: 0, y: reduceMotion ? 0 : 14 }}
         animate={{ opacity: 1, y: 0 }}

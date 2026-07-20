@@ -18,7 +18,7 @@ function StepRailInner({ sequence, currentIndex, saveState, onStepSelect }: Step
   const minutesLeft = ESTIMATED_MINUTES_REMAINING[sequence[currentIndex] ?? "welcome"] ?? 0;
 
   return (
-    <div className="mb-6 hidden min-w-0 md:block">
+    <div className="mb-2 hidden min-w-0 md:block">
       <ol className="flex min-w-0 items-center gap-1" aria-label="Setup steps">
         {sequence.map((stepId, i) => {
           const done = i < currentIndex;
@@ -33,7 +33,7 @@ function StepRailInner({ sequence, currentIndex, saveState, onStepSelect }: Step
                   type="button"
                   onClick={() => onStepSelect(i)}
                   className={cn(
-                    "flex shrink-0 items-center gap-2 rounded-lg px-2 py-1.5 text-left press-scale transition-colors",
+                    "flex shrink-0 items-center gap-1.5 rounded-lg px-1.5 py-1 text-left press-scale transition-colors",
                     "hover:bg-muted",
                   )}
                 >
@@ -49,7 +49,7 @@ function StepRailInner({ sequence, currentIndex, saveState, onStepSelect }: Step
                 </button>
               ) : (
                 <div
-                  className="flex shrink-0 items-center gap-2 rounded-lg px-2 py-1.5"
+                  className="flex shrink-0 items-center gap-1.5 rounded-lg px-1.5 py-1"
                   aria-current={active ? "step" : undefined}
                 >
                   <StepMarker done={done} active={active} index={i} />
@@ -81,7 +81,7 @@ function StepRailInner({ sequence, currentIndex, saveState, onStepSelect }: Step
         })}
       </ol>
 
-      <div className="mt-2 flex items-center justify-between gap-3 px-2">
+      <div className="mt-1 flex items-center justify-between gap-3">
         <p className="text-[11px] text-muted-foreground">
           {minutesLeft > 0 ? `About ${minutesLeft} min left` : "Almost done"}
         </p>

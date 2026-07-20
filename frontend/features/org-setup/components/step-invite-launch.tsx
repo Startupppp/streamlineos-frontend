@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Plus, X } from "lucide-react";
 import { RocketIcon } from "@animateicons/react/lucide";
@@ -18,6 +18,7 @@ import type { Invitee, WizardData } from "../lib/types";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { StepGeneration } from "./step-generation";
 import { NavButtons } from "./nav-buttons";
+import { StepBody } from "./step-body";
 
 type StepInviteLaunchProps = {
   data: WizardData;
@@ -29,7 +30,7 @@ export function StepInviteLaunch({ data, onChangeInvitees, onBack }: StepInviteL
   const reduceMotion = useReducedMotion();
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<string>(INVITE_ROLES[0] ?? "ADMIN");
-  const [launching, setLaunching] = useState(false);
+  const [phase, setPhase] = useState<"form" | "pending" | "generating">("form");
 
   function handleAdd() {
     const trimmed = email.trim();
@@ -44,15 +45,35 @@ export function StepInviteLaunch({ data, onChangeInvitees, onBack }: StepInviteL
   }
 
   function handleLaunch() {
-    setLaunching(true);
+    if (phase !== "form") return;
+    setPhase("pending");
   }
 
-  if (launching) {
+  useEffect(() => {
+    if (phase !== "pending") return;
+    const id = window.setTimeout(() => setPhase("generating"), 120);
+    return () => window.clearTimeout(id);
+  }, [phase]);
+
+  if (phase === "generating") {
     return <StepGeneration data={data} />;
   }
 
+  const isPending = phase === "pending";
+
   return (
-    <div className="space-y-5">
+    <StepBody
+      footer={
+        <NavButtons
+          onBack={onBack}
+          onNext={handleLaunch}
+          nextLabel="Build my workspace"
+          nextIcon={RocketIcon}
+          isPending={isPending}
+          loadingText="Building workspace…"
+        />
+      }
+    >
       <p className="text-[13px] leading-relaxed text-muted-foreground">
         Invite teammates now, or skip and invite them later from Settings.
       </p>
@@ -64,6 +85,7 @@ export function StepInviteLaunch({ data, onChangeInvitees, onBack }: StepInviteL
           onChange={(e) => setEmail(e.target.value)}
           placeholder="teammate@company.com"
           className="flex-1 text-sm"
+          disabled={isPending}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
@@ -72,7 +94,7 @@ export function StepInviteLaunch({ data, onChangeInvitees, onBack }: StepInviteL
           }}
         />
         <div className="flex gap-2">
-          <Select value={role} onValueChange={setRole}>
+          <Select value={role} onValueChange={setRole} disabled={isPending}>
             <SelectTrigger className="flex-1 text-sm sm:w-28 sm:flex-initial">
               <SelectValue />
             </SelectTrigger>
@@ -90,6 +112,7 @@ export function StepInviteLaunch({ data, onChangeInvitees, onBack }: StepInviteL
             variant="outline"
             className="h-9 w-9 shrink-0"
             onClick={handleAdd}
+            disabled={isPending}
             aria-label="Add invitee"
           >
             <Plus className="h-3.5 w-3.5" />
@@ -113,7 +136,8 @@ export function StepInviteLaunch({ data, onChangeInvitees, onBack }: StepInviteL
                 <button
                   type="button"
                   onClick={() => handleRemove(invitee.email)}
-                  className="text-muted-foreground transition-colors hover:text-destructive"
+                  disabled={isPending}
+                  className="text-muted-foreground transition-colors hover:text-destructive disabled:pointer-events-none disabled:opacity-50"
                   aria-label={`Remove ${invitee.email}`}
                 >
                   <X className="h-3.5 w-3.5" />
@@ -123,13 +147,6 @@ export function StepInviteLaunch({ data, onChangeInvitees, onBack }: StepInviteL
           ))}
         </ul>
       )}
-
-      <NavButtons
-        onBack={onBack}
-        onNext={handleLaunch}
-        nextLabel="Build my workspace"
-        nextIcon={RocketIcon}
-      />
-    </div>
+    </StepBody>
   );
 }

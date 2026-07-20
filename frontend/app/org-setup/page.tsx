@@ -10,15 +10,15 @@ import { completeOnboardingGate } from "@/lib/onboarding-gate";
 import { signInWithMagicToken } from "@/hooks/common/auth-hooks";
 import {
   useSkipOrgSetupMutation,
-  usePatchOrgSetupSessionMutation,
   useOrgSetupSessionQuery,
-  useModuleRecommendationsMutation,
 } from "@/lib/api/hooks/org";
 import {
   STEP_TITLES,
   DEFAULT_DATA,
   deriveAppsFromGoals,
   getStepSequence,
+  resolveStepIndex,
+  toggleGoalSelection,
   type StepId,
 } from "@/features/org-setup/lib/constants";
 import {
@@ -27,31 +27,83 @@ import {
   saveDraft,
   loadStep,
   saveStep,
+  clampStep,
+  hasDraftProgress,
 } from "@/features/org-setup/lib/draft";
 import type { WizardData } from "@/features/org-setup/lib/types";
 import { OrgSetupShell } from "@/features/org-setup/components/org-setup-shell";
 import { StepWelcome } from "@/features/org-setup/components/step-welcome";
 import { StepBasics } from "@/features/org-setup/components/step-basics";
-import { StepSetup } from "@/features/org-setup/components/step-setup";
 import { StepInviteLaunch } from "@/features/org-setup/components/step-invite-launch";
+
+function syncAppsFromGoals(data: WizardData): WizardData {
+  const derived = deriveAppsFromGoals(data.goals);
+  return { ...data, installedApps: derived, modules: derived };
+}
+
+function parseServerWizardData(
+  raw: Record<string, unknown>,
+): Partial<WizardData> {
+  const next: Partial<WizardData> = {};
+  if (Array.isArray(raw.goals))
+    next.goals = raw.goals.filter((g): g is string => typeof g === "string");
+
+  if (typeof raw.industry === "string") next.industry = raw.industry;
+  if (typeof raw.companyName === "string") next.companyName = raw.companyName;
+  if (typeof raw.teamSize === "string") next.teamSize = raw.teamSize;
+  if (typeof raw.country === "string") next.country = raw.country;
+  if (typeof raw.timezone === "string") next.timezone = raw.timezone;
+  if (typeof raw.phone === "string") next.phone = raw.phone;
+  if (typeof raw.currency === "string") next.currency = raw.currency;
+  if (typeof raw.fiscalYearStart === "string")
+    next.fiscalYearStart = raw.fiscalYearStart;
+  if (typeof raw.businessAddress === "string")
+    next.businessAddress = raw.businessAddress;
+  if (typeof raw.taxId === "string") next.taxId = raw.taxId;
+  if (Array.isArray(raw.installedApps)) {
+    next.installedApps = raw.installedApps.filter(
+      (m): m is string => typeof m === "string",
+    );
+  }
+  if (Array.isArray(raw.modules)) {
+    next.modules = raw.modules.filter(
+      (m): m is string => typeof m === "string",
+    );
+  }
+  if (
+    raw.startingData === "clean" ||
+    raw.startingData === "sample" ||
+    raw.startingData === "import"
+  ) {
+    next.startingData = raw.startingData;
+  }
+  if (Array.isArray(raw.invitees)) {
+    next.invitees = raw.invitees.filter(
+      (v): v is WizardData["invitees"][number] =>
+        typeof v === "object" &&
+        v !== null &&
+        typeof (v as { email?: unknown }).email === "string" &&
+        typeof (v as { role?: unknown }).role === "string",
+    );
+  }
+  return next;
+}
 
 export default function OrgSetupPage() {
   const { data: session, update } = useSession();
-  const { mutateAsync: skipOrgSetup } = useSkipOrgSetupMutation();
-  const { mutate: patchSession, isPending: isSaving } = usePatchOrgSetupSessionMutation();
   const { data: serverSession } = useOrgSetupSessionQuery();
-  const { mutate: fetchModuleRecommendations } = useModuleRecommendationsMutation();
+  const { mutateAsync: skipOrgSetup } = useSkipOrgSetupMutation();
 
   const [step, setStep] = useState(1);
   const [mounted, setMounted] = useState(false);
   const [isSkipping, setIsSkipping] = useState(false);
   const [direction, setDirection] = useState(1);
   const [data, setData] = useState<WizardData>({ ...DEFAULT_DATA });
-  const [recommendedReasons, setRecommendedReasons] = useState<Record<string, string>>({});
-  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
-  const hydratedFromServerRef = useRef(false);
-  const recommendationsFetchedRef = useRef(false);
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">(
+    "idle",
+  );
   const exitedRef = useRef(false);
+  const hydratedFromServerRef = useRef(false);
 
   const sequence = useMemo(() => getStepSequence(data.goals), [data.goals]);
   const totalSteps = sequence.length;
@@ -62,34 +114,27 @@ export default function OrgSetupPage() {
     session?.user?.email?.split("@")[0] ??
     "";
 
-  const patch = useCallback((updates: Partial<WizardData>) => {
-    setData((prev) => {
-      const next = { ...prev, ...updates };
-      saveDraft(next);
-      return next;
-    });
+  const markDraftSaved = useCallback(() => {
+    setSaveState("saved");
   }, []);
 
-  const persistStep = useCallback(
-    (stepId: StepId, snapshot: WizardData) => {
-      setSaveState("saving");
-      patchSession(
-        { currentStep: stepId, data: snapshot },
-        { onSuccess: () => setSaveState("saved"), onError: () => setSaveState("idle") },
-      );
+  const patch = useCallback(
+    (updates: Partial<WizardData>) => {
+      setData((prev) => {
+        const next = { ...prev, ...updates };
+        saveDraft(next);
+        return next;
+      });
+      markDraftSaved();
     },
-    [patchSession],
+    [markDraftSaved],
   );
 
   const goNext = useCallback(() => {
     setDirection(1);
-    setStep((s) => {
-      const nextIndex = Math.min(s + 1, totalSteps);
-      const nextStepId = sequence[nextIndex - 1] ?? "welcome";
-      persistStep(nextStepId, data);
-      return nextIndex;
-    });
-  }, [totalSteps, sequence, data, persistStep]);
+    setStep((s) => Math.min(s + 1, totalSteps));
+    markDraftSaved();
+  }, [totalSteps, markDraftSaved]);
 
   const goBack = useCallback(() => {
     setDirection(-1);
@@ -101,28 +146,18 @@ export default function OrgSetupPage() {
     setStep(index + 1);
   }, []);
 
-  const handleToggleGoal = useCallback((id: string) => {
-    setData((prev) => {
-      const has = prev.goals.includes(id);
-      const newGoals = has
-        ? prev.goals.filter((g) => g !== id)
-        : [...prev.goals, id];
-      const derived = deriveAppsFromGoals(newGoals);
-      const next = { ...prev, goals: newGoals, installedApps: derived, modules: derived };
-      saveDraft(next);
-      return next;
-    });
-  }, []);
-
-  const handleToggleModule = useCallback((moduleKey: string) => {
-    setData((prev) => {
-      const has = prev.modules.includes(moduleKey);
-      const modules = has ? prev.modules.filter((m) => m !== moduleKey) : [...prev.modules, moduleKey];
-      const next = { ...prev, modules };
-      saveDraft(next);
-      return next;
-    });
-  }, []);
+  const handleToggleGoal = useCallback(
+    (id: string) => {
+      setData((prev) => {
+        const newGoals = toggleGoalSelection(prev.goals, id);
+        const next = syncAppsFromGoals({ ...prev, goals: newGoals });
+        saveDraft(next);
+        return next;
+      });
+      markDraftSaved();
+    },
+    [markDraftSaved],
+  );
 
   const handleSkipToDashboard = useCallback(async () => {
     setIsSkipping(true);
@@ -141,43 +176,45 @@ export default function OrgSetupPage() {
   }, [skipOrgSetup, update]);
 
   useEffect(() => {
-    const savedStep = loadStep();
-    const savedDraft = loadDraft();
+    const savedDraft = syncAppsFromGoals(loadDraft());
     const savedSequence = getStepSequence(savedDraft.goals);
-    if (savedStep >= savedSequence.length) {
-      clearAll();
-      setStep(1);
-      setData({ ...DEFAULT_DATA });
-    } else {
-      setStep(savedStep);
-      setData(savedDraft);
-    }
+    const restoredStep = clampStep(loadStep(), savedSequence.length);
+    setData(savedDraft);
+    saveDraft(savedDraft);
+    setStep(restoredStep);
+    saveStep(restoredStep);
     setMounted(true);
   }, []);
 
   useEffect(() => {
     if (!mounted || hydratedFromServerRef.current || !serverSession) return;
     hydratedFromServerRef.current = true;
-    if (serverSession.status !== "in_progress" || !serverSession.data) return;
-    const serverData = serverSession.data as Partial<WizardData>;
-    if (!serverData.goals && !serverData.companyName) return;
 
-    const merged: WizardData = { ...DEFAULT_DATA, ...serverData };
+    const localDraft = loadDraft();
+    if (hasDraftProgress(localDraft)) return;
+    if (serverSession.status !== "in_progress" || !serverSession.data) return;
+
+    const serverData = parseServerWizardData(serverSession.data);
+    const merged = syncAppsFromGoals({ ...DEFAULT_DATA, ...serverData });
+    if (!hasDraftProgress(merged)) return;
+
     const mergedSequence = getStepSequence(merged.goals);
-    const stepIndex = serverSession.currentStep
-      ? Math.max(1, mergedSequence.indexOf(serverSession.currentStep as StepId) + 1)
-      : 1;
+    const stepFromServer = resolveStepIndex(
+      serverSession.currentStep,
+      mergedSequence,
+    );
+    const restoredStep =
+      stepFromServer >= 1
+        ? clampStep(stepFromServer, mergedSequence.length)
+        : clampStep(loadStep(), mergedSequence.length);
 
     setData(merged);
     saveDraft(merged);
-    if (stepIndex > 1 && stepIndex <= mergedSequence.length) {
-      setStep(stepIndex);
-      saveStep(stepIndex);
-    }
+    setStep(restoredStep);
+    saveStep(restoredStep);
   }, [mounted, serverSession]);
 
   useEffect(() => {
-    // Once a workspace exists, set the gate cookie then leave — so the proxy agrees and won't bounce us back into a refresh loop.
     if (exitedRef.current) return;
     if (session?.orgId || session?.orgOnboardingCompletedAt) {
       exitedRef.current = true;
@@ -193,29 +230,12 @@ export default function OrgSetupPage() {
   }, [step, mounted]);
 
   useEffect(() => {
-    if (currentStepId !== "setup" || recommendationsFetchedRef.current || data.goals.length === 0) {
-      return;
-    }
-    recommendationsFetchedRef.current = true;
-    fetchModuleRecommendations(
-      { goals: data.goals, industry: data.industry || undefined },
-      {
-        onSuccess: (res) => {
-          const reasons: Record<string, string> = {};
-          for (const rec of res.recommendedModules) reasons[rec.moduleKey] = rec.reason;
-          setRecommendedReasons(reasons);
-        },
-      },
-    );
-  }, [currentStepId, data.goals, data.industry, fetchModuleRecommendations]);
-
-  useEffect(() => {
     if (saveState !== "saved") return;
     const timeout = setTimeout(() => setSaveState("idle"), 4000);
     return () => clearTimeout(timeout);
   }, [saveState]);
 
-  if (!mounted) {
+  if (!mounted)
     return (
       <div className="flex h-full min-h-0 w-full min-w-0 flex-1 overflow-hidden">
         <div className="mx-auto flex w-full min-w-0 max-w-lg flex-1 flex-col gap-4 px-4 py-6 sm:px-8 md:max-w-none md:w-1/2 md:px-8">
@@ -233,7 +253,6 @@ export default function OrgSetupPage() {
         </div>
       </div>
     );
-  }
 
   const stepTitle =
     currentStepId === "welcome"
@@ -246,7 +265,7 @@ export default function OrgSetupPage() {
       currentIndex={step - 1}
       title={stepTitle}
       direction={direction}
-      saveState={isSaving ? "saving" : saveState}
+      saveState={saveState}
       data={data}
       onStepSelect={handleStepSelect}
     >
@@ -267,21 +286,11 @@ export default function OrgSetupPage() {
           onNext={goNext}
         />
       )}
-      {currentStepId === "setup" && (
-        <StepSetup
-          data={data}
-          recommendedReasons={recommendedReasons}
-          onToggleModule={handleToggleModule}
-          patch={patch}
-          onBack={goBack}
-          onNext={goNext}
-        />
-      )}
       {currentStepId === "invite" && (
         <StepInviteLaunch
           data={data}
-          onChangeInvitees={(invitees) => patch({ invitees })}
           onBack={goBack}
+          onChangeInvitees={(invitees) => patch({ invitees })}
         />
       )}
     </OrgSetupShell>

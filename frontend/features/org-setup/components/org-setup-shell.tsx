@@ -2,9 +2,11 @@
 
 import { useMemo, type ReactNode } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { STEP_SUBTITLES } from "../lib/constants";
+import { ORG_SETUP_COL_PAD, STEP_SUBTITLES } from "../lib/constants";
 import type { StepId } from "../lib/constants";
+import { toPreviewSnapshot } from "../lib/preview-snapshot";
 import type { WizardData } from "../lib/types";
+import { cn } from "@/lib/utils";
 import { StepRail } from "./step-rail";
 import { MobileProgressBar } from "./mobile-progress-bar";
 import { OrgSetupBrandColumn } from "./org-setup-brand-column";
@@ -34,15 +36,7 @@ export function OrgSetupShell({
   const currentStepId = sequence[currentIndex] ?? "welcome";
   const isWelcome = currentStepId === "welcome";
   const previewSnapshot = useMemo(
-    () => ({
-      companyName: data.companyName,
-      industry: data.industry,
-      teamSize: data.teamSize,
-      goals: data.goals,
-      modules: data.modules,
-      installedApps: data.installedApps,
-      inviteesCount: data.invitees.length,
-    }),
+    () => toPreviewSnapshot(data),
     [
       data.companyName,
       data.industry,
@@ -56,38 +50,45 @@ export function OrgSetupShell({
 
   return (
     <div className="flex h-full min-h-0 w-full min-w-0 flex-1 overflow-hidden md:flex-row">
-      <div className="relative flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-y-auto overscroll-contain scrollbar-hide md:w-1/2">
-        <div className="mx-auto flex w-full min-w-0 max-w-lg flex-1 flex-col px-4 py-4 sm:px-8 sm:py-5 md:max-w-none md:px-8 md:py-6 lg:px-10 lg:py-8 pb-[calc(5.25rem+env(safe-area-inset-bottom))] md:pb-8">
-          <StepRail
-            sequence={sequence}
-            currentIndex={currentIndex}
-            saveState={saveState}
-            onStepSelect={onStepSelect}
-          />
-
-          <MobileProgressBar sequence={sequence} currentIndex={currentIndex} />
-
-          {!isWelcome && (
-            <div className="mb-3.5 min-w-0 space-y-1 sm:mb-4">
-              <AnimatePresence mode="wait">
-                <motion.h1
-                  key={title}
-                  initial={{ opacity: 0, y: reduceMotion ? 0 : -6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: reduceMotion ? 0 : 6 }}
-                  transition={{ duration: 0.15 }}
-                  className="font-display text-xl font-extrabold tracking-[-0.02em] text-foreground text-balance sm:text-2xl"
-                >
-                  {title}
-                </motion.h1>
-              </AnimatePresence>
-              <p className="text-[13px] text-muted-foreground">
-                {STEP_SUBTITLES[currentStepId]}
-              </p>
-            </div>
+      <div className="relative flex h-full min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden md:w-1/2">
+        <div
+          className={cn(
+            "mx-auto flex h-full min-h-0 w-full min-w-0 max-w-lg flex-1 flex-col md:max-w-none",
+            ORG_SETUP_COL_PAD,
           )}
+        >
+          <div className="shrink-0">
+            <StepRail
+              sequence={sequence}
+              currentIndex={currentIndex}
+              saveState={saveState}
+              onStepSelect={onStepSelect}
+            />
 
-          <div className="min-h-0 min-w-0 flex-1">
+            <MobileProgressBar sequence={sequence} currentIndex={currentIndex} />
+
+            {!isWelcome && (
+              <div className="mb-2 hidden min-w-0 space-y-0.5 md:block">
+                <AnimatePresence mode="wait">
+                  <motion.h1
+                    key={title}
+                    initial={{ opacity: 0, y: reduceMotion ? 0 : -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: reduceMotion ? 0 : 6 }}
+                    transition={{ duration: 0.15 }}
+                    className="font-display text-xl font-extrabold tracking-[-0.02em] text-foreground text-balance sm:text-2xl"
+                  >
+                    {title}
+                  </motion.h1>
+                </AnimatePresence>
+                <p className="text-[13px] text-muted-foreground">
+                  {STEP_SUBTITLES[currentStepId]}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
             <AnimatePresence mode="wait" custom={direction}>
               <motion.div
                 key={currentIndex}
@@ -111,6 +112,7 @@ export function OrgSetupShell({
                 initial="initial"
                 animate="animate"
                 exit="exit"
+                className="flex h-full min-h-0 min-w-0 flex-1 flex-col"
               >
                 {children}
               </motion.div>
@@ -119,7 +121,10 @@ export function OrgSetupShell({
         </div>
       </div>
 
-      <OrgSetupBrandColumn snapshot={previewSnapshot} />
+      <OrgSetupBrandColumn
+        snapshot={previewSnapshot}
+        stepId={currentStepId}
+      />
     </div>
   );
 }

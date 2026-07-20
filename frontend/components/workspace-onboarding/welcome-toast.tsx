@@ -6,12 +6,8 @@ import { PartyPopper } from "lucide-react";
 import {
   WELCOME_POP_KEY,
   WELCOME_POP_NAME_KEY,
-} from "@/features/org-setup/components/step-generation";
+} from "@/features/org-setup/lib/constants";
 
-/**
- * One-shot toast after org-setup redirects to the dashboard.
- * Complements the full-screen WelcomeCelebration on the setup step.
- */
 export function WelcomeToast() {
   useEffect(() => {
     let name = "your workspace";

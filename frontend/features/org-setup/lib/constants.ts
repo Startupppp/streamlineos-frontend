@@ -1,17 +1,29 @@
 import type { WizardData } from "./types";
 
 export const DRAFT_KEY = "org-setup-draft";
+export const WELCOME_POP_KEY = "org-setup-welcome-pending";
+export const WELCOME_POP_NAME_KEY = "org-setup-welcome-name";
 
-const COMMERCE_GOALS = new Set(["sales", "finance", "everything"]);
+export const ORG_SETUP_COL_PAD =
+  "px-3 py-3 sm:px-4 sm:py-3 md:px-5 md:py-4 lg:px-6 lg:py-5";
 
-export function needsPaymentsStep(goals: string[]): boolean {
-  return goals.some((g) => COMMERCE_GOALS.has(g));
-}
-
-export type StepId = "welcome" | "basics" | "setup" | "invite";
+export type StepId = "welcome" | "basics" | "invite";
 
 export function getStepSequence(_goals: string[]): StepId[] {
-  return ["welcome", "basics", "setup", "invite"];
+  return ["welcome", "basics", "invite"];
+}
+
+export function resolveStepIndex(
+  stepId: string | null | undefined,
+  sequence: StepId[],
+): number {
+  if (!stepId) return 0;
+  if (stepId === "setup") {
+    const inviteIdx = sequence.indexOf("invite");
+    return inviteIdx >= 0 ? inviteIdx + 1 : 0;
+  }
+  const idx = sequence.findIndex((id) => id === stepId);
+  return idx >= 0 ? idx + 1 : 0;
 }
 
 export const GOALS = [
@@ -25,6 +37,10 @@ export const GOALS = [
   { id: "everything", label: "Build Everything", outcome: "Enable the full StreamlineOS suite" },
 ] as const;
 
+export const EVERYTHING_GOAL_ID = "everything";
+
+export const ALL_GOAL_IDS: readonly string[] = GOALS.map((g) => g.id);
+
 export const GOAL_TO_APPS: Record<string, string[]> = {
   sales: ["CRM"],
   hr: ["HR"],
@@ -36,17 +52,41 @@ export const GOAL_TO_APPS: Record<string, string[]> = {
   everything: ["CRM", "HR", "PROJECTS", "FINANCE", "INVENTORY", "HELPDESK"],
 };
 
-export const DEFAULT_APPS = ["CRM", "HR", "PROJECTS"];
+export const ALWAYS_ENABLED_MODULES = ["CHAT", "KNOWLEDGE"] as const;
+
+export const DEFAULT_APPS = ["CRM", "HR", "PROJECTS", ...ALWAYS_ENABLED_MODULES];
 
 export function deriveAppsFromGoals(goals: string[]): string[] {
-  if (goals.length === 0) return DEFAULT_APPS;
-  const apps = new Set<string>();
+  if (goals.length === 0) return [...DEFAULT_APPS];
+  const apps = new Set<string>(ALWAYS_ENABLED_MODULES);
   for (const g of goals) {
-    for (const app of (GOAL_TO_APPS[g] ?? [])) {
+    for (const app of GOAL_TO_APPS[g] ?? []) {
       apps.add(app);
     }
   }
-  return apps.size > 0 ? Array.from(apps) : DEFAULT_APPS;
+  if (apps.size === ALWAYS_ENABLED_MODULES.length) return [...DEFAULT_APPS];
+  return Array.from(apps);
+}
+
+export function toggleGoalSelection(current: readonly string[], id: string): string[] {
+  if (id === EVERYTHING_GOAL_ID) {
+    const allSelected = ALL_GOAL_IDS.every((goalId) => current.includes(goalId));
+    return allSelected ? [] : [...ALL_GOAL_IDS];
+  }
+
+  const has = current.includes(id);
+  let next = has ? current.filter((goalId) => goalId !== id) : [...current, id];
+
+  if (has) {
+    next = next.filter((goalId) => goalId !== EVERYTHING_GOAL_ID);
+  } else {
+    const others = ALL_GOAL_IDS.filter((goalId) => goalId !== EVERYTHING_GOAL_ID);
+    if (others.every((goalId) => next.includes(goalId)) && !next.includes(EVERYTHING_GOAL_ID)) {
+      next = [...next, EVERYTHING_GOAL_ID];
+    }
+  }
+
+  return next;
 }
 
 export const INDUSTRIES: readonly string[] = [
@@ -89,28 +129,24 @@ export const GENERATION_STEPS: readonly string[] = [
   "Enabling modules",
   "Creating defaults",
   "Preparing dashboard checklist",
-  "Preparing payment setup",
   "Sending invites",
 ];
 
 export const STEP_TITLES: Record<StepId, string> = {
   welcome: "Welcome",
   basics: "Basics",
-  setup: "Modules",
   invite: "Launch",
 };
 
 export const STEP_SUBTITLES: Record<StepId, string> = {
   welcome: "Let's get your workspace ready to run your business.",
-  basics: "Your goals, industry, and company — the essentials only.",
-  setup: "Confirm what to enable. Nothing here is permanent.",
+  basics: "Goals unlock modules. Add industry and company, then launch.",
   invite: "Bring your team in, then build your workspace.",
 };
 
 export const ESTIMATED_MINUTES_REMAINING: Record<StepId, number> = {
-  welcome: 3,
+  welcome: 2,
   basics: 2,
-  setup: 1,
   invite: 1,
 };
 
@@ -124,19 +160,6 @@ export const MODULE_CATALOG: Record<string, { label: string; description: string
   KNOWLEDGE: { label: "Knowledge", description: "SOPs and team docs", setupTasks: ["Create team space"] },
   CHAT: { label: "Chat", description: "Team messaging", setupTasks: ["Create first channel"] },
 };
-
-export const STARTING_DATA_OPTIONS: { id: WizardData["startingData"]; label: string; description: string; nextStep: string }[] = [
-  { id: "clean", label: "Start clean", description: "No sample data — build from scratch", nextStep: "Your workspace opens empty and ready to fill in." },
-  { id: "sample", label: "Use sample data", description: "Lightweight demo data you can delete anytime", nextStep: "We'll add sample contacts, products, and tasks so you can explore." },
-  { id: "import", label: "Import data", description: "Bring in contacts, employees, or products after setup", nextStep: "You'll be guided to import screens right after workspace generation." },
-];
-
-export const PAYMENT_PROVIDER_OPTIONS: { id: NonNullable<WizardData["paymentsChoice"]>; label: string; description: string }[] = [
-  { id: "razorpay", label: "Razorpay", description: "Cards, UPI, net banking — recommended for India" },
-  { id: "stripe", label: "Stripe", description: "Cards and global payment methods" },
-  { id: "manual", label: "Manual / Bank Transfer", description: "Record offline payments — no live processing" },
-  { id: "skip", label: "Skip for now", description: "Connect payments later from Settings" },
-];
 
 export const INVITE_ROLES = ["ADMIN", "HR", "SALES", "ENGINEERING"] as const;
 

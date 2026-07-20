@@ -15,12 +15,15 @@ import { useCompleteOrgSetupMutation, type OrgSetupPayload } from "@/lib/api/hoo
 import { useGenerateWorkspace } from "@/hooks/api/workspace-onboarding";
 import { useBulkInviteUsers } from "@/hooks/api/users";
 import type { Invitee, WizardData } from "../lib/types";
-import { GENERATION_STEPS } from "../lib/constants";
+import {
+  DEFAULT_APPS,
+  GENERATION_STEPS,
+  WELCOME_POP_KEY,
+  WELCOME_POP_NAME_KEY,
+} from "../lib/constants";
 import { WelcomeCelebration } from "./welcome-celebration";
 
 const SETUP_DONE_KEY = "org-setup-complete";
-export const WELCOME_POP_KEY = "org-setup-welcome-pending";
-export const WELCOME_POP_NAME_KEY = "org-setup-welcome-name";
 
 type StepGenerationProps = {
   data: WizardData;
@@ -44,10 +47,8 @@ export function StepGeneration({ data }: StepGenerationProps) {
   const [isContinuing, setIsContinuing] = useState(false);
   const dataRef = useRef(data);
 
-  const wantsPayments = !!data.paymentsChoice && data.paymentsChoice !== "skip";
   const wantsInvites = data.invitees.length > 0;
   const generationSteps = GENERATION_STEPS.filter((label) => {
-    if (label === "Preparing payment setup") return wantsPayments;
     if (label === "Sending invites") return wantsInvites;
     return true;
   });
@@ -81,7 +82,7 @@ export function StepGeneration({ data }: StepGenerationProps) {
       ...(d.country ? { country: d.country } : {}),
       ...(d.timezone ? { timezone: d.timezone } : {}),
       phone: d.phone,
-      enabledModules: d.modules.length > 0 ? d.modules : ["HR", "CRM", "PROJECTS"],
+      enabledModules: d.modules.length > 0 ? d.modules : [...DEFAULT_APPS],
     };
   }
 
@@ -89,21 +90,7 @@ export function StepGeneration({ data }: StepGenerationProps) {
     if (isContinuing) return;
     setIsContinuing(true);
     clearAll();
-    try {
-      sessionStorage.setItem(WELCOME_POP_KEY, "1");
-      const name = dataRef.current.companyName?.trim();
-      if (name) sessionStorage.setItem(WELCOME_POP_NAME_KEY, name);
-    } catch {
-      void 0;
-    }
-
-    const choice = dataRef.current.paymentsChoice;
-    if (choice && choice !== "skip") {
-      window.location.replace("/settings/payments?from=org-setup");
-      return;
-    }
-    const importFlag = dataRef.current.startingData === "import" ? "?setup=import" : "";
-    window.location.replace(`/dashboard${importFlag}`);
+    window.location.replace("/dashboard");
   }, [isContinuing]);
 
   async function handleSuccess(autoLoginToken: string | null) {
@@ -115,7 +102,15 @@ export function StepGeneration({ data }: StepGenerationProps) {
     }
     setCompletedSteps(total);
     clearBackendTokenCache();
+    clearAll();
     sessionStorage.setItem(SETUP_DONE_KEY, "1");
+    try {
+      sessionStorage.setItem(WELCOME_POP_KEY, "1");
+      const name = dataRef.current.companyName?.trim();
+      if (name) sessionStorage.setItem(WELCOME_POP_NAME_KEY, name);
+    } catch {
+      void 0;
+    }
 
     if (autoLoginToken) {
       await signInWithMagicToken(autoLoginToken);
@@ -203,7 +198,7 @@ export function StepGeneration({ data }: StepGenerationProps) {
 
   return (
     <>
-      <div className="space-y-4">
+      <div className="h-full min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain scrollbar-hide">
         <div className="space-y-2">
           <p className="text-[13px] font-medium text-foreground">
             {companyName ? `Setting up ${companyName}` : "Setting up your workspace"}

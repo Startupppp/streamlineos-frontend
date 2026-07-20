@@ -537,6 +537,140 @@
   }
 }
 
+@keyframes goal-everything-border {
+  0% {
+    background-position: 0 0, 0% 50%;
+  }
+  50% {
+    background-position: 0 0, 100% 50%;
+  }
+  100% {
+    background-position: 0 0, 0% 50%;
+  }
+}
+
+@keyframes goal-everything-sheen {
+  0% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -120% 0;
+  }
+}
+
+button.goal-everything-chip {
+  position: relative;
+  isolation: isolate;
+  border-style: solid;
+  border-width: 2.5px;
+  border-color: transparent;
+  background-color: transparent;
+  background-image:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--brand-core) 14%, var(--card)) 0%,
+      color-mix(in srgb, var(--brand-cyan) 12%, var(--card)) 100%
+    ),
+    linear-gradient(
+      120deg,
+      var(--brand-deep) 0%,
+      var(--brand-core) 18%,
+      var(--brand-cyan) 42%,
+      var(--brand-bright) 62%,
+      var(--brand-core) 82%,
+      var(--brand-deep) 100%
+    );
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  background-size: 100% 100%, 280% 100%;
+  background-position: 0 0, 0% 50%;
+  animation: goal-everything-border 2s ease-in-out infinite;
+}
+
+button.goal-everything-chip::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    color-mix(in srgb, var(--brand-cyan) 22%, transparent) 50%,
+    transparent 65%
+  );
+  background-size: 220% 100%;
+  background-position: 120% 0;
+  animation: goal-everything-sheen 2.6s ease-in-out infinite;
+}
+
+button.goal-everything-chip[aria-checked="true"] {
+  animation: none;
+  background-image:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--brand-core) 16%, var(--card)) 0%,
+      color-mix(in srgb, var(--brand-cyan) 12%, var(--card)) 100%
+    ),
+    linear-gradient(var(--brand-core), var(--brand-core));
+  background-size: 100% 100%, 100% 100%;
+  background-position: 0 0, 0 0;
+}
+
+button.goal-everything-chip[aria-checked="true"]::before {
+  display: none;
+}
+
+.dark button.goal-everything-chip[aria-checked="true"] {
+  background-image:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--brand-core) 22%, var(--card)) 0%,
+      color-mix(in srgb, var(--brand-cyan) 16%, var(--card)) 100%
+    ),
+    linear-gradient(var(--brand-core), var(--brand-core));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button.goal-everything-chip {
+    animation: none;
+    background-image:
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--brand-core) 14%, var(--card)) 0%,
+        color-mix(in srgb, var(--brand-cyan) 12%, var(--card)) 100%
+      ),
+      linear-gradient(135deg, var(--brand-deep), var(--brand-core), var(--brand-cyan));
+    background-size: 100% 100%, 100% 100%;
+    background-position: 0 0, 0 0;
+  }
+
+  button.goal-everything-chip::before {
+    display: none;
+  }
+
+  button.goal-everything-chip[aria-checked="true"] {
+    background-image:
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--brand-core) 16%, var(--card)) 0%,
+        color-mix(in srgb, var(--brand-cyan) 12%, var(--card)) 100%
+      ),
+      linear-gradient(var(--brand-core), var(--brand-core));
+  }
+
+  .dark button.goal-everything-chip[aria-checked="true"] {
+    background-image:
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--brand-core) 22%, var(--card)) 0%,
+        color-mix(in srgb, var(--brand-cyan) 16%, var(--card)) 100%
+      ),
+      linear-gradient(var(--brand-core), var(--brand-core));
+  }
+}
+
 @keyframes marquee-x {
   from {
     transform: translateX(0);
@@ -551,6 +685,22 @@
   gap: 3rem;
   width: max-content;
   animation: marquee-x 32s linear infinite;
+}
+
+.preview-goal-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee-x 18s linear infinite;
+}
+
+.preview-goal-marquee-track:hover {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .preview-goal-marquee-track {
+    animation: none;
+  }
 }
 
 @keyframes skeleton-shimmer {
