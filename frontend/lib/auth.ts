@@ -186,6 +186,7 @@ function buildUserFromSessionData(
     hasDashboardAccess: sessionData.hasDashboardAccess,
     orgId: sessionData.orgId ?? null,
     isOrgOwner: sessionData.isOrgOwner,
+    isPlatformAdmin: sessionData.isPlatformAdmin === true,
     branchId: sessionData.branchId ?? null,
     totpEnabled: sessionData.totpEnabled,
     mfaEnforced: sessionData.mfaEnforced,
@@ -353,83 +354,108 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
 
     async session({ session, token }) {
-      const tokenOrgId = (token.orgId as string | null | undefined) ?? null;
-      const fresh = token.id
-        ? await fetchSessionDataCached(token.id as string, tokenOrgId)
-        : null;
+      try {
+        const tokenOrgId = (token.orgId as string | null | undefined) ?? null;
+        const fresh = token.id
+          ? await fetchSessionDataCached(token.id as string, tokenOrgId)
+          : null;
 
-      const orgId = fresh
-        ? fresh.orgId
-        : ((token.orgId as string | null | undefined) ?? null);
-      const isOrgOwner = fresh
-        ? fresh.isOrgOwner
-        : ((token.isOrgOwner as boolean | undefined) ?? false);
-      const permissions = fresh?.permissions ?? [];
-      const enabledModules = fresh?.enabledModules ?? [];
-      const plan = fresh?.plan ?? null;
-      const role = fresh?.role ?? (token.role as string | undefined) ?? "";
-      const branchId = fresh?.branchId ?? null;
+        const orgId = fresh
+          ? fresh.orgId
+          : ((token.orgId as string | null | undefined) ?? null);
+        const isOrgOwner = fresh
+          ? fresh.isOrgOwner
+          : ((token.isOrgOwner as boolean | undefined) ?? false);
+        const permissions = fresh?.permissions ?? [];
+        const enabledModules = fresh?.enabledModules ?? [];
+        const plan = fresh?.plan ?? null;
+        const role = fresh?.role ?? (token.role as string | undefined) ?? "";
+        const branchId = fresh?.branchId ?? null;
 
-      if (session.user) {
-        session.user.id = token.id as string;
-        session.user.email = token.email as string;
-        session.user.role = role;
-        session.user.image =
-          fresh?.image ?? (token.picture as string | null | undefined) ?? null;
-        session.user.isActive = fresh?.isActive ?? (token.isActive as boolean);
-        session.user.hasDashboardAccess = fresh?.hasDashboardAccess ?? true;
-        session.user.isPlatformAdmin =
-          (token.isPlatformAdmin as boolean | undefined) ?? false;
-        session.user.isOrgOwner = isOrgOwner;
-      }
-      session.orgId = orgId;
-      session.branchId = branchId;
-      session.sessionId = token.sessionId as string | undefined;
-      session.plan = plan;
-      session.permissions = permissions;
-      session.enabledModules = enabledModules;
-      if (token.daysUntilExpiry !== undefined)
-        session.daysUntilExpiry = token.daysUntilExpiry as number;
-      session.authProvider =
-        (token.authProvider as string | undefined) ?? "credentials";
-      session.orgOnboardingCompletedAt =
-        fresh?.orgOnboardingCompletedAt ?? token.orgOnboardingCompletedAt ?? null;
-      session.userOnboardingCompletedAt =
-        fresh?.userOnboardingCompletedAt ?? token.userOnboardingCompletedAt ?? null;
-
-      const jwtSecret = process.env.BACKEND_JWT_SECRET;
-      const sessionId = (token.sessionId as string | undefined)?.trim();
-      if (jwtSecret && token.id && sessionId) {
-        const userId = token.id as string;
-        const jwtCacheKey = `${userId}:${orgId ?? ""}`;
-        const cachedJwt = getBackendJwtFromStore(jwtCacheKey);
-        if (cachedJwt) {
-          session.backendJwt = cachedJwt;
-        } else {
-          const minted = await new SignJWT({
-            orgId,
-            branchId,
-            role,
-            enabledModules,
-            plan,
-            isPlatformAdmin:
-              (token.isPlatformAdmin as boolean | undefined) === true,
-            isOrgOwner,
-            sessionId,
-          })
-            .setProtectedHeader({ alg: "HS256" })
-            .setSubject(userId)
-            .setIssuedAt()
-            .setExpirationTime("10m")
-            .sign(new TextEncoder().encode(jwtSecret));
-          setBackendJwtInStore(jwtCacheKey, minted);
-          session.backendJwt = minted;
+        if (session.user) {
+          session.user.id = token.id as string;
+          session.user.email = token.email as string;
+          session.user.role = role;
+          session.user.image =
+            fresh?.image ?? (token.picture as string | null | undefined) ?? null;
+          session.user.isActive = fresh?.isActive ?? (token.isActive as boolean);
+          session.user.hasDashboardAccess = fresh?.hasDashboardAccess ?? true;
+          session.user.isPlatformAdmin =
+            (token.isPlatformAdmin as boolean | undefined) ?? false;
+          session.user.isOrgOwner = isOrgOwner;
         }
-      }
+        session.orgId = orgId;
+        session.branchId = branchId;
+        session.sessionId = token.sessionId as string | undefined;
+        session.plan = plan;
+        session.permissions = permissions;
+        session.enabledModules = enabledModules;
+        if (token.daysUntilExpiry !== undefined)
+          session.daysUntilExpiry = token.daysUntilExpiry as number;
+        session.authProvider =
+          (token.authProvider as string | undefined) ?? "credentials";
+        session.orgOnboardingCompletedAt =
+          fresh?.orgOnboardingCompletedAt ??
+          (token.orgOnboardingCompletedAt as string | null | undefined) ??
+          null;
+        session.userOnboardingCompletedAt =
+          fresh?.userOnboardingCompletedAt ??
+          (token.userOnboardingCompletedAt as string | null | undefined) ??
+          null;
 
-      return session;
+        const jwtSecret = process.env.BACKEND_JWT_SECRET;
+        const sessionId = (token.sessionId as string | undefined)?.trim();
+        if (jwtSecret && token.id && sessionId) {
+          const userId = token.id as string;
+          const jwtCacheKey = `${userId}:${orgId ?? ""}`;
+          const cachedJwt = getBackendJwtFromStore(jwtCacheKey);
+          if (cachedJwt) {
+            session.backendJwt = cachedJwt;
+          } else {
+            const minted = await new SignJWT({
+              orgId,
+              branchId,
+              role,
+              enabledModules,
+              plan,
+              isPlatformAdmin:
+                (token.isPlatformAdmin as boolean | undefined) === true,
+              isOrgOwner,
+              sessionId,
+            })
+              .setProtectedHeader({ alg: "HS256" })
+              .setSubject(userId)
+              .setIssuedAt()
+              .setExpirationTime("10m")
+              .sign(new TextEncoder().encode(jwtSecret));
+            setBackendJwtInStore(jwtCacheKey, minted);
+            session.backendJwt = minted;
+          }
+        }
+
+        return session;
+      } catch {
+        if (session.user) {
+          session.user.id = token.id as string;
+          session.user.email = token.email as string;
+          session.user.role = (token.role as string | undefined) ?? "";
+          session.user.isActive = (token.isActive as boolean | undefined) ?? true;
+          session.user.isPlatformAdmin =
+            (token.isPlatformAdmin as boolean | undefined) === true;
+          session.user.isOrgOwner =
+            (token.isOrgOwner as boolean | undefined) === true;
+        }
+        session.orgId =
+          (token.orgId as string | null | undefined) ?? null;
+        session.sessionId = token.sessionId as string | undefined;
+        session.orgOnboardingCompletedAt =
+          (token.orgOnboardingCompletedAt as string | null | undefined) ?? null;
+        session.userOnboardingCompletedAt =
+          (token.userOnboardingCompletedAt as string | null | undefined) ?? null;
+        return session;
+      }
     },
   },
 
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
 });

@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 import { getSessionAbility } from "@/lib/abilities-server";
 import { BlogAdminNav } from "@/components/blog/blog-admin-nav";
-import { auth } from "@/lib/auth";
+import { getServerAuth } from "@/lib/get-server-auth";
+import { signInPathForMissingSession } from "@/lib/auth-session-cookies";
 
 export const dynamic = "force-dynamic";
 
@@ -10,9 +11,9 @@ export default async function BlogAdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth();
+  const session = await getServerAuth();
   if (!session?.user) {
-    redirect("/signin?callbackUrl=/blogs/admin");
+    redirect(signInPathForMissingSession("/blogs/admin"));
   }
   const ability = await getSessionAbility();
   if (!ability.can("manage", "blog:posts")) {

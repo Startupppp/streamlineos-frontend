@@ -1,14 +1,17 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
+import { getServerAuth } from "@/lib/get-server-auth";
+import { signInPathForMissingSession } from "@/lib/auth-session-cookies";
 import { isPlatformOwner } from "./role";
 
 export async function requirePlatformOwner() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    redirect("/signin?callbackUrl=/owner");
-  }
-  if (!isPlatformOwner(session.user.role)) {
-    redirect("/dashboard");
-  }
+  const session = await getServerAuth();
+
+  if (!session?.user?.id) redirect(signInPathForMissingSession("/owner"));
+
+  const isPlatformAdmin =
+    session.user.isPlatformAdmin === true || isPlatformOwner(session.user.role);
+
+  if (!isPlatformAdmin) redirect("/dashboard");
+
   return session;
 }

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import type { Session } from "next-auth";
 import { getServerAuth } from "@/lib/get-server-auth";
+import { signInPathForMissingSession } from "@/lib/auth-session-cookies";
 import { getSessionAbility } from "@/lib/abilities-server";
 import type { AppAbility } from "@/lib/abilities";
 import type { PermissionKey } from "@/lib/rbac/permissions";
@@ -42,7 +43,7 @@ async function getCurrentPath(): Promise<string | null> {
 
 export async function requireSession(): Promise<Session> {
   const session = (await getServerAuth()) as Session | null;
-  if (!session?.user) redirect("/signin");
+  if (!session?.user) redirect(signInPathForMissingSession());
   return session;
 }
 
@@ -53,7 +54,7 @@ export async function requirePermission(
   const session = (await getServerAuth()) as Session | null;
   if (!session?.user) {
     if (options.redirectTo) redirect(options.redirectTo);
-    redirect("/signin");
+    redirect(signInPathForMissingSession());
   }
 
   const ability = await getSessionAbility();

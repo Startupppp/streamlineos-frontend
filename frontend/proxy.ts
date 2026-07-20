@@ -2,16 +2,13 @@ import { NextResponse, NextRequest } from "next/server";
 import { getToken, type JWT } from "next-auth/jwt";
 import { PLATFORM_OWNER_ROLE, OWNER_HOME } from "@/lib/platform/role";
 import { ROLES } from "@/lib/constants/roles";
-import { BRAND_DOMAIN } from "@/lib/branding";
 import {
   hasSessionCookie,
   sessionCookieBases,
+  SESSION_EXPIRED_QUERY,
+  SESSION_EXPIRED_VALUE,
   withExpiredSessionCookies,
 } from "@/lib/auth-session-cookies";
-
-const APEX_DOMAIN = BRAND_DOMAIN.startsWith("www.")
-  ? BRAND_DOMAIN.slice("www.".length)
-  : null;
 
 function buildCsp(nonce: string, apiUrl?: string): string {
   const isDev = process.env.NODE_ENV === "development";
@@ -162,17 +159,6 @@ export async function proxy(req: NextRequest) {
     return NextResponse.redirect(httpsUrl, 301);
   }
 
-  if (
-    process.env.NODE_ENV === "production" &&
-    APEX_DOMAIN !== null &&
-    req.nextUrl.hostname === APEX_DOMAIN
-  ) {
-    const canonicalUrl = req.nextUrl.clone();
-    canonicalUrl.protocol = "https";
-    canonicalUrl.host = BRAND_DOMAIN;
-    return NextResponse.redirect(canonicalUrl, 301);
-  }
-
   if (matchesRoute(pathname, "/signup")) {
     return redirectTo(req, "/signin", req.nextUrl.search);
   }
@@ -181,7 +167,8 @@ export async function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const secret = process.env.NEXTAUTH_SECRET;
+  const secret =
+    process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
   let token: JWT | null = null;
   for (const cookieName of sessionCookieBases()) {
     token = await getToken({
@@ -217,6 +204,16 @@ export async function proxy(req: NextRequest) {
     }
 
     if (matchesAny(pathname, AUTH_ROUTES)) {
+      if (
+        req.nextUrl.searchParams.get(SESSION_EXPIRED_QUERY) ===
+        SESSION_EXPIRED_VALUE
+      ) {
+        return withExpiredSessionCookies(
+          redirectTo(req, pathname),
+          req,
+          true,
+        );
+      }
       const target = resolveSafeCallbackUrl(req);
       if (target) {
         return redirectTo(req, target.pathname, target.search);
@@ -237,6 +234,13 @@ export async function proxy(req: NextRequest) {
       if (!hasOrg) return redirectTo(req, "/org-setup");
       if (isOrgOwner) return redirectTo(req, "/dashboard");
       if (token.userOnboardingCompletedAt) return redirectTo(req, "/dashboard");
+    } else if (
+      isProtected &&
+      isPlatformAdmin &&
+      !hasOrg &&
+      !matchesRoute(pathname, OWNER_HOME)
+    ) {
+      return redirectTo(req, OWNER_HOME);
     } else if (isProtected && !isPlatformAdmin) {
       const needsOrgSetup =
         !hasOrg || (isOrgOwner && !token.orgOnboardingCompletedAt);
@@ -274,7 +278,7 @@ export async function proxy(req: NextRequest) {
     "Content-Security-Policy",
     buildCsp(nonce, process.env.NEXT_PUBLIC_API_URL),
   );
-  return withExpiredSessionCookies(response, req, staleSessionCookie);
+  return response;
 }
 
 export const config = {

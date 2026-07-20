@@ -25,7 +25,7 @@ async function clearStaleSessionCookies(): Promise<void> {
   }
 }
 
-async function readServerAuth(): Promise<Session | null> {
+export const getServerAuth = cache(async (): Promise<Session | null> => {
   try {
     return (await auth()) ?? null;
   } catch (error) {
@@ -35,6 +35,4 @@ async function readServerAuth(): Promise<Session | null> {
     await clearStaleSessionCookies();
     return null;
   }
-}
-
-export const getServerAuth = cache(readServerAuth);
+});
