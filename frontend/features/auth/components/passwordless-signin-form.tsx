@@ -62,13 +62,14 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
 
   const requestOtpMutation = useMutation({
     mutationFn: (email: string) =>
-      apiClient.post<{ ok: true }>("/auth/email-otp", { email }),
-    onSuccess: (_data, email) => {
+      apiClient.post<{ message: string }>("/auth/email-otp", { email }),
+    onSuccess: (data, email) => {
       setSubmittedEmail(email);
       setStage("code");
       setOtpValue("");
       setMagicLinkSent(false);
       startCooldown();
+      toast.success(getErrorMessage(data));
     },
     onError: (error) => {
       toast.error(getErrorMessage(error));
@@ -96,8 +97,9 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
   const magicLinkMutation = useMutation({
     mutationFn: (email: string) =>
       apiClient.post<{ message: string }>("/auth/magic-link", { email }),
-    onSuccess: () => {
+    onSuccess: (data) => {
       setMagicLinkSent(true);
+      toast.success(getErrorMessage(data));
     },
     onError: (error) => {
       toast.error(getErrorMessage(error));
