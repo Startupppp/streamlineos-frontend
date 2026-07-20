@@ -1,7 +1,8 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 
 export interface PersonalDetailsPayload {
   phone: string;
@@ -17,11 +18,35 @@ export interface PersonalDetailsPayload {
   addressCountry?: string;
 }
 
+export interface PersonalDetails {
+  phone: string | null;
+  gender: "MALE" | "FEMALE" | "OTHER" | null;
+  dateOfBirth: string | null;
+  emergencyName: string | null;
+  emergencyRelation: string | null;
+  emergencyPhone: string | null;
+}
+
+export function usePersonalDetailsQuery() {
+  return useQuery({
+    queryKey: queryKeys.onboardingFlow.personalDetails(),
+    queryFn: () => apiClient.get<PersonalDetails>("/onboarding/personal-details"),
+    staleTime: 30_000,
+  });
+}
+
 export function usePersonalInfoMutation() {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationKey: ["onboarding", "personal-details"],
     mutationFn: (payload: PersonalDetailsPayload) =>
       apiClient.patch<void>("/onboarding/personal-details", payload),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.onboardingFlow.personalDetails(),
+      });
+    },
   });
 }
 

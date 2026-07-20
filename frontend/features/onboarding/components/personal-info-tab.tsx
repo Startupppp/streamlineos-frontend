@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,10 @@ import {
 import { motion } from "framer-motion";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { toast } from "sonner";
-import { usePersonalInfoMutation } from "@/lib/api/hooks/onboarding";
+import {
+  usePersonalDetailsQuery,
+  usePersonalInfoMutation,
+} from "@/lib/api/hooks/onboarding";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { FormNavButtons } from "@/components/onboarding/form-nav-buttons";
 import type { Variants } from "framer-motion";
@@ -55,6 +58,8 @@ export function PersonalInfoTab({
   defaultValues,
 }: PersonalInfoTabProps) {
   const { mutate, isPending } = usePersonalInfoMutation();
+  const { data: personalDetails } = usePersonalDetailsQuery();
+  const hasHydratedDetails = useRef(false);
 
   const form = useForm<PersonalInfoFormValues>({
     resolver: zodResolver(personalInfoSchema),
@@ -81,6 +86,25 @@ export function PersonalInfoTab({
   const showIndianAddress = effectiveCountry === INDIA_COUNTRY_NAME;
   const selectedState = form.watch("addressState");
   const cityOptions = selectedState ? citiesForState(selectedState) : [];
+
+  useEffect(() => {
+    if (!personalDetails || hasHydratedDetails.current) return;
+
+    const emergencyRelationship = EMERGENCY_RELATIONSHIPS.find(
+      (relationship) => relationship.value === personalDetails.emergencyRelation,
+    );
+
+    form.reset({
+      ...form.getValues(),
+      phone: personalDetails.phone ?? "",
+      gender: personalDetails.gender ?? undefined,
+      dateOfBirth: personalDetails.dateOfBirth ?? "",
+      emergencyName: personalDetails.emergencyName ?? "",
+      emergencyRelation: emergencyRelationship?.value,
+      emergencyPhone: personalDetails.emergencyPhone ?? "",
+    });
+    hasHydratedDetails.current = true;
+  }, [form, personalDetails]);
 
   useEffect(() => {
     if (!form.getValues("addressCountry")?.trim()) {
