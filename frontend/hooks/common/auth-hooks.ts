@@ -6,19 +6,28 @@ import { useRouter } from "next/navigation";
 import { apiClient, clearBackendTokenCache } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
-export async function signInWithMagicToken(magicToken: string): Promise<boolean> {
-  if (!magicToken) return false;
-  clearBackendTokenCache();
+async function attemptCredentialsSignIn(magicToken: string): Promise<boolean> {
   try {
     const result = await signIn("credentials", {
       magicToken,
       redirect: false,
     });
-    if (result?.ok) return true;
+    if (result?.ok && !result.error) return true;
   } catch {
   }
-  const session = await getSession();
-  return Boolean(session?.user);
+  try {
+    const session = await getSession();
+    return Boolean(session?.user);
+  } catch {
+    return false;
+  }
+}
+
+export async function signInWithMagicToken(magicToken: string): Promise<boolean> {
+  if (!magicToken) return false;
+  clearBackendTokenCache();
+  if (await attemptCredentialsSignIn(magicToken)) return true;
+  return attemptCredentialsSignIn(magicToken);
 }
 
 export function useVerifyEmail() {

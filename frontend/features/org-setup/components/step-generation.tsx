@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect, useRef, useLayoutEffect, useCallback } from "react";
-import { signIn, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Check, Loader2, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { clearBackendTokenCache } from "@/lib/api-client";
 import { completeOnboardingGate } from "@/lib/onboarding-gate";
+import { signInWithMagicToken } from "@/hooks/common/auth-hooks";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { clearAll } from "@/features/org-setup/lib/draft";
 import { useCompleteOrgSetupMutation, type OrgSetupPayload } from "@/lib/api/hooks/org";
@@ -118,10 +119,7 @@ export function StepGeneration({ data }: StepGenerationProps) {
     sessionStorage.setItem(SETUP_DONE_KEY, "1");
 
     if (autoLoginToken) {
-      await signIn("credentials", {
-        magicToken: autoLoginToken,
-        redirect: false,
-      }).catch(() => null);
+      await signInWithMagicToken(autoLoginToken);
     }
     await completeOnboardingGate("org-setup-done", update);
 

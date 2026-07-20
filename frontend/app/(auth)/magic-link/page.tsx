@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { signInWithMagicToken } from "@/hooks/common/auth-hooks";
 import { Loader2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -23,16 +23,10 @@ export default function MagicLinkPage() {
     attempted.current = true;
 
     async function verify() {
-      try {
-        const result = await signIn("credentials", {
-          magicToken: token,
-          redirect: false,
-        });
-        if (result?.ok && !result.error) {
-          window.location.replace("/post-signin");
-          return;
-        }
-      } catch {
+      const signedIn = await signInWithMagicToken(token ?? "");
+      if (signedIn) {
+        window.location.replace("/post-signin");
+        return;
       }
       setErrorMessage("This link is invalid, expired, or has already been used. Please request a new one.");
       setStatus("error");

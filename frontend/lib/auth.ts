@@ -210,46 +210,40 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
     Credentials({
       credentials: {
-        email: { label: "Email", type: "email" },
         magicToken: { label: "Magic token", type: "text" },
-        totpCode: { label: "MFA code", type: "text" },
       },
       async authorize(credentials, request) {
-        if (credentials?.magicToken) {
-          try {
-            const ua = request.headers.get("user-agent") ?? null;
-            const rawIp =
-              request.headers.get("x-forwarded-for") ??
-              request.headers.get("x-real-ip") ??
-              null;
-            const ip = rawIp ? rawIp.split(",")[0].trim() : null;
+        const magicToken = credentials?.magicToken;
+        if (typeof magicToken !== "string" || magicToken.length === 0) return null;
+        try {
+          const ua = request.headers.get("user-agent") ?? null;
+          const rawIp =
+            request.headers.get("x-forwarded-for") ??
+            request.headers.get("x-real-ip") ??
+            null;
+          const ip = rawIp ? rawIp.split(",")[0].trim() : null;
 
-            const { data: raw } = await axios.post<unknown>(
-              `${BACKEND_URL}/auth/magic-link/verify`,
-              { token: credentials.magicToken },
-              {
-                headers: {
-                  ...(ua ? { "x-client-user-agent": ua } : {}),
-                  ...(ip ? { "x-client-ip": ip } : {}),
-                },
+          const { data: raw } = await axios.post<unknown>(
+            `${BACKEND_URL}/auth/magic-link/verify`,
+            { token: magicToken },
+            {
+              headers: {
+                ...(ua ? { "x-client-user-agent": ua } : {}),
+                ...(ip ? { "x-client-ip": ip } : {}),
               },
-            );
-            if (!raw) return null;
-            const data = unwrapBackend<{
-              userId: string;
-              sessionId?: string;
-            }>(raw);
-            const sessionData = await fetchSessionData(data.userId);
-            if (!sessionData) return null;
-            return {
-              ...buildUserFromSessionData(data.userId, sessionData),
-              sessionId: data.sessionId ?? undefined,
-            };
-          } catch {
-            return null;
-          }
+            },
+          );
+          const data = unwrapBackend<{ userId?: string; sessionId?: string }>(raw);
+          if (typeof data?.userId !== "string" || data.userId.length === 0) return null;
+          const sessionData = await fetchSessionData(data.userId);
+          if (!sessionData) return null;
+          return {
+            ...buildUserFromSessionData(data.userId, sessionData),
+            sessionId: data.sessionId ?? undefined,
+          };
+        } catch {
+          return null;
         }
-        return null;
       },
     }),
   ],

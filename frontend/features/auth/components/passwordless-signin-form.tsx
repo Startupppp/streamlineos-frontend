@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useMutation } from "@tanstack/react-query";
-import { signIn } from "next-auth/react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +12,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/components/ui/input-otp";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { signInWithMagicToken } from "@/hooks/common/auth-hooks";
 import { cn } from "@/lib/utils";
 
 const emailSchema = z.object({
@@ -79,21 +79,13 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
     mutationFn: (variables: { email: string; code: string }) =>
       apiClient.post<{ autoLoginToken: string }>("/auth/email-otp/verify", variables),
     onSuccess: async (data) => {
-      try {
-        const result = await signIn("credentials", {
-          magicToken: data.autoLoginToken,
-          redirect: false,
-        });
-        if (result?.ok && !result.error) {
-          window.location.assign(getCallbackUrl());
-        } else {
-          toast.error("Sign-in failed. Please try again.");
-          setOtpValue("");
-        }
-      } catch {
-        toast.error("Sign-in failed. Please try again.");
-        setOtpValue("");
+      const signedIn = await signInWithMagicToken(data.autoLoginToken);
+      if (signedIn) {
+        window.location.assign(getCallbackUrl());
+        return;
       }
+      toast.error("Could not complete sign-in. Request a new code and try again.");
+      setOtpValue("");
     },
     onError: (error) => {
       toast.error(getErrorMessage(error));

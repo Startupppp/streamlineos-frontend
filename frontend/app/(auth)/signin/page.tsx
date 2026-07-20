@@ -44,7 +44,9 @@ export default function SignInPage() {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const url = params.get("callbackUrl");
-      if (url && url.startsWith("/")) return url;
+      if (url && url.startsWith("/") && !url.startsWith("//") && !url.includes("\\")) {
+        return url;
+      }
     }
     return "/post-signin";
   }, []);

@@ -3,7 +3,7 @@
 import { useCallback, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { signIn, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useQuery } from "@tanstack/react-query";
@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
 import { apiClient, clearBackendTokenCache } from "@/lib/api-client";
-import { useAcceptInvitation } from "@/hooks/common/auth-hooks";
+import { signInWithMagicToken, useAcceptInvitation } from "@/hooks/common/auth-hooks";
 import { motion } from "framer-motion";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { InvitationIllustration } from "@/components/illustrations";
@@ -133,11 +133,8 @@ export default function InvitationPage() {
 
   const autoLoginWithToken = useCallback(
     async (autoLoginToken: string): Promise<void> => {
-      const result = await signIn("credentials", {
-        magicToken: autoLoginToken,
-        redirect: false,
-      });
-      if (result?.ok) {
+      const signedIn = await signInWithMagicToken(autoLoginToken);
+      if (signedIn) {
         window.location.href = "/post-signin";
       } else {
         router.push("/signin");

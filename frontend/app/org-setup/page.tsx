@@ -3,10 +3,11 @@
 export const dynamic = "force-dynamic";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { useSession, signIn } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { clearBackendTokenCache } from "@/lib/api-client";
 import { completeOnboardingGate } from "@/lib/onboarding-gate";
+import { signInWithMagicToken } from "@/hooks/common/auth-hooks";
 import {
   useSkipOrgSetupMutation,
   usePatchOrgSetupSessionMutation,
@@ -128,10 +129,7 @@ export default function OrgSetupPage() {
       const res = await skipOrgSetup({});
       clearBackendTokenCache();
       if (res?.autoLoginToken) {
-        await signIn("credentials", {
-          magicToken: res.autoLoginToken,
-          redirect: false,
-        }).catch(() => null);
+        await signInWithMagicToken(res.autoLoginToken);
       }
       await completeOnboardingGate("org-setup-done", update);
       clearAll();
