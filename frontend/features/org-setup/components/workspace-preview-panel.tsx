@@ -27,7 +27,7 @@ export function WorkspacePreviewPanel({ data }: WorkspacePreviewPanelProps) {
               const meta = MODULE_CATALOG[moduleKey];
               return (
                 <li key={moduleKey} className="flex items-center gap-2 rounded-lg border border-border bg-card px-2.5 py-1.5">
-                  <LayoutGrid className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+                  <LayoutGrid className="h-3.5 w-3.5 text-brand-core shrink-0" />
                   <div className="min-w-0">
                     <TruncatedText text={meta?.label ?? moduleKey} className="text-[12px] font-medium text-foreground" />
                     {meta?.description && (
@@ -57,11 +57,11 @@ export function WorkspacePreviewPanel({ data }: WorkspacePreviewPanelProps) {
       )}
 
       {showPaymentsTeaser && (
-        <div className="rounded-lg border border-blue-200 bg-blue-50 p-2.5 space-y-1">
-          <p className="flex items-center gap-1.5 text-[12px] font-medium text-blue-800">
+        <div className="rounded-lg border border-brand-core/25 bg-brand-core/5 p-2.5 space-y-1 dark:bg-brand-core/10 dark:border-brand-core/30">
+          <p className="flex items-center gap-1.5 text-[12px] font-medium text-brand-deep dark:text-brand-bright">
             <Wallet className="h-3.5 w-3.5" /> Payment readiness
           </p>
-          <p className="text-[11px] text-blue-700">
+          <p className="text-[11px] text-brand-deep/80 dark:text-brand-bright/80">
             {data.paymentsChoice && data.paymentsChoice !== "skip"
               ? `${data.paymentsChoice === "razorpay" ? "Razorpay" : data.paymentsChoice === "stripe" ? "Stripe" : "Manual payments"} will be ready to configure in test mode after setup.`
               : "You selected a goal that usually needs online payments — you'll get a chance to connect a provider."}

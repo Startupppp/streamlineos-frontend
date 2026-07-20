@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { STEP_SUBTITLES } from "../lib/constants";
 import type { StepId } from "../lib/constants";
@@ -18,6 +18,7 @@ type OrgSetupShellProps = {
   direction: number;
   saveState: "idle" | "saving" | "saved";
   data: WizardData;
+  onStepSelect?: (index: number) => void;
   children: ReactNode;
 };
 
@@ -31,14 +32,21 @@ export function OrgSetupShell({
   direction,
   saveState,
   data,
+  onStepSelect,
   children,
 }: OrgSetupShellProps) {
+  const reduceMotion = useReducedMotion();
   const currentStepId = sequence[currentIndex];
   const isFirstOrLast = currentIndex === 0 || currentIndex === sequence.length - 1;
 
   return (
-    <div className="w-full max-w-5xl mx-auto flex gap-8 pb-24 lg:pb-2">
-      <StepRail sequence={sequence} currentIndex={currentIndex} saveState={saveState} />
+    <div className="w-full max-w-5xl mx-auto flex gap-8 pb-32 lg:pb-2">
+      <StepRail
+        sequence={sequence}
+        currentIndex={currentIndex}
+        saveState={saveState}
+        onStepSelect={onStepSelect}
+      />
 
       <div className="flex-1 min-w-0 max-w-xl mx-auto lg:mx-0 space-y-4">
         <MobileProgressBar sequence={sequence} currentIndex={currentIndex} />
@@ -63,9 +71,9 @@ export function OrgSetupShell({
 
         <div
           className={cn(
-            "bg-card rounded-xl border border-border shadow-soft min-h-0 overflow-y-auto scrollbar-hide",
-            "max-h-[calc(100dvh-15rem)] lg:max-h-[calc(100dvh-11rem)]",
-            isFirstOrLast ? "p-5" : "p-4",
+            "bg-card rounded-xl border border-border shadow-soft min-h-0",
+            "lg:overflow-y-auto lg:scrollbar-hide lg:max-h-[calc(100dvh-11rem)]",
+            isFirstOrLast ? "p-4 sm:p-5" : "p-3.5 sm:p-4",
           )}
         >
           <AnimatePresence mode="wait" custom={direction}>
@@ -73,14 +81,21 @@ export function OrgSetupShell({
               key={currentIndex}
               custom={direction}
               variants={{
-                initial: (d: number) => ({ opacity: 0, x: d * 20 }),
-                animate: { opacity: 1, x: 0 },
-                exit: (d: number) => ({ opacity: 0, x: d * -20 }),
+                initial: (d: number) => ({ opacity: 0, x: reduceMotion ? 0 : d * 24 }),
+                animate: {
+                  opacity: 1,
+                  x: 0,
+                  transition: { duration: 0.22, ease: "easeOut" },
+                },
+                exit: (d: number) => ({
+                  opacity: 0,
+                  x: reduceMotion ? 0 : d * -24,
+                  transition: { duration: 0.15, ease: "easeOut" },
+                }),
               }}
               initial="initial"
               animate="animate"
               exit="exit"
-              transition={{ duration: 0.18, ease: "easeOut" }}
             >
               {children}
             </motion.div>

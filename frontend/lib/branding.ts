@@ -3,8 +3,8 @@ export const BRAND_TAGLINE = "The operating system for modern teams";
 export const BRAND_DESCRIPTION =
   "StreamlineOS unifies HR, projects, CRM, chat, and analytics into one operating system for modern teams.";
 
-export const BRAND_DOMAIN = "www.streamlineos.in";
+export const BRAND_DOMAIN =
+  process.env.NEXT_PUBLIC_BRAND_DOMAIN ?? "www.streamlineos.in";
 export const BRAND_URL = `https://${BRAND_DOMAIN}`;
-export const BRAND_API_DOMAIN = "api.streamlineos.in";
-export const BRAND_API_URL = `https://${BRAND_API_DOMAIN}`;
-export const BRAND_SUPPORT_EMAIL = "support@streamlineos.in";
+export const BRAND_SUPPORT_EMAIL =
+  process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? "support@streamlineos.in";

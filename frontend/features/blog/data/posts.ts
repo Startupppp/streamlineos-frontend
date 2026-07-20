@@ -1,3 +1,5 @@
+import { BRAND_SUPPORT_EMAIL } from "@/lib/branding";
+
 type BlogPost = {
   slug: string;
   title: string;
@@ -83,7 +85,7 @@ Over the next 90 days we're focused on three things:
 2. **Open the HR + Projects + CRM modules** in sequence, validated with real customer workflows rather than feature checklists.
 3. **Build the integration surface** — Razorpay (done), Google Workspace (in progress), WhatsApp Business, Zapier.
 
-If you're building a team operating system or running one, I'd love to compare notes. Reach out at [founders@streamlineos.in](mailto:founders@streamlineos.in) or via the [contact page](/contact).
+If you're building a team operating system or running one, I'd love to compare notes. Reach out at [${BRAND_SUPPORT_EMAIL}](mailto:${BRAND_SUPPORT_EMAIL}) or via the [contact page](/contact).
 
 — Aditya`,
   },

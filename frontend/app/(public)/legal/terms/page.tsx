@@ -61,8 +61,8 @@ export default function TermsPage() {
           <li>Keep your credentials confidential. Enable MFA — we strongly recommend it.</li>
           <li>
             Notify us immediately if you suspect unauthorized access (write to{" "}
-            <a href="mailto:security@streamlineos.app" className="font-mono text-blue-600 hover:underline">
-              security@streamlineos.app
+            <a href={`mailto:${BRAND_SUPPORT_EMAIL}`} className="font-mono text-blue-600 hover:underline">
+              {BRAND_SUPPORT_EMAIL}
             </a>
             ).
           </li>

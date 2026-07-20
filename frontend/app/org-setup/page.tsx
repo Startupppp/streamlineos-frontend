@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useSession, signIn } from "next-auth/react";
-import { Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { clearBackendTokenCache } from "@/lib/api-client";
 import { completeOnboardingGate } from "@/lib/onboarding-gate";
 import {
@@ -92,6 +92,11 @@ export default function OrgSetupPage() {
   const goBack = useCallback(() => {
     setDirection(-1);
     setStep((s) => Math.max(s - 1, 1));
+  }, []);
+
+  const handleStepSelect = useCallback((index: number) => {
+    setDirection(-1);
+    setStep(index + 1);
   }, []);
 
   const handleToggleGoal = useCallback((id: string) => {
@@ -211,8 +216,26 @@ export default function OrgSetupPage() {
 
   if (!mounted) {
     return (
-      <div className="w-full max-w-sm flex items-center justify-center py-16">
-        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+      <div className="w-full max-w-5xl mx-auto flex gap-8 pb-24 lg:pb-2">
+        <div className="hidden lg:flex w-64 shrink-0 flex-col gap-6 py-2">
+          <Skeleton className="h-7 w-40" />
+          <div className="space-y-2">
+            <Skeleton className="h-9 w-full rounded-lg" />
+            <Skeleton className="h-9 w-full rounded-lg" />
+            <Skeleton className="h-9 w-full rounded-lg" />
+            <Skeleton className="h-9 w-full rounded-lg" />
+          </div>
+        </div>
+        <div className="flex-1 min-w-0 max-w-xl mx-auto lg:mx-0 space-y-4">
+          <div className="hidden lg:block space-y-2">
+            <Skeleton className="h-7 w-56" />
+            <Skeleton className="h-4 w-72" />
+          </div>
+          <Skeleton className="h-80 w-full rounded-xl" />
+        </div>
+        <div className="hidden lg:block w-72 shrink-0">
+          <Skeleton className="h-64 w-full rounded-xl" />
+        </div>
       </div>
     );
   }
@@ -230,6 +253,7 @@ export default function OrgSetupPage() {
       direction={direction}
       saveState={isSaving ? "saving" : saveState}
       data={data}
+      onStepSelect={handleStepSelect}
     >
       {currentStepId === "welcome" && (
         <StepWelcome onNext={goNext} onSkip={handleSkipToDashboard} isSkipping={isSkipping} />

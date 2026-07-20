@@ -207,7 +207,7 @@ function CopySnippetButton({ text }: { text: string }) {
 }
 
 function SetupHelp() {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:1500";
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "";
 
   const cursorSnippet = JSON.stringify(
     {

@@ -1,0 +1,149 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-20T00:00:00Z",
+  "title": "Design System: StreamlineOS",
+  "extensions": {
+    "colorMeta": {
+      "ink": { "role": "primary", "displayName": "Ink", "canonical": "#0b1220", "tonalRamp": ["#020617", "#0b1220", "#1e293b", "#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1"] },
+      "canvas": { "role": "neutral", "displayName": "Canvas", "canonical": "#f8fafc", "tonalRamp": ["#0f172a", "#334155", "#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0", "#f1f5f9", "#f8fafc"] },
+      "panel": { "role": "neutral", "displayName": "Panel", "canonical": "#ffffff", "tonalRamp": ["#131316", "#3f3f46", "#71717a", "#a1a1aa", "#d4d4d8", "#e4e4e7", "#f4f4f5", "#ffffff"] },
+      "mist": { "role": "neutral", "displayName": "Mist", "canonical": "#f1f5f9", "tonalRamp": ["#1e293b", "#475569", "#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0", "#f1f5f9", "#f8fafc"] },
+      "hairline": { "role": "neutral", "displayName": "Hairline", "canonical": "#e2e8f0", "tonalRamp": ["#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0", "#eef2f7", "#f8fafc"] },
+      "annotation": { "role": "neutral", "displayName": "Annotation", "canonical": "#64748b", "tonalRamp": ["#0f172a", "#1e293b", "#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1", "#f1f5f9"] },
+      "signal-blue": { "role": "secondary", "displayName": "Signal Blue", "canonical": "#3b82f6", "tonalRamp": ["#1e3a8a", "#1e40af", "#1d4ed8", "#2563eb", "#3b82f6", "#60a5fa", "#93c5fd", "#dbeafe"] },
+      "signal-red": { "role": "tertiary", "displayName": "Signal Red", "canonical": "#dc2626", "tonalRamp": ["#7f1d1d", "#991b1b", "#b91c1c", "#dc2626", "#ef4444", "#f87171", "#fca5a5", "#fee2e2"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Module hero surfaces only (PageWrapper variant=display). Reserved, not default." },
+      "headline": { "displayName": "Headline", "purpose": "Standard PageWrapper page title." },
+      "title": { "displayName": "Title", "purpose": "Card headers, dialog titles, section headings." },
+      "body": { "displayName": "Body", "purpose": "Default text at 14px; prose capped at 65-75ch." },
+      "label": { "displayName": "Label", "purpose": "Form labels, table headers, badges, meta." },
+      "mono": { "displayName": "Mono", "purpose": "IDs, keys, code, tabular numerics." }
+    },
+    "shadows": [
+      { "name": "card-rest", "value": "0 1px 2px 0 rgba(0,0,0,0.05)", "purpose": "The most a resting card carries (shadow-sm)." },
+      { "name": "soft", "value": "0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04)", "purpose": "Barely-there ambient lift for grouped panels." },
+      { "name": "medium", "value": "0 4px 6px -1px rgba(0,0,0,0.07), 0 10px 32px -4px rgba(0,0,0,0.06)", "purpose": "Floating layers: popovers, dropdowns, hover lift." },
+      { "name": "noir", "value": "0 1px 2px rgba(15,23,42,0.04), 0 8px 24px -10px rgba(15,23,42,0.12), 0 0 0 1px rgba(15,23,42,0.04)", "purpose": "Premium framed lift with built-in 1px ring; flips to inset glass highlight in dark mode." },
+      { "name": "cta", "value": "0 8px 22px -10px rgba(11,18,32,0.35)", "purpose": "Primary button ambient authority; the one resting shadow with presence." }
+    ],
+    "motion": [
+      { "name": "press-scale", "value": "transform 0.1s ease; :active scale(0.97)", "purpose": "Universal tactile press on buttons and controls." },
+      { "name": "state-transition", "value": "150-250ms ease-out on opacity/transform", "purpose": "Default for hover, open/close, and state changes; respects prefers-reduced-motion." },
+      { "name": "fade-up", "value": "0.35s ease; opacity 0→1, translateY(12px)→0", "purpose": "Entrance for page sections and list items (stagger ~80ms)." },
+      { "name": "route-transition", "value": "220ms ease-out; x:24→0 in, x:0→-24 out", "purpose": "Framer Motion step/route transitions in AnimatePresence mode=wait." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Ink-filled CTA with ambient shadow; one per view.",
+      "html": "<button class=\"ds-btn-primary\">Create project</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 36px; padding: 8px 16px; background: var(--primary, #0b1220); color: var(--primary-foreground, #ffffff); font-family: 'Geist', ui-sans-serif, system-ui, sans-serif; font-size: 14px; font-weight: 600; border: none; border-radius: 8px; box-shadow: 0 8px 22px -10px rgba(11,18,32,0.35); cursor: pointer; transition: background-color 0.15s ease-out, transform 0.1s ease; } .ds-btn-primary:hover { background: color-mix(in srgb, var(--primary, #0b1220) 90%, transparent); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 8px 22px -10px rgba(11,18,32,0.35), 0 0 0 1px var(--ring, #94a3b8); } .ds-btn-primary:active { transform: scale(0.97); }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Panel-filled secondary action with Hairline border that warms on hover.",
+      "html": "<button class=\"ds-btn-outline\">Export CSV</button>",
+      "css": ".ds-btn-outline { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 36px; padding: 8px 16px; background: var(--card, #ffffff); color: var(--foreground, #0b1220); font-family: 'Geist', ui-sans-serif, system-ui, sans-serif; font-size: 14px; font-weight: 500; border: 1px solid var(--input, #e2e8f0); border-radius: 8px; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); cursor: pointer; transition: border-color 0.15s ease-out, transform 0.1s ease; } .ds-btn-outline:hover { border-color: color-mix(in srgb, var(--primary, #0b1220) 50%, transparent); } .ds-btn-outline:focus-visible { outline: none; border-color: var(--ring, #94a3b8); box-shadow: 0 0 0 1px var(--ring, #94a3b8); } .ds-btn-outline:active { transform: scale(0.97); }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Borderless tertiary action with Mist hover wash.",
+      "html": "<button class=\"ds-btn-ghost\">Cancel</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 36px; padding: 8px 16px; background: transparent; color: var(--foreground, #0b1220); font-family: 'Geist', ui-sans-serif, system-ui, sans-serif; font-size: 14px; font-weight: 500; border: none; border-radius: 8px; cursor: pointer; transition: background-color 0.15s ease-out, transform 0.1s ease; } .ds-btn-ghost:hover { background: var(--muted, #f1f5f9); } .ds-btn-ghost:focus-visible { outline: none; box-shadow: 0 0 0 1px var(--ring, #94a3b8); } .ds-btn-ghost:active { transform: scale(0.97); }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "The single field style (FIELD_CONTROL): 36px, Panel fill, Hairline stroke, ring on focus.",
+      "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"Search employees...\" />",
+      "css": ".ds-input { box-sizing: border-box; width: 260px; height: 36px; padding: 8px 12px; background: var(--card, #ffffff); color: var(--foreground, #0b1220); font-family: 'Geist', ui-sans-serif, system-ui, sans-serif; font-size: 14px; border: 1px solid var(--input, #e2e8f0); border-radius: 8px; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); outline: none; transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out; } .ds-input::placeholder { color: var(--muted-foreground, #64748b); } .ds-input:hover { border-color: color-mix(in srgb, var(--primary, #0b1220) 40%, transparent); } .ds-input:focus-visible { border-color: var(--ring, #94a3b8); box-shadow: 0 0 0 1px var(--ring, #94a3b8); }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Canonical in-shell container: Panel fill, Hairline border, shadow-sm, 14px corners.",
+      "html": "<div class=\"ds-card\"><h3 class=\"ds-card-title\">Open positions</h3><p class=\"ds-card-body\">8 roles across 3 departments are actively hiring this quarter.</p></div>",
+      "css": ".ds-card { background: var(--card, #ffffff); border: 1px solid var(--border, #e2e8f0); border-radius: 14px; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); padding: 16px; max-width: 320px; font-family: 'Geist', ui-sans-serif, system-ui, sans-serif; } .ds-card-title { margin: 0 0 4px; font-size: 14px; font-weight: 600; letter-spacing: -0.01em; color: var(--card-foreground, #0b1220); } .ds-card-body { margin: 0; font-size: 14px; line-height: 1.5; color: var(--muted-foreground, #64748b); }"
+    },
+    {
+      "name": "Filter Select",
+      "kind": "chip",
+      "refersTo": "filter-control",
+      "description": "Compact 32px toolbar control; filter rows are flat flex rows, never bordered panels.",
+      "html": "<button class=\"ds-filter-select\">Status: Active<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m6 9 6 6 6-6\"/></svg></button>",
+      "css": ".ds-filter-select { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px; background: var(--card, #ffffff); color: var(--foreground, #0b1220); font-family: 'Geist', ui-sans-serif, system-ui, sans-serif; font-size: 13px; font-weight: 500; border: 1px solid var(--input, #e2e8f0); border-radius: 8px; cursor: pointer; transition: border-color 0.15s ease-out; } .ds-filter-select svg { color: var(--muted-foreground, #64748b); } .ds-filter-select:hover { border-color: color-mix(in srgb, var(--primary, #0b1220) 40%, transparent); } .ds-filter-select:focus-visible { outline: none; border-color: var(--ring, #94a3b8); box-shadow: 0 0 0 1px var(--ring, #94a3b8); }"
+    },
+    {
+      "name": "Sidebar Nav Item",
+      "kind": "nav",
+      "refersTo": "button-ghost",
+      "description": "Active nav item takes a color-mix wash of the theme accent — a tint, never a fill.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-item ds-nav-item-active\" href=\"#\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect width=\"7\" height=\"9\" x=\"3\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"5\" x=\"14\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"9\" x=\"14\" y=\"12\" rx=\"1\"/><rect width=\"7\" height=\"5\" x=\"3\" y=\"16\" rx=\"1\"/></svg>Dashboard</a><a class=\"ds-nav-item\" href=\"#\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M22 21v-2a4 4 0 0 0-3-3.87\"/><path d=\"M16 3.13a4 4 0 0 1 0 7.75\"/></svg>People</a></nav>",
+      "css": ".ds-nav { display: flex; flex-direction: column; gap: 2px; width: 200px; padding: 8px; background: var(--sidebar, #ffffff); border: 1px solid var(--sidebar-border, #e2e8f0); border-radius: 10px; font-family: 'Geist', ui-sans-serif, system-ui, sans-serif; } .ds-nav-item { display: flex; align-items: center; gap: 10px; padding: 7px 10px; font-size: 13.5px; font-weight: 500; color: var(--sidebar-foreground, #0b1220); text-decoration: none; border-radius: 8px; transition: background-color 0.15s ease-out; } .ds-nav-item svg { color: var(--muted-foreground, #64748b); } .ds-nav-item:hover { background: var(--muted, #f1f5f9); } .ds-nav-item-active { background: color-mix(in srgb, var(--sidebar-primary, #0b1220) 8%, transparent); color: var(--sidebar-accent-foreground, #0b1220); font-weight: 600; } .ds-nav-item-active svg { color: var(--sidebar-primary, #0b1220); }"
+    },
+    {
+      "name": "Status Chip",
+      "kind": "chip",
+      "refersTo": "filter-control",
+      "description": "Semantic status only — a colored chip always means something; never decorative.",
+      "html": "<span class=\"ds-chip ds-chip-success\">Active</span> <span class=\"ds-chip ds-chip-warning\">Pending</span> <span class=\"ds-chip ds-chip-danger\">Overdue</span> <span class=\"ds-chip ds-chip-info\">In review</span>",
+      "css": ".ds-chip { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; font-family: 'Geist', ui-sans-serif, system-ui, sans-serif; font-size: 12px; font-weight: 500; border-radius: 6px; border: 1px solid transparent; } .ds-chip-success { background: #ecfdf5; color: #047857; border-color: #a7f3d0; } .ds-chip-warning { background: #fffbeb; color: #b45309; border-color: #fde68a; } .ds-chip-danger { background: #fef2f2; color: #b91c1c; border-color: #fecaca; } .ds-chip-info { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Ink First, Color Earned",
+    "overview": "StreamlineOS is a monochrome instrument. The chrome — canvas, panels, borders, text, even the primary CTA — is drawn entirely in ink and slate. Color appears on screen for exactly two reasons: the user chose it (one of 18 selectable accent themes that retint --primary, --ring, and the sidebar in one move) or it means something (emerald success, amber warning, red danger, blue info). The default Ink theme renders the entire authenticated app with no hue at all, and it must always look finished that way. This is a product-register system in the Linear/Stripe lane, built for people who live in it 6–8 hours a day across 30+ modules: density with restraint, one page anatomy everywhere, borders for structure and shadows only in response.",
+    "keyCharacteristics": [
+      "Monochrome ink chrome; accent is user-selected via theme tokens, never hardcoded",
+      "Dense, compact, all-day-usable: 36px controls, 14px body, 32px filter rows",
+      "One page anatomy everywhere (PageWrapper); consistency over surprise",
+      "Borders structure, shadows respond; flat by default",
+      "Every state designed: skeleton loading, teaching empty states, friendly errors",
+      "Motion is 150–250ms state communication, never decoration"
+    ],
+    "rules": [
+      { "name": "The Borrowed Accent Rule", "body": "The accent color is never yours to pick. Interactive tints use theme tokens — bg-primary, bg-primary/5..15, border-l-primary, --ring — never a literal Tailwind hue. If the screen only looks right in the Blue theme, it's broken.", "section": "colors" },
+      { "name": "The Semantic Reserve Rule", "body": "Emerald, amber, red, and blue are a status vocabulary, not decoration. A colored chip always means something; every light-tint pairing carries its dark-mode variant.", "section": "colors" },
+      { "name": "The HR Exception", "body": "The HR module keeps its rich gradient hero and toned quick-action tiles by explicit decision. Preserve it in conformance passes; do not export its richness to other modules.", "section": "colors" },
+      { "name": "The One Family Rule", "body": "Geist everywhere, weight for hierarchy. No display fonts in UI labels, no second sans, no font pairing inside the shell.", "section": "typography" },
+      { "name": "The Balanced Heading Rule", "body": "Headings get text-wrap: balance, prose gets text-wrap: pretty — set globally; don't undo it.", "section": "typography" },
+      { "name": "The Flat-At-Rest Rule", "body": "If an element isn't floating and isn't the primary CTA, it has at most shadow-sm. Backdrop-blur and glass panels are landing/auth-only; inside the shell they are prohibited.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do render the default Ink theme as the finished product — pure monochrome chrome with bg-primary accents that happen to be ink.",
+      "Do use theme tokens (bg-primary, bg-primary/10, --ring) for every interactive accent so all 18 palettes retint the app in one move.",
+      "Do keep the h-9 (36px) control canon and h-8 (32px) filter canon; density is the product.",
+      "Do ship all five states per page: skeleton loading that mirrors the real layout, teaching empty states with one action, friendly error + retry, sparse, and dense.",
+      "Do keep motion 150–250ms ease-out on opacity/transform, with prefers-reduced-motion fallbacks, and press feedback via the built-in press-scale.",
+      "Do preserve the HR module's gradient hero and toned tiles — it is a deliberate exception.",
+      "Do show human-readable names everywhere; a visible raw UUID is a bug."
+    ],
+    "donts": [
+      "Don't resurrect the retired violet/indigo gradient CTA style — brand gradients live on landing/marketing surfaces only, never inside the authenticated shell.",
+      "Don't hardcode blue-* (or any literal hue) on interactive accent surfaces; blue is semantic info and chart seeds only.",
+      "Don't build rainbow dashboards: no decorative color on chrome, no full-saturation tints on inactive states.",
+      "Don't use glassy blurred cards, heavy shadows, min-h-screen, or page-level gradients inside the shell — the shell owns the background.",
+      "Don't wrap filter rows in a bordered card, nest cards, or use colored side-stripe borders thicker than 1px.",
+      "Don't ship default-looking buttons, flat identical card grids, or lone spinners where skeletons belong.",
+      "Don't invent a second field style, a second error-message path (getErrorMessage is canonical), or a second rich-text editor.",
+      "Don't let neutral hexes or bg-white/slate-* chrome bypass semantic tokens — they must flip correctly in dark mode."
+    ]
+  }
+}

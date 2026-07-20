@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { STEP_TITLES } from "../lib/constants";
 import type { StepId } from "../lib/constants";
 
@@ -21,11 +20,16 @@ export function MobileProgressBar({ sequence, currentIndex }: MobileProgressBarP
           {currentIndex + 1} / {total}
         </p>
       </div>
-      <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
-        <motion.div
-          className="h-full gradient-wizard rounded-full"
-          animate={{ width: `${pct}%` }}
-          transition={{ duration: 0.3, ease: "easeOut" }}
+      <div
+        className="h-1 w-full rounded-full bg-muted overflow-hidden"
+        role="progressbar"
+        aria-valuenow={pct}
+        aria-valuemin={0}
+        aria-valuemax={100}
+      >
+        <div
+          className="h-full gradient-wizard rounded-full transition-[width] duration-[400ms] ease-out motion-reduce:transition-none"
+          style={{ width: `${pct}%` }}
         />
       </div>
     </div>

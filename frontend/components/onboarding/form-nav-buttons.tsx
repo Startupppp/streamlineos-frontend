@@ -1,7 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowLeft, ArrowRight } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 
 interface FormNavButtonsProps {
   onBack?: () => void;
@@ -19,7 +20,13 @@ export function FormNavButtons({
   const hasLeadingActions = Boolean(onBack || onClear);
 
   return (
-    <div className={hasLeadingActions ? "flex items-center justify-between gap-3" : "flex justify-end"}>
+    <div
+      className={
+        hasLeadingActions
+          ? "flex flex-wrap items-center justify-between gap-2 sm:gap-3"
+          : "flex justify-end"
+      }
+    >
       {hasLeadingActions && (
         <div className="flex items-center gap-2">
           {onBack && (
@@ -35,11 +42,10 @@ export function FormNavButtons({
           )}
         </div>
       )}
-      <Button type="submit" disabled={isLoading} aria-busy={isLoading}>
-        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+      <LoadingButton type="submit" isPending={isLoading}>
         {submitLabel}
         <ArrowRight className="ml-2 h-4 w-4" />
-      </Button>
+      </LoadingButton>
     </div>
   );
 }

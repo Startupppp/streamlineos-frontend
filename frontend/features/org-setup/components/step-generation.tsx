@@ -80,6 +80,7 @@ export function StepGeneration({ data }: StepGenerationProps) {
       companySize: d.teamSize || "1-10",
       ...(d.country ? { country: d.country } : {}),
       ...(d.timezone ? { timezone: d.timezone } : {}),
+      ...(d.phone ? { phone: d.phone } : {}),
       enabledModules: d.modules.length > 0 ? d.modules : ["HR", "CRM", "PROJECTS"],
     };
   }
@@ -208,11 +209,16 @@ export function StepGeneration({ data }: StepGenerationProps) {
             {companyName ? `Setting up ${companyName}` : "Setting up your workspace"}
           </p>
 
-          <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
-            <motion.div
-              className="h-full gradient-wizard rounded-full"
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
+          <div
+            className="h-1 w-full bg-muted rounded-full overflow-hidden"
+            role="progressbar"
+            aria-valuenow={progress}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          >
+            <div
+              className="h-full gradient-wizard rounded-full transition-[width] duration-[400ms] ease-out motion-reduce:transition-none"
+              style={{ width: `${progress}%` }}
             />
           </div>
 
@@ -237,31 +243,31 @@ export function StepGeneration({ data }: StepGenerationProps) {
                 key={label}
                 initial={{ opacity: 0, x: -6 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.04, duration: 0.18 }}
+                transition={{ delay: i * 0.04, duration: 0.18, ease: "easeOut" }}
                 className={cn(
                   "flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-colors duration-300",
-                  active && "bg-blue-50",
+                  active && "bg-brand-core/10 dark:bg-brand-core/15",
                 )}
               >
                 <span
                   className={cn(
-                    "h-5 w-5 rounded-full flex items-center justify-center shrink-0 transition-all duration-300",
-                    done || showWelcome ? "bg-foreground" : active ? "bg-blue-100" : "bg-muted",
+                    "h-5 w-5 rounded-full flex items-center justify-center shrink-0 transition-colors duration-300",
+                    done || showWelcome ? "bg-foreground" : active ? "bg-brand-core/15" : "bg-muted",
                   )}
                 >
                   <AnimatePresence mode="wait">
                     {done || showWelcome ? (
                       <motion.span
                         key="check"
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
+                        initial={{ scale: 0.5, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
                         transition={{ type: "spring", stiffness: 500, damping: 18 }}
                       >
                         <Check className="h-3 w-3 text-background stroke-[2.5]" />
                       </motion.span>
                     ) : active ? (
                       <motion.span key="spin" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                        <Loader2 className="h-3 w-3 text-blue-600 animate-spin" />
+                        <Loader2 className="h-3 w-3 text-brand-core animate-spin" />
                       </motion.span>
                     ) : (
                       <span key="dot" className="h-1.5 w-1.5 rounded-full bg-muted-foreground/30" />
@@ -273,7 +279,7 @@ export function StepGeneration({ data }: StepGenerationProps) {
                   className={cn(
                     "text-[13px] transition-colors duration-300",
                     (done || showWelcome) && "text-foreground font-medium",
-                    active && "text-blue-700 font-medium",
+                    active && "text-brand-deep dark:text-brand-bright font-medium",
                     pending && !showWelcome && "text-muted-foreground",
                   )}
                 >

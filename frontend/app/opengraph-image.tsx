@@ -1,5 +1,7 @@
 import { ImageResponse } from "next/og";
-import { BRAND_NAME, BRAND_TAGLINE } from "@/lib/branding";
+import { BRAND_NAME, BRAND_TAGLINE, BRAND_DOMAIN } from "@/lib/branding";
+
+const DISPLAY_DOMAIN = BRAND_DOMAIN.replace(/^www\./, "");
 
 export const runtime = "edge";
 export const alt = `${BRAND_NAME} — ${BRAND_TAGLINE}`;
@@ -116,7 +118,7 @@ export default async function OpengraphImage() {
             textTransform: "uppercase",
           }}
         >
-          <div style={{ color: "#94a3b8" }}>streamlineos.in</div>
+          <div style={{ color: "#94a3b8" }}>{DISPLAY_DOMAIN}</div>
           <div style={{ color: "#67e8f9" }}>Built in India</div>
         </div>
       </div>

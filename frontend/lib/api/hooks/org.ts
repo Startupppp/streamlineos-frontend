@@ -10,6 +10,7 @@ export type OrgSetupPayload = {
   companySize: string;
   country?: string;
   timezone?: string;
+  phone?: string;
   enabledModules: string[];
 };
 

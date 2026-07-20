@@ -28,6 +28,11 @@ const PAYMENT_ICONS: Record<PaymentsChoice, LucideIcon> = {
   razorpay: Wallet, stripe: CreditCard, manual: Building2, skip: SkipForward,
 };
 
+const OPTION_SELECTED =
+  "border-brand-core bg-brand-core/10 dark:bg-brand-core/15";
+const OPTION_IDLE = "border-border bg-card hover:border-brand-core/40";
+const OPTION_LABEL_SELECTED = "text-brand-deep dark:text-brand-bright";
+
 export function StepSetup({ data, recommendedReasons, onToggleModule, patch, onBack, onNext }: StepSetupProps) {
   const showPayments = needsPaymentsStep(data.goals);
 
@@ -44,16 +49,18 @@ export function StepSetup({ data, recommendedReasons, onToggleModule, patch, onB
                 key={key}
                 className={cn(
                   "flex items-center gap-2 rounded-lg border px-2.5 py-2 transition-colors",
-                  selected ? "border-blue-300 bg-blue-50/50" : "border-border bg-card",
+                  selected ? "border-brand-core/40 bg-brand-core/5 dark:bg-brand-core/10" : "border-border bg-card",
                 )}
               >
-                <LayoutGrid className={cn("h-3.5 w-3.5 shrink-0", selected ? "text-blue-600" : "text-muted-foreground")} />
+                <LayoutGrid className={cn("h-3.5 w-3.5 shrink-0", selected ? "text-brand-core" : "text-muted-foreground")} />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
                     <span className="text-[12.5px] font-medium text-foreground">{meta.label}</span>
                     <span className={cn(
                       "text-[9.5px] font-medium px-1.5 py-0.5 rounded-full border",
-                      selected ? "border-blue-200 bg-blue-100 text-blue-700" : "border-border bg-muted text-muted-foreground",
+                      selected
+                        ? "border-brand-core/30 bg-brand-core/10 text-brand-deep dark:bg-brand-core/15 dark:text-brand-bright"
+                        : "border-border bg-muted text-muted-foreground",
                     )}>
                       {selected ? "Included" : "Optional"}
                     </span>
@@ -81,12 +88,12 @@ export function StepSetup({ data, recommendedReasons, onToggleModule, patch, onB
                 aria-checked={selected}
                 onClick={() => patch({ startingData: option.id })}
                 className={cn(
-                  "flex flex-col gap-1 p-2.5 rounded-lg border text-left transition-colors",
-                  selected ? "border-blue-500 bg-blue-50" : "border-border bg-card hover:border-blue-300",
+                  "flex flex-col gap-1 p-2.5 rounded-lg border text-left transition-colors press-scale",
+                  selected ? OPTION_SELECTED : OPTION_IDLE,
                 )}
               >
-                <Icon className={cn("h-3.5 w-3.5 shrink-0", selected ? "text-blue-600" : "text-muted-foreground")} />
-                <span className={cn("text-[11.5px] font-medium", selected ? "text-blue-700" : "text-foreground")}>{option.label}</span>
+                <Icon className={cn("h-3.5 w-3.5 shrink-0", selected ? "text-brand-core" : "text-muted-foreground")} />
+                <span className={cn("text-[11.5px] font-medium", selected ? OPTION_LABEL_SELECTED : "text-foreground")}>{option.label}</span>
                 <p className="text-[10px] text-muted-foreground">{option.description}</p>
               </button>
             );
@@ -110,12 +117,12 @@ export function StepSetup({ data, recommendedReasons, onToggleModule, patch, onB
                   aria-checked={selected}
                   onClick={() => patch({ paymentsChoice: option.id })}
                   className={cn(
-                    "flex items-center gap-2 p-2.5 rounded-lg border text-left transition-colors",
-                    selected ? "border-blue-500 bg-blue-50" : "border-border bg-card hover:border-blue-300",
+                    "flex items-center gap-2 p-2.5 rounded-lg border text-left transition-colors press-scale",
+                    selected ? OPTION_SELECTED : OPTION_IDLE,
                   )}
                 >
-                  <Icon className={cn("h-3.5 w-3.5 shrink-0", selected ? "text-blue-600" : "text-muted-foreground")} />
-                  <span className={cn("text-[11.5px] font-medium", selected ? "text-blue-700" : "text-foreground")}>{option.label}</span>
+                  <Icon className={cn("h-3.5 w-3.5 shrink-0", selected ? "text-brand-core" : "text-muted-foreground")} />
+                  <span className={cn("text-[11.5px] font-medium", selected ? OPTION_LABEL_SELECTED : "text-foreground")}>{option.label}</span>
                 </button>
               );
             })}

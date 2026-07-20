@@ -5,7 +5,7 @@ import { BRAND_NAME } from "@/lib/branding";
 
 export default function OrgSetupLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="relative flex h-[100dvh] overflow-hidden surface-soft text-slate-900">
+    <div className="relative flex h-[100dvh] overflow-hidden surface-soft text-foreground">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-slate-900 focus:text-white focus:rounded-md text-sm font-medium"
@@ -21,7 +21,7 @@ export default function OrgSetupLayout({ children }: { children: ReactNode }) {
             aria-label={BRAND_NAME}
           >
             <AnimatedLogo size={34} className="rounded-xl" />
-            <span className="font-display text-base font-bold tracking-tight text-slate-900">
+            <span className="font-display text-base font-bold tracking-tight text-foreground">
               {BRAND_NAME}
             </span>
           </Link>
@@ -35,20 +35,20 @@ export default function OrgSetupLayout({ children }: { children: ReactNode }) {
           {children}
         </main>
 
-        <footer className="hidden lg:flex shrink-0 px-6 sm:px-10 py-5 items-center justify-between text-[12px] font-medium text-slate-400">
+        <footer className="hidden lg:flex shrink-0 px-6 sm:px-10 py-5 items-center justify-between text-[12px] font-medium text-muted-foreground">
           <p>
             &copy; {new Date().getFullYear()} {BRAND_NAME}
           </p>
           <div className="flex items-center gap-4">
             <Link
               href="/legal/privacy"
-              className="hover:text-slate-700 transition-colors"
+              className="hover:text-foreground transition-colors"
             >
               Privacy
             </Link>
             <Link
               href="/legal/terms"
-              className="hover:text-slate-700 transition-colors"
+              className="hover:text-foreground transition-colors"
             >
               Terms
             </Link>

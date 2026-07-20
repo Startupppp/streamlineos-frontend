@@ -1,14 +1,13 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { motion } from "framer-motion";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import {
   ArrowLeft,
   ArrowRight,
   Check,
-  Loader2,
   Send,
   Shield,
   type LucideIcon,
@@ -77,9 +76,8 @@ export function ReviewTab({
   }
 
   return (
-    <Card className="border-border text-center py-8">
-      <CardContent className="flex flex-col items-center space-y-4">
-        <motion.div
+    <div className="text-center py-8 flex flex-col items-center space-y-4">
+      <motion.div
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
@@ -112,26 +110,26 @@ export function ReviewTab({
               return (
                 <div
                   key={step.id}
-                  className={`flex items-center gap-3 p-3 rounded-lg text-left ${isCompleted ? "bg-green-500/10" : "bg-muted/50"}`}
+                  className={`flex items-center gap-3 p-3 rounded-lg text-left ${isCompleted ? "bg-emerald-500/10" : "bg-muted/50"}`}
                 >
                   {isCompleted ? (
                     <Check
-                      className="h-5 w-5 text-green-500 flex-shrink-0"
+                      className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0"
                       aria-hidden="true"
                     />
                   ) : (
                     <StepIcon
-                      className="h-5 w-5 text-muted-foreground flex-shrink-0"
+                      className="h-5 w-5 text-muted-foreground shrink-0"
                       aria-hidden="true"
                     />
                   )}
                   <span
-                    className={`text-sm font-medium ${isCompleted ? "text-green-600" : "text-muted-foreground"}`}
+                    className={`text-sm font-medium ${isCompleted ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}`}
                   >
                     {step.label}
                   </span>
                   <span
-                    className={`ml-auto text-xs ${isCompleted ? "text-green-600" : "text-muted-foreground"}`}
+                    className={`ml-auto text-xs ${isCompleted ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}`}
                   >
                     {isCompleted ? "Completed" : "Pending"}
                   </span>
@@ -141,7 +139,7 @@ export function ReviewTab({
 
             <div className="flex items-center gap-3 p-3 rounded-lg text-left bg-primary/10">
               <Shield
-                className="h-5 w-5 text-primary flex-shrink-0"
+                className="h-5 w-5 text-primary shrink-0"
                 aria-hidden="true"
               />
               <span className="text-sm font-medium text-primary">
@@ -170,20 +168,18 @@ export function ReviewTab({
                   : undefined
               }
             >
-              <Button
+              <LoadingButton
                 onClick={handleSubmit}
-                disabled={!allDataStepsComplete || isSubmitting}
-                aria-busy={isSubmitting}
+                disabled={!allDataStepsComplete}
+                isPending={isSubmitting}
+                loadingText="Submitting…"
                 aria-describedby={
                   !allDataStepsComplete ? "review-hint" : undefined
                 }
               >
-                {isSubmitting && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                )}
                 Submit
                 <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
+              </LoadingButton>
             </span>
             {!allDataStepsComplete && (
               <p id="review-hint" className="sr-only">
@@ -191,8 +187,7 @@ export function ReviewTab({
               </p>
             )}
           </motion.div>
-        </motion.div>
-      </CardContent>
-    </Card>
+      </motion.div>
+    </div>
   );
 }

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { LegalShell, LegalSection, PlainEnglish } from "@/features/legal/legal-shell";
-import { BRAND_NAME } from "@/lib/branding";
+import { BRAND_NAME, BRAND_SUPPORT_EMAIL } from "@/lib/branding";
 
 export const metadata: Metadata = {
   title: `Security — ${BRAND_NAME}`,
@@ -257,8 +257,8 @@ export default function SecurityPage() {
         <ul className="list-disc pl-5 space-y-2">
           <li>
             Email{" "}
-            <a href="mailto:security@streamlineos.app" className="font-mono text-blue-600 hover:underline">
-              security@streamlineos.app
+            <a href={`mailto:${BRAND_SUPPORT_EMAIL}`} className="font-mono text-blue-600 hover:underline">
+              {BRAND_SUPPORT_EMAIL}
             </a>{" "}
             with a clear description and reproduction steps.
           </li>
@@ -280,8 +280,8 @@ export default function SecurityPage() {
         <p>
           For security questionnaires, pen-test reports, or due-diligence requests during
           enterprise procurement, write to{" "}
-          <a href="mailto:security@streamlineos.app" className="font-mono text-blue-600 hover:underline">
-            security@streamlineos.app
+          <a href={`mailto:${BRAND_SUPPORT_EMAIL}`} className="font-mono text-blue-600 hover:underline">
+            {BRAND_SUPPORT_EMAIL}
           </a>
           . We respond within two business days.
         </p>

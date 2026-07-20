@@ -1,6 +1,8 @@
 import { chromium } from "playwright";
 
-const BASE = "http://localhost:1000";
+const BASE = process.env.QA_BASE_URL ?? "http://localhost:1000";
+const DEMO_EMAIL = process.env.DEMO_EMAIL ?? "demo@streamlineos.in";
+const DEMO_PASSWORD = process.env.DEMO_PASSWORD ?? "Demo@2026!";
 const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36";
 
@@ -19,7 +21,7 @@ async function login() {
   for (const c of parseSetCookies(csrfRes)) jar.set(c.name, c.value);
   const { csrfToken } = await csrfRes.json();
   const body = new URLSearchParams({
-    csrfToken, email: "demo@streamlineos.in", password: "Demo@2026!",
+    csrfToken, email: DEMO_EMAIL, password: DEMO_PASSWORD,
     callbackUrl: `${BASE}/projects`, json: "true",
   });
   const cookieHeader = [...jar.entries()].map(([k, v]) => `${k}=${v}`).join("; ");

@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Plus, Rocket, X } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import { Plus, Rocket, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +12,7 @@ import { INVITE_ROLES } from "../lib/constants";
 import type { Invitee, WizardData } from "../lib/types";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { StepGeneration } from "./step-generation";
+import { NavButtons } from "./nav-buttons";
 
 type StepInviteLaunchProps = {
   data: WizardData;
@@ -20,6 +21,7 @@ type StepInviteLaunchProps = {
 };
 
 export function StepInviteLaunch({ data, onChangeInvitees, onBack }: StepInviteLaunchProps) {
+  const reduceMotion = useReducedMotion();
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<string>(INVITE_ROLES[0]);
   const [launching, setLaunching] = useState(false);
@@ -46,7 +48,7 @@ export function StepInviteLaunch({ data, onChangeInvitees, onBack }: StepInviteL
         Invite teammates now, or skip and invite them later from Settings.
       </p>
 
-      <div className="flex gap-1.5">
+      <div className="flex flex-col sm:flex-row gap-1.5">
         <Input
           type="email"
           value={email}
@@ -60,19 +62,21 @@ export function StepInviteLaunch({ data, onChangeInvitees, onBack }: StepInviteL
             }
           }}
         />
-        <Select value={role} onValueChange={setRole}>
-          <SelectTrigger className="w-28 text-sm">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {INVITE_ROLES.map((r) => (
-              <SelectItem key={r} value={r}>{r}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button type="button" size="icon" variant="outline" className="h-9 w-9 shrink-0" onClick={handleAdd}>
-          <Plus className="h-3.5 w-3.5" />
-        </Button>
+        <div className="flex gap-1.5">
+          <Select value={role} onValueChange={setRole}>
+            <SelectTrigger className="flex-1 sm:flex-initial sm:w-28 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+              {INVITE_ROLES.map((r) => (
+                <SelectItem key={r} value={r}>{r}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button type="button" size="icon" variant="outline" className="h-9 w-9 shrink-0" onClick={handleAdd} aria-label="Add invitee">
+            <Plus className="h-3.5 w-3.5" />
+          </Button>
+        </div>
       </div>
 
       {data.invitees.length > 0 && (
@@ -80,9 +84,9 @@ export function StepInviteLaunch({ data, onChangeInvitees, onBack }: StepInviteL
           {data.invitees.map((invitee, i) => (
             <motion.li
               key={invitee.email}
-              initial={{ opacity: 0, x: -6 }}
+              initial={{ opacity: 0, x: reduceMotion ? 0 : -6 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.03 }}
+              transition={{ delay: i * 0.03, duration: 0.2, ease: "easeOut" }}
               className="flex items-center justify-between gap-2 rounded-lg border border-border bg-card px-2.5 py-1.5"
             >
               <TruncatedText text={invitee.email} className="text-[13px]" />
@@ -102,14 +106,12 @@ export function StepInviteLaunch({ data, onChangeInvitees, onBack }: StepInviteL
         </ul>
       )}
 
-      <div className="fixed inset-x-0 bottom-0 z-40 flex gap-2 border-t border-border bg-background px-4 py-3 lg:static lg:border-0 lg:bg-transparent lg:px-0 lg:py-0 lg:pt-1">
-        <Button type="button" variant="outline" onClick={onBack} className="h-9 px-3 text-sm">
-          <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Back
-        </Button>
-        <Button type="button" onClick={() => setLaunching(true)} className="flex-1 h-9 text-sm gap-1.5">
-          <Rocket className="h-3.5 w-3.5" /> Build my workspace <ArrowRight className="h-3.5 w-3.5" />
-        </Button>
-      </div>
+      <NavButtons
+        onBack={onBack}
+        onNext={() => setLaunching(true)}
+        nextLabel="Build my workspace"
+        nextIcon={Rocket}
+      />
     </div>
   );
 }

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowRight, BadgeCheck, Layers, Sparkles } from "lucide-react";
 import { PublicShell, PublicEyebrow } from "@/features/landing/public-shell";
 import { Button } from "@/components/ui/button";
-import { BRAND_NAME, BRAND_URL } from "@/lib/branding";
+import { BRAND_NAME, BRAND_URL, BRAND_SUPPORT_EMAIL } from "@/lib/branding";
 import { PRICING, COMPETITOR_PRICES, cheapestAnnualLabel } from "@/lib/pricing";
 import { faqs } from "@/features/landing/data/faqs";
 import { FAQJsonLd } from "@/features/seo/structured-data";
@@ -90,8 +90,7 @@ const pricingFaqs = [
   },
   {
     question: "Do you offer discounts for non-profits or startups?",
-    answer:
-      "Registered non-profits get 50% off Startup and Growth. YC, Sequoia Surge, and Antler portfolio startups get 12 months free on Startup. Email founders@streamlineos.in with proof.",
+    answer: `Registered non-profits get 50% off Startup and Growth. YC, Sequoia Surge, and Antler portfolio startups get 12 months free on Startup. Email ${BRAND_SUPPORT_EMAIL} with proof.`,
   },
 ];
 

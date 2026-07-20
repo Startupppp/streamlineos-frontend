@@ -30,8 +30,8 @@ const channels = [
     icon: Shield,
     label: "Security disclosures",
     description: "Report a vulnerability â€” please don't share details on this form.",
-    value: "security@streamlineos.app",
-    href: "mailto:security@streamlineos.app",
+    value: BRAND_SUPPORT_EMAIL,
+    href: `mailto:${BRAND_SUPPORT_EMAIL}`,
   },
   {
     icon: BookOpen,

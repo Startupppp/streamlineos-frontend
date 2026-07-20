@@ -3,7 +3,7 @@
 import { useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, PartyPopper, Sparkles, LayoutDashboard } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { ConfettiOverlay } from "@/features/crm/deals/confetti-overlay";
 
 type WelcomeCelebrationProps = {
@@ -53,7 +53,7 @@ export function WelcomeCelebration({
           initial={{ opacity: 0, y: 24, scale: 0.94 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ type: "spring", stiffness: 380, damping: 28 }}
-          className="relative w-full max-w-md overflow-hidden rounded-2xl border border-border bg-card shadow-[0_24px_80px_-20px_rgba(30,64,175,0.45)]"
+          className="relative w-full max-w-md max-h-[90dvh] overflow-y-auto rounded-2xl border border-border bg-card shadow-[0_24px_80px_-20px_rgba(30,64,175,0.45)]"
         >
           <div
             aria-hidden
@@ -108,16 +108,17 @@ export function WelcomeCelebration({
             </ul>
 
             <div className="pt-1 space-y-2">
-              <Button
+              <LoadingButton
                 type="button"
                 size="lg"
                 className="w-full h-11 text-sm font-semibold gap-2 shadow-md"
                 onClick={onContinue}
-                disabled={isContinuing}
+                isPending={isContinuing}
+                loadingText="Opening…"
               >
-                {isContinuing ? "Opening…" : "Open my workspace"}
+                Open my workspace
                 <ArrowRight className="h-4 w-4" />
-              </Button>
+              </LoadingButton>
               <p className="text-[11px] text-muted-foreground">
                 You can invite teammates and finish setup tips anytime.
               </p>

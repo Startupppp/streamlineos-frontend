@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { BRAND_SUPPORT_EMAIL } from "@/lib/branding";
 import { Users, UserCheck, UserMinus, TrendingUp, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -132,7 +133,7 @@ export function SeatsBlock() {
         </dl>
         {isEnterprise && (
           <Button variant="outline" size="sm" className="text-xs h-7" asChild>
-            <Link href="mailto:sales@streamlineos.com">Contact Sales</Link>
+            <Link href={`mailto:${BRAND_SUPPORT_EMAIL}`}>Contact Sales</Link>
           </Button>
         )}
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -9,6 +10,7 @@ type NavButtonsProps = {
   onNext: () => void;
   skipLabel?: string;
   nextLabel?: string;
+  nextIcon?: LucideIcon;
   nextDisabled?: boolean;
 };
 
@@ -18,14 +20,16 @@ export function NavButtons({
   onNext,
   skipLabel,
   nextLabel,
+  nextIcon: NextIcon,
   nextDisabled,
 }: NavButtonsProps) {
   return (
     <div
       className={cn(
         "flex gap-2 pt-1",
-        "fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background px-4 py-3",
-        "lg:static lg:border-0 lg:bg-transparent lg:px-0 lg:py-0",
+        "fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background px-4 pt-3",
+        "pb-[max(0.75rem,env(safe-area-inset-bottom))]",
+        "lg:static lg:border-0 lg:bg-transparent lg:px-0 lg:pt-1 lg:pb-0",
       )}
     >
       <Button
@@ -54,6 +58,7 @@ export function NavButtons({
         disabled={nextDisabled}
         className="flex-1 h-9 text-sm gap-1.5"
       >
+        {NextIcon && <NextIcon className="h-3.5 w-3.5" />}
         {nextLabel ?? "Continue"} <ArrowRight className="h-3.5 w-3.5" />
       </Button>
     </div>
