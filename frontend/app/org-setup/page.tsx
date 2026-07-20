@@ -51,6 +51,7 @@ export default function OrgSetupPage() {
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
   const hydratedFromServerRef = useRef(false);
   const recommendationsFetchedRef = useRef(false);
+  const exitedRef = useRef(false);
 
   const sequence = useMemo(() => getStepSequence(data.goals), [data.goals]);
   const totalSteps = sequence.length;
@@ -176,11 +177,15 @@ export default function OrgSetupPage() {
   }, [mounted, serverSession]);
 
   useEffect(() => {
-    if (session?.orgOnboardingCompletedAt) {
+    // Once a workspace exists, set the gate cookie then leave — so the proxy agrees and won't bounce us back into a refresh loop.
+    if (exitedRef.current) return;
+    if (session?.orgId || session?.orgOnboardingCompletedAt) {
+      exitedRef.current = true;
       clearAll();
+      void completeOnboardingGate("org-setup-done", update);
       window.location.replace("/dashboard");
     }
-  }, [session?.orgOnboardingCompletedAt]);
+  }, [session?.orgId, session?.orgOnboardingCompletedAt, update]);
 
   useEffect(() => {
     if (!mounted) return;

@@ -159,16 +159,12 @@ export async function proxy(req: NextRequest) {
     return NextResponse.redirect(httpsUrl, 301);
   }
 
-  if (matchesRoute(pathname, "/signup")) {
+  if (matchesRoute(pathname, "/signup"))
     return redirectTo(req, "/signin", req.nextUrl.search);
-  }
 
-  if (pathname.startsWith("/api/")) {
-    return NextResponse.next();
-  }
+  if (pathname.startsWith("/api/")) return NextResponse.next();
 
-  const secret =
-    process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
+  const secret = process.env.NEXTAUTH_SECRET;
   let token: JWT | null = null;
   for (const cookieName of sessionCookieBases()) {
     token = await getToken({
@@ -207,17 +203,12 @@ export async function proxy(req: NextRequest) {
       if (
         req.nextUrl.searchParams.get(SESSION_EXPIRED_QUERY) ===
         SESSION_EXPIRED_VALUE
-      ) {
-        return withExpiredSessionCookies(
-          redirectTo(req, pathname),
-          req,
-          true,
-        );
-      }
+      )
+        return withExpiredSessionCookies(redirectTo(req, pathname), req, true);
+
       const target = resolveSafeCallbackUrl(req);
-      if (target) {
-        return redirectTo(req, target.pathname, target.search);
-      }
+      if (target) return redirectTo(req, target.pathname, target.search);
+
       return redirectTo(req, "/dashboard");
     }
 
@@ -226,9 +217,16 @@ export async function proxy(req: NextRequest) {
     const hasOrg = Boolean(token.orgId);
     const orgSetupDone = Boolean(req.cookies.get("org-setup-done")?.value);
     const onboardingDone = Boolean(req.cookies.get("onboarding-done")?.value);
+    // Single source of truth for the org-setup gate. The /org-setup exit is the
+    // exact inverse of the /dashboard entry check, so the two can never disagree
+    // (which is what would create an /org-setup ⇄ /dashboard redirect loop).
+    const needsOrgSetup =
+      !hasOrg || (isOrgOwner && !token.orgOnboardingCompletedAt);
 
     if (matchesRoute(pathname, "/org-setup")) {
       if (isPlatformAdmin) return redirectTo(req, OWNER_HOME);
+      // Never keep a user on onboarding once they have a usable workspace.
+      if (!needsOrgSetup || orgSetupDone) return redirectTo(req, "/dashboard");
     } else if (matchesRoute(pathname, "/onboarding")) {
       if (isPlatformAdmin) return redirectTo(req, OWNER_HOME);
       if (!hasOrg) return redirectTo(req, "/org-setup");
@@ -242,26 +240,22 @@ export async function proxy(req: NextRequest) {
     ) {
       return redirectTo(req, OWNER_HOME);
     } else if (isProtected && !isPlatformAdmin) {
-      const needsOrgSetup =
-        !hasOrg || (isOrgOwner && !token.orgOnboardingCompletedAt);
-      if (needsOrgSetup && !orgSetupDone) {
-        return redirectTo(req, "/org-setup");
-      }
+      if (needsOrgSetup && !orgSetupDone) return redirectTo(req, "/org-setup");
+
       if (
         !isOrgOwner &&
         hasOrg &&
         !token.userOnboardingCompletedAt &&
         !onboardingDone
-      ) {
+      )
         return redirectTo(req, "/onboarding");
-      }
+
       if (
         token.mfaEnforced === true &&
         token.totpEnabled !== true &&
         !matchesRoute(pathname, "/settings")
-      ) {
+      )
         return redirectTo(req, "/settings", "?tab=security&mfa=required");
-      }
     }
   }
 
