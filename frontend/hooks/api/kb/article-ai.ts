@@ -2,8 +2,9 @@
 
 import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
 
-type ArticleAiTextResult = { text: string };
+type ArticleAiTextResult = { text: string; aiUsage?: AiUsageMeta | null };
 
 export function useKbArticleSummarize(articleId: number) {
   return useMutation({

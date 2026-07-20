@@ -2,8 +2,9 @@
 
 import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
 
-type PageAiTextResult = { text: string };
+type PageAiTextResult = { text: string; aiUsage?: AiUsageMeta | null };
 
 export function useKbPageSummarize(pageId: number) {
   return useMutation({

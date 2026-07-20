@@ -21,7 +21,52 @@ export interface AiCreditTransaction {
   balanceAfter: number;
   feature: string | null;
   model: string | null;
+  promptTokens: number | null;
+  completionTokens: number | null;
+  totalTokens: number | null;
+  costUsd: number | null;
   createdAt: string;
+}
+
+export interface AiCreditsUsageTotals {
+  requests: number;
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  credits: number;
+  costUsd: number;
+}
+
+export interface AiCreditsUsageByFeature {
+  feature: string;
+  requests: number;
+  totalTokens: number;
+  credits: number;
+  costUsd: number;
+}
+
+export interface AiCreditsUsageByModel {
+  model: string;
+  requests: number;
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  credits: number;
+  costUsd: number;
+}
+
+export interface AiCreditsUsageDaily {
+  date: string;
+  requests: number;
+  totalTokens: number;
+  credits: number;
+}
+
+export interface AiCreditsUsage {
+  totals: AiCreditsUsageTotals;
+  byFeature: AiCreditsUsageByFeature[];
+  byModel: AiCreditsUsageByModel[];
+  daily: AiCreditsUsageDaily[];
 }
 
 export interface AiCreditsWallet {
@@ -112,6 +157,20 @@ export function usePurchaseAiCredits() {
       }
     },
     onError: (e) => toast.error(getErrorMessage(e)),
+  });
+}
+
+export type AiCreditsUsageDays = 7 | 30 | 90;
+
+export function useAiCreditsUsage(days: AiCreditsUsageDays) {
+  return useQuery<AiCreditsUsage>({
+    queryKey: ["billing", "ai-credits", "usage", { days }],
+    queryFn: () =>
+      apiClient.get<AiCreditsUsage>("/billing/ai-credits/usage", {
+        days: String(days),
+      }),
+    staleTime: 60_000,
+    placeholderData: keepPreviousData,
   });
 }
 

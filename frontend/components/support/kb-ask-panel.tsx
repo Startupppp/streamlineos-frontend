@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { AiCitationChips, type Citation } from "@/components/ai/ai-citation-chips";
+import { AiUsageChip } from "@/components/ai/ai-usage-chip";
 import { useKbAsk, useKbAiAnswerFeedback } from "@/hooks/api/kb/ask";
 import { usePublicAskKb, type KbAnswer } from "@/hooks/api/support/kb-rag";
 import type { KbAskResponse, KbAskCitation } from "@/types/kb";
@@ -179,7 +180,10 @@ function AuthedAskPanel({ className, articleId }: { className?: string; articleI
 
         {answer && !askMutation.isPending && (
           <div className="rounded-lg border bg-muted/30 p-2.5 space-y-2">
-            <p className="text-[13px] whitespace-pre-wrap leading-relaxed">{answer.answer}</p>
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-[13px] whitespace-pre-wrap leading-relaxed flex-1">{answer.answer}</p>
+              <AiUsageChip usage={answer.aiUsage} className="shrink-0 mt-0.5" />
+            </div>
             {citations.length > 0 && (
               <div className="space-y-1 pt-1 border-t">
                 <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">

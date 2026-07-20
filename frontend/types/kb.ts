@@ -189,6 +189,7 @@ export interface KbAskResponse {
   citations: KbAskCitation[];
   hasContext: boolean;
   conversationId: number;
+  aiUsage?: AiUsageMeta | null;
 }
 
 export interface KbSearchParams {
@@ -373,6 +374,8 @@ export interface KbContentGapRow {
   gapKind: "search" | "ai_no_context";
 }
 
+import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
+
 export type KbResearchBriefStatus = "queued" | "running" | "completed" | "failed";
 
 export interface KbResearchBriefCitation {
@@ -398,6 +401,7 @@ export interface KbResearchBrief {
   rating: "helpful" | "not_helpful" | null;
   createdAt: string;
   updatedAt: string;
+  aiUsage?: AiUsageMeta | null;
 }
 
 export type KbResearchBriefListItem = Omit<KbResearchBrief, "report">;

@@ -2,6 +2,7 @@
 
 import { queryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
 
 export interface BriefCitation {
   id: string;
@@ -14,6 +15,7 @@ export interface ExecutiveBriefSnapshot {
   citations: BriefCitation[];
   uncertaintyNotes: string[];
   generatedAt: string;
+  aiUsage?: AiUsageMeta | null;
 }
 
 export interface LatestBriefResponse {

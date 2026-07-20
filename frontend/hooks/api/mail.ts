@@ -20,6 +20,7 @@ import type {
   ReplyMailBody,
   MailActionBody,
 } from "@/types/mail";
+import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
 
 export function useMailAccounts() {
   return useQuery({
@@ -112,6 +113,7 @@ interface MailInboxSummaryResult {
   summary: string;
   highlights: MailInboxSummaryHighlight[];
   actionItems: string[];
+  aiUsage?: AiUsageMeta | null;
 }
 
 interface MailThreadSummaryResult {

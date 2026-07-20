@@ -16,6 +16,7 @@ import { isApiError } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useMailInboxSummary } from "@/hooks/api/mail";
 import { AlertCircle } from "lucide-react";
+import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
 
 type SummaryState =
   | { status: "idle" }
@@ -28,6 +29,7 @@ type SummaryState =
       summary: string;
       highlights: { subject: string; fromEmail: string; reason: string }[];
       actionItems: string[];
+      aiUsage?: AiUsageMeta | null;
     };
 
 interface MailInboxSummarySheetProps {
@@ -80,7 +82,7 @@ export function MailInboxSummarySheet({
           )}
 
           {summaryState.status === "ready" && (
-            <AiDraftCard>
+            <AiDraftCard usage={summaryState.aiUsage}>
               <div className="flex flex-col gap-4">
                 <p className="text-[13px] leading-relaxed text-foreground whitespace-pre-wrap">
                   {summaryState.summary}
@@ -182,6 +184,7 @@ export function useMailInboxSummarySheet(): UseMailInboxSummarySheetReturn {
         summary: d.summary,
         highlights: d.highlights,
         actionItems: d.actionItems,
+        aiUsage: d.aiUsage,
       };
     }
     return { status: "idle" };

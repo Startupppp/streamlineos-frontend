@@ -24,6 +24,7 @@ import { AiDraftCard } from "./ai-draft-card";
 import { AiQuotaEmptyState } from "./ai-quota-empty-state";
 import { AiPermissionDenied } from "./ai-permission-denied";
 import type { Citation } from "./ai-citation-chips";
+import type { AiUsageMeta } from "./ai-usage-chip";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isApiError } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
@@ -32,6 +33,7 @@ export interface AiActionResult {
   text: string;
   citations?: Citation[];
   confidence?: number;
+  aiUsage?: AiUsageMeta | null;
 }
 
 export interface AiAction {
@@ -54,7 +56,7 @@ interface AiActionsMenuProps {
 
 type ActionState =
   | { status: "loading" }
-  | { status: "ready"; result: AiActionResult }
+  | { status: "ready"; result: AiActionResult; aiUsage?: AiUsageMeta | null }
   | { status: "quota" }
   | { status: "denied"; reason: string }
   | { status: "error"; message: string };
@@ -78,7 +80,7 @@ export function AiActionsMenu({
     setState({ status: "loading" });
     try {
       const result = await action.run();
-      setState({ status: "ready", result });
+      setState({ status: "ready", result, aiUsage: result.aiUsage });
     } catch (error) {
       if (isApiError(error) && error.status === 402) {
         setState({ status: "quota" });
@@ -179,6 +181,7 @@ export function AiActionsMenu({
               <AiDraftCard
                 citations={state.result.citations}
                 confidence={state.result.confidence}
+                usage={state.aiUsage}
                 onAccept={active?.onApply ? handleApply : undefined}
                 acceptLabel={active?.applyLabel ?? "Apply"}
               >

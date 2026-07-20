@@ -30,10 +30,12 @@ interface KbArticleAiActionsProps {
   onApplyImprovement?: (text: string) => void;
 }
 
+import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
+
 type AskPanelState =
   | { status: "input" }
   | { status: "loading" }
-  | { status: "ready"; text: string }
+  | { status: "ready"; text: string; aiUsage?: AiUsageMeta | null }
   | { status: "quota" }
   | { status: "denied"; reason: string }
   | { status: "error"; message: string };
@@ -54,7 +56,7 @@ export function KbArticleAiActions({ articleId, onApplyImprovement }: KbArticleA
     setAskState({ status: "loading" });
     try {
       const res = await askMutation.mutateAsync(q);
-      setAskState({ status: "ready", text: res.text });
+      setAskState({ status: "ready", text: res.text, aiUsage: res.aiUsage });
     } catch (err) {
       if (isApiError(err) && err.status === 402) { setAskState({ status: "quota" }); return; }
       if (isApiError(err) && err.status === 403) { setAskState({ status: "denied", reason: getErrorMessage(err) }); return; }
@@ -94,7 +96,7 @@ export function KbArticleAiActions({ articleId, onApplyImprovement }: KbArticleA
       description: "Concise bullet-point summary",
       run: async (): Promise<AiActionResult> => {
         const res = await summarize.mutateAsync();
-        return { text: res.text };
+        return { text: res.text, aiUsage: res.aiUsage };
       },
     },
     {
@@ -114,7 +116,7 @@ export function KbArticleAiActions({ articleId, onApplyImprovement }: KbArticleA
       description: "Get a rewritten draft — you apply it",
       run: async (): Promise<AiActionResult> => {
         const res = await improve.mutateAsync();
-        return { text: res.text };
+        return { text: res.text, aiUsage: res.aiUsage };
       },
       onApply: onApplyImprovement ? handleApplyImprovement : undefined,
       applyLabel: "Apply draft",
@@ -125,7 +127,7 @@ export function KbArticleAiActions({ articleId, onApplyImprovement }: KbArticleA
       description: "Topics that complement this article",
       run: async (): Promise<AiActionResult> => {
         const res = await suggestRelated.mutateAsync();
-        return { text: res.text };
+        return { text: res.text, aiUsage: res.aiUsage };
       },
     },
   ];
@@ -191,7 +193,7 @@ export function KbArticleAiActions({ articleId, onApplyImprovement }: KbArticleA
                   <p className="text-xs font-medium text-muted-foreground">Your question</p>
                   <p className="text-[13px] text-foreground mt-0.5">{lastQuestion}</p>
                 </div>
-                <AiDraftCard>
+                <AiDraftCard usage={askState.aiUsage}>
                   <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-foreground">
                     {askState.text}
                   </p>

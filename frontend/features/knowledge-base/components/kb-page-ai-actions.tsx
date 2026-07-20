@@ -33,6 +33,7 @@ import {
   useKbPageImprove,
   useKbPageSuggestRelated,
 } from "@/hooks/api/kb/page-ai";
+import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
 
 interface KbPageAiActionsProps {
   pageId: number;
@@ -45,7 +46,7 @@ type PanelState =
   | { status: "idle" }
   | { status: "ask-input" }
   | { status: "loading" }
-  | { status: "ready"; text: string; isImprove: boolean }
+  | { status: "ready"; text: string; isImprove: boolean; aiUsage?: AiUsageMeta | null }
   | { status: "quota" }
   | { status: "denied"; reason: string }
   | { status: "error"; message: string };
@@ -89,10 +90,21 @@ export function KbPageAiActions({ pageId, onApplyImprovement }: KbPageAiActionsP
     setOpen(true);
     try {
       let text = "";
-      if (action === "summarize") text = (await summarize.mutateAsync()).text;
-      else if (action === "improve") text = (await improve.mutateAsync()).text;
-      else if (action === "suggest-related") text = (await suggestRelated.mutateAsync()).text;
-      setPanelState({ status: "ready", text, isImprove: action === "improve" });
+      let aiUsage: AiUsageMeta | null | undefined;
+      if (action === "summarize") {
+        const res = await summarize.mutateAsync();
+        text = res.text;
+        aiUsage = res.aiUsage;
+      } else if (action === "improve") {
+        const res = await improve.mutateAsync();
+        text = res.text;
+        aiUsage = res.aiUsage;
+      } else if (action === "suggest-related") {
+        const res = await suggestRelated.mutateAsync();
+        text = res.text;
+        aiUsage = res.aiUsage;
+      }
+      setPanelState({ status: "ready", text, isImprove: action === "improve", aiUsage });
     } catch (err) {
       if (isApiError(err) && err.status === 402) { setPanelState({ status: "quota" }); return; }
       if (isApiError(err) && err.status === 403) { setPanelState({ status: "denied", reason: getErrorMessage(err) }); return; }
@@ -105,7 +117,7 @@ export function KbPageAiActions({ pageId, onApplyImprovement }: KbPageAiActionsP
     setPanelState({ status: "loading" });
     try {
       const res = await askMutation.mutateAsync(q);
-      setPanelState({ status: "ready", text: res.text, isImprove: false });
+      setPanelState({ status: "ready", text: res.text, isImprove: false, aiUsage: res.aiUsage });
     } catch (err) {
       if (isApiError(err) && err.status === 402) { setPanelState({ status: "quota" }); return; }
       if (isApiError(err) && err.status === 403) { setPanelState({ status: "denied", reason: getErrorMessage(err) }); return; }
@@ -248,6 +260,7 @@ export function KbPageAiActions({ pageId, onApplyImprovement }: KbPageAiActionsP
                 <AiDraftCard
                   onAccept={panelState.isImprove && onApplyImprovement ? handleApplyImprovement : undefined}
                   acceptLabel="Copy & apply draft"
+                  usage={panelState.aiUsage}
                 >
                   <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-foreground">
                     {panelState.text}

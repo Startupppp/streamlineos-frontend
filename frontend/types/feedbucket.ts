@@ -1,3 +1,5 @@
+import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
+
 export type FeedbucketSubmissionType = "bug" | "idea" | "feature" | "question" | "praise" | "other";
 
 export type FeedbucketAiType = "bug" | "feature" | "improvement" | "question" | "praise" | "other";
@@ -17,6 +19,7 @@ export interface FeedbucketAiAnalysis {
   priority: FeedbucketAiPriority;
   model: string;
   processedAt: string;
+  aiUsage?: AiUsageMeta | null;
 }
 export type FeedbucketSubmissionStatus = "open" | "in_progress" | "resolved" | "archived";
 export type FeedbucketSubmissionPriority = "low" | "medium" | "high" | "urgent";

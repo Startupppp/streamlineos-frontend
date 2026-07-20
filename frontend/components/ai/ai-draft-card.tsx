@@ -8,6 +8,7 @@ import { AiGeneratedLabel } from "./ai-generated-label";
 import { AiConfidenceBadge } from "./ai-confidence-badge";
 import { AiCitationChips, type Citation } from "./ai-citation-chips";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { AiUsageChip, type AiUsageMeta } from "./ai-usage-chip";
 
 interface AiDraftCardProps {
   children: React.ReactNode;
@@ -15,6 +16,7 @@ interface AiDraftCardProps {
   timestamp?: string | Date;
   confidence?: number;
   citations?: Citation[];
+  usage?: AiUsageMeta | null;
   onAccept?: () => void;
   onEdit?: () => void;
   onDiscard?: () => void;
@@ -29,6 +31,7 @@ export function AiDraftCard({
   timestamp,
   confidence,
   citations,
+  usage,
   onAccept,
   onEdit,
   onDiscard,
@@ -54,6 +57,7 @@ export function AiDraftCard({
         {confidence !== undefined && (
           <AiConfidenceBadge confidence={confidence} />
         )}
+        <AiUsageChip usage={usage} className="ml-auto" />
       </div>
 
       <div className="px-3 py-3">{children}</div>

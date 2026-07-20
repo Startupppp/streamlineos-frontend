@@ -19,6 +19,7 @@ import {
 } from "@/hooks/api/feedbucket/use-feedbucket-ai";
 import { useConvertFeedbucketToTicket } from "@/hooks/api/feedbucket/use-feedbucket-submissions";
 import type { FeedbucketAiAnalysis, FeedbucketAiPriority, FeedbucketAiType } from "@/types/feedbucket";
+import { AiUsageChip, type AiUsageMeta } from "@/components/ai/ai-usage-chip";
 
 const AI_UNAVAILABLE_STATUSES = new Set([400, 402, 503]);
 
@@ -186,6 +187,7 @@ export function FeedbucketAiPanel({
   const [localTicketId, setLocalTicketId] = useState<number | null>(linkedTicketId);
   const [localTicketKey, setLocalTicketKey] = useState<string | null>(linkedTicketKey);
   const [aiFallbackReason, setAiFallbackReason] = useState<string | null>(null);
+  const [lastAnalysisUsage, setLastAnalysisUsage] = useState<AiUsageMeta | null | undefined>(null);
 
   const analysis = localAnalysis ?? existingAnalysis;
   const ticketId = localTicketId ?? linkedTicketId;
@@ -198,6 +200,7 @@ export function FeedbucketAiPanel({
     try {
       const result = await analyzeMutation.mutateAsync({ submissionId, force });
       setLocalAnalysis(result);
+      setLastAnalysisUsage(result.aiUsage);
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
@@ -301,6 +304,9 @@ export function FeedbucketAiPanel({
           <>
             <Separator />
             <AiAnalysisResult analysis={analysis} />
+            {lastAnalysisUsage && (
+              <AiUsageChip usage={lastAnalysisUsage} className="mt-1" />
+            )}
           </>
         )}
 

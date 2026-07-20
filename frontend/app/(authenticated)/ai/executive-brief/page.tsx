@@ -6,11 +6,13 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AiCitationChips } from "@/components/ai/ai-citation-chips";
 import { AiGeneratedLabel } from "@/components/ai/ai-generated-label";
+import { AiUsageChip } from "@/components/ai/ai-usage-chip";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useExecutiveBrief,
   useGenerateBrief,
   type LatestBriefResponse,
+  type ExecutiveBriefSnapshot,
 } from "@/lib/api/hooks/executive-brief";
 
 export default function ExecutiveBriefPage() {
@@ -45,7 +47,9 @@ export default function ExecutiveBriefPage() {
           {getErrorMessage(error)}
         </div>
       )}
-      {!isLoading && !error && data && <BriefContent data={data} />}
+      {!isLoading && !error && data && (
+        <BriefContent data={data} freshUsage={generate.data?.aiUsage} />
+      )}
     </PageWrapper>
   );
 }
@@ -61,7 +65,7 @@ function BriefSkeleton() {
   );
 }
 
-function BriefContent({ data }: { data: LatestBriefResponse }) {
+function BriefContent({ data, freshUsage }: { data: LatestBriefResponse; freshUsage?: ExecutiveBriefSnapshot["aiUsage"] }) {
   const { snapshot, isStale } = data;
 
   if (!snapshot) {
@@ -102,9 +106,12 @@ function BriefContent({ data }: { data: LatestBriefResponse }) {
       )}
 
       <div className="rounded-xl border border-border bg-card p-6 shadow-sm space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center gap-2 justify-between">
           <h2 className="text-sm font-semibold text-foreground">Operational Summary</h2>
-          <AiGeneratedLabel timestamp={snapshot.generatedAt} />
+          <div className="flex items-center gap-3">
+            <AiUsageChip usage={freshUsage} />
+            <AiGeneratedLabel timestamp={snapshot.generatedAt} />
+          </div>
         </div>
         <p className="text-sm text-foreground leading-relaxed whitespace-pre-line">
           {snapshot.narrative}
