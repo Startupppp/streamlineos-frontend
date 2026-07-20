@@ -48,7 +48,7 @@ export default function SignInPage() {
         return url;
       }
     }
-    return "/post-signin";
+    return "/dashboard";
   }, []);
 
   const googleSignInMutation = useMutation({

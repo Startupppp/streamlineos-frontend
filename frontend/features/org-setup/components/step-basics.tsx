@@ -1,11 +1,9 @@
 "use client";
 
-import { useMemo, type MouseEvent } from "react";
-import { toast } from "sonner";
+import { useMemo, useState, type MouseEvent } from "react";
 import { getAllCountries } from "countries-and-timezones";
 import {
   TrendingUp, Users, Package, DollarSign, Headphones, LayoutGrid, Sparkles, Zap, Check,
-  Monitor, Palette, ShoppingBag, Cog, Heart, BookOpen, Building, Building2, Utensils, Truck,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -15,10 +13,9 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { GOALS, INDUSTRIES, TEAM_SIZES } from "../lib/constants";
+import { GOALS, INDUSTRIES, INDUSTRY_TEMPLATE_HINTS, TEAM_SIZES } from "../lib/constants";
 import type { WizardData } from "../lib/types";
 import { NavButtons } from "./nav-buttons";
-import { TruncatedText } from "@/components/ui/truncated-text";
 
 type StepBasicsProps = {
   data: WizardData;
@@ -33,38 +30,65 @@ const GOAL_ICONS: Record<string, LucideIcon> = {
   support: Headphones, projects: LayoutGrid, ai: Sparkles, everything: Zap,
 };
 
-const INDUSTRY_ICONS: Record<string, LucideIcon> = {
-  "IT Services": Monitor, "Agency": Palette, "Retail": ShoppingBag, "Manufacturing": Cog,
-  "Healthcare": Heart, "Education": BookOpen, "Construction": Building, "Real Estate": Building2,
-  "Restaurant": Utensils, "Logistics": Truck,
-};
-
 const ALL_COUNTRIES = Object.values(getAllCountries())
   .map((c) => ({ name: c.name, timezone: c.timezones[0] ?? "UTC" }))
   .sort((a, b) => a.name.localeCompare(b.name));
 
+const OTHER_INDUSTRY = "__other";
+
 const CHIP_BASE =
-  "flex items-center gap-1.5 p-2 rounded-lg border text-left text-[11.5px] font-medium transition-colors press-scale";
+  "flex items-center gap-1.5 p-2 rounded-lg border text-left text-xs font-medium transition-colors press-scale";
 const CHIP_SELECTED =
   "border-brand-core bg-brand-core/10 text-brand-deep dark:bg-brand-core/15 dark:text-brand-bright";
 const CHIP_IDLE = "border-border bg-card text-foreground hover:border-brand-core/40";
 
+function InlineError({ id, message }: { id: string; message: string | null }) {
+  if (!message) return null;
+  return (
+    <p id={id} role="alert" className="text-xs text-destructive">
+      {message}
+    </p>
+  );
+}
+
 export function StepBasics({ data, patch, onToggleGoal, onBack, onNext }: StepBasicsProps) {
-  const customIndustry = INDUSTRIES.includes(data.industry) ? "" : data.industry;
+  const [attempted, setAttempted] = useState(false);
+  const [otherSelected, setOtherSelected] = useState(
+    () => data.industry.trim() !== "" && !INDUSTRIES.includes(data.industry),
+  );
 
   const selectedCountryTimezone = useMemo(
     () => ALL_COUNTRIES.find((c) => c.name === data.country)?.timezone ?? "",
     [data.country],
   );
 
+  const industrySelectValue = otherSelected
+    ? OTHER_INDUSTRY
+    : INDUSTRIES.includes(data.industry)
+      ? data.industry
+      : undefined;
+  const industryHint = INDUSTRY_TEMPLATE_HINTS[data.industry];
+
+  const errors = {
+    goals: attempted && data.goals.length === 0 ? "Select at least one goal." : null,
+    industry: attempted && !data.industry.trim() ? "Select or enter your industry." : null,
+    companyName: attempted && !data.companyName.trim() ? "Enter your company name." : null,
+    teamSize: attempted && !data.teamSize ? "Select your team size." : null,
+  };
+
   function handleGoalToggle(e: MouseEvent<HTMLButtonElement>) {
     const id = e.currentTarget.dataset.goalId;
     if (id) onToggleGoal(id);
   }
 
-  function handleIndustrySelect(e: MouseEvent<HTMLButtonElement>) {
-    const ind = e.currentTarget.dataset.industry;
-    if (ind) patch({ industry: ind });
+  function handleIndustrySelect(value: string) {
+    if (value === OTHER_INDUSTRY) {
+      setOtherSelected(true);
+      if (INDUSTRIES.includes(data.industry)) patch({ industry: "" });
+      return;
+    }
+    setOtherSelected(false);
+    patch({ industry: value });
   }
 
   function handleCountrySelect(name: string) {
@@ -73,20 +97,13 @@ export function StepBasics({ data, patch, onToggleGoal, onBack, onNext }: StepBa
   }
 
   function handleNext() {
-    if (data.goals.length === 0) {
-      toast.error("Pick at least one goal");
-      return;
-    }
-    if (!data.industry.trim()) {
-      toast.error("Select or enter your industry");
-      return;
-    }
-    if (!data.companyName.trim()) {
-      toast.error("Enter your company name");
-      return;
-    }
-    if (!data.teamSize) {
-      toast.error("Select your team size");
+    const valid =
+      data.goals.length > 0 &&
+      data.industry.trim() !== "" &&
+      data.companyName.trim() !== "" &&
+      data.teamSize !== "";
+    if (!valid) {
+      setAttempted(true);
       return;
     }
     onNext();
@@ -95,8 +112,12 @@ export function StepBasics({ data, patch, onToggleGoal, onBack, onNext }: StepBa
   return (
     <div className="space-y-5">
       <section className="space-y-2">
-        <p className="text-[12px] font-semibold text-foreground">What do you want to get done?</p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+        <p className="text-xs font-semibold text-foreground">What do you want to get done? *</p>
+        <div
+          role="group"
+          aria-label="What do you want to get done?"
+          className="grid grid-cols-2 sm:grid-cols-3 gap-1.5"
+        >
           {GOALS.map((goal) => {
             const selected = data.goals.includes(goal.id);
             const Icon = GOAL_ICONS[goal.id] ?? Zap;
@@ -110,63 +131,77 @@ export function StepBasics({ data, patch, onToggleGoal, onBack, onNext }: StepBa
                 onClick={handleGoalToggle}
                 className={cn(CHIP_BASE, selected ? CHIP_SELECTED : CHIP_IDLE)}
               >
-                <Icon className={cn("h-3.5 w-3.5 shrink-0", selected ? "text-brand-core" : "text-muted-foreground")} />
+                <Icon className={cn("h-3.5 w-3.5 shrink-0", selected ? "text-brand-core" : "text-muted-foreground")} aria-hidden />
                 <span className="min-w-0 flex-1">{goal.label}</span>
-                {selected && <Check className="h-3 w-3 text-brand-core ml-auto shrink-0" />}
+                {selected && <Check className="h-3 w-3 text-brand-core ml-auto shrink-0" aria-hidden />}
               </button>
             );
           })}
         </div>
+        <InlineError id="goals-error" message={errors.goals} />
       </section>
 
       <section className="space-y-2">
-        <p className="text-[12px] font-semibold text-foreground">Industry</p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-          {INDUSTRIES.map((ind) => {
-            const selected = data.industry === ind;
-            const Icon = INDUSTRY_ICONS[ind] ?? Building2;
-            return (
-              <button
-                key={ind}
-                type="button"
-                role="radio"
-                aria-checked={selected}
-                data-industry={ind}
-                onClick={handleIndustrySelect}
-                className={cn(CHIP_BASE, selected ? CHIP_SELECTED : CHIP_IDLE)}
-              >
-                <Icon className={cn("h-3.5 w-3.5 shrink-0", selected ? "text-brand-core" : "text-muted-foreground")} />
-                <TruncatedText text={ind} />
-              </button>
-            );
-          })}
+        <Label htmlFor="industry-select" className="text-xs font-semibold text-foreground">
+          Industry *
+        </Label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <Select value={industrySelectValue} onValueChange={handleIndustrySelect}>
+            <SelectTrigger
+              id="industry-select"
+              className="text-sm"
+              aria-invalid={!!errors.industry}
+              aria-describedby={errors.industry ? "industry-error" : undefined}
+            >
+              <SelectValue placeholder="Select your industry" />
+            </SelectTrigger>
+            <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+              {INDUSTRIES.map((ind) => (
+                <SelectItem key={ind} value={ind}>{ind}</SelectItem>
+              ))}
+              <SelectItem value={OTHER_INDUSTRY}>Other…</SelectItem>
+            </SelectContent>
+          </Select>
+          {otherSelected && (
+            <Input
+              value={data.industry}
+              onChange={(e) => patch({ industry: e.target.value })}
+              placeholder="Your industry"
+              aria-label="Your industry"
+              className="text-sm"
+            />
+          )}
         </div>
-        <Input
-          value={customIndustry}
-          onChange={(e) => patch({ industry: e.target.value })}
-          placeholder="Other industry"
-          aria-label="Other industry"
-          className="text-[12.5px]"
-        />
+        {industryHint && (
+          <p className="text-xs text-muted-foreground">We&apos;ll set up: {industryHint}</p>
+        )}
+        <InlineError id="industry-error" message={errors.industry} />
       </section>
 
       <section className="space-y-2">
-        <p className="text-[12px] font-semibold text-foreground">Company</p>
+        <p className="text-xs font-semibold text-foreground">Company</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <div className="space-y-1">
-            <Label htmlFor="company-name" className="text-[12px]">Company name *</Label>
+            <Label htmlFor="company-name" className="text-xs">Company name *</Label>
             <Input
               id="company-name"
               value={data.companyName}
               onChange={(e) => patch({ companyName: e.target.value })}
               placeholder="Acme Corp"
               className="text-sm"
+              aria-invalid={!!errors.companyName}
+              aria-describedby={errors.companyName ? "company-name-error" : undefined}
             />
+            <InlineError id="company-name-error" message={errors.companyName} />
           </div>
           <div className="space-y-1">
-            <Label className="text-[12px]">Team size *</Label>
+            <Label className="text-xs">Team size *</Label>
             <Select onValueChange={(v) => patch({ teamSize: v })} value={data.teamSize}>
-              <SelectTrigger className="text-sm">
+              <SelectTrigger
+                className="text-sm"
+                aria-invalid={!!errors.teamSize}
+                aria-describedby={errors.teamSize ? "team-size-error" : undefined}
+              >
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
               <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
@@ -175,9 +210,10 @@ export function StepBasics({ data, patch, onToggleGoal, onBack, onNext }: StepBa
                 ))}
               </SelectContent>
             </Select>
+            <InlineError id="team-size-error" message={errors.teamSize} />
           </div>
           <div className="space-y-1">
-            <Label className="text-[12px]">Country</Label>
+            <Label className="text-xs">Country</Label>
             <Select onValueChange={handleCountrySelect} value={data.country}>
               <SelectTrigger className="text-sm">
                 <SelectValue placeholder="Select country" />
@@ -189,11 +225,11 @@ export function StepBasics({ data, patch, onToggleGoal, onBack, onNext }: StepBa
               </SelectContent>
             </Select>
             {selectedCountryTimezone && (
-              <p className="text-[10.5px] text-muted-foreground">Timezone: {selectedCountryTimezone}</p>
+              <p className="text-xs text-muted-foreground">Timezone: {selectedCountryTimezone}</p>
             )}
           </div>
           <div className="space-y-1">
-            <Label htmlFor="org-phone" className="text-[12px]">Mobile number</Label>
+            <Label htmlFor="org-phone" className="text-xs">Mobile number</Label>
             <PhoneInput
               id="org-phone"
               defaultCountry="IN"
@@ -204,7 +240,7 @@ export function StepBasics({ data, patch, onToggleGoal, onBack, onNext }: StepBa
             />
           </div>
         </div>
-        <p className="text-[10.5px] text-muted-foreground">You can change all of this later in Settings.</p>
+        <p className="text-xs text-muted-foreground">You can change all of this later in Settings.</p>
       </section>
 
       <NavButtons onBack={onBack} onNext={handleNext} />

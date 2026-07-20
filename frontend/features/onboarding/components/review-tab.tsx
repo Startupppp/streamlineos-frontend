@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { motion } from "framer-motion";
@@ -8,6 +9,8 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
+  ClipboardCheck,
+  LayoutDashboard,
   Send,
   Shield,
   type LucideIcon,
@@ -18,6 +21,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { useSubmitOnboardingMutation } from "@/lib/api/hooks/onboarding";
+import { CompletionCelebration } from "@/components/celebration/completion-celebration";
 
 const ROLE_LABELS: Record<string, string> = {
   CEO: "CEO",
@@ -34,6 +38,12 @@ const ROLE_LABELS: Record<string, string> = {
   DESIGN: "Design",
   VIDEO_EDITOR: "Video Editor",
 };
+
+const CELEBRATION_HIGHLIGHTS = [
+  { icon: ClipboardCheck, label: "Profile, bank, and documents submitted" },
+  { icon: Shield, label: "HR reviews and verifies your details" },
+  { icon: LayoutDashboard, label: "Explore your dashboard while you wait" },
+];
 
 interface Step {
   id: string;
@@ -56,18 +66,26 @@ export function ReviewTab({
 }: ReviewTabProps) {
   const { data: session, update } = useSession();
   const { mutate: submitOnboarding, isPending: isSubmitting } = useSubmitOnboardingMutation();
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [isContinuing, setIsContinuing] = useState(false);
   const userRole = session?.user?.role ?? "ENGINEERING";
   const roleLabel = ROLE_LABELS[userRole] ?? userRole;
+  const firstName = session?.user?.name?.split(" ")[0] ?? "";
   const dataSteps = steps.filter((s) => s.id !== reviewStepId);
   const allDataStepsComplete = dataSteps.every((s) => completedSteps.has(s.id));
+
+  const goToDashboard = useCallback(() => {
+    if (isContinuing) return;
+    setIsContinuing(true);
+    window.location.replace("/dashboard");
+  }, [isContinuing]);
 
   function handleSubmit() {
     submitOnboarding(undefined, {
       onSuccess: async () => {
-        toast.success("Onboarding submitted! Redirecting…");
         clearBackendTokenCache();
         await completeOnboardingGate("onboarding-done", update);
-        window.location.replace("/dashboard");
+        setShowCelebration(true);
       },
       onError: (err) => {
         toast.error(getErrorMessage(err));
@@ -156,18 +174,12 @@ export function ReviewTab({
             Default leave balances will be allocated upon submission
           </motion.p>
 
-          <motion.div variants={fadeUp} className="flex gap-3 pt-4">
-            <Button variant="outline" onClick={onBack} disabled={isSubmitting}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
-            </Button>
-            <span
-              title={
-                !allDataStepsComplete
-                  ? "Complete all steps before submitting"
-                  : undefined
-              }
-            >
+          <motion.div variants={fadeUp} className="pt-4 space-y-2">
+            <div className="flex gap-3 justify-center">
+              <Button variant="outline" onClick={onBack} disabled={isSubmitting}>
+                <ArrowLeft className="mr-2 h-4 w-4" aria-hidden />
+                Back
+              </Button>
               <LoadingButton
                 onClick={handleSubmit}
                 disabled={!allDataStepsComplete}
@@ -178,16 +190,30 @@ export function ReviewTab({
                 }
               >
                 Submit
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <ArrowRight className="ml-2 h-4 w-4" aria-hidden />
               </LoadingButton>
-            </span>
+            </div>
             {!allDataStepsComplete && (
-              <p id="review-hint" className="sr-only">
-                Complete all previous steps to enable this button
+              <p id="review-hint" className="text-xs text-muted-foreground">
+                Complete the steps above to enable Submit.
               </p>
             )}
           </motion.div>
       </motion.div>
+
+      {showCelebration && (
+        <CompletionCelebration
+          icon={ClipboardCheck}
+          title={firstName ? `You're all set, ${firstName}!` : "You're all set!"}
+          description="Your onboarding details are in. HR will review them and finish setting you up."
+          highlights={CELEBRATION_HIGHLIGHTS}
+          ctaLabel="Go to my dashboard"
+          onContinue={goToDashboard}
+          isContinuing={isContinuing}
+          footnote="You can update your details anytime from your profile."
+          autoAdvanceMs={10_000}
+        />
+      )}
     </div>
   );
 }

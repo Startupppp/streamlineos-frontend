@@ -27,7 +27,7 @@ import {
 } from "@/features/hr/shared/hr-ui";
 import { HrChecklistItem } from "@/features/hr/setup/hr-checklist-item";
 import { HrSetupTourProvider, HrTakeTourButton } from "@/features/hr/setup/hr-setup-tour";
-import { ConfettiOverlay } from "@/features/crm/deals/confetti-overlay";
+import { ConfettiOverlay } from "@/components/celebration/confetti-overlay";
 import { useCan } from "@/hooks/api/access";
 import {
   useModuleChecklist,

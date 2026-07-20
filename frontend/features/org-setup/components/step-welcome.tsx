@@ -23,8 +23,8 @@ export function StepWelcome({ onNext, onSkip, isSkipping = false }: StepWelcomeP
   return (
     <div className="space-y-5 text-center">
       <div className="space-y-2">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-core/25 bg-brand-core/5 px-2.5 py-1 text-[11px] font-medium text-brand-deep dark:text-brand-bright">
-          <Clock className="h-3 w-3" /> Takes about 4 minutes
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-core/25 bg-brand-core/5 px-2.5 py-1 text-xs font-medium text-brand-deep dark:text-brand-bright">
+          <Clock className="h-3 w-3" aria-hidden /> Takes about 4 minutes
         </span>
         <p className="text-sm text-muted-foreground">
           A few quick questions, then your workspace is ready to run your business.
@@ -41,7 +41,7 @@ export function StepWelcome({ onNext, onSkip, isSkipping = false }: StepWelcomeP
             className="flex items-center gap-2.5 text-[13px] text-muted-foreground"
           >
             <div className="h-6 w-6 rounded-md bg-brand-core/10 flex items-center justify-center shrink-0">
-              <Icon className="h-3.5 w-3.5 text-brand-core" />
+              <Icon className="h-3.5 w-3.5 text-brand-core" aria-hidden />
             </div>
             {label}
           </motion.li>
@@ -50,7 +50,7 @@ export function StepWelcome({ onNext, onSkip, isSkipping = false }: StepWelcomeP
 
       <div className="space-y-2 pt-1">
         <Button className="w-full h-9 text-sm gap-1.5" onClick={onNext} disabled={isSkipping}>
-          Start Setup <ArrowRight className="h-3.5 w-3.5" />
+          Start Setup <ArrowRight className="h-3.5 w-3.5" aria-hidden />
         </Button>
         <LoadingButton
           variant="ghost"

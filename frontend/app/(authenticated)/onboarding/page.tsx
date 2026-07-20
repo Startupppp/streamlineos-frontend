@@ -225,7 +225,7 @@ export default function OnboardingPage() {
                     </div>
                     <span
                       className={cn(
-                        "text-[10px] font-medium text-center leading-tight",
+                        "text-xs font-medium text-center leading-tight",
                         isCurrent ? "block" : "hidden sm:block",
                         "transition-colors duration-200",
                         isCurrent

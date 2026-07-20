@@ -221,12 +221,12 @@ export function StepGeneration({ data }: StepGenerationProps) {
           </div>
 
           <div className="flex items-center justify-between">
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-xs text-muted-foreground" aria-live="polite">
               {completedSteps < total
                 ? generationSteps[completedSteps] ?? "Finishing up…"
                 : "All done!"}
             </p>
-            <p className="text-[11px] tabular-nums text-muted-foreground">{progress}%</p>
+            <p className="text-xs tabular-nums text-muted-foreground">{progress}%</p>
           </div>
         </div>
 

@@ -200,7 +200,7 @@ export async function proxy(req: NextRequest) {
       if (target) {
         return redirectTo(req, target.pathname, target.search);
       }
-      return redirectTo(req, "/post-signin");
+      return redirectTo(req, "/dashboard");
     }
 
     const isPlatformAdmin = isPlatformAdminToken(token);

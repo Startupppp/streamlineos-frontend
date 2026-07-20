@@ -91,7 +91,7 @@ export function StepInviteLaunch({ data, onChangeInvitees, onBack }: StepInviteL
             >
               <TruncatedText text={invitee.email} className="text-[13px]" />
               <div className="flex items-center gap-2 shrink-0">
-                <span className="text-[11px] text-muted-foreground">{invitee.role}</span>
+                <span className="text-xs text-muted-foreground">{invitee.role}</span>
                 <button
                   type="button"
                   onClick={() => handleRemove(invitee.email)}

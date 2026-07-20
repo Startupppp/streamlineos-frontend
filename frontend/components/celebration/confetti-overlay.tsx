@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useMemo } from "react";
+import { useReducedMotion } from "framer-motion";
 
 const CONFETTI_COLORS = [
   "#06b6d4",
@@ -19,6 +20,7 @@ interface ConfettiOverlayProps {
 }
 
 export function ConfettiOverlay({ onDone, durationMs = 3000 }: ConfettiOverlayProps) {
+  const reduceMotion = useReducedMotion();
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -40,6 +42,8 @@ export function ConfettiOverlay({ onDone, durationMs = 3000 }: ConfettiOverlayPr
       })),
     [],
   );
+
+  if (reduceMotion) return null;
 
   return (
     <>

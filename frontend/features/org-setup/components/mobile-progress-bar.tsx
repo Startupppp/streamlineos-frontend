@@ -16,7 +16,7 @@ export function MobileProgressBar({ sequence, currentIndex }: MobileProgressBarP
     <div className="lg:hidden -mx-4 sm:-mx-8 px-4 sm:px-8 pb-3 mb-3 border-b border-border">
       <div className="flex items-center justify-between mb-1.5">
         <p className="text-[13px] font-semibold text-foreground">{STEP_TITLES[sequence[currentIndex]]}</p>
-        <p className="text-[11px] tabular-nums text-muted-foreground">
+        <p className="text-xs tabular-nums text-muted-foreground">
           {currentIndex + 1} / {total}
         </p>
       </div>

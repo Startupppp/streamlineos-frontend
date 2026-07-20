@@ -43,7 +43,7 @@ export function StepRail({ sequence, currentIndex, saveState, onStepSelect }: St
           const marker = (
             <span
               className={cn(
-                "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[10px]",
+                "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[11px]",
                 done
                   ? "border-foreground bg-foreground text-background"
                   : active
@@ -75,15 +75,15 @@ export function StepRail({ sequence, currentIndex, saveState, onStepSelect }: St
 
       <div className="mt-auto space-y-2 border-t border-border pt-4">
         {minutesLeft > 0 && (
-          <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <Clock className="h-3 w-3" /> About {minutesLeft} min left
+          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Clock className="h-3 w-3" aria-hidden /> About {minutesLeft} min left
           </p>
         )}
         <motion.p
           key={saveState}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="flex items-center gap-1.5 text-[11px] text-muted-foreground min-h-4"
+          className="flex items-center gap-1.5 text-xs text-muted-foreground min-h-4"
           aria-live="polite"
         >
           {saveState === "saving" ? (

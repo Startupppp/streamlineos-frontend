@@ -25,7 +25,7 @@ export default function MagicLinkPage() {
     async function verify() {
       const signedIn = await signInWithMagicToken(token ?? "");
       if (signedIn) {
-        window.location.replace("/post-signin");
+        window.location.replace("/dashboard");
         return;
       }
       setErrorMessage("This link is invalid, expired, or has already been used. Please request a new one.");

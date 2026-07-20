@@ -49,7 +49,6 @@ export default function robots(): MetadataRoute.Robots {
           "/subscription-expired",
           "/org-setup",
           "/owner",
-          "/post-signin",
         ],
       },
     ],

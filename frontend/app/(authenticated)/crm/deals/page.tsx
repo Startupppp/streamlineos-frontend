@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback, useTransition, useEffect } from "react"
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import { Plus, Download, LayoutGrid, TableIcon } from "lucide-react";
-import { ConfettiOverlay } from "@/features/crm/deals/confetti-overlay";
+import { ConfettiOverlay } from "@/components/celebration/confetti-overlay";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";

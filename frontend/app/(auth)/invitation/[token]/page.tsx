@@ -135,7 +135,7 @@ export default function InvitationPage() {
     async (autoLoginToken: string): Promise<void> => {
       const signedIn = await signInWithMagicToken(autoLoginToken);
       if (signedIn) {
-        window.location.href = "/post-signin";
+        window.location.href = "/dashboard";
       } else {
         router.push("/signin");
       }

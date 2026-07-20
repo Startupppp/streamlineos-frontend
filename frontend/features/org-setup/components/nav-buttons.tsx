@@ -38,7 +38,7 @@ export function NavButtons({
         onClick={onBack}
         className="h-9 px-3 text-sm"
       >
-        <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Back
+        <ArrowLeft className="h-3.5 w-3.5 mr-1" aria-hidden /> Back
       </Button>
 
       {skipLabel && (
@@ -58,8 +58,8 @@ export function NavButtons({
         disabled={nextDisabled}
         className="flex-1 h-9 text-sm gap-1.5"
       >
-        {NextIcon && <NextIcon className="h-3.5 w-3.5" />}
-        {nextLabel ?? "Continue"} <ArrowRight className="h-3.5 w-3.5" />
+        {NextIcon && <NextIcon className="h-3.5 w-3.5" aria-hidden />}
+        {nextLabel ?? "Continue"} <ArrowRight className="h-3.5 w-3.5" aria-hidden />
       </Button>
     </div>
   );
