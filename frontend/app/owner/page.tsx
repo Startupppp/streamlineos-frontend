@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Building2,
   Users as UsersIcon,
@@ -20,7 +22,7 @@ export default function OwnerDashboard() {
       <StatCardGrid cols={6}>
         <StatCard label="Customers" value={0} hint="active last 30d" icon={Building2} tone="blue" />
         <StatCard label="Users" value={0} hint="across all orgs" icon={UsersIcon} color="cyan" />
-        <StatCard label="Inbox" value={0} icon={Mail} tone="violet" />
+        <StatCard label="Inbox" value={0} icon={Mail} tone="blue" />
         <StatCard label="Leads" value={0} icon={TrendingUp} tone="emerald" />
         <StatCard label="Visits (30d)" value={0} icon={Eye} tone="blue" />
         <StatCard label="Revenue (30d)" value="₹0" icon={Wallet} tone="emerald" />

@@ -1,3 +1,5 @@
+"use client";
+
 import { Wallet } from "lucide-react";
 import { OwnerPage } from "@/components/owner/owner-page";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
@@ -20,7 +22,7 @@ export default function RevenuePage() {
           icon={Wallet}
           tone="emerald"
         />
-        <StatCard label="Refunded" value="₹0" hint="0 txn" tone="violet" />
+        <StatCard label="Refunded" value="₹0" hint="0 txn" tone="blue" />
         <StatCard label="Failed" value={0} hint="transactions" />
         <StatCard label="Months tracked" value={0} color="cyan" />
       </StatCardGrid>

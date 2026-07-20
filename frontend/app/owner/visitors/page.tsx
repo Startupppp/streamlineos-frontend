@@ -1,3 +1,5 @@
+"use client";
+
 import { Eye, Globe, FileText } from "lucide-react";
 import { OwnerPage } from "@/components/owner/owner-page";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
@@ -15,7 +17,7 @@ export default function VisitorsPage() {
       <StatCardGrid cols={4} className="mb-1.5">
         <StatCard label="Visits (30d)" value={0} icon={Eye} tone="blue" />
         <StatCard label="Unique (30d)" value={0} icon={Globe} color="cyan" />
-        <StatCard label="Top page" value="—" icon={FileText} tone="violet" />
+        <StatCard label="Top page" value="—" icon={FileText} tone="blue" />
         <StatCard label="Top referrer" value="Direct" tone="emerald" />
       </StatCardGrid>
 

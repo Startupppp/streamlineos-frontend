@@ -232,7 +232,6 @@ export async function proxy(req: NextRequest) {
 
     if (matchesRoute(pathname, "/org-setup")) {
       if (isPlatformAdmin) return redirectTo(req, OWNER_HOME);
-      if (token.orgOnboardingCompletedAt) return redirectTo(req, "/dashboard");
     } else if (matchesRoute(pathname, "/onboarding")) {
       if (isPlatformAdmin) return redirectTo(req, OWNER_HOME);
       if (!hasOrg) return redirectTo(req, "/org-setup");
