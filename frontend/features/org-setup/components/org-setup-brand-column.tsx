@@ -20,7 +20,7 @@ function OrgSetupBrandColumnInner({ snapshot }: OrgSetupBrandColumnProps) {
   const company = snapshot.companyName.trim();
 
   return (
-    <aside className="relative hidden h-full min-h-0 w-[42%] min-w-0 shrink-0 flex-col overflow-hidden border-r border-border/60 xl:flex">
+    <aside className="relative hidden h-full min-h-0 w-1/2 min-w-0 shrink-0 flex-col overflow-hidden border-l border-border/60 md:flex">
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.35]"
         style={{
@@ -41,13 +41,13 @@ function OrgSetupBrandColumnInner({ snapshot }: OrgSetupBrandColumnProps) {
         aria-hidden
       />
 
-      <div className="relative z-10 flex h-full min-h-0 min-w-0 flex-col px-8 py-8 2xl:px-12 2xl:py-10">
+      <div className="relative z-10 flex h-full min-h-0 min-w-0 flex-col px-6 py-6 lg:px-8 lg:py-8 2xl:px-12 2xl:py-10">
         <Link
           href="/"
-          className="mb-6 flex items-center gap-2.5 self-start"
+          className="mb-5 flex items-center gap-2.5 self-start lg:mb-6"
           aria-label={BRAND_NAME}
         >
-          <AnimatedLogo size={30} className="rounded-xl" />
+          <AnimatedLogo size={28} className="rounded-xl" />
           <span className="font-display text-sm font-bold tracking-tight text-foreground">
             {BRAND_NAME}
           </span>
@@ -60,7 +60,7 @@ function OrgSetupBrandColumnInner({ snapshot }: OrgSetupBrandColumnProps) {
           className="mb-5 min-w-0 max-w-md space-y-2.5"
         >
           <p className="text-[12px] font-medium text-brand-deep">Workspace birth</p>
-          <h2 className="font-display text-[1.65rem] font-extrabold leading-[1.05] tracking-[-0.03em] text-foreground text-balance 2xl:text-[2rem]">
+          <h2 className="font-display text-[1.45rem] font-extrabold leading-[1.05] tracking-[-0.03em] text-foreground text-balance lg:text-[1.65rem] 2xl:text-[2rem]">
             {company ? (
               <>
                 Building <span className="brand-sweep">{company}</span>

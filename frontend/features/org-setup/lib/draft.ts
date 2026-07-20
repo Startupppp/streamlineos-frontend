@@ -26,6 +26,7 @@ export function loadDraft(): WizardData {
       teamSize: typeof p.teamSize === "string" ? p.teamSize : DEFAULT_DATA.teamSize,
       country: typeof p.country === "string" ? p.country : undefined,
       timezone: typeof p.timezone === "string" ? p.timezone : undefined,
+      phone: typeof p.phone === "string" ? p.phone : DEFAULT_DATA.phone,
       currency: typeof p.currency === "string" ? p.currency : undefined,
       fiscalYearStart: typeof p.fiscalYearStart === "string" ? p.fiscalYearStart : undefined,
       businessAddress: typeof p.businessAddress === "string" ? p.businessAddress : undefined,

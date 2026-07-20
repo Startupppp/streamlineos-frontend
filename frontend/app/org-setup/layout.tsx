@@ -14,7 +14,7 @@ export default function OrgSetupLayout({ children }: { children: ReactNode }) {
       </a>
 
       <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <header className="flex shrink-0 items-center px-4 py-3.5 sm:px-8 xl:hidden">
+        <header className="flex shrink-0 items-center px-4 py-3.5 sm:px-8 md:hidden">
           <Link
             href="/"
             className="flex min-h-10 items-center gap-2.5 group"
@@ -34,20 +34,6 @@ export default function OrgSetupLayout({ children }: { children: ReactNode }) {
         >
           {children}
         </main>
-
-        <footer className="hidden shrink-0 items-center justify-between px-8 py-3 text-[11px] font-medium text-muted-foreground xl:flex">
-          <p>
-            &copy; {new Date().getFullYear()} {BRAND_NAME}
-          </p>
-          <div className="flex items-center gap-4">
-            <Link href="/legal/privacy" className="transition-colors hover:text-foreground">
-              Privacy
-            </Link>
-            <Link href="/legal/terms" className="transition-colors hover:text-foreground">
-              Terms
-            </Link>
-          </div>
-        </footer>
       </div>
     </div>
   );

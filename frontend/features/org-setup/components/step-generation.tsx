@@ -80,7 +80,7 @@ export function StepGeneration({ data }: StepGenerationProps) {
       companySize: d.teamSize || "1-10",
       ...(d.country ? { country: d.country } : {}),
       ...(d.timezone ? { timezone: d.timezone } : {}),
-      ...(d.phone ? { phone: d.phone } : {}),
+      phone: d.phone,
       enabledModules: d.modules.length > 0 ? d.modules : ["HR", "CRM", "PROJECTS"],
     };
   }
@@ -161,11 +161,15 @@ export function StepGeneration({ data }: StepGenerationProps) {
     const payload = buildPayload(dataRef.current);
 
     try {
-      await generateWorkspaceRef.current.mutateAsync({
-        industry: payload.industry,
-        enabledModules: payload.enabledModules,
-      });
       const res = await completeOrgSetupRef.current.mutateAsync(payload);
+      clearBackendTokenCache();
+
+      await generateWorkspaceRef.current
+        .mutateAsync({
+          industry: payload.industry,
+          enabledModules: payload.enabledModules,
+        })
+        .catch(() => null);
 
       const inviteGroups = groupInviteesByRole(dataRef.current.invitees);
       for (const group of inviteGroups) {

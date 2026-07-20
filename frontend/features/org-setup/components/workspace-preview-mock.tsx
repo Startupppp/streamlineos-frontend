@@ -66,7 +66,7 @@ function WorkspacePreviewMockInner({
           >
             <div
               className={cn(
-                "mb-1 flex items-center justify-center rounded-lg bg-foreground text-[10px] font-bold text-background",
+                "mb-1 flex items-center justify-center rounded-lg bg-gradient-to-br from-brand-core to-brand-cyan text-[10px] font-bold text-white",
                 compact ? "h-7 w-7" : "h-8 w-8",
               )}
             >

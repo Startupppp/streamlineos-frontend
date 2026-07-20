@@ -22,6 +22,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { ZodIssue } from "zod";
+import { basicsStepSchema } from "../lib/basics-schema";
 import { GOALS, INDUSTRIES, INDUSTRY_TEMPLATE_HINTS, TEAM_SIZES } from "../lib/constants";
 import type { WizardData } from "../lib/types";
 import { GoalChip } from "./goal-chip";
@@ -63,6 +65,11 @@ function InlineError({ id, message }: { id: string; message: string | null }) {
   );
 }
 
+function fieldError(attempted: boolean, issues: ZodIssue[], key: string): string | null {
+  if (!attempted) return null;
+  return issues.find((issue) => issue.path[0] === key)?.message ?? null;
+}
+
 export function StepBasics({ data, patch, onToggleGoal, onBack, onNext }: StepBasicsProps) {
   const [attempted, setAttempted] = useState(false);
   const [otherSelected, setOtherSelected] = useState(
@@ -81,11 +88,25 @@ export function StepBasics({ data, patch, onToggleGoal, onBack, onNext }: StepBa
       : undefined;
   const industryHint = INDUSTRY_TEMPLATE_HINTS[data.industry];
 
+  const parsed = useMemo(
+    () =>
+      basicsStepSchema.safeParse({
+        goals: data.goals,
+        industry: data.industry,
+        companyName: data.companyName,
+        teamSize: data.teamSize,
+        phone: data.phone,
+      }),
+    [data.goals, data.industry, data.companyName, data.teamSize, data.phone],
+  );
+
+  const issues = parsed.success ? [] : parsed.error.issues;
   const errors = {
-    goals: attempted && data.goals.length === 0 ? "Select at least one goal." : null,
-    industry: attempted && !data.industry.trim() ? "Select or enter your industry." : null,
-    companyName: attempted && !data.companyName.trim() ? "Enter your company name." : null,
-    teamSize: attempted && !data.teamSize ? "Select your team size." : null,
+    goals: fieldError(attempted, issues, "goals"),
+    industry: fieldError(attempted, issues, "industry"),
+    companyName: fieldError(attempted, issues, "companyName"),
+    teamSize: fieldError(attempted, issues, "teamSize"),
+    phone: fieldError(attempted, issues, "phone"),
   };
 
   const handleGoalToggle = useCallback(
@@ -111,13 +132,12 @@ export function StepBasics({ data, patch, onToggleGoal, onBack, onNext }: StepBa
     patch({ country: name, timezone: tz });
   }
 
+  function handlePhoneChange(value: string) {
+    patch({ phone: value });
+  }
+
   function handleNext() {
-    const valid =
-      data.goals.length > 0 &&
-      data.industry.trim() !== "" &&
-      data.companyName.trim() !== "" &&
-      data.teamSize !== "";
-    if (!valid) {
+    if (!parsed.success) {
       setAttempted(true);
       return;
     }
@@ -248,16 +268,19 @@ export function StepBasics({ data, patch, onToggleGoal, onBack, onNext }: StepBa
           </div>
           <div className="space-y-1">
             <Label htmlFor="org-phone" className="text-xs">
-              Mobile number
+              Mobile number *
             </Label>
             <PhoneInput
               id="org-phone"
               defaultCountry="IN"
               placeholder="Enter mobile number"
               maxLength={17}
-              value={data.phone ?? ""}
-              onChange={(v) => patch({ phone: v ?? "" })}
+              value={data.phone}
+              onChange={handlePhoneChange}
+              aria-invalid={!!errors.phone}
+              aria-describedby={errors.phone ? "org-phone-error" : undefined}
             />
+            <InlineError id="org-phone-error" message={errors.phone} />
           </div>
         </div>
         <p className="text-xs text-muted-foreground">You can change all of this later in Settings.</p>

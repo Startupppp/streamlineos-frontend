@@ -18,7 +18,7 @@ function StepRailInner({ sequence, currentIndex, saveState, onStepSelect }: Step
   const minutesLeft = ESTIMATED_MINUTES_REMAINING[sequence[currentIndex] ?? "welcome"] ?? 0;
 
   return (
-    <div className="mb-6 hidden min-w-0 xl:block">
+    <div className="mb-6 hidden min-w-0 md:block">
       <ol className="flex min-w-0 items-center gap-1" aria-label="Setup steps">
         {sequence.map((stepId, i) => {
           const done = i < currentIndex;
@@ -33,14 +33,14 @@ function StepRailInner({ sequence, currentIndex, saveState, onStepSelect }: Step
                   type="button"
                   onClick={() => onStepSelect(i)}
                   className={cn(
-                    "flex min-w-0 items-center gap-2 rounded-lg px-2 py-1.5 text-left press-scale transition-colors",
+                    "flex shrink-0 items-center gap-2 rounded-lg px-2 py-1.5 text-left press-scale transition-colors",
                     "hover:bg-muted",
                   )}
                 >
                   <StepMarker done={done} active={active} index={i} />
                   <span
                     className={cn(
-                      "truncate text-[12px] font-medium",
+                      "whitespace-nowrap text-[12px] font-medium",
                       active ? "text-brand-deep" : "text-foreground",
                     )}
                   >
@@ -49,13 +49,13 @@ function StepRailInner({ sequence, currentIndex, saveState, onStepSelect }: Step
                 </button>
               ) : (
                 <div
-                  className="flex min-w-0 items-center gap-2 rounded-lg px-2 py-1.5"
+                  className="flex shrink-0 items-center gap-2 rounded-lg px-2 py-1.5"
                   aria-current={active ? "step" : undefined}
                 >
                   <StepMarker done={done} active={active} index={i} />
                   <span
                     className={cn(
-                      "truncate text-[12px] font-medium",
+                      "whitespace-nowrap text-[12px] font-medium",
                       active
                         ? "text-brand-deep"
                         : done
@@ -70,7 +70,7 @@ function StepRailInner({ sequence, currentIndex, saveState, onStepSelect }: Step
               {!isLast && (
                 <div
                   className={cn(
-                    "mx-0.5 h-px min-w-3 flex-1 transition-colors duration-300",
+                    "mx-0.5 h-px min-w-2 flex-1 transition-colors duration-300",
                     done ? "bg-foreground" : "bg-border",
                   )}
                   aria-hidden

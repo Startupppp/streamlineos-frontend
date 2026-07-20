@@ -11,7 +11,7 @@ export type WizardData = {
   teamSize: string;
   country?: string;
   timezone?: string;
-  phone?: string;
+  phone: string;
   currency?: string;
   fiscalYearStart?: string;
   businessAddress?: string;

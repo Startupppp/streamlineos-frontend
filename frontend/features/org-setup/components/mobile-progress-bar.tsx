@@ -14,7 +14,7 @@ export function MobileProgressBar({ sequence, currentIndex }: MobileProgressBarP
   const stepId = sequence[currentIndex];
 
   return (
-    <div className="mb-4 min-w-0 border-b border-border/70 pb-3 xl:hidden">
+    <div className="mb-4 min-w-0 border-b border-border/70 pb-3 md:hidden">
       <div className="mb-1.5 flex min-w-0 items-center justify-between gap-3">
         <p className="min-w-0 truncate text-[13px] font-semibold text-foreground">
           {stepId ? STEP_TITLES[stepId] : "Setup"}

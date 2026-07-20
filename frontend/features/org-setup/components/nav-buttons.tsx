@@ -36,14 +36,14 @@ export function NavButtons({
         "flex gap-2 pt-2",
         "fixed inset-x-0 bottom-0 z-40 border-t border-border/80 bg-background/95 px-4 pt-3 backdrop-blur-sm",
         "pb-[max(0.75rem,env(safe-area-inset-bottom))]",
-        "xl:static xl:border-0 xl:bg-transparent xl:px-0 xl:pt-2 xl:pb-0 xl:backdrop-blur-none",
+        "md:static md:border-0 md:bg-transparent md:px-0 md:pt-2 md:pb-0 md:backdrop-blur-none",
       )}
     >
       <Button
         type="button"
         variant="outline"
         onClick={onBack}
-        className="h-10 min-w-10 px-3 text-sm xl:h-9"
+        className="h-10 min-w-10 px-3 text-sm md:h-9"
       >
         <ArrowLeft className="mr-1 h-3.5 w-3.5" aria-hidden />
         Back
@@ -54,7 +54,7 @@ export function NavButtons({
           type="button"
           variant="ghost"
           onClick={onNext}
-          className="h-10 px-3 text-sm text-muted-foreground hover:text-foreground xl:h-9"
+          className="h-10 px-3 text-sm text-muted-foreground hover:text-foreground md:h-9"
         >
           {skipLabel}
         </Button>
@@ -64,7 +64,7 @@ export function NavButtons({
         type="button"
         onClick={onNext}
         disabled={nextDisabled}
-        className="h-10 min-w-0 flex-1 gap-1.5 text-sm xl:h-9"
+        className="h-10 min-w-0 flex-1 gap-1.5 text-sm md:h-9"
       >
         {NextIcon && <NextIcon className="h-3.5 w-3.5 shrink-0" size={14} aria-hidden />}
         <span className="truncate">{nextLabel ?? "Continue"}</span>

@@ -103,10 +103,15 @@ async function fetchSessionData(userId: string): Promise<SessionData | null> {
 
 async function fetchSessionDataWithCache(userId: string, orgId: string | null): Promise<SessionData | null> {
   const storeKey = `${userId}:${orgId ?? ""}`;
-  const cached = getSessionDataFromStore(storeKey);
-  if (cached) return cached;
+  if (orgId !== null) {
+    const cached = getSessionDataFromStore(storeKey);
+    if (cached) return cached;
+  }
   const data = await fetchSessionData(userId);
-  if (data) setSessionDataInStore(storeKey, data);
+  if (data?.orgId) {
+    setSessionDataInStore(`${userId}:${data.orgId}`, data);
+    if (orgId !== null) setSessionDataInStore(storeKey, data);
+  }
   return data;
 }
 

@@ -7,7 +7,6 @@ import type { StepId } from "../lib/constants";
 import type { WizardData } from "../lib/types";
 import { StepRail } from "./step-rail";
 import { MobileProgressBar } from "./mobile-progress-bar";
-import { PreviewAccordion } from "./preview-accordion";
 import { OrgSetupBrandColumn } from "./org-setup-brand-column";
 
 type OrgSetupShellProps = {
@@ -56,11 +55,9 @@ export function OrgSetupShell({
   );
 
   return (
-    <div className="flex h-full min-h-0 w-full min-w-0 flex-1 overflow-hidden">
-      <OrgSetupBrandColumn snapshot={previewSnapshot} />
-
-      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain scrollbar-hide">
-        <div className="mx-auto flex w-full min-w-0 max-w-lg flex-1 flex-col px-4 py-4 sm:px-8 sm:py-5 md:max-w-xl md:px-10 md:py-6 xl:max-w-lg xl:px-8 xl:py-8 pb-[calc(5.25rem+env(safe-area-inset-bottom))] xl:pb-8">
+    <div className="flex h-full min-h-0 w-full min-w-0 flex-1 overflow-hidden md:flex-row">
+      <div className="relative flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-y-auto overscroll-contain scrollbar-hide md:w-1/2">
+        <div className="mx-auto flex w-full min-w-0 max-w-lg flex-1 flex-col px-4 py-4 sm:px-8 sm:py-5 md:max-w-none md:px-8 md:py-6 lg:px-10 lg:py-8 pb-[calc(5.25rem+env(safe-area-inset-bottom))] md:pb-8">
           <StepRail
             sequence={sequence}
             currentIndex={currentIndex}
@@ -69,8 +66,6 @@ export function OrgSetupShell({
           />
 
           <MobileProgressBar sequence={sequence} currentIndex={currentIndex} />
-
-          <PreviewAccordion snapshot={previewSnapshot} />
 
           {!isWelcome && (
             <div className="mb-3.5 min-w-0 space-y-1 sm:mb-4">
@@ -123,6 +118,8 @@ export function OrgSetupShell({
           </div>
         </div>
       </div>
+
+      <OrgSetupBrandColumn snapshot={previewSnapshot} />
     </div>
   );
 }

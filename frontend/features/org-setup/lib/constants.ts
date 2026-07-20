@@ -95,9 +95,9 @@ export const GENERATION_STEPS: readonly string[] = [
 
 export const STEP_TITLES: Record<StepId, string> = {
   welcome: "Welcome",
-  basics: "Business basics",
-  setup: "Modules & payments",
-  invite: "Invite & launch",
+  basics: "Basics",
+  setup: "Modules",
+  invite: "Launch",
 };
 
 export const STEP_SUBTITLES: Record<StepId, string> = {
@@ -145,6 +145,7 @@ export const DEFAULT_DATA: WizardData = {
   industry: "",
   companyName: "",
   teamSize: "",
+  phone: "",
   installedApps: DEFAULT_APPS,
   modules: DEFAULT_APPS,
   startingData: "clean",
