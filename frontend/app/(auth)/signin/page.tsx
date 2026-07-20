@@ -117,10 +117,6 @@ export default function SignInPage() {
         )}
 
         <PasswordlessSigninForm getCallbackUrl={getCallbackUrl} />
-
-        <p className="text-[11px] text-muted-foreground/50 text-center leading-relaxed">
-          Encrypted in transit over TLS. Sessions are signed and rotated.
-        </p>
       </div>
     </div>
   );

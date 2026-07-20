@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
@@ -85,7 +85,10 @@ export function PersonalInfoTab({
   const effectiveCountry = selectedCountry?.trim() || INDIA_COUNTRY_NAME;
   const showIndianAddress = effectiveCountry === INDIA_COUNTRY_NAME;
   const selectedState = form.watch("addressState");
-  const cityOptions = selectedState ? citiesForState(selectedState) : [];
+  const cityOptions = useMemo(
+    () => (selectedState ? citiesForState(selectedState) : []),
+    [selectedState],
+  );
 
   useEffect(() => {
     if (!personalDetails || hasHydratedDetails.current) return;

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { ArrowRight, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Magnetic } from "./motion/magnetic";
@@ -19,15 +19,15 @@ const navLinks = [
 export function LandingNav() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const reduce = useReducedMotion();
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
+    const onScroll = () => setScrolled(window.scrollY > 12);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Close the mobile drawer when crossing to desktop breakpoints.
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 768px)");
     const onChange = () => {
@@ -37,7 +37,6 @@ export function LandingNav() {
     return () => mq.removeEventListener("change", onChange);
   }, []);
 
-  // Prevent body scroll while the mobile menu is open.
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
@@ -49,19 +48,19 @@ export function LandingNav() {
 
   return (
     <header
-      className={`fixed top-0 inset-x-0 z-50 transition-all duration-500 ${
+      className={`fixed top-0 inset-x-0 z-50 transition-[padding] duration-500 ${
         scrolled ? "py-2" : "py-3 sm:py-4"
       }`}
     >
       <div
-        className={`container mx-auto px-3 sm:px-4 lg:px-8 transition-all duration-500 ${
+        className={`container mx-auto px-3 sm:px-4 lg:px-8 transition-[max-width] duration-500 ${
           scrolled ? "max-w-5xl" : "max-w-7xl"
         }`}
       >
         <div
           className={`flex items-center justify-between gap-2 rounded-2xl transition-all duration-500 ${
             scrolled
-              ? "bg-white/95 backdrop-blur-md px-3 sm:px-4 py-2 border border-blue-500/10 shadow-sm"
+              ? "bg-white/90 backdrop-blur-xl px-3 sm:px-4 py-2 border border-brand-core/10 shadow-[0_12px_40px_-18px_rgba(30,64,175,0.28)]"
               : "px-1.5 sm:px-2 py-1 border border-transparent"
           }`}
         >
@@ -73,13 +72,13 @@ export function LandingNav() {
             <div className="relative shrink-0">
               <AnimatedLogo
                 size={32}
-                className="rounded-lg ring-1 ring-blue-500/10 sm:hidden"
+                className="rounded-lg ring-1 ring-brand-core/10 sm:hidden"
               />
               <AnimatedLogo
                 size={34}
-                className="rounded-lg ring-1 ring-blue-500/10 hidden sm:block"
+                className="rounded-lg ring-1 ring-brand-core/10 hidden sm:block"
               />
-              <div className="absolute inset-0 rounded-lg bg-blue-500/0 group-hover:bg-blue-500/10 transition-colors duration-300 pointer-events-none" />
+              <div className="absolute inset-0 rounded-lg bg-brand-core/0 group-hover:bg-brand-core/10 transition-colors duration-300 pointer-events-none" />
             </div>
             <span className="font-display text-sm sm:text-base font-bold tracking-tight text-slate-900 truncate">
               {BRAND_NAME}
@@ -99,7 +98,7 @@ export function LandingNav() {
           </nav>
 
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            <Magnetic strength={0.3}>
+            <Magnetic strength={reduce ? 0 : 0.28}>
               <Link href="/signin">
                 <Button size="sm" className="h-9 px-3 sm:px-4 text-xs sm:text-sm">
                   Get started
@@ -110,7 +109,7 @@ export function LandingNav() {
             <button
               type="button"
               onClick={() => setOpen((v) => !v)}
-              className="md:hidden h-9 w-9 inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-900"
+              className="md:hidden h-9 w-9 inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white/90 text-slate-900"
               aria-label={open ? "Close menu" : "Open menu"}
               aria-expanded={open}
             >
@@ -122,9 +121,9 @@ export function LandingNav() {
         <AnimatePresence>
           {open && (
             <motion.div
-              initial={{ opacity: 0, y: -8 }}
+              initial={reduce ? { opacity: 0 } : { opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
+              exit={reduce ? { opacity: 0 } : { opacity: 0, y: -8 }}
               transition={{ duration: 0.2 }}
               className="md:hidden mt-2 rounded-2xl glass-panel-strong p-3 space-y-1 max-h-[min(70vh,480px)] overflow-y-auto"
             >
@@ -141,7 +140,7 @@ export function LandingNav() {
               <Link
                 href="/signin"
                 onClick={() => setOpen(false)}
-                className="mt-1 flex items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-3 py-3 text-sm font-semibold text-white hover:bg-blue-700"
+                className="mt-1 flex items-center justify-center gap-1.5 rounded-lg bg-slate-900 px-3 py-3 text-sm font-semibold text-white hover:bg-slate-800"
               >
                 Get started
                 <ArrowRight className="h-3.5 w-3.5" />

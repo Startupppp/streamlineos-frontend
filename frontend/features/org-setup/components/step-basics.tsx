@@ -1,20 +1,30 @@
 "use client";
 
-import { useMemo, useState, type MouseEvent } from "react";
+import { useCallback, useMemo, useState, type MouseEvent } from "react";
 import { getAllCountries } from "countries-and-timezones";
 import {
-  TrendingUp, Users, Package, DollarSign, Headphones, LayoutGrid, Sparkles, Zap, Check,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+  TrendingUpIcon,
+  UsersIcon,
+  BoxesIcon,
+  BadgeDollarIcon,
+  HeadphonesIcon,
+  LayoutGridIcon,
+  SparklesIcon,
+  ZapIcon,
+} from "@animateicons/react/lucide";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PhoneInput } from "@/components/ui/phone-input";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
 import { GOALS, INDUSTRIES, INDUSTRY_TEMPLATE_HINTS, TEAM_SIZES } from "../lib/constants";
 import type { WizardData } from "../lib/types";
+import { GoalChip } from "./goal-chip";
 import { NavButtons } from "./nav-buttons";
 
 type StepBasicsProps = {
@@ -25,9 +35,17 @@ type StepBasicsProps = {
   onNext: () => void;
 };
 
-const GOAL_ICONS: Record<string, LucideIcon> = {
-  sales: TrendingUp, hr: Users, inventory: Package, finance: DollarSign,
-  support: Headphones, projects: LayoutGrid, ai: Sparkles, everything: Zap,
+type AnimatedIcon = typeof TrendingUpIcon;
+
+const GOAL_ICONS: Record<string, AnimatedIcon> = {
+  sales: TrendingUpIcon,
+  hr: UsersIcon,
+  inventory: BoxesIcon,
+  finance: BadgeDollarIcon,
+  support: HeadphonesIcon,
+  projects: LayoutGridIcon,
+  ai: SparklesIcon,
+  everything: ZapIcon,
 };
 
 const ALL_COUNTRIES = Object.values(getAllCountries())
@@ -35,12 +53,6 @@ const ALL_COUNTRIES = Object.values(getAllCountries())
   .sort((a, b) => a.name.localeCompare(b.name));
 
 const OTHER_INDUSTRY = "__other";
-
-const CHIP_BASE =
-  "flex items-center gap-1.5 p-2 rounded-lg border text-left text-xs font-medium transition-colors press-scale";
-const CHIP_SELECTED =
-  "border-brand-core bg-brand-core/10 text-brand-deep dark:bg-brand-core/15 dark:text-brand-bright";
-const CHIP_IDLE = "border-border bg-card text-foreground hover:border-brand-core/40";
 
 function InlineError({ id, message }: { id: string; message: string | null }) {
   if (!message) return null;
@@ -76,10 +88,13 @@ export function StepBasics({ data, patch, onToggleGoal, onBack, onNext }: StepBa
     teamSize: attempted && !data.teamSize ? "Select your team size." : null,
   };
 
-  function handleGoalToggle(e: MouseEvent<HTMLButtonElement>) {
-    const id = e.currentTarget.dataset.goalId;
-    if (id) onToggleGoal(id);
-  }
+  const handleGoalToggle = useCallback(
+    (e: MouseEvent<HTMLButtonElement>) => {
+      const id = e.currentTarget.dataset.goalId;
+      if (id) onToggleGoal(id);
+    },
+    [onToggleGoal],
+  );
 
   function handleIndustrySelect(value: string) {
     if (value === OTHER_INDUSTRY) {
@@ -112,29 +127,24 @@ export function StepBasics({ data, patch, onToggleGoal, onBack, onNext }: StepBa
   return (
     <div className="space-y-5">
       <section className="space-y-2">
-        <p className="text-xs font-semibold text-foreground">What do you want to get done? *</p>
+        <p className="text-[13px] font-semibold text-foreground">What do you want to get done? *</p>
         <div
           role="group"
           aria-label="What do you want to get done?"
-          className="grid grid-cols-2 sm:grid-cols-3 gap-1.5"
+          className="grid grid-cols-2 gap-1.5 sm:grid-cols-3"
         >
           {GOALS.map((goal) => {
             const selected = data.goals.includes(goal.id);
-            const Icon = GOAL_ICONS[goal.id] ?? Zap;
+            const Icon = GOAL_ICONS[goal.id] ?? ZapIcon;
             return (
-              <button
+              <GoalChip
                 key={goal.id}
-                type="button"
-                role="checkbox"
-                aria-checked={selected}
-                data-goal-id={goal.id}
-                onClick={handleGoalToggle}
-                className={cn(CHIP_BASE, selected ? CHIP_SELECTED : CHIP_IDLE)}
-              >
-                <Icon className={cn("h-3.5 w-3.5 shrink-0", selected ? "text-brand-core" : "text-muted-foreground")} aria-hidden />
-                <span className="min-w-0 flex-1">{goal.label}</span>
-                {selected && <Check className="h-3 w-3 text-brand-core ml-auto shrink-0" aria-hidden />}
-              </button>
+                goalId={goal.id}
+                label={goal.label}
+                selected={selected}
+                Icon={Icon}
+                onToggle={handleGoalToggle}
+              />
             );
           })}
         </div>
@@ -142,10 +152,10 @@ export function StepBasics({ data, patch, onToggleGoal, onBack, onNext }: StepBa
       </section>
 
       <section className="space-y-2">
-        <Label htmlFor="industry-select" className="text-xs font-semibold text-foreground">
+        <Label htmlFor="industry-select" className="text-[13px] font-semibold text-foreground">
           Industry *
         </Label>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <Select value={industrySelectValue} onValueChange={handleIndustrySelect}>
             <SelectTrigger
               id="industry-select"
@@ -157,7 +167,9 @@ export function StepBasics({ data, patch, onToggleGoal, onBack, onNext }: StepBa
             </SelectTrigger>
             <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
               {INDUSTRIES.map((ind) => (
-                <SelectItem key={ind} value={ind}>{ind}</SelectItem>
+                <SelectItem key={ind} value={ind}>
+                  {ind}
+                </SelectItem>
               ))}
               <SelectItem value={OTHER_INDUSTRY}>Other…</SelectItem>
             </SelectContent>
@@ -179,10 +191,12 @@ export function StepBasics({ data, patch, onToggleGoal, onBack, onNext }: StepBa
       </section>
 
       <section className="space-y-2">
-        <p className="text-xs font-semibold text-foreground">Company</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <p className="text-[13px] font-semibold text-foreground">Company</p>
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
           <div className="space-y-1">
-            <Label htmlFor="company-name" className="text-xs">Company name *</Label>
+            <Label htmlFor="company-name" className="text-xs">
+              Company name *
+            </Label>
             <Input
               id="company-name"
               value={data.companyName}
@@ -206,7 +220,9 @@ export function StepBasics({ data, patch, onToggleGoal, onBack, onNext }: StepBa
               </SelectTrigger>
               <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                 {TEAM_SIZES.map((s) => (
-                  <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                  <SelectItem key={s.value} value={s.value}>
+                    {s.label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -220,7 +236,9 @@ export function StepBasics({ data, patch, onToggleGoal, onBack, onNext }: StepBa
               </SelectTrigger>
               <SelectContent className="max-h-[200px] min-w-[var(--radix-select-trigger-width)]">
                 {ALL_COUNTRIES.map((c) => (
-                  <SelectItem key={c.name} value={c.name}>{c.name}</SelectItem>
+                  <SelectItem key={c.name} value={c.name}>
+                    {c.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -229,7 +247,9 @@ export function StepBasics({ data, patch, onToggleGoal, onBack, onNext }: StepBa
             )}
           </div>
           <div className="space-y-1">
-            <Label htmlFor="org-phone" className="text-xs">Mobile number</Label>
+            <Label htmlFor="org-phone" className="text-xs">
+              Mobile number
+            </Label>
             <PhoneInput
               id="org-phone"
               defaultCountry="IN"

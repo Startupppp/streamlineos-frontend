@@ -11,24 +11,27 @@ type MobileProgressBarProps = {
 export function MobileProgressBar({ sequence, currentIndex }: MobileProgressBarProps) {
   const total = sequence.length;
   const pct = Math.round(((currentIndex + 1) / total) * 100);
+  const stepId = sequence[currentIndex];
 
   return (
-    <div className="lg:hidden -mx-4 sm:-mx-8 px-4 sm:px-8 pb-3 mb-3 border-b border-border">
-      <div className="flex items-center justify-between mb-1.5">
-        <p className="text-[13px] font-semibold text-foreground">{STEP_TITLES[sequence[currentIndex]]}</p>
-        <p className="text-xs tabular-nums text-muted-foreground">
+    <div className="mb-4 min-w-0 border-b border-border/70 pb-3 xl:hidden">
+      <div className="mb-1.5 flex min-w-0 items-center justify-between gap-3">
+        <p className="min-w-0 truncate text-[13px] font-semibold text-foreground">
+          {stepId ? STEP_TITLES[stepId] : "Setup"}
+        </p>
+        <p className="shrink-0 text-xs tabular-nums text-muted-foreground">
           {currentIndex + 1} / {total}
         </p>
       </div>
       <div
-        className="h-1 w-full rounded-full bg-muted overflow-hidden"
+        className="h-1.5 w-full overflow-hidden rounded-full bg-muted"
         role="progressbar"
         aria-valuenow={pct}
         aria-valuemin={0}
         aria-valuemax={100}
       >
         <div
-          className="h-full gradient-wizard rounded-full transition-[width] duration-[400ms] ease-out motion-reduce:transition-none"
+          className="h-full rounded-full gradient-wizard transition-[width] duration-[400ms] ease-out motion-reduce:transition-none"
           style={{ width: `${pct}%` }}
         />
       </div>

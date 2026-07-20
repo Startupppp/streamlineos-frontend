@@ -19,7 +19,6 @@ import { GENERATION_STEPS } from "../lib/constants";
 import { WelcomeCelebration } from "./welcome-celebration";
 
 const SETUP_DONE_KEY = "org-setup-complete";
-/** One-shot flag so the dashboard can greet new orgs after redirect. */
 export const WELCOME_POP_KEY = "org-setup-welcome-pending";
 export const WELCOME_POP_NAME_KEY = "org-setup-welcome-name";
 
@@ -95,7 +94,7 @@ export function StepGeneration({ data }: StepGenerationProps) {
       const name = dataRef.current.companyName?.trim();
       if (name) sessionStorage.setItem(WELCOME_POP_NAME_KEY, name);
     } catch {
-      /* ignore */
+      void 0;
     }
 
     const choice = dataRef.current.paymentsChoice;
@@ -123,7 +122,6 @@ export function StepGeneration({ data }: StepGenerationProps) {
     }
     await completeOnboardingGate("org-setup-done", update);
 
-    // Brief beat so the final checklist ticks finish, then celebrate.
     await new Promise<void>((resolve) => setTimeout(resolve, 700));
     setShowWelcome(true);
   }

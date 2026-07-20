@@ -90,7 +90,10 @@ export function LandingFooter() {
           ))}
         </MotionStagger>
 
-        <MotionReveal className="border-t border-slate-200/80 py-5 sm:py-6 flex flex-col sm:flex-row justify-between items-center gap-2 text-center sm:text-left">
+        <MotionReveal
+          variant="fadeIn"
+          className="border-t border-slate-200/80 py-5 sm:py-6 flex flex-col sm:flex-row justify-between items-center gap-2 text-center sm:text-left"
+        >
           <p className="text-xs font-mono text-slate-400">
             &copy; {new Date().getFullYear()} {BRAND_NAME}. All rights reserved.
           </p>

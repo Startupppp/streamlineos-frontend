@@ -1,15 +1,14 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { cn } from "@/lib/utils";
 import { STEP_SUBTITLES } from "../lib/constants";
 import type { StepId } from "../lib/constants";
 import type { WizardData } from "../lib/types";
 import { StepRail } from "./step-rail";
-import { WorkspacePreviewPanel } from "./workspace-preview-panel";
 import { MobileProgressBar } from "./mobile-progress-bar";
 import { PreviewAccordion } from "./preview-accordion";
+import { OrgSetupBrandColumn } from "./org-setup-brand-column";
 
 type OrgSetupShellProps = {
   sequence: StepId[];
@@ -22,9 +21,6 @@ type OrgSetupShellProps = {
   children: ReactNode;
 };
 
-// Replaces the old single centered card: desktop gets a 3-column composition (step rail /
-// main panel / workspace preview), mobile gets a top progress bar + collapsed preview
-// accordion + sticky bottom action bar (rendered by each step's own NavButtons).
 export function OrgSetupShell({
   sequence,
   currentIndex,
@@ -36,78 +32,97 @@ export function OrgSetupShell({
   children,
 }: OrgSetupShellProps) {
   const reduceMotion = useReducedMotion();
-  const currentStepId = sequence[currentIndex];
-  const isFirstOrLast = currentIndex === 0 || currentIndex === sequence.length - 1;
+  const currentStepId = sequence[currentIndex] ?? "welcome";
+  const isWelcome = currentStepId === "welcome";
+  const previewSnapshot = useMemo(
+    () => ({
+      companyName: data.companyName,
+      industry: data.industry,
+      teamSize: data.teamSize,
+      goals: data.goals,
+      modules: data.modules,
+      installedApps: data.installedApps,
+      inviteesCount: data.invitees.length,
+    }),
+    [
+      data.companyName,
+      data.industry,
+      data.teamSize,
+      data.goals,
+      data.modules,
+      data.installedApps,
+      data.invitees.length,
+    ],
+  );
 
   return (
-    <div className="w-full max-w-5xl mx-auto flex gap-8 pb-32 lg:pb-2">
-      <StepRail
-        sequence={sequence}
-        currentIndex={currentIndex}
-        saveState={saveState}
-        onStepSelect={onStepSelect}
-      />
+    <div className="flex h-full min-h-0 w-full min-w-0 flex-1 overflow-hidden">
+      <OrgSetupBrandColumn snapshot={previewSnapshot} />
 
-      <div className="flex-1 min-w-0 max-w-xl mx-auto lg:mx-0 space-y-4">
-        <MobileProgressBar sequence={sequence} currentIndex={currentIndex} />
+      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain scrollbar-hide">
+        <div className="mx-auto flex w-full min-w-0 max-w-lg flex-1 flex-col px-4 py-4 sm:px-8 sm:py-5 md:max-w-xl md:px-10 md:py-6 xl:max-w-lg xl:px-8 xl:py-8 pb-[calc(5.25rem+env(safe-area-inset-bottom))] xl:pb-8">
+          <StepRail
+            sequence={sequence}
+            currentIndex={currentIndex}
+            saveState={saveState}
+            onStepSelect={onStepSelect}
+          />
 
-        <div className="hidden lg:block space-y-1">
-          <AnimatePresence mode="wait">
-            <motion.h1
-              key={title}
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 6 }}
-              transition={{ duration: 0.15 }}
-              className="text-2xl font-semibold tracking-tight text-foreground"
-            >
-              {title}
-            </motion.h1>
-          </AnimatePresence>
-          <p className="text-[13px] text-muted-foreground">{STEP_SUBTITLES[currentStepId]}</p>
-        </div>
+          <MobileProgressBar sequence={sequence} currentIndex={currentIndex} />
 
-        <PreviewAccordion data={data} />
+          <PreviewAccordion snapshot={previewSnapshot} />
 
-        <div
-          className={cn(
-            "bg-card rounded-xl border border-border shadow-soft min-h-0",
-            "lg:overflow-y-auto lg:scrollbar-hide lg:max-h-[calc(100dvh-11rem)]",
-            isFirstOrLast ? "p-4 sm:p-5" : "p-3.5 sm:p-4",
+          {!isWelcome && (
+            <div className="mb-3.5 min-w-0 space-y-1 sm:mb-4">
+              <AnimatePresence mode="wait">
+                <motion.h1
+                  key={title}
+                  initial={{ opacity: 0, y: reduceMotion ? 0 : -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: reduceMotion ? 0 : 6 }}
+                  transition={{ duration: 0.15 }}
+                  className="font-display text-xl font-extrabold tracking-[-0.02em] text-foreground text-balance sm:text-2xl"
+                >
+                  {title}
+                </motion.h1>
+              </AnimatePresence>
+              <p className="text-[13px] text-muted-foreground">
+                {STEP_SUBTITLES[currentStepId]}
+              </p>
+            </div>
           )}
-        >
-          <AnimatePresence mode="wait" custom={direction}>
-            <motion.div
-              key={currentIndex}
-              custom={direction}
-              variants={{
-                initial: (d: number) => ({ opacity: 0, x: reduceMotion ? 0 : d * 24 }),
-                animate: {
-                  opacity: 1,
-                  x: 0,
-                  transition: { duration: 0.22, ease: "easeOut" },
-                },
-                exit: (d: number) => ({
-                  opacity: 0,
-                  x: reduceMotion ? 0 : d * -24,
-                  transition: { duration: 0.15, ease: "easeOut" },
-                }),
-              }}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-            >
-              {children}
-            </motion.div>
-          </AnimatePresence>
+
+          <div className="min-h-0 min-w-0 flex-1">
+            <AnimatePresence mode="wait" custom={direction}>
+              <motion.div
+                key={currentIndex}
+                custom={direction}
+                variants={{
+                  initial: (d: number) => ({
+                    opacity: 0,
+                    x: reduceMotion ? 0 : d * 24,
+                  }),
+                  animate: {
+                    opacity: 1,
+                    x: 0,
+                    transition: { duration: 0.22, ease: "easeOut" },
+                  },
+                  exit: (d: number) => ({
+                    opacity: 0,
+                    x: reduceMotion ? 0 : d * -24,
+                    transition: { duration: 0.15, ease: "easeOut" },
+                  }),
+                }}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+              >
+                {children}
+              </motion.div>
+            </AnimatePresence>
+          </div>
         </div>
       </div>
-
-      <aside className="hidden lg:block w-72 shrink-0 self-start sticky top-8">
-        <div className="max-h-[calc(100dvh-5rem)] overflow-y-auto scrollbar-hide rounded-xl border border-border bg-card p-4">
-          <WorkspacePreviewPanel data={data} />
-        </div>
-      </aside>
     </div>
   );
 }

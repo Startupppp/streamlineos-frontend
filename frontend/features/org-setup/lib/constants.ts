@@ -8,9 +8,6 @@ export function needsPaymentsStep(goals: string[]): boolean {
   return goals.some((g) => COMMERCE_GOALS.has(g));
 }
 
-// Kept intentionally short — 4 screens, not 9. Each screen groups several of the PRD's
-// conceptual steps (goals+industry+company, modules+starting-data+payments) so nothing
-// required is dropped, but the user never sees more than 4 steps in the rail/progress bar.
 export type StepId = "welcome" | "basics" | "setup" | "invite";
 
 export function getStepSequence(_goals: string[]): StepId[] {

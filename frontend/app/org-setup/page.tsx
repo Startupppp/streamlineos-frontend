@@ -40,7 +40,7 @@ export default function OrgSetupPage() {
   const { mutateAsync: skipOrgSetup } = useSkipOrgSetupMutation();
   const { mutate: patchSession, isPending: isSaving } = usePatchOrgSetupSessionMutation();
   const { data: serverSession } = useOrgSetupSessionQuery();
-  const moduleRecommendations = useModuleRecommendationsMutation();
+  const { mutate: fetchModuleRecommendations } = useModuleRecommendationsMutation();
 
   const [step, setStep] = useState(1);
   const [mounted, setMounted] = useState(false);
@@ -154,8 +154,6 @@ export default function OrgSetupPage() {
     setMounted(true);
   }, []);
 
-  // Server session is the source of truth for cross-device resume; localStorage above
-  // is only the instant-paint cache (per 02_Odoo_Research §"Resume Without Fear").
   useEffect(() => {
     if (!mounted || hydratedFromServerRef.current || !serverSession) return;
     hydratedFromServerRef.current = true;
@@ -189,11 +187,12 @@ export default function OrgSetupPage() {
     saveStep(step);
   }, [step, mounted]);
 
-  // Fetch real "why recommended" copy once goals+industry are known, for the Modules step.
   useEffect(() => {
-    if (currentStepId !== "setup" || recommendationsFetchedRef.current || data.goals.length === 0) return;
+    if (currentStepId !== "setup" || recommendationsFetchedRef.current || data.goals.length === 0) {
+      return;
+    }
     recommendationsFetchedRef.current = true;
-    moduleRecommendations.mutate(
+    fetchModuleRecommendations(
       { goals: data.goals, industry: data.industry || undefined },
       {
         onSuccess: (res) => {
@@ -203,8 +202,7 @@ export default function OrgSetupPage() {
         },
       },
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentStepId]);
+  }, [currentStepId, data.goals, data.industry, fetchModuleRecommendations]);
 
   useEffect(() => {
     if (saveState !== "saved") return;
@@ -214,24 +212,19 @@ export default function OrgSetupPage() {
 
   if (!mounted) {
     return (
-      <div className="w-full max-w-5xl mx-auto flex gap-8 pb-24 lg:pb-2">
-        <div className="hidden lg:flex w-64 shrink-0 flex-col gap-6 py-2">
-          <Skeleton className="h-7 w-40" />
-          <div className="space-y-2">
-            <Skeleton className="h-9 w-full rounded-lg" />
-            <Skeleton className="h-9 w-full rounded-lg" />
-            <Skeleton className="h-9 w-full rounded-lg" />
-            <Skeleton className="h-9 w-full rounded-lg" />
-          </div>
+      <div className="flex h-full min-h-0 w-full min-w-0 flex-1 overflow-hidden">
+        <div className="hidden h-full w-[42%] shrink-0 flex-col gap-6 border-r border-border/60 p-10 xl:flex">
+          <Skeleton className="h-8 w-40" />
+          <Skeleton className="h-10 w-72" />
+          <Skeleton className="h-4 w-64" />
+          <Skeleton className="mt-4 h-72 w-full max-w-[440px] rounded-2xl" />
         </div>
-        <div className="flex-1 min-w-0 max-w-xl mx-auto lg:mx-0 space-y-4">
-          <div className="hidden lg:block space-y-2">
-            <Skeleton className="h-7 w-56" />
-            <Skeleton className="h-4 w-72" />
-          </div>
-          <Skeleton className="h-80 w-full rounded-xl" />
-        </div>
-        <div className="hidden lg:block w-72 shrink-0">
+        <div className="mx-auto flex w-full min-w-0 max-w-lg flex-1 flex-col gap-4 px-4 py-6 sm:px-8 md:max-w-xl md:px-10 xl:max-w-lg">
+          <Skeleton className="h-8 w-full xl:hidden" />
+          <Skeleton className="h-44 w-full rounded-2xl md:block xl:hidden" />
+          <Skeleton className="hidden h-6 w-48 xl:block" />
+          <Skeleton className="h-8 w-56" />
+          <Skeleton className="h-4 w-72 max-w-full" />
           <Skeleton className="h-64 w-full rounded-xl" />
         </div>
       </div>
@@ -254,7 +247,12 @@ export default function OrgSetupPage() {
       onStepSelect={handleStepSelect}
     >
       {currentStepId === "welcome" && (
-        <StepWelcome onNext={goNext} onSkip={handleSkipToDashboard} isSkipping={isSkipping} />
+        <StepWelcome
+          onNext={goNext}
+          onSkip={handleSkipToDashboard}
+          isSkipping={isSkipping}
+          firstName={firstName}
+        />
       )}
       {currentStepId === "basics" && (
         <StepBasics

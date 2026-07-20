@@ -2,11 +2,16 @@
 
 import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { Plus, Rocket, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
+import { RocketIcon } from "@animateicons/react/lucide";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { INVITE_ROLES } from "../lib/constants";
 import type { Invitee, WizardData } from "../lib/types";
@@ -23,7 +28,7 @@ type StepInviteLaunchProps = {
 export function StepInviteLaunch({ data, onChangeInvitees, onBack }: StepInviteLaunchProps) {
   const reduceMotion = useReducedMotion();
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<string>(INVITE_ROLES[0]);
+  const [role, setRole] = useState<string>(INVITE_ROLES[0] ?? "ADMIN");
   const [launching, setLaunching] = useState(false);
 
   function handleAdd() {
@@ -38,23 +43,27 @@ export function StepInviteLaunch({ data, onChangeInvitees, onBack }: StepInviteL
     onChangeInvitees(data.invitees.filter((i) => i.email !== target));
   }
 
+  function handleLaunch() {
+    setLaunching(true);
+  }
+
   if (launching) {
     return <StepGeneration data={data} />;
   }
 
   return (
-    <div className="space-y-4">
-      <p className="text-[13px] text-muted-foreground">
+    <div className="space-y-5">
+      <p className="text-[13px] leading-relaxed text-muted-foreground">
         Invite teammates now, or skip and invite them later from Settings.
       </p>
 
-      <div className="flex flex-col sm:flex-row gap-1.5">
+      <div className="flex flex-col gap-2 sm:flex-row">
         <Input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="teammate@company.com"
-          className="text-sm flex-1"
+          className="flex-1 text-sm"
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
@@ -62,40 +71,49 @@ export function StepInviteLaunch({ data, onChangeInvitees, onBack }: StepInviteL
             }
           }}
         />
-        <div className="flex gap-1.5">
+        <div className="flex gap-2">
           <Select value={role} onValueChange={setRole}>
-            <SelectTrigger className="flex-1 sm:flex-initial sm:w-28 text-sm">
+            <SelectTrigger className="flex-1 text-sm sm:w-28 sm:flex-initial">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
               {INVITE_ROLES.map((r) => (
-                <SelectItem key={r} value={r}>{r}</SelectItem>
+                <SelectItem key={r} value={r}>
+                  {r}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          <Button type="button" size="icon" variant="outline" className="h-9 w-9 shrink-0" onClick={handleAdd} aria-label="Add invitee">
+          <Button
+            type="button"
+            size="icon"
+            variant="outline"
+            className="h-9 w-9 shrink-0"
+            onClick={handleAdd}
+            aria-label="Add invitee"
+          >
             <Plus className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>
 
       {data.invitees.length > 0 && (
-        <ul className="space-y-1">
+        <ul className="space-y-1.5">
           {data.invitees.map((invitee, i) => (
             <motion.li
               key={invitee.email}
               initial={{ opacity: 0, x: reduceMotion ? 0 : -6 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.03, duration: 0.2, ease: "easeOut" }}
-              className="flex items-center justify-between gap-2 rounded-lg border border-border bg-card px-2.5 py-1.5"
+              className="flex items-center justify-between gap-2 rounded-xl border border-border/80 bg-background/50 px-3 py-2"
             >
               <TruncatedText text={invitee.email} className="text-[13px]" />
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex shrink-0 items-center gap-2">
                 <span className="text-xs text-muted-foreground">{invitee.role}</span>
                 <button
                   type="button"
                   onClick={() => handleRemove(invitee.email)}
-                  className="text-muted-foreground hover:text-destructive transition-colors"
+                  className="text-muted-foreground transition-colors hover:text-destructive"
                   aria-label={`Remove ${invitee.email}`}
                 >
                   <X className="h-3.5 w-3.5" />
@@ -108,9 +126,9 @@ export function StepInviteLaunch({ data, onChangeInvitees, onBack }: StepInviteL
 
       <NavButtons
         onBack={onBack}
-        onNext={() => setLaunching(true)}
+        onNext={handleLaunch}
         nextLabel="Build my workspace"
-        nextIcon={Rocket}
+        nextIcon={RocketIcon}
       />
     </div>
   );

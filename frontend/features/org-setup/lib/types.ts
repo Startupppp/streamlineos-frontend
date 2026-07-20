@@ -12,9 +12,6 @@ export type WizardData = {
   country?: string;
   timezone?: string;
   phone?: string;
-  // Captured in the setup draft/session for later use; not yet persisted onto the
-  // organization record (backend setupSchema doesn't accept them yet — deliberately
-  // out of scope for this visual pass, tracked as a follow-up).
   currency?: string;
   fiscalYearStart?: string;
   businessAddress?: string;

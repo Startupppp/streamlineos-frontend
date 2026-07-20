@@ -1,20 +1,27 @@
 "use client";
 
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import type { ComponentType, Ref } from "react";
+import type { IconHandle } from "@animateicons/react";
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+
+type AnimatedIcon = ComponentType<{
+  ref?: Ref<IconHandle>;
+  size?: number;
+  className?: string;
+}>;
 
 type NavButtonsProps = {
   onBack: () => void;
   onNext: () => void;
   skipLabel?: string;
   nextLabel?: string;
-  nextIcon?: LucideIcon;
+  nextIcon?: LucideIcon | AnimatedIcon;
   nextDisabled?: boolean;
 };
 
-// Sticky bottom action bar on mobile (<lg); inline within the main panel on desktop.
 export function NavButtons({
   onBack,
   onNext,
@@ -26,19 +33,20 @@ export function NavButtons({
   return (
     <div
       className={cn(
-        "flex gap-2 pt-1",
-        "fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background px-4 pt-3",
+        "flex gap-2 pt-2",
+        "fixed inset-x-0 bottom-0 z-40 border-t border-border/80 bg-background/95 px-4 pt-3 backdrop-blur-sm",
         "pb-[max(0.75rem,env(safe-area-inset-bottom))]",
-        "lg:static lg:border-0 lg:bg-transparent lg:px-0 lg:pt-1 lg:pb-0",
+        "xl:static xl:border-0 xl:bg-transparent xl:px-0 xl:pt-2 xl:pb-0 xl:backdrop-blur-none",
       )}
     >
       <Button
         type="button"
         variant="outline"
         onClick={onBack}
-        className="h-9 px-3 text-sm"
+        className="h-10 min-w-10 px-3 text-sm xl:h-9"
       >
-        <ArrowLeft className="h-3.5 w-3.5 mr-1" aria-hidden /> Back
+        <ArrowLeft className="mr-1 h-3.5 w-3.5" aria-hidden />
+        Back
       </Button>
 
       {skipLabel && (
@@ -46,7 +54,7 @@ export function NavButtons({
           type="button"
           variant="ghost"
           onClick={onNext}
-          className="h-9 px-3 text-sm text-muted-foreground hover:text-foreground"
+          className="h-10 px-3 text-sm text-muted-foreground hover:text-foreground xl:h-9"
         >
           {skipLabel}
         </Button>
@@ -56,10 +64,11 @@ export function NavButtons({
         type="button"
         onClick={onNext}
         disabled={nextDisabled}
-        className="flex-1 h-9 text-sm gap-1.5"
+        className="h-10 min-w-0 flex-1 gap-1.5 text-sm xl:h-9"
       >
-        {NextIcon && <NextIcon className="h-3.5 w-3.5" aria-hidden />}
-        {nextLabel ?? "Continue"} <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+        {NextIcon && <NextIcon className="h-3.5 w-3.5 shrink-0" size={14} aria-hidden />}
+        <span className="truncate">{nextLabel ?? "Continue"}</span>
+        <ArrowRight className="h-3.5 w-3.5 shrink-0" aria-hidden />
       </Button>
     </div>
   );

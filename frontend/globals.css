@@ -459,7 +459,19 @@
       transparent 70%
     ),
     #f4f7fc;
-  background-attachment: fixed;
+}
+
+@media (min-width: 1024px) {
+  .surface-soft {
+    background-attachment: fixed;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-sweep {
+    animation: none;
+    background-position: 50% 50%;
+  }
 }
 
 @keyframes brand-sweep {
