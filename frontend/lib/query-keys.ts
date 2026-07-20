@@ -1234,6 +1234,11 @@ export const queryKeys = {
     all: [...base, "ai", "meetings"] as const,
   },
 
+  platform: {
+    all: [...base, "platform"] as const,
+    admins: () => [...base, "platform", "admins"] as const,
+  },
+
   mail: {
     all: [...base, "mail"] as const,
     accounts: () => [...base, "mail", "accounts"] as const,

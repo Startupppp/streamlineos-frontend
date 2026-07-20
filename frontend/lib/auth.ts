@@ -76,6 +76,7 @@ interface SessionData {
   plan: Plan | null;
   orgOnboardingCompletedAt: string | null;
   userOnboardingCompletedAt: string | null;
+  isPlatformAdmin?: boolean;
 }
 
 async function fetchSessionData(userId: string): Promise<SessionData | null> {
@@ -111,22 +112,6 @@ async function fetchSessionDataWithCache(userId: string, orgId: string | null): 
 
 const fetchSessionDataCached = cache(fetchSessionDataWithCache);
 
-function parsePlatformAdminEmails(): ReadonlySet<string> {
-  const raw = process.env.PLATFORM_ADMIN_EMAILS ?? "";
-  return new Set(
-    raw
-      .split(",")
-      .map((e) => e.trim().toLowerCase())
-      .filter(Boolean),
-  );
-}
-
-const PLATFORM_ADMIN_EMAILS = parsePlatformAdminEmails();
-
-function isPlatformAdminEmail(email: string | null | undefined): boolean {
-  if (!email) return false;
-  return PLATFORM_ADMIN_EMAILS.has(email.toLowerCase());
-}
 
 function unwrapBackend<T>(body: unknown): T {
   if (body !== null && typeof body === "object") {
@@ -321,7 +306,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           user.enabledModules = sessionData.enabledModules;
           user.orgOnboardingCompletedAt = sessionData.orgOnboardingCompletedAt;
           user.userOnboardingCompletedAt = sessionData.userOnboardingCompletedAt;
-          user.isPlatformAdmin = isPlatformAdminEmail(sessionData.email);
+          user.isPlatformAdmin = sessionData.isPlatformAdmin === true;
         }
       }
       return true;
