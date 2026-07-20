@@ -401,7 +401,6 @@ export interface KbResearchBrief {
   rating: "helpful" | "not_helpful" | null;
   createdAt: string;
   updatedAt: string;
-  aiUsage?: AiUsageMeta | null;
 }
 
 export type KbResearchBriefListItem = Omit<KbResearchBrief, "report">;

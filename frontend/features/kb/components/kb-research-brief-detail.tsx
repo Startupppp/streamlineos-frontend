@@ -7,9 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { TruncatedText } from "@/components/ui/truncated-text";
 import { AiCitationChips, type Citation } from "@/components/ai/ai-citation-chips";
-import { AiUsageChip } from "@/components/ai/ai-usage-chip";
 import { ThumbsUpIcon, ThumbsDownIcon } from "@animateicons/react/lucide";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -206,9 +204,8 @@ export function KbResearchBriefDetail({ briefId }: KbResearchBriefDetailProps) {
 
       {brief.status === "completed" && (
         <Card>
-          <CardContent className="p-4 flex items-center justify-between gap-4 flex-wrap">
+          <CardContent className="p-4">
             <BriefFeedback briefId={brief.id} currentRating={brief.rating} />
-            <AiUsageChip usage={brief.aiUsage} />
           </CardContent>
         </Card>
       )}
