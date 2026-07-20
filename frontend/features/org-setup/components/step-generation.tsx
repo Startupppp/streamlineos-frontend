@@ -2,10 +2,7 @@
 
 import { useState, useEffect, useRef, useLayoutEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { Check, Loader2, RefreshCw } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { AnimatePresence } from "framer-motion";
 import { clearBackendTokenCache } from "@/lib/api-client";
 import { completeOnboardingGate } from "@/lib/onboarding-gate";
 import { signInWithMagicToken } from "@/hooks/common/auth-hooks";
@@ -21,6 +18,7 @@ import {
   WELCOME_POP_KEY,
   WELCOME_POP_NAME_KEY,
 } from "../lib/constants";
+import { GenerationProgressStage } from "./generation-progress-stage";
 import { WelcomeCelebration } from "./welcome-celebration";
 
 const SETUP_DONE_KEY = "org-setup-complete";
@@ -198,114 +196,15 @@ export function StepGeneration({ data }: StepGenerationProps) {
 
   return (
     <>
-      <div className="h-full min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain scrollbar-hide">
-        <div className="space-y-2">
-          <p className="text-[13px] font-medium text-foreground">
-            {companyName ? `Setting up ${companyName}` : "Setting up your workspace"}
-          </p>
-
-          <div
-            className="h-1 w-full bg-muted rounded-full overflow-hidden"
-            role="progressbar"
-            aria-valuenow={progress}
-            aria-valuemin={0}
-            aria-valuemax={100}
-          >
-            <div
-              className="h-full gradient-wizard rounded-full transition-[width] duration-[400ms] ease-out motion-reduce:transition-none"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-muted-foreground" aria-live="polite">
-              {completedSteps < total
-                ? generationSteps[completedSteps] ?? "Finishing up…"
-                : "All done!"}
-            </p>
-            <p className="text-xs tabular-nums text-muted-foreground">{progress}%</p>
-          </div>
-        </div>
-
-        <ul className="space-y-1" aria-label="Setup progress">
-          {generationSteps.map((label, i) => {
-            const done = i < completedSteps;
-            const active = i === completedSteps && !error && !showWelcome;
-            const pending = i > completedSteps;
-
-            return (
-              <motion.li
-                key={label}
-                initial={{ opacity: 0, x: -6 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.04, duration: 0.18, ease: "easeOut" }}
-                className={cn(
-                  "flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-colors duration-300",
-                  active && "bg-brand-core/10 dark:bg-brand-core/15",
-                )}
-              >
-                <span
-                  className={cn(
-                    "h-5 w-5 rounded-full flex items-center justify-center shrink-0 transition-colors duration-300",
-                    done || showWelcome ? "bg-foreground" : active ? "bg-brand-core/15" : "bg-muted",
-                  )}
-                >
-                  <AnimatePresence mode="wait">
-                    {done || showWelcome ? (
-                      <motion.span
-                        key="check"
-                        initial={{ scale: 0.5, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ type: "spring", stiffness: 500, damping: 18 }}
-                      >
-                        <Check className="h-3 w-3 text-background stroke-[2.5]" />
-                      </motion.span>
-                    ) : active ? (
-                      <motion.span key="spin" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                        <Loader2 className="h-3 w-3 text-brand-core animate-spin" />
-                      </motion.span>
-                    ) : (
-                      <span key="dot" className="h-1.5 w-1.5 rounded-full bg-muted-foreground/30" />
-                    )}
-                  </AnimatePresence>
-                </span>
-
-                <span
-                  className={cn(
-                    "text-[13px] transition-colors duration-300",
-                    (done || showWelcome) && "text-foreground font-medium",
-                    active && "text-brand-deep dark:text-brand-bright font-medium",
-                    pending && !showWelcome && "text-muted-foreground",
-                  )}
-                >
-                  {label}
-                </span>
-              </motion.li>
-            );
-          })}
-        </ul>
-
-        <AnimatePresence>
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 space-y-2"
-            >
-              <p className="text-[13px] text-destructive">{error}</p>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={runSetup}
-                className="text-xs gap-1"
-              >
-                <RefreshCw className="h-3 w-3" /> Try again
-              </Button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+      <GenerationProgressStage
+        steps={generationSteps}
+        completedSteps={completedSteps}
+        progress={progress}
+        companyName={companyName}
+        error={error}
+        showWelcome={showWelcome}
+        onRetry={runSetup}
+      />
 
       <AnimatePresence>
         {showWelcome && (
