@@ -1,7 +1,7 @@
 "use client";
 
 import { memo } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import { AnimatedLogo } from "@/features/landing/components/animated-logo";
 import { BRAND_NAME } from "@/lib/branding";
@@ -41,10 +41,10 @@ function OrgSetupBrandColumnInner({ snapshot }: OrgSetupBrandColumnProps) {
         aria-hidden
       />
 
-      <div className="relative z-10 flex h-full min-h-0 min-w-0 flex-col px-6 py-6 lg:px-8 lg:py-8 2xl:px-12 2xl:py-10">
+      <div className="relative z-10 flex h-full min-h-0 min-w-0 flex-col px-5 py-5 lg:px-7 lg:py-6 xl:px-8 xl:py-7 2xl:px-10 2xl:py-8">
         <Link
           href="/"
-          className="mb-5 flex items-center gap-2.5 self-start lg:mb-6"
+          className="mb-3 flex items-center gap-2.5 self-start lg:mb-4"
           aria-label={BRAND_NAME}
         >
           <AnimatedLogo size={28} className="rounded-xl" />
@@ -57,27 +57,45 @@ function OrgSetupBrandColumnInner({ snapshot }: OrgSetupBrandColumnProps) {
           initial={{ opacity: 0, y: reduceMotion ? 0 : 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, ease: EASE }}
-          className="mb-5 min-w-0 max-w-md space-y-2.5"
+          className="mb-3 min-w-0 max-w-lg shrink-0 space-y-1.5 lg:mb-4"
         >
-          <p className="text-[12px] font-medium text-brand-deep">Workspace birth</p>
-          <h2 className="font-display text-[1.45rem] font-extrabold leading-[1.05] tracking-[-0.03em] text-foreground text-balance lg:text-[1.65rem] 2xl:text-[2rem]">
-            {company ? (
-              <>
-                Building <span className="brand-sweep">{company}</span>
-              </>
-            ) : (
-              <>
-                Your company, on <span className="brand-sweep">{BRAND_NAME}</span>
-              </>
-            )}
-          </h2>
+          <p className="text-xs font-medium text-brand-deep">Workspace birth</p>
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.h2
+              key={company || "default"}
+              initial={{
+                opacity: 0,
+                y: reduceMotion ? 0 : 8,
+              }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{
+                opacity: 0,
+                y: reduceMotion ? 0 : -6,
+              }}
+              transition={{ duration: 0.22, ease: EASE }}
+              className="font-display text-[1.35rem] font-extrabold leading-[1.05] tracking-[-0.03em] text-foreground text-balance lg:text-[1.55rem] 2xl:text-[1.85rem]"
+            >
+              {company ? (
+                <>
+                  Building <span className="brand-sweep">{company}</span>
+                </>
+              ) : (
+                <>
+                  Your company, on <span className="brand-sweep">{BRAND_NAME}</span>
+                </>
+              )}
+            </motion.h2>
+          </AnimatePresence>
           <p className="max-w-sm text-[13px] leading-relaxed text-muted-foreground">
             Watch your workspace take shape as you answer. Nothing here is permanent.
           </p>
         </motion.div>
 
-        <div className="relative z-10 flex min-h-0 min-w-0 flex-1 items-center">
-          <WorkspacePreviewMock snapshot={snapshot} className="w-full max-w-[420px]" />
+        <div className="relative z-10 flex min-h-0 min-w-0 flex-1 items-stretch pb-1">
+          <WorkspacePreviewMock
+            snapshot={snapshot}
+            className="h-full w-full max-w-none lg:max-w-[560px] xl:max-w-[640px] 2xl:max-w-[720px]"
+          />
         </div>
       </div>
     </aside>

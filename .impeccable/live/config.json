@@ -1,7 +1,0 @@
-{
-  "files": ["frontend/app/layout.tsx"],
-  "exclude": [".claude/worktrees/**"],
-  "insertBefore": "</body>",
-  "commentSyntax": "jsx",
-  "cspChecked": true
-}

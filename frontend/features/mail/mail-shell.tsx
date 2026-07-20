@@ -283,7 +283,6 @@ export function MailShell() {
       <MailInboxSummarySheet
         open={summarySheetOpen}
         onClose={handleCloseSummary}
-        selectedAccountId={selectedAccountId}
         summaryState={summaryState}
       />
     </div>

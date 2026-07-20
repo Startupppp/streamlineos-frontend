@@ -35,7 +35,6 @@ type SummaryState =
 interface MailInboxSummarySheetProps {
   open: boolean;
   onClose: () => void;
-  selectedAccountId: number | "all";
   summaryState: SummaryState;
 }
 

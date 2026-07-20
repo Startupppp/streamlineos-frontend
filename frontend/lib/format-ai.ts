@@ -1,6 +1,7 @@
 export function formatCredits(credits: number): string {
   if (!Number.isFinite(credits)) return "0";
   const abs = Math.abs(credits);
+  if (abs > 0 && abs < 0.001) return credits < 0 ? "> -0.001" : "< 0.001";
   const maximumFractionDigits = abs > 0 && abs < 0.01 ? 3 : 2;
   return credits.toLocaleString("en-US", {
     minimumFractionDigits: 0,
