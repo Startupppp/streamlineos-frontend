@@ -22,7 +22,9 @@ import {
 import { personalInfoSchema } from "@/lib/location/personal-info-validation";
 import { CompletionCelebration } from "@/components/celebration/completion-celebration";
 import { cn } from "@/lib/utils";
-import { bankDetailsSchema } from "../lib/bank-details-schema";
+import { useOnboardingRequirements } from "../hooks/use-onboarding-requirements";
+import { buildBankDetailsSchema } from "../lib/bank-details-schema";
+import { countryNameToCode } from "../lib/onboarding-requirements-schema";
 import { DATA_STEP_IDS, STEP_TITLES, type StepId } from "../lib/constants";
 import type { WizardDraft } from "../lib/wizard-draft-schema";
 import { NavButtons } from "./nav-buttons";
@@ -65,14 +67,13 @@ type StepReviewProps = {
   onBack: () => void;
 };
 
-export function StepReview({
-  completedSteps,
-  draft,
-  onBack,
-}: StepReviewProps) {
+export function StepReview({ completedSteps, draft, onBack }: StepReviewProps) {
   const { data: session, update } = useSession();
-  const { mutateAsync: savePersonal } = usePersonalInfoMutation();
+  const countryCode =
+    draft.bank.countryCode || countryNameToCode(draft.personal.addressCountry);
+  const { data: requirements } = useOnboardingRequirements(countryCode);
   const { mutateAsync: saveBank } = useBankDetailsMutation();
+  const { mutateAsync: savePersonal } = usePersonalInfoMutation();
   const { mutateAsync: submitOnboarding } = useSubmitOnboardingMutation();
   const [showCelebration, setShowCelebration] = useState(false);
   const [isContinuing, setIsContinuing] = useState(false);
@@ -111,21 +112,31 @@ export function StepReview({
       return;
     }
 
-    const bankParsed = bankDetailsSchema.safeParse({
-      ...draft.bank,
-      taxId: draft.bank.taxId.trim() ? draft.bank.taxId : undefined,
-    });
-    if (!bankParsed.success) {
-      toast.error(
-        bankParsed.error.issues[0]?.message ?? "Bank details are incomplete",
-      );
-      return;
+    const bankFormValues = {
+      accountHolder: draft.bank.accountHolder,
+      bankName: draft.bank.bankName,
+      accountNumber: draft.bank.accountNumber,
+      routingCode: draft.bank.routingCode,
+      iban: draft.bank.iban,
+      swift: draft.bank.swift,
+      statutory: draft.bank.statutory ?? {},
+    };
+
+    if (requirements) {
+      const bankParsed =
+        buildBankDetailsSchema(requirements).safeParse(bankFormValues);
+      if (!bankParsed.success) {
+        toast.error(
+          bankParsed.error.issues[0]?.message ?? "Bank details are incomplete",
+        );
+        return;
+      }
     }
 
     setIsSubmitting(true);
     try {
       await savePersonal(personalParsed.data);
-      await saveBank(bankParsed.data);
+      await saveBank({ countryCode, ...bankFormValues });
       await submitOnboarding();
       clearBackendTokenCache();
       await completeOnboardingGate("onboarding-done", update);
@@ -219,10 +230,7 @@ export function StepReview({
             })}
 
             <li className="flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2.5">
-              <Shield
-                className="h-4 w-4 shrink-0 text-primary"
-                aria-hidden
-              />
+              <Shield className="h-4 w-4 shrink-0 text-primary" aria-hidden />
               <span className="text-sm font-medium text-foreground">
                 Role: {roleLabel}
               </span>

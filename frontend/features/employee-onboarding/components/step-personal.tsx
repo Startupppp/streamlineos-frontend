@@ -3,6 +3,7 @@
 import { useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { isSupportedCountry } from "react-phone-number-input";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PhoneInput } from "@/components/ui/phone-input";
@@ -27,6 +28,7 @@ import {
   type PersonalInfoFormValues,
 } from "@/lib/location/personal-info-validation";
 import { WizardSectionHeading } from "@/components/wizard-shell";
+import { countryNameToCode } from "../lib/onboarding-requirements-schema";
 import {
   EMPTY_PERSONAL_DRAFT,
   personalDraftToFormDefaults,
@@ -91,6 +93,10 @@ export function StepPersonal({
   const selectedCountry = form.watch("addressCountry");
   const effectiveCountry = selectedCountry?.trim() || INDIA_COUNTRY_NAME;
   const showIndianAddress = effectiveCountry === INDIA_COUNTRY_NAME;
+  const phoneCountryCode = countryNameToCode(effectiveCountry);
+  const phoneCountry = isSupportedCountry(phoneCountryCode)
+    ? phoneCountryCode
+    : "IN";
   const selectedState = form.watch("addressState");
   const cityOptions = useMemo(
     () => (selectedState ? citiesForState(selectedState) : []),
@@ -188,8 +194,9 @@ export function StepPersonal({
               name="phone"
               render={({ field }) => (
                 <PhoneInput
+                  key={phoneCountry}
                   id="phone"
-                  defaultCountry="IN"
+                  defaultCountry={phoneCountry}
                   placeholder="Enter phone number"
                   maxLength={17}
                   value={field.value}
@@ -429,8 +436,9 @@ export function StepPersonal({
               name="emergencyPhone"
               render={({ field }) => (
                 <PhoneInput
+                  key={phoneCountry}
                   id="emergencyPhone"
-                  defaultCountry="IN"
+                  defaultCountry={phoneCountry}
                   placeholder="Enter phone number"
                   maxLength={17}
                   value={field.value}

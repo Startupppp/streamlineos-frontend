@@ -18,8 +18,8 @@ export type EmployeePreviewSnapshot = {
   accountHolder: string;
   bankName: string;
   accountNumber: string;
-  ifsc: string;
-  taxId: string;
+  bankCode: string;
+  bankCodeLabel: string;
   docsComplete: boolean;
 };
 
@@ -51,8 +51,12 @@ export function toPreviewSnapshot(
     accountHolder: draft.bank.accountHolder,
     bankName: draft.bank.bankName,
     accountNumber: draft.bank.accountNumber,
-    ifsc: draft.bank.ifsc,
-    taxId: draft.bank.taxId,
+    bankCode: draft.bank.iban || draft.bank.routingCode || draft.bank.swift,
+    bankCodeLabel: draft.bank.iban
+      ? "IBAN"
+      : draft.bank.swift && !draft.bank.routingCode
+        ? "SWIFT / BIC"
+        : "Bank code",
     docsComplete: draft.docsComplete,
   };
 }
@@ -79,8 +83,8 @@ export function previewSnapshotsEqual(
     a.accountHolder === b.accountHolder &&
     a.bankName === b.bankName &&
     a.accountNumber === b.accountNumber &&
-    a.ifsc === b.ifsc &&
-    a.taxId === b.taxId &&
+    a.bankCode === b.bankCode &&
+    a.bankCodeLabel === b.bankCodeLabel &&
     a.docsComplete === b.docsComplete
   );
 }

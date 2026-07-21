@@ -8,6 +8,7 @@ export interface HrDocumentType {
   id: number;
   name: string;
   description: string | null;
+  countryCode: string | null;
   isMandatory: boolean | null;
   isActive: boolean | null;
   sortOrder: number | null;

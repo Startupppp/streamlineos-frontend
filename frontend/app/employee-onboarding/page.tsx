@@ -25,6 +25,8 @@ import {
   type StepId,
 } from "@/features/employee-onboarding/lib/constants";
 import { toPreviewSnapshot } from "@/features/employee-onboarding/lib/preview-snapshot";
+import { countryNameToCode } from "@/features/employee-onboarding/lib/onboarding-requirements-schema";
+import { useEnsureOnboardingDocuments } from "@/features/employee-onboarding/hooks/use-onboarding-requirements";
 import {
   EMPTY_BANK_DRAFT,
   EMPTY_PERSONAL_DRAFT,
@@ -64,14 +66,16 @@ function draftPayload(draft: WizardDraft): Record<string, unknown> {
 function personalHasValues(personal: PersonalDraft): boolean {
   return Boolean(
     personal.phone.trim() ||
-      personal.gender.trim() ||
-      personal.dateOfBirth.trim() ||
-      personal.emergencyName.trim() ||
-      personal.emergencyPhone.trim(),
+    personal.gender.trim() ||
+    personal.dateOfBirth.trim() ||
+    personal.emergencyName.trim() ||
+    personal.emergencyPhone.trim(),
   );
 }
 
-function resolveStepFromSession(currentStep: string | null | undefined): StepId {
+function resolveStepFromSession(
+  currentStep: string | null | undefined,
+): StepId {
   if (currentStep && isStepId(currentStep)) return currentStep;
   return STEP_IDS.PERSONAL;
 }
@@ -81,9 +85,8 @@ export default function EmployeeOnboardingPage() {
   const [direction, setDirection] = useState(1);
   const [localDraft, setLocalDraft] = useState<WizardDraft | null>(null);
   const [localStep, setLocalStep] = useState<StepId | null>(null);
-  const [localCompleted, setLocalCompleted] = useState<ReadonlySet<string> | null>(
-    null,
-  );
+  const [localCompleted, setLocalCompleted] =
+    useState<ReadonlySet<string> | null>(null);
   const [saveState, setSaveState] = useState<"idle" | "saved">("idle");
   const persistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -91,6 +94,7 @@ export default function EmployeeOnboardingPage() {
     useOnboardingSessionQuery();
   const { mutate: patchSession } = usePatchOnboardingSessionMutation();
   const { data: personalDetails } = usePersonalDetailsQuery();
+  const { mutate: ensureDocuments } = useEnsureOnboardingDocuments();
 
   const sessionDraft = useMemo(
     () => (session ? parseWizardDraft(session.data) : EMPTY_WIZARD_DRAFT),
@@ -200,6 +204,11 @@ export default function EmployeeOnboardingPage() {
     [wizardDraft, identity],
   );
 
+  const countryCode = useMemo(
+    () => countryNameToCode(wizardDraft.personal.addressCountry),
+    [wizardDraft.personal.addressCountry],
+  );
+
   const currentStepIndex = stepIndexOf(activeTab);
 
   const navigateTo = useCallback(
@@ -249,10 +258,11 @@ export default function EmployeeOnboardingPage() {
         currentStep: STEP_IDS.BANK,
         completedSteps: Array.from(nextCompleted),
       });
+      ensureDocuments(countryNameToCode(personal.addressCountry));
       setDirection(1);
       setLocalStep(STEP_IDS.BANK);
     },
-    [flushPersist, localCompleted, sessionCompleted],
+    [flushPersist, localCompleted, sessionCompleted, ensureDocuments],
   );
 
   const handleBankComplete = useCallback(
@@ -404,6 +414,7 @@ export default function EmployeeOnboardingPage() {
       ) : null}
       {activeTab === STEP_IDS.BANK ? (
         <StepBank
+          countryCode={countryCode}
           onComplete={handleBankComplete}
           onDraftChange={handleBankDraftChange}
           onClear={handleBankClear}
@@ -413,6 +424,7 @@ export default function EmployeeOnboardingPage() {
       ) : null}
       {activeTab === STEP_IDS.DOCS ? (
         <StepDocuments
+          countryCode={countryCode}
           onComplete={handleDocsComplete}
           onBack={handleGoToBank}
         />

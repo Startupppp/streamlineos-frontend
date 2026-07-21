@@ -6,11 +6,12 @@ import { NavButtons } from "./nav-buttons";
 import { StepBody } from "./step-body";
 
 type StepDocumentsProps = {
+  countryCode: string;
   onComplete: () => void;
   onBack: () => void;
 };
 
-export function StepDocuments({ onComplete, onBack }: StepDocumentsProps) {
+export function StepDocuments({ countryCode, onComplete, onBack }: StepDocumentsProps) {
   const [canContinue, setCanContinue] = useState(true);
 
   const handleCanContinueChange = useCallback((next: boolean) => {
@@ -31,6 +32,7 @@ export function StepDocuments({ onComplete, onBack }: StepDocumentsProps) {
       <EmployeeDocumentsTab
         variant="wizard"
         hideNav
+        countryCode={countryCode}
         onCanContinueChange={handleCanContinueChange}
       />
     </StepBody>

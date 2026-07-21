@@ -18,11 +18,14 @@ export const personalDraftSchema = z.object({
 });
 
 export const bankDraftSchema = z.object({
+  countryCode: draftString,
   accountHolder: draftString,
   bankName: draftString,
   accountNumber: draftString,
-  ifsc: draftString,
-  taxId: draftString,
+  routingCode: draftString,
+  iban: draftString,
+  swift: draftString,
+  statutory: z.record(z.string(), z.string()).catch({}),
 });
 
 export const wizardDraftSchema = z.object({
@@ -40,11 +43,14 @@ export const wizardDraftSchema = z.object({
     emergencyPhone: "",
   }),
   bank: bankDraftSchema.catch({
+    countryCode: "",
     accountHolder: "",
     bankName: "",
     accountNumber: "",
-    ifsc: "",
-    taxId: "",
+    routingCode: "",
+    iban: "",
+    swift: "",
+    statutory: {},
   }),
   docsComplete: z.boolean().catch(false),
 });
@@ -68,11 +74,14 @@ export const EMPTY_PERSONAL_DRAFT: PersonalDraft = {
 };
 
 export const EMPTY_BANK_DRAFT: BankDraft = {
+  countryCode: "",
   accountHolder: "",
   bankName: "",
   accountNumber: "",
-  ifsc: "",
-  taxId: "",
+  routingCode: "",
+  iban: "",
+  swift: "",
+  statutory: {},
 };
 
 export const EMPTY_WIZARD_DRAFT: WizardDraft = {

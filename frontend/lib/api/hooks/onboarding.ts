@@ -30,7 +30,8 @@ export interface PersonalDetails {
 export function usePersonalDetailsQuery() {
   return useQuery({
     queryKey: queryKeys.onboardingFlow.personalDetails(),
-    queryFn: () => apiClient.get<PersonalDetails>("/onboarding/personal-details"),
+    queryFn: () =>
+      apiClient.get<PersonalDetails>("/onboarding/personal-details"),
     staleTime: 30_000,
   });
 }
@@ -51,12 +52,14 @@ export function usePersonalInfoMutation() {
 }
 
 export interface BankDetailsPayload {
+  countryCode: string;
   accountHolder: string;
   bankName: string;
   accountNumber: string;
-  ifsc: string;
-  branch?: string;
-  taxId?: string;
+  routingCode: string;
+  iban: string;
+  swift: string;
+  statutory: Record<string, string>;
 }
 
 export function useBankDetailsMutation() {

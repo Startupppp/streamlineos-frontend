@@ -266,6 +266,7 @@ interface EmployeeDocumentsTabProps {
   onContinue?: () => void;
   variant?: "default" | "wizard";
   hideNav?: boolean;
+  countryCode?: string;
   onCanContinueChange?: (canContinue: boolean) => void;
 }
 
@@ -274,6 +275,7 @@ export function EmployeeDocumentsTab({
   onContinue,
   variant = "default",
   hideNav = false,
+  countryCode,
   onCanContinueChange,
 }: EmployeeDocumentsTabProps = {}) {
   const { data: myDocs, isLoading: docsLoading } = useMyOnboardingDocs();
@@ -288,7 +290,12 @@ export function EmployeeDocumentsTab({
   const isWizard = variant === "wizard";
 
   const checklist = (() => {
-    const types = (docTypes ?? []).filter((dt) => dt.isActive !== false);
+    const country = countryCode?.toUpperCase();
+    const types = (docTypes ?? []).filter(
+      (dt) =>
+        dt.isActive !== false &&
+        (!country || !dt.countryCode || dt.countryCode.toUpperCase() === country),
+    );
     const docsByTypeId = new Map((myDocs ?? []).map((d) => [d.documentTypeId, d]));
     return types.map((dt) => ({
       docType: dt,

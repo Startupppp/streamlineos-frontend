@@ -23,8 +23,8 @@ import {
   formatPreviewGender,
   maskAccountNumber,
   previewInitials,
-  type EmployeePreviewSnapshot,
   previewSnapshotsEqual,
+  type EmployeePreviewSnapshot,
 } from "../lib/preview-snapshot";
 
 type ProfilePreviewProps = {
@@ -55,9 +55,7 @@ function FieldRow({ label, value, placeholder, filled }: FieldRowProps) {
           transition={{ duration: 0.18, ease: WIZARD_EASE }}
           className={cn(
             "min-w-0 flex-1 text-right text-[12px] leading-snug",
-            filled
-              ? "font-medium text-foreground"
-              : "text-muted-foreground/55",
+            filled ? "font-medium text-foreground" : "text-muted-foreground/55",
           )}
         >
           {filled ? value : placeholder}
@@ -88,7 +86,9 @@ function ProfilePreviewInner({
   const emergencyLine = [emergencyName, emergencyRelation, emergencyPhone]
     .filter(Boolean)
     .join(" · ");
-  const showPayroll = stepId === "bank" || stepId === "docs" || stepId === "finish";
+
+  const showPayroll =
+    stepId === "bank" || stepId === "docs" || stepId === "finish";
   const showDocs = stepId === "docs" || stepId === "finish";
   const bankFilled =
     snapshot.bankName.trim().length > 0 ||
@@ -102,7 +102,7 @@ function ProfilePreviewInner({
     .filter(Boolean)
     .join(" · ");
   const holder = snapshot.accountHolder.trim();
-  const ifsc = snapshot.ifsc.trim();
+  const bankCode = snapshot.bankCode.trim();
 
   return (
     <div className={cn("relative flex min-h-0 w-full min-w-0", className)}>
@@ -270,7 +270,10 @@ function ProfilePreviewInner({
                 className="space-y-2.5 overflow-hidden rounded-xl border border-border/70 bg-background/60 p-3"
               >
                 <div className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground">
-                  <Landmark className="h-3.5 w-3.5 text-brand-core" aria-hidden />
+                  <Landmark
+                    className="h-3.5 w-3.5 text-brand-core"
+                    aria-hidden
+                  />
                   Payroll
                 </div>
                 <div className="space-y-2">
@@ -287,10 +290,10 @@ function ProfilePreviewInner({
                     filled={bankFilled}
                   />
                   <FieldRow
-                    label="IFSC"
-                    value={ifsc}
-                    placeholder="IFSC code"
-                    filled={ifsc.length > 0}
+                    label={snapshot.bankCodeLabel}
+                    value={bankCode}
+                    placeholder={snapshot.bankCodeLabel}
+                    filled={bankCode.length > 0}
                   />
                 </div>
               </motion.section>
@@ -308,18 +311,15 @@ function ProfilePreviewInner({
                 className="space-y-2.5 overflow-hidden rounded-xl border border-border/70 bg-background/60 p-3"
               >
                 <div className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground">
-                  <FileText className="h-3.5 w-3.5 text-brand-core" aria-hidden />
+                  <FileText
+                    className="h-3.5 w-3.5 text-brand-core"
+                    aria-hidden
+                  />
                   Documents
                 </div>
                 <div className="space-y-2">
-                  <DocChip
-                    label="Identity"
-                    ready={snapshot.docsComplete}
-                  />
-                  <DocChip
-                    label="Employment"
-                    ready={snapshot.docsComplete}
-                  />
+                  <DocChip label="Identity" ready={snapshot.docsComplete} />
+                  <DocChip label="Employment" ready={snapshot.docsComplete} />
                 </div>
               </motion.section>
             ) : null}
@@ -348,9 +348,7 @@ function DocChip({ label, ready }: { label: string; ready: boolean }) {
       )}
     >
       <span className="font-medium">{label}</span>
-      <span className="tabular-nums">
-        {ready ? "Attached" : "Waiting"}
-      </span>
+      <span className="tabular-nums">{ready ? "Attached" : "Waiting"}</span>
     </div>
   );
 }
