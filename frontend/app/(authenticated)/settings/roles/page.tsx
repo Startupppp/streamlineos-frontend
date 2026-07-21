@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { SearchInput } from "@/components/ui/search-input";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -61,8 +63,15 @@ function RolesContent() {
   const [templateOpen, setTemplateOpen] = useState(false);
   const [assignmentsOpen, setAssignmentsOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Role | null>(null);
+  const [search, setSearch] = useState("");
 
   const selectedRole = roles?.find((role) => role.id === selectedRoleId) ?? null;
+
+  const filteredRoles = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return roles ?? [];
+    return (roles ?? []).filter((role) => role.name.toLowerCase().includes(q));
+  }, [roles, search]);
 
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
   const handleOpenTemplate = useCallback(() => setTemplateOpen(true), []);
@@ -70,6 +79,7 @@ function RolesContent() {
   const handleSelectRole = useCallback((roleId: number) => setSelectedRoleId(roleId), []);
   const handleDeleteDialogClose = useCallback(() => setDeleteTarget(null), []);
   const handleRetryRoles = useCallback(() => { void refetchRoles(); }, [refetchRoles]);
+  const handleSearchChange = useCallback((value: string) => setSearch(value), []);
 
   const handleDeleteRole = useCallback(() => {
     if (!deleteTarget) return;
@@ -88,37 +98,47 @@ function RolesContent() {
   return (
     <PageWrapper
       title="Roles & Permissions"
-      subtitle="Configure access controls for each role"
+      subtitle="Configure access controls for each role."
       noInternalScroll
+      mobileFiltersInline
       actions={
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" className="sm:hidden" asChild aria-label="Audit log">
+        <div className="grid w-full grid-cols-3 gap-2 sm:flex sm:w-auto sm:flex-nowrap sm:justify-end">
+          <Button variant="outline" size="sm" asChild className="w-full gap-1.5 sm:w-auto">
             <Link href="/settings/roles/audit">
-              <ClipboardList className="h-4 w-4" />
+              <ClipboardList className="h-3.5 w-3.5" />
+              <span className="truncate">Audit</span>
             </Link>
           </Button>
-          <Button variant="outline" asChild className="hidden sm:inline-flex gap-2">
-            <Link href="/settings/roles/audit">
-              <ClipboardList className="h-4 w-4" /> Audit log
-            </Link>
-          </Button>
-          <AnimatedIconButton icon={CopyIcon} iconSize={16} variant="outline" size="icon" className="sm:hidden" onClick={handleOpenTemplate} aria-label="Use template" />
-          <AnimatedIconButton icon={CopyIcon} iconSize={16} iconClassName="mr-2" variant="outline" onClick={handleOpenTemplate} className="hidden sm:inline-flex">
-            Use template
+          <AnimatedIconButton
+            icon={CopyIcon}
+            iconSize={14}
+            iconClassName="mr-1.5"
+            variant="outline"
+            size="sm"
+            onClick={handleOpenTemplate}
+            className="w-full sm:w-auto"
+          >
+            <span className="truncate">Template</span>
           </AnimatedIconButton>
           <AnimatedIconButton
             icon={PlusIcon}
-            iconSize={16}
-            iconClassName="mr-0 sm:mr-1"
+            iconSize={14}
+            iconClassName="mr-1.5"
+            size="sm"
             onClick={handleOpenCreate}
-            className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground"
+            className="w-full gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 sm:w-auto"
           >
-            <span className="hidden sm:inline">New role</span>
+            <span className="truncate">New role</span>
           </AnimatedIconButton>
         </div>
       }
+      filters={
+        <div className="min-w-0 w-full flex-1 md:min-w-[160px] md:max-w-xs">
+          <SearchInput placeholder="Search roles…" value={search} onValueChange={handleSearchChange} />
+        </div>
+      }
     >
-      <div className="flex flex-1 min-h-0 flex-col gap-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-3">
       {metricsLoading ? (
         <StatCardGridSkeleton cols={4} count={4} />
       ) : (
@@ -130,11 +150,11 @@ function RolesContent() {
         </StatCardGrid>
       )}
 
-      <div className="grid flex-1 min-h-0 gap-4 lg:grid-cols-[320px_1fr]">
+      <div className="grid flex-1 min-h-0 gap-3 lg:grid-cols-[320px_1fr]">
         <Card className="flex flex-col lg:min-h-0">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <Shield className="h-4 w-4" /> Roles ({roles?.length ?? 0})
+              <Shield className="h-4 w-4" /> Roles
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0 lg:flex-1 lg:min-h-0">
@@ -161,21 +181,27 @@ function RolesContent() {
                   Retry
                 </Button>
               </div>
-            ) : (roles ?? []).length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 gap-3 px-4 text-center">
-                <Shield className="h-10 w-10 text-muted-foreground/40" />
-                <div>
-                  <p className="text-sm font-medium">No roles yet</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Create a role to manage permissions</p>
-                </div>
-                <Button size="sm" onClick={handleOpenCreate} className="gap-1.5">
-                  <PlusIcon size={14} /> New role
-                </Button>
-              </div>
+            ) : filteredRoles.length === 0 ? (
+              <EmptyState
+                illustrationPreset="security"
+                title={search.trim() ? "No matching roles" : "No roles yet"}
+                description={
+                  search.trim()
+                    ? "Try a different search term."
+                    : "Create a role to manage permissions."
+                }
+                action={
+                  search.trim()
+                    ? undefined
+                    : { label: "New role", onClick: handleOpenCreate }
+                }
+                compact
+                className="border-0 bg-transparent py-10"
+              />
             ) : (
               <ScrollArea className="lg:h-full" type="auto">
                 <div className="divide-y divide-border/60">
-                  {(roles ?? []).map((role) => (
+                  {filteredRoles.map((role) => (
                     <RoleListItem
                       key={role.id}
                       role={role}

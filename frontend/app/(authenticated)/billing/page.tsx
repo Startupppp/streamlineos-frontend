@@ -20,7 +20,7 @@ function resolveTab(raw: string | null): BillingTab {
 }
 
 const TAB_TRIGGER_CLASS =
-  "h-7 rounded-md px-3 text-sm font-medium gap-1.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none text-muted-foreground hover:text-foreground transition-colors duration-200";
+  "h-7 min-w-0 flex-1 truncate sm:flex-none rounded-md px-3 text-sm font-medium gap-1.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none text-muted-foreground hover:text-foreground transition-colors duration-200";
 
 function BillingPageContent() {
   const router = useRouter();
@@ -50,7 +50,7 @@ function BillingPageContent() {
         onValueChange={handleTabChange}
         className="flex flex-col flex-1 min-h-0 gap-0"
       >
-        <TabsList className="h-9 w-full items-center gap-1 rounded-lg border border-border bg-card p-1 overflow-x-auto scrollbar-hide sm:w-fit justify-start shrink-0 mb-4">
+        <TabsList className="flex h-9 min-h-9 max-h-9 w-full items-center gap-1 rounded-lg border border-border bg-card p-1 overflow-x-auto scrollbar-hide sm:w-fit justify-stretch sm:justify-start shrink-0 mb-4">
           <TabsTrigger value="plan" className={TAB_TRIGGER_CLASS}>
             <CreditCard className="h-3.5 w-3.5" />
             Plan

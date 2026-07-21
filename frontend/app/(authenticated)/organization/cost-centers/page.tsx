@@ -37,7 +37,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
-import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
@@ -356,24 +355,32 @@ export default function OrgCostCentersPage() {
     <PageWrapper
       title="Cost Centers"
       subtitle="Cost centers for expense tracking."
+      mobileFiltersInline
       actions={
-        <div className="flex items-center gap-2">
+        <div className="flex w-full items-center gap-2 sm:w-auto">
           <Button
             variant={showArchived ? "secondary" : "outline"}
             size="sm"
-            className="text-xs"
+            className="flex-1 text-xs sm:flex-none"
             onClick={handleToggleArchived}
           >
             <Archive className="h-4 w-4 mr-1.5" />
             {showArchived ? "Show Active" : `Archived (${archived.length})`}
           </Button>
-          <AnimatedIconButton icon={PlusIcon} iconSize={16} iconClassName="mr-1.5" size="sm" onClick={handleOpenCreate}>
+          <AnimatedIconButton
+            icon={PlusIcon}
+            iconSize={16}
+            iconClassName="mr-1.5"
+            size="sm"
+            className="flex-1 sm:flex-none"
+            onClick={handleOpenCreate}
+          >
             Add Cost Center
           </AnimatedIconButton>
         </div>
       }
       filters={
-        <div className={FILTER_TOOLBAR_ROW}>
+        <div className="min-w-0 w-full flex-1 md:min-w-[160px] md:max-w-xs">
           <SearchInput placeholder="Search cost centers…" value={search} onValueChange={handleSearchInputChange} />
         </div>
       }

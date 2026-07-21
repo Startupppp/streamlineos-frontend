@@ -2,15 +2,14 @@
 
 import { useState, useCallback, useTransition, useMemo } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { format } from "date-fns";
-import { Shield, Activity } from "lucide-react";
+import { Activity, SlidersHorizontal } from "lucide-react";
 import { InfoIcon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/shared/error-state";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
-import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -20,7 +19,10 @@ import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
   SheetBody,
 } from "@/components/ui/sheet";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { SearchInput } from "@/components/ui/search-input";
+import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
@@ -286,21 +288,19 @@ export default function AuditLogPage() {
   const { data: actions } = useAuditLogActions();
   const { data: targetTypes } = useAuditLogTargetTypes();
 
-  const logs = data?.logs ?? [];
   const totalPages = data?.totalPages ?? 1;
   const total = data?.total ?? 0;
 
-  const filteredLogs = useMemo(
-    () =>
-      userSearch.trim()
-        ? logs.filter(
-            (log) =>
-              (log.userName ?? "").toLowerCase().includes(userSearch.toLowerCase()) ||
-              (log.userEmail ?? "").toLowerCase().includes(userSearch.toLowerCase()),
-          )
-        : logs,
-    [logs, userSearch],
-  );
+  const filteredLogs = useMemo(() => {
+    const logs = data?.logs ?? [];
+    const q = userSearch.trim().toLowerCase();
+    if (!q) return logs;
+    return logs.filter(
+      (log) =>
+        (log.userName ?? "").toLowerCase().includes(q) ||
+        (log.userEmail ?? "").toLowerCase().includes(q),
+    );
+  }, [data?.logs, userSearch]);
 
   const resetFilters = useCallback(() => {
     updateParams({ action: null, target: null, from: null, to: null, page: null });
@@ -341,104 +341,158 @@ export default function AuditLogPage() {
     updateParams({ page: p <= 1 ? null : String(p) });
   }, [updateParams]);
 
-  const hasActiveFilters = actionFilter !== "all" || targetTypeFilter !== "all" || !!dateFrom || !!dateTo || !!userSearch;
+  const hasActiveFilters =
+    actionFilter !== "all" ||
+    targetTypeFilter !== "all" ||
+    !!dateFrom ||
+    !!dateTo ||
+    !!userSearch;
 
-  const filtersBar = (
-    <div className={FILTER_TOOLBAR_ROW}>
-      <Select value={actionFilter} onValueChange={handleActionFilter}>
-        <SelectTrigger className={`w-[160px] ${FILTER_SELECT_TRIGGER}`}>
-          <SelectValue placeholder="All actions" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Actions</SelectItem>
-          {actions?.map((a) => (
-            <SelectItem key={a} value={a}>{a}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Select value={targetTypeFilter} onValueChange={handleTargetTypeFilter}>
-        <SelectTrigger className={`w-32 ${FILTER_SELECT_TRIGGER}`}>
-          <SelectValue placeholder="All types" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Types</SelectItem>
-          {targetTypes?.map((t) => (
-            <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <DatePicker value={dateFrom} onChange={handleDateFrom} placeholder="From date" className="w-[140px]" />
-      <DatePicker value={dateTo} onChange={handleDateTo} placeholder="To date" className="w-[140px]" />
-      {hasActiveFilters && (
-        <Button variant="ghost" size="sm" onClick={resetFilters} className="text-sm">
-          Clear
-        </Button>
-      )}
-    </div>
-  );
-
-  const goToPageToolbar = (
-    <div className="hidden md:flex items-center gap-1.5">
-      <span className="text-[12px] text-muted-foreground">Go to</span>
-      <Input
-        type="number"
-        min={1}
-        max={totalPages}
-        value={goToPage}
-        onChange={handleGoToPageChange}
-        onKeyDown={handleGoToPageKeyDown}
-        placeholder="—"
-        className="w-14 text-xs text-center"
-        aria-label="Go to page"
-      />
-    </div>
-  );
-
-  const pageSizeToolbar = (
-    <div className="flex items-center gap-2">
-      <span className="text-[12px] text-muted-foreground">Rows per page</span>
-      <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
-        <SelectTrigger className="w-[64px] text-xs">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {PAGE_SIZE_OPTIONS.map((s) => (
-            <SelectItem key={s} value={String(s)} className="text-xs">{s}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
-  );
+  function renderFilterSelects() {
+    return (
+      <div className="flex w-full flex-col gap-2 md:contents">
+        <Select value={actionFilter} onValueChange={handleActionFilter}>
+          <SelectTrigger className={`w-full md:w-[160px] ${FILTER_SELECT_TRIGGER}`}>
+            <SelectValue placeholder="All actions" />
+          </SelectTrigger>
+          <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+            <SelectItem value="all">All Actions</SelectItem>
+            {actions?.map((a) => (
+              <SelectItem key={a} value={a}>
+                {a}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={targetTypeFilter} onValueChange={handleTargetTypeFilter}>
+          <SelectTrigger className={`w-full md:w-32 ${FILTER_SELECT_TRIGGER}`}>
+            <SelectValue placeholder="All types" />
+          </SelectTrigger>
+          <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+            <SelectItem value="all">All Types</SelectItem>
+            {targetTypes?.map((t) => (
+              <SelectItem key={t} value={t} className="capitalize">
+                {t}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <DatePicker
+          value={dateFrom}
+          onChange={handleDateFrom}
+          placeholder="From date"
+          className="w-full md:w-[140px]"
+        />
+        <DatePicker
+          value={dateTo}
+          onChange={handleDateTo}
+          placeholder="To date"
+          className="w-full md:w-[140px]"
+        />
+        {hasActiveFilters && (
+          <Button variant="ghost" size="sm" onClick={resetFilters} className="text-sm">
+            Clear
+          </Button>
+        )}
+      </div>
+    );
+  }
 
   const toolbar = (
     <div className="flex items-center gap-3">
-      {pageSizeToolbar}
-      {goToPageToolbar}
+      <div className="flex items-center gap-2">
+        <span className="text-[12px] text-muted-foreground">Rows per page</span>
+        <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
+          <SelectTrigger className={`w-[64px] text-xs ${FILTER_SELECT_TRIGGER}`}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+            {PAGE_SIZE_OPTIONS.map((s) => (
+              <SelectItem key={s} value={String(s)} className="text-xs">
+                {s}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="hidden md:flex items-center gap-1.5">
+        <span className="text-[12px] text-muted-foreground">Go to</span>
+        <Input
+          type="number"
+          min={1}
+          max={totalPages}
+          value={goToPage}
+          onChange={handleGoToPageChange}
+          onKeyDown={handleGoToPageKeyDown}
+          placeholder="—"
+          className="w-14 text-xs text-center"
+          aria-label="Go to page"
+        />
+      </div>
     </div>
+  );
+
+  const emptyState = (
+    <EmptyState
+      illustrationPreset="activity"
+      title="No audit events found"
+      description={
+        hasActiveFilters
+          ? "Try adjusting your search or filters."
+          : "System actions and changes will appear here."
+      }
+      action={
+        hasActiveFilters
+          ? { label: "Clear filters", onClick: resetFilters }
+          : undefined
+      }
+    />
   );
 
   return (
     <PageWrapper
       title="Audit Log"
-      subtitle="Track all system actions, logins, and changes across your organization."
+      subtitle="Track system actions, logins, and changes across your organization."
+      mobileFiltersInline
       noInternalScroll
-      actions={
-        <div className="flex items-center gap-2">
-          <Shield className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm text-muted-foreground font-medium">
-            {total.toLocaleString()} events
-          </span>
-        </div>
+      filters={
+        <>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 shrink-0 gap-1.5 text-xs md:hidden"
+                aria-label="Filters"
+              >
+                <SlidersHorizontal className="h-4 w-4" />
+                <span className="truncate">Filters</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-[min(22rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] p-3"
+              align="start"
+            >
+              {renderFilterSelects()}
+            </PopoverContent>
+          </Popover>
+          <div className="min-w-0 flex-1 md:min-w-[160px] md:max-w-xs">
+            <SearchInput
+              placeholder="Search by name or email…"
+              value={userSearch}
+              onValueChange={handleUserSearchChange}
+            />
+          </div>
+          <div className="hidden md:contents">{renderFilterSelects()}</div>
+        </>
       }
-      filters={filtersBar}
     >
-      <div className="flex flex-1 min-h-0 flex-col gap-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-3">
         {isError ? (
           <ErrorState
             title="Failed to load audit events"
             description="Something went wrong while fetching audit events. Please try again."
             onRetry={handleRetry}
-            compact
           />
         ) : isLoading ? (
           <DataTableSkeleton rows={pageSize} columns={6} className="flex-1" />
@@ -450,7 +504,6 @@ export default function AuditLogPage() {
             getRowKey={(log) => log.id}
             onRowClick={handleRowClick}
             minWidth="700px"
-            search={{ value: userSearch, onChange: handleUserSearchChange, placeholder: "Search by name or email" }}
             toolbar={toolbar}
             pagination={{
               mode: "server",
@@ -459,22 +512,7 @@ export default function AuditLogPage() {
               total,
               onPageChange: handlePageChange,
             }}
-            emptyState={
-              <div className="py-14 flex flex-col items-center gap-3 text-center">
-                <EmptyDocumentsIllustration className="h-40 w-40 opacity-95" />
-                <div className="space-y-1 text-muted-foreground">
-                  <p className="text-sm font-medium text-foreground">No audit events found</p>
-                  {hasActiveFilters && (
-                    <p className="text-xs">Try adjusting your filters to see results.</p>
-                  )}
-                </div>
-                {hasActiveFilters && (
-                  <Button variant="outline" size="sm" onClick={resetFilters}>
-                    Clear filters
-                  </Button>
-                )}
-              </div>
-            }
+            emptyState={emptyState}
           />
         )}
       </div>

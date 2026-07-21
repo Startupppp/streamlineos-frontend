@@ -128,6 +128,7 @@ export default function LoginHistoryPage() {
     <PageWrapper
       title="Login History"
       subtitle="A record of all sign-in events for your account."
+      mobileFiltersInline
       noInternalScroll
       filters={
         <div className={FILTER_TOOLBAR_ROW}>

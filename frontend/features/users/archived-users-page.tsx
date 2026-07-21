@@ -5,7 +5,6 @@ import { keepPreviousData } from "@tanstack/react-query";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
-import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -36,16 +35,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { formatDistanceToNow } from "date-fns";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-
-function getInitials(name: string | null, email: string): string {
-  if (name) {
-    const parts = name.split(" ").filter(Boolean);
-    if (parts.length >= 2)
-      return `${parts[0]?.[0] ?? ""}${parts[1]?.[0] ?? ""}`.toUpperCase();
-    if (parts.length === 1) return (parts[0] ?? "").slice(0, 2).toUpperCase();
-  }
-  return email.slice(0, 2).toUpperCase();
-}
+import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
 
 interface ArchivedActionsMenuProps {
   user: User;
@@ -167,22 +157,25 @@ export function ArchivedUsersPage() {
     {
       key: "user",
       header: "User",
-      cell: (user) => (
-        <div className="flex items-center gap-2">
-          <Avatar className="h-6 w-6 shrink-0">
-            <AvatarImage src={user.image ?? undefined} alt={user.name ?? user.email} />
-            <AvatarFallback className="text-[10px] font-semibold">
-              {getInitials(user.name, user.email)}
-            </AvatarFallback>
-          </Avatar>
-          <div className="min-w-0">
-            <p className="text-[11px] font-medium truncate leading-tight">{user.name ?? "—"}</p>
-            {user.designation && (
-              <p className="text-[10px] text-muted-foreground truncate">{user.designation}</p>
-            )}
+      cell: (user) => {
+        const displayName = getUserDisplayName(user);
+        return (
+          <div className="flex items-center gap-2">
+            <Avatar className="h-6 w-6 shrink-0">
+              <AvatarImage src={user.image ?? undefined} alt={displayName} />
+              <AvatarFallback className="text-[10px] font-semibold">
+                {getUserInitials(user)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <p className="text-[11px] font-medium truncate leading-tight">{displayName}</p>
+              {user.designation && (
+                <p className="text-[10px] text-muted-foreground truncate">{user.designation}</p>
+              )}
+            </div>
           </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       key: "email",
@@ -228,11 +221,14 @@ export function ArchivedUsersPage() {
       <PageWrapper
         title="Archived Users"
         subtitle="Archived members no longer have access."
+        mobileFiltersInline
         filters={
-          <div className={FILTER_TOOLBAR_ROW}>
-            <div className="min-w-[180px] max-w-xs flex-1">
-              <SearchInput placeholder="Search archived users..." value={search} onValueChange={handleSearchChange} />
-            </div>
+          <div className="min-w-0 w-full flex-1 md:min-w-[160px] md:max-w-xs">
+            <SearchInput
+              placeholder="Search archived users…"
+              value={search}
+              onValueChange={handleSearchChange}
+            />
           </div>
         }
       >

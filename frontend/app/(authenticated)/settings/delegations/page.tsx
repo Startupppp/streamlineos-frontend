@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,6 +13,7 @@ import { SearchInput } from "@/components/ui/search-input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Sheet,
   SheetBody,
@@ -29,10 +29,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  TABS_CONTENT_PAGE_BODY_CLASS,
+} from "@/components/ui/tabs";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient, getApiError } from "@/lib/api-client";
 import { toast } from "sonner";
-import { ArrowLeftRight, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { PlusIcon, XIcon } from "@animateicons/react/lucide";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -40,6 +47,8 @@ import { formatRelative } from "date-fns";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { PERMISSIONS } from "@/lib/rbac/permissions";
+
+const TAB_PANEL_CLASS = `${TABS_CONTENT_PAGE_BODY_CLASS} mt-0`;
 
 interface Delegation {
   id: string;
@@ -83,6 +92,7 @@ function DelegationsContent() {
   const queryClient = useQueryClient();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [revoking, setRevoking] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
 
   const { data: membersData } = useOrgMembers(1, 200);
   const members = useMemo(() => membersData?.data ?? [], [membersData]);
@@ -107,6 +117,7 @@ function DelegationsContent() {
   });
 
   const revokeMutation = useMutation({
+    mutationKey: ["delegations", "revoke"],
     mutationFn: (id: string) => apiClient.delete(`/access/delegations/${id}`),
     onSuccess: () => {
       toast.success("Delegation revoked");
@@ -128,73 +139,131 @@ function DelegationsContent() {
   );
 
   const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
+  const handleSearchChange = useCallback((value: string) => setSearch(value), []);
 
   const handleGrantSuccess = useCallback(() => {
     setSheetOpen(false);
     void queryClient.invalidateQueries({ queryKey: ["delegations"] });
   }, [queryClient]);
 
+  const matchesSearch = useCallback(
+    (d: Delegation, nameField: "delegatorId" | "delegateeId") => {
+      const q = search.trim().toLowerCase();
+      if (!q) return true;
+      const name = (memberMap.get(d[nameField]) ?? "").toLowerCase();
+      const reason = (d.reason ?? "").toLowerCase();
+      return name.includes(q) || reason.includes(q);
+    },
+    [search, memberMap],
+  );
+
+  const filteredReceived = useMemo(
+    () => (received ?? []).filter((d) => matchesSearch(d, "delegatorId")),
+    [received, matchesSearch],
+  );
+
   const activeGiven = useMemo(
     () =>
       (given ?? []).filter(
-        (d) => d.status === "ACTIVE" && new Date(d.endsAt) > new Date(),
+        (d) =>
+          d.status === "ACTIVE" &&
+          new Date(d.endsAt) > new Date() &&
+          matchesSearch(d, "delegateeId"),
       ),
-    [given],
+    [given, matchesSearch],
   );
   const inactiveGiven = useMemo(
     () =>
       (given ?? []).filter(
-        (d) => d.status !== "ACTIVE" || new Date(d.endsAt) <= new Date(),
+        (d) =>
+          (d.status !== "ACTIVE" || new Date(d.endsAt) <= new Date()) &&
+          matchesSearch(d, "delegateeId"),
       ),
+    [given, matchesSearch],
+  );
+
+  const receivedCount = received?.length ?? 0;
+  const activeGivenCount = useMemo(
+    () =>
+      (given ?? []).filter(
+        (d) => d.status === "ACTIVE" && new Date(d.endsAt) > new Date(),
+      ).length,
     [given],
   );
 
   return (
     <PageWrapper
       title="Delegations"
-      subtitle="Share specific permissions with other team members for a period of time"
+      subtitle="Share specific permissions with teammates for a set period."
+      mobileFiltersInline
       actions={
         <AnimatedIconButton
           size="sm"
           icon={PlusIcon}
           iconSize={14}
-          iconClassName="mr-1"
-          className="bg-primary hover:bg-primary/90 text-primary-foreground"
+          iconClassName="mr-1.5"
+          className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground"
           onClick={handleOpenSheet}
         >
           Delegate
         </AnimatedIconButton>
       }
+      filters={
+        <div className="min-w-0 w-full flex-1 md:min-w-[160px] md:max-w-xs">
+          <SearchInput
+            placeholder="Search by name or reason…"
+            value={search}
+            onValueChange={handleSearchChange}
+          />
+        </div>
+      }
     >
-      <div className="space-y-4">
-        <Card>
-          <CardHeader className="px-4 pt-4 pb-2">
-            <CardTitle className="text-sm font-semibold flex items-center justify-between">
-              <span className="flex items-center gap-1.5">
-                <ArrowLeftRight className="h-3.5 w-3.5 text-muted-foreground" />
-                Received from others
-              </span>
-              {!loadingReceived && (received?.length ?? 0) > 0 && (
-                <Badge variant="secondary" className="text-xs font-medium">
-                  {received!.length}
-                </Badge>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
+      <div className="flex flex-1 min-h-0 flex-col gap-3">
+        <Tabs
+          defaultValue="received"
+          className="flex min-h-0 flex-1 flex-col gap-3"
+        >
+          <TabsList className="flex w-full justify-stretch sm:w-full">
+            <TabsTrigger
+              value="received"
+              className="min-w-0 flex-1 gap-1.5 truncate"
+            >
+              Received
+              {!loadingReceived && receivedCount > 0 ? (
+                <span className="tabular-nums text-xs opacity-70">
+                  {receivedCount}
+                </span>
+              ) : null}
+            </TabsTrigger>
+            <TabsTrigger
+              value="granted"
+              className="min-w-0 flex-1 gap-1.5 truncate"
+            >
+              Granted
+              {!loadingGiven && activeGivenCount > 0 ? (
+                <span className="tabular-nums text-xs opacity-70">
+                  {activeGivenCount}
+                </span>
+              ) : null}
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="received" className={TAB_PANEL_CLASS}>
             {loadingReceived ? (
               <DelegationSkeletons count={2} />
-            ) : !received?.length ? (
-              <div className="flex flex-col items-center justify-center py-10 text-center">
-                <ArrowLeftRight className="w-8 text-muted-foreground/30 mb-2" />
-                <p className="text-sm font-medium">No delegations received</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Permissions delegated to you will appear here
-                </p>
-              </div>
+            ) : filteredReceived.length === 0 ? (
+              <EmptyState
+                illustrationPreset="permissions"
+                title={search ? "No matching delegations" : "No delegations received"}
+                description={
+                  search
+                    ? "Try adjusting your search."
+                    : "Permissions delegated to you will appear here."
+                }
+              />
             ) : (
-              <div className="divide-y divide-border/60">
-                {received.map((d) => (
+              <div className="divide-y divide-border/60 rounded-xl border border-border bg-card">
+                {filteredReceived.map((d) => (
                   <DelegationRow
                     key={d.id}
                     delegation={d}
@@ -204,33 +273,28 @@ function DelegationsContent() {
                 ))}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </TabsContent>
 
-        <Card>
-          <CardHeader className="px-4 pt-4 pb-2">
-            <CardTitle className="text-sm font-semibold flex items-center justify-between">
-              <span>Granted by you</span>
-              {!loadingGiven && activeGiven.length > 0 && (
-                <Badge variant="secondary" className="text-xs font-medium">
-                  {activeGiven.length} active
-                </Badge>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
+          <TabsContent value="granted" className={TAB_PANEL_CLASS}>
             {loadingGiven ? (
               <DelegationSkeletons count={2} />
-            ) : !activeGiven.length && !inactiveGiven.length ? (
-              <div className="flex flex-col items-center justify-center py-10 text-center">
-                <ArrowLeftRight className="w-8 text-muted-foreground/30 mb-2" />
-                <p className="text-sm font-medium">No delegations granted</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Delegate permissions to share access with colleagues
-                </p>
-              </div>
+            ) : activeGiven.length === 0 && inactiveGiven.length === 0 ? (
+              <EmptyState
+                illustrationPreset="permissions"
+                title={search ? "No matching delegations" : "No delegations granted"}
+                description={
+                  search
+                    ? "Try adjusting your search."
+                    : "Delegate permissions to share access with colleagues."
+                }
+                action={
+                  search
+                    ? undefined
+                    : { label: "Delegate", onClick: handleOpenSheet }
+                }
+              />
             ) : (
-              <div className="divide-y divide-border/60">
+              <div className="divide-y divide-border/60 rounded-xl border border-border bg-card">
                 {activeGiven.map((d) => (
                   <DelegationRow
                     key={d.id}
@@ -253,8 +317,8 @@ function DelegationsContent() {
                 ))}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </TabsContent>
+        </Tabs>
       </div>
 
       <GrantDelegationSheet

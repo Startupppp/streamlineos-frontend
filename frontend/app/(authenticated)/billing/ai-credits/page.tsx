@@ -417,7 +417,7 @@ export default function AiCreditsPage() {
                 <p className="text-sm font-semibold text-foreground shrink-0">Usage Analytics</p>
                 <div className="flex items-center gap-2 ml-auto">
                   <Select value={String(usageDays)} onValueChange={handleUsageDaysChange}>
-                    <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "h-8 w-[90px] text-xs")}>
+                    <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-fit min-w-[110px]")}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="min-w-[var(--radix-select-trigger-width)]">

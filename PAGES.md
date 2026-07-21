@@ -156,7 +156,7 @@ Ordered money-path first. Check off each page after fixing.
 ---
 
 ## Billing & Accounting
-- [x] `/billing` — **Consolidated Billing & Plan (2026-07-16)**: URL-synced tabs — Plan (current plan/trial banner, plan cards + monthly/annual toggle, promo-code apply, Razorpay upgrade, compact seats block, plan-usage meters from `GET /billing/entitlements`), Invoices & Payments (subscription payment history), Billing Profile (GSTIN/PAN/address form); absorbs `/settings/subscription` + `/billing/seats`
+- [x] `/billing` — **Consolidated Billing & Plan (2026-07-16)**: URL-synced tabs — Plan (current plan/trial banner, plan cards + monthly/annual toggle, promo-code apply, Razorpay upgrade, compact seats block, plan-usage meters from `GET /billing/entitlements`), Invoices & Payments (subscription payment history), Billing Profile (GSTIN/PAN/address form); absorbs `/settings/subscription` + `/billing/seats`. **Mobile equal-width TabsList (2026-07-21):** `h-9 min-h-9 max-h-9` full-width list; triggers `flex-1 min-w-0 truncate` on mobile, `sm:w-fit` / `sm:flex-none` on desktop
 - [x] `/billing/invoices` — Invoices list with status filters
 - [x] `/billing/invoices/new` — New invoice creation
 - [x] `/billing/invoices/[invoiceId]` — Invoice detail: line items table, totals, payments history, record-payment dialog, send/mark-paid/delete actions
@@ -587,18 +587,20 @@ All reconciled (hook URLs↔routes, chat signatures, PermissionKeys). Build not 
 
 ## Settings
 - [x] `/settings` — Account settings (profile + security only); notification prefs removed 2026-07-13 — use `/notifications/preferences` (deleted `settings-preferences.tsx` + legacy HR notification hooks)
-- [x] `/settings/organization` — Organization settings; removed Integrations + Custom Domains sections (UI-only; backend APIs kept) 2026-07-21
+- [x] `/settings/organization` — Organization settings
 - [x] `/settings/members` — Members management (redirect → `/users`); Create User removed from More menu; Invite User + Bulk Invite share full role list (Member/Manager/HR/Finance/Engineering/Admin) 2026-07-21
-- [x] `/users` — Mobile toolbar via existing `mobileFiltersInline` + actions Filters popover + search in `filters` (no `showMobileFiltersButton`/`filtersLeading`); desktop flat toolbar 2026-07-21
-- [x] `/users` User Details sheet — Prefs trimmed to Language/Timezone/Date/Time Format; tab triggers `text-sm font-medium`/active `font-semibold`; all TabsContent `pt-4`; Activity tab removed; TabsList h-9 equal-width; empty states fill+center; Revoke all h-9 red icon 2026-07-21
-- [x] `/settings/roles` — Roles list
+- [x] `/users` — Mobile toolbar via existing `mobileFiltersInline` + actions Filters popover + search in `filters`; desktop flat toolbar 2026-07-21
+- [x] `/users/archived` — Archived users; Users-pattern (`mobileFiltersInline` flat search toolbar) 2026-07-21
+- [x] `/users/suspended` — Suspended users; Users-pattern (`mobileFiltersInline` flat search toolbar) 2026-07-21
+- [x] `/users/invitations` — Invitations; Users-pattern (`mobileFiltersInline` flat search + inline status Select — no Filters popover for a lone select) 2026-07-21
+- [x] `/settings/roles` — Roles list; Users-pattern toolbar (`mobileFiltersInline` search, equal-width Audit/Template/New role on mobile, StatCardGrid) 2026-07-21
 - [x] `/settings/roles/[roleId]` — Role editor: per-role permission matrix + member list via `useRole`/`useRoleMembers`, gated `settings:rbac:manage`, back button to `/settings/roles`
 - [x] `/settings/roles/simulate` — Permission Simulator — employee combobox, simulates effective permissions via GET /roles/simulate/:targetUserId, grouped by module with expandable rows, scope badges
 - [x] `/settings/modules` — Org module management: enable/disable feature modules via `useOrgModules`/`useToggleOrgModule`, responsive grid with Switch per module, gated `settings:manage`; Feedbucket removed from catalog 2026-07-13 (lives under PM `/projects/[projectId]/feedbucket`); 2026-07-19 cards restyled to product-switcher language (accent icon tile + name + one-line description) via shared `lib/module-catalog.ts` derived from `sidebar-nav-items` sources; Blog removed from org-modules catalog 2026-07-19 (public `/blogs` + RBAC kept — not an org toggle)
 - [x] `/settings/permissions` — Permission Matrix — replaced `DashboardGate allowedRoles` with `permission="settings:rbac:manage"`, added `GET /roles/permissions/matrix` backend endpoint, `useRolePermissionsMatrix()` hook, page now renders live role/permission data with loading skeleton, error state, and empty state
 - [x] `/settings/branches` — Branches (E2E fix: empty state fills content height with in-card primary CTA)
 - [x] `/settings/notifications` — Redirects to `/notifications/preferences`
-- [x] `/settings/audit-log` — Audit log
+- [x] `/settings/audit-log` — Audit log; Filters + Search share one `filters` flex row (`shrink-0` Filters popover + `flex-1 min-w-0` search; desktop selects via `md:contents`); EmptyState 2026-07-21
 - [x] `/settings/webhooks` — Webhooks (E2E fix: empty state fills content height with in-card primary CTA)
 - [x] `/settings/email-templates` — Email templates
 - [x] `/settings/custom-fields` — Custom fields (E2E fix: empty state fills content height with in-card primary CTA)
@@ -612,11 +614,12 @@ All reconciled (hook URLs↔routes, chat signatures, PermissionKeys). Build not 
 - [x] `/projects/settings/integrations` — Integrations: PmPageShell glass connection cards + setup panel, agent tokens glass section, getErrorMessage; page body scrolls via PageWrapper ScrollArea (2026-07-18)
 - [x] `/support/settings/automations` — Support ticket automation rules
 - [x] `/accounting/settings/automations` — Finance automation rules
-- [x] `/settings/api-tokens` — API tokens
+- [x] `/settings/api-tokens` — API tokens; Personal/Organization equal-width `flex-1` TabsTriggers + New Token in one toolbar row (2026-07-21)
 - [x] `/settings/devices` — Trusted devices; browser/OS parsed via shared `parse-user-agent` (2026-07-13) — API clients show labels like Axios 1.18.1, not raw UA; Electron → StreamlineOS Desktop (2026-07-19)
-- [x] `/settings/login-history` — Login history; pinned DataTable header+pagination via `noInternalScroll` fill chain (2026-07-19); browser/OS from API DTOs; Electron → StreamlineOS Desktop (2026-07-19)
+- [x] `/settings/login-history` — Login history; pinned DataTable header+pagination via `noInternalScroll` fill chain (2026-07-19); browser/OS from API DTOs; Electron → StreamlineOS Desktop (2026-07-19); Users-pattern `mobileFiltersInline` flat All/Success/Failure chips (2026-07-21)
 - [x] `/settings/security` — Security settings; active-session rows use StreamlineOS Desktop (not Electron N) via shared UA parser (2026-07-19)
-- [x] `/settings/sessions` — Active sessions; browser/OS from API-enriched DTOs; Electron → StreamlineOS Desktop (2026-07-19)
+- [x] `/settings/sessions` — Active sessions; Users-pattern (`mobileFiltersInline` flat search, full-width mobile revoke action); Electron → StreamlineOS Desktop 2026-07-21
+- [x] `/settings/delegations` — Received / Granted tabs (kept, equal-width `flex-1` triggers like User Details sheet); Users-pattern toolbar (`mobileFiltersInline` search, EmptyState, full-width mobile Delegate) 2026-07-21
 - [x] `/settings/subscription` — **Redirects to `/billing?tab=plan`** (2026-07-16); plan management consolidated into Billing & Plan
 
 ---
@@ -701,7 +704,7 @@ Completed all identified missing features across Organization and Authorization 
 - [x] `/organization/locations` — Same archive/restore pattern; no `deletedAt` so filter by `status === "ARCHIVED"` only.
 - [x] `/organization/cost-centers` — Same archive/restore pattern; converted anonymous handlers to `useCallback`.
 - [x] `/settings/api-tokens` — Full implementation: list/create/revoke/delete tokens; token-created dialog with one-time copy; scope selector; expiry date.
-- [x] `/settings/organization` — Added `maxConcurrentSessions` field to Security Policies section; wired to backend. Removed Integrations + Custom Domains cards 2026-07-21.
+- [x] `/settings/organization` — Added `maxConcurrentSessions` field to Security Policies section; wired to backend.
 - Backend: Created `api-tokens` NestJS module (controller/service/dto) with list/create/revoke/delete endpoints; registered in `app.module.ts`.
 - Backend: Added `maxConcurrentSessions` to `organizations` schema (frontend + backend), org security DTO, and session enforcement in `auth.service.ts` (oldest sessions revoked on login when limit exceeded).
 - DB: Migration `0124_max_concurrent_sessions.sql` adds `max_concurrent_sessions` column.

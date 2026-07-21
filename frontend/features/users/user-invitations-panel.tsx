@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -39,9 +39,12 @@ type InvStatus = "pending" | "accepted" | "expired";
 type StatusFilter = "all" | InvStatus;
 
 const STATUS_CLASSES: Record<InvStatus, string> = {
-  pending: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  accepted: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  expired: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  pending:
+    "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  accepted:
+    "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  expired:
+    "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
 };
 
 function getStatus(inv: Invitation): InvStatus {
@@ -55,7 +58,11 @@ export function UserInvitationsPanel() {
   const router = useRouter();
   const pathname = usePathname();
   const [, startTransition] = useTransition();
-  const { open: inviteOpen, onOpenChange: setInviteOpen, setOpen: openInvite } = useQueryParamOpen("create");
+  const {
+    open: inviteOpen,
+    onOpenChange: setInviteOpen,
+    setOpen: openInvite,
+  } = useQueryParamOpen("create");
   const [cancelId, setCancelId] = useState<string | null>(null);
 
   const q = searchParams.get("q") ?? "";
@@ -66,13 +73,21 @@ export function UserInvitationsPanel() {
   const [localSearch, setLocalSearch] = useState(q);
   const debouncedLocalSearch = useDebouncedValue(localSearch, 300);
 
-  const { data, isLoading, isError, refetch } = useInvitations({ page, limit: 20, includeAccepted });
+  const { data, isLoading, isError, refetch } = useInvitations({
+    page,
+    limit: 20,
+    includeAccepted,
+  });
   const { mutate: resend, isPending: isResending } = useResendInvite();
   const { mutate: cancel, isPending: isCancelling } = useCancelInvitation();
 
   const allRows = data?.data ?? [];
   const filtered = allRows.filter((inv) => {
-    if (localSearch && !inv.email.toLowerCase().includes(localSearch.toLowerCase())) return false;
+    if (
+      localSearch &&
+      !inv.email.toLowerCase().includes(localSearch.toLowerCase())
+    )
+      return false;
     if (status !== "all" && getStatus(inv) !== status) return false;
     return true;
   });
@@ -102,7 +117,8 @@ export function UserInvitationsPanel() {
   );
 
   const handleStatusChange = useCallback(
-    (value: string) => updateParams({ status: value === "all" ? null : value, page: null }),
+    (value: string) =>
+      updateParams({ status: value === "all" ? null : value, page: null }),
     [updateParams],
   );
 
@@ -127,7 +143,10 @@ export function UserInvitationsPanel() {
   const handleCancelConfirm = useCallback(() => {
     if (!cancelId) return;
     cancel(cancelId, {
-      onSuccess: () => { toast.success("Invitation cancelled"); setCancelId(null); },
+      onSuccess: () => {
+        toast.success("Invitation cancelled");
+        setCancelId(null);
+      },
       onError: (e) => {
         const message = getApiError(e);
         toast.error(
@@ -140,15 +159,25 @@ export function UserInvitationsPanel() {
     });
   }, [cancel, cancelId]);
 
-  const handleCancelDialogChange = useCallback((open: boolean) => { if (!open) setCancelId(null); }, []);
+  const handleCancelDialogChange = useCallback((open: boolean) => {
+    if (!open) setCancelId(null);
+  }, []);
   const handleOpenInvite = useCallback(() => openInvite(), [openInvite]);
-  const handleInviteChange = useCallback((v: boolean) => setInviteOpen(v), [setInviteOpen]);
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleInviteChange = useCallback(
+    (v: boolean) => setInviteOpen(v),
+    [setInviteOpen],
+  );
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
   const handleClearFilters = useCallback(() => {
     setLocalSearch("");
     updateParams({ q: null, status: null, page: null });
   }, [updateParams]);
-  const handlePageChange = useCallback((p: number) => updateParams({ page: p <= 1 ? null : String(p) }), [updateParams]);
+  const handlePageChange = useCallback(
+    (p: number) => updateParams({ page: p <= 1 ? null : String(p) }),
+    [updateParams],
+  );
 
   const pagination = data?.pagination;
   const hasFilters = !!localSearch || status !== "all";
@@ -163,7 +192,9 @@ export function UserInvitationsPanel() {
       key: "role",
       header: "Role",
       cell: (inv) => (
-        <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0">{inv.role}</Badge>
+        <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0">
+          {inv.role}
+        </Badge>
       ),
     },
     {
@@ -184,7 +215,10 @@ export function UserInvitationsPanel() {
       cell: (inv) => {
         const s = getStatus(inv);
         return (
-          <Badge variant="outline" className={`h-4 text-[9px] px-1.5 py-0 capitalize ${STATUS_CLASSES[s]}`}>
+          <Badge
+            variant="outline"
+            className={`h-4 text-[9px] px-1.5 py-0 capitalize ${STATUS_CLASSES[s]}`}
+          >
             {s}
           </Badge>
         );
@@ -255,52 +289,69 @@ export function UserInvitationsPanel() {
       <PageWrapper
         title="Invitations"
         subtitle="Manage and track team invitations."
+        mobileFiltersInline
         actions={
-          <AnimatedIconButton icon={MailIcon} iconSize={14} iconClassName="mr-1.5" size="sm" onClick={handleOpenInvite}>
+          <AnimatedIconButton
+            icon={MailIcon}
+            iconSize={14}
+            iconClassName="mr-1.5"
+            size="sm"
+            className="w-full sm:w-auto"
+            onClick={handleOpenInvite}
+          >
             Invite User
           </AnimatedIconButton>
         }
         filters={
-          <div className={FILTER_TOOLBAR_ROW}>
-            <div className="min-w-[180px] max-w-xs flex-1">
-              <SearchInput value={localSearch} onValueChange={handleSearchChange} placeholder="Search by email…" />
+          <>
+            <div className="min-w-0 w-full flex-1 md:min-w-[160px] md:max-w-xs">
+              <SearchInput
+                value={localSearch}
+                onValueChange={handleSearchChange}
+                placeholder="Search by email…"
+              />
             </div>
             <Select value={status} onValueChange={handleStatusChange}>
-              <SelectTrigger className={`w-[140px] ${FILTER_SELECT_TRIGGER}`}><SelectValue /></SelectTrigger>
-              <SelectContent>
+              <SelectTrigger
+                className={`w-[140px] shrink-0 ${FILTER_SELECT_TRIGGER}`}
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                 <SelectItem value="all">All statuses</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="accepted">Accepted</SelectItem>
                 <SelectItem value="expired">Expired</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </>
         }
       >
-        {isError ? (
-          <ErrorState
-            title="Failed to load invitations"
-            description="An error occurred while loading invitations."
-            onRetry={handleRetry}
-            className="flex-1"
-          />
-        ) : (
-          <DataTable
-            className="flex-1 min-h-0"
-            data={filtered}
-            columns={columns}
-            getRowKey={(inv) => inv.id}
-            isLoading={isLoading}
-            emptyState={emptyState}
-            pagination={{
-              mode: "server",
-              page,
-              pageSize: 20,
-              total: pagination?.total ?? 0,
-              onPageChange: handlePageChange,
-            }}
-          />
-        )}
+        <div className="flex flex-1 min-h-0 flex-col gap-3">
+          {isError ? (
+            <ErrorState
+              title="Failed to load invitations"
+              description="An error occurred while loading invitations."
+              onRetry={handleRetry}
+            />
+          ) : (
+            <DataTable
+              className="flex-1 min-h-0"
+              data={filtered}
+              columns={columns}
+              getRowKey={(inv) => inv.id}
+              isLoading={isLoading}
+              emptyState={emptyState}
+              pagination={{
+                mode: "server",
+                page,
+                pageSize: 20,
+                total: pagination?.total ?? 0,
+                onPageChange: handlePageChange,
+              }}
+            />
+          )}
+        </div>
       </PageWrapper>
 
       <UserInviteDialog open={inviteOpen} onOpenChange={handleInviteChange} />

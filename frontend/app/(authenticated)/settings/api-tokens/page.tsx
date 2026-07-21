@@ -22,18 +22,29 @@ export default function ApiTokensPage() {
     <PageWrapper
       title="API Tokens"
       subtitle="Create and manage tokens for programmatic access."
-      actions={
-        <AnimatedIconButton size="sm" onClick={handleNewToken} icon={PlusIcon} iconSize={14} iconClassName="mr-1.5">
-          New Token
-        </AnimatedIconButton>
-      }
     >
       <div className="flex flex-1 min-h-0 flex-col">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-1 min-h-0 flex-col">
-          <TabsList className="mb-3 shrink-0">
-            <TabsTrigger value="personal" className="text-xs">Personal</TabsTrigger>
-            <TabsTrigger value="organization" className="text-xs">Organization</TabsTrigger>
-          </TabsList>
+          <div className="mb-3 flex shrink-0 items-center gap-2">
+            <TabsList className="flex h-9 min-w-0 flex-1 justify-stretch">
+              <TabsTrigger value="personal" className="min-w-0 flex-1 text-xs">
+                Personal
+              </TabsTrigger>
+              <TabsTrigger value="organization" className="min-w-0 flex-1 text-xs">
+                Organization
+              </TabsTrigger>
+            </TabsList>
+            <AnimatedIconButton
+              size="sm"
+              className="shrink-0"
+              onClick={handleNewToken}
+              icon={PlusIcon}
+              iconSize={14}
+              iconClassName="mr-1.5"
+            >
+              New Token
+            </AnimatedIconButton>
+          </div>
           <TabsContent value="personal" className="mt-0 flex flex-1 min-h-0 flex-col">
             <PersonalTokensTab
               showCreate={createPersonalOpen}

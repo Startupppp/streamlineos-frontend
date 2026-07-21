@@ -100,7 +100,10 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg p-0 flex flex-col gap-0">
+      <SheetContent
+        showCloseButton={false}
+        className="w-full sm:max-w-lg p-0 flex flex-col gap-0"
+      >
         <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle className="text-base">User Details</SheetTitle>
         </SheetHeader>

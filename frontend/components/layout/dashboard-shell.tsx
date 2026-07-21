@@ -35,7 +35,7 @@ const WelcomeToast = dynamic(
       (m) => m.WelcomeToast,
     ),
   { ssr: false },
-)
+);
 
 const ChatUnreadNotifications = dynamic(
   () =>
@@ -107,14 +107,23 @@ export function DashboardShell({
   useEffect(() => {
     if (!route.startsWith("/chat")) return;
     const handleConversationChange = (event: Event) => {
-      if (!(event instanceof CustomEvent) || typeof event.detail !== "boolean") {
+      if (
+        !(event instanceof CustomEvent) ||
+        typeof event.detail !== "boolean"
+      ) {
         return;
       }
       setIsChatConversationOpen(event.detail);
     };
-    window.addEventListener("chat:conversation-change", handleConversationChange);
+    window.addEventListener(
+      "chat:conversation-change",
+      handleConversationChange,
+    );
     return () => {
-      window.removeEventListener("chat:conversation-change", handleConversationChange);
+      window.removeEventListener(
+        "chat:conversation-change",
+        handleConversationChange,
+      );
     };
   }, [route]);
 
@@ -142,7 +151,7 @@ export function DashboardShell({
   const isChatRoute = route.startsWith("/chat");
 
   return (
-    <div className="h-dvh flex flex-col overflow-hidden">
+    <div className="flex h-dvh flex-col overflow-hidden overscroll-none">
       {hasDashboardAccess && <ChatUnreadNotifications currentUserId={userId} />}
       <Link
         href="#dashboard-content"
@@ -155,42 +164,47 @@ export function DashboardShell({
         <CommandPaletteProvider>
           <AskOsProvider>
             <CommandPalette />
+
             <TrialBanner />
 
-            <GlobalHeader
-              isSidebarCollapsed={isSidebarCollapsed}
-              onToggleSidebar={handleToggleSidebar}
-              showSidebarToggle={!hideSidebar}
-              mobileNavOpen={mobileMenuOpen}
-            />
+            <div className="flex h-[calc(100dvh-var(--shell-banner-offset,0px))] min-h-0 flex-col overflow-hidden">
+              <GlobalHeader
+                isSidebarCollapsed={isSidebarCollapsed}
+                onToggleSidebar={handleToggleSidebar}
+                showSidebarToggle={!hideSidebar}
+                mobileNavOpen={mobileMenuOpen}
+              />
 
-            <div className="flex-1 flex min-h-0">
-              {!hideSidebar && (
-                <aside
-                  aria-label="Sidebar"
-                  style={{ width: sidebarW }}
-                  className="hidden md:flex flex-col h-full border-r border-sidebar-border bg-sidebar shrink-0 transition-[width] duration-300 ease-in-out overflow-visible relative z-50"
-                >
-                  <AppSidebar isCollapsed={isSidebarCollapsed} />
-                </aside>
-              )}
+              <div className="flex min-h-0 flex-1 overflow-hidden">
+                {!hideSidebar && (
+                  <aside
+                    aria-label="Sidebar"
+                    style={{ width: sidebarW }}
+                    className="relative z-50 hidden h-full shrink-0 flex-col overflow-visible border-r border-sidebar-border bg-sidebar transition-[width] duration-300 ease-in-out md:flex"
+                  >
+                    <AppSidebar isCollapsed={isSidebarCollapsed} />
+                  </aside>
+                )}
 
-              <main
-                id="dashboard-content"
-                className="flex-1 min-w-0 flex flex-col overflow-hidden md:pb-6"
-              >
-                <div
-                  className={cn(
-                    "flex-1 min-h-0 overflow-auto flex flex-col pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0",
-                    isChatRoute &&
-                      getChatMobileContentPaddingClassName(isChatConversationOpen),
-                  )}
+                <main
+                  id="dashboard-content"
+                  className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden md:pb-6"
                 >
-                  {children}
-                  <WelcomeToast />
-                  <SuccessChecklist />
-                </div>
-              </main>
+                  <div
+                    className={cn(
+                      "flex min-h-0 flex-1 flex-col overflow-auto pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0",
+                      isChatRoute &&
+                        getChatMobileContentPaddingClassName(
+                          isChatConversationOpen,
+                        ),
+                    )}
+                  >
+                    {children}
+                    <WelcomeToast />
+                    <SuccessChecklist />
+                  </div>
+                </main>
+              </div>
             </div>
 
             {!hideSidebar && (
@@ -233,7 +247,9 @@ export function DashboardShell({
           </AskOsProvider>
         </CommandPaletteProvider>
       ) : (
-        <NotActivatedPage />
+        <div className="min-h-0 flex-1 overflow-auto">
+          <NotActivatedPage />
+        </div>
       )}
     </div>
   );

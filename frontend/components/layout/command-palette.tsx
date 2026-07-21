@@ -12,7 +12,6 @@ import {
   Search,
   Loader2,
   ArrowRight,
-  Hash,
   Plus,
   LayoutDashboard,
   Kanban,
@@ -472,39 +471,6 @@ export function CommandPalette() {
           </>
         )}
       </CommandList>
-
-      <div className="flex items-center justify-between border-t border-border px-3 py-1.5 text-[11px] text-muted-foreground bg-muted/30 dark:bg-muted/20">
-        <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1">
-            <Hash className="h-3 w-3 text-muted-foreground" />
-            {pages.length} pages
-          </span>
-          {query.length >= 2 && (
-            <span className="flex items-center gap-1">
-              <Search className="h-3 w-3 text-muted-foreground" />
-              {isSearching ? "Searching…" : `${entityResults.length} records`}
-            </span>
-          )}
-        </div>
-        <div className="hidden sm:flex items-center gap-1.5">
-          <kbd className="inline-flex h-4 items-center rounded border border-border bg-background px-1 font-mono text-[10px] text-muted-foreground">
-            ↑↓
-          </kbd>
-          <kbd className="inline-flex h-4 items-center rounded border border-border bg-background px-1 font-mono text-[10px] text-muted-foreground">
-            ↵
-          </kbd>
-          <span>open</span>
-          <kbd className="inline-flex h-4 items-center rounded border border-border bg-background px-1 font-mono text-[10px] text-muted-foreground">
-            esc
-          </kbd>
-          <span className="ml-2">
-            <kbd className="inline-flex h-4 items-center rounded border border-border bg-background px-1 font-mono text-[10px] text-muted-foreground">
-              ?
-            </kbd>
-            <span className="ml-1">shortcuts</span>
-          </span>
-        </div>
-      </div>
     </CommandDialog>
   );
 }

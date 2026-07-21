@@ -37,7 +37,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
-import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
@@ -52,7 +51,10 @@ const formSchema = z.object({
     .trim()
     .min(1, "Name is required")
     .max(100)
-    .refine((v) => /[\p{L}\p{N}]/u.test(v), "Name must contain at least one letter or number"),
+    .refine(
+      (v) => /[\p{L}\p{N}]/u.test(v),
+      "Name must contain at least one letter or number",
+    ),
   code: z
     .string()
     .trim()
@@ -80,7 +82,11 @@ function BuForm({
 
   return (
     <Form {...form}>
-      <form id="bu-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form
+        id="bu-form"
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="space-y-4"
+      >
         <FormField
           control={form.control}
           name="name"
@@ -105,7 +111,11 @@ function BuForm({
               <FormItem>
                 <FormLabel>Code</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. TECH" {...field} onChange={handleCodeChange} />
+                  <Input
+                    placeholder="e.g. TECH"
+                    {...field}
+                    onChange={handleCodeChange}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -119,7 +129,11 @@ function BuForm({
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea placeholder="Optional description..." rows={3} {...field} />
+                <Textarea
+                  placeholder="Optional description..."
+                  rows={3}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -143,15 +157,18 @@ export default function BusinessUnitsPage() {
   const [search, setSearch] = useState("");
 
   const allUnits = units?.data ?? [];
-  const active = allUnits.filter((u) => u.status !== "ARCHIVED" && !u.deletedAt);
-  const archived = allUnits.filter((u) => u.status === "ARCHIVED" && !u.deletedAt);
+  const active = allUnits.filter(
+    (u) => u.status !== "ARCHIVED" && !u.deletedAt,
+  );
+  const archived = allUnits.filter(
+    (u) => u.status === "ARCHIVED" && !u.deletedAt,
+  );
   const displayed = showArchived ? archived : active;
   const filtered = search
     ? displayed.filter((u) => {
         const q = search.toLowerCase();
         return (
-          u.name.toLowerCase().includes(q) ||
-          u.code.toLowerCase().includes(q)
+          u.name.toLowerCase().includes(q) || u.code.toLowerCase().includes(q)
         );
       })
     : displayed;
@@ -233,17 +250,34 @@ export default function BusinessUnitsPage() {
   }, [deleting, remove]);
 
   const handleOpenCreate = useCallback(() => setShowCreate(true), []);
-  const handleToggleArchived = useCallback(() => setShowArchived((v) => !v), []);
+  const handleToggleArchived = useCallback(
+    () => setShowArchived((v) => !v),
+    [],
+  );
   const handleSearchChange = useCallback((v: string) => setSearch(v), []);
 
-  function handleSearchInputChange(value: string) { handleSearchChange(value); }
+  function handleSearchInputChange(value: string) {
+    handleSearchChange(value);
+  }
 
-  function makeRestoreHandler(unit: OrgBusinessUnit) { return () => handleRestore(unit); }
-  function makeArchiveHandler(unit: OrgBusinessUnit) { return () => handleArchive(unit); }
-  function makeSetEditingHandler(unit: OrgBusinessUnit) { return () => setEditing(unit); }
-  function makeSetDeletingHandler(unit: OrgBusinessUnit) { return () => setDeleting(unit); }
-  function handleEditSheetOpenChange(open: boolean) { if (!open) setEditing(null); }
-  function handleDeleteDialogOpenChange(open: boolean) { if (!open) setDeleting(null); }
+  function makeRestoreHandler(unit: OrgBusinessUnit) {
+    return () => handleRestore(unit);
+  }
+  function makeArchiveHandler(unit: OrgBusinessUnit) {
+    return () => handleArchive(unit);
+  }
+  function makeSetEditingHandler(unit: OrgBusinessUnit) {
+    return () => setEditing(unit);
+  }
+  function makeSetDeletingHandler(unit: OrgBusinessUnit) {
+    return () => setDeleting(unit);
+  }
+  function handleEditSheetOpenChange(open: boolean) {
+    if (!open) setEditing(null);
+  }
+  function handleDeleteDialogOpenChange(open: boolean) {
+    if (!open) setDeleting(null);
+  }
 
   const columns: DataTableColumn<OrgBusinessUnit>[] = [
     {
@@ -297,7 +331,12 @@ export default function BusinessUnitsPage() {
         <div className="flex items-center gap-1">
           {u.status === "ARCHIVED" ? (
             <>
-              <Button variant="ghost" size="sm" onClick={makeRestoreHandler(u)} title="Restore">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={makeRestoreHandler(u)}
+                title="Restore"
+              >
                 <RotateCcw className="h-4 w-4 text-primary" />
               </Button>
               <AnimatedIconButton
@@ -312,10 +351,20 @@ export default function BusinessUnitsPage() {
             </>
           ) : (
             <>
-              <Button variant="ghost" size="sm" onClick={makeSetEditingHandler(u)} title="Edit">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={makeSetEditingHandler(u)}
+                title="Edit"
+              >
                 <Pencil className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="sm" onClick={makeArchiveHandler(u)} title="Archive">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={makeArchiveHandler(u)}
+                title="Archive"
+              >
                 <Archive className="h-4 w-4 text-muted-foreground" />
               </Button>
             </>
@@ -351,100 +400,134 @@ export default function BusinessUnitsPage() {
 
   return (
     <RequireModule module="HR">
-    <PageWrapper
-      title="Business Units"
-      subtitle="Top-level divisions of your organization."
-      actions={
-        <div className="flex items-center gap-2">
-          <Button
-            variant={showArchived ? "secondary" : "outline"}
-            size="sm"
-            className="text-xs"
-            onClick={handleToggleArchived}
-          >
-            <Archive className="h-4 w-4 mr-1.5" />
-            {showArchived ? "Show Active" : `Archived (${archived.length})`}
-          </Button>
-          <AnimatedIconButton icon={PlusIcon} iconSize={16} iconClassName="mr-1.5" size="sm" onClick={handleOpenCreate}>
-            Add Business Unit
-          </AnimatedIconButton>
-        </div>
-      }
-      filters={
-        <div className={FILTER_TOOLBAR_ROW}>
-          <SearchInput placeholder="Search business units…" value={search} onValueChange={handleSearchInputChange} />
-        </div>
-      }
-    >
-      <DataTable
-        data={filtered}
-        columns={columns}
-        getRowKey={(u) => u.id}
-        isLoading={isLoading}
-        emptyState={emptyState}
-        rowClassName={(u) => cn(u.status === "ARCHIVED" && "opacity-60")}
-        minWidth="580px"
-        className="flex-1 min-h-0"
-      />
-
-      <Sheet open={showCreate} onOpenChange={setShowCreate}>
-        <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">
-          <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
-            <SheetTitle>New Business Unit</SheetTitle>
-          </SheetHeader>
-          <SheetBody className="px-6 py-5">
-            <BuForm onSubmit={handleCreate} isPending={create.isPending} />
-          </SheetBody>
-          <div className="shrink-0 px-6 py-4 border-t">
-            <div className="grid grid-cols-2 gap-2">
-              <SheetClose asChild>
-                <Button variant="outline" size="sm" className="w-full">Cancel</Button>
-              </SheetClose>
-              <LoadingButton size="sm" type="submit" form="bu-form" isPending={create.isPending} loadingText="Saving…" className="w-full">Save</LoadingButton>
-            </div>
+      <PageWrapper
+        title="Business Units"
+        subtitle="Top-level divisions of your organization."
+        mobileFiltersInline
+        actions={
+          <div className="flex w-full items-center gap-2 sm:w-auto">
+            <Button
+              variant={showArchived ? "secondary" : "outline"}
+              size="sm"
+              className="flex-1 text-xs sm:flex-none"
+              onClick={handleToggleArchived}
+            >
+              <Archive className="h-4 w-4 mr-1.5" />
+              {showArchived ? "Show Active" : `Archived (${archived.length})`}
+            </Button>
+            <AnimatedIconButton
+              icon={PlusIcon}
+              iconSize={16}
+              iconClassName="mr-1.5"
+              size="sm"
+              className="flex-1 sm:flex-none"
+              onClick={handleOpenCreate}
+            >
+              Add Business Unit
+            </AnimatedIconButton>
           </div>
-        </SheetContent>
-      </Sheet>
-
-      <Sheet open={!!editing} onOpenChange={handleEditSheetOpenChange}>
-        <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">
-          <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
-            <SheetTitle>Edit Business Unit</SheetTitle>
-          </SheetHeader>
-          <SheetBody className="px-6 py-5">
-            {editing && (
-              <BuForm
-                defaultValues={{
-                  name: editing.name,
-                  code: editing.code,
-                  description: editing.description ?? "",
-                }}
-                onSubmit={handleUpdate}
-                isPending={update.isPending}
-              />
-            )}
-          </SheetBody>
-          <div className="shrink-0 px-6 py-4 border-t">
-            <div className="grid grid-cols-2 gap-2">
-              <SheetClose asChild>
-                <Button variant="outline" size="sm" className="w-full">Cancel</Button>
-              </SheetClose>
-              <LoadingButton size="sm" type="submit" form="bu-form" isPending={update.isPending} loadingText="Saving…" className="w-full">Save</LoadingButton>
-            </div>
+        }
+        filters={
+          <div className="min-w-0 w-full flex-1 md:min-w-[160px] md:max-w-xs">
+            <SearchInput
+              value={search}
+              placeholder="Search business units…"
+              onValueChange={handleSearchInputChange}
+            />
           </div>
-        </SheetContent>
-      </Sheet>
+        }
+      >
+        <DataTable
+          data={filtered}
+          columns={columns}
+          getRowKey={(u) => u.id}
+          isLoading={isLoading}
+          emptyState={emptyState}
+          rowClassName={(u) => cn(u.status === "ARCHIVED" && "opacity-60")}
+          minWidth="580px"
+          className="flex-1 min-h-0"
+        />
 
-      <ConfirmDialog
-        open={!!deleting}
-        onOpenChange={handleDeleteDialogOpenChange}
-        title="Delete Business Unit"
-        description={`Permanently delete "${deleting?.name}"? This cannot be undone.`}
-        onConfirm={handleDelete}
-        isPending={remove.isPending}
-        destructive
-      />
-    </PageWrapper>
+        <Sheet open={showCreate} onOpenChange={setShowCreate}>
+          <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">
+            <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
+              <SheetTitle>New Business Unit</SheetTitle>
+            </SheetHeader>
+            <SheetBody className="px-6 py-5">
+              <BuForm onSubmit={handleCreate} isPending={create.isPending} />
+            </SheetBody>
+            <div className="shrink-0 px-6 py-4 border-t">
+              <div className="grid grid-cols-2 gap-2">
+                <SheetClose asChild>
+                  <Button variant="outline" size="sm" className="w-full">
+                    Cancel
+                  </Button>
+                </SheetClose>
+                <LoadingButton
+                  size="sm"
+                  type="submit"
+                  form="bu-form"
+                  isPending={create.isPending}
+                  loadingText="Saving…"
+                  className="w-full"
+                >
+                  Save
+                </LoadingButton>
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
+
+        <Sheet open={!!editing} onOpenChange={handleEditSheetOpenChange}>
+          <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">
+            <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
+              <SheetTitle>Edit Business Unit</SheetTitle>
+            </SheetHeader>
+            <SheetBody className="px-6 py-5">
+              {editing && (
+                <BuForm
+                  defaultValues={{
+                    name: editing.name,
+                    code: editing.code,
+                    description: editing.description ?? "",
+                  }}
+                  onSubmit={handleUpdate}
+                  isPending={update.isPending}
+                />
+              )}
+            </SheetBody>
+            <div className="shrink-0 px-6 py-4 border-t">
+              <div className="grid grid-cols-2 gap-2">
+                <SheetClose asChild>
+                  <Button variant="outline" size="sm" className="w-full">
+                    Cancel
+                  </Button>
+                </SheetClose>
+                <LoadingButton
+                  size="sm"
+                  type="submit"
+                  form="bu-form"
+                  isPending={update.isPending}
+                  loadingText="Saving…"
+                  className="w-full"
+                >
+                  Save
+                </LoadingButton>
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
+
+        <ConfirmDialog
+          open={!!deleting}
+          onOpenChange={handleDeleteDialogOpenChange}
+          title="Delete Business Unit"
+          description={`Permanently delete "${deleting?.name}"? This cannot be undone.`}
+          onConfirm={handleDelete}
+          isPending={remove.isPending}
+          destructive
+        />
+      </PageWrapper>
     </RequireModule>
   );
 }

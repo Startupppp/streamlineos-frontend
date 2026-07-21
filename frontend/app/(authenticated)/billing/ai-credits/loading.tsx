@@ -24,7 +24,7 @@ export default function AiCreditsLoading() {
           <div className="flex items-center justify-between">
             <Skeleton className="h-4 w-32" />
             <div className="flex items-center gap-2">
-              <Skeleton className="h-8 w-[90px] rounded-md" />
+              <Skeleton className="h-9 w-[110px] rounded-md" />
               <Skeleton className="h-8 w-8 rounded-md" />
             </div>
           </div>

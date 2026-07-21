@@ -11,7 +11,6 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
 import { SearchInput } from "@/components/ui/search-input";
-import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -174,6 +173,7 @@ export default function SessionsPage() {
     <PageWrapper
       title="Active Sessions"
       subtitle="Manage where you're signed in. Revoking a session signs you out on that device."
+      mobileFiltersInline
       actions={
         <AnimatedIconButton
           icon={LogoutIcon}
@@ -181,6 +181,7 @@ export default function SessionsPage() {
           iconClassName="mr-1.5"
           variant="outline"
           size="sm"
+          className="w-full sm:w-auto"
           onClick={handleRevokeAllClick}
           disabled={revokeAll.isPending || allSessions.filter((s) => !s.isCurrent).length === 0}
         >
@@ -188,36 +189,35 @@ export default function SessionsPage() {
         </AnimatedIconButton>
       }
       filters={
-        <div className={FILTER_TOOLBAR_ROW}>
-          <div className="min-w-[180px] max-w-[240px]">
-            <SearchInput placeholder="Search by device or IP…" value={search} onValueChange={handleSearchChange} />
-          </div>
+        <div className="min-w-0 w-full flex-1 md:min-w-[160px] md:max-w-xs">
+          <SearchInput placeholder="Search by device or IP…" value={search} onValueChange={handleSearchChange} />
         </div>
       }
     >
-      {isError ? (
-        <ErrorState
-          title="Couldn't load sessions"
-          description="Something went wrong while fetching your active sessions."
-          onRetry={handleRetry}
-          className="flex-1"
-        />
-      ) : (
-        <DataTable
-          key={pageSize}
-          data={filtered}
-          columns={columns}
-          getRowKey={(s) => s.id}
-          isLoading={isLoading}
-          emptyState={emptyState}
-          minWidth="600px"
-          className="flex-1 min-h-0"
-          pagination={{
-            pageSize,
-            onPageSizeChange: handlePageSizeChange,
-          }}
-        />
-      )}
+      <div className="flex flex-1 min-h-0 flex-col gap-3">
+        {isError ? (
+          <ErrorState
+            title="Couldn't load sessions"
+            description="Something went wrong while fetching your active sessions."
+            onRetry={handleRetry}
+          />
+        ) : (
+          <DataTable
+            key={pageSize}
+            data={filtered}
+            columns={columns}
+            getRowKey={(s) => s.id}
+            isLoading={isLoading}
+            emptyState={emptyState}
+            minWidth="600px"
+            className="flex-1 min-h-0"
+            pagination={{
+              pageSize,
+              onPageSizeChange: handlePageSizeChange,
+            }}
+          />
+        )}
+      </div>
 
       <ConfirmDialog
         open={!!revoking}
