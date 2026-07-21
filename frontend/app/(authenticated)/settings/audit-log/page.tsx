@@ -35,7 +35,6 @@ import { getInitials } from "@/lib/format-utils";
 const ACTION_COLORS: Record<string, string> = {
   "user.login": "bg-emerald-500/10 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
   "user.logout": "bg-muted text-muted-foreground border-border",
-  "user.password_reset": "bg-amber-500/10 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
   "user.deactivated": "bg-red-500/10 text-red-600 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
   "org.member_invited": "bg-blue-500/10 text-blue-600 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
   "org.member_removed": "bg-red-500/10 text-red-600 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
@@ -86,7 +85,6 @@ const ACTION_LABELS: Record<string, string> = {
   "user.registered": "User Registered",
   "user.login": "Login",
   "user.logout": "Logout",
-  "user.password_reset": "Password Reset",
   "user.deactivated": "User Deactivated",
   "org.member_invited": "Member Invited",
   "org.member_removed": "Member Removed",

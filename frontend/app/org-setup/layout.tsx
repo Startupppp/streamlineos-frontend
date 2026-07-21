@@ -2,6 +2,8 @@ import { ReactNode } from "react";
 import Link from "next/link";
 import { AnimatedLogo } from "@/features/landing/components/animated-logo";
 import { BRAND_NAME } from "@/lib/branding";
+import { ORG_SETUP_COL_PAD_X } from "@/features/org-setup/lib/constants";
+import { cn } from "@/lib/utils";
 
 export default function OrgSetupLayout({ children }: { children: ReactNode }) {
   return (
@@ -14,10 +16,15 @@ export default function OrgSetupLayout({ children }: { children: ReactNode }) {
       </a>
 
       <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <header className="flex shrink-0 items-center px-4 py-3.5 sm:px-8 md:hidden">
+        <header
+          className={cn(
+            "flex shrink-0 items-center py-3 md:hidden",
+            ORG_SETUP_COL_PAD_X,
+          )}
+        >
           <Link
             href="/"
-            className="flex min-h-10 items-center gap-2.5 group"
+            className="flex min-h-11 items-center gap-2.5 group"
             aria-label={BRAND_NAME}
           >
             <AnimatedLogo size={30} className="rounded-xl" />

@@ -10,7 +10,7 @@ import type { StepId } from "../lib/constants";
 type StepRailProps = {
   sequence: StepId[];
   currentIndex: number;
-  saveState: "idle" | "saving" | "saved";
+  saveState: "idle" | "saved";
   onStepSelect?: (index: number) => void;
 };
 
@@ -92,12 +92,7 @@ function StepRailInner({ sequence, currentIndex, saveState, onStepSelect }: Step
           className="flex min-h-4 items-center gap-1.5 text-[11px] text-muted-foreground"
           aria-live="polite"
         >
-          {saveState === "saving" ? (
-            <>
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-400" />
-              Saving…
-            </>
-          ) : saveState === "saved" ? (
+          {saveState === "saved" ? (
             <>
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
               Saved

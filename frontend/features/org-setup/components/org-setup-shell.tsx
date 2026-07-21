@@ -5,7 +5,7 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { ORG_SETUP_COL_PAD, STEP_SUBTITLES } from "../lib/constants";
 import type { StepId } from "../lib/constants";
 import { toPreviewSnapshot } from "../lib/preview-snapshot";
-import type { WizardData } from "../lib/types";
+import type { WizardData } from "../lib/wizard-data-schema";
 import { cn } from "@/lib/utils";
 import { StepRail } from "./step-rail";
 import { MobileProgressBar } from "./mobile-progress-bar";
@@ -16,7 +16,7 @@ type OrgSetupShellProps = {
   currentIndex: number;
   title: string;
   direction: number;
-  saveState: "idle" | "saving" | "saved";
+  saveState: "idle" | "saved";
   data: WizardData;
   onStepSelect?: (index: number) => void;
   children: ReactNode;
@@ -53,7 +53,7 @@ export function OrgSetupShell({
       <div className="relative flex h-full min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden md:w-1/2">
         <div
           className={cn(
-            "mx-auto flex h-full min-h-0 w-full min-w-0 max-w-lg flex-1 flex-col md:max-w-none",
+            "flex h-full min-h-0 w-full min-w-0 flex-1 flex-col",
             ORG_SETUP_COL_PAD,
           )}
         >

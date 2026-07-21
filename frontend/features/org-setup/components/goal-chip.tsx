@@ -22,7 +22,7 @@ type GoalChipProps = {
 };
 
 const CHIP_BASE =
-  "flex min-h-10 items-center gap-1.5 p-2 rounded-lg border text-left text-xs font-medium transition-colors press-scale";
+  "flex min-h-10 w-full items-center gap-1.5 p-2.5 rounded-lg border text-left text-xs font-medium transition-colors press-scale sm:min-h-10 sm:p-2";
 const CHIP_SELECTED =
   "border-brand-core bg-brand-core/10 text-brand-deep dark:bg-brand-core/15 dark:text-brand-bright";
 const CHIP_IDLE =

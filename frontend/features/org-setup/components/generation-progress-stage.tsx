@@ -46,7 +46,7 @@ export function GenerationProgressStage({
   const dashOffset = RING_CIRCUMFERENCE * (1 - progress / 100);
 
   return (
-    <div className="relative flex h-full min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain scrollbar-hide">
+    <div className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain scrollbar-hide">
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-brand-core/[0.07] via-brand-cyan/[0.03] to-transparent"
         aria-hidden
@@ -60,8 +60,8 @@ export function GenerationProgressStage({
         aria-hidden
       />
 
-      <div className="relative flex flex-col gap-5 pb-1">
-        <div className="flex flex-col items-center gap-4 pt-1 text-center">
+      <div className="relative flex min-w-0 flex-col gap-5 pb-1">
+        <div className="flex min-w-0 flex-col items-center gap-4 pt-1 text-center">
           <motion.div
             initial={reduceMotion ? false : { opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
@@ -170,8 +170,8 @@ export function GenerationProgressStage({
             </div>
           </motion.div>
 
-          <div className="w-full max-w-sm space-y-1.5 px-1">
-            <h2 className="font-display text-[1.35rem] font-extrabold leading-[1.1] tracking-[-0.03em] text-foreground text-balance sm:text-[1.5rem]">
+          <div className="w-full min-w-0 space-y-1.5 px-1 md:max-w-sm">
+            <h2 className="font-display text-[1.35rem] font-extrabold leading-[1.1] tracking-[-0.03em] text-foreground text-balance break-words sm:text-[1.5rem]">
               Assembling {workspaceLabel}
             </h2>
             <p
@@ -183,7 +183,7 @@ export function GenerationProgressStage({
           </div>
         </div>
 
-        <div className="space-y-2">
+        <div className="min-w-0 space-y-2">
           <div
             className="h-1.5 w-full overflow-hidden rounded-full bg-border/70"
             aria-hidden
@@ -210,7 +210,7 @@ export function GenerationProgressStage({
           </div>
         </div>
 
-        <ul className="space-y-1" aria-label="Setup progress">
+        <ul className="min-w-0 space-y-1" aria-label="Setup progress">
           {steps.map((label, index) => {
             const done = index < completedSteps || isComplete;
             const active = index === activeIndex;
@@ -227,7 +227,7 @@ export function GenerationProgressStage({
                   ease: PREVIEW_EASE,
                 }}
                 className={cn(
-                  "relative flex items-center gap-2.5 rounded-xl px-2.5 py-2 transition-colors duration-300",
+                  "relative flex min-w-0 items-center gap-2.5 rounded-xl px-2.5 py-2.5 transition-colors duration-300",
                   active &&
                     "bg-gradient-to-r from-brand-core/[0.12] via-brand-cyan/[0.06] to-transparent",
                   done && !active && "opacity-90",
@@ -245,7 +245,7 @@ export function GenerationProgressStage({
 
                 <span
                   className={cn(
-                    "relative min-w-0 text-[13px] tracking-tight transition-colors duration-300",
+                    "relative min-w-0 flex-1 truncate text-[13px] tracking-tight transition-colors duration-300",
                     done && "font-medium text-foreground",
                     active && "font-semibold text-brand-deep dark:text-brand-bright",
                     pending && "text-muted-foreground",
@@ -290,7 +290,7 @@ export function GenerationProgressStage({
                 size="sm"
                 variant="outline"
                 onClick={onRetry}
-                className="text-xs gap-1.5"
+                className="h-11 min-h-11 w-full gap-1.5 text-xs sm:h-9 sm:min-h-9 sm:w-auto"
               >
                 <RefreshCw className="h-3 w-3" />
                 Try again

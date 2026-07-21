@@ -346,7 +346,6 @@ export interface OnboardEmployeeInput {
   whatsappSameAsPhone?: boolean;
   whatsappNumber?: string;
   gender?: string;
-  password: string;
   designation: string;
   departmentId?: number;
   role: string;
@@ -374,7 +373,6 @@ export interface BulkOnboardEmployeeRow {
   whatsappSameAsPhone?: boolean;
   whatsappNumber?: string;
   gender?: "MALE" | "FEMALE" | "OTHER";
-  password?: string;
   designation: string;
   departmentId?: number;
   department?: string;

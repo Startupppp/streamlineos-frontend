@@ -7,8 +7,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { useUpdateUserStatus, useDeleteUser, useResetUserPassword } from "@/hooks/api/users";
+import {
+  useUpdateUserStatus,
+  useDeleteUser,
+  useSendSigninLink,
+} from "@/hooks/api/users";
 import type { User } from "@/hooks/api/users";
 import { getApiError } from "@/lib/api-client";
 import { toast } from "sonner";
@@ -22,29 +25,40 @@ interface UserActionsMenuProps {
 }
 
 export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
-  const { mutate: updateStatus, isPending: isUpdatingStatus } = useUpdateUserStatus();
+  const { mutate: updateStatus, isPending: isUpdatingStatus } =
+    useUpdateUserStatus();
   const { mutate: deleteUser, isPending: isDeleting } = useDeleteUser();
-  const { mutate: resetPassword, isPending: isResettingPassword } = useResetUserPassword();
+  const { mutate: resetPassword, isPending: isResettingPassword } =
+    useSendSigninLink();
 
   function handleActivate() {
-    updateStatus({ userId: user.id, status: "active" }, {
-      onSuccess: () => toast.success("User activated"),
-      onError: (e) => toast.error(getApiError(e)),
-    });
+    updateStatus(
+      { userId: user.id, status: "active" },
+      {
+        onSuccess: () => toast.success("User activated"),
+        onError: (e) => toast.error(getApiError(e)),
+      },
+    );
   }
 
   function handleSuspend() {
-    updateStatus({ userId: user.id, status: "suspended" }, {
-      onSuccess: () => toast.success("User suspended"),
-      onError: (e) => toast.error(getApiError(e)),
-    });
+    updateStatus(
+      { userId: user.id, status: "suspended" },
+      {
+        onSuccess: () => toast.success("User suspended"),
+        onError: (e) => toast.error(getApiError(e)),
+      },
+    );
   }
 
   function handleArchive() {
-    updateStatus({ userId: user.id, status: "archived" }, {
-      onSuccess: () => toast.success("User archived"),
-      onError: (e) => toast.error(getApiError(e)),
-    });
+    updateStatus(
+      { userId: user.id, status: "archived" },
+      {
+        onSuccess: () => toast.success("User archived"),
+        onError: (e) => toast.error(getApiError(e)),
+      },
+    );
   }
 
   function handleDelete() {
@@ -56,7 +70,8 @@ export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
 
   function handleResetPassword() {
     resetPassword(user.id, {
-      onSuccess: (r) => toast.success(`Password reset email sent to ${r.email}`),
+      onSuccess: (r) =>
+        toast.success(`Password reset email sent to ${r.email}`),
       onError: (e) => toast.error(getApiError(e)),
     });
   }
@@ -66,7 +81,14 @@ export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <AnimatedIconButton icon={EllipsisIcon} iconSize={16} variant="ghost" size="sm" className="h-7 w-7 p-0" disabled={isLoading}>
+        <AnimatedIconButton
+          icon={EllipsisIcon}
+          iconSize={16}
+          variant="ghost"
+          size="sm"
+          className="h-7 w-7 p-0"
+          disabled={isLoading}
+        >
           <span className="sr-only">Actions</span>
         </AnimatedIconButton>
       </DropdownMenuTrigger>
@@ -94,9 +116,7 @@ export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
           Reset password
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem variant="destructive"
-          onClick={handleDelete}
-        >
+        <DropdownMenuItem variant="destructive" onClick={handleDelete}>
           <Trash2 className="h-3.5 w-3.5 mr-2" />
           Delete user
         </DropdownMenuItem>

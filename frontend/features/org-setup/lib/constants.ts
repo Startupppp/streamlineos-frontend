@@ -1,11 +1,15 @@
-import type { WizardData } from "./types";
+import type { WizardData } from "./wizard-data-schema";
 
 export const DRAFT_KEY = "org-setup-draft";
-export const WELCOME_POP_KEY = "org-setup-welcome-pending";
-export const WELCOME_POP_NAME_KEY = "org-setup-welcome-name";
+
+export const ORG_SETUP_COL_PAD_X =
+  "px-4 sm:px-6 md:px-8 lg:px-10";
+
+export const ORG_SETUP_COL_PAD_Y =
+  "py-3 sm:py-4 md:py-5 lg:py-6";
 
 export const ORG_SETUP_COL_PAD =
-  "px-3 py-3 sm:px-4 sm:py-3 md:px-5 md:py-4 lg:px-6 lg:py-5";
+  ORG_SETUP_COL_PAD_X + " " + ORG_SETUP_COL_PAD_Y;
 
 export type StepId = "welcome" | "basics" | "invite";
 
@@ -171,6 +175,5 @@ export const DEFAULT_DATA: WizardData = {
   phone: "",
   installedApps: DEFAULT_APPS,
   modules: DEFAULT_APPS,
-  startingData: "clean",
   invitees: [],
 };

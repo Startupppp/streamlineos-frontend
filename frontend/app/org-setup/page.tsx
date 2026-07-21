@@ -30,7 +30,10 @@ import {
   clampStep,
   hasDraftProgress,
 } from "@/features/org-setup/lib/draft";
-import type { WizardData } from "@/features/org-setup/lib/types";
+import {
+  parseWizardDraft,
+  type WizardData,
+} from "@/features/org-setup/lib/wizard-data-schema";
 import { OrgSetupShell } from "@/features/org-setup/components/org-setup-shell";
 import { StepWelcome } from "@/features/org-setup/components/step-welcome";
 import { StepBasics } from "@/features/org-setup/components/step-basics";
@@ -39,54 +42,6 @@ import { StepInviteLaunch } from "@/features/org-setup/components/step-invite-la
 function syncAppsFromGoals(data: WizardData): WizardData {
   const derived = deriveAppsFromGoals(data.goals);
   return { ...data, installedApps: derived, modules: derived };
-}
-
-function parseServerWizardData(
-  raw: Record<string, unknown>,
-): Partial<WizardData> {
-  const next: Partial<WizardData> = {};
-  if (Array.isArray(raw.goals))
-    next.goals = raw.goals.filter((g): g is string => typeof g === "string");
-
-  if (typeof raw.industry === "string") next.industry = raw.industry;
-  if (typeof raw.companyName === "string") next.companyName = raw.companyName;
-  if (typeof raw.teamSize === "string") next.teamSize = raw.teamSize;
-  if (typeof raw.country === "string") next.country = raw.country;
-  if (typeof raw.timezone === "string") next.timezone = raw.timezone;
-  if (typeof raw.phone === "string") next.phone = raw.phone;
-  if (typeof raw.currency === "string") next.currency = raw.currency;
-  if (typeof raw.fiscalYearStart === "string")
-    next.fiscalYearStart = raw.fiscalYearStart;
-  if (typeof raw.businessAddress === "string")
-    next.businessAddress = raw.businessAddress;
-  if (typeof raw.taxId === "string") next.taxId = raw.taxId;
-  if (Array.isArray(raw.installedApps)) {
-    next.installedApps = raw.installedApps.filter(
-      (m): m is string => typeof m === "string",
-    );
-  }
-  if (Array.isArray(raw.modules)) {
-    next.modules = raw.modules.filter(
-      (m): m is string => typeof m === "string",
-    );
-  }
-  if (
-    raw.startingData === "clean" ||
-    raw.startingData === "sample" ||
-    raw.startingData === "import"
-  ) {
-    next.startingData = raw.startingData;
-  }
-  if (Array.isArray(raw.invitees)) {
-    next.invitees = raw.invitees.filter(
-      (v): v is WizardData["invitees"][number] =>
-        typeof v === "object" &&
-        v !== null &&
-        typeof (v as { email?: unknown }).email === "string" &&
-        typeof (v as { role?: unknown }).role === "string",
-    );
-  }
-  return next;
 }
 
 export default function OrgSetupPage() {
@@ -99,9 +54,7 @@ export default function OrgSetupPage() {
   const [isSkipping, setIsSkipping] = useState(false);
   const [direction, setDirection] = useState(1);
   const [data, setData] = useState<WizardData>({ ...DEFAULT_DATA });
-  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">(
-    "idle",
-  );
+  const [saveState, setSaveState] = useState<"idle" | "saved">("idle");
   const exitedRef = useRef(false);
   const hydratedFromServerRef = useRef(false);
 
@@ -194,8 +147,7 @@ export default function OrgSetupPage() {
     if (hasDraftProgress(localDraft)) return;
     if (serverSession.status !== "in_progress" || !serverSession.data) return;
 
-    const serverData = parseServerWizardData(serverSession.data);
-    const merged = syncAppsFromGoals({ ...DEFAULT_DATA, ...serverData });
+    const merged = syncAppsFromGoals(parseWizardDraft(serverSession.data));
     if (!hasDraftProgress(merged)) return;
 
     const mergedSequence = getStepSequence(merged.goals);

@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { INVITE_ROLES } from "../lib/constants";
-import type { Invitee, WizardData } from "../lib/types";
+import type { Invitee, WizardData } from "../lib/wizard-data-schema";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { StepGeneration } from "./step-generation";
 import { NavButtons } from "./nav-buttons";
@@ -22,11 +22,15 @@ import { StepBody } from "./step-body";
 
 type StepInviteLaunchProps = {
   data: WizardData;
-  onChangeInvitees: (invitees: Invitee[]) => void;
   onBack: () => void;
+  onChangeInvitees: (invitees: Invitee[]) => void;
 };
 
-export function StepInviteLaunch({ data, onChangeInvitees, onBack }: StepInviteLaunchProps) {
+export function StepInviteLaunch({
+  data,
+  onChangeInvitees,
+  onBack,
+}: StepInviteLaunchProps) {
   const reduceMotion = useReducedMotion();
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<string>(INVITE_ROLES[0] ?? "ADMIN");
@@ -35,7 +39,10 @@ export function StepInviteLaunch({ data, onChangeInvitees, onBack }: StepInviteL
   function handleAdd() {
     const trimmed = email.trim();
     if (!trimmed || !trimmed.includes("@")) return;
-    if (data.invitees.some((i) => i.email.toLowerCase() === trimmed.toLowerCase())) return;
+    if (
+      data.invitees.some((i) => i.email.toLowerCase() === trimmed.toLowerCase())
+    )
+      return;
     onChangeInvitees([...data.invitees, { email: trimmed, role }]);
     setEmail("");
   }
@@ -55,9 +62,7 @@ export function StepInviteLaunch({ data, onChangeInvitees, onBack }: StepInviteL
     return () => window.clearTimeout(id);
   }, [phase]);
 
-  if (phase === "generating") {
-    return <StepGeneration data={data} />;
-  }
+  if (phase === "generating") return <StepGeneration data={data} />;
 
   const isPending = phase === "pending";
 
@@ -78,13 +83,13 @@ export function StepInviteLaunch({ data, onChangeInvitees, onBack }: StepInviteL
         Invite teammates now, or skip and invite them later from Settings.
       </p>
 
-      <div className="flex flex-col gap-2 sm:flex-row">
+      <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-stretch">
         <Input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="teammate@company.com"
-          className="flex-1 text-sm"
+          className="min-w-0 w-full flex-1 text-sm sm:h-10"
           disabled={isPending}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
@@ -93,9 +98,9 @@ export function StepInviteLaunch({ data, onChangeInvitees, onBack }: StepInviteL
             }
           }}
         />
-        <div className="flex gap-2">
+        <div className="flex min-w-0 gap-2 sm:w-auto sm:shrink-0">
           <Select value={role} onValueChange={setRole} disabled={isPending}>
-            <SelectTrigger className="flex-1 text-sm sm:w-28 sm:flex-initial">
+            <SelectTrigger className="min-w-0 flex-1 text-sm sm:w-32 sm:flex-initial">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
@@ -110,7 +115,7 @@ export function StepInviteLaunch({ data, onChangeInvitees, onBack }: StepInviteL
             type="button"
             size="icon"
             variant="outline"
-            className="h-9 w-9 shrink-0"
+            className="w-11 shrink-0 sm:w-10"
             onClick={handleAdd}
             disabled={isPending}
             aria-label="Add invitee"
@@ -121,23 +126,28 @@ export function StepInviteLaunch({ data, onChangeInvitees, onBack }: StepInviteL
       </div>
 
       {data.invitees.length > 0 && (
-        <ul className="space-y-1.5">
+        <ul className="min-w-0 space-y-1.5">
           {data.invitees.map((invitee, i) => (
             <motion.li
               key={invitee.email}
               initial={{ opacity: 0, x: reduceMotion ? 0 : -6 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.03, duration: 0.2, ease: "easeOut" }}
-              className="flex items-center justify-between gap-2 rounded-xl border border-border/80 bg-background/50 px-3 py-2"
+              className="flex min-w-0 items-center justify-between gap-2 rounded-xl border border-border/80 bg-background/50 px-3 py-2"
             >
-              <TruncatedText text={invitee.email} className="text-[13px]" />
-              <div className="flex shrink-0 items-center gap-2">
-                <span className="text-xs text-muted-foreground">{invitee.role}</span>
+              <TruncatedText
+                text={invitee.email}
+                className="min-w-0 text-[13px]"
+              />
+              <div className="flex shrink-0 items-center gap-1">
+                <span className="text-xs text-muted-foreground">
+                  {invitee.role}
+                </span>
                 <button
                   type="button"
                   onClick={() => handleRemove(invitee.email)}
                   disabled={isPending}
-                  className="text-muted-foreground transition-colors hover:text-destructive disabled:pointer-events-none disabled:opacity-50"
+                  className="inline-flex w-9 items-center justify-center text-muted-foreground transition-colors hover:text-destructive disabled:pointer-events-none disabled:opacity-50 sm:h-9 sm:w-9"
                   aria-label={`Remove ${invitee.email}`}
                 >
                   <X className="h-3.5 w-3.5" />

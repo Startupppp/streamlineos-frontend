@@ -1,4 +1,4 @@
-import type { WizardData } from "./types";
+import type { WizardData } from "./wizard-data-schema";
 
 export type WorkspacePreviewSnapshot = {
   companyName: string;

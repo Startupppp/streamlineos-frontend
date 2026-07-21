@@ -10,7 +10,6 @@ export interface OrgSettings {
   currency: string | null;
   fiscalYearStart: number | null;
   mfaEnforced?: boolean;
-  passwordExpiryDays?: number | null;
   allowedEmailDomains?: string[] | null;
   maxConcurrentSessions?: number | null;
   settings?: Record<string, unknown> | null;

@@ -41,7 +41,6 @@ export function useAcceptInvitation() {
   return useMutation({
     mutationFn: (variables: {
       token: string;
-      password?: string;
       firstName?: string;
       lastName?: string;
     }) =>

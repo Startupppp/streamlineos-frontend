@@ -11,13 +11,9 @@ import { clearAll } from "@/features/org-setup/lib/draft";
 import { useCompleteOrgSetupMutation, type OrgSetupPayload } from "@/lib/api/hooks/org";
 import { useGenerateWorkspace } from "@/hooks/api/workspace-onboarding";
 import { useBulkInviteUsers } from "@/hooks/api/users";
-import type { Invitee, WizardData } from "../lib/types";
-import {
-  DEFAULT_APPS,
-  GENERATION_STEPS,
-  WELCOME_POP_KEY,
-  WELCOME_POP_NAME_KEY,
-} from "../lib/constants";
+import { WELCOME_POP_KEY, WELCOME_POP_NAME_KEY } from "@/lib/welcome-pop";
+import type { Invitee, WizardData } from "../lib/wizard-data-schema";
+import { DEFAULT_APPS, GENERATION_STEPS } from "../lib/constants";
 import { GenerationProgressStage } from "./generation-progress-stage";
 import { WelcomeCelebration } from "./welcome-celebration";
 
@@ -74,9 +70,9 @@ export function StepGeneration({ data }: StepGenerationProps) {
 
   function buildPayload(d: WizardData): OrgSetupPayload {
     return {
-      industry: d.industry || "IT Services",
+      industry: d.industry,
       companyName: d.companyName,
-      companySize: d.teamSize || "1-10",
+      companySize: d.teamSize,
       ...(d.country ? { country: d.country } : {}),
       ...(d.timezone ? { timezone: d.timezone } : {}),
       phone: d.phone,

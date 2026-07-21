@@ -24,8 +24,13 @@ import {
 } from "@/components/ui/select";
 import type { ZodIssue } from "zod";
 import { basicsStepSchema } from "../lib/basics-schema";
-import { GOALS, INDUSTRIES, INDUSTRY_TEMPLATE_HINTS, TEAM_SIZES } from "../lib/constants";
-import type { WizardData } from "../lib/types";
+import {
+  GOALS,
+  INDUSTRIES,
+  INDUSTRY_TEMPLATE_HINTS,
+  TEAM_SIZES,
+} from "../lib/constants";
+import type { WizardData } from "../lib/wizard-data-schema";
 import { GoalChip } from "./goal-chip";
 import { NavButtons } from "./nav-buttons";
 import { StepBody } from "./step-body";
@@ -66,12 +71,22 @@ function InlineError({ id, message }: { id: string; message: string | null }) {
   );
 }
 
-function fieldError(attempted: boolean, issues: ZodIssue[], key: string): string | null {
+function fieldError(
+  attempted: boolean,
+  issues: ZodIssue[],
+  key: string,
+): string | null {
   if (!attempted) return null;
   return issues.find((issue) => issue.path[0] === key)?.message ?? null;
 }
 
-export function StepBasics({ data, patch, onToggleGoal, onBack, onNext }: StepBasicsProps) {
+export function StepBasics({
+  data,
+  patch,
+  onToggleGoal,
+  onBack,
+  onNext,
+}: StepBasicsProps) {
   const [attempted, setAttempted] = useState(false);
   const [otherSelected, setOtherSelected] = useState(
     () => data.industry.trim() !== "" && !INDUSTRIES.includes(data.industry),
@@ -147,12 +162,14 @@ export function StepBasics({ data, patch, onToggleGoal, onBack, onNext }: StepBa
 
   return (
     <StepBody footer={<NavButtons onBack={onBack} onNext={handleNext} />}>
-      <section className="space-y-2">
-        <p className="text-[13px] font-semibold text-foreground">What do you want to get done? *</p>
+      <section className="min-w-0 space-y-2">
+        <p className="text-[13px] font-semibold text-foreground">
+          What do you want to get done? *
+        </p>
         <div
           role="group"
           aria-label="What do you want to get done?"
-          className="grid grid-cols-2 gap-1.5 sm:grid-cols-3"
+          className="grid min-w-0 grid-cols-2 gap-1.5 sm:grid-cols-3"
         >
           {GOALS.map((goal) => {
             const selected = data.goals.includes(goal.id);
@@ -170,21 +187,33 @@ export function StepBasics({ data, patch, onToggleGoal, onBack, onNext }: StepBa
           })}
         </div>
         <p className="text-xs text-muted-foreground">
-          We&apos;ll enable matching modules (Chat &amp; Knowledge always included). You can change
-          modules later in Settings.
+          We&apos;ll enable matching modules (Chat &amp; Knowledge always
+          included). You can change modules later in Settings.
         </p>
         <InlineError id="goals-error" message={errors.goals} />
       </section>
 
-      <section className="space-y-2">
-        <Label htmlFor="industry-select" className="text-[13px] font-semibold text-foreground">
+      <section className="min-w-0 space-y-2">
+        <Label
+          htmlFor="industry-select"
+          className="text-[13px] font-semibold text-foreground"
+        >
           Industry *
         </Label>
-        <div className={otherSelected ? "grid grid-cols-1 gap-2 sm:grid-cols-2" : "w-full"}>
-          <Select value={industrySelectValue} onValueChange={handleIndustrySelect}>
+        <div
+          className={
+            otherSelected
+              ? "grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2"
+              : "w-full min-w-0"
+          }
+        >
+          <Select
+            value={industrySelectValue}
+            onValueChange={handleIndustrySelect}
+          >
             <SelectTrigger
               id="industry-select"
-              className="w-full text-sm"
+              className="h-11 w-full text-sm sm:h-10"
               aria-invalid={!!errors.industry}
               aria-describedby={errors.industry ? "industry-error" : undefined}
             >
@@ -205,20 +234,22 @@ export function StepBasics({ data, patch, onToggleGoal, onBack, onNext }: StepBa
               onChange={(e) => patch({ industry: e.target.value })}
               placeholder="Your industry"
               aria-label="Your industry"
-              className="text-sm"
+              className="w-full text-sm"
             />
           )}
         </div>
         {industryHint && (
-          <p className="text-xs text-muted-foreground">We&apos;ll set up: {industryHint}</p>
+          <p className="text-xs text-muted-foreground">
+            We&apos;ll set up: {industryHint}
+          </p>
         )}
         <InlineError id="industry-error" message={errors.industry} />
       </section>
 
-      <section className="space-y-2">
+      <section className="min-w-0 space-y-2">
         <p className="text-[13px] font-semibold text-foreground">Company</p>
-        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-          <div className="space-y-1">
+        <div className="grid min-w-0 grid-cols-1 gap-2.5 sm:grid-cols-2">
+          <div className="min-w-0 space-y-1">
             <Label htmlFor="company-name" className="text-xs">
               Company name *
             </Label>
@@ -227,19 +258,26 @@ export function StepBasics({ data, patch, onToggleGoal, onBack, onNext }: StepBa
               value={data.companyName}
               onChange={(e) => patch({ companyName: e.target.value })}
               placeholder="Acme Corp"
-              className="text-sm"
+              className="w-full text-sm"
               aria-invalid={!!errors.companyName}
-              aria-describedby={errors.companyName ? "company-name-error" : undefined}
+              aria-describedby={
+                errors.companyName ? "company-name-error" : undefined
+              }
             />
             <InlineError id="company-name-error" message={errors.companyName} />
           </div>
-          <div className="space-y-1">
+          <div className="min-w-0 space-y-1">
             <Label className="text-xs">Team size *</Label>
-            <Select onValueChange={(v) => patch({ teamSize: v })} value={data.teamSize}>
+            <Select
+              onValueChange={(v) => patch({ teamSize: v })}
+              value={data.teamSize}
+            >
               <SelectTrigger
-                className="text-sm"
+                className="w-full text-sm"
                 aria-invalid={!!errors.teamSize}
-                aria-describedby={errors.teamSize ? "team-size-error" : undefined}
+                aria-describedby={
+                  errors.teamSize ? "team-size-error" : undefined
+                }
               >
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
@@ -253,10 +291,10 @@ export function StepBasics({ data, patch, onToggleGoal, onBack, onNext }: StepBa
             </Select>
             <InlineError id="team-size-error" message={errors.teamSize} />
           </div>
-          <div className="space-y-1">
+          <div className="min-w-0 space-y-1">
             <Label className="text-xs">Country</Label>
             <Select onValueChange={handleCountrySelect} value={data.country}>
-              <SelectTrigger className="text-sm">
+              <SelectTrigger className="w-full text-sm">
                 <SelectValue placeholder="Select country" />
               </SelectTrigger>
               <SelectContent className="max-h-[200px] min-w-[var(--radix-select-trigger-width)]">
@@ -268,10 +306,12 @@ export function StepBasics({ data, patch, onToggleGoal, onBack, onNext }: StepBa
               </SelectContent>
             </Select>
             {selectedCountryTimezone && (
-              <p className="text-xs text-muted-foreground">Timezone: {selectedCountryTimezone}</p>
+              <p className="min-w-0 truncate text-xs text-muted-foreground">
+                Timezone: {selectedCountryTimezone}
+              </p>
             )}
           </div>
-          <div className="space-y-1">
+          <div className="min-w-0 space-y-1">
             <Label htmlFor="org-phone" className="text-xs">
               Mobile number *
             </Label>
@@ -282,13 +322,16 @@ export function StepBasics({ data, patch, onToggleGoal, onBack, onNext }: StepBa
               maxLength={17}
               value={data.phone}
               onChange={handlePhoneChange}
+              className="w-full"
               aria-invalid={!!errors.phone}
               aria-describedby={errors.phone ? "org-phone-error" : undefined}
             />
             <InlineError id="org-phone-error" message={errors.phone} />
           </div>
         </div>
-        <p className="text-xs text-muted-foreground">You can change all of this later in Settings.</p>
+        <p className="text-xs text-muted-foreground">
+          You can change all of this later in Settings.
+        </p>
       </section>
     </StepBody>
   );

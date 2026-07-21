@@ -180,20 +180,6 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
           )}
         />
       )}
-      <FormField
-        control={form.control}
-        name="password"
-        render={({ field }) => (
-          <FormItem className="sm:col-span-2">
-            <FormLabel>Initial Password</FormLabel>
-            <FormControl>
-              <Input type="password" placeholder="Leave blank for invite link" {...field} />
-            </FormControl>
-            <FormDescription className="text-xs">Optional. Ignored if the email belongs to an existing account — that user keeps their current password.</FormDescription>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
     </div>
   );
 }

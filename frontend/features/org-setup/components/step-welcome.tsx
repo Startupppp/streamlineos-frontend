@@ -39,14 +39,15 @@ export function StepWelcome({
             Birth your workspace on{" "}
             <span className="brand-sweep">{BRAND_NAME}</span>
           </h1>
-          <p className="max-w-md text-sm leading-relaxed text-muted-foreground sm:text-[15px]">
-            A few questions shape your modules, defaults, and team invites — then you land ready to run.
+          <p className="w-full text-sm leading-relaxed text-muted-foreground sm:max-w-md sm:text-[15px]">
+            A few questions shape your modules, defaults, and team invites —
+            then you land ready to run.
           </p>
         </div>
 
-        <div className="space-y-2 pt-1">
+        <div className="w-full min-w-0 space-y-2 pt-1">
           <Button
-            className="h-11 w-full gap-1.5 text-sm sm:h-10"
+            className="h-11 min-h-11 w-full gap-1.5 text-sm sm:h-10 sm:min-h-10"
             onClick={onNext}
             disabled={isSkipping}
           >
@@ -55,7 +56,7 @@ export function StepWelcome({
           </Button>
           <LoadingButton
             variant="ghost"
-            className="h-10 w-full text-sm text-muted-foreground hover:text-foreground sm:h-9"
+            className="h-11 min-h-11 w-full text-sm text-muted-foreground hover:text-foreground sm:h-10 sm:min-h-10"
             onClick={onSkip}
             isPending={isSkipping}
             loadingText="Setting up defaults…"

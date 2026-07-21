@@ -3,10 +3,7 @@
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { PartyPopper } from "lucide-react";
-import {
-  WELCOME_POP_KEY,
-  WELCOME_POP_NAME_KEY,
-} from "@/features/org-setup/lib/constants";
+import { WELCOME_POP_KEY, WELCOME_POP_NAME_KEY } from "@/lib/welcome-pop";
 
 export function WelcomeToast() {
   useEffect(() => {

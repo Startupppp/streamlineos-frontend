@@ -217,16 +217,13 @@ export async function proxy(req: NextRequest) {
     const hasOrg = Boolean(token.orgId);
     const orgSetupDone = Boolean(req.cookies.get("org-setup-done")?.value);
     const onboardingDone = Boolean(req.cookies.get("onboarding-done")?.value);
-    // Single source of truth for the org-setup gate. The /org-setup exit is the
-    // exact inverse of the /dashboard entry check, so the two can never disagree
-    // (which is what would create an /org-setup ⇄ /dashboard redirect loop).
-    const needsOrgSetup =
-      !hasOrg || (isOrgOwner && !token.orgOnboardingCompletedAt);
+    // No workspace ALWAYS forces /org-setup; the durable skip/done cookie only suppresses the nag for an owner who has an org but hasn't finished the wizard. Entry and exit share `forceOrgSetup`, so they can never disagree (no /org-setup ⇄ /dashboard loop).
+    const ownerSetupPending = isOrgOwner && !token.orgOnboardingCompletedAt;
+    const forceOrgSetup = !hasOrg || (ownerSetupPending && !orgSetupDone);
 
     if (matchesRoute(pathname, "/org-setup")) {
       if (isPlatformAdmin) return redirectTo(req, OWNER_HOME);
-      // Never keep a user on onboarding once they have a usable workspace.
-      if (!needsOrgSetup || orgSetupDone) return redirectTo(req, "/dashboard");
+      if (!forceOrgSetup) return redirectTo(req, "/dashboard");
     } else if (matchesRoute(pathname, "/onboarding")) {
       if (isPlatformAdmin) return redirectTo(req, OWNER_HOME);
       if (!hasOrg) return redirectTo(req, "/org-setup");
@@ -240,7 +237,7 @@ export async function proxy(req: NextRequest) {
     ) {
       return redirectTo(req, OWNER_HOME);
     } else if (isProtected && !isPlatformAdmin) {
-      if (needsOrgSetup && !orgSetupDone) return redirectTo(req, "/org-setup");
+      if (forceOrgSetup) return redirectTo(req, "/org-setup");
 
       if (
         !isOrgOwner &&

@@ -37,13 +37,6 @@ export const onboardEmployeeInputSchema = z.object({
     .string()
     .refine((val) => !val || isValidPhoneNumber(val), "Please enter a valid WhatsApp number")
     .optional(),
-  password: z
-    .string()
-    .max(128, "Password must be at most 128 characters")
-    .refine((val) => !val || val.length >= 8, {
-      message: "Password must be at least 8 characters",
-    })
-    .optional(),
   designation: z
     .string()
     .trim()

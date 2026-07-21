@@ -82,7 +82,7 @@ export function OnboardingWizard() {
     defaultValues: {
       firstName: "", lastName: "", email: "", phone: "",
       whatsappSameAsPhone: true, whatsappNumber: "", gender: "MALE",
-      password: "", designation: "", departmentId: undefined,
+      designation: "", departmentId: undefined,
       role: "ENGINEERING", employeeId: "", joiningDate: new Date(),
       dateOfBirth: undefined,
       taxId: "", monthlySalary: undefined,
@@ -135,7 +135,6 @@ export function OnboardingWizard() {
           firstName: toTitleCase(data.firstName),
           lastName: toTitleCase(data.lastName),
           designation: formatDesignation(data.designation),
-          password: data.password ?? "",
         },
         {
           onSuccess: (result) => {

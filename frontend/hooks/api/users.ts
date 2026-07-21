@@ -583,9 +583,9 @@ export const useBulkUpdateUsers = () => {
   });
 };
 
-export const useResetUserPassword = () => {
+export const useSendSigninLink = () => {
   return useMutation<{ success: boolean; email: string }, Error, string>({
-    mutationFn: (userId) => apiClient.post<{ success: boolean; email: string }>(`/users/${userId}/reset-password`, {}),
+    mutationFn: (userId) => apiClient.post<{ success: boolean; email: string }>(`/users/${userId}/send-signin-link`, {}),
   });
 };
 
