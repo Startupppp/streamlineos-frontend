@@ -5,7 +5,7 @@ import {
 } from "@/lib/theme/app-themes";
 
 export function AppThemeScript({ nonce }: { nonce?: string }) {
-  const script = `try{if(location.pathname.indexOf("/onboarding")!==0){var d=document.documentElement;var t=localStorage.getItem(${JSON.stringify(
+  const script = `try{if(location.pathname.indexOf("/employee-onboarding")!==0){var d=document.documentElement;var t=localStorage.getItem(${JSON.stringify(
     APP_THEME_STORAGE_KEY,
   )});if(t&&${JSON.stringify(
     getSelectableThemeIds(),
