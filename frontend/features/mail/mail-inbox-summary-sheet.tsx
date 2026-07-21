@@ -47,9 +47,9 @@ export function MailInboxSummarySheet({
     <Sheet open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
       <SheetContent className="p-0 flex flex-col gap-0 sm:max-w-lg overflow-hidden">
         <SheetHeader className="shrink-0 border-b border-border px-6 py-4">
-          <SheetTitle className="text-base font-semibold">Inbox summary</SheetTitle>
+          <SheetTitle className="text-base font-semibold">What needs me</SheetTitle>
           <SheetDescription className="text-[13px] text-muted-foreground">
-            AI-generated overview of your inbox. Review before acting.
+            AI triage of your inbox — highlights and action items. Review before acting; never auto-sends.
           </SheetDescription>
         </SheetHeader>
 

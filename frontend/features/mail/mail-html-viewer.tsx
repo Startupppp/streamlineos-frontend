@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import DOMPurify from "isomorphic-dompurify";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 const BLOCKED_ATTR = "data-blocked-src";
@@ -82,7 +83,7 @@ export function MailHtmlViewer({ html, className }: MailHtmlViewerProps) {
   const handleLoadImages = useCallback(() => setAllowImages(true), []);
 
   return (
-    <div className={className}>
+    <div className={cn("min-w-0", className)}>
       {blockedCount > 0 && (
         <div className="flex items-center gap-2 mb-3 px-3 py-1.5 rounded-md bg-muted/60 border border-border/40 text-[11px] text-muted-foreground">
           <span>
@@ -100,9 +101,14 @@ export function MailHtmlViewer({ html, className }: MailHtmlViewerProps) {
         </div>
       )}
       <div
-        className="mail-html-body prose prose-sm dark:prose-invert max-w-none text-[13px] text-foreground break-words [&_a]:text-blue-600 [&_a]:underline dark:[&_a]:text-blue-400 [&_img]:max-w-full [&_img]:rounded [&_table]:max-w-full [&_table]:overflow-x-auto [&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground"
-        dangerouslySetInnerHTML={{ __html: sanitized }}
-      />
+        className="mail-html-frame overflow-x-auto rounded-lg border border-border/50 bg-white text-neutral-900 shadow-sm"
+        style={{ colorScheme: "light" }}
+      >
+        <div
+          className="mail-html-body prose prose-sm max-w-none px-4 py-3 text-[13px] leading-relaxed text-neutral-900 break-words [&_a]:text-blue-600 [&_a]:underline [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded [&_table]:max-w-full [&_table]:overflow-x-auto [&_td]:align-top [&_th]:align-top [&_blockquote]:border-l-2 [&_blockquote]:border-neutral-300 [&_blockquote]:pl-3 [&_blockquote]:text-neutral-600"
+          dangerouslySetInnerHTML={{ __html: sanitized }}
+        />
+      </div>
     </div>
   );
 }

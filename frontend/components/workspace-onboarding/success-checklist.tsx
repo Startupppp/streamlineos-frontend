@@ -64,7 +64,7 @@ function persistDismissed(orgId: string | null | undefined): void {
 }
 
 const TOTAL = 5;
-const RING_RADIUS = 24;
+const RING_RADIUS = 18;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
 const SPRING_SNAPPY = { type: "spring" as const, stiffness: 400, damping: 22 };
@@ -158,16 +158,22 @@ function ChecklistRow({ item, done }: ChecklistRowProps) {
 interface ProgressBadgeProps {
   doneCount: number;
   total: number;
+  compact?: boolean;
 }
 
-function ProgressBadge({ doneCount, total }: ProgressBadgeProps) {
+function ProgressBadge({ doneCount, total, compact = false }: ProgressBadgeProps) {
   return (
     <motion.span
       key={doneCount}
       initial={{ scale: 1.35, opacity: 0.7 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={SPRING_BOUNCE}
-      className="absolute -top-1.5 -right-1.5 h-5 min-w-5 px-0.5 rounded-full bg-background border border-border text-[10px] font-semibold text-foreground flex items-center justify-center leading-none tabular-nums"
+      className={cn(
+        "absolute rounded-full bg-background border border-border font-semibold text-foreground flex items-center justify-center leading-none tabular-nums",
+        compact
+          ? "-top-1 -right-1 h-4 min-w-4 px-0.5 text-[9px]"
+          : "-top-1.5 -right-1.5 h-5 min-w-5 px-0.5 text-[10px]",
+      )}
       aria-hidden="true"
     >
       {doneCount}/{total}
@@ -265,13 +271,13 @@ function FabProgressRing({ progressFraction }: FabProgressRingProps) {
 
   return (
     <svg
-      className="absolute -inset-1 h-14 w-14 -rotate-90 pointer-events-none"
-      viewBox="0 0 56 56"
+      className="absolute -inset-1 h-11 w-11 -rotate-90 pointer-events-none"
+      viewBox="0 0 44 44"
       aria-hidden="true"
     >
       <circle
-        cx="28"
-        cy="28"
+        cx="22"
+        cy="22"
         r={RING_RADIUS}
         fill="none"
         stroke="currentColor"
@@ -279,12 +285,12 @@ function FabProgressRing({ progressFraction }: FabProgressRingProps) {
         className="text-primary/20"
       />
       <motion.circle
-        cx="28"
-        cy="28"
+        cx="22"
+        cy="22"
         r={RING_RADIUS}
         fill="none"
         stroke="currentColor"
-        strokeWidth="2.5"
+        strokeWidth="2"
         strokeLinecap="round"
         className="text-primary-foreground/80"
         strokeDasharray={RING_CIRCUMFERENCE}
@@ -408,15 +414,15 @@ export function SuccessChecklist() {
                     : { boxShadow: "0 4px 14px -2px rgba(0, 0, 0, 0.15)" }
                 }
                 transition={{ type: "spring", stiffness: 380, damping: 24 }}
-                className="relative h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                className="relative h-9 w-9 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               >
                 <motion.span
                   animate={allDone ? { rotate: [0, -8, 8, 0], scale: [1, 1.1, 1] } : { rotate: 0, scale: 1 }}
                   transition={allDone ? { duration: 0.5, ease: "easeOut" } : { duration: 0.2 }}
                 >
-                  <CheckCircle2 className="h-5 w-5" />
+                  <CheckCircle2 className="h-4 w-4" />
                 </motion.span>
-                <ProgressBadge doneCount={doneCount} total={TOTAL} />
+                <ProgressBadge doneCount={doneCount} total={TOTAL} compact />
               </motion.button>
             </motion.div>
           ) : (

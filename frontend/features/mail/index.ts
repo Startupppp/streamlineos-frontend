@@ -14,3 +14,7 @@ export {
   MailInboxSummarySheet,
   useMailInboxSummarySheet,
 } from "./mail-inbox-summary-sheet";
+export { MailEmptyPane } from "./mail-empty-pane";
+export { MailHeader } from "./mail-header";
+export { MailAiComposeToolbar } from "./mail-ai-compose-toolbar";
+export { groupMailMessages, scoreNeedsYou } from "./mail-group-messages";

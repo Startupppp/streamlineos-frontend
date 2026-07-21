@@ -22,20 +22,13 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Textarea } from "@/components/ui/textarea";
-import { SparklesIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useSendMail, useReplyMail, useMailAiDraft } from "@/hooks/api/mail";
+import { useSendMail, useReplyMail } from "@/hooks/api/mail";
 import { mailComposeSchema, mailReplySchema } from "./mail-compose-schema";
 import type { MailComposeValues, MailReplyValues } from "./mail-compose-schema";
 import { EmailChipsInput } from "./email-chips-input";
+import { MailAiComposeToolbar } from "./mail-ai-compose-toolbar";
 import type { MailAccount } from "@/types/mail";
 
 const TiptapEditor = dynamic(
@@ -63,95 +56,6 @@ interface MailComposeSheetProps {
   onClose: () => void;
   mode: MailComposeMode;
   accounts: MailAccount[];
-}
-
-interface AiDraftPopoverProps {
-  accountId?: number;
-  threadId?: string;
-  mode: "compose" | "reply";
-  onInsert: (subject: string, body: string, composeMode: "compose" | "reply") => void;
-}
-
-function AiDraftPopover({ accountId, threadId, mode, onInsert }: AiDraftPopoverProps) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  const [open, setOpen] = useState(false);
-  const [instruction, setInstruction] = useState("");
-  const aiDraft = useMailAiDraft();
-
-  const handleInstructionChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => setInstruction(e.target.value),
-    [],
-  );
-
-  const handleGenerate = useCallback(async () => {
-    if (!instruction.trim()) return;
-    try {
-      const data = await aiDraft.mutateAsync({
-        mode,
-        instruction: instruction.trim(),
-        accountId,
-        threadId,
-      });
-      onInsert(data.subject, data.bodyHtml, mode);
-      setOpen(false);
-      setInstruction("");
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    }
-  }, [instruction, aiDraft, mode, accountId, threadId, onInsert]);
-
-  const handleGenerateClick = useCallback(() => {
-    void handleGenerate();
-  }, [handleGenerate]);
-
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        void handleGenerate();
-      }
-    },
-    [handleGenerate],
-  );
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="h-7 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
-          {...hoverHandlers}
-        >
-          <SparklesIcon ref={iconRef} size={13} />
-          Write with AI
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent align="start" className="w-72 p-3">
-        <div className="flex flex-col gap-2">
-          <p className="text-[12px] font-medium text-foreground">Describe what to write</p>
-          <Textarea
-            value={instruction}
-            onChange={handleInstructionChange}
-            onKeyDown={handleKeyDown}
-            placeholder="e.g. Follow up on yesterday's meeting..."
-            className="h-20 text-[13px] resize-none"
-            autoFocus
-          />
-          <LoadingButton
-            size="sm"
-            isPending={aiDraft.isPending}
-            loadingText="Generating..."
-            onClick={handleGenerateClick}
-            className="h-8 text-xs w-full"
-          >
-            Generate
-          </LoadingButton>
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
 }
 
 export function MailComposeSheet({
@@ -242,20 +146,29 @@ export function MailComposeSheet({
   }, [open, mode, replyForm, composeForm, defaultAccountId]);
 
   const handleAiInsert = useCallback(
-    (subject: string, body: string, insertMode: "compose" | "reply") => {
+    (subject: string, body: string) => {
       setBodyHtmlForEditor(body);
       setBodyContentKey((k) => k + 1);
-      if (insertMode === "compose") {
+      if (isReply) {
+        replyForm.setValue("bodyHtml", body, { shouldValidate: true });
+      } else {
         const currentSubject = composeForm.getValues("subject");
-        if (!currentSubject) {
+        if (!currentSubject && subject) {
           composeForm.setValue("subject", subject, { shouldValidate: true });
         }
         composeForm.setValue("bodyHtml", body, { shouldValidate: true });
-      } else {
-        replyForm.setValue("bodyHtml", body, { shouldValidate: true });
       }
     },
-    [composeForm, replyForm],
+    [isReply, composeForm, replyForm],
+  );
+
+  const handleAiSubject = useCallback(
+    (subject: string) => {
+      if (!isReply && subject) {
+        composeForm.setValue("subject", subject, { shouldValidate: true });
+      }
+    },
+    [isReply, composeForm],
   );
 
   const handleBodyChange = useCallback(
@@ -562,13 +475,26 @@ export function MailComposeSheet({
           </div>
 
           <div className="flex-1 min-h-0 flex flex-col px-0">
-            <div className="flex items-center justify-between px-6 pt-2 pb-1 border-b border-border/20">
+            <div className="flex flex-col gap-1.5 px-6 pt-2 pb-2 border-b border-border/20">
               <span className="text-[11px] text-muted-foreground">Message</span>
-              <AiDraftPopover
+              <MailAiComposeToolbar
                 accountId={activeAccountId}
                 threadId={activeThreadId}
                 mode={isReply ? "reply" : "compose"}
+                currentSubject={
+                  isReply
+                    ? mode.type === "reply"
+                      ? mode.subject
+                      : ""
+                    : composeForm.watch("subject")
+                }
+                currentBodyHtml={
+                  isReply
+                    ? replyForm.watch("bodyHtml")
+                    : composeForm.watch("bodyHtml")
+                }
                 onInsert={handleAiInsert}
+                onSubjectOnly={handleAiSubject}
               />
             </div>
             <div className="flex-1 min-h-0 overflow-y-auto">

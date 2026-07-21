@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -19,7 +19,6 @@ import { UploadIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -277,9 +276,18 @@ function UploadSheet({
 interface EmployeeDocumentsTabProps {
   onBack?: () => void;
   onContinue?: () => void;
+  variant?: "default" | "wizard";
+  hideNav?: boolean;
+  onCanContinueChange?: (canContinue: boolean) => void;
 }
 
-export function EmployeeDocumentsTab({ onBack, onContinue }: EmployeeDocumentsTabProps = {}) {
+export function EmployeeDocumentsTab({
+  onBack,
+  onContinue,
+  variant = "default",
+  hideNav = false,
+  onCanContinueChange,
+}: EmployeeDocumentsTabProps = {}) {
   const { data: myDocs, isLoading: docsLoading } = useMyOnboardingDocs();
   const { data: docTypes, isLoading: typesLoading } = useDocumentTypes();
   const submitDoc = useSubmitOnboardingDoc();
@@ -289,6 +297,7 @@ export function EmployeeDocumentsTab({ onBack, onContinue }: EmployeeDocumentsTa
   const [uploadSheetOpen, setUploadSheetOpen] = useState(false);
 
   const isLoading = docsLoading || typesLoading;
+  const isWizard = variant === "wizard";
 
   const checklist = (() => {
     const types = (docTypes ?? []).filter((dt) => dt.isActive !== false);
@@ -308,6 +317,10 @@ export function EmployeeDocumentsTab({ onBack, onContinue }: EmployeeDocumentsTa
         c.submission.status === "RE_UPLOAD_REQUESTED" ||
         c.submission.status === "REJECTED"),
   );
+
+  useEffect(() => {
+    onCanContinueChange?.(!mandatoryUnsubmitted);
+  }, [mandatoryUnsubmitted, onCanContinueChange]);
 
   const handleOpenUpload = useCallback((dt: DocumentType, existing: OnboardingDoc | null) => {
     setUploadTarget(dt);
@@ -354,25 +367,32 @@ export function EmployeeDocumentsTab({ onBack, onContinue }: EmployeeDocumentsTa
           description="Your HR team hasn't configured any required documents yet."
           compact
         />
-        {(onBack || onContinue) && (
+        {!hideNav && (onBack || onContinue) ? (
           <DocumentsTabNav onBack={onBack} onContinue={onContinue} />
-        )}
+        ) : null}
       </div>
     );
   }
 
   return (
     <>
-      <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden mb-4">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between mb-2">
+      <div
+        className={cn(
+          "mb-3 overflow-hidden rounded-xl border border-border/70",
+          isWizard ? "bg-card/60" : "rounded-2xl bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)]",
+        )}
+      >
+        <div className={cn("p-3.5", !isWizard && "p-4")}>
+          <div className="mb-2 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <div className="w-7 rounded-lg bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center">
+              <div className="flex w-7 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-500/10">
                 <FileText className="h-3.5 w-3.5 text-emerald-700 dark:text-emerald-300" />
               </div>
-              <p className="text-sm font-semibold text-foreground">Document Checklist</p>
+              <p className="text-sm font-semibold text-foreground">
+                Document checklist
+              </p>
             </div>
-            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               {approvedCount} / {checklist.length} approved
             </span>
           </div>
@@ -380,91 +400,100 @@ export function EmployeeDocumentsTab({ onBack, onContinue }: EmployeeDocumentsTa
             value={progressPct}
             className="h-1.5 [&>div]:bg-emerald-500 [&>div]:transition-all [&>div]:duration-500"
           />
-          {progressPct === 100 && (
-            <p className="text-[11px] text-emerald-600 dark:text-emerald-300 font-semibold mt-1.5 flex items-center gap-1">
+          {progressPct === 100 ? (
+            <p className="mt-1.5 flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-300">
               <CheckCircle2 className="h-3 w-3" />
               All documents approved
             </p>
-          )}
-        </CardContent>
-      </Card>
+          ) : null}
+        </div>
+      </div>
 
       <div className="space-y-2">
         {checklist.map(({ docType, submission }) => {
           const isApproved = submission?.status === "APPROVED";
           const status = submission?.status ?? "PENDING";
           return (
-            <Card
+            <div
               key={docType.id}
               className={cn(
-                "rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden border-l-4 transition-colors duration-200",
+                "overflow-hidden rounded-xl border border-border/70 border-l-4 transition-colors duration-200",
+                isWizard
+                  ? "bg-card/60"
+                  : "rounded-2xl bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)]",
                 isApproved
                   ? "border-l-emerald-500"
                   : status === "SUBMITTED"
                     ? "border-l-amber-400"
                     : status === "REJECTED" || status === "RE_UPLOAD_REQUESTED"
                       ? "border-l-rose-400"
-                      : "border-l-border"
+                      : "border-l-border",
               )}
             >
-              <CardContent className="p-3">
+              <div className="p-3">
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5 shrink-0">
                     {docStatusIcon(status)}
                   </div>
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 flex-wrap">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-1.5">
                       <p
                         className={cn(
                           "text-sm font-medium",
-                          isApproved && "line-through text-muted-foreground"
+                          isApproved && "text-muted-foreground line-through",
                         )}
                       >
                         {docType.name}
                       </p>
-                      {docType.isMandatory && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border shrink-0">
+                      {docType.isMandatory ? (
+                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
                           Required
                         </span>
-                      )}
-                      {submission && (
+                      ) : null}
+                      {submission ? (
                         <span
                           className={cn(
-                            "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0",
-                            docStatusBadgeClass(submission.status)
+                            "inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold",
+                            docStatusBadgeClass(submission.status),
                           )}
                         >
                           {docStatusLabel(submission.status)}
                         </span>
-                      )}
+                      ) : null}
                     </div>
 
-                    {docType.description && !isApproved && (
-                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                    {docType.description && !isApproved ? (
+                      <p className="mt-0.5 text-[11px] text-muted-foreground">
                         {docType.description}
                       </p>
-                    )}
+                    ) : null}
 
-                    {submission?.fileUrl && (
+                    {submission?.fileUrl ? (
                       <a
                         href={submission.fileUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-[11px] text-primary hover:text-primary/80 hover:underline mt-0.5 transition-colors duration-200"
+                        className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-primary transition-colors duration-200 hover:text-primary/80 hover:underline"
                         aria-label={`View ${submission.fileName}`}
                       >
                         {submission.fileName}
                         <ExternalLink className="h-2.5 w-2.5" />
                       </a>
-                    )}
+                    ) : null}
 
-                    {submission?.reviewedAt && isApproved && (
-                      <p className="text-[11px] text-muted-foreground mt-0.5">
-                        Approved {new Date(submission.reviewedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                        {submission.reviewerName && ` by ${submission.reviewerName}`}
+                    {submission?.reviewedAt && isApproved ? (
+                      <p className="mt-0.5 text-[11px] text-muted-foreground">
+                        Approved{" "}
+                        {new Date(submission.reviewedAt).toLocaleDateString(
+                          "en-IN",
+                          { day: "numeric", month: "short", year: "numeric" },
+                        )}
+                        {submission.reviewerName
+                          ? ` by ${submission.reviewerName}`
+                          : ""}
                       </p>
-                    )}
+                    ) : null}
 
                     {submission?.status === "RE_UPLOAD_REQUESTED" && submission.remarks && (
                       <p className="text-[11px] text-amber-600 dark:text-amber-300 mt-0.5">
@@ -473,30 +502,34 @@ export function EmployeeDocumentsTab({ onBack, onContinue }: EmployeeDocumentsTa
                     )}
                   </div>
 
-                  {canUpload(submission?.status) && (
+                  {canUpload(submission?.status) ? (
                     <AnimatedIconButton
                       icon={UploadIcon}
                       size="sm"
                       variant="outline"
-                      className="text-xs shrink-0 gap-1.5 duration-200"
+                      className="shrink-0 gap-1.5 text-xs duration-200"
                       onClick={() => handleOpenUpload(docType, submission)}
                       aria-label={`Upload ${docType.name}`}
                     >
                       {submission ? "Re-upload" : "Upload"}
                     </AnimatedIconButton>
-                  )}
+                  ) : null}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           );
         })}
       </div>
 
-      {(onBack || onContinue) && (
+      {!hideNav && (onBack || onContinue) ? (
         <div className="mt-4">
-          <DocumentsTabNav onBack={onBack} onContinue={onContinue} continueDisabled={mandatoryUnsubmitted} />
+          <DocumentsTabNav
+            onBack={onBack}
+            onContinue={onContinue}
+            continueDisabled={mandatoryUnsubmitted}
+          />
         </div>
-      )}
+      ) : null}
 
       <UploadSheet
         open={uploadSheetOpen}

@@ -3,18 +3,6 @@
 import { useCallback, useRef, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Settings } from "lucide-react";
-import { SparklesIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useMailAccounts } from "@/hooks/api/mail";
@@ -28,12 +16,11 @@ import {
   MailInboxSummarySheet,
   useMailInboxSummarySheet,
 } from "./mail-inbox-summary-sheet";
-import { EmptyState } from "@/components/ui/empty-state";
+import { MailEmptyPane } from "./mail-empty-pane";
+import { MailHeader, MAIL_ACCOUNT_SENTINEL } from "./mail-header";
 import type { MailMessageSummary } from "@/types/mail";
 import type { MailComposeMode } from "./mail-compose-sheet";
-import type { MailReplyParams } from "./mail-reading-pane";
-
-const SENTINEL = "__all__";
+import type { MailReplyParams } from "./mail-reading-ai-actions";
 
 export function MailShell() {
   const router = useRouter();
@@ -60,8 +47,6 @@ export function MailShell() {
   const composeParamConsumedRef = useRef(false);
 
   const { summaryState, triggerSummary } = useMailInboxSummarySheet();
-  const { iconRef: sparklesRef, hoverHandlers: sparklesHover } =
-    useAnimatedIcon();
 
   const finalizeMutate = finalize.mutate;
   useEffect(() => {
@@ -107,7 +92,7 @@ export function MailShell() {
   );
 
   const handleAccountChange = useCallback((value: string) => {
-    if (value === SENTINEL) {
+    if (value === MAIL_ACCOUNT_SENTINEL) {
       setSelectedAccountId("all");
     } else {
       const id = Number(value);
@@ -153,84 +138,25 @@ export function MailShell() {
 
   const handleCloseSummary = useCallback(() => setSummarySheetOpen(false), []);
 
+  const hasAccounts = accounts.length > 0;
+
   return (
     <div className="flex flex-col h-full min-h-0 min-w-0">
-      <div className="flex items-center gap-2 px-3 py-2 border-b border-border/40 shrink-0 bg-card/50">
-        <span className="text-sm font-semibold text-foreground tracking-tight shrink-0">
-          Mail
-        </span>
-
-        {accountsLoading ? (
-          <Skeleton className="h-9 w-36 rounded-md" />
-        ) : accounts.length > 0 ? (
-          <Select
-            value={
-              selectedAccountId === "all" ? SENTINEL : String(selectedAccountId)
-            }
-            onValueChange={handleAccountChange}
-          >
-            <SelectTrigger className="h-9 w-auto min-w-[9rem] max-w-[14rem] border-input bg-card text-xs">
-              <SelectValue placeholder="All accounts" />
-            </SelectTrigger>
-            <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-              <SelectItem value={SENTINEL} className="text-xs">
-                All accounts
-              </SelectItem>
-              {accounts.map((account) => (
-                <SelectItem
-                  key={account.id}
-                  value={String(account.id)}
-                  className="text-xs"
-                >
-                  {account.accountEmail ??
-                    account.accountLabel ??
-                    `Account ${account.id}`}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        ) : null}
-
-        <div className="flex-1" />
-
-        {canAi && accounts.length > 0 && (
-          <button
-            type="button"
-            className="flex items-center gap-1.5 h-9 px-3 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-input bg-card transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            onClick={handleOpenSummary}
-            aria-label="Summarize inbox with AI"
-            {...sparklesHover}
-          >
-            <SparklesIcon ref={sparklesRef} size={13} />
-            Summarize
-          </button>
-        )}
-
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-9 text-xs gap-1.5"
-          onClick={handleOpenCompose}
-          disabled={accounts.length === 0}
-        >
-          Compose
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-9 w-9 shrink-0"
-          onClick={handleOpenAccountsSheet}
-          aria-label="Mail account settings"
-        >
-          <Settings className="h-4 w-4" aria-hidden />
-        </Button>
-      </div>
+      <MailHeader
+        accounts={accounts}
+        accountsLoading={accountsLoading}
+        selectedAccountId={selectedAccountId}
+        canAi={canAi}
+        onAccountChange={handleAccountChange}
+        onCompose={handleOpenCompose}
+        onSummarize={handleOpenSummary}
+        onOpenAccounts={handleOpenAccountsSheet}
+      />
 
       <div className="flex flex-1 min-h-0 min-w-0">
         <div
           className={cn(
-            "flex flex-col h-full shrink-0 border-r border-border/40 bg-card/50 w-full md:w-[260px] lg:w-[300px]",
+            "flex flex-col h-full shrink-0 border-r border-border/40 bg-card/40 w-full md:w-[280px] lg:w-[320px]",
             !showMobileList && "hidden md:flex",
           )}
         >
@@ -245,11 +171,16 @@ export function MailShell() {
 
         <div
           className={cn(
-            "flex flex-1 min-h-0 min-w-0 bg-muted/10",
+            "flex flex-1 min-h-0 min-w-0 bg-muted/15",
             showMobileList && "hidden md:flex",
           )}
         >
-          {selectedMessage ? (
+          {!hasAccounts && !accountsLoading ? (
+            <MailEmptyPane
+              variant="connect"
+              onConnect={handleOpenAccountsSheet}
+            />
+          ) : selectedMessage ? (
             <MailReadingPane
               selectedMessage={selectedMessage}
               accounts={accounts}
@@ -257,13 +188,11 @@ export function MailShell() {
               onReply={handleReply}
             />
           ) : (
-            <div className="flex flex-1 items-center justify-center p-6">
-              <EmptyState
-                illustrationPreset="mail"
-                title="Select a message to read"
-                description="Choose a message from the list on the left."
-              />
-            </div>
+            <MailEmptyPane
+              variant="select"
+              selectedAccountId={selectedAccountId}
+              onSelectMessage={handleSelectMessage}
+            />
           )}
         </div>
       </div>
