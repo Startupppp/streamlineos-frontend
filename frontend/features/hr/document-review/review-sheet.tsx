@@ -38,6 +38,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useUploadFile } from "@/hooks/api/use-upload-file";
+import { useHrDocumentTypes } from "@/hooks/api/hr/document-types";
 
 interface OnboardingDoc {
   id: number;
@@ -63,25 +64,12 @@ interface ReviewSheetProps {
   onClose: () => void;
 }
 
-interface DocumentType {
-  id: number;
-  name: string;
-  isActive: boolean | null;
-}
-
 function useEmployeeOnboardingDocs(userId: string | null) {
   return useQuery<OnboardingDoc[]>({
     queryKey: queryKeys.hr.onboardingDocs(userId ?? undefined),
     queryFn: () =>
       apiClient.get<OnboardingDoc[]>("/hr/onboarding-docs", { params: { userId } }),
     enabled: !!userId,
-  });
-}
-
-function useDocumentTypes() {
-  return useQuery<DocumentType[]>({
-    queryKey: queryKeys.hr.documentTypes(),
-    queryFn: () => apiClient.get<DocumentType[]>("/hr/document-types"),
   });
 }
 
@@ -285,7 +273,7 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
   const uploadDocMutation = useUploadOnboardingDoc();
   const uploadFileMutation = useUploadFile();
   const { data: employeeDocs, isLoading: docsLoading } = useEmployeeOnboardingDocs(userId);
-  const { data: documentTypes } = useDocumentTypes();
+  const { data: documentTypes } = useHrDocumentTypes();
 
   const [reuploadDoc, setReuploadDoc] = useState<OnboardingDoc | null>(null);
   const [reuploadRemarks, setReuploadRemarks] = useState("");

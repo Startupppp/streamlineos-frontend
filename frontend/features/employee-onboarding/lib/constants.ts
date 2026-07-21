@@ -1,9 +1,12 @@
-export const ONBOARDING_COL_PAD_X = "px-4 sm:px-6 md:px-8 lg:px-10";
+import {
+  WIZARD_COL_PAD,
+  WIZARD_COL_PAD_X,
+  WIZARD_COL_PAD_Y,
+} from "@/components/wizard-shell";
 
-export const ONBOARDING_COL_PAD_Y = "py-3 sm:py-4 md:py-5 lg:py-6";
-
-export const ONBOARDING_COL_PAD =
-  ONBOARDING_COL_PAD_X + " " + ONBOARDING_COL_PAD_Y;
+export const ONBOARDING_COL_PAD_X = WIZARD_COL_PAD_X;
+export const ONBOARDING_COL_PAD_Y = WIZARD_COL_PAD_Y;
+export const ONBOARDING_COL_PAD = WIZARD_COL_PAD;
 
 export const STEP_IDS = {
   PERSONAL: "personal",
@@ -35,10 +38,34 @@ export const STEP_SUBTITLES: Record<StepId, string> = {
   finish: "Confirm everything looks right, then send it to HR.",
 };
 
+export type StepGuide = {
+  why: string;
+  minutes: number;
+};
+
+export const STEP_GUIDE: Record<StepId, StepGuide> = {
+  personal: {
+    why: "This is how your profile will appear in People once HR has your record.",
+    minutes: 2,
+  },
+  bank: {
+    why: "Payroll details stay private — HR sees them on your employee file, not in the directory.",
+    minutes: 2,
+  },
+  docs: {
+    why: "Uploaded IDs and papers attach to this same profile for verification.",
+    minutes: 3,
+  },
+  finish: {
+    why: "After you submit, HR reviews this file while you explore the workspace.",
+    minutes: 1,
+  },
+};
+
 export const ESTIMATED_MINUTES_REMAINING: Record<StepId, number> = {
-  personal: 6,
-  bank: 4,
-  docs: 3,
+  personal: 8,
+  bank: 6,
+  docs: 4,
   finish: 1,
 };
 

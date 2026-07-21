@@ -76,6 +76,7 @@ const PROTECTED_ROUTES = [
   "/hr",
   "/settings",
   "/onboarding",
+  "/employee-onboarding",
   "/org-setup",
   "/owner",
   "/billing",
@@ -225,6 +226,8 @@ export async function proxy(req: NextRequest) {
       if (isPlatformAdmin) return redirectTo(req, OWNER_HOME);
       if (!forceOrgSetup) return redirectTo(req, "/dashboard");
     } else if (matchesRoute(pathname, "/onboarding")) {
+      return redirectTo(req, "/employee-onboarding");
+    } else if (matchesRoute(pathname, "/employee-onboarding")) {
       if (isPlatformAdmin) return redirectTo(req, OWNER_HOME);
       if (!hasOrg) return redirectTo(req, "/org-setup");
       if (isOrgOwner) return redirectTo(req, "/dashboard");
@@ -245,7 +248,7 @@ export async function proxy(req: NextRequest) {
         !token.userOnboardingCompletedAt &&
         !onboardingDone
       )
-        return redirectTo(req, "/onboarding");
+        return redirectTo(req, "/employee-onboarding");
 
       if (
         token.mfaEnforced === true &&

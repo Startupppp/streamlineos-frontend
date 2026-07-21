@@ -1,27 +1,21 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { AnimatedLogo } from "@/features/landing/components/animated-logo";
 import { BRAND_NAME } from "@/lib/branding";
-import { getServerAuth } from "@/lib/get-server-auth";
-import { signInPathForMissingSession } from "@/lib/auth-session-cookies";
-import { OWNER_HOME } from "@/lib/platform/role";
-import { ONBOARDING_COL_PAD_X } from "@/features/onboarding/lib/constants";
 import { cn } from "@/lib/utils";
+import { WIZARD_COL_PAD_X } from "./constants";
 
-export default async function EmployeeOnboardingLayout({
-  children,
-}: {
+type FocusedWizardFrameProps = {
   children: ReactNode;
-}) {
-  const session = await getServerAuth();
+  mainLabel: string;
+  mobileHeaderClassName?: string;
+};
 
-  if (!session?.user) redirect(signInPathForMissingSession());
-  if (session.user.isPlatformAdmin) redirect(OWNER_HOME);
-  if (!session.orgId) redirect("/org-setup");
-  if (session.user.isOrgOwner) redirect("/dashboard");
-  if (session.userOnboardingCompletedAt) redirect("/dashboard");
-
+export function FocusedWizardFrame({
+  children,
+  mainLabel,
+  mobileHeaderClassName,
+}: FocusedWizardFrameProps) {
   return (
     <div className="relative flex h-[100dvh] max-w-[100vw] overflow-hidden surface-soft text-foreground">
       <a
@@ -34,8 +28,9 @@ export default async function EmployeeOnboardingLayout({
       <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <header
           className={cn(
-            "flex shrink-0 items-center pt-3 pb-0 md:hidden",
-            ONBOARDING_COL_PAD_X,
+            "flex shrink-0 items-center md:hidden",
+            WIZARD_COL_PAD_X,
+            mobileHeaderClassName ?? "py-3",
           )}
         >
           <Link
@@ -52,7 +47,7 @@ export default async function EmployeeOnboardingLayout({
 
         <main
           id="main-content"
-          aria-label="Employee onboarding"
+          aria-label={mainLabel}
           className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
         >
           {children}

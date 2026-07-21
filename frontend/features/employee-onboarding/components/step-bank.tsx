@@ -1,70 +1,96 @@
 "use client";
 
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { useBankDetailsMutation } from "@/lib/api/hooks/onboarding";
-import { getErrorMessage } from "@/lib/get-error-message";
 import {
   bankDetailsSchema,
   type BankDetailsFormValues,
 } from "../lib/bank-details-schema";
+import {
+  EMPTY_BANK_DRAFT,
+  type BankDraft,
+} from "../lib/wizard-draft-schema";
 import { FieldError } from "./field-error";
 import { NavButtons } from "./nav-buttons";
 import { StepBody } from "./step-body";
 
-export type BankFormValues = Record<string, string | undefined>;
-
 type StepBankProps = {
-  onComplete: (values: BankFormValues) => void;
+  onComplete: (values: BankDraft) => void;
+  onDraftChange?: (values: BankDraft) => void;
+  onClear?: () => void;
   onBack: () => void;
-  defaultValues?: BankFormValues;
+  defaultValues?: BankDraft;
 };
 
-export function StepBank({ onComplete, onBack, defaultValues }: StepBankProps) {
-  const { mutate, isPending } = useBankDetailsMutation();
+function toBankDraft(values: BankDetailsFormValues): BankDraft {
+  return {
+    accountHolder: values.accountHolder ?? "",
+    bankName: values.bankName ?? "",
+    accountNumber: values.accountNumber ?? "",
+    ifsc: values.ifsc ?? "",
+    taxId: values.taxId ?? "",
+  };
+}
 
+export function StepBank({
+  onComplete,
+  onDraftChange,
+  onClear,
+  onBack,
+  defaultValues,
+}: StepBankProps) {
   const form = useForm<BankDetailsFormValues>({
     resolver: zodResolver(bankDetailsSchema),
     mode: "onChange",
     defaultValues: {
-      accountHolder: "",
-      bankName: "",
-      accountNumber: "",
-      ifsc: "",
-      taxId: "",
+      ...EMPTY_BANK_DRAFT,
       ...defaultValues,
     },
   });
 
   const { errors } = form.formState;
 
-  function handleFormSubmit(values: BankDetailsFormValues) {
-    mutate(values, {
-      onSuccess: () => {
-        toast.success("Bank details saved");
-        onComplete({
-          accountHolder: values.accountHolder,
-          bankName: values.bankName,
-          accountNumber: values.accountNumber,
-          ifsc: values.ifsc,
-          taxId: values.taxId,
-        });
-      },
-      onError: (err) => {
-        toast.error(getErrorMessage(err));
-      },
+  useEffect(() => {
+    if (!onDraftChange) return;
+    const subscription = form.watch((values) => {
+      onDraftChange({
+        accountHolder: values.accountHolder ?? "",
+        bankName: values.bankName ?? "",
+        accountNumber: values.accountNumber ?? "",
+        ifsc: values.ifsc ?? "",
+        taxId: values.taxId ?? "",
+      });
     });
+    return () => subscription.unsubscribe();
+  }, [form, onDraftChange]);
+
+  function handleFormSubmit(values: BankDetailsFormValues) {
+    toast.success("Bank details saved");
+    onComplete(toBankDraft(values));
   }
 
   function handleNextClick() {
     void form.handleSubmit(handleFormSubmit)();
   }
 
+  function handleClear() {
+    form.reset({ ...EMPTY_BANK_DRAFT });
+    onClear?.();
+  }
+
   function handleIfscChange(e: React.ChangeEvent<HTMLInputElement>) {
     form.setValue("ifsc", e.target.value.toUpperCase(), {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  }
+
+  function handleTaxIdChange(e: React.ChangeEvent<HTMLInputElement>) {
+    form.setValue("taxId", e.target.value.toUpperCase(), {
       shouldDirty: true,
       shouldValidate: true,
     });
@@ -82,8 +108,8 @@ export function StepBank({ onComplete, onBack, defaultValues }: StepBankProps) {
             onNext={handleNextClick}
             nextType="submit"
             nextLabel="Save & continue"
-            isPending={isPending}
-            loadingText="Saving…"
+            clearLabel="Clear"
+            onClear={handleClear}
           />
         }
       >
@@ -146,6 +172,8 @@ export function StepBank({ onComplete, onBack, defaultValues }: StepBankProps) {
               aria-required="true"
               aria-invalid={!!errors.ifsc}
               className="uppercase"
+              autoCapitalize="characters"
+              spellCheck={false}
             />
             <FieldError message={errors.ifsc?.message} />
           </div>
@@ -158,9 +186,12 @@ export function StepBank({ onComplete, onBack, defaultValues }: StepBankProps) {
           </Label>
           <Input
             id="taxId"
-            {...form.register("taxId")}
+            {...form.register("taxId", { onChange: handleTaxIdChange })}
             placeholder="ABCDE1234F"
             aria-describedby="taxId-hint"
+            className="uppercase"
+            autoCapitalize="characters"
+            spellCheck={false}
           />
           <p id="taxId-hint" className="text-xs text-muted-foreground">
             Used for payroll and tax compliance.

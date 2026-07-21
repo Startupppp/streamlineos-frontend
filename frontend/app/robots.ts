@@ -23,6 +23,7 @@ export default function robots(): MetadataRoute.Robots {
           "/knowledge-base/",
           "/notifications/",
           "/onboarding/",
+          "/employee-onboarding/",
           "/organization/",
           "/payroll/",
           "/projects/",

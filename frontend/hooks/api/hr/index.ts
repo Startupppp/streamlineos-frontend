@@ -16,6 +16,7 @@ export * from "./skills";
 export * from "./dashboard";
 export * from "./onboarding";
 export * from "./benefits";
+export * from "./document-types";
 export * from "./document-templates";
 export * from "./hr-settings";
 export * from "./handbook";

@@ -1,0 +1,89 @@
+"use client";
+
+import type { ReactNode } from "react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { WizardSplitShell } from "@/components/wizard-shell";
+import {
+  ONBOARDING_SEQUENCE,
+  STEP_SUBTITLES,
+  type StepId,
+} from "../lib/constants";
+import type { EmployeePreviewSnapshot } from "../lib/preview-snapshot";
+import { StepRail } from "./step-rail";
+import { MobileProgressBar } from "./mobile-progress-bar";
+import { BrandColumn } from "./brand-column";
+
+type EmployeeOnboardingShellProps = {
+  currentIndex: number;
+  title: string;
+  direction: number;
+  saveState: "idle" | "saved";
+  completedSteps: ReadonlySet<string>;
+  reachableSteps: ReadonlySet<string>;
+  snapshot: EmployeePreviewSnapshot;
+  onStepSelect?: (index: number) => void;
+  children: ReactNode;
+};
+
+export function EmployeeOnboardingShell({
+  currentIndex,
+  title,
+  direction,
+  saveState,
+  completedSteps,
+  reachableSteps,
+  snapshot,
+  onStepSelect,
+  children,
+}: EmployeeOnboardingShellProps) {
+  const reduceMotion = useReducedMotion();
+  const currentStepId: StepId =
+    ONBOARDING_SEQUENCE[currentIndex] ?? "personal";
+
+  return (
+    <WizardSplitShell
+      direction={direction}
+      stepKey={currentIndex}
+      brandColumn={
+        <BrandColumn stepId={currentStepId} snapshot={snapshot} />
+      }
+      header={
+        <>
+          <StepRail
+            sequence={ONBOARDING_SEQUENCE}
+            currentIndex={currentIndex}
+            completedSteps={completedSteps}
+            saveState={saveState}
+            reachableSteps={reachableSteps}
+            onStepSelect={onStepSelect}
+          />
+
+          <MobileProgressBar
+            sequence={ONBOARDING_SEQUENCE}
+            currentIndex={currentIndex}
+          />
+
+          <div className="mb-2 hidden min-w-0 space-y-0.5 md:block">
+            <AnimatePresence mode="wait">
+              <motion.h1
+                key={title}
+                initial={{ opacity: 0, y: reduceMotion ? 0 : -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: reduceMotion ? 0 : 6 }}
+                transition={{ duration: 0.15 }}
+                className="font-display text-xl font-extrabold tracking-[-0.02em] text-foreground text-balance sm:text-2xl"
+              >
+                {title}
+              </motion.h1>
+            </AnimatePresence>
+            <p className="text-[13px] text-muted-foreground">
+              {STEP_SUBTITLES[currentStepId]}
+            </p>
+          </div>
+        </>
+      }
+    >
+      {children}
+    </WizardSplitShell>
+  );
+}

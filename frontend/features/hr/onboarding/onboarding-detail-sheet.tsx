@@ -30,16 +30,12 @@ import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  useHrDocumentTypes,
+  type HrDocumentType,
+} from "@/hooks/api/hr/document-types";
 
-interface DocumentType {
-  id: number;
-  name: string;
-  description: string | null;
-  isMandatory: boolean | null;
-  isActive: boolean | null;
-  sortOrder: number | null;
-  applicableRoles: string[] | null;
-}
+type DocumentType = HrDocumentType;
 
 interface OnboardingDoc {
   id: number;
@@ -61,14 +57,6 @@ function useMyOnboardingDocs() {
     queryKey: queryKeys.hr.myOnboardingDocs(),
     queryFn: () => apiClient.get<OnboardingDoc[]>("/hr/onboarding-docs"),
     staleTime: 60_000,
-  });
-}
-
-function useDocumentTypes() {
-  return useQuery<DocumentType[]>({
-    queryKey: queryKeys.hr.documentTypes(),
-    queryFn: () => apiClient.get<DocumentType[]>("/hr/document-types"),
-    staleTime: 5 * 60_000,
   });
 }
 
@@ -289,7 +277,7 @@ export function EmployeeDocumentsTab({
   onCanContinueChange,
 }: EmployeeDocumentsTabProps = {}) {
   const { data: myDocs, isLoading: docsLoading } = useMyOnboardingDocs();
-  const { data: docTypes, isLoading: typesLoading } = useDocumentTypes();
+  const { data: docTypes, isLoading: typesLoading } = useHrDocumentTypes();
   const submitDoc = useSubmitOnboardingDoc();
 
   const [uploadTarget, setUploadTarget] = useState<DocumentType | null>(null);

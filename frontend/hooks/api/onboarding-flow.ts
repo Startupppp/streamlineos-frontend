@@ -9,6 +9,13 @@ export type OnboardingFlowSession = {
   status: "not_started" | "in_progress" | "completed" | "skipped" | "abandoned";
   currentStep: string | null;
   completedSteps: string[];
+  data: Record<string, unknown>;
+};
+
+export type OnboardingSessionPatch = {
+  currentStep?: string;
+  completedSteps?: string[];
+  data?: Record<string, unknown>;
 };
 
 export function useOnboardingSessionQuery(enabled = true) {
@@ -22,11 +29,15 @@ export function useOnboardingSessionQuery(enabled = true) {
 }
 
 export function usePatchOnboardingSessionMutation() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ["onboarding", "session", "patch"],
-    mutationFn: (payload: { currentStep?: string; completedSteps?: string[] }) =>
+    mutationFn: (payload: OnboardingSessionPatch) =>
       apiClient.patch<OnboardingFlowSession>("/onboarding/session", payload),
     retry: false,
+    onSuccess: (session) => {
+      queryClient.setQueryData(queryKeys.onboardingFlow.session(), session);
+    },
   });
 }
 

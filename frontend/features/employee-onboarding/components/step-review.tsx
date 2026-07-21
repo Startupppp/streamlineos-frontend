@@ -14,10 +14,17 @@ import { completeOnboardingGate } from "@/lib/onboarding-gate";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { useSubmitOnboardingMutation } from "@/lib/api/hooks/onboarding";
+import {
+  useBankDetailsMutation,
+  usePersonalInfoMutation,
+  useSubmitOnboardingMutation,
+} from "@/lib/api/hooks/onboarding";
+import { personalInfoSchema } from "@/lib/location/personal-info-validation";
 import { CompletionCelebration } from "@/components/celebration/completion-celebration";
 import { cn } from "@/lib/utils";
+import { bankDetailsSchema } from "../lib/bank-details-schema";
 import { DATA_STEP_IDS, STEP_TITLES, type StepId } from "../lib/constants";
+import type { WizardDraft } from "../lib/wizard-draft-schema";
 import { NavButtons } from "./nav-buttons";
 import { StepBody } from "./step-body";
 
@@ -54,15 +61,22 @@ const CELEBRATION_HIGHLIGHTS = [
 
 type StepReviewProps = {
   completedSteps: ReadonlySet<string>;
+  draft: WizardDraft;
   onBack: () => void;
 };
 
-export function StepReview({ completedSteps, onBack }: StepReviewProps) {
+export function StepReview({
+  completedSteps,
+  draft,
+  onBack,
+}: StepReviewProps) {
   const { data: session, update } = useSession();
-  const { mutate: submitOnboarding, isPending: isSubmitting } =
-    useSubmitOnboardingMutation();
+  const { mutateAsync: savePersonal } = usePersonalInfoMutation();
+  const { mutateAsync: saveBank } = useBankDetailsMutation();
+  const { mutateAsync: submitOnboarding } = useSubmitOnboardingMutation();
   const [showCelebration, setShowCelebration] = useState(false);
   const [isContinuing, setIsContinuing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const userRole = session?.user?.role ?? "ENGINEERING";
   const roleLabel = ROLE_LABELS[userRole] ?? userRole;
   const firstName = session?.user?.name?.split(" ")[0] ?? "";
@@ -76,17 +90,51 @@ export function StepReview({ completedSteps, onBack }: StepReviewProps) {
     window.location.replace("/dashboard");
   }, [isContinuing]);
 
-  function handleSubmit() {
-    submitOnboarding(undefined, {
-      onSuccess: async () => {
-        clearBackendTokenCache();
-        await completeOnboardingGate("onboarding-done", update);
-        setShowCelebration(true);
-      },
-      onError: (err) => {
-        toast.error(getErrorMessage(err));
-      },
+  async function handleSubmit() {
+    if (isSubmitting) return;
+
+    const personalParsed = personalInfoSchema.safeParse({
+      ...draft.personal,
+      gender:
+        draft.personal.gender === "MALE" ||
+        draft.personal.gender === "FEMALE" ||
+        draft.personal.gender === "OTHER"
+          ? draft.personal.gender
+          : undefined,
+      emergencyRelation: draft.personal.emergencyRelation || undefined,
     });
+    if (!personalParsed.success) {
+      toast.error(
+        personalParsed.error.issues[0]?.message ??
+          "Personal details are incomplete",
+      );
+      return;
+    }
+
+    const bankParsed = bankDetailsSchema.safeParse({
+      ...draft.bank,
+      taxId: draft.bank.taxId.trim() ? draft.bank.taxId : undefined,
+    });
+    if (!bankParsed.success) {
+      toast.error(
+        bankParsed.error.issues[0]?.message ?? "Bank details are incomplete",
+      );
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await savePersonal(personalParsed.data);
+      await saveBank(bankParsed.data);
+      await submitOnboarding();
+      clearBackendTokenCache();
+      await completeOnboardingGate("onboarding-done", update);
+      setShowCelebration(true);
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -193,7 +241,6 @@ export function StepReview({ completedSteps, onBack }: StepReviewProps) {
               Default leave balances are allocated after submission.
             </p>
           )}
-
         </div>
       </StepBody>
 

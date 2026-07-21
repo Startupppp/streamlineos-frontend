@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
@@ -16,11 +16,6 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import {
-  usePersonalDetailsQuery,
-  usePersonalInfoMutation,
-} from "@/lib/api/hooks/onboarding";
-import { getErrorMessage } from "@/lib/get-error-message";
-import {
   ALL_COUNTRIES,
   EMERGENCY_RELATIONSHIPS,
   INDIA_COUNTRY_NAME,
@@ -31,39 +26,64 @@ import {
   personalInfoSchema,
   type PersonalInfoFormValues,
 } from "@/lib/location/personal-info-validation";
+import { WizardSectionHeading } from "@/components/wizard-shell";
+import {
+  EMPTY_PERSONAL_DRAFT,
+  personalDraftToFormDefaults,
+  type PersonalDraft,
+} from "../lib/wizard-draft-schema";
 import { FieldError } from "./field-error";
 import { NavButtons } from "./nav-buttons";
 import { StepBody } from "./step-body";
 
-export type PersonalFormValues = Record<string, string | undefined>;
-
 type StepPersonalProps = {
-  onComplete: (values: PersonalFormValues) => void;
-  defaultValues?: PersonalFormValues;
+  onComplete: (values: PersonalDraft) => void;
+  onDraftChange?: (values: PersonalDraft) => void;
+  onClear?: () => void;
+  defaultValues?: PersonalDraft;
 };
 
-export function StepPersonal({ onComplete, defaultValues }: StepPersonalProps) {
-  const { mutate, isPending } = usePersonalInfoMutation();
-  const { data: personalDetails } = usePersonalDetailsQuery();
-  const hasHydratedDetails = useRef(false);
+function toPersonalDraft(values: PersonalInfoFormValues): PersonalDraft {
+  return {
+    phone: values.phone ?? "",
+    gender: values.gender ?? "",
+    dateOfBirth: values.dateOfBirth ?? "",
+    addressLine1: values.addressLine1 ?? "",
+    addressCity: values.addressCity ?? "",
+    addressState: values.addressState ?? "",
+    addressPostalCode: values.addressPostalCode ?? "",
+    addressCountry: values.addressCountry ?? INDIA_COUNTRY_NAME,
+    emergencyName: values.emergencyName ?? "",
+    emergencyRelation: values.emergencyRelation ?? "",
+    emergencyPhone: values.emergencyPhone ?? "",
+  };
+}
+
+export function StepPersonal({
+  onComplete,
+  onDraftChange,
+  onClear,
+  defaultValues,
+}: StepPersonalProps) {
+  const formDefaults = personalDraftToFormDefaults(
+    defaultValues ?? EMPTY_PERSONAL_DRAFT,
+  );
 
   const form = useForm<PersonalInfoFormValues>({
     resolver: zodResolver(personalInfoSchema),
     mode: "onChange",
     defaultValues: {
-      phone: "",
-      gender: undefined,
-      dateOfBirth: "",
-      addressLine1: "",
-      addressCity: "",
-      addressState: "",
-      addressPostalCode: "",
-      emergencyName: "",
-      emergencyRelation: undefined,
-      emergencyPhone: "",
-      ...defaultValues,
-      addressCountry:
-        defaultValues?.addressCountry?.trim() || INDIA_COUNTRY_NAME,
+      phone: formDefaults.phone,
+      gender: formDefaults.gender,
+      dateOfBirth: formDefaults.dateOfBirth,
+      addressLine1: formDefaults.addressLine1,
+      addressCity: formDefaults.addressCity,
+      addressState: formDefaults.addressState,
+      addressPostalCode: formDefaults.addressPostalCode,
+      addressCountry: formDefaults.addressCountry,
+      emergencyName: formDefaults.emergencyName,
+      emergencyRelation: formDefaults.emergencyRelation || undefined,
+      emergencyPhone: formDefaults.emergencyPhone,
     },
   });
 
@@ -78,24 +98,24 @@ export function StepPersonal({ onComplete, defaultValues }: StepPersonalProps) {
   );
 
   useEffect(() => {
-    if (!personalDetails || hasHydratedDetails.current) return;
-
-    const emergencyRelationship = EMERGENCY_RELATIONSHIPS.find(
-      (relationship) =>
-        relationship.value === personalDetails.emergencyRelation,
-    );
-
-    form.reset({
-      ...form.getValues(),
-      phone: personalDetails.phone ?? "",
-      gender: personalDetails.gender ?? undefined,
-      dateOfBirth: personalDetails.dateOfBirth ?? "",
-      emergencyName: personalDetails.emergencyName ?? "",
-      emergencyRelation: emergencyRelationship?.value,
-      emergencyPhone: personalDetails.emergencyPhone ?? "",
+    if (!onDraftChange) return;
+    const subscription = form.watch((values) => {
+      onDraftChange({
+        phone: values.phone ?? "",
+        gender: values.gender ?? "",
+        dateOfBirth: values.dateOfBirth ?? "",
+        addressLine1: values.addressLine1 ?? "",
+        addressCity: values.addressCity ?? "",
+        addressState: values.addressState ?? "",
+        addressPostalCode: values.addressPostalCode ?? "",
+        addressCountry: values.addressCountry ?? INDIA_COUNTRY_NAME,
+        emergencyName: values.emergencyName ?? "",
+        emergencyRelation: values.emergencyRelation ?? "",
+        emergencyPhone: values.emergencyPhone ?? "",
+      });
     });
-    hasHydratedDetails.current = true;
-  }, [form, personalDetails]);
+    return () => subscription.unsubscribe();
+  }, [form, onDraftChange]);
 
   useEffect(() => {
     if (!form.getValues("addressCountry")?.trim()) {
@@ -132,30 +152,12 @@ export function StepPersonal({ onComplete, defaultValues }: StepPersonalProps) {
       emergencyRelation: undefined,
       emergencyPhone: "",
     });
+    onClear?.();
   }
 
   function handleFormSubmit(values: PersonalInfoFormValues) {
-    mutate(values, {
-      onSuccess: () => {
-        toast.success("Personal details saved");
-        onComplete({
-          phone: values.phone,
-          gender: values.gender,
-          dateOfBirth: values.dateOfBirth,
-          addressLine1: values.addressLine1,
-          addressCity: values.addressCity,
-          addressState: values.addressState,
-          addressPostalCode: values.addressPostalCode,
-          addressCountry: values.addressCountry,
-          emergencyName: values.emergencyName,
-          emergencyRelation: values.emergencyRelation,
-          emergencyPhone: values.emergencyPhone,
-        });
-      },
-      onError: (err) => {
-        toast.error(getErrorMessage(err));
-      },
-    });
+    toast.success("Personal details saved");
+    onComplete(toPersonalDraft(values));
   }
 
   function handleNextClick() {
@@ -173,8 +175,6 @@ export function StepPersonal({ onComplete, defaultValues }: StepPersonalProps) {
             onNext={handleNextClick}
             nextType="submit"
             nextLabel="Save & continue"
-            isPending={isPending}
-            loadingText="Saving…"
             clearLabel="Clear"
             onClear={handleClear}
           />
@@ -249,12 +249,6 @@ export function StepPersonal({ onComplete, defaultValues }: StepPersonalProps) {
         </div>
 
         <section className="space-y-3">
-          <div>
-            <h3 className="text-sm font-semibold text-foreground">
-              Home address
-            </h3>
-            <p className="text-xs text-muted-foreground">Optional</p>
-          </div>
           <div className="space-y-1.5">
             <Label htmlFor="addressLine1">Street address</Label>
             <Input
@@ -388,9 +382,7 @@ export function StepPersonal({ onComplete, defaultValues }: StepPersonalProps) {
         </section>
 
         <section className="space-y-3">
-          <h3 className="text-sm font-semibold text-foreground">
-            Emergency contact
-          </h3>
+          <WizardSectionHeading>Emergency contact</WizardSectionHeading>
           <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="emergencyName">Full name</Label>
@@ -431,7 +423,7 @@ export function StepPersonal({ onComplete, defaultValues }: StepPersonalProps) {
             </div>
           </div>
           <div className="space-y-1.5 sm:max-w-[calc(50%-0.5rem)]">
-            <Label htmlFor="emergencyPhone">Phone number</Label>
+            <Label htmlFor="emergencyPhone">Emergency phone</Label>
             <Controller
               control={form.control}
               name="emergencyPhone"

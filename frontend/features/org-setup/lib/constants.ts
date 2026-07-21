@@ -1,15 +1,15 @@
 import type { WizardData } from "./wizard-data-schema";
+import {
+  WIZARD_COL_PAD,
+  WIZARD_COL_PAD_X,
+  WIZARD_COL_PAD_Y,
+} from "@/components/wizard-shell";
 
 export const DRAFT_KEY = "org-setup-draft";
 
-export const ORG_SETUP_COL_PAD_X =
-  "px-4 sm:px-6 md:px-8 lg:px-10";
-
-export const ORG_SETUP_COL_PAD_Y =
-  "py-3 sm:py-4 md:py-5 lg:py-6";
-
-export const ORG_SETUP_COL_PAD =
-  ORG_SETUP_COL_PAD_X + " " + ORG_SETUP_COL_PAD_Y;
+export const ORG_SETUP_COL_PAD_X = WIZARD_COL_PAD_X;
+export const ORG_SETUP_COL_PAD_Y = WIZARD_COL_PAD_Y;
+export const ORG_SETUP_COL_PAD = WIZARD_COL_PAD;
 
 export type StepId = "welcome" | "basics" | "invite";
 
