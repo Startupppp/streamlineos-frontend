@@ -3,7 +3,7 @@
 import { use, useState, useCallback } from "react";
 import { useModules, useCreateModule } from "@/hooks/api/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { ModuleCard, ModuleCardSkeleton } from "@/features/projects/modules/module-card";
 import { EmptyTasksIllustration } from "@/components/illustrations";
@@ -14,7 +14,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -229,11 +228,7 @@ export default function ModulesPage({
       >
         <PmPageShell>
           <PmSection index={0}>
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-20 rounded-xl" />
-              ))}
-            </div>
+            <StatCardGridSkeleton cols={4} count={4} />
           </PmSection>
           <PmSection index={1}>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import type { LucideIcon } from "lucide-react";
@@ -24,6 +25,8 @@ import {
   type ChecklistItemId,
 } from "@/hooks/common/use-workspace-checklist-progress";
 import { cn } from "@/lib/utils";
+
+const MOBILE_HEADER_SLOT_ID = "mobile-header-checklist-slot";
 
 function dismissedKey(orgId: string): string {
   return `ws_checklist_dismissed_${orgId}`;
@@ -172,6 +175,87 @@ function ProgressBadge({ doneCount, total }: ProgressBadgeProps) {
   );
 }
 
+interface ChecklistPanelProps {
+  doneCount: number;
+  progress: number;
+  completed: Set<ChecklistItemId>;
+  onCollapse: () => void;
+  onDismiss: () => void;
+}
+
+function ChecklistPanel({
+  doneCount,
+  progress,
+  completed,
+  onCollapse,
+  onDismiss,
+}: ChecklistPanelProps) {
+  return (
+    <Card className="shadow-lg overflow-hidden">
+      <div className="px-4 pt-3 pb-2">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-sm font-semibold text-foreground truncate">Getting Started</span>
+            <motion.span
+              key={doneCount}
+              initial={{ scale: 1.2, opacity: 0.6 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={SPRING_BOUNCE}
+              className="shrink-0 text-xs font-medium text-muted-foreground tabular-nums"
+            >
+              {doneCount}/{TOTAL}
+            </motion.span>
+          </div>
+          <div className="flex items-center gap-1 shrink-0">
+            <motion.button
+              type="button"
+              onClick={onCollapse}
+              aria-label="Collapse checklist"
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.97 }}
+              className="h-6 w-6 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+            >
+              <ChevronDown className="h-3.5 w-3.5" />
+            </motion.button>
+            <motion.button
+              type="button"
+              onClick={onDismiss}
+              aria-label="Dismiss checklist"
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.97 }}
+              className="h-6 w-6 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+            >
+              <X className="h-3.5 w-3.5" />
+            </motion.button>
+          </div>
+        </div>
+        <Progress
+          value={progress}
+          className="h-1.5 mt-2"
+          aria-label={`${doneCount} of ${TOTAL} tasks completed`}
+        />
+      </div>
+
+      <div className="px-3 pb-3 space-y-0.5">
+        <motion.div
+          variants={listVariants}
+          initial="hidden"
+          animate="visible"
+          className="space-y-0.5"
+        >
+          {CHECKLIST_ITEMS.map((item) => (
+            <ChecklistRow
+              key={item.id}
+              item={item}
+              done={completed.has(item.id)}
+            />
+          ))}
+        </motion.div>
+      </div>
+    </Card>
+  );
+}
+
 interface FabProgressRingProps {
   progressFraction: number;
 }
@@ -224,15 +308,30 @@ export function SuccessChecklist() {
     () => false,
   );
   const [collapsed, setCollapsed] = useState(false);
+  const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null);
 
   const progress = Math.round((doneCount / TOTAL) * 100);
   const progressFraction = doneCount / TOTAL;
   const allDone = doneCount >= TOTAL;
   const dismissed = storedDismissed || allDone;
+  const isActive =
+    Boolean(canSetUpWorkspace) &&
+    Boolean(org?.onboardingCompletedAt) &&
+    !dismissed &&
+    !isLoading &&
+    !allDone;
 
   useEffect(() => {
     if (allDone && orgId && !storedDismissed) persistDismissed(orgId);
   }, [allDone, orgId, storedDismissed]);
+
+  useEffect(() => {
+    if (!isActive) {
+      setHeaderSlot(null);
+      return;
+    }
+    setHeaderSlot(document.getElementById(MOBILE_HEADER_SLOT_ID));
+  }, [isActive]);
 
   const handleDismiss = useCallback(() => {
     persistDismissed(orgId);
@@ -242,116 +341,95 @@ export function SuccessChecklist() {
     setCollapsed((prev) => !prev);
   }, []);
 
-  if (!canSetUpWorkspace || !org?.onboardingCompletedAt || dismissed || isLoading || allDone) return null;
+  if (!isActive) return null;
+
+  const panelProps: ChecklistPanelProps = {
+    doneCount,
+    progress,
+    completed,
+    onCollapse: handleToggleCollapse,
+    onDismiss: handleDismiss,
+  };
+
+  const mobileHeaderUi =
+    headerSlot &&
+    createPortal(
+      <div className="relative inline-flex items-center">
+        <button
+          type="button"
+          onClick={handleToggleCollapse}
+          aria-label={collapsed ? "Open getting started checklist" : "Collapse checklist"}
+          aria-expanded={!collapsed}
+          className="relative size-8 rounded-lg flex items-center justify-center text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <CheckCircle2 className="h-4 w-4" />
+          <ProgressBadge doneCount={doneCount} total={TOTAL} />
+        </button>
+        <AnimatePresence>
+          {!collapsed ? (
+            <motion.div
+              key="checklist-panel-mobile"
+              className="absolute top-full right-0 mt-2 z-50 w-[min(20rem,calc(100vw-1.5rem))] origin-top-right"
+              {...panelTransition}
+            >
+              <ChecklistPanel {...panelProps} />
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
+      </div>,
+      headerSlot,
+    );
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
-      <AnimatePresence mode="wait">
-        {collapsed ? (
-          <motion.div
-            key="checklist-fab"
-            className="relative"
-            {...fabEntrance}
-          >
-            <FabProgressRing progressFraction={progressFraction} />
-            <motion.button
-              type="button"
-              onClick={handleToggleCollapse}
-              aria-label="Open getting started checklist"
-              initial={false}
-              whileHover={{
-                scale: 1.05,
-                boxShadow: "0 10px 28px -4px rgba(0, 0, 0, 0.22), 0 4px 12px -2px rgba(0, 0, 0, 0.12)",
-              }}
-              whileTap={{ scale: 0.97 }}
-              animate={
-                allDone
-                  ? { boxShadow: "0 8px 24px -4px rgba(124, 58, 237, 0.45)" }
-                  : { boxShadow: "0 4px 14px -2px rgba(0, 0, 0, 0.15)" }
-              }
-              transition={{ type: "spring", stiffness: 380, damping: 24 }}
-              className="relative h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+    <>
+      {mobileHeaderUi}
+      <div className="fixed z-50 bottom-4 right-4 hidden md:block">
+        <AnimatePresence mode="wait">
+          {collapsed ? (
+            <motion.div
+              key="checklist-fab"
+              className="relative"
+              {...fabEntrance}
             >
-              <motion.span
-                animate={allDone ? { rotate: [0, -8, 8, 0], scale: [1, 1.1, 1] } : { rotate: 0, scale: 1 }}
-                transition={allDone ? { duration: 0.5, ease: "easeOut" } : { duration: 0.2 }}
+              <FabProgressRing progressFraction={progressFraction} />
+              <motion.button
+                type="button"
+                onClick={handleToggleCollapse}
+                aria-label="Open getting started checklist"
+                initial={false}
+                whileHover={{
+                  scale: 1.05,
+                  boxShadow: "0 10px 28px -4px rgba(0, 0, 0, 0.22), 0 4px 12px -2px rgba(0, 0, 0, 0.12)",
+                }}
+                whileTap={{ scale: 0.97 }}
+                animate={
+                  allDone
+                    ? { boxShadow: "0 8px 24px -4px rgba(124, 58, 237, 0.45)" }
+                    : { boxShadow: "0 4px 14px -2px rgba(0, 0, 0, 0.15)" }
+                }
+                transition={{ type: "spring", stiffness: 380, damping: 24 }}
+                className="relative h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               >
-                <CheckCircle2 className="h-5 w-5" />
-              </motion.span>
-              <ProgressBadge doneCount={doneCount} total={TOTAL} />
-            </motion.button>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="checklist-panel"
-            className="w-72 origin-bottom-right"
-            {...panelTransition}
-          >
-            <Card className="shadow-lg overflow-hidden">
-              <div className="px-4 pt-3 pb-2">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-sm font-semibold text-foreground truncate">Getting Started</span>
-                    <motion.span
-                      key={doneCount}
-                      initial={{ scale: 1.2, opacity: 0.6 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={SPRING_BOUNCE}
-                      className="shrink-0 text-xs font-medium text-muted-foreground tabular-nums"
-                    >
-                      {doneCount}/{TOTAL}
-                    </motion.span>
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <motion.button
-                      type="button"
-                      onClick={handleToggleCollapse}
-                      aria-label="Collapse checklist"
-                      whileHover={{ scale: 1.08 }}
-                      whileTap={{ scale: 0.97 }}
-                      className="h-6 w-6 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
-                    >
-                      <ChevronDown className="h-3.5 w-3.5" />
-                    </motion.button>
-                    <motion.button
-                      type="button"
-                      onClick={handleDismiss}
-                      aria-label="Dismiss checklist"
-                      whileHover={{ scale: 1.08 }}
-                      whileTap={{ scale: 0.97 }}
-                      className="h-6 w-6 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </motion.button>
-                  </div>
-                </div>
-                <Progress
-                  value={progress}
-                  className="h-1.5 mt-2"
-                  aria-label={`${doneCount} of ${TOTAL} tasks completed`}
-                />
-              </div>
-
-              <div className="px-3 pb-3 space-y-0.5">
-                <motion.div
-                  variants={listVariants}
-                  initial="hidden"
-                  animate="visible"
-                  className="space-y-0.5"
+                <motion.span
+                  animate={allDone ? { rotate: [0, -8, 8, 0], scale: [1, 1.1, 1] } : { rotate: 0, scale: 1 }}
+                  transition={allDone ? { duration: 0.5, ease: "easeOut" } : { duration: 0.2 }}
                 >
-                  {CHECKLIST_ITEMS.map((item) => (
-                    <ChecklistRow
-                      key={item.id}
-                      item={item}
-                      done={completed.has(item.id)}
-                    />
-                  ))}
-                </motion.div>
-              </div>
-            </Card>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+                  <CheckCircle2 className="h-5 w-5" />
+                </motion.span>
+                <ProgressBadge doneCount={doneCount} total={TOTAL} />
+              </motion.button>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="checklist-panel"
+              className="w-72 origin-bottom-right"
+              {...panelTransition}
+            >
+              <ChecklistPanel {...panelProps} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </>
   );
 }

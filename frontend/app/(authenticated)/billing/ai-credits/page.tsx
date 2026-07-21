@@ -381,7 +381,7 @@ export default function AiCreditsPage() {
             {isLoading ? (
               <StatCardGridSkeleton cols={4} count={4} />
             ) : (
-              <StatCardGrid cols={4} mobileScroll>
+              <StatCardGrid cols={4}>
                 <StatCard
                   label="Balance"
                   value={formatCredits(wallet?.balance ?? 0) + " cr"}

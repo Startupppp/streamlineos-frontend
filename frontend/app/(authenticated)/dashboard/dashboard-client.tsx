@@ -307,7 +307,6 @@ export function DashboardClient() {
           <motion.div variants={fadeUp} initial="hidden" animate="visible">
             <StatCardGrid
               cols={statCards.length >= 4 ? 4 : statCards.length >= 3 ? 3 : 2}
-              mobileScroll
             >
               {statCards.map((stat) => (
                 <StatCard

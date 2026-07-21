@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   Sheet,
   SheetBody,
@@ -19,12 +19,10 @@ import { UserStatusBadge } from "./user-status-badge";
 import { UserEditForm } from "./user-edit-form";
 import { UserSessionsTab } from "./user-sessions-tab";
 import { UserDevicesTab } from "./user-devices-tab";
-import { UserActivityTab } from "./user-activity-tab";
 import { UserPreferencesTab } from "./user-preferences-tab";
 import { UserLoginHistoryTab } from "./user-login-history-tab";
 import { UserMembershipSection } from "./user-membership-section";
 import { UserAuditTab } from "./user-audit-tab";
-import { useCallback } from "react";
 import {
   Mail,
   Phone,
@@ -35,14 +33,23 @@ import {
   Github,
   Globe,
 } from "lucide-react";
-import { XIcon } from "@animateicons/react/lucide";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 
 interface UserDetailSheetProps {
   userId: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+const TAB_ITEMS = [
+  { value: "profile", label: "Profile" },
+  { value: "sessions", label: "Sessions" },
+  { value: "devices", label: "Devices" },
+  { value: "login-history", label: "Logins" },
+  { value: "audit", label: "Audit" },
+  { value: "preferences", label: "Prefs" },
+] as const;
+
+const TAB_PANEL_CLASS = "mt-2 flex min-h-0 flex-1 flex-col pt-4";
 
 function getInitials(name: string | null, email: string): string {
   if (name) {
@@ -95,219 +102,196 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-lg p-0 flex flex-col gap-0">
         <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
-          <div className="flex items-center justify-between gap-2">
-            <SheetTitle className="text-base">User Details</SheetTitle>
-            {user && !isEditing && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 text-xs"
-                onClick={handleStartEditing}
-              >
-                <Pencil className="h-3.5 w-3.5 mr-1" />
-                Edit
-              </Button>
-            )}
-            {isEditing && (
-              <AnimatedIconButton
-                icon={XIcon}
-                iconSize={14}
-                iconClassName="mr-1"
-                variant="ghost"
-                size="sm"
-                className="h-7 text-xs"
-                onClick={handleCancelEditing}
-              >
-                Cancel
-              </AnimatedIconButton>
-            )}
-          </div>
+          <SheetTitle className="text-base">User Details</SheetTitle>
         </SheetHeader>
 
-        <SheetBody className="px-6 py-5">
-        {isLoading && <ProfileSkeleton />}
+        <SheetBody className="flex min-h-0 flex-1 flex-col px-6 py-5">
+          {isLoading && <ProfileSkeleton />}
 
-        {!isLoading && user && (
-          <>
-            {isEditing ? (
-              <UserEditForm
-                user={user}
-                onSuccess={handleEditSuccess}
-                onCancel={handleCancelEditing}
-              />
-            ) : (
-              <Tabs defaultValue="profile" className="flex flex-col">
-                <TabsList className="shrink-0 w-full justify-start bg-muted/50 rounded-md p-0.5 gap-0.5 flex-wrap">
-                  {[
-                    { value: "profile", label: "Profile" },
-                    { value: "sessions", label: "Sessions" },
-                    { value: "devices", label: "Devices" },
-                    { value: "activity", label: "Activity" },
-                    { value: "login-history", label: "Logins" },
-                    { value: "audit", label: "Audit" },
-                    { value: "preferences", label: "Prefs" },
-                  ].map(({ value, label }) => (
-                    <TabsTrigger
-                      key={value}
-                      value={value}
-                      className="text-xs px-2.5"
-                    >
-                      {label}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
+          {!isLoading && user && (
+            <>
+              {isEditing ? (
+                <UserEditForm
+                  user={user}
+                  onSuccess={handleEditSuccess}
+                  onCancel={handleCancelEditing}
+                />
+              ) : (
+                <Tabs defaultValue="profile" className="flex min-h-0 flex-1 flex-col gap-0">
+                  <TabsList className="flex h-9 min-h-9 max-h-9 w-full sm:w-full shrink-0 justify-stretch overflow-hidden bg-muted/50 rounded-md p-0.5 gap-0.5">
+                    {TAB_ITEMS.map(({ value, label }) => (
+                      <TabsTrigger
+                        key={value}
+                        value={value}
+                        className="h-7 min-w-0 flex-1 shrink px-1 truncate text-sm font-medium data-[state=active]:font-semibold"
+                      >
+                        {label}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
 
-                <TabsContent value="profile" className="mt-4 flex-1 space-y-4">
-                  <div className="flex items-start gap-3">
-                    <Avatar className="h-14 w-14 shrink-0">
-                      <AvatarImage src={user.image ?? undefined} alt={user.name ?? user.email} />
-                      <AvatarFallback className="text-sm font-semibold">
-                        {getInitials(user.name, user.email)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-sm leading-tight truncate">
-                        {user.name ?? user.email}
-                      </p>
-                      {user.designation && (
-                        <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                          {user.designation}
-                        </p>
-                      )}
-                      <div className="flex flex-wrap gap-1.5 mt-2">
-                        <Badge variant="secondary" className="text-[10px] h-5 px-1.5">
-                          {user.role}
-                        </Badge>
-                        <UserStatusBadge isActive={user.isActive} />
-                      </div>
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div className="space-y-2.5">
-                    <div className="flex items-center gap-2.5 text-xs">
-                      <Mail className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                      <span className="text-foreground truncate">{user.email}</span>
-                    </div>
-                    {user.phone && (
-                      <div className="flex items-center gap-2.5 text-xs">
-                        <Phone className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                        <span className="text-foreground">{user.phone}</span>
-                      </div>
-                    )}
-                    {user.designation && (
-                      <div className="flex items-center gap-2.5 text-xs">
-                        <Briefcase className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                        <span className="text-foreground">{user.designation}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {user.bio && (
-                    <>
-                      <Separator />
-                      <p className="text-xs text-muted-foreground leading-relaxed">{user.bio}</p>
-                    </>
-                  )}
-
-                  {(user.linkedinUrl || user.twitterUrl || user.githubUrl || user.websiteUrl) && (
-                    <>
-                      <Separator />
-                      <div className="flex flex-wrap gap-2">
-                        {user.linkedinUrl && (
-                          <a
-                            href={user.linkedinUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                          >
-                            <Linkedin className="h-3.5 w-3.5" />
-                            LinkedIn
-                          </a>
-                        )}
-                        {user.twitterUrl && (
-                          <a
-                            href={user.twitterUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                          >
-                            <Twitter className="h-3.5 w-3.5" />
-                            Twitter
-                          </a>
-                        )}
-                        {user.githubUrl && (
-                          <a
-                            href={user.githubUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                          >
-                            <Github className="h-3.5 w-3.5" />
-                            GitHub
-                          </a>
-                        )}
-                        {user.websiteUrl && (
-                          <a
-                            href={user.websiteUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                          >
-                            <Globe className="h-3.5 w-3.5" />
-                            Website
-                          </a>
-                        )}
-                      </div>
-                    </>
-                  )}
-
-                  {user.emergencyContact && (
-                    <>
-                      <Separator />
-                      <div className="space-y-2">
-                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Emergency Contact</p>
-                        <div className="space-y-1 text-xs">
-                          <p className="font-medium">{user.emergencyContact.name} <span className="font-normal text-muted-foreground">({user.emergencyContact.relation})</span></p>
-                          <p className="text-muted-foreground">{user.emergencyContact.phone}</p>
-                          {user.emergencyContact.email && <p className="text-muted-foreground">{user.emergencyContact.email}</p>}
+                  <TabsContent value="profile" className={TAB_PANEL_CLASS}>
+                    <div className="space-y-4">
+                      <div className="flex items-start gap-3">
+                        <Avatar className="h-14 w-14 shrink-0">
+                          <AvatarImage src={user.image ?? undefined} alt={user.name ?? user.email} />
+                          <AvatarFallback className="text-sm font-semibold">
+                            {getInitials(user.name, user.email)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <p className="font-semibold text-sm leading-tight truncate">
+                                {user.name ?? user.email}
+                              </p>
+                              {user.designation && (
+                                <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                                  {user.designation}
+                                </p>
+                              )}
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 shrink-0 text-xs"
+                              onClick={handleStartEditing}
+                            >
+                              <Pencil className="h-3.5 w-3.5 mr-1" />
+                              Edit
+                            </Button>
+                          </div>
+                          <div className="flex flex-wrap gap-1.5 mt-2">
+                            <Badge variant="secondary" className="text-[10px] h-5 px-1.5">
+                              {user.role}
+                            </Badge>
+                            <UserStatusBadge isActive={user.isActive} />
+                          </div>
                         </div>
                       </div>
-                    </>
-                  )}
 
-                  <Separator />
-                  <UserMembershipSection userId={user.id} />
-                </TabsContent>
+                      <Separator />
 
-                <TabsContent value="sessions" className="mt-4 flex-1">
-                  <UserSessionsTab userId={user.id} />
-                </TabsContent>
+                      <div className="space-y-2.5">
+                        <div className="flex items-center gap-2.5 text-xs">
+                          <Mail className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                          <span className="text-foreground truncate">{user.email}</span>
+                        </div>
+                        {user.phone && (
+                          <div className="flex items-center gap-2.5 text-xs">
+                            <Phone className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                            <span className="text-foreground">{user.phone}</span>
+                          </div>
+                        )}
+                        {user.designation && (
+                          <div className="flex items-center gap-2.5 text-xs">
+                            <Briefcase className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                            <span className="text-foreground">{user.designation}</span>
+                          </div>
+                        )}
+                      </div>
 
-                <TabsContent value="devices" className="mt-4 flex-1">
-                  <UserDevicesTab userId={user.id} />
-                </TabsContent>
+                      {user.bio && (
+                        <>
+                          <Separator />
+                          <p className="text-xs text-muted-foreground leading-relaxed">{user.bio}</p>
+                        </>
+                      )}
 
-                <TabsContent value="activity" className="mt-4 flex-1">
-                  <UserActivityTab userId={user.id} />
-                </TabsContent>
+                      {(user.linkedinUrl || user.twitterUrl || user.githubUrl || user.websiteUrl) && (
+                        <>
+                          <Separator />
+                          <div className="flex flex-wrap gap-2">
+                            {user.linkedinUrl && (
+                              <a
+                                href={user.linkedinUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                              >
+                                <Linkedin className="h-3.5 w-3.5" />
+                                LinkedIn
+                              </a>
+                            )}
+                            {user.twitterUrl && (
+                              <a
+                                href={user.twitterUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                              >
+                                <Twitter className="h-3.5 w-3.5" />
+                                Twitter
+                              </a>
+                            )}
+                            {user.githubUrl && (
+                              <a
+                                href={user.githubUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                              >
+                                <Github className="h-3.5 w-3.5" />
+                                GitHub
+                              </a>
+                            )}
+                            {user.websiteUrl && (
+                              <a
+                                href={user.websiteUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                              >
+                                <Globe className="h-3.5 w-3.5" />
+                                Website
+                              </a>
+                            )}
+                          </div>
+                        </>
+                      )}
 
-                <TabsContent value="login-history" className="mt-4 flex-1">
-                  <UserLoginHistoryTab userId={user.id} />
-                </TabsContent>
+                      {user.emergencyContact && (
+                        <>
+                          <Separator />
+                          <div className="space-y-2">
+                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Emergency Contact</p>
+                            <div className="space-y-1 text-xs">
+                              <p className="font-medium">{user.emergencyContact.name} <span className="font-normal text-muted-foreground">({user.emergencyContact.relation})</span></p>
+                              <p className="text-muted-foreground">{user.emergencyContact.phone}</p>
+                              {user.emergencyContact.email && <p className="text-muted-foreground">{user.emergencyContact.email}</p>}
+                            </div>
+                          </div>
+                        </>
+                      )}
 
-                <TabsContent value="audit" className="mt-4 flex-1">
-                  <UserAuditTab userId={user.id} />
-                </TabsContent>
+                      <Separator />
+                      <UserMembershipSection userId={user.id} />
+                    </div>
+                  </TabsContent>
 
-                <TabsContent value="preferences" className="mt-4 flex-1">
-                  <UserPreferencesTab userId={user.id} />
-                </TabsContent>
-              </Tabs>
-            )}
-          </>
-        )}
+                  <TabsContent value="sessions" className={TAB_PANEL_CLASS}>
+                    <UserSessionsTab userId={user.id} />
+                  </TabsContent>
+
+                  <TabsContent value="devices" className={TAB_PANEL_CLASS}>
+                    <UserDevicesTab userId={user.id} />
+                  </TabsContent>
+
+                  <TabsContent value="login-history" className={TAB_PANEL_CLASS}>
+                    <UserLoginHistoryTab userId={user.id} />
+                  </TabsContent>
+
+                  <TabsContent value="audit" className={TAB_PANEL_CLASS}>
+                    <UserAuditTab userId={user.id} />
+                  </TabsContent>
+
+                  <TabsContent value="preferences" className={TAB_PANEL_CLASS}>
+                    <UserPreferencesTab userId={user.id} />
+                  </TabsContent>
+                </Tabs>
+              )}
+            </>
+          )}
         </SheetBody>
       </SheetContent>
     </Sheet>

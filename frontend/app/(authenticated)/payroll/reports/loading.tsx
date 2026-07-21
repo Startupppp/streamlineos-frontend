@@ -1,6 +1,7 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 
 export function ReportsPageSkeleton() {
   return (
@@ -24,11 +25,7 @@ export function ReportsPageSkeleton() {
           ))}
         </div>
         <div className="flex-1 min-w-0 flex flex-col gap-4">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-20 rounded-xl" />
-            ))}
-          </div>
+          <StatCardGridSkeleton cols={4} count={4} />
           <Skeleton className="h-64 rounded-xl" />
         </div>
       </div>

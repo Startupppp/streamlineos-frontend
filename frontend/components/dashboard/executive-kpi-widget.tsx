@@ -28,7 +28,7 @@ export function ExecutiveKpiWidget() {
   const skeletonCount = hasCrmAccess ? 4 : 2;
 
   if (isLoading || !data) {
-    return <StatCardGridSkeleton cols={4} count={skeletonCount} mobileScroll />;
+    return <StatCardGridSkeleton cols={4} count={skeletonCount} />;
   }
 
   const fmt = (n: number) =>
@@ -39,7 +39,7 @@ export function ExecutiveKpiWidget() {
         : `₹${n}`;
 
   return (
-    <StatCardGrid cols={4} mobileScroll>
+    <StatCardGrid cols={4}>
       <StatCard
         label="Open Roles"
         value={data.openRoles}

@@ -4,7 +4,7 @@ import { useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useRoles, useDeleteRole, useRolesAnalytics, useRolePermissionsMatrix } from "@/hooks/api/roles";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
-import { Loader2, Shield, ClipboardList } from "lucide-react";
+import { Loader2, Shield, ClipboardList, ShieldCheck, Users, KeyRound, Layers } from "lucide-react";
 import { PlusIcon, Trash2Icon, CopyIcon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getApiError } from "@/lib/api-client";
@@ -83,12 +84,6 @@ function RolesContent() {
   }, [deleteRole, deleteTarget, selectedRoleId]);
 
   const metricsLoading = isLoading || analyticsLoading;
-  const metrics = [
-    { label: "Total Roles", value: analytics?.totalRoles ?? 0 },
-    { label: "Custom Roles", value: analytics?.customRoles ?? 0 },
-    { label: "Users Assigned", value: analytics?.usersAssigned ?? 0 },
-    { label: "Total Permissions", value: analytics?.totalPermissions ?? 0 },
-  ];
 
   return (
     <PageWrapper
@@ -124,20 +119,16 @@ function RolesContent() {
       }
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {metricsLoading ? (
-          [...Array(4)].map((_, i) => <Skeleton key={i} className="h-14 rounded-lg" />)
-        ) : (
-          <>
-            {metrics.map(({ label, value }) => (
-              <Card key={label} className="p-3">
-                <p className="text-xs text-muted-foreground">{label}</p>
-                <p className="text-xl font-bold tabular-nums">{value}</p>
-              </Card>
-            ))}
-          </>
-        )}
-      </div>
+      {metricsLoading ? (
+        <StatCardGridSkeleton cols={4} count={4} />
+      ) : (
+        <StatCardGrid cols={4}>
+          <StatCard label="Total Roles" value={analytics?.totalRoles ?? 0} icon={Layers} />
+          <StatCard label="Custom Roles" value={analytics?.customRoles ?? 0} icon={ShieldCheck} tone="blue" />
+          <StatCard label="Users Assigned" value={analytics?.usersAssigned ?? 0} icon={Users} tone="emerald" />
+          <StatCard label="Total Permissions" value={analytics?.totalPermissions ?? 0} icon={KeyRound} tone="amber" />
+        </StatCardGrid>
+      )}
 
       <div className="grid flex-1 min-h-0 gap-4 lg:grid-cols-[320px_1fr]">
         <Card className="flex flex-col lg:min-h-0">

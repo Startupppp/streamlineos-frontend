@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useUserLoginHistory } from "@/hooks/api/users";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { formatClientDeviceLabel } from "@/lib/format-utils";
-import { History, ChevronLeft, ChevronRight, CheckCircle, XCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, CheckCircle, XCircle } from "lucide-react";
 import { format } from "date-fns";
 
 interface UserLoginHistoryTabProps {
@@ -20,7 +21,7 @@ export function UserLoginHistoryTab({ userId }: UserLoginHistoryTabProps) {
     undefined,
   );
 
-  const { data, isLoading } = useUserLoginHistory(userId, {
+  const { data, isLoading, error, refetch } = useUserLoginHistory(userId, {
     page,
     limit: 15,
     success: successFilter,
@@ -52,9 +53,13 @@ export function UserLoginHistoryTab({ userId }: UserLoginHistoryTabProps) {
     setPage((p) => Math.min(totalPages, p + 1));
   }, []);
 
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
   if (isLoading) {
     return (
-      <div className="space-y-2 pt-2">
+      <div className="space-y-2">
         {Array.from({ length: 6 }).map((_, i) => (
           <Skeleton key={i} className="h-12 w-full rounded" />
         ))}
@@ -62,9 +67,22 @@ export function UserLoginHistoryTab({ userId }: UserLoginHistoryTabProps) {
     );
   }
 
+  if (error) {
+    return (
+      <EmptyState
+        compact
+        className="flex-1 w-full min-h-0"
+        illustrationPreset="alert"
+        title="Couldn't load login history"
+        description={getErrorMessage(error)}
+        action={{ label: "Retry", onClick: handleRetry }}
+      />
+    );
+  }
+
   return (
-    <div className="space-y-3 pt-1">
-      <div className="flex items-center gap-2">
+    <div className="flex min-h-0 flex-1 flex-col space-y-3">
+      <div className="flex shrink-0 items-center gap-2">
         <Button
           variant={successFilter === undefined ? "secondary" : "outline"}
           size="sm"
@@ -79,7 +97,7 @@ export function UserLoginHistoryTab({ userId }: UserLoginHistoryTabProps) {
           className="h-7 text-xs"
           onClick={handleFilterSuccess}
         >
-          <CheckCircle className="h-3 w-3 mr-1 text-green-600" />
+          <CheckCircle className="h-3 w-3 mr-1 text-green-600 dark:text-green-400" />
           Successful
         </Button>
         <Button
@@ -88,7 +106,7 @@ export function UserLoginHistoryTab({ userId }: UserLoginHistoryTabProps) {
           className="h-7 text-xs"
           onClick={handleFilterFailed}
         >
-          <XCircle className="h-3 w-3 mr-1 text-red-500" />
+          <XCircle className="h-3 w-3 mr-1 text-red-500 dark:text-red-400" />
           Failed
         </Button>
       </div>
@@ -96,14 +114,13 @@ export function UserLoginHistoryTab({ userId }: UserLoginHistoryTabProps) {
       {entries.length === 0 ? (
         <EmptyState
           compact
-          illustration={
-            <History className="h-10 w-10 text-muted-foreground/40" />
-          }
+          className="flex-1 w-full min-h-0"
+          illustrationPreset="security"
           title="No login history"
           description="No login events recorded for this user."
         />
       ) : (
-        <div className="space-y-1.5">
+        <div className="min-h-0 flex-1 space-y-1.5 overflow-y-auto">
           {entries.map((entry) => (
             <div
               key={entry.id}
@@ -111,7 +128,7 @@ export function UserLoginHistoryTab({ userId }: UserLoginHistoryTabProps) {
             >
               <div className="mt-0.5">
                 {entry.success ? (
-                  <CheckCircle className="h-3.5 w-3.5 text-green-500" />
+                  <CheckCircle className="h-3.5 w-3.5 text-green-500 dark:text-green-400" />
                 ) : (
                   <XCircle className="h-3.5 w-3.5 text-red-400" />
                 )}
@@ -149,7 +166,7 @@ export function UserLoginHistoryTab({ userId }: UserLoginHistoryTabProps) {
       )}
 
       {pagination && pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between text-xs text-muted-foreground pt-1">
+        <div className="flex shrink-0 items-center justify-between text-xs text-muted-foreground pt-1">
           <span>{pagination.total} events</span>
           <div className="flex items-center gap-1">
             <Button

@@ -37,8 +37,6 @@ export function PageWrapper({
   actions,
   filters,
   filtersClassName,
-  // md: collapse filters into a popover on phones + tablets so multi-select
-  // toolbars don't force awkward horizontal scrolling on ~768–1024px widths.
   filtersCollapseBreakpoint = "md",
   mobileFiltersInline = false,
   actionsInline = false,
@@ -117,8 +115,7 @@ export function PageWrapper({
               className={cn(
                 actionsInline
                   ? "flex shrink-0 items-center gap-2"
-                  : // Wrap on phones; avoid equal-width grid that squishes 3+ actions.
-                    "flex w-full flex-wrap items-center gap-2 sm:w-auto sm:shrink-0 sm:flex-nowrap sm:justify-end",
+                  : "flex w-full flex-wrap items-center gap-2 sm:w-auto sm:shrink-0 sm:flex-nowrap sm:justify-end",
               )}
             >
               {actions}
@@ -142,16 +139,13 @@ export function PageWrapper({
                   className="w-[min(22rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] p-3"
                   align="start"
                 >
-                  <div className="flex flex-col gap-2">
-                    {filters}
-                  </div>
+                  <div className="flex flex-col gap-2">{filters}</div>
                 </PopoverContent>
               </Popover>
             </div>
           )}
           <div
             className={cn(
-              // Horizontal filter toolbar: fixed-size controls, no full-width search steal.
               "w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain scrollbar-hide touch-pan-x pb-3 sm:gap-2.5",
               PAGE_CHROME_X,
               mobileFiltersInline ? "flex" : desktopFiltersClass,
@@ -166,7 +160,6 @@ export function PageWrapper({
       {noInternalScroll ? (
         <div
           className={cn(
-            // Always keep horizontal + bottom chrome; never let contentClassName strip it
             "flex min-h-0 flex-1 flex-col overflow-hidden",
             PAGE_CHROME_X,
             PAGE_CHROME_BOTTOM,

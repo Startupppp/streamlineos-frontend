@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useUserSessions, useRevokeSession, useRevokeAllSessions } from "@/hooks/api/users";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { formatClientDeviceLabel, formatIpAddress } from "@/lib/format-utils";
 import { toast } from "sonner";
 import { Trash2Icon } from "@animateicons/react/lucide";
@@ -36,7 +36,7 @@ function isSessionActive(session: { isRevoked: boolean; expiresAt: string | null
 }
 
 export function UserSessionsTab({ userId }: UserSessionsTabProps) {
-  const { data: sessions, isLoading } = useUserSessions(userId);
+  const { data: sessions, isLoading, error, refetch } = useUserSessions(userId);
   const { mutate: revokeSession, isPending: isRevoking } = useRevokeSession();
   const { mutate: revokeAll, isPending: isRevokingAll } = useRevokeAllSessions();
 
@@ -45,7 +45,7 @@ export function UserSessionsTab({ userId }: UserSessionsTabProps) {
       { userId, sessionId },
       {
         onSuccess: () => toast.success("Session revoked"),
-        onError: (e) => toast.error(getApiError(e)),
+        onError: (e) => toast.error(getErrorMessage(e)),
       }
     );
   }
@@ -53,13 +53,17 @@ export function UserSessionsTab({ userId }: UserSessionsTabProps) {
   function handleRevokeAll() {
     revokeAll(userId, {
       onSuccess: () => toast.success("All sessions revoked"),
-      onError: (e) => toast.error(getApiError(e)),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
+  }
+
+  function handleRetry() {
+    void refetch();
   }
 
   if (isLoading) {
     return (
-      <div className="space-y-2 pt-2">
+      <div className="space-y-2">
         {Array.from({ length: 8 }).map((_, i) => (
           <Skeleton key={i} className="h-10 w-full rounded" />
         ))}
@@ -67,10 +71,24 @@ export function UserSessionsTab({ userId }: UserSessionsTabProps) {
     );
   }
 
+  if (error) {
+    return (
+      <EmptyState
+        compact
+        className="flex-1 w-full min-h-0"
+        illustrationPreset="alert"
+        title="Couldn't load sessions"
+        description={getErrorMessage(error)}
+        action={{ label: "Retry", onClick: handleRetry }}
+      />
+    );
+  }
+
   if (!sessions || sessions.length === 0) {
     return (
       <EmptyState
         compact
+        className="flex-1 w-full min-h-0"
         illustrationPreset="devices"
         title="No sessions"
         description="This user has no recorded sessions."
@@ -132,7 +150,7 @@ export function UserSessionsTab({ userId }: UserSessionsTabProps) {
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 text-[11px] text-red-600 hover:text-red-700 hover:bg-red-50"
+              className="h-6 text-[11px] text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-500/10"
               onClick={() => handleRevoke(row.id)}
               disabled={isRevoking}
             >
@@ -145,18 +163,18 @@ export function UserSessionsTab({ userId }: UserSessionsTabProps) {
   ];
 
   return (
-    <div className="space-y-3 pt-1">
+    <div className="flex min-h-0 flex-1 flex-col space-y-2">
       {activeSessions.length > 0 && (
-        <div className="flex justify-end">
+        <div className="flex shrink-0 justify-end">
           <AnimatedIconButton
             icon={Trash2Icon}
             iconSize={14}
-            iconClassName="mr-1"
+            iconClassName="mr-1 text-red-600 dark:text-red-400"
             variant="outline"
             size="sm"
             onClick={handleRevokeAll}
             disabled={isRevokingAll}
-            className="text-red-600 border-red-200 hover:bg-red-50 dark:hover:bg-red-500/10 h-7 text-xs"
+            className="h-9 text-xs text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:border-red-500/30 dark:hover:bg-red-500/10 dark:hover:text-red-300 [&_svg:not([class*='text-'])]:text-red-600 hover:[&_svg:not([class*='text-'])]:text-red-700 dark:[&_svg:not([class*='text-'])]:text-red-400 dark:hover:[&_svg:not([class*='text-'])]:text-red-300"
           >
             Revoke all ({activeSessions.length})
           </AnimatedIconButton>
@@ -166,6 +184,7 @@ export function UserSessionsTab({ userId }: UserSessionsTabProps) {
         data={sessions}
         columns={columns}
         getRowKey={(session) => session.id}
+        className="min-h-0 flex-1"
       />
     </div>
   );

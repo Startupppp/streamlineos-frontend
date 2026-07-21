@@ -168,14 +168,14 @@ export const WorkloadView = memo(function WorkloadView({
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-4">
-      <div className="grid shrink-0 grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid w-full min-w-0 shrink-0 gap-3 overflow-x-auto overscroll-x-contain touch-pan-x scrollbar-hide grid-cols-[repeat(4,minmax(176px,1fr))]">
         {STATS.map((stat) => (
           <button
             key={stat.id}
             type="button"
             onClick={() => handleStatCardClick(stat.id)}
             className={cn(
-              "bg-card rounded-lg border border-border p-3 flex items-center gap-3 shadow-sm text-left transition-colors hover:bg-muted/40",
+              "bg-card rounded-lg border border-border p-3 flex h-full items-center gap-3 shadow-sm text-left transition-colors hover:bg-muted/40",
               filters.statCard === stat.id && stat.id !== "all" && "ring-2 ring-primary/30 bg-primary/5",
             )}
           >

@@ -37,6 +37,7 @@ import { useOrgBranches, useOrgDepartments } from "@/hooks/api/org-hierarchy";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { CheckCircle2, Mail, ChevronDown } from "lucide-react";
+import { USER_INVITE_ROLES } from "./user-invite-roles";
 
 const inviteSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -54,13 +55,6 @@ interface UserInviteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-
-const ROLES = [
-  { value: "MEMBER", label: "Member" },
-  { value: "ADMIN", label: "Admin" },
-  { value: "MANAGER", label: "Manager" },
-  { value: "HR", label: "HR" },
-];
 
 export function UserInviteDialog({ open, onOpenChange }: UserInviteDialogProps) {
   const [invited, setInvited] = useState(false);
@@ -193,7 +187,7 @@ export function UserInviteDialog({ open, onOpenChange }: UserInviteDialogProps) 
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {ROLES.map((r) => (
+                        {USER_INVITE_ROLES.map((r) => (
                           <SelectItem key={r.value} value={r.value}>
                             {r.label}
                           </SelectItem>

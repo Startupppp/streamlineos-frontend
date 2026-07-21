@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useUserAuditLog } from "@/hooks/api/users";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 
@@ -21,14 +22,26 @@ function friendlyAction(action: string): string {
 
 export function UserAuditTab({ userId }: UserAuditTabProps) {
   const [page, setPage] = useState(1);
-  const { data, isLoading } = useUserAuditLog(userId, { page, limit: 15 });
+  const { data, isLoading, error, refetch } = useUserAuditLog(userId, { page, limit: 15 });
 
   const entries = data?.data ?? [];
   const pagination = data?.pagination;
 
+  const handlePagePrev = useCallback(() => {
+    setPage((p) => Math.max(1, p - 1));
+  }, []);
+
+  const handlePageNext = useCallback((totalPages: number) => {
+    setPage((p) => Math.min(totalPages, p + 1));
+  }, []);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
   if (isLoading) {
     return (
-      <div className="space-y-2 pt-2">
+      <div className="space-y-2">
         {Array.from({ length: 6 }).map((_, i) => (
           <Skeleton key={i} className="h-10 w-full rounded" />
         ))}
@@ -36,10 +49,24 @@ export function UserAuditTab({ userId }: UserAuditTabProps) {
     );
   }
 
+  if (error) {
+    return (
+      <EmptyState
+        compact
+        className="flex-1 w-full min-h-0"
+        illustrationPreset="alert"
+        title="Couldn't load audit log"
+        description={getErrorMessage(error)}
+        action={{ label: "Retry", onClick: handleRetry }}
+      />
+    );
+  }
+
   if (entries.length === 0) {
     return (
       <EmptyState
         compact
+        className="flex-1 w-full min-h-0"
         illustrationPreset="security"
         title="No audit events"
         description="No activity has been logged for this user yet."
@@ -48,8 +75,8 @@ export function UserAuditTab({ userId }: UserAuditTabProps) {
   }
 
   return (
-    <div className="space-y-3 pt-1">
-      <div className="space-y-1.5">
+    <div className="flex min-h-0 flex-1 flex-col space-y-3">
+      <div className="min-h-0 flex-1 space-y-1.5 overflow-y-auto">
         {entries.map((entry) => (
           <div
             key={entry.id}
@@ -71,14 +98,14 @@ export function UserAuditTab({ userId }: UserAuditTabProps) {
       </div>
 
       {pagination && pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between text-xs text-muted-foreground pt-1">
+        <div className="flex shrink-0 items-center justify-between text-xs text-muted-foreground pt-1">
           <span>{pagination.total} events</span>
           <div className="flex items-center gap-1">
             <Button
               variant="outline"
               size="sm"
               className="h-7 w-7 p-0"
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              onClick={handlePagePrev}
               disabled={page === 1}
             >
               <ChevronLeft className="h-3.5 w-3.5" />
@@ -88,7 +115,7 @@ export function UserAuditTab({ userId }: UserAuditTabProps) {
               variant="outline"
               size="sm"
               className="h-7 w-7 p-0"
-              onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
+              onClick={() => handlePageNext(pagination.totalPages)}
               disabled={page === pagination.totalPages}
             >
               <ChevronRight className="h-3.5 w-3.5" />

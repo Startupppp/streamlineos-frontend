@@ -137,6 +137,7 @@ function MobileHeader({ hidden }: { hidden?: boolean }) {
         <HeaderBrand />
       </div>
       <div className="flex items-center gap-1 shrink-0">
+        <div id="mobile-header-checklist-slot" className="relative inline-flex items-center" />
         <NotificationBell />
       </div>
     </div>

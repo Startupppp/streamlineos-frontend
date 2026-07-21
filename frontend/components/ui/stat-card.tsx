@@ -106,52 +106,34 @@ export interface StatCardProps {
 export interface StatCardGridProps {
   children: ReactNode;
   cols?: 2 | 3 | 4 | 5 | 6;
-  mobileScroll?: boolean;
   className?: string;
 }
 
 export interface StatCardGridSkeletonProps {
   cols?: 2 | 3 | 4 | 5 | 6;
   count?: number;
-  mobileScroll?: boolean;
   className?: string;
 }
 
 const STAT_GRID_COLS: Record<NonNullable<StatCardGridProps["cols"]>, string> = {
-  2: "grid-cols-2",
-  3: "grid-cols-3",
-  4: "grid-cols-4",
-  5: "grid-cols-5",
-  6: "grid-cols-6",
-};
-
-const STAT_GRID_RESPONSIVE_COLS: Record<
-  NonNullable<StatCardGridProps["cols"]>,
-  string
-> = {
-  2: "sm:grid-cols-2",
-  3: "sm:grid-cols-3",
-  4: "sm:grid-cols-4",
-  5: "sm:grid-cols-5",
-  6: "sm:grid-cols-6",
+  2: "grid-cols-[repeat(2,minmax(176px,1fr))]",
+  3: "grid-cols-[repeat(3,minmax(176px,1fr))]",
+  4: "grid-cols-[repeat(4,minmax(176px,1fr))]",
+  5: "grid-cols-[repeat(5,minmax(176px,1fr))]",
+  6: "grid-cols-[repeat(6,minmax(176px,1fr))]",
 };
 
 export function StatCardGrid({
   children,
   cols = 4,
-  mobileScroll = false,
   className,
 }: StatCardGridProps) {
   return (
     <div
       className={cn(
-        mobileScroll
-          ? "flex -mx-px gap-3 overflow-x-auto pb-1 snap-x snap-mandatory scrollbar-hide sm:mx-0 sm:grid sm:pb-0"
-          : "grid gap-3",
-        mobileScroll ? STAT_GRID_RESPONSIVE_COLS[cols] : STAT_GRID_COLS[cols],
-        mobileScroll
-          ? "[&>*]:h-full [&>*]:min-w-[176px] [&>*]:shrink-0 [&>*]:snap-start sm:[&>*]:min-w-0 sm:[&>*]:shrink"
-          : "[&>*]:min-w-0 [&>*]:h-full",
+        "grid w-full min-w-0 gap-3 overflow-x-auto overscroll-x-contain touch-pan-x scrollbar-hide",
+        STAT_GRID_COLS[cols],
+        "[&>*]:h-full",
         className,
       )}
     >
@@ -180,12 +162,11 @@ export function StatCardSkeleton({ className }: { className?: string }) {
 export function StatCardGridSkeleton({
   cols = 4,
   count,
-  mobileScroll = false,
   className,
 }: StatCardGridSkeletonProps) {
   const itemCount = count ?? cols;
   return (
-    <StatCardGrid cols={cols} mobileScroll={mobileScroll} className={className}>
+    <StatCardGrid cols={cols} className={className}>
       {Array.from({ length: itemCount }).map((_, i) => (
         <StatCardSkeleton key={i} />
       ))}
@@ -253,7 +234,7 @@ export const StatCard = memo(function StatCard({
       <div className="min-w-0 flex-1 space-y-0.5">
         <p
           className={cn(
-            "text-[11px] font-medium leading-tight sm:truncate",
+            "text-[11px] font-medium leading-tight truncate",
             featured ? "text-primary-foreground/70" : "text-muted-foreground",
           )}
         >

@@ -8,6 +8,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
+import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import {
   Select,
@@ -209,11 +210,7 @@ export function ReportsPageSkeleton() {
       }
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-[72px] rounded-lg" />
-          ))}
-        </div>
+        <StatCardGridSkeleton cols={4} count={4} />
         <div className="grid gap-4 md:grid-cols-2">
           <Card>
             <CardContent className="pt-4">

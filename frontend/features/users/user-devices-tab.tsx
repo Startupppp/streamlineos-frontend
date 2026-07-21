@@ -1,12 +1,11 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useUserDevices, useRemoveDevice } from "@/hooks/api/users";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -26,7 +25,7 @@ type Device = {
 };
 
 export function UserDevicesTab({ userId }: UserDevicesTabProps) {
-  const { data: devices, isLoading } = useUserDevices(userId);
+  const { data: devices, isLoading, error, refetch } = useUserDevices(userId);
   const { mutate: removeDevice, isPending } = useRemoveDevice();
 
   function handleRemove(deviceId: string) {
@@ -34,14 +33,18 @@ export function UserDevicesTab({ userId }: UserDevicesTabProps) {
       { userId, deviceId },
       {
         onSuccess: () => toast.success("Device removed"),
-        onError: (e) => toast.error(getApiError(e)),
+        onError: (e) => toast.error(getErrorMessage(e)),
       }
     );
   }
 
+  function handleRetry() {
+    void refetch();
+  }
+
   if (isLoading) {
     return (
-      <div className="space-y-2 pt-2">
+      <div className="space-y-2">
         {Array.from({ length: 8 }).map((_, i) => (
           <Skeleton key={i} className="h-10 w-full rounded" />
         ))}
@@ -49,10 +52,24 @@ export function UserDevicesTab({ userId }: UserDevicesTabProps) {
     );
   }
 
+  if (error) {
+    return (
+      <EmptyState
+        compact
+        className="flex-1 w-full min-h-0"
+        illustrationPreset="alert"
+        title="Couldn't load devices"
+        description={getErrorMessage(error)}
+        action={{ label: "Retry", onClick: handleRetry }}
+      />
+    );
+  }
+
   if (!devices || devices.length === 0) {
     return (
       <EmptyState
         compact
+        className="flex-1 w-full min-h-0"
         illustrationPreset="devices"
         title="No devices"
         description="This user has no registered devices."
@@ -108,10 +125,10 @@ export function UserDevicesTab({ userId }: UserDevicesTabProps) {
           <AnimatedIconButton
             icon={Trash2Icon}
             iconSize={12}
-            iconClassName="mr-1"
+            iconClassName="mr-1 text-red-600 dark:text-red-400"
             variant="ghost"
             size="sm"
-            className="h-6 text-[11px] text-red-600 hover:text-red-700 hover:bg-red-50"
+            className="h-6 text-[11px] text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-500/10 [&_svg]:text-red-600 dark:[&_svg]:text-red-400"
             onClick={() => handleRemove(row.id)}
             disabled={isPending}
           >
@@ -123,12 +140,11 @@ export function UserDevicesTab({ userId }: UserDevicesTabProps) {
   ];
 
   return (
-    <div className="pt-1">
-      <DataTable
-        data={devices}
-        columns={columns}
-        getRowKey={(device) => device.id}
-      />
-    </div>
+    <DataTable
+      data={devices}
+      columns={columns}
+      getRowKey={(device) => device.id}
+      className="min-h-0 flex-1"
+    />
   );
 }

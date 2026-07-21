@@ -16,7 +16,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import type { Customer360Response, Customer360SectionItem } from "@/types/crm";
 import type { StatTone } from "@/components/ui/stat-card";
 
@@ -116,16 +116,7 @@ export function Customer360Section({ data, isLoading }: Customer360SectionProps)
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[1, 2, 3, 4].map((i) => (
-            <Card key={i} className="shadow-sm">
-              <CardContent className="p-3 space-y-1.5">
-                <Skeleton className="h-3 w-16" />
-                <Skeleton className="h-6 w-10" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <StatCardGridSkeleton cols={4} count={4} />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {[1, 2, 3].map((i) => (
             <Card key={i} className="shadow-sm">

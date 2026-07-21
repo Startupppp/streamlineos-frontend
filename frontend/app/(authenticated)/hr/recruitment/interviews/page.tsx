@@ -7,6 +7,7 @@ import type { Interview } from "@/types/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import {
   Settings,
   List,
@@ -15,6 +16,8 @@ import {
   ChevronRight,
   CalendarClock,
   BarChart2,
+  CheckCircle2,
+  XCircle,
   Plus,
 } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -177,24 +180,12 @@ export default function InterviewsPage() {
       }
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="bg-muted/40 rounded-lg p-3 text-center">
-          <p className="text-xl font-bold tabular-nums text-foreground">{interviewStats.total}</p>
-          <p className="text-xs font-medium text-muted-foreground mt-0.5">Total</p>
-        </div>
-        <div className="bg-muted/40 rounded-lg p-3 text-center">
-          <p className="text-xl font-bold tabular-nums text-amber-600">{interviewStats.pending}</p>
-          <p className="text-xs font-medium text-muted-foreground mt-0.5">Scheduled</p>
-        </div>
-        <div className="bg-muted/40 rounded-lg p-3 text-center">
-          <p className="text-xl font-bold tabular-nums text-emerald-600">{interviewStats.passed}</p>
-          <p className="text-xs font-medium text-muted-foreground mt-0.5">Passed</p>
-        </div>
-        <div className="bg-muted/40 rounded-lg p-3 text-center">
-          <p className="text-xl font-bold tabular-nums text-rose-600">{interviewStats.failed}</p>
-          <p className="text-xs font-medium text-muted-foreground mt-0.5">Failed</p>
-        </div>
-      </div>
+      <StatCardGrid cols={4}>
+        <StatCard label="Total" value={interviewStats.total} icon={BarChart2} />
+        <StatCard label="Scheduled" value={interviewStats.pending} icon={CalendarClock} tone="amber" />
+        <StatCard label="Passed" value={interviewStats.passed} icon={CheckCircle2} tone="emerald" />
+        <StatCard label="Failed" value={interviewStats.failed} icon={XCircle} tone="red" />
+      </StatCardGrid>
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1 rounded-lg border p-1">

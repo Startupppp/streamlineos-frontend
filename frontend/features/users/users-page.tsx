@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +21,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -42,7 +43,6 @@ import { UserDetailSheet } from "./user-detail-sheet";
 import { UserInviteDialog } from "./user-invite-dialog";
 import { UserBulkInviteDialog } from "./user-bulk-invite-dialog";
 import { UserImportDialog } from "./user-import-dialog";
-import { UserCreateDialog } from "./user-create-dialog";
 import { UserActionsMenu } from "./user-actions-menu";
 import { UserBulkAssignDialog } from "./user-bulk-assign-dialog";
 import { UserStatsCards } from "./user-stats-cards";
@@ -55,20 +55,13 @@ import { Users,
   UserPlus,
   Download,
   Upload,
+  SlidersHorizontal,
 } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { formatDistanceToNow } from "date-fns";
 import { TruncatedText } from "@/components/ui/truncated-text";
-
-function getInitials(name: string | null, email: string): string {
-  if (name) {
-    const parts = name.split(" ").filter(Boolean);
-    if (parts.length >= 2) return `${parts[0]![0]}${parts[1]![0]}`.toUpperCase();
-    if (parts.length === 1) return parts[0]!.slice(0, 2).toUpperCase();
-  }
-  return email.slice(0, 2).toUpperCase();
-}
+import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
 
 export function UsersPage() {
   const router = useRouter();
@@ -92,7 +85,6 @@ export function UsersPage() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [bulkInviteOpen, setBulkInviteOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
-  const [createOpen, setCreateOpen] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [selectAllMatching, setSelectAllMatching] = useState(false);
@@ -244,11 +236,8 @@ export function UsersPage() {
   const handleInviteChange = useCallback((v: boolean) => setInviteOpen(v), []);
   const handleBulkInviteChange = useCallback((v: boolean) => setBulkInviteOpen(v), []);
   const handleImportChange = useCallback((v: boolean) => setImportOpen(v), []);
-  const handleCreateChange = useCallback((v: boolean) => setCreateOpen(v), []);
   const handleSheetChange = useCallback((v: boolean) => setSheetOpen(v), []);
   const handleAssignChange = useCallback((v: boolean) => setAssignOpen(v), []);
-  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
-  const handleCloseCreate = useCallback(() => setCreateOpen(false), []);
   const handleOpenBulkInvite = useCallback(() => setBulkInviteOpen(true), []);
   const handleOpenImport = useCallback(() => setImportOpen(true), []);
   const handleExport = useCallback(() => exportUsers(), [exportUsers]);
@@ -271,22 +260,25 @@ export function UsersPage() {
       key: "name",
       header: "User",
       sortable: true,
-      cell: (user) => (
-        <div className="flex items-center gap-2">
-          <Avatar className="h-6 w-6 shrink-0">
-            <AvatarImage src={user.image ?? undefined} alt={user.name ?? user.email} />
-            <AvatarFallback className="text-[10px] font-semibold">
-              {getInitials(user.name, user.email)}
-            </AvatarFallback>
-          </Avatar>
-          <div className="min-w-0">
-            <TruncatedText text={user.name ?? "—"} className="text-[11px] font-medium leading-tight" />
-            {user.designation && (
-              <TruncatedText text={user.designation} className="text-[10px] text-muted-foreground" />
-            )}
+      cell: (user) => {
+        const displayName = getUserDisplayName(user);
+        return (
+          <div className="flex items-center gap-2">
+            <Avatar className="h-6 w-6 shrink-0">
+              <AvatarImage src={user.image ?? undefined} alt={displayName} />
+              <AvatarFallback className="text-[10px] font-semibold">
+                {getUserInitials(user)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <TruncatedText text={displayName} className="text-[11px] font-medium leading-tight" />
+              {user.designation && (
+                <TruncatedText text={user.designation} className="text-[10px] text-muted-foreground" />
+              )}
+            </div>
           </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       key: "email",
@@ -376,16 +368,80 @@ export function UsersPage() {
     />
   );
 
+  function renderFilterSelects() {
+    return (
+      <div className="flex w-full flex-col gap-2 md:contents">
+        <Select value={status} onValueChange={handleStatusChange}>
+          <SelectTrigger className={`w-full md:w-32 ${FILTER_SELECT_TRIGGER}`}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+            <SelectItem value="all">All statuses</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="suspended">Suspended</SelectItem>
+            <SelectItem value="archived">Archived</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={role} onValueChange={handleRoleChange}>
+          <SelectTrigger className={`w-full md:w-32 ${FILTER_SELECT_TRIGGER}`}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+            <SelectItem value="all">All roles</SelectItem>
+            <SelectItem value="OWNER">Owner</SelectItem>
+            <SelectItem value="ADMIN">Admin</SelectItem>
+            <SelectItem value="MANAGER">Manager</SelectItem>
+            <SelectItem value="MEMBER">Member</SelectItem>
+            <SelectItem value="HR">HR</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={departmentId} onValueChange={handleDeptChange}>
+          <SelectTrigger className={`w-full md:w-36 ${FILTER_SELECT_TRIGGER}`}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+            <SelectItem value="all">All departments</SelectItem>
+            {(departmentsData?.data ?? []).map((d) => (
+              <SelectItem key={d.id} value={String(d.id)}>
+                {d.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={branchId} onValueChange={handleBranchChange}>
+          <SelectTrigger className={`w-full md:w-32 ${FILTER_SELECT_TRIGGER}`}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+            <SelectItem value="all">All branches</SelectItem>
+            {(branchesData?.data ?? []).map((b) => (
+              <SelectItem key={b.id} value={String(b.id)}>
+                {b.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    );
+  }
+
   return (
     <>
       <PageWrapper
         title="Users"
         subtitle="Manage members, roles, and access."
+        mobileFiltersInline
         actions={
-          <>
+          <div className="grid w-full grid-cols-3 gap-2 sm:flex sm:w-auto sm:flex-nowrap sm:justify-end">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <AnimatedIconButton icon={EllipsisIcon} iconClassName="mr-1.5" variant="outline" size="sm">
+                <AnimatedIconButton
+                  icon={EllipsisIcon}
+                  iconClassName="mr-1.5"
+                  variant="outline"
+                  size="sm"
+                  className="w-full sm:w-auto"
+                >
                   More
                 </AnimatedIconButton>
               </DropdownMenuTrigger>
@@ -403,74 +459,44 @@ export function UsersPage() {
                   <Users className="h-3.5 w-3.5 mr-2" />
                   Bulk Invite
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleOpenCreate}>
-                  <UserPlus className="h-3.5 w-3.5 mr-2" />
-                  Create User
-                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button size="sm" onClick={handleOpenInvite}>
+            <Button size="sm" className="w-full sm:w-auto" onClick={handleOpenInvite}>
               <UserPlus className="h-3.5 w-3.5 mr-1.5" />
               Invite User
             </Button>
-          </>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 w-full gap-1.5 text-xs md:hidden"
+                  aria-label="Filters"
+                >
+                  <SlidersHorizontal className="h-4 w-4" />
+                  <span className="truncate">Filters</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                className="w-[min(22rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] p-3"
+                align="end"
+              >
+                {renderFilterSelects()}
+              </PopoverContent>
+            </Popover>
+          </div>
         }
         filters={
-          <div className={FILTER_TOOLBAR_ROW}>
-            <div className="min-w-[160px] max-w-xs flex-1">
-              <SearchInput placeholder="Search users..." value={search} onValueChange={handleSearchChange} />
+          <>
+            <div className="min-w-0 w-full flex-1 md:min-w-[160px] md:max-w-xs">
+              <SearchInput
+                placeholder="Search users..."
+                value={search}
+                onValueChange={handleSearchChange}
+              />
             </div>
-            <Select value={status} onValueChange={handleStatusChange}>
-              <SelectTrigger className={`w-32 ${FILTER_SELECT_TRIGGER}`}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="suspended">Suspended</SelectItem>
-                <SelectItem value="archived">Archived</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={role} onValueChange={handleRoleChange}>
-              <SelectTrigger className={`w-32 ${FILTER_SELECT_TRIGGER}`}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All roles</SelectItem>
-                <SelectItem value="OWNER">Owner</SelectItem>
-                <SelectItem value="ADMIN">Admin</SelectItem>
-                <SelectItem value="MANAGER">Manager</SelectItem>
-                <SelectItem value="MEMBER">Member</SelectItem>
-                <SelectItem value="HR">HR</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={departmentId} onValueChange={handleDeptChange}>
-              <SelectTrigger className={`w-36 ${FILTER_SELECT_TRIGGER}`}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All departments</SelectItem>
-                {(departmentsData?.data ?? []).map((d) => (
-                  <SelectItem key={d.id} value={String(d.id)}>
-                    {d.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={branchId} onValueChange={handleBranchChange}>
-              <SelectTrigger className={`w-32 ${FILTER_SELECT_TRIGGER}`}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All branches</SelectItem>
-                {(branchesData?.data ?? []).map((b) => (
-                  <SelectItem key={b.id} value={String(b.id)}>
-                    {b.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+            <div className="hidden md:contents">{renderFilterSelects()}</div>
+          </>
         }
       >
         <div className="flex flex-1 min-h-0 flex-col gap-3">
@@ -607,11 +633,6 @@ export function UsersPage() {
         onOpenChange={handleBulkInviteChange}
       />
       <UserImportDialog open={importOpen} onOpenChange={handleImportChange} />
-      <UserCreateDialog
-        open={createOpen}
-        onOpenChange={handleCreateChange}
-        onSuccess={handleCloseCreate}
-      />
       <UserBulkAssignDialog
         open={assignOpen}
         onOpenChange={handleAssignChange}

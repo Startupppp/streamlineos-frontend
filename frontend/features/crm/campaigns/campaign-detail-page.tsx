@@ -7,7 +7,7 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -111,11 +111,7 @@ export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
     return (
       <PageWrapper title="Campaign" backHref="/crm/campaigns">
         <div className="space-y-4">
-          <div className="grid grid-cols-4 gap-3">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-24 rounded-xl" />
-            ))}
-          </div>
+          <StatCardGridSkeleton cols={4} count={4} />
           <Skeleton className="h-72 rounded-xl" />
         </div>
       </PageWrapper>

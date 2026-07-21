@@ -197,14 +197,6 @@ interface OrgHoliday {
   createdAt: string;
 }
 
-interface OrgCustomDomain {
-  id: string;
-  domain: string;
-  verificationToken: string;
-  verifiedAt: string | null;
-  createdAt: string;
-}
-
 export const useOrgHolidays = (
   options?: Omit<UseQueryOptions<OrgHoliday[], Error>, "queryKey" | "queryFn">,
 ) =>
@@ -240,64 +232,6 @@ export const useDeleteOrgHoliday = () => {
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: [...queryKeys.organization.all, "holidays"],
-      });
-    },
-  });
-};
-
-export const useOrgCustomDomains = (
-  options?: Omit<
-    UseQueryOptions<OrgCustomDomain[], Error>,
-    "queryKey" | "queryFn"
-  >,
-) =>
-  useQuery<OrgCustomDomain[], Error>({
-    queryKey: [...queryKeys.organization.all, "custom-domains"],
-    queryFn: () =>
-      apiClient.get<OrgCustomDomain[]>("/organization/custom-domains"),
-    staleTime: 60_000,
-    ...options,
-  });
-
-export const useAddCustomDomain = () => {
-  const queryClient = useQueryClient();
-  return useMutation<OrgCustomDomain, Error, { domain: string }>({
-    mutationFn: (data) =>
-      apiClient.post<OrgCustomDomain>("/organization/custom-domains", data),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: [...queryKeys.organization.all, "custom-domains"],
-      });
-    },
-  });
-};
-
-export const useVerifyCustomDomain = () => {
-  const queryClient = useQueryClient();
-  return useMutation<{ verified: boolean }, Error, string>({
-    mutationFn: (domainId) =>
-      apiClient.post<{ verified: boolean }>(
-        `/organization/custom-domains/${domainId}/verify`,
-        {},
-      ),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: [...queryKeys.organization.all, "custom-domains"],
-      });
-    },
-  });
-};
-
-export const useRemoveCustomDomain = () => {
-  const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, string>({
-    mutationFn: (domainId) =>
-      apiClient.delete<{ success: boolean }>(
-        `/organization/custom-domains/${domainId}`,
-      ),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: [...queryKeys.organization.all, "custom-domains"],
       });
     },
   });

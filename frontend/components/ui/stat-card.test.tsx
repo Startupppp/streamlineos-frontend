@@ -2,9 +2,9 @@ import { render } from "@testing-library/react";
 import { StatCard, StatCardGrid } from "./stat-card";
 
 describe("StatCardGrid", () => {
-  it("uses a touch-scrollable row below the small breakpoint when mobileScroll is enabled", () => {
+  it("keeps a comfortable card min-width and scrolls instead of compressing", () => {
     const { container } = render(
-      <StatCardGrid cols={4} mobileScroll>
+      <StatCardGrid cols={4}>
         <StatCard label="First" value={1} />
         <StatCard label="Second" value={2} />
       </StatCardGrid>,
@@ -12,24 +12,24 @@ describe("StatCardGrid", () => {
 
     const grid = container.firstElementChild;
     expect(grid).toHaveClass(
-      "flex",
+      "grid",
+      "min-w-0",
       "overflow-x-auto",
-      "snap-x",
-      "sm:grid",
-      "sm:grid-cols-4",
-      "[&>*]:min-w-[176px]",
-      "sm:[&>*]:min-w-0",
+      "scrollbar-hide",
+      "grid-cols-[repeat(4,minmax(176px,1fr))]",
     );
+    expect(grid).not.toHaveClass("[&>*]:min-w-0");
   });
 
-  it("keeps the regular grid for consumers that do not opt in", () => {
+  it("honors the cols prop for denser strips", () => {
     const { container } = render(
-      <StatCardGrid cols={4}>
+      <StatCardGrid cols={6}>
         <StatCard label="First" value={1} />
       </StatCardGrid>,
     );
 
-    expect(container.firstElementChild).toHaveClass("grid", "grid-cols-4");
-    expect(container.firstElementChild).not.toHaveClass("overflow-x-auto");
+    expect(container.firstElementChild).toHaveClass(
+      "grid-cols-[repeat(6,minmax(176px,1fr))]",
+    );
   });
 });

@@ -15,10 +15,8 @@ import { OrgBrandingSection } from "@/features/settings/organization/org-brandin
 import { OrgLocalizationSection } from "@/features/settings/organization/org-localization-section";
 import { OrgBusinessHoursSection } from "@/features/settings/organization/org-business-hours-section";
 import { OrgHolidayCalendarSection } from "@/features/settings/organization/org-holiday-calendar-section";
-import { OrgCustomDomainsSection } from "@/features/settings/organization/org-custom-domains-section";
 import { OrgConfigSection } from "@/features/settings/organization/org-config-section";
 import { OrgSecuritySection } from "@/features/settings/organization/org-security-section";
-import { OrgIntegrationsSection } from "@/features/settings/organization/org-integrations-section";
 import { OrgDataPrivacySection } from "@/features/settings/organization/org-data-privacy-section";
 import { OrgDangerZoneSection } from "@/features/settings/organization/org-danger-zone-section";
 
@@ -314,10 +312,6 @@ export default function OrganizationSettingsPage() {
         <OrgBusinessHoursSection org={org} canEdit={canEdit} />
 
         <OrgHolidayCalendarSection canEdit={canEdit} />
-
-        <OrgCustomDomainsSection canEdit={canEdit} />
-
-        <OrgIntegrationsSection canEdit={canEdit} />
 
         <OrgDataPrivacySection canEdit={canEdit} />
 

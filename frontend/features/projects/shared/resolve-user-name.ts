@@ -10,7 +10,10 @@ export function getUserDisplayName(user: NamedUser | null | undefined): string {
   if (user.name && user.name.trim()) return user.name.trim();
   const full = `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim();
   if (full) return full;
-  return user.email?.trim() || "Unknown";
+  const email = user.email?.trim();
+  if (!email) return "Unknown";
+  const local = email.split("@")[0]?.trim();
+  return local || email;
 }
 
 export function getUserInitials(user: NamedUser | null | undefined): string {

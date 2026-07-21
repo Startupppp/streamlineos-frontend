@@ -587,8 +587,10 @@ All reconciled (hook URLs↔routes, chat signatures, PermissionKeys). Build not 
 
 ## Settings
 - [x] `/settings` — Account settings (profile + security only); notification prefs removed 2026-07-13 — use `/notifications/preferences` (deleted `settings-preferences.tsx` + legacy HR notification hooks)
-- [x] `/settings/organization` — Organization settings
-- [x] `/settings/members` — Members management
+- [x] `/settings/organization` — Organization settings; removed Integrations + Custom Domains sections (UI-only; backend APIs kept) 2026-07-21
+- [x] `/settings/members` — Members management (redirect → `/users`); Create User removed from More menu; Invite User + Bulk Invite share full role list (Member/Manager/HR/Finance/Engineering/Admin) 2026-07-21
+- [x] `/users` — Mobile toolbar via existing `mobileFiltersInline` + actions Filters popover + search in `filters` (no `showMobileFiltersButton`/`filtersLeading`); desktop flat toolbar 2026-07-21
+- [x] `/users` User Details sheet — Prefs trimmed to Language/Timezone/Date/Time Format; tab triggers `text-sm font-medium`/active `font-semibold`; all TabsContent `pt-4`; Activity tab removed; TabsList h-9 equal-width; empty states fill+center; Revoke all h-9 red icon 2026-07-21
 - [x] `/settings/roles` — Roles list
 - [x] `/settings/roles/[roleId]` — Role editor: per-role permission matrix + member list via `useRole`/`useRoleMembers`, gated `settings:rbac:manage`, back button to `/settings/roles`
 - [x] `/settings/roles/simulate` — Permission Simulator — employee combobox, simulates effective permissions via GET /roles/simulate/:targetUserId, grouped by module with expandable rows, scope badges
@@ -699,7 +701,7 @@ Completed all identified missing features across Organization and Authorization 
 - [x] `/organization/locations` — Same archive/restore pattern; no `deletedAt` so filter by `status === "ARCHIVED"` only.
 - [x] `/organization/cost-centers` — Same archive/restore pattern; converted anonymous handlers to `useCallback`.
 - [x] `/settings/api-tokens` — Full implementation: list/create/revoke/delete tokens; token-created dialog with one-time copy; scope selector; expiry date.
-- [x] `/settings/organization` — Added `maxConcurrentSessions` field to Security Policies section; wired to backend.
+- [x] `/settings/organization` — Added `maxConcurrentSessions` field to Security Policies section; wired to backend. Removed Integrations + Custom Domains cards 2026-07-21.
 - Backend: Created `api-tokens` NestJS module (controller/service/dto) with list/create/revoke/delete endpoints; registered in `app.module.ts`.
 - Backend: Added `maxConcurrentSessions` to `organizations` schema (frontend + backend), org security DTO, and session enforcement in `auth.service.ts` (oldest sessions revoked on login when limit exceeded).
 - DB: Migration `0124_max_concurrent_sessions.sql` adds `max_concurrent_sessions` column.

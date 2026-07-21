@@ -1,5 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 
 export default function CompanyDetailLoading() {
   return (
@@ -12,11 +13,7 @@ export default function CompanyDetailLoading() {
             <Skeleton className="h-4 w-24" />
           </div>
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-24" />
-          ))}
-        </div>
+        <StatCardGridSkeleton cols={4} count={4} />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="space-y-4">
             <Skeleton className="h-48" />

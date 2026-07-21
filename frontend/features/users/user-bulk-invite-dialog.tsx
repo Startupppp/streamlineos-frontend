@@ -34,6 +34,7 @@ import { useBulkInviteUsers } from "@/hooks/api/users";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { CheckCircle2, XCircle } from "lucide-react";
+import { USER_INVITE_ROLES } from "./user-invite-roles";
 
 const bulkInviteSchema = z.object({
   emailsRaw: z
@@ -53,13 +54,6 @@ interface UserBulkInviteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-
-const ROLES = [
-  { value: "MEMBER", label: "Member" },
-  { value: "ADMIN", label: "Admin" },
-  { value: "MANAGER", label: "Manager" },
-  { value: "HR", label: "HR" },
-];
 
 function parseEmails(raw: string): string[] {
   return raw
@@ -198,7 +192,7 @@ export function UserBulkInviteDialog({ open, onOpenChange }: UserBulkInviteDialo
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {ROLES.map((r) => (
+                        {USER_INVITE_ROLES.map((r) => (
                           <SelectItem key={r.value} value={r.value}>
                             {r.label}
                           </SelectItem>

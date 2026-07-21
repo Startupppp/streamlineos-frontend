@@ -1,6 +1,7 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTableSkeleton } from "@/components/ui/data-table";
+import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 
 export default function InterviewsLoading() {
   return (
@@ -18,14 +19,7 @@ export default function InterviewsLoading() {
       }
     >
       <div className="flex flex-1 min-h-0 flex-col space-y-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="bg-muted/40 rounded-lg p-3 text-center space-y-1.5">
-              <Skeleton className="h-5 w-8 mx-auto" />
-              <Skeleton className="h-3 w-12 mx-auto" />
-            </div>
-          ))}
-        </div>
+        <StatCardGridSkeleton cols={4} count={4} />
         <div className="flex items-center justify-between">
           <Skeleton className="h-8 w-32 rounded-lg" />
         </div>

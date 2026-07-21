@@ -46,19 +46,6 @@ interface UserDevice {
   createdAt: string;
 }
 
-interface UserActivityItem {
-  id: string;
-  orgId: string;
-  userId: string;
-  actorUserId: string | null;
-  action: string;
-  resourceType: string | null;
-  resourceId: string | null;
-  metadata: Record<string, unknown>;
-  ipAddress: string | null;
-  createdAt: string;
-}
-
 interface UserPreferences {
   userId: string;
   theme: string;
@@ -184,18 +171,6 @@ export const useUserDevices = (
   return useQuery<UserDevice[], Error>({
     queryKey: queryKeys.users.devices(userId),
     queryFn: () => apiClient.get<UserDevice[]>(`/users/${userId}/devices`),
-    enabled: !!userId,
-    ...options,
-  });
-};
-
-export const useUserActivity = (
-  userId: string,
-  options?: Omit<UseQueryOptions<UserActivityItem[], Error>, "queryKey" | "queryFn">
-) => {
-  return useQuery<UserActivityItem[], Error>({
-    queryKey: queryKeys.users.activity(userId),
-    queryFn: () => apiClient.get<UserActivityItem[]>(`/users/${userId}/activity`),
     enabled: !!userId,
     ...options,
   });
@@ -342,32 +317,6 @@ export const useInviteUser = () => {
       apiClient.post<{ success: boolean; invitationId: string; resent: boolean }>("/users/invite", data),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
-    },
-  });
-};
-
-export const useCreateUser = () => {
-  const queryClient = useQueryClient();
-  return useMutation<
-    { userId?: string; invitationId?: string; created?: boolean },
-    Error,
-    {
-      email: string;
-      firstName?: string;
-      lastName?: string;
-      role?: string;
-      designation?: string;
-      phone?: string;
-      departmentId?: number;
-      branchId?: number;
-      sendInvite?: boolean;
-    }
-  >({
-    mutationFn: (data) =>
-      apiClient.post<{ userId?: string; invitationId?: string; created?: boolean }>("/users", data),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.users.stats() });
     },
   });
 };
@@ -666,7 +615,6 @@ export type {
   EmergencyContact,
   UserSession,
   UserDevice,
-  UserActivityItem,
   UserPreferences,
   UserStats,
   Invitation,
