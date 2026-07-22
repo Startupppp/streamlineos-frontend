@@ -87,10 +87,14 @@ export function PageWrapper({
               </Button>
             )}
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className={cn(titleClass, typeof title === "string" ? undefined : "w-fit shrink-0")}>
-                  {title}
-                </h1>
+              <div className="flex min-w-0 items-center gap-2 flex-wrap">
+                {typeof title === "string" ? (
+                  <h1 className={cn(titleClass, "min-w-0 max-w-2xl")}>
+                    <TruncatedText text={title} />
+                  </h1>
+                ) : (
+                  <h1 className={cn(titleClass, "w-fit shrink-0")}>{title}</h1>
+                )}
                 {badge && (
                   <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-primary/10 text-foreground text-[11px] font-medium tabular-nums border border-primary/20">
                     {badge}
@@ -103,9 +107,9 @@ export function PageWrapper({
                   className="mt-1 text-[13px] text-muted-foreground leading-snug max-w-2xl"
                 />
               ) : subtitle ? (
-                <p className="mt-1 text-[13px] text-muted-foreground leading-snug max-w-2xl line-clamp-2 sm:line-clamp-1">
+                <div className="mt-1 text-[13px] text-muted-foreground leading-snug max-w-2xl">
                   {subtitle}
-                </p>
+                </div>
               ) : null}
             </div>
           </div>

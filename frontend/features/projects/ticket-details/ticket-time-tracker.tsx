@@ -135,24 +135,24 @@ export function TicketTimeTracker({ ticketId, projectId, timeSpent }: TicketTime
 
       <div className="flex items-center gap-2 mb-2">
         <div className={cn(
-          "flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-sm font-mono flex-1",
+          "flex h-9 flex-1 items-center gap-1.5 rounded-md border px-2.5 text-sm font-mono",
           running ? "border-primary/50 bg-primary/5 text-primary" : "bg-muted/30"
         )}>
           <Timer className="h-3.5 w-3.5 shrink-0" />
           <span>{formatElapsed(elapsed)}</span>
         </div>
         {!running ? (
-          <AnimatedIconButton size="sm" variant="outline" icon={PlayIcon} iconSize={12} iconClassName="mr-1" className="text-xs px-3" onClick={handleStart}>
+          <AnimatedIconButton size="sm" variant="outline" icon={PlayIcon} iconSize={12} iconClassName="mr-1" className="h-9 text-xs px-3" onClick={handleStart}>
             Start
           </AnimatedIconButton>
         ) : (
           <>
-            <Button size="sm" variant="outline" className="text-xs px-3 gap-1" onClick={handleStop}>
+            <Button size="sm" variant="outline" className="h-9 text-xs px-3 gap-1" onClick={handleStop}>
               <Square className="h-3 w-3" />Stop
             </Button>
             <Button
               size="sm"
-              className="text-xs px-3"
+              className="h-9 text-xs px-3"
               onClick={handleSaveTimer}
               disabled={logTime.isPending}
             >

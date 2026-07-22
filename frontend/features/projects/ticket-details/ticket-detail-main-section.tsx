@@ -4,7 +4,6 @@ import dynamic from "next/dynamic";
 import { Textarea } from "@/components/ui/textarea";
 import { viewFile, downloadFile } from "@/hooks/common/use-file-url";
 import { TicketSubtasks } from "./ticket-subtasks";
-import { TicketParentControl } from "./ticket-parent-control";
 import { TicketRelations } from "./ticket-relations";
 import { ActivityFeed } from "./activity-feed";
 import { TicketActivityLog } from "@/features/projects/tickets/ticket-activity-log";
@@ -109,17 +108,15 @@ export function TicketDetailMainSection({
 
   return (
     <div className="min-w-0 max-w-full space-y-4 sm:space-y-5">
-      <Textarea
-        value={localTitle}
-        onChange={onTitleChange}
-        rows={2}
-        className="h-auto w-full max-w-full min-h-0 resize-none break-words border-0 bg-transparent px-0 py-1 text-lg font-semibold leading-snug shadow-none [overflow-wrap:anywhere] [word-break:break-word] hover:border-0 focus-visible:border-0 focus-visible:ring-0 focus-visible:ring-offset-0 sm:text-xl"
-        placeholder="Ticket title"
-      />
-
-      {!isPreview && (
-        <TicketParentControl ticket={ticket} projectId={projectId} projectKey={projectKey} />
-      )}
+      <div className="min-w-0">
+        <Textarea
+          value={localTitle}
+          onChange={onTitleChange}
+          rows={2}
+          className="h-auto w-full max-w-full min-h-0 resize-none break-words border-0 bg-transparent px-0 py-1 text-lg font-semibold leading-snug shadow-none [overflow-wrap:anywhere] [word-break:break-word] hover:border-0 focus-visible:border-0 focus-visible:ring-0 focus-visible:ring-offset-0 sm:text-xl"
+          placeholder="Ticket title"
+        />
+      </div>
 
       <div className="min-w-0">
         <h3 className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">

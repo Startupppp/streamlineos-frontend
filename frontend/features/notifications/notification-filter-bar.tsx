@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { Check, ChevronDown, SlidersHorizontal } from "lucide-react";
 import { XIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -15,13 +15,10 @@ import {
 } from "@/components/ui/select";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  ResponsivePopover,
+  ResponsivePopoverContent,
+  ResponsivePopoverTrigger,
+} from "@/components/ui/responsive-popover";
 import {
   SECTION_TABS,
   NOTIFICATION_CATEGORIES,
@@ -60,18 +57,34 @@ function FilterMenuItem({
   badge?: number;
 }) {
   return (
-    <DropdownMenuItem onClick={onSelect} className="text-xs">
+    <button
+      type="button"
+      role="menuitemradio"
+      aria-checked={active}
+      onClick={onSelect}
+      className="relative flex w-full cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-xs outline-none select-none hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground"
+    >
       <span className={cn("flex h-3.5 w-3.5 items-center justify-center", !active && "opacity-0")}>
         <Check className="h-3.5 w-3.5" />
       </span>
-      <span className="flex-1">{label}</span>
+      <span className="flex-1 text-left">{label}</span>
       {badge !== undefined && badge > 0 && (
         <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
           {badge}
         </span>
       )}
-    </DropdownMenuItem>
+    </button>
   );
+}
+
+function FilterSectionLabel({ children }: { children: ReactNode }) {
+  return (
+    <p className="px-2 py-1.5 text-xs font-medium text-muted-foreground">{children}</p>
+  );
+}
+
+function FilterSectionDivider() {
+  return <div className="-mx-1 my-1 h-px bg-border" />;
 }
 
 function ClearFiltersButton({ onClick }: { onClick: () => void }) {
@@ -104,6 +117,7 @@ export function NotificationFilterBar({
   onClearFilters,
   unreadCount,
 }: NotificationFilterBarProps) {
+  const [filterOpen, setFilterOpen] = useState(false);
   const hasFilters = !!activeCategory || !!activePriority;
   const activeSectionLabel = SECTION_TABS.find((t) => t.value === activeSection)?.label ?? "All";
 
@@ -129,6 +143,30 @@ export function NotificationFilterBar({
     [onPriorityChange],
   );
 
+  const handleMobileSectionSelect = useCallback(
+    (section: NotificationSection) => {
+      onSectionChange(section);
+      setFilterOpen(false);
+    },
+    [onSectionChange],
+  );
+
+  const handleMobileCategorySelect = useCallback(
+    (category: NotificationCategory | undefined) => {
+      onCategoryChange(category);
+      setFilterOpen(false);
+    },
+    [onCategoryChange],
+  );
+
+  const handleMobilePrioritySelect = useCallback(
+    (priority: NotificationPriority | undefined) => {
+      onPriorityChange(priority);
+      setFilterOpen(false);
+    },
+    [onPriorityChange],
+  );
+
   const activeFilterCount =
     (activeSection !== "ALL" ? 1 : 0) + (activeCategory ? 1 : 0) + (activePriority ? 1 : 0);
 
@@ -142,11 +180,12 @@ export function NotificationFilterBar({
         placeholder="Search notifications…"
       />
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
+      <ResponsivePopover open={filterOpen} onOpenChange={setFilterOpen}>
+        <ResponsivePopoverTrigger asChild>
           <Button
             variant="outline"
             className={cn(FILTER_SELECT_TRIGGER, "shrink-0 h-9 gap-1.5 sm:hidden max-w-[160px]")}
+            aria-label="Filter notifications"
           >
             <SlidersHorizontal className="h-3.5 w-3.5 shrink-0" />
             <span className="truncate">{mobileFilterLabel}</span>
@@ -157,50 +196,56 @@ export function NotificationFilterBar({
             )}
             <ChevronDown className="h-3 w-3 shrink-0 opacity-50" />
           </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuLabel className="text-xs text-muted-foreground">View</DropdownMenuLabel>
-          {SECTION_TABS.map((tab) => (
+        </ResponsivePopoverTrigger>
+        <ResponsivePopoverContent
+          align="end"
+          title="Filters"
+          className="w-56 p-1"
+        >
+          <div role="menu" aria-label="Notification filters">
+            <FilterSectionLabel>View</FilterSectionLabel>
+            {SECTION_TABS.map((tab) => (
+              <FilterMenuItem
+                key={tab.value}
+                label={tab.label}
+                active={activeSection === tab.value}
+                onSelect={() => handleMobileSectionSelect(tab.value)}
+                badge={tab.value === "UNREAD" ? unreadCount : undefined}
+              />
+            ))}
+            <FilterSectionDivider />
+            <FilterSectionLabel>Category</FilterSectionLabel>
             <FilterMenuItem
-              key={tab.value}
-              label={tab.label}
-              active={activeSection === tab.value}
-              onSelect={() => onSectionChange(tab.value)}
-              badge={tab.value === "UNREAD" ? unreadCount : undefined}
+              label="All Categories"
+              active={!activeCategory}
+              onSelect={() => handleMobileCategorySelect(undefined)}
             />
-          ))}
-          <DropdownMenuSeparator />
-          <DropdownMenuLabel className="text-xs text-muted-foreground">Category</DropdownMenuLabel>
-          <FilterMenuItem
-            label="All Categories"
-            active={!activeCategory}
-            onSelect={() => onCategoryChange(undefined)}
-          />
-          {NOTIFICATION_CATEGORIES.map((cat) => (
+            {NOTIFICATION_CATEGORIES.map((cat) => (
+              <FilterMenuItem
+                key={cat}
+                label={NOTIFICATION_CATEGORY_CONFIG[cat].label}
+                active={activeCategory === cat}
+                onSelect={() => handleMobileCategorySelect(cat)}
+              />
+            ))}
+            <FilterSectionDivider />
+            <FilterSectionLabel>Priority</FilterSectionLabel>
             <FilterMenuItem
-              key={cat}
-              label={NOTIFICATION_CATEGORY_CONFIG[cat].label}
-              active={activeCategory === cat}
-              onSelect={() => onCategoryChange(cat)}
+              label="All Priorities"
+              active={!activePriority}
+              onSelect={() => handleMobilePrioritySelect(undefined)}
             />
-          ))}
-          <DropdownMenuSeparator />
-          <DropdownMenuLabel className="text-xs text-muted-foreground">Priority</DropdownMenuLabel>
-          <FilterMenuItem
-            label="All Priorities"
-            active={!activePriority}
-            onSelect={() => onPriorityChange(undefined)}
-          />
-          {NOTIFICATION_PRIORITIES.map((p) => (
-            <FilterMenuItem
-              key={p}
-              label={NOTIFICATION_PRIORITY_CONFIG[p].label}
-              active={activePriority === p}
-              onSelect={() => onPriorityChange(p)}
-            />
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+            {NOTIFICATION_PRIORITIES.map((p) => (
+              <FilterMenuItem
+                key={p}
+                label={NOTIFICATION_PRIORITY_CONFIG[p].label}
+                active={activePriority === p}
+                onSelect={() => handleMobilePrioritySelect(p)}
+              />
+            ))}
+          </div>
+        </ResponsivePopoverContent>
+      </ResponsivePopover>
 
       <Select value={activeSection} onValueChange={handleSectionSelect}>
         <SelectTrigger className={cn("hidden sm:flex w-[160px] shrink-0", FILTER_SELECT_TRIGGER)}>

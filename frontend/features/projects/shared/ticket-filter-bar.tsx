@@ -66,6 +66,8 @@ interface TicketFilterBarProps {
   className?: string;
   align?: "start" | "end";
   leading?: ReactNode;
+  trailing?: ReactNode;
+  mobileSearchFirst?: boolean;
 }
 
 function parseMulti(param: string): string[] {
@@ -100,6 +102,8 @@ export function TicketFilterBar({
   className,
   align = "start",
   leading,
+  trailing,
+  mobileSearchFirst = false,
 }: TicketFilterBarProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -397,33 +401,31 @@ export function TicketFilterBar({
 
   const hasFilterChips = activeFilterCount > 0;
 
-  const controls = (
+  const searchField = (
     <div
       className={cn(
-        "flex min-w-0 items-center gap-0.5 sm:gap-1",
-        !leading && align === "end" && "sm:justify-end",
-        leading ? "shrink-0" : "flex-1",
-      )}
-    >
-      <div
-        className={cn(
-          "relative min-w-0",
-          leading
+        "relative min-w-0",
+        mobileSearchFirst
+          ? "w-full sm:w-[220px] sm:flex-none md:w-[240px]"
+          : leading
             ? "w-[min(100%,240px)] min-w-[10rem] flex-1 sm:w-[220px] sm:flex-none md:w-[240px]"
             : align === "end"
               ? "w-full max-w-[240px] min-w-[10rem] flex-1 sm:w-[220px] sm:flex-none md:w-[240px]"
               : "w-full max-w-[240px] min-w-[10rem] flex-1 sm:max-w-[220px] md:max-w-[240px]",
-        )}
-      >
-        <SearchInput
-          placeholder="Search..."
-          value={localSearch}
-          onValueChange={handleSearchChange}
-          className="[&_svg]:left-2 [&_svg]:h-3.5 [&_svg]:w-3.5"
-          inputClassName="h-9 pl-7 pr-7 text-xs"
-        />
-      </div>
+      )}
+    >
+      <SearchInput
+        placeholder="Search..."
+        value={localSearch}
+        onValueChange={handleSearchChange}
+        className="[&_svg]:left-2 [&_svg]:h-3.5 [&_svg]:w-3.5"
+        inputClassName="h-9 pl-7 pr-7 text-xs"
+      />
+    </div>
+  );
 
+  const filterActions = (
+    <>
       <FilterCommandMenu
         activeFilterCount={activeFilterCount}
         statusItems={statusItems}
@@ -484,20 +486,61 @@ export function TicketFilterBar({
             </Tooltip>
           </TooltipProvider>
         )}
+    </>
+  );
+
+  const toolbar = mobileSearchFirst ? (
+    <div
+      className={cn(
+        "flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:flex-nowrap sm:items-center sm:gap-1.5",
+        align === "end" && !leading ? "sm:justify-end" : "sm:justify-start",
+      )}
+    >
+      <div className="order-1 w-full min-w-0 sm:order-2 sm:w-auto sm:shrink-0">
+        {searchField}
+      </div>
+      <div
+        className={cn(
+          "order-2 flex w-full min-w-0 items-center gap-1 sm:contents",
+          !leading && "justify-end",
+        )}
+      >
+        {leading ? (
+          <div className="order-1 min-w-0 flex-1 sm:flex-none sm:shrink-0">
+            {leading}
+          </div>
+        ) : null}
+        <div className="order-3 flex shrink-0 items-center gap-0.5 sm:gap-1">
+          {filterActions}
+          {trailing}
+        </div>
+      </div>
+    </div>
+  ) : (
+    <div
+      className={cn(
+        "flex w-full min-w-0 flex-nowrap items-center gap-1 sm:gap-1.5",
+        leading ? "justify-between" : align === "end" ? "sm:justify-end" : "justify-start",
+      )}
+    >
+      {leading}
+      <div
+        className={cn(
+          "flex min-w-0 items-center gap-0.5 sm:gap-1",
+          !leading && align === "end" && "sm:justify-end",
+          leading ? "shrink-0" : "flex-1",
+        )}
+      >
+        {searchField}
+        {filterActions}
+        {trailing}
+      </div>
     </div>
   );
 
   return (
     <div className={cn("flex w-full min-w-0 flex-col gap-1.5", className)}>
-      <div
-        className={cn(
-          "flex w-full min-w-0 flex-nowrap items-center gap-1 sm:gap-1.5",
-          leading ? "justify-between" : align === "end" ? "sm:justify-end" : "justify-start",
-        )}
-      >
-        {leading}
-        {controls}
-      </div>
+      {toolbar}
 
       {hasFilterChips ? (
         <div className="flex w-full min-w-0 items-center gap-1.5">

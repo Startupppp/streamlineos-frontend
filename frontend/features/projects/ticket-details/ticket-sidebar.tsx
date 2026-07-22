@@ -21,6 +21,7 @@ import {
   SidebarAssigneeSection,
   type DisplayedAssignee,
 } from "./sidebar-assignee-section";
+import { TicketParentControl } from "./ticket-parent-control";
 import {
   getUserDisplayName,
   getUserInitials,
@@ -152,6 +153,7 @@ function CustomerPicker({
 interface TicketSidebarProps {
   ticket: {
     id: number;
+    parentTicketId?: number | null;
     status?: string | null;
     priority?: string | null;
     type?: string | null;
@@ -202,6 +204,7 @@ interface TicketSidebarProps {
   };
   ticketId: number;
   projectId?: number;
+  projectKey?: string | null;
   sprints: Array<{ id: number; name: string; status?: string | null }>;
   statuses?: Array<{ name: string; id: number }>;
   onAutoSave: (field: Record<string, unknown>) => void;
@@ -227,6 +230,7 @@ export function TicketSidebar({
   ticket,
   ticketId,
   projectId,
+  projectKey,
   sprints,
   statuses,
   onAutoSave,
@@ -325,6 +329,18 @@ export function TicketSidebar({
         onModuleChange={handleModuleChange}
         onCycleChange={handleCycleChange}
       />
+
+      {projectId != null ? (
+        <TicketParentControl
+          ticket={{
+            id: ticket.id,
+            parentTicketId: ticket.parentTicketId ?? null,
+          }}
+          projectId={projectId}
+          projectKey={projectKey}
+          variant="field"
+        />
+      ) : null}
 
       <CustomerPicker
         customerId={ticket.customerId}

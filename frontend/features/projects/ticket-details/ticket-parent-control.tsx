@@ -2,25 +2,38 @@
 
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { CornerLeftUp, Search, X } from "lucide-react";
+import { ChevronsUpDown, CornerLeftUp, Search } from "lucide-react";
+import { XIcon } from "@animateicons/react/lucide";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Input } from "@/components/ui/input";
 import { useTicketSearch } from "@/hooks/api/projects/ticket-search";
 import { useUpdateTicket } from "@/hooks/api";
 import { useCan } from "@/hooks/api/access";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { cn } from "@/lib/utils";
 import { TicketParentLink } from "./ticket-parent-link";
 import type { Ticket } from "@/types/projects";
 
+type TicketParentControlVariant = "field" | "breadcrumb";
+
 interface TicketParentControlProps {
-  ticket: Ticket;
+  ticket: Pick<Ticket, "id" | "parentTicketId">;
   projectId: number;
   projectKey?: string | null;
+  variant?: TicketParentControlVariant;
 }
 
-export function TicketParentControl({ ticket, projectId, projectKey }: TicketParentControlProps) {
+const FIELD_CONTROL_CLASS =
+  "flex w-full min-h-10 touch-manipulation items-center gap-1.5 rounded-md border border-input bg-background px-3 py-2 text-xs text-left transition-colors hover:bg-accent @[18rem]:min-h-9 md:min-h-9";
+
+export function TicketParentControl({
+  ticket,
+  projectId,
+  projectKey,
+  variant = "field",
+}: TicketParentControlProps) {
   const canEdit = useCan("projects:tickets:update");
   const updateTicket = useUpdateTicket(projectId);
   const [open, setOpen] = useState(false);
@@ -62,88 +75,153 @@ export function TicketParentControl({ ticket, projectId, projectKey }: TicketPar
     setQ(e.target.value);
   }
 
-  if (!canEdit) {
-    return hasParent ? (
+  function handleOpenChange(next: boolean) {
+    setOpen(next);
+    if (!next) setQ("");
+  }
+
+  const picker = (
+    <PopoverContent align="start" className="w-80 p-0">
+      <div className="flex items-center gap-2 border-b px-2.5 py-2">
+        <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+        <Input
+          value={q}
+          onChange={handleQueryChange}
+          placeholder="Search tickets to set as parent…"
+          className="h-7 border-0 p-0 text-xs shadow-none focus-visible:ring-0"
+          autoFocus
+        />
+      </div>
+      <div className="max-h-64 overflow-y-auto p-1">
+        {debounced.trim().length === 0 ? (
+          <p className="px-2 py-3 text-center text-xs text-muted-foreground">Type to search…</p>
+        ) : isFetching && matches.length === 0 ? (
+          <p className="px-2 py-3 text-center text-xs text-muted-foreground">Searching…</p>
+        ) : matches.length === 0 ? (
+          <p className="px-2 py-3 text-center text-xs text-muted-foreground">
+            No matching tickets in this project
+          </p>
+        ) : (
+          matches.map((r) => (
+            <button
+              key={r.id}
+              type="button"
+              onClick={() => setParent(r.id)}
+              disabled={updateTicket.isPending}
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-muted/60"
+            >
+              <span className="shrink-0 font-mono text-[10px] text-muted-foreground/70">
+                {r.projectKey}-{r.ticketNumber}
+              </span>
+              <span className="min-w-0 flex-1 truncate text-xs">{r.title}</span>
+            </button>
+          ))
+        )}
+      </div>
+    </PopoverContent>
+  );
+
+  if (variant === "breadcrumb") {
+    if (!hasParent) return null;
+    return (
       <TicketParentLink
         parentTicketId={ticket.parentTicketId}
         projectId={projectId}
         projectKey={projectKey}
+        density="compact"
       />
-    ) : null;
+    );
+  }
+
+  if (!canEdit) {
+    if (!hasParent) {
+      return (
+        <div className="min-w-0">
+          <span className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+            Parent
+          </span>
+          <p className="text-xs text-muted-foreground">None</p>
+        </div>
+      );
+    }
+    return (
+      <div className="min-w-0">
+        <span className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+          Parent
+        </span>
+        <TicketParentLink
+          parentTicketId={ticket.parentTicketId}
+          projectId={projectId}
+          projectKey={projectKey}
+          density="field"
+        />
+      </div>
+    );
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
-      {hasParent ? (
-        <>
-          <TicketParentLink
-            parentTicketId={ticket.parentTicketId}
-            projectId={projectId}
-            projectKey={projectKey}
-          />
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 text-muted-foreground"
-            onClick={handleRemove}
-            disabled={updateTicket.isPending}
-            aria-label="Remove parent"
-          >
-            <X className="h-3.5 w-3.5" />
-          </Button>
-        </>
-      ) : null}
-
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 gap-1.5 px-2 text-xs text-muted-foreground hover:text-foreground"
-          >
-            <CornerLeftUp className="h-3.5 w-3.5" />
-            {hasParent ? "Change parent" : "Add parent"}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent align="start" className="w-80 p-0">
-          <div className="flex items-center gap-2 border-b px-2.5 py-2">
-            <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-            <Input
-              value={q}
-              onChange={handleQueryChange}
-              placeholder="Search tickets to set as parent…"
-              className="h-7 border-0 p-0 text-xs shadow-none focus-visible:ring-0"
-              autoFocus
+    <div className="min-w-0">
+      <span className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+        Parent
+      </span>
+      <div className="flex min-w-0 items-center gap-1">
+        {hasParent ? (
+          <>
+            <div
+              className={cn(
+                FIELD_CONTROL_CLASS,
+                "min-w-0 flex-1 justify-between gap-1 pr-1.5",
+              )}
+            >
+              <TicketParentLink
+                parentTicketId={ticket.parentTicketId}
+                projectId={projectId}
+                projectKey={projectKey}
+                density="field"
+                className="min-w-0 flex-1 px-0 hover:bg-transparent"
+              />
+              <Popover open={open} onOpenChange={handleOpenChange}>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    disabled={updateTicket.isPending}
+                    aria-label="Change parent"
+                  >
+                    <ChevronsUpDown className="h-3.5 w-3.5" />
+                  </button>
+                </PopoverTrigger>
+                {picker}
+              </Popover>
+            </div>
+            <AnimatedIconButton
+              type="button"
+              variant="ghost"
+              size="icon"
+              icon={XIcon}
+              iconSize={14}
+              className="h-10 w-10 shrink-0 touch-manipulation text-muted-foreground hover:text-destructive @[18rem]:h-8 @[18rem]:w-8 md:h-8 md:w-8"
+              onClick={handleRemove}
+              disabled={updateTicket.isPending}
+              aria-label="Remove parent"
             />
-          </div>
-          <div className="max-h-64 overflow-y-auto p-1">
-            {debounced.trim().length === 0 ? (
-              <p className="px-2 py-3 text-center text-xs text-muted-foreground">Type to search…</p>
-            ) : isFetching && matches.length === 0 ? (
-              <p className="px-2 py-3 text-center text-xs text-muted-foreground">Searching…</p>
-            ) : matches.length === 0 ? (
-              <p className="px-2 py-3 text-center text-xs text-muted-foreground">
-                No matching tickets in this project
-              </p>
-            ) : (
-              matches.map((r) => (
-                <button
-                  key={r.id}
-                  type="button"
-                  onClick={() => setParent(r.id)}
-                  disabled={updateTicket.isPending}
-                  className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-muted/60"
-                >
-                  <span className="shrink-0 font-mono text-[10px] text-muted-foreground/70">
-                    {r.projectKey}-{r.ticketNumber}
-                  </span>
-                  <span className="min-w-0 flex-1 truncate text-xs">{r.title}</span>
-                </button>
-              ))
-            )}
-          </div>
-        </PopoverContent>
-      </Popover>
+          </>
+        ) : (
+          <Popover open={open} onOpenChange={handleOpenChange}>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className={cn(FIELD_CONTROL_CLASS, "text-muted-foreground")}
+                disabled={updateTicket.isPending}
+              >
+                <CornerLeftUp className="h-3.5 w-3.5 shrink-0" />
+                <span className="min-w-0 flex-1 truncate">Add parent</span>
+              </button>
+            </PopoverTrigger>
+            {picker}
+          </Popover>
+        )}
+      </div>
     </div>
   );
 }

@@ -10,13 +10,24 @@ import { cn } from "@/lib/utils";
 export default function InboxPage() {
   const [selectedNotification, setSelectedNotification] =
     React.useState<Notification | null>(null);
+  const [selectionDismissed, setSelectionDismissed] = React.useState(false);
 
   function handleSelect(notification: Notification) {
+    setSelectionDismissed(false);
     setSelectedNotification(notification);
   }
 
   function handleClearSelection() {
+    setSelectionDismissed(true);
     setSelectedNotification(null);
+  }
+
+  function handleAutoClearSelection() {
+    setSelectedNotification(null);
+  }
+
+  function handleFilterChange() {
+    setSelectionDismissed(false);
   }
 
   const hasSelection = selectedNotification != null;
@@ -26,7 +37,7 @@ export default function InboxPage() {
       title="Inbox"
       subtitle="Mentions, assignments, and updates addressed to you"
       noInternalScroll
-      contentClassName="p-0"
+      contentClassName="!p-0 mx-4 mb-2 sm:mx-6 lg:mx-8 rounded-xl border border-border"
     >
       <div className="flex h-full min-h-0 min-w-0 divide-x divide-border">
         <div
@@ -39,7 +50,10 @@ export default function InboxPage() {
         >
           <InboxList
             selectedId={selectedNotification?.id ?? null}
+            selectionDismissed={selectionDismissed}
             onSelect={handleSelect}
+            onClearSelection={handleAutoClearSelection}
+            onFilterChange={handleFilterChange}
           />
         </div>
 

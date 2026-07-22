@@ -3,10 +3,10 @@
 import { SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  ResponsivePopover,
+  ResponsivePopoverContent,
+  ResponsivePopoverTrigger,
+} from "@/components/ui/responsive-popover";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {
@@ -105,14 +105,18 @@ export function DisplayPrefsPopover({
   }
 
   return (
-    <Popover>
-      <PopoverTrigger asChild>
+    <ResponsivePopover>
+      <ResponsivePopoverTrigger asChild>
         <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
           <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
           Display
         </Button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-60 p-3">
+      </ResponsivePopoverTrigger>
+      <ResponsivePopoverContent
+        align="end"
+        title="Display options"
+        className="w-60 p-3"
+      >
         <p className="mb-3 text-[13px] font-semibold text-foreground">Display options</p>
 
         <SectionLabel>Group by</SectionLabel>
@@ -175,7 +179,7 @@ export function DisplayPrefsPopover({
             />
           ))}
         </div>
-      </PopoverContent>
-    </Popover>
+      </ResponsivePopoverContent>
+    </ResponsivePopover>
   );
 }

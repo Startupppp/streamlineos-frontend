@@ -5,10 +5,10 @@ import { Filter, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  ResponsivePopover,
+  ResponsivePopoverContent,
+  ResponsivePopoverTrigger,
+} from "@/components/ui/responsive-popover";
 import { cn } from "@/lib/utils";
 import type { OrgSize } from "@/types/crm";
 
@@ -123,8 +123,8 @@ export function CustomerFilterPopover({
   }, [onFiltersChange]);
 
   return (
-    <Popover>
-      <PopoverTrigger asChild>
+    <ResponsivePopover>
+      <ResponsivePopoverTrigger asChild>
         <Button
           variant="outline"
           size="sm"
@@ -141,8 +141,12 @@ export function CustomerFilterPopover({
             </Badge>
           ) : null}
         </Button>
-      </PopoverTrigger>
-      <PopoverContent align="start" className="w-72 p-3">
+      </ResponsivePopoverTrigger>
+      <ResponsivePopoverContent
+        align="start"
+        title="Add filter"
+        className="w-72 p-3"
+      >
         <div className="mb-3 flex items-center justify-between">
           <p className="text-[13px] font-semibold text-foreground">
             Add filter
@@ -212,8 +216,8 @@ export function CustomerFilterPopover({
             )}
           </div>
         </div>
-      </PopoverContent>
-    </Popover>
+      </ResponsivePopoverContent>
+    </ResponsivePopover>
   );
 }
 

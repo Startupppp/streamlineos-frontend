@@ -576,8 +576,16 @@ export class Annotator {
 .an-tool.active { background: #6366f1; color: #fff; }
 .an-close { color: #64748b; }
 .an-comment-box {
-  position: fixed; width: 288px; background: #fff; border-radius: 12px; box-shadow: 0 10px 36px rgba(11,18,32,0.28);
+  position: fixed; width: min(288px, calc(100vw - 2rem)); max-width: calc(100vw - 2rem);
+  background: #fff; border-radius: 12px; box-shadow: 0 10px 36px rgba(11,18,32,0.28);
   padding: 12px; display: flex; flex-direction: column; gap: 8px; pointer-events: auto; z-index: 10;
+  box-sizing: border-box;
+}
+@media (max-width: 480px) {
+  .an-toolbar {
+    max-width: calc(100vw - 1.5rem); overflow-x: auto; top: max(12px, env(safe-area-inset-top, 0px));
+  }
+  .an-comment-box { width: calc(100vw - 2rem); max-width: calc(100vw - 2rem); }
 }
 .an-type-row { display: flex; flex-wrap: wrap; gap: 4px; }
 .an-chip {

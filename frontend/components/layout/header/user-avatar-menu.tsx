@@ -46,10 +46,6 @@ import {
 import { resolveImageUrl, cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
-interface UserAvatarMenuProps {
-  variant?: "header" | "bottom-nav";
-}
-
 type MenuLink = {
   href: string;
   label: string;
@@ -178,39 +174,14 @@ function buildMenuEntries(opts: {
 const AccountTrigger = forwardRef<
   HTMLButtonElement,
   ComponentPropsWithoutRef<"button"> & {
-    isBottomNav: boolean;
     name: string;
     image: string | undefined;
     initials: string;
   }
 >(function AccountTrigger(
-  { isBottomNav, name, image, initials, className, type = "button", ...props },
+  { name, image, initials, className, type = "button", ...props },
   ref,
 ) {
-  if (isBottomNav) {
-    return (
-      <button
-        ref={ref}
-        type={type}
-        className={cn(
-          "flex flex-col items-center gap-0.5 min-w-[44px] py-1 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md",
-          "text-muted-foreground hover:text-foreground",
-          className,
-        )}
-        {...props}
-        aria-label="Account menu"
-      >
-        <Avatar className="h-5 w-5 ring-1 ring-border/60">
-          <AvatarImage src={image} alt={name} />
-          <AvatarFallback className="text-[9px] font-bold bg-primary/10 text-primary">
-            {initials}
-          </AvatarFallback>
-        </Avatar>
-        <span className="text-[10px] leading-none">Me</span>
-      </button>
-    );
-  }
-
   return (
     <button
       ref={ref}
@@ -281,7 +252,17 @@ function DrawerMenuSeparator() {
   return <div className="my-1 h-px bg-border" />;
 }
 
-export function UserAvatarMenu({ variant = "header" }: UserAvatarMenuProps) {
+interface UserAvatarMenuProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
+}
+
+export function UserAvatarMenu({
+  open,
+  onOpenChange,
+  hideTrigger = false,
+}: UserAvatarMenuProps) {
   const isMobile = useIsMobile();
   const { data: session } = useSession();
   const { mutate: handleSignOut, isPending: isSigningOut } = useSignOut();
@@ -302,9 +283,6 @@ export function UserAvatarMenu({ variant = "header" }: UserAvatarMenuProps) {
     handleSignOut();
   }, [handleSignOut]);
 
-  const isBottomNav = variant === "bottom-nav";
-  const useDrawer = isMobile || isBottomNav;
-
   const entries = buildMenuEntries({
     canManageSettings,
     canViewAiCredits,
@@ -314,66 +292,73 @@ export function UserAvatarMenu({ variant = "header" }: UserAvatarMenuProps) {
   });
 
   const trigger = (
-    <AccountTrigger
-      isBottomNav={isBottomNav}
-      name={name}
-      image={image}
-      initials={initials}
-    />
+    <AccountTrigger name={name} image={image} initials={initials} />
   );
 
-  if (useDrawer) {
+  const drawerBody = (
+    <>
+      <DrawerHeader className="min-w-0 shrink-0 overflow-hidden border-b px-4 py-3 text-left">
+        <DrawerTitle className="sr-only">Account menu</DrawerTitle>
+        <UserIdentity name={name} email={email} className="px-0 py-0" />
+      </DrawerHeader>
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        {entries.map((entry, index) => {
+          if (entry.kind === "separator") {
+            return <DrawerMenuSeparator key={`sep-${index}`} />;
+          }
+          if (entry.kind === "theme") {
+            return (
+              <div key="theme" className="px-3 py-2">
+                <ThemeMenuPanel />
+              </div>
+            );
+          }
+          if (entry.kind === "signout") {
+            return (
+              <button
+                key="signout"
+                type="button"
+                onClick={handleSignOutClick}
+                disabled={isSigningOut}
+                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
+              >
+                <LogOut className="h-4 w-4 shrink-0" />
+                Sign out
+              </button>
+            );
+          }
+          return entry.links.map((link) => (
+            <DrawerMenuLink
+              key={link.href}
+              href={link.href}
+              label={link.label}
+              icon={link.icon}
+            />
+          ));
+        })}
+      </div>
+    </>
+  );
+
+  if (hideTrigger || isMobile) {
     return (
-      <Drawer direction="bottom">
-        <DrawerTrigger asChild>{trigger}</DrawerTrigger>
+      <Drawer
+        direction="bottom"
+        open={open}
+        onOpenChange={onOpenChange}
+      >
+        {!hideTrigger ? (
+          <DrawerTrigger asChild>{trigger}</DrawerTrigger>
+        ) : null}
         <DrawerContent className="flex max-h-[min(92dvh,40rem)] flex-col gap-0 overflow-hidden rounded-t-xl border bg-card p-0 shadow-2xl">
-          <DrawerHeader className="min-w-0 shrink-0 overflow-hidden border-b px-4 py-3 text-left">
-            <DrawerTitle className="sr-only">Account menu</DrawerTitle>
-            <UserIdentity name={name} email={email} className="px-0 py-0" />
-          </DrawerHeader>
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-            {entries.map((entry, index) => {
-              if (entry.kind === "separator") {
-                return <DrawerMenuSeparator key={`sep-${index}`} />;
-              }
-              if (entry.kind === "theme") {
-                return (
-                  <div key="theme" className="px-3 py-2">
-                    <ThemeMenuPanel />
-                  </div>
-                );
-              }
-              if (entry.kind === "signout") {
-                return (
-                  <button
-                    key="signout"
-                    type="button"
-                    onClick={handleSignOutClick}
-                    disabled={isSigningOut}
-                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
-                  >
-                    <LogOut className="h-4 w-4 shrink-0" />
-                    Sign out
-                  </button>
-                );
-              }
-              return entry.links.map((link) => (
-                <DrawerMenuLink
-                  key={link.href}
-                  href={link.href}
-                  label={link.label}
-                  icon={link.icon}
-                />
-              ));
-            })}
-          </div>
+          {drawerBody}
         </DrawerContent>
       </Drawer>
     );
   }
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={onOpenChange}>
       <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"

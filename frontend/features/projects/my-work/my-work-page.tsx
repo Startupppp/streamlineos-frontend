@@ -6,12 +6,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
-import {
-  PM_TOOLBAR,
-  PmPageShell,
-  PmSection,
-} from "@/features/projects/shared/pm-chrome";
+import { PmPageShell, PmSection } from "@/features/projects/shared/pm-chrome";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { TicketFilterBar } from "@/features/projects/shared/ticket-filter-bar";
 import { ViewSwitcher } from "@/features/projects/views/view-switcher";
@@ -298,74 +293,83 @@ export function MyWorkPage() {
           ? "Your recently updated assigned tickets will appear here."
           : "Tickets assigned to you across all projects will appear here.";
 
-  return (
-    <PageWrapper
-      title="My Issues"
-      subtitle="Your tickets across all projects"
-      noInternalScroll
-      filtersClassName="pb-2"
-      filters={
-        <div className={PM_TOOLBAR}>
-          {showViewSwitcher ? (
-            <ViewSwitcher
-              activeView={activeView}
-              onViewChange={handleViewChange}
-              allowedViews={MY_WORK_VIEWS}
-            />
-          ) : null}
-          <div className="min-w-0 flex-1">
-            <TicketFilterBar
-              showSprintFilter={false}
-              showAssigneeFilter={false}
-              align="end"
-            />
-          </div>
-          {showViewSwitcher ? (
-            <DisplayOptionsPanel
-              viewType={activeView}
-              options={displayOptions}
-              onChange={handleDisplayOptionsChange}
-            />
-          ) : null}
-          <Button
-            variant="outline"
-            size="icon"
-            className={cn(
-              "size-9 shrink-0",
-              showGroupingSidebar && "border-primary bg-primary/10 text-primary",
-            )}
-            aria-label="Toggle grouping sidebar"
-            aria-pressed={showGroupingSidebar}
-            onClick={handleToggleSidebar}
-          >
-            <PanelRight className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-      }
+  const groupingSidebarButton = (
+    <Button
+      variant="outline"
+      size="icon"
+      className={cn(
+        "size-9 shrink-0",
+        showGroupingSidebar && "border-primary bg-primary/10 text-primary",
+      )}
+      aria-label="Toggle grouping sidebar"
+      aria-pressed={showGroupingSidebar}
+      onClick={handleToggleSidebar}
     >
-      <PmPageShell className="min-h-0 flex-1 overflow-hidden">
-        <PmSection
-          index={0}
-          className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden"
-        >
-          <Tabs
-            value={activeTab}
-            onValueChange={handleTabChange}
+      <PanelRight className="h-3.5 w-3.5" />
+    </Button>
+  );
+
+  return (
+    <Tabs
+      value={activeTab}
+      onValueChange={handleTabChange}
+      className="flex min-h-0 flex-1 flex-col gap-0 overflow-hidden"
+    >
+      <PageWrapper
+        title="My Issues"
+        subtitle="Your tickets across all projects"
+        noInternalScroll
+        mobileFiltersInline
+        filtersClassName="flex-col items-stretch gap-2 overflow-x-visible pb-2 md:w-full md:flex-row md:flex-nowrap md:items-center md:justify-between md:gap-2"
+        filters={
+          <>
+            <div className="min-w-0 w-full overflow-x-auto scrollbar-hide md:w-auto md:shrink-0">
+              <TabsList>
+                {WORK_TABS.map((tab) => (
+                  <TabsTrigger key={tab} value={tab}>
+                    {TAB_CONFIG[tab].label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
+            <div className="flex min-w-0 w-full items-center gap-2 md:ml-auto md:w-auto md:max-w-full md:shrink-0">
+              <TicketFilterBar
+                className="min-w-0 w-full md:w-auto"
+                showSprintFilter={false}
+                showAssigneeFilter={false}
+                align="end"
+                mobileSearchFirst
+                leading={
+                  showViewSwitcher ? (
+                    <ViewSwitcher
+                      activeView={activeView}
+                      onViewChange={handleViewChange}
+                      allowedViews={MY_WORK_VIEWS}
+                    />
+                  ) : undefined
+                }
+                trailing={
+                  <>
+                    {showViewSwitcher ? (
+                      <DisplayOptionsPanel
+                        viewType={activeView}
+                        options={displayOptions}
+                        onChange={handleDisplayOptionsChange}
+                      />
+                    ) : null}
+                    {groupingSidebarButton}
+                  </>
+                }
+              />
+            </div>
+          </>
+        }
+      >
+        <PmPageShell className="min-h-0 flex-1 overflow-hidden">
+          <PmSection
+            index={0}
             className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden"
           >
-            <PageTabsToolbar
-              tabsDensity="labeled"
-              tabs={
-                <TabsList>
-                  {WORK_TABS.map((tab) => (
-                    <TabsTrigger key={tab} value={tab}>
-                      {TAB_CONFIG[tab].label}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              }
-            />
-
             <div className="flex min-h-0 flex-1 gap-3 overflow-hidden">
               <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
                 {isLoading ? (
@@ -426,9 +430,9 @@ export function MyWorkPage() {
                 />
               ) : null}
             </div>
-          </Tabs>
-        </PmSection>
-      </PmPageShell>
-    </PageWrapper>
+          </PmSection>
+        </PmPageShell>
+      </PageWrapper>
+    </Tabs>
   );
 }

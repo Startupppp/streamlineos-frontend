@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AppSidebar } from "./app-sidebar";
 import { GlobalHeader } from "./header/global-header";
-import { MobileBottomNav } from "./mobile-bottom-nav";
 import { CommandPalette } from "./command-palette";
 import { NotActivatedPage } from "../auth/not-activated-page";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
@@ -19,6 +18,12 @@ import { AskOsProvider } from "@/components/assistant/ask-os-provider";
 import { CommandPaletteProvider } from "@/features/command-palette";
 import { ChatMobileBottomNav } from "@/features/chat/chat-mobile-bottom-nav";
 import { getChatMobileContentPaddingClassName } from "@/features/chat/chat-mobile-chrome-layout";
+import { MobileModuleBottomNav } from "./mobile/mobile-module-bottom-nav";
+import { MobileShellFab } from "./mobile/mobile-shell-fab";
+import {
+  getMobileModuleContentPaddingClassName,
+  shouldShowMobileModuleBottomNav,
+} from "./mobile/mobile-module-nav-items";
 import { cn } from "@/lib/utils";
 
 const SuccessChecklist = dynamic(
@@ -74,7 +79,7 @@ export function DashboardShell({
   const [isChatConversationOpen, setIsChatConversationOpen] = useState(false);
   const [productSwitcherOpen, setProductSwitcherOpen] = useState(false);
   const [workspaceSwitcherOpen, setWorkspaceSwitcherOpen] = useState(false);
-  const { hideSidebar } = useProductSidebarVisibility();
+  const { hideSidebar, navGroups } = useProductSidebarVisibility();
   usePushSubscription(userId);
   const rafIdRef = useRef<number | null>(null);
 
@@ -149,6 +154,12 @@ export function DashboardShell({
     ? SIDEBAR_COLLAPSED_W
     : SIDEBAR_EXPANDED_W;
   const isChatRoute = route.startsWith("/chat");
+  const showModuleBottomNav = useMemo(
+    () => shouldShowMobileModuleBottomNav(navGroups, { isChatRoute }),
+    [navGroups, isChatRoute],
+  );
+  const showChatBottomNav = isChatRoute && !isChatConversationOpen;
+  const showAboveBottomNav = showModuleBottomNav || showChatBottomNav;
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden overscroll-none">
@@ -192,7 +203,10 @@ export function DashboardShell({
                 >
                   <div
                     className={cn(
-                      "flex min-h-0 flex-1 flex-col overflow-auto pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0",
+                      "flex min-h-0 flex-1 flex-col overflow-auto md:pb-0",
+                      getMobileModuleContentPaddingClassName(
+                        showModuleBottomNav,
+                      ),
                       isChatRoute &&
                         getChatMobileContentPaddingClassName(
                           isChatConversationOpen,
@@ -237,12 +251,15 @@ export function DashboardShell({
               onOpenChange={setWorkspaceSwitcherOpen}
             />
 
-            <MobileBottomNav
-              onOpenMobileMenu={handleOpenMobileMenu}
-              className={isChatRoute ? "max-sm:hidden" : undefined}
-            />
+            <MobileModuleBottomNav />
             {isChatRoute && (
               <ChatMobileBottomNav onOpenMobileMenu={handleOpenMobileMenu} />
+            )}
+            {!(isChatRoute && isChatConversationOpen) && (
+              <MobileShellFab
+                onOpenMobileMenu={handleOpenMobileMenu}
+                showAboveBottomNav={showAboveBottomNav}
+              />
             )}
           </AskOsProvider>
         </CommandPaletteProvider>

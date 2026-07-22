@@ -1,7 +1,11 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState } from "react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  ResponsivePopover,
+  ResponsivePopoverContent,
+  ResponsivePopoverTrigger,
+} from "@/components/ui/responsive-popover";
 import { Button } from "@/components/ui/button";
 import {
   ListFilter,
@@ -331,8 +335,8 @@ export function WorkloadFilterMenu({
   );
 
   return (
-    <Popover open={open} onOpenChange={handleOpenChange}>
-      <PopoverTrigger asChild>
+    <ResponsivePopover open={open} onOpenChange={handleOpenChange}>
+      <ResponsivePopoverTrigger asChild>
         <Button
           variant="outline"
           size="sm"
@@ -346,9 +350,10 @@ export function WorkloadFilterMenu({
             </span>
           ) : null}
         </Button>
-      </PopoverTrigger>
-      <PopoverContent
+      </ResponsivePopoverTrigger>
+      <ResponsivePopoverContent
         align="end"
+        title="Add filter"
         className="w-auto max-w-[min(520px,var(--radix-popover-content-available-width))] overflow-hidden p-0"
         onInteractOutside={handleInteractOutside}
       >
@@ -497,7 +502,7 @@ export function WorkloadFilterMenu({
             </div>
           ) : null}
         </div>
-      </PopoverContent>
-    </Popover>
+      </ResponsivePopoverContent>
+    </ResponsivePopover>
   );
 }

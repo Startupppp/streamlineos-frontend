@@ -17,6 +17,7 @@ import { formatTicketKey, parseTicketKey } from "@/features/projects/shared/form
 import { TicketDetailMainSection } from "./ticket-detail-main-section";
 import { TicketDetailRightPanel } from "./ticket-detail-right-panel";
 import { TicketDetailActions } from "./ticket-detail-actions";
+import { TicketParentControl } from "./ticket-parent-control";
 import { useTicketDetail } from "./use-ticket-detail";
 import { resolveTicketId } from "./resolve-ticket-id";
 import { TicketAiMenu } from "@/features/projects/ai/ticket-ai-menu";
@@ -32,12 +33,12 @@ const RIGHT_PANEL_COLLAPSED_KEY = "streamlineos:ticket-detail:right-panel:collap
 function DetailSkeleton() {
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto scrollbar-hide md:flex-row md:overflow-hidden">
-      <div className="min-w-0 shrink-0 space-y-4 bg-card px-4 pb-4 pt-2 pr-12 md:min-h-0 md:flex-1 md:overflow-y-auto md:px-6 md:pb-5 md:pr-6 md:scrollbar-hide">
+      <div className="min-w-0 shrink-0 space-y-4 bg-card px-4 pb-4 pt-2 md:min-h-0 md:flex-1 md:overflow-y-auto md:px-6 md:pb-5 md:scrollbar-hide">
         <Skeleton className="h-4 w-3/4" />
         <Skeleton className="h-40 w-full rounded-lg" />
         <Skeleton className="h-24 w-full rounded-lg" />
       </div>
-      <div className="shrink-0 border-t border-border px-4 py-3 pr-12 md:w-96 md:min-w-96 md:overflow-y-auto md:border-t-0 md:border-l md:pr-4 md:scrollbar-hide xl:w-[26rem] xl:min-w-[26rem]">
+      <div className="hidden shrink-0 border-t border-border px-4 py-3 md:block md:w-96 md:min-w-96 md:overflow-y-auto md:border-t-0 md:border-l md:pr-4 md:scrollbar-hide xl:w-[26rem] xl:min-w-[26rem]">
         <div className="mb-3 flex gap-2">
           <Skeleton className="h-5 w-16 rounded-md" />
           <Skeleton className="h-5 w-20 rounded-md" />
@@ -111,12 +112,14 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
     }
   };
 
-  function handleToggleRightPanel() {
-    setRightPanelCollapsed((prev) => {
-      const next = !prev;
-      localStorage.setItem(RIGHT_PANEL_COLLAPSED_KEY, String(next));
-      return next;
-    });
+  function handleRightPanelOpenChange(open: boolean) {
+    const collapsed = !open;
+    setRightPanelCollapsed(collapsed);
+    localStorage.setItem(RIGHT_PANEL_COLLAPSED_KEY, String(collapsed));
+  }
+
+  function handleExpandRightPanel() {
+    handleRightPanelOpenChange(true);
   }
 
   if (!parsed) return notFound();
@@ -178,8 +181,27 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
 
   return (
     <PageWrapper
-      title={displayKey}
-      subtitle={pageTitle}
+      title={pageTitle}
+      subtitle={
+        <span className="inline-flex min-w-0 max-w-full flex-wrap items-center gap-x-1.5 gap-y-0.5">
+          <span className="shrink-0 font-mono text-[13px] font-medium text-muted-foreground">
+            {displayKey}
+          </span>
+          {ticket.parentTicketId != null ? (
+            <>
+              <span className="shrink-0 text-muted-foreground/40" aria-hidden>
+                ·
+              </span>
+              <TicketParentControl
+                ticket={ticket}
+                projectId={projectId}
+                projectKey={projectData?.key}
+                variant="breadcrumb"
+              />
+            </>
+          ) : null}
+        </span>
+      }
       backHref={`/projects/${projectId}`}
       noInternalScroll
       actionsInline
@@ -192,7 +214,7 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
               size="icon"
               variant="outline"
               className="h-9 w-9 touch-manipulation border-border/60 bg-card/50 backdrop-blur-sm sm:h-8 sm:w-8"
-              onClick={handleToggleRightPanel}
+              onClick={handleExpandRightPanel}
               aria-label="Expand details panel"
             >
               <PanelRightOpen className="h-4 w-4" />
@@ -226,7 +248,7 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
           className="pointer-events-none absolute -top-6 right-1/3 h-32 w-32 rounded-full bg-primary/[0.05] blur-3xl"
         />
 
-        <div className="min-w-0 flex-1 bg-gradient-to-b from-card/80 to-background/40 px-4 pb-4 pt-2 pr-12 md:min-h-0 md:overflow-y-auto md:px-6 md:pb-5 md:pr-6 md:scrollbar-hide">
+        <div className="min-w-0 flex-1 bg-gradient-to-b from-card/80 to-background/40 px-4 pb-4 pt-2 md:min-h-0 md:overflow-y-auto md:px-6 md:pb-5 md:scrollbar-hide">
           <TicketDetailMainSection
             ticket={ticket}
             ticketId={ticketId}
@@ -241,21 +263,20 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
           />
         </div>
 
-        {!rightPanelCollapsed && (
-          <aside className="min-w-0 shrink-0 border-t border-border bg-card pr-12 pb-[max(1.25rem,env(safe-area-inset-bottom))] md:min-h-0 md:w-96 md:min-w-96 md:overflow-y-auto md:border-t-0 md:border-l md:pb-0 md:pr-0 md:scrollbar-hide xl:w-[26rem] xl:min-w-[26rem]">
-            <TicketDetailRightPanel
-              displayKey={displayKey}
-              saving={saving}
-              ticket={ticket}
-              ticketId={ticketId}
-              projectId={projectId}
-              sprints={sprints}
-              statuses={statuses}
-              onAutoSave={autoSave}
-              onToggleCollapse={handleToggleRightPanel}
-            />
-          </aside>
-        )}
+        <TicketDetailRightPanel
+          open={!rightPanelCollapsed}
+          onOpenChange={handleRightPanelOpenChange}
+          displayKey={displayKey}
+          saving={saving}
+          ticket={ticket}
+          ticketId={ticketId}
+          projectId={projectId}
+          projectKey={projectData?.key}
+          sprints={sprints}
+          statuses={statuses}
+          onAutoSave={autoSave}
+          asideClassName="md:w-96 md:min-w-96 xl:w-[26rem] xl:min-w-[26rem]"
+        />
       </div>
     </PageWrapper>
   );

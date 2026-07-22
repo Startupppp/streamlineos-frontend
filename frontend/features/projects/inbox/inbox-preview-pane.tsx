@@ -90,7 +90,7 @@ function NotificationFallbackPreview({
 
   return (
     <div className="flex h-full min-h-0 min-w-0 w-full flex-col overflow-y-auto scrollbar-hide">
-      <div className="shrink-0 border border-l-0 border-border px-4 pb-4 pt-4 md:px-6 md:pt-6">
+      <div className="shrink-0 border-y border-border px-4 pb-4 pt-4 md:px-6 md:pt-6">
         <div className="flex items-start gap-3">
           <div
             className={cn(

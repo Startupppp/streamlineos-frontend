@@ -100,6 +100,7 @@ class FeedbucketWidget {
 
   private readonly container: HTMLDivElement;
   private readonly logo: HTMLDivElement;
+  private readonly shadowRoot: ShadowRoot;
   private readonly panel: HTMLDivElement;
   private readonly formView: HTMLDivElement;
   private readonly successView: HTMLDivElement;
@@ -257,6 +258,14 @@ class FeedbucketWidget {
     }
   };
 
+  private readonly handleViewportChange = (): void => {
+    if (this.isOpen) this.positionPanel();
+  };
+
+  private isMobileViewport(): boolean {
+    return window.matchMedia("(max-width: 480px)").matches;
+  }
+
   private readonly handleDragPointerDown = (event: PointerEvent): void => {
     if (event.pointerType === "mouse" && event.button !== 0) return;
     this.cancelHoverPrefetch();
@@ -356,6 +365,7 @@ class FeedbucketWidget {
     this.aiAssistEnabled = aiAssistEnabled;
 
     const shadow = hostEl.attachShadow({ mode: "open" });
+    this.shadowRoot = shadow;
     const style = document.createElement("style");
     style.textContent = getStyles();
     shadow.appendChild(style);
@@ -608,6 +618,8 @@ class FeedbucketWidget {
     this.panel.appendChild(this.errorView);
 
     document.addEventListener("keydown", this.handleKeydown);
+    window.addEventListener("resize", this.handleViewportChange);
+    window.addEventListener("orientationchange", this.handleViewportChange);
     this.restorePosition();
   }
 
@@ -853,13 +865,37 @@ class FeedbucketWidget {
     this.panel.setAttribute("aria-hidden", this.isOpen ? "false" : "true");
     if (this.isOpen) {
       this.positionPanel();
-    } else if (this.viewState === "success") {
-      this.resetForm();
-      this.showView("form");
+    } else {
+      this.container.classList.remove("panel-open");
+      this.panel.classList.remove("is-sheet");
+      if (this.panel.parentElement !== this.container) {
+        this.container.appendChild(this.panel);
+      }
+      if (this.viewState === "success") {
+        this.resetForm();
+        this.showView("form");
+      }
     }
   }
 
   private positionPanel(): void {
+    if (this.isMobileViewport()) {
+      if (this.panel.parentElement !== this.shadowRoot) {
+        this.shadowRoot.appendChild(this.panel);
+      }
+      this.panel.classList.add("is-sheet");
+      this.panel.classList.remove("flip-left");
+      this.panel.style.top = "";
+      this.panel.style.bottom = "";
+      this.container.classList.add("panel-open");
+      return;
+    }
+
+    if (this.panel.parentElement !== this.container) {
+      this.container.appendChild(this.panel);
+    }
+    this.panel.classList.remove("is-sheet");
+    this.container.classList.remove("panel-open");
     const rect = this.container.getBoundingClientRect();
     this.panel.classList.toggle("flip-left", rect.left < window.innerWidth / 2);
     if (rect.top > window.innerHeight / 2) {

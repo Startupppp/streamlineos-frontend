@@ -2,11 +2,10 @@
 
 import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
-import { AlertCircle, ExternalLink, PanelRightOpen } from "lucide-react";
-import { XIcon } from "@animateicons/react/lucide";
+import { AlertCircle, ArrowLeft, ExternalLink, PanelRightOpen } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { isApiError, getApiErrorCode } from "@/lib/api-client";
 import { useProject } from "@/hooks/api";
 import { useProjectBoardTickets } from "@/hooks/api/projects";
@@ -16,6 +15,7 @@ import {
 } from "@/features/projects/shared/format-ticket-key";
 import { TicketDetailMainSection } from "@/features/projects/ticket-details/ticket-detail-main-section";
 import { TicketDetailRightPanel } from "@/features/projects/ticket-details/ticket-detail-right-panel";
+import { TicketParentLink } from "@/features/projects/ticket-details/ticket-parent-link";
 import { useTicketDetail } from "@/features/projects/ticket-details/use-ticket-detail";
 import { resolveTicketId } from "@/features/projects/ticket-details/resolve-ticket-id";
 import type { InboxTicketLinkTarget } from "./parse-inbox-ticket-link";
@@ -38,7 +38,7 @@ function PreviewSkeleton() {
         <Skeleton className="h-24 w-full rounded-lg" />
         <Skeleton className="h-40 w-full rounded-lg" />
       </div>
-      <div className="shrink-0 border-t border-border px-4 py-3 lg:w-72 lg:min-w-72 lg:overflow-y-auto lg:border-t-0 lg:border-l lg:scrollbar-hide xl:w-80 xl:min-w-80">
+      <div className="hidden shrink-0 border-t border-border px-4 py-3 lg:block lg:w-72 lg:min-w-72 lg:overflow-y-auto lg:border-t-0 lg:border-l lg:scrollbar-hide xl:w-80 xl:min-w-80">
         <div className="mb-3 flex gap-2">
           <Skeleton className="h-5 w-16 rounded-md" />
           <Skeleton className="h-5 w-20 rounded-md" />
@@ -78,13 +78,15 @@ export function InboxTicketPreview({
     return localStorage.getItem(RIGHT_PANEL_COLLAPSED_KEY) === "true";
   });
 
-  const handleToggleRightPanel = useCallback(() => {
-    setRightPanelCollapsed((prev) => {
-      const next = !prev;
-      localStorage.setItem(RIGHT_PANEL_COLLAPSED_KEY, String(next));
-      return next;
-    });
+  const handleRightPanelOpenChange = useCallback((open: boolean) => {
+    const collapsed = !open;
+    setRightPanelCollapsed(collapsed);
+    localStorage.setItem(RIGHT_PANEL_COLLAPSED_KEY, String(collapsed));
   }, []);
+
+  const handleExpandRightPanel = useCallback(() => {
+    handleRightPanelOpenChange(true);
+  }, [handleRightPanelOpenChange]);
 
   const { data: projectData, isLoading: projectLoading } = useProject(
     target.projectId,
@@ -173,10 +175,45 @@ export function InboxTicketPreview({
 
   return (
     <div className="flex h-full min-h-0 min-w-0 w-full flex-col overflow-hidden">
-      <div className="flex shrink-0 items-center justify-between gap-3 border border-l-0 border-border px-4 py-2.5 md:px-5">
-        <p className="min-w-0 flex-1 truncate font-mono text-xs font-medium text-muted-foreground">
-          {displayKey}
-        </p>
+      <div className="flex shrink-0 items-center justify-between gap-3 border-y border-border px-4 py-2.5 md:px-5">
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          {onClose ? (
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground lg:hidden"
+              onClick={onClose}
+              aria-label="Back to inbox"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          ) : null}
+          <div className="min-w-0 flex-1">
+            <TruncatedText
+              text={ticket.title}
+              className="text-sm font-semibold tracking-tight text-foreground leading-tight"
+            />
+            <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
+              <span className="shrink-0 font-mono text-[11px] font-medium text-muted-foreground leading-snug">
+                {displayKey}
+              </span>
+              {ticket.parentTicketId != null ? (
+                <>
+                  <span className="shrink-0 text-muted-foreground/40" aria-hidden>
+                    ·
+                  </span>
+                  <TicketParentLink
+                    parentTicketId={ticket.parentTicketId}
+                    projectId={target.projectId}
+                    projectKey={detailProject?.key ?? projectData?.key}
+                    density="compact"
+                  />
+                </>
+              ) : null}
+            </div>
+          </div>
+        </div>
         <div className="flex shrink-0 items-center gap-1.5">
           {rightPanelCollapsed ? (
             <Button
@@ -184,7 +221,7 @@ export function InboxTicketPreview({
               size="icon"
               variant="outline"
               className="h-8 w-8"
-              onClick={handleToggleRightPanel}
+              onClick={handleExpandRightPanel}
               aria-label="Expand details panel"
             >
               <PanelRightOpen className="h-4 w-4" />
@@ -201,18 +238,6 @@ export function InboxTicketPreview({
               Open ticket
             </Link>
           </Button>
-          {onClose ? (
-            <AnimatedIconButton
-              type="button"
-              size="icon"
-              variant="ghost"
-              icon={XIcon}
-              iconSize={16}
-              className="h-8 w-8 text-muted-foreground hover:text-foreground"
-              onClick={onClose}
-              aria-label="Close preview"
-            />
-          ) : null}
         </div>
       </div>
 
@@ -233,21 +258,20 @@ export function InboxTicketPreview({
           />
         </div>
 
-        {!rightPanelCollapsed ? (
-          <aside className="min-w-0 shrink-0 border-t border-border bg-card lg:min-h-0 lg:w-72 lg:min-w-72 lg:overflow-y-auto lg:border-t-0 lg:border-l lg:scrollbar-hide xl:w-80 xl:min-w-80">
-            <TicketDetailRightPanel
-              displayKey={displayKey}
-              saving={saving}
-              ticket={ticket}
-              ticketId={resolvedTicketId}
-              projectId={target.projectId}
-              sprints={sprints}
-              statuses={statuses}
-              onAutoSave={autoSave}
-              onToggleCollapse={handleToggleRightPanel}
-            />
-          </aside>
-        ) : null}
+        <TicketDetailRightPanel
+          open={!rightPanelCollapsed}
+          onOpenChange={handleRightPanelOpenChange}
+          displayKey={displayKey}
+          saving={saving}
+          ticket={ticket}
+          ticketId={resolvedTicketId}
+          projectId={target.projectId}
+          projectKey={detailProject?.key ?? projectData?.key}
+          sprints={sprints}
+          statuses={statuses}
+          onAutoSave={autoSave}
+          asideClassName="lg:w-72 lg:min-w-72 xl:w-80 xl:min-w-80"
+        />
       </div>
     </div>
   );

@@ -52,6 +52,23 @@ export type BroadcastStatus =
   | "FAILED";
 export type DigestMode = "disabled" | "hourly" | "daily" | "weekly";
 
+export interface NotificationTicketAssignee {
+  id: string;
+  name: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  image: string | null;
+}
+
+export interface NotificationTicketContext {
+  ticketId: number;
+  ticketKey: string;
+  priority: string | null;
+  status: string;
+  type: string;
+  assignee: NotificationTicketAssignee | null;
+}
+
 export interface Notification {
   id: number;
   orgId: string;
@@ -61,6 +78,8 @@ export interface Notification {
   category: NotificationCategory;
   sourceModule: string | null;
   eventKey?: string | null;
+  entityType?: string | null;
+  entityId?: string | null;
   reason?: string | null;
   title: string;
   message: string | null;
@@ -68,6 +87,8 @@ export interface Notification {
   isRead: boolean;
   pinned: boolean;
   channel: string;
+  metadata?: Record<string, unknown> | null;
+  ticketContext?: NotificationTicketContext | null;
   archivedAt: Date | string | null;
   snoozedUntil: Date | string | null;
   createdAt: Date | string;

@@ -232,63 +232,70 @@ export function AllWorkPage() {
                   onClear={handleClearSelection}
                 />
               ) : null}
-              <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
-                <div className="flex min-h-full flex-1 flex-col overscroll-contain">
-                <AnimatePresence mode="wait" initial={false}>
-                  {view === "list" ? (
-                    <motion.div
-                      key="list-view"
-                      variants={swapVariants}
-                      initial="initial"
-                      animate="animate"
-                      exit="exit"
-                      transition={pmSnappy}
-                    >
-                      <AllWorkListSection groups={projectGroups} />
-                    </motion.div>
-                  ) : null}
+              <div className="flex min-h-0 flex-1 flex-col gap-0">
+                <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
+                  <div
+                    className={cn(
+                      "flex flex-1 flex-col overscroll-contain",
+                      view === "board" ? "h-full min-h-0" : "min-h-full",
+                    )}
+                  >
+                  <AnimatePresence mode="wait" initial={false}>
+                    {view === "list" ? (
+                      <motion.div
+                        key="list-view"
+                        variants={swapVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        transition={pmSnappy}
+                      >
+                        <AllWorkListSection groups={projectGroups} />
+                      </motion.div>
+                    ) : null}
 
-                  {view === "table" ? (
-                    <motion.div
-                      key="table-view"
-                      variants={swapVariants}
-                      initial="initial"
-                      animate="animate"
-                      exit="exit"
-                      transition={pmSnappy}
-                    >
-                      <AllWorkTableSection
-                        tickets={tickets}
-                        tableSelection={tableSelection}
-                        onSelectionChange={setTableSelection}
-                        onTicketClick={handleTicketClickForTable}
-                      />
-                    </motion.div>
-                  ) : null}
+                    {view === "table" ? (
+                      <motion.div
+                        key="table-view"
+                        variants={swapVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        transition={pmSnappy}
+                      >
+                        <AllWorkTableSection
+                          tickets={tickets}
+                          tableSelection={tableSelection}
+                          onSelectionChange={setTableSelection}
+                          onTicketClick={handleTicketClickForTable}
+                        />
+                      </motion.div>
+                    ) : null}
 
-                  {view === "board" ? (
-                    <motion.div
-                      key="board-view"
-                      variants={swapVariants}
-                      initial="initial"
-                      animate="animate"
-                      exit="exit"
-                      transition={pmSnappy}
-                      className="h-full w-full"
-                    >
-                      <AllWorkBoardSection groups={projectGroups} />
-                    </motion.div>
-                  ) : null}
-                </AnimatePresence>
-                </div>
-              </ScrollArea>
+                    {view === "board" ? (
+                      <motion.div
+                        key="board-view"
+                        variants={swapVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        transition={pmSnappy}
+                        className="flex h-full min-h-0 w-full flex-1 flex-col"
+                      >
+                        <AllWorkBoardSection groups={projectGroups} />
+                      </motion.div>
+                    ) : null}
+                  </AnimatePresence>
+                  </div>
+                </ScrollArea>
 
-              <PaginationFooter
-                page={currentPage}
-                limit={limit}
-                total={total}
-                onPageChange={handlePageChange}
-              />
+                <PaginationFooter
+                  page={currentPage}
+                  limit={limit}
+                  total={total}
+                  onPageChange={handlePageChange}
+                />
+              </div>
             </>
           )}
         </PmSection>

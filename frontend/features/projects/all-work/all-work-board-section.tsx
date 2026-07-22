@@ -30,8 +30,8 @@ function BoardProjectSection({ group }: BoardProjectSectionProps) {
   );
 
   return (
-    <PmPanel className="overflow-visible">
-      <div className="flex min-w-0 items-center gap-2 border-b border-border/50 bg-muted/20 px-3 py-2">
+    <PmPanel className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
+      <div className="flex shrink-0 min-w-0 items-center gap-2 border-b border-border/50 bg-muted/20 px-3 py-2">
         <ProjectChip
           projectId={group.projectId}
           projectKey={group.projectKey}
@@ -45,7 +45,7 @@ function BoardProjectSection({ group }: BoardProjectSectionProps) {
           {group.tickets.length}
         </Badge>
       </div>
-      <div className="p-2 sm:p-3">
+      <div className="flex min-h-0 flex-1 flex-col px-2 pt-2 pb-0 sm:px-3 sm:pt-3">
         <KanbanBoard
           tickets={kanbanTickets}
           projectId={group.projectId}
@@ -63,7 +63,7 @@ interface AllWorkBoardSectionProps {
 
 export function AllWorkBoardSection({ groups }: AllWorkBoardSectionProps) {
   return (
-    <div className="flex flex-col gap-3 pb-4">
+    <div className="flex h-full min-h-0 flex-1 flex-col gap-3">
       {groups.map((group) => (
         <BoardProjectSection key={group.projectId} group={group} />
       ))}

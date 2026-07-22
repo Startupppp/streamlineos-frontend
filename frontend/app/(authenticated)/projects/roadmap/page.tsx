@@ -57,9 +57,9 @@ export default function RoadmapPage() {
   const showSearch = activeTab === "roadmap" || activeTab === "feedback";
 
   const actions = (
-    <div className="flex items-center gap-2">
+    <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
       {orgId ? (
-        <Button asChild variant="outline" size="sm">
+        <Button asChild variant="outline" size="sm" className="min-w-0 flex-1 sm:flex-none">
           <Link href={`/roadmap/${orgId}`} target="_blank" rel="noopener noreferrer">
             <ExternalLink className="h-3.5 w-3.5" />
             Public board
@@ -67,13 +67,13 @@ export default function RoadmapPage() {
         </Button>
       ) : null}
       {activeTab === "roadmap" ? (
-        <Button size="sm" onClick={handleOpenRoadmapCreate}>
+        <Button size="sm" className="min-w-0 flex-1 sm:flex-none" onClick={handleOpenRoadmapCreate}>
           <Plus className="h-3.5 w-3.5" />
           New Item
         </Button>
       ) : null}
       {activeTab === "changelog" ? (
-        <Button size="sm" onClick={handleOpenChangelogCreate}>
+        <Button size="sm" className="min-w-0 flex-1 sm:flex-none" onClick={handleOpenChangelogCreate}>
           <Plus className="h-3.5 w-3.5" />
           New Entry
         </Button>

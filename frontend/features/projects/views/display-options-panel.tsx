@@ -5,7 +5,11 @@ import { Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  ResponsivePopover,
+  ResponsivePopoverContent,
+  ResponsivePopoverTrigger,
+} from "@/components/ui/responsive-popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -294,11 +298,11 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
   const propertyChips = propertyChipsForView(viewType);
 
   return (
-    <Popover>
+    <ResponsivePopover>
       <TooltipProvider delayDuration={200}>
         <Tooltip>
           <TooltipTrigger asChild>
-            <PopoverTrigger asChild>
+            <ResponsivePopoverTrigger asChild>
               <Button
                 variant="outline"
                 size="sm"
@@ -308,14 +312,19 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
                 <Settings2 className="h-3.5 w-3.5 shrink-0" />
                 <span className="hidden md:inline">Display</span>
               </Button>
-            </PopoverTrigger>
+            </ResponsivePopoverTrigger>
           </TooltipTrigger>
           <TooltipContent side="bottom" className="text-xs md:hidden">
             Display options
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
-      <PopoverContent align="start" collisionPadding={16} className="w-72 p-3 space-y-3">
+      <ResponsivePopoverContent
+        align="start"
+        collisionPadding={16}
+        title="Display options"
+        className="w-72 space-y-3 p-3"
+      >
         {showLayout && (
           <>
             {isBoard && (
@@ -469,7 +478,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
         >
           Reset to defaults
         </Button>
-      </PopoverContent>
-    </Popover>
+      </ResponsivePopoverContent>
+    </ResponsivePopover>
   );
 });

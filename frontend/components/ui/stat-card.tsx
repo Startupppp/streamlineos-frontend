@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { memo, type ComponentType, type ReactNode } from "react";
+import { Children, memo, type ComponentType, type ReactNode } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
@@ -115,27 +115,24 @@ export interface StatCardGridSkeletonProps {
   className?: string;
 }
 
-const STAT_GRID_COLS: Record<NonNullable<StatCardGridProps["cols"]>, string> = {
-  2: "grid-cols-1 sm:grid-cols-2",
-  3: "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3",
-  4: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
-  5: "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5",
-  6: "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6",
-};
-
 export function StatCardGrid({
   children,
   cols = 4,
   className,
 }: StatCardGridProps) {
+  const childCount = Children.toArray(children).length;
+  const columnCount = childCount > 0 ? childCount : cols;
+
   return (
     <div
       className={cn(
         "grid w-full min-w-0 shrink-0 gap-3",
-        STAT_GRID_COLS[cols],
         "[&>*]:min-w-0 [&>*]:h-full",
         className,
       )}
+      style={{
+        gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))`,
+      }}
     >
       {children}
     </div>

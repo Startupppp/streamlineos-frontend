@@ -22,6 +22,10 @@ jest.mock("next/link", () => {
   };
 });
 
+jest.mock("next/navigation", () => ({
+  usePathname: () => "/projects",
+}));
+
 jest.mock("./app-sidebar", () => ({
   AppSidebar: ({
     onNavigate,
@@ -38,8 +42,12 @@ jest.mock("./header/global-header", () => ({
   GlobalHeader: () => null,
 }));
 
-jest.mock("./mobile-bottom-nav", () => ({
-  MobileBottomNav: ({
+jest.mock("./mobile/mobile-module-bottom-nav", () => ({
+  MobileModuleBottomNav: () => null,
+}));
+
+jest.mock("./mobile/mobile-shell-fab", () => ({
+  MobileShellFab: ({
     onOpenMobileMenu,
   }: {
     onOpenMobileMenu: () => void;
@@ -98,7 +106,18 @@ jest.mock("./header/workspace-switcher", () => ({
 }));
 
 jest.mock("./sidebar/use-product-sidebar-visibility", () => ({
-  useProductSidebarVisibility: () => ({ hideSidebar: false }),
+  useProductSidebarVisibility: () => ({
+    hideSidebar: false,
+    navGroups: [
+      {
+        label: "Projects",
+        routes: [
+          { label: "Home", href: "/projects/command-center", icon: () => null },
+          { label: "Inbox", href: "/projects/inbox", icon: () => null },
+        ],
+      },
+    ],
+  }),
 }));
 
 jest.mock("@/components/assistant/ask-os-provider", () => ({

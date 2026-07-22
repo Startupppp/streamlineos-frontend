@@ -17,7 +17,6 @@ import {
   PmPanel,
   PmSection,
   PM_FILL_PANEL,
-  PM_TOOLBAR,
 } from "@/features/projects/shared/pm-chrome";
 import { cn } from "@/lib/utils";
 import { mapBoardTicketToKanban } from "./map-board-ticket";
@@ -206,17 +205,20 @@ export function MyTicketsPage({ params }: PageProps) {
       subtitle="Tickets assigned to or reported by you"
       noInternalScroll
       contentClassName="!p-0"
+      mobileFiltersInline
       filters={
-        <div className={PM_TOOLBAR}>
-          <ViewSwitcher
-            activeView={view}
-            onViewChange={handleViewChange}
-            allowedViews={MY_TICKETS_VIEWS}
-          />
-          <div className="min-w-0 flex-1 sm:flex sm:justify-end">
-            <TicketFilterBar showSprintFilter={false} showAssigneeFilter={false} />
-          </div>
-        </div>
+        <TicketFilterBar
+          showSprintFilter={false}
+          showAssigneeFilter={false}
+          mobileSearchFirst
+          leading={
+            <ViewSwitcher
+              activeView={view}
+              onViewChange={handleViewChange}
+              allowedViews={MY_TICKETS_VIEWS}
+            />
+          }
+        />
       }
     >
       <PmPageShell className={cn(PAGE_CHROME_X, "min-h-0 flex-1 gap-0 overflow-hidden")} withGlow>

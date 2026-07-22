@@ -203,7 +203,7 @@ export function QuickCreateMenu({
 
   if (!canCreateProject && !(canCreateIssue && hasProjects)) {
     return (
-      <Button size="sm" variant="outline" className="gap-1.5" asChild>
+      <Button size="sm" variant="outline" className="min-w-0 flex-1 gap-1.5 sm:flex-none" asChild>
         <Link href="/projects/all">All projects</Link>
       </Button>
     );
@@ -212,7 +212,7 @@ export function QuickCreateMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button size="sm" className="gap-1.5" {...hoverHandlers}>
+        <Button size="sm" className="min-w-0 flex-1 gap-1.5 sm:flex-none" {...hoverHandlers}>
           <PlusIcon ref={iconRef} size={14} />
           New
         </Button>

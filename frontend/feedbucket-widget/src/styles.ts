@@ -39,6 +39,7 @@ export function getStyles(): string {
   border: 1px solid #e6eaf0;
   border-radius: 16px;
   box-shadow: 0 6px 24px rgba(11,18,32,0.16);
+  transition: opacity 160ms ease;
 }
 .launcher-btn {
   display: flex;
@@ -134,6 +135,31 @@ export function getStyles(): string {
   pointer-events: auto;
   transform: none;
   transition: opacity 180ms ease, transform 180ms ease, visibility 0ms;
+}
+.panel.is-sheet {
+  position: fixed;
+  top: 50% !important;
+  left: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: calc(100vw - 2rem);
+  min-width: 0;
+  max-width: calc(100vw - 2rem);
+  max-height: calc(100vh - 2rem - env(safe-area-inset-bottom, 0px));
+  transform: translate(-50%, -50%) scale(0.97);
+  transform-origin: center center;
+  resize: none;
+  z-index: 2147483647;
+}
+.panel.is-sheet[aria-hidden="false"] {
+  transform: translate(-50%, -50%);
+}
+.widget.panel-open {
+  z-index: 2147483646;
+}
+.widget.panel-open .launcher {
+  opacity: 0.35;
+  pointer-events: none;
 }
 
 .panel-header {
@@ -238,7 +264,7 @@ export function getStyles(): string {
 
 .result-view {
   padding: 34px 22px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center;
-  flex: 1 1 auto; justify-content: center;
+  flex: 1 1 auto; justify-content: center; min-width: 0; overflow-y: auto;
 }
 .result-icon {
   width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
@@ -246,8 +272,14 @@ export function getStyles(): string {
 }
 .result-icon.success-icon { background: #dcfce7; color: #16a34a; }
 .result-icon.error-icon { background: #fee2e2; color: #dc2626; }
-.result-title { font-size: 15px; font-weight: 600; color: #0b1220; }
-.result-subtitle { font-size: 13px; color: #64748b; }
+.result-title {
+  font-size: 15px; font-weight: 600; color: #0b1220;
+  max-width: 100%; overflow-wrap: anywhere; word-break: break-word;
+}
+.result-subtitle {
+  font-size: 13px; color: #64748b; line-height: 1.45;
+  max-width: 100%; overflow-wrap: anywhere; word-break: break-word;
+}
 .done-btn, .retry-btn {
   margin-top: 6px; padding: 8px 20px; background: #0b1220; border: none; border-radius: 8px; font-size: 13px;
   font-weight: 500; font-family: inherit; color: #ffffff; cursor: pointer; transition: background 140ms ease;
@@ -255,13 +287,19 @@ export function getStyles(): string {
 .done-btn:hover, .retry-btn:hover { background: #1e293b; }
 
 @media (max-width: 480px) {
-  .panel { width: calc(100vw - 24px); max-width: calc(100vw - 24px); resize: none; }
+  .panel.is-sheet .panel-header { padding: 12px 14px; }
+  .panel.is-sheet .panel-body { padding: 14px; }
+  .panel.is-sheet .result-view { padding: 28px 16px; }
+  .type-group { gap: 6px; }
+  .actions { flex-wrap: wrap; }
+  .actions .cancel-btn, .actions .submit-btn { flex: 1 1 auto; }
 }
 @media (prefers-reduced-motion: reduce) {
   .launcher-btn, .panel, .type-btn, .close-btn, .capture-btn, .remove-screenshot-btn,
   .submit-btn, .cancel-btn, .done-btn, .retry-btn, .text-input, .message-textarea,
   .ai-btn { transition: none !important; }
   .panel[aria-hidden="false"] { transition: none !important; }
+  .widget.panel-open .launcher { transition: none !important; }
 }
 `;
 }

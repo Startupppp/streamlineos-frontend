@@ -600,8 +600,8 @@ export function CreateTicketDialog({
                 />
               </div>
 
-              <div className="relative z-10 flex shrink-0 items-center justify-between gap-3 border-t border-border bg-background px-5 py-3">
-                <div className="flex items-center gap-2">
+              <div className="relative z-10 grid shrink-0 grid-cols-[1fr_auto] items-center gap-x-3 gap-y-2 border-t border-border bg-background px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] [grid-template-areas:'tools_more'_'submit_submit'] md:flex md:justify-between md:gap-3 md:pb-3">
+                <div className="flex min-w-0 items-center gap-2 [grid-area:tools]">
                   <button
                     type="button"
                     onClick={handleAttachClick}
@@ -631,15 +631,15 @@ export function CreateTicketDialog({
                     multiple
                     onChange={handleFileChange}
                   />
-                  <span className="text-[10px] text-muted-foreground">
+                  <span className="sr-only text-[10px] text-muted-foreground md:not-sr-only md:inline md:truncate">
                     Up to {MAX_FILES} files, 25MB each, 100MB total
                     {files.length > 0 &&
                       ` · ${files.length}/${MAX_FILES} · ${formatBytes(totalSize)}`}
                   </span>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <label className="flex cursor-pointer select-none items-center gap-2 rounded-md border border-input bg-muted px-2 py-1">
+                <div className="contents md:flex md:items-center md:gap-3">
+                  <label className="flex cursor-pointer select-none items-center gap-2 justify-self-end rounded-md border border-input bg-muted px-2 py-1 [grid-area:more]">
                     <Switch
                       checked={createMore}
                       onCheckedChange={handleCreateMoreChange}
@@ -655,7 +655,7 @@ export function CreateTicketDialog({
                     type="submit"
                     isPending={isPending || isUploading}
                     loadingText="Creating…"
-                    className="px-4 text-xs"
+                    className="w-full px-4 text-xs [grid-area:submit] md:w-auto"
                     size="sm"
                     disabled={!canSubmit}
                   >

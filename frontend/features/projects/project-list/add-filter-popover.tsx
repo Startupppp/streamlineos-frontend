@@ -4,10 +4,10 @@ import { useCallback, useState } from "react";
 import { Filter, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  ResponsivePopover,
+  ResponsivePopoverContent,
+  ResponsivePopoverTrigger,
+} from "@/components/ui/responsive-popover";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -117,8 +117,8 @@ export function AddFilterPopover({ filters, onFiltersChange }: AddFilterPopoverP
   const hasAny = activeCount > 0;
 
   return (
-    <Popover>
-      <PopoverTrigger asChild>
+    <ResponsivePopover>
+      <ResponsivePopoverTrigger asChild>
         <Button
           variant="outline"
           size="sm"
@@ -135,8 +135,12 @@ export function AddFilterPopover({ filters, onFiltersChange }: AddFilterPopoverP
             </Badge>
           ) : null}
         </Button>
-      </PopoverTrigger>
-      <PopoverContent align="start" className="w-72 p-3">
+      </ResponsivePopoverTrigger>
+      <ResponsivePopoverContent
+        align="start"
+        title="Add filter"
+        className="w-72 p-3"
+      >
         <div className="mb-3 flex items-center justify-between">
           <p className="text-[13px] font-semibold text-foreground">Add filter</p>
           {hasAny ? (
@@ -215,8 +219,8 @@ export function AddFilterPopover({ filters, onFiltersChange }: AddFilterPopoverP
             )}
           </div>
         </div>
-      </PopoverContent>
-    </Popover>
+      </ResponsivePopoverContent>
+    </ResponsivePopover>
   );
 }
 
