@@ -114,7 +114,7 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
             gross: formatMoney(run.grossTotal),
             deductions: formatMoney(run.deductionTotal),
             net: formatMoney(run.netTotal),
-            employees: run.employeeCount,
+            employees: run.employeeCount ?? undefined,
           }}
           ruleVersion={run.statutoryRuleVersion ?? "IN-2025.04"}
           payDate={run.payDate ?? null}
