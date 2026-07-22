@@ -93,6 +93,10 @@ export interface PayrollRun {
   orgId: string;
   month: string;
   status: PayrollRunStatus;
+  runType?: string | null;
+  payDate?: string | null;
+  statutoryRuleVersion?: string | null;
+  calculationVersion?: string | null;
   grossTotal: string | null;
   deductionTotal: string | null;
   netTotal: string | null;

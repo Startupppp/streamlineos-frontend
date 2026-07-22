@@ -182,132 +182,163 @@ export default function PayrollCommandCenterPage() {
 
       {!isLoading && data && (
         <div className="flex flex-1 min-h-0 flex-col gap-4">
-          <ReadinessRail
-            canPay={
-              !!header &&
-              header.exceptionCounts.BLOCKER === 0 &&
-              (header.status === "LOCKED" ||
-                header.status === "APPROVED" ||
-                header.status === "PAID")
-            }
-            blockers={[
-              ...(header && header.exceptionCounts.BLOCKER > 0
-                ? [
-                    {
-                      id: "blockers",
-                      label: `${header.exceptionCounts.BLOCKER} blocking exception(s)`,
-                      href: runId ? `/payroll/runs/${runId}?tab=exceptions` : undefined,
-                    },
-                  ]
-                : []),
-              ...(header?.status === "PREPARING" || header?.status === "EXCEPTIONS_FOUND"
-                ? [
-                    {
-                      id: "not-ready",
-                      label: "Run is not approved/locked yet",
-                      href: runId ? `/payroll/runs/${runId}` : undefined,
-                    },
-                  ]
-                : []),
-            ]}
-            changes={
-              data.panels.varianceSummary
-                ? [
-                    {
-                      id: "net-delta",
-                      label: `Net variance ${data.panels.varianceSummary.netDelta} vs prior period`,
-                    },
-                    {
-                      id: "changed",
-                      label: `${data.panels.varianceSummary.changedEmployees} employee(s) changed`,
-                    },
-                  ]
-                : []
-            }
-            nextAction={
-              header?.status === "EXCEPTIONS_FOUND"
-                ? {
-                    label: "Resolve blockers",
-                    href: runId ? `/payroll/runs/${runId}?tab=exceptions` : "/payroll/runs",
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_20rem] gap-4 items-start">
+            <div className="space-y-4 min-w-0 order-2 lg:order-1">
+              <StatCardGrid cols={4}>
+                <StatCard
+                  label="Net Payable"
+                  value={formatMoney(header?.netTotal)}
+                  tone="blue"
+                  icon={DollarSign}
+                />
+                <StatCard
+                  label="Gross"
+                  value={formatMoney(header?.grossTotal)}
+                />
+                <StatCard
+                  label="Deductions"
+                  value={formatMoney(header?.deductionTotal)}
+                  tone="amber"
+                  icon={TrendingDown}
+                />
+                <StatCard
+                  label="Exceptions"
+                  value={excCount}
+                  tone={excCount > 0 ? "red" : "emerald"}
+                  icon={AlertTriangle}
+                  href={
+                    excCount > 0 && runId
+                      ? `/payroll/runs/${runId}?tab=exceptions`
+                      : undefined
                   }
-                : header?.status === "PREVIEW_READY" || header?.status === "DRAFT"
-                  ? {
-                      label: "Review & submit for approval",
-                      href: runId ? `/payroll/runs/${runId}` : "/payroll/runs",
-                    }
-                  : header?.status === "PENDING_APPROVAL"
+                />
+              </StatCardGrid>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="lg:col-span-1">
+                  {data.checklist.length > 0 ? (
+                    <ChecklistCard items={data.checklist} />
+                  ) : (
+                    <div className="rounded-xl border border-dashed border-border bg-card p-4 min-h-[200px]">
+                      <ChartEmptyState
+                        message="Start a payroll run to see the checklist"
+                        height={200}
+                        compact
+                      />
+                    </div>
+                  )}
+                </div>
+                <div className="lg:col-span-2">
+                  <CommandCenterPanels data={data} runId={runId} />
+                </div>
+              </div>
+            </div>
+
+            <div className="order-1 lg:order-2 space-y-3">
+              <ReadinessRail
+                variant="rail"
+                canPay={
+                  !!header &&
+                  header.exceptionCounts.BLOCKER === 0 &&
+                  (header.status === "LOCKED" ||
+                    header.status === "APPROVED" ||
+                    header.status === "PAID")
+                }
+                totals={{
+                  gross: formatMoney(header?.grossTotal),
+                  deductions: formatMoney(header?.deductionTotal),
+                  net: formatMoney(header?.netTotal),
+                  employees: header?.employeeCount,
+                }}
+                ruleVersion="IN-2025.04"
+                warnings={
+                  header && header.exceptionCounts.WARNING > 0
+                    ? [
+                        {
+                          id: "warn",
+                          label: `${header.exceptionCounts.WARNING} warning(s)`,
+                          href: runId ? `/payroll/runs/${runId}?tab=exceptions` : undefined,
+                        },
+                      ]
+                    : []
+                }
+                blockers={[
+                  ...(header && header.exceptionCounts.BLOCKER > 0
+                    ? [
+                        {
+                          id: "blockers",
+                          label: `${header.exceptionCounts.BLOCKER} blocking exception(s)`,
+                          href: runId ? `/payroll/runs/${runId}?tab=exceptions` : undefined,
+                        },
+                      ]
+                    : []),
+                  ...(header?.status === "PREPARING" || header?.status === "EXCEPTIONS_FOUND"
+                    ? [
+                        {
+                          id: "not-ready",
+                          label: "Run is not approved/locked yet",
+                          href: runId ? `/payroll/runs/${runId}` : undefined,
+                        },
+                      ]
+                    : []),
+                ]}
+                changes={
+                  data.panels.varianceSummary
+                    ? [
+                        {
+                          id: "net-delta",
+                          label: `Net variance ${data.panels.varianceSummary.netDelta} vs prior period`,
+                        },
+                        {
+                          id: "changed",
+                          label: `${data.panels.varianceSummary.changedEmployees} employee(s) changed`,
+                        },
+                      ]
+                    : []
+                }
+                nextAction={
+                  header?.status === "EXCEPTIONS_FOUND"
                     ? {
-                        label: "Review approval stages",
-                        href: runId ? `/payroll/runs/${runId}` : "/payroll/runs",
+                        label: "Resolve blockers",
+                        href: runId ? `/payroll/runs/${runId}?tab=exceptions` : "/payroll/runs",
                       }
-                    : header?.status === "LOCKED"
+                    : header?.status === "PREVIEW_READY" || header?.status === "DRAFT"
                       ? {
-                          label: "Go to bank transfers",
-                          href: `/payroll/bank-transfers?runId=${runId ?? ""}`,
+                          label: "Review & submit for approval",
+                          href: runId ? `/payroll/runs/${runId}` : "/payroll/runs",
                         }
-                      : header?.status === "PAID"
+                      : header?.status === "PENDING_APPROVAL"
                         ? {
-                            label: "Publish payslips",
-                            href: runId ? `/payroll/runs/${runId}` : "/payroll/payslips",
-                          }
-                        : {
-                            label: "Open run detail",
+                            label: "Review approval stages",
                             href: runId ? `/payroll/runs/${runId}` : "/payroll/runs",
                           }
-            }
-            summary={
-              header
-                ? `${header.employeeCount} employees · Net ${formatMoney(header.netTotal)} · ${excCount} open exception(s)`
-                : undefined
-            }
-          />
-          <StatCardGrid cols={5}>
-            <StatCard
-              label="Net Payable"
-              value={formatMoney(header?.netTotal)}
-              tone="blue"
-              icon={DollarSign}
-            />
-            <StatCard
-              label="Gross"
-              value={formatMoney(header?.grossTotal)}
-            />
-            <StatCard
-              label="Deductions"
-              value={formatMoney(header?.deductionTotal)}
-              tone="amber"
-              icon={TrendingDown}
-            />
-            <StatCard
-              label="Employees"
-              value={header?.employeeCount ?? 0}
-              icon={Users}
-            />
-            <StatCard
-              label="Exceptions"
-              value={excCount}
-              tone={excCount > 0 ? "red" : "emerald"}
-              icon={AlertTriangle}
-              href={excCount > 0 ? "/payroll/runs" : undefined}
-            />
-          </StatCardGrid>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div className="lg:col-span-1">
-              {data.checklist.length > 0 ? (
-                <ChecklistCard items={data.checklist} />
-              ) : (
-                <div className="rounded-xl border border-dashed border-border bg-card p-4 min-h-[200px]">
-                  <ChartEmptyState
-                    message="Start a payroll run to see the checklist"
-                    height={200}
-                    compact
-                  />
+                        : header?.status === "LOCKED"
+                          ? {
+                              label: "Go to bank transfers",
+                              href: `/payroll/bank-transfers?runId=${runId ?? ""}`,
+                            }
+                          : header?.status === "PAID"
+                            ? {
+                                label: "Publish payslips",
+                                href: runId ? `/payroll/runs/${runId}` : "/payroll/payslips",
+                              }
+                            : {
+                                label: "Open run detail",
+                                href: runId ? `/payroll/runs/${runId}` : "/payroll/runs",
+                              }
+                }
+                summary={
+                  header
+                    ? `${header.employeeCount} employees · ${excCount} open exception(s)`
+                    : undefined
+                }
+              />
+              {header && (
+                <div className="hidden lg:flex items-center gap-2 text-xs text-muted-foreground px-1">
+                  <Users className="h-3.5 w-3.5" />
+                  <span className="payroll-money">{header.employeeCount} people this period</span>
                 </div>
               )}
-            </div>
-            <div className="lg:col-span-2">
-              <CommandCenterPanels data={data} runId={runId} />
             </div>
           </div>
         </div>

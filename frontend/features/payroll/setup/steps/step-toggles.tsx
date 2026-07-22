@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ToggleRow } from "@/features/payroll/shared";
 import { NavButtons } from "@/features/payroll/setup/nav-buttons";
+import { PolicyImpactPreview } from "@/features/payroll/setup/components/policy-impact-preview";
 import { useToggleImpact, usePreviewPolicy } from "@/hooks/api/payroll";
 import { TOGGLE_GROUPS, TOGGLE_META, RISKY_TOGGLES } from "@/features/payroll/setup/lib/constants";
 import type { SetupDraft } from "@/features/payroll/setup/lib/draft";
@@ -121,7 +122,10 @@ export function StepToggles({ draft, updateDraft, goNext, goBack }: StepTogglesP
   const [pendingToggle, setPendingToggle] = useState<ToggleKey | null>(null);
   const [pendingValue, setPendingValue] = useState(false);
 
-  const { data: impactData } = useToggleImpact(pendingToggle ?? "", !!pendingToggle);
+  const { data: impactData, isFetching: impactLoading } = useToggleImpact(
+    pendingToggle ?? "",
+    !!pendingToggle,
+  );
 
   const country = draft.profile?.country ?? "IN";
   const isNonIN = country !== "IN";
@@ -252,19 +256,14 @@ export function StepToggles({ draft, updateDraft, goNext, goBack }: StepTogglesP
               Disable {pendingMeta?.label ?? pendingToggle}?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {impactData ? (
-                <>
-                  This will affect {impactData.affectedEmployeeCount} employee
-                  {impactData.affectedEmployeeCount !== 1 ? "s" : ""}.
-                  {impactData.affectedStatutoryCodes.length > 0 && (
-                    <> Statutory codes affected: {impactData.affectedStatutoryCodes.join(", ")}.</>
-                  )}
-                </>
-              ) : (
-                "Disabling a statutory compliance feature may have legal implications."
-              )}
+              Disabling a statutory or workflow control may change deductions, filings, or approval paths.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <PolicyImpactPreview
+            impact={impactData}
+            loading={impactLoading}
+            toggleLabel={pendingMeta?.label}
+          />
           <AlertDialogFooter>
             <AlertDialogCancel onClick={handleCancelToggle}>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmToggle}>Yes, disable</AlertDialogAction>

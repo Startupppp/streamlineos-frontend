@@ -83,13 +83,20 @@ export function TemplateCard({ template, selected, onSelect, actions }: Template
           : "border-border bg-card hover:border-primary/40 hover:shadow-sm",
       )}
     >
-      {template.isRecommended && (
-        <div className="absolute -top-2.5 left-3">
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-primary text-primary-foreground">
+      <div className="absolute -top-2.5 left-3 flex flex-wrap gap-1">
+        {template.isRecommended && (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[var(--payroll-ledger)] text-white">
             Recommended
           </span>
-        </div>
-      )}
+        )}
+        {["INDIAN_STANDARD", "INDIAN_STARTUP", "CONTRACTOR", "SALES_INCENTIVE", "GLOBAL_REMOTE"].includes(
+          template.category,
+        ) && (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border border-[var(--payroll-rule)] bg-[var(--payroll-paper)] text-[var(--payroll-ink)] dark:bg-card dark:text-foreground">
+            Core template
+          </span>
+        )}
+      </div>
 
       <div className="space-y-2.5">
         <div className="flex items-start justify-between gap-2">
@@ -100,6 +107,10 @@ export function TemplateCard({ template, selected, onSelect, actions }: Template
                 {template.badge}
               </span>
             )}
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              {template.category.replace(/_/g, " ")}
+              {template.isSystem ? " · System" : ""}
+            </p>
           </div>
           <span className={cn("shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium", complexity.className)}>
             {complexity.label}

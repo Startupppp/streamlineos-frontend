@@ -110,6 +110,14 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
             openExceptions === 0 &&
             (run.status === "LOCKED" || run.status === "APPROVED" || run.status === "PAID")
           }
+          totals={{
+            gross: formatMoney(run.grossTotal),
+            deductions: formatMoney(run.deductionTotal),
+            net: formatMoney(run.netTotal),
+            employees: run.employeeCount,
+          }}
+          ruleVersion={run.statutoryRuleVersion ?? "IN-2025.04"}
+          payDate={run.payDate ?? null}
           blockers={
             openExceptions > 0
               ? [
@@ -140,7 +148,7 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
                     ? { label: "Publish payslips", href: `/payroll/runs/${runId}` }
                     : { label: "Review employees", href: `/payroll/runs/${runId}?tab=employees` }
           }
-          summary={`${run.employeeCount} employees · Net ${formatMoney(run.netTotal)} · ${formatMonth(run.month)}`}
+          summary={`${run.employeeCount} employees · ${formatMonth(run.month)}`}
         />
 
         {isLocked && (
