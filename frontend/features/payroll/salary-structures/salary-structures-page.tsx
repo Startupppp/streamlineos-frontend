@@ -234,14 +234,26 @@ export function SalaryStructuresPageContent() {
         </AnimatedIconButton>
       }
     >
-      <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-        <ArrowRight className="h-3.5 w-3.5 shrink-0 text-accent" />
+      <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
+        <ArrowRight className="mt-0.5 h-3.5 w-3.5 shrink-0" />
         <span>
-          Per-employee salary structures and overrides are managed from the{" "}
-          <Link href="/payroll/employees" className="text-accent underline-offset-2 hover:underline font-medium">
-            Employees
+          These are <span className="font-medium">reference templates</span> for
+          standardising compensation — payroll runs do not read them directly. Live
+          payroll is calculated from{" "}
+          <Link
+            href="/payroll/components"
+            className="underline underline-offset-2 hover:no-underline font-medium"
+          >
+            Components
           </Link>{" "}
-          page.
+          applied per employee as a{" "}
+          <Link
+            href="/payroll/employees"
+            className="underline underline-offset-2 hover:no-underline font-medium"
+          >
+            Salary Profile
+          </Link>
+          . Edit an employee&apos;s structure there so it flows into their run.
         </span>
       </div>
 
