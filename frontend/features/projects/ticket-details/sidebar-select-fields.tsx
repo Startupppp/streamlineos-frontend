@@ -73,6 +73,19 @@ export interface SidebarSelectFieldsProps {
   onCycleChange: (v: string) => void;
 }
 
+const FIELD_GRID = "grid grid-cols-1 gap-3 @[18rem]:grid-cols-2 md:grid-cols-2";
+const SELECT_CONTENT_CLASS = "min-w-[var(--radix-select-trigger-width)]";
+const CONTROL_CLASS =
+  "w-full min-h-10 touch-manipulation @[18rem]:min-h-9 md:min-h-9";
+
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+      {children}
+    </span>
+  );
+}
+
 export function SidebarSelectFields({
   ticket,
   statuses,
@@ -90,17 +103,15 @@ export function SidebarSelectFields({
   onCycleChange,
 }: SidebarSelectFieldsProps) {
   return (
-    <>
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-1 block">
-            Status
-          </span>
+    <div className="space-y-3">
+      <div className={FIELD_GRID}>
+        <div className="min-w-0">
+          <FieldLabel>Status</FieldLabel>
           <Select value={ticket.status || "TODO"} onValueChange={onStatusChange}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger className={CONTROL_CLASS}>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className={SELECT_CONTENT_CLASS}>
               {statuses?.map((s) => (
                 <SelectItem key={s.id} value={s.name}>
                   {s.name.replace(/_/g, " ")}
@@ -132,15 +143,13 @@ export function SidebarSelectFields({
             </SelectContent>
           </Select>
         </div>
-        <div>
-          <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-1 block">
-            Priority
-          </span>
+        <div className="min-w-0">
+          <FieldLabel>Priority</FieldLabel>
           <Select value={ticket.priority || "MEDIUM"} onValueChange={onPriorityChange}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger className={CONTROL_CLASS}>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className={SELECT_CONTENT_CLASS}>
               <SelectItem value="LOW">Low</SelectItem>
               <SelectItem value="MEDIUM">Medium</SelectItem>
               <SelectItem value="HIGH">High</SelectItem>
@@ -150,16 +159,14 @@ export function SidebarSelectFields({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-1 block">
-            Type
-          </span>
+      <div className={FIELD_GRID}>
+        <div className="min-w-0">
+          <FieldLabel>Type</FieldLabel>
           <Select value={ticket.type || "TASK"} onValueChange={onTypeChange}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger className={CONTROL_CLASS}>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className={SELECT_CONTENT_CLASS}>
               <SelectItem value="TASK">Task</SelectItem>
               <SelectItem value="BUG">Bug</SelectItem>
               <SelectItem value="STORY">Story</SelectItem>
@@ -167,32 +174,30 @@ export function SidebarSelectFields({
             </SelectContent>
           </Select>
         </div>
-        <div>
-          <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-1 block">
-            Points
-          </span>
+        <div className="min-w-0">
+          <FieldLabel>Points</FieldLabel>
           <Input
             type="number"
             min={0}
             value={ticket.points ?? ""}
             onChange={onPointsChange}
-            className="w-full"
+            className={CONTROL_CLASS}
             placeholder="0"
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-1 block">
-            <Target className="h-3 w-3 inline mr-0.5" />
+      <div className={FIELD_GRID}>
+        <div className="min-w-0">
+          <FieldLabel>
+            <Target className="mr-0.5 inline h-3 w-3" />
             Sprint
-          </span>
+          </FieldLabel>
           <Select value={ticket.sprintId?.toString() || "none"} onValueChange={onSprintChange}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger className={CONTROL_CLASS}>
               <SelectValue placeholder="None" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className={SELECT_CONTENT_CLASS}>
               <SelectItem value="none">None</SelectItem>
               {sprints?.map((s) => (
                 <SelectItem key={s.id} value={s.id.toString()}>
@@ -203,16 +208,16 @@ export function SidebarSelectFields({
             </SelectContent>
           </Select>
         </div>
-        <div>
-          <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-1 block">
-            <Zap className="h-3 w-3 inline mr-0.5" />
+        <div className="min-w-0">
+          <FieldLabel>
+            <Zap className="mr-0.5 inline h-3 w-3" />
             Epic
-          </span>
+          </FieldLabel>
           <Select value={ticket.epicId?.toString() || "none"} onValueChange={onEpicChange}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger className={CONTROL_CLASS}>
               <SelectValue placeholder="None" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className={SELECT_CONTENT_CLASS}>
               <SelectItem value="none">None</SelectItem>
               {epics.map((epic) => (
                 <SelectItem key={epic.id} value={epic.id.toString()}>
@@ -224,17 +229,17 @@ export function SidebarSelectFields({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-1 block">
-            <Boxes className="h-3 w-3 inline mr-0.5" />
+      <div className={FIELD_GRID}>
+        <div className="min-w-0">
+          <FieldLabel>
+            <Boxes className="mr-0.5 inline h-3 w-3" />
             Module
-          </span>
+          </FieldLabel>
           <Select value={ticket.moduleId?.toString() || "none"} onValueChange={onModuleChange}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger className={CONTROL_CLASS}>
               <SelectValue placeholder="None" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className={SELECT_CONTENT_CLASS}>
               <SelectItem value="none">None</SelectItem>
               {modules.map((mod) => (
                 <SelectItem key={mod.id} value={mod.id.toString()}>
@@ -244,16 +249,16 @@ export function SidebarSelectFields({
             </SelectContent>
           </Select>
         </div>
-        <div>
-          <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-1 block">
-            <RotateCcw className="h-3 w-3 inline mr-0.5" />
+        <div className="min-w-0">
+          <FieldLabel>
+            <RotateCcw className="mr-0.5 inline h-3 w-3" />
             Cycle
-          </span>
+          </FieldLabel>
           <Select value={ticket.cycleId?.toString() || "none"} onValueChange={onCycleChange}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger className={CONTROL_CLASS}>
               <SelectValue placeholder="None" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className={SELECT_CONTENT_CLASS}>
               <SelectItem value="none">None</SelectItem>
               {cycles.map((cycle) => (
                 <SelectItem key={cycle.id} value={cycle.id.toString()}>
@@ -265,6 +270,6 @@ export function SidebarSelectFields({
           </Select>
         </div>
       </div>
-    </>
+    </div>
   );
 }

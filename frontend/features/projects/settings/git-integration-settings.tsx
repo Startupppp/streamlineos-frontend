@@ -4,11 +4,11 @@ import type { ReactNode } from "react";
 import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { ExternalLink } from "lucide-react";
+import { Bot, ExternalLink, GitBranch } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Form,
   FormField,
@@ -22,6 +22,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -64,8 +65,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import {
   PmPageShell,
-  PmPanel,
-  PmSection,
   PmStaggerList,
   PM_FILL_PANEL,
   PM_PANEL,
@@ -73,14 +72,15 @@ import {
 import { ProviderIcon, ConnectionRow } from "./git-connection-row";
 import { CreatedSecretDialog } from "./git-created-secret-dialog";
 import { SetupInstructions } from "./git-setup-instructions";
+import {
+  gitConnectionSchema,
+  type GitConnectionFormValues,
+} from "./git-connection-schema";
 
-const gitConnectionSchema = z.object({
-  provider: z.string(),
-  repoUrl: z.string().min(1, "Repository URL is required"),
-  repoName: z.string(),
-});
+type IntegrationsTab = "connections" | "agent";
 
-type GitConnectionFormValues = z.infer<typeof gitConnectionSchema>;
+const TAB_TRIGGER_CLASS =
+  "h-7 min-w-0 flex-1 truncate sm:flex-none rounded-md px-3 text-sm font-medium gap-1.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none text-muted-foreground hover:text-foreground transition-colors duration-200";
 
 const PROVIDERS: { value: GitProvider; label: string }[] = [
   { value: "github", label: "GitHub" },
@@ -118,6 +118,8 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
     defaultValues: { provider: "github", repoUrl: "", repoName: "" },
   });
 
+  const selectedProvider = gitForm.watch("provider");
+
   const handleDialogChange = useCallback(
     (open: boolean) => {
       setDialogOpen(open);
@@ -130,7 +132,7 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
 
   const handleCreate = useCallback((values: GitConnectionFormValues) => {
     createConnection.mutate(
-      { provider: values.provider as GitProvider, repoUrl: values.repoUrl.trim(), repoName: values.repoName.trim() || undefined },
+      { provider: values.provider, repoUrl: values.repoUrl.trim(), repoName: values.repoName.trim() || undefined },
       {
         onSuccess: (data) => {
           toast.success("Connection created");
@@ -184,52 +186,76 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
     void refetch();
   }, [refetch]);
 
+  const [activeTab, setActiveTab] = useState<IntegrationsTab>("connections");
+
+  const handleTabChange = useCallback((value: string) => {
+    if (value === "connections" || value === "agent") {
+      setActiveTab(value);
+    }
+  }, []);
+
   return (
     <RequireModule module="PROJECTS">
       <PageWrapper
         title="Integrations"
         subtitle="Connect Git repositories to link commits and pull requests to tickets"
-        actions={<AddConnectionButton onClick={handleOpenDialog} />}
+        actions={
+          activeTab === "connections" ? (
+            <AddConnectionButton onClick={handleOpenDialog} />
+          ) : null
+        }
       >
         <PmPageShell className="flex-none overflow-visible">
-          <PmSection index={0}>
-            {isLoading ? (
-              <div className="space-y-3">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className={cn(PM_PANEL, "space-y-3 p-4")}>
-                    <div className="flex items-center gap-3">
-                      <Skeleton className="h-9 w-9 rounded-lg" />
-                      <div className="min-w-0 flex-1 space-y-1.5">
-                        <Skeleton className="h-4 w-40" />
-                        <Skeleton className="h-3 w-64" />
+          <Tabs
+            value={activeTab}
+            onValueChange={handleTabChange}
+            className="flex flex-col gap-0"
+          >
+            <TabsList className="mb-4 flex h-9 min-h-9 max-h-9 w-full shrink-0 items-center justify-stretch gap-1 overflow-x-auto rounded-lg border border-border bg-card p-1 scrollbar-hide sm:w-fit sm:justify-start">
+              <TabsTrigger value="connections" className={TAB_TRIGGER_CLASS}>
+                <GitBranch className="h-3.5 w-3.5" />
+                Connections
+              </TabsTrigger>
+              {footer ? (
+                <TabsTrigger value="agent" className={TAB_TRIGGER_CLASS}>
+                  <Bot className="h-3.5 w-3.5" />
+                  Agent access
+                </TabsTrigger>
+              ) : null}
+            </TabsList>
+
+            <TabsContent value="connections" className="mt-0">
+              {isLoading ? (
+                <div className="space-y-3">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className={cn(PM_PANEL, "space-y-3 p-4")}>
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-9 w-9 rounded-lg" />
+                        <div className="min-w-0 flex-1 space-y-1.5">
+                          <Skeleton className="h-4 w-40" />
+                          <Skeleton className="h-3 w-64" />
+                        </div>
                       </div>
+                      <Skeleton className="h-9 w-full rounded-md" />
                     </div>
-                    <Skeleton className="h-9 w-full rounded-md" />
-                  </div>
-                ))}
-              </div>
-            ) : isError ? (
-              <ErrorState
+                  ))}
+                </div>
+              ) : isError ? (
+                <ErrorState
                   className={PM_FILL_PANEL}
                   title="Could not load connections"
                   description="There was a problem loading your Git connections."
                   onRetry={handleRetry}
                 />
-            ) : !connections || connections.length === 0 ? (
-              <div className="flex min-h-full flex-col gap-4">
+              ) : !connections || connections.length === 0 ? (
                 <EmptyState
-                    className={PM_FILL_PANEL}
-                    illustration={<EmptyDevicesIllustration />}
-                    title="No repositories connected"
-                    description="Connect GitHub, GitLab, or Bitbucket to link commits and PRs to your tickets."
-                    action={{ label: "Add connection", onClick: handleOpenDialog }}
-                  />
-                <div className="shrink-0">
-                  <SetupInstructions />
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
+                  className={PM_FILL_PANEL}
+                  illustration={<EmptyDevicesIllustration />}
+                  title="No repositories connected"
+                  description="Connect GitHub, GitLab, or Bitbucket to link commits and PRs to your tickets."
+                  action={{ label: "Add connection", onClick: handleOpenDialog }}
+                />
+              ) : (
                 <PmStaggerList className="space-y-3">
                   {connections.map((connection) => (
                     <ConnectionRow
@@ -241,83 +267,93 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
                     />
                   ))}
                 </PmStaggerList>
-                <SetupInstructions />
-              </div>
-            )}
-          </PmSection>
+              )}
+            </TabsContent>
 
-          {footer ? (
-            <PmSection index={1}>
-              <div className="mt-2">{footer}</div>
-            </PmSection>
-          ) : null}
+            {footer ? (
+              <TabsContent value="agent" className="mt-0">
+                {footer}
+              </TabsContent>
+            ) : null}
+          </Tabs>
         </PmPageShell>
 
         <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
-          <DialogContent>
-            <DialogHeader>
+          <DialogContent className="flex max-h-[90dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
+            <DialogHeader className="shrink-0 px-6 pt-6 pb-4">
               <DialogTitle>Add Git connection</DialogTitle>
               <DialogDescription>
                 We generate a webhook URL and secret for you to paste into your repository.
               </DialogDescription>
             </DialogHeader>
             <Form {...gitForm}>
-              <form onSubmit={gitForm.handleSubmit(handleCreate)} className="space-y-4">
-                <FormField
-                  control={gitForm.control}
-                  name="provider"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Provider</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
+              <form
+                onSubmit={gitForm.handleSubmit(handleCreate)}
+                className="flex min-h-0 flex-1 flex-col"
+              >
+                <DialogBody className="space-y-4 px-6 py-2">
+                  <FormField
+                    control={gitForm.control}
+                    name="provider"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Provider</FormLabel>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <FormControl>
+                            <SelectTrigger><SelectValue placeholder="Select provider" /></SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {PROVIDERS.map((p) => (
+                              <SelectItem key={p.value} value={p.value}>
+                                <span className="flex items-center gap-2">
+                                  <ProviderIcon provider={p.value} className="h-4 w-4" />
+                                  {p.label}
+                                </span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage className="text-xs" />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={gitForm.control}
+                    name="repoUrl"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Repository URL <span className="text-destructive">*</span></FormLabel>
                         <FormControl>
-                          <SelectTrigger><SelectValue placeholder="Select provider" /></SelectTrigger>
+                          <div className="relative">
+                            <ExternalLink className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input {...field} className="pl-9" placeholder="https://github.com/org/repo" />
+                          </div>
                         </FormControl>
-                        <SelectContent>
-                          {PROVIDERS.map((p) => (
-                            <SelectItem key={p.value} value={p.value}>
-                              <span className="flex items-center gap-2">
-                                <ProviderIcon provider={p.value} className="h-4 w-4" />
-                                {p.label}
-                              </span>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage className="text-xs" />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={gitForm.control}
-                  name="repoUrl"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Repository URL <span className="text-destructive">*</span></FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <ExternalLink className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                          <Input {...field} className="pl-9" placeholder="https://github.com/org/repo" />
-                        </div>
-                      </FormControl>
-                      <FormMessage className="text-xs" />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={gitForm.control}
-                  name="repoName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Display name (optional)</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="org/repo" />
-                      </FormControl>
-                      <FormMessage className="text-xs" />
-                    </FormItem>
-                  )}
-                />
-                <DialogFooter>
+                        <FormMessage className="text-xs" />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={gitForm.control}
+                    name="repoName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Display name (optional)</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="org/repo" />
+                        </FormControl>
+                        <FormMessage className="text-xs" />
+                      </FormItem>
+                    )}
+                  />
+                  {selectedProvider === "github" ? (
+                    <SetupInstructions
+                      compact
+                      className="rounded-lg border border-border/60 bg-muted/20 p-3"
+                    />
+                  ) : null}
+                </DialogBody>
+                <DialogFooter className="shrink-0 border-t border-border/60 px-6 py-4">
                   <Button type="button" variant="outline" onClick={handleCancelDialog}>
                     Cancel
                   </Button>

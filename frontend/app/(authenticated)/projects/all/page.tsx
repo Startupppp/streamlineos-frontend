@@ -6,6 +6,7 @@ import { useProjects } from "@/hooks/api/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { RequireModule } from "@/components/auth/require-module";
 import { NewProjectDialog } from "@/features/projects/project-list/new-project-dialog";
+import { ResumeLastProjectAction } from "@/features/projects/project-list/resume-last-project-action";
 import { ProjectCard } from "@/features/projects/project-list/project-card";
 import { ProjectTable } from "@/features/projects/project-list/project-table";
 import { ProjectFilterBar } from "@/features/projects/project-list/project-filter-bar";
@@ -194,7 +195,10 @@ export default function ProjectsPage() {
         title="All Projects"
         subtitle="Browse and manage every project in your workspace"
         actions={
-          <NewProjectDialog open={createOpen} onOpenChange={handleCreateOpenChange} />
+          <>
+            <ResumeLastProjectAction />
+            <NewProjectDialog open={createOpen} onOpenChange={handleCreateOpenChange} />
+          </>
         }
       >
         <PmPageShell>

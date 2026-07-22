@@ -12,8 +12,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { useDeleteProject, useArchiveProject } from "@/hooks/api/projects";
+import { useArchiveProject } from "@/hooks/api/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { DeleteProjectDialog } from "@/features/projects/sidebar/delete-project-dialog";
 import { EditProjectSheet } from "./edit-project-sheet";
 import type { ProjectListItem } from "@/types/projects/projects";
 
@@ -38,7 +39,6 @@ export function ProjectCardDialogs({
   deleteConfirmOpen,
   onDeleteConfirmOpenChange,
 }: ProjectCardDialogsProps) {
-  const deleteProject = useDeleteProject();
   const archiveProject = useArchiveProject();
 
   const handleArchiveConfirm = useCallback(
@@ -59,26 +59,6 @@ export function ProjectCardDialogs({
       );
     },
     [archiveProject, project.id, isArchived, onArchiveConfirmOpenChange],
-  );
-
-  const handleDeleteConfirm = useCallback(
-    (e: MouseEvent) => {
-      e.preventDefault();
-      if (deleteProject.isPending) return;
-      deleteProject.mutate(
-        { projectId: project.id },
-        {
-          onSuccess: () => {
-            toast.success("Project deleted");
-            onDeleteConfirmOpenChange(false);
-          },
-          onError: (error) => {
-            toast.error(getErrorMessage(error));
-          },
-        },
-      );
-    },
-    [deleteProject, project.id, onDeleteConfirmOpenChange],
   );
 
   return (
@@ -112,26 +92,12 @@ export function ProjectCardDialogs({
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={deleteConfirmOpen} onOpenChange={onDeleteConfirmOpenChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete project?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. All tickets and data in this project will be permanently deleted.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteProject.isPending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              disabled={deleteProject.isPending}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {deleteProject.isPending ? "Deleting…" : "Delete"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteProjectDialog
+        open={deleteConfirmOpen}
+        onOpenChange={onDeleteConfirmOpenChange}
+        projectId={project.id}
+        projectName={project.name}
+      />
     </>
   );
 }

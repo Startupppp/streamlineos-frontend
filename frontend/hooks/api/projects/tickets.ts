@@ -328,10 +328,6 @@ export function useMoveTicket(
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.tickets({ projectId: variables.projectId }),
       });
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.detail(variables.projectId),
-      });
-      queryClient.invalidateQueries({ queryKey: queryKeys.projectReports.all });
       options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
   });
@@ -385,6 +381,11 @@ export function useAddLabelToTicket(
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.ticket(variables.ticketId),
       });
+      if (variables.projectId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.projects.tickets({ projectId: variables.projectId }),
+        });
+      }
       options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
   });
@@ -405,6 +406,11 @@ export function useRemoveLabelFromTicket(
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.ticket(variables.ticketId),
       });
+      if (variables.projectId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.projects.tickets({ projectId: variables.projectId }),
+        });
+      }
       options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
   });
@@ -440,7 +446,7 @@ export function useCreateOrgLabel(
     mutationFn: (data) =>
       apiClient.post<TicketLabel>("/projects/labels", data),
     onSuccess: (data, variables, context, mutFnCtx) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.labels() });
+      queryClient.invalidateQueries({ queryKey: [...queryKeys.projects.all, "labels"] });
       options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
   });

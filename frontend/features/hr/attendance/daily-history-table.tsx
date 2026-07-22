@@ -80,7 +80,10 @@ const columns: DataTableColumn<AttendanceLog>[] = [
     key: "status",
     header: "Status",
     cell: (log) => {
-      const statusKey = log.status || "PRESENT";
+      const statusKey =
+        log.checkOut && log.status !== "ON_BREAK"
+          ? "CHECKED_OUT"
+          : log.status || "PRESENT";
       const badgeClass = statusBadgeClasses[statusKey] ?? statusBadgeClasses.PRESENT;
       return (
         <Badge

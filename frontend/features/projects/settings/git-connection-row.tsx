@@ -1,10 +1,11 @@
 "use client";
 
 import { memo, useState, useCallback } from "react";
-import { GitBranch, Github, Gitlab } from "lucide-react";
+import { ChevronDown, GitBranch, Github, Gitlab } from "lucide-react";
 import { Trash2Icon, CopyIcon, EyeIcon, EyeOffIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
@@ -13,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { PM_PANEL } from "@/features/projects/shared/pm-chrome";
 import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { SetupInstructions } from "./git-setup-instructions";
 
 export function ProviderIcon({
   provider,
@@ -66,8 +68,10 @@ export const ConnectionRow = memo(function ConnectionRow({
   isToggling,
 }: ConnectionRowProps) {
   const [revealed, setRevealed] = useState(false);
+  const [setupOpen, setSetupOpen] = useState(false);
 
   const handleToggleReveal = useCallback(() => setRevealed((v) => !v), []);
+  const handleToggleSetup = useCallback(() => setSetupOpen((v) => !v), []);
   const handleToggle = useCallback(() => onToggle(connection), [connection, onToggle]);
   const handleDelete = useCallback(
     () => onDelete(connection.id),
@@ -75,6 +79,7 @@ export const ConnectionRow = memo(function ConnectionRow({
   );
 
   const displayName = connection.repoName || connection.repoUrl;
+  const isGithub = connection.provider === "github";
 
   return (
     <div
@@ -155,6 +160,29 @@ export const ConnectionRow = memo(function ConnectionRow({
             The full secret is shown only once at creation. Recreate the connection if it is lost.
           </p>
         </div>
+        {isGithub ? (
+          <div className="border-t border-border/50 pt-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 w-full justify-between px-2 text-xs text-muted-foreground hover:text-foreground"
+              onClick={handleToggleSetup}
+              aria-expanded={setupOpen}
+            >
+              How it works
+              <ChevronDown
+                className={cn(
+                  "h-3.5 w-3.5 transition-transform duration-200",
+                  setupOpen && "rotate-180",
+                )}
+              />
+            </Button>
+            {setupOpen ? (
+              <SetupInstructions compact className="px-1 pb-1 pt-2" />
+            ) : null}
+          </div>
+        ) : null}
       </div>
     </div>
   );

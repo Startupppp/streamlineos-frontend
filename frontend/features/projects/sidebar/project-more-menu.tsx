@@ -2,7 +2,6 @@
 
 import { useMemo, useState, useCallback } from "react";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
 
 import { EllipsisIcon, SlidersHorizontalIcon } from "@animateicons/react/lucide";
 import { cn } from "@/lib/utils";
@@ -19,6 +18,7 @@ import {
   useAnimatedNavIconHover,
 } from "@/components/layout/sidebar/sidebar-animated-nav";
 import type { ProjectNavGroup, ProjectNavItem } from "./project-nav-config";
+import { useProjectNavIsActive } from "./use-project-nav";
 
 interface ProjectMoreMenuProps {
   baseUrl: string;
@@ -26,20 +26,6 @@ interface ProjectMoreMenuProps {
   collapsed: boolean;
   onNavigate?: () => void;
   onCustomize?: () => void;
-}
-
-function useIsMoreItemActive(baseUrl: string) {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  return (href: string) => {
-    if (!pathname) return false;
-    if (href.includes("view=workload")) {
-      return pathname === baseUrl && searchParams.get("view") === "workload";
-    }
-    if (href === baseUrl) return pathname === baseUrl;
-    return pathname === href || pathname.startsWith(`${href}/`);
-  };
 }
 
 export function ProjectMoreMenu({
@@ -51,7 +37,7 @@ export function ProjectMoreMenu({
 }: ProjectMoreMenuProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const isActive = useIsMoreItemActive(baseUrl);
+  const isActive = useProjectNavIsActive(baseUrl);
   const { iconRef, animatedNavHoverHandlers } = useAnimatedNavIconHover();
   const customizeHover = useAnimatedNavIconHover();
 
@@ -109,9 +95,6 @@ export function ProjectMoreMenu({
           )}
           aria-label="More project tools"
         >
-          {anyActive ? (
-            <span className="absolute left-0 inset-y-1.5 w-0.5 rounded-full bg-primary" />
-          ) : null}
           <SidebarAnimatedNavIcon
             icon={EllipsisIcon}
             iconRef={iconRef}
@@ -211,7 +194,7 @@ function MoreLink({
       className={cn(
         "flex items-center gap-2 rounded-lg px-2 py-1.5 text-[13px] transition-all duration-150",
         active
-          ? "bg-primary/12 font-medium text-foreground shadow-[inset_0_0_0_1px] shadow-primary/15"
+          ? "bg-primary/10 font-medium text-foreground"
           : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
       )}
     >

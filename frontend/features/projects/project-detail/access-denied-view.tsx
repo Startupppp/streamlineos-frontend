@@ -45,7 +45,7 @@ function AccessDeniedIllustration({ className }: { className?: string }) {
 
 export function AccessDeniedView({ projectName, hint }: { projectName: string; hint?: string }) {
   return (
-    <div className="flex items-center justify-center min-h-[60dvh] w-full p-8">
+    <div className="flex flex-1 min-h-full w-full items-center justify-center p-8">
       <div className="text-center max-w-md">
         <AccessDeniedIllustration className="w-48 h-48 mx-auto mb-6" />
         <h2 className="text-xl font-bold text-foreground mb-2">

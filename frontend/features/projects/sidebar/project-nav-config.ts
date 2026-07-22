@@ -46,9 +46,19 @@ export interface ProjectNavItem {
   permission?: boolean;
 }
 
+export type ProjectNavSectionId =
+  | "build"
+  | "plan"
+  | "ship"
+  | "collaborate"
+  | "insights"
+  | "configure";
+
 export interface ProjectNavGroup {
-  id: string;
+  id: ProjectNavSectionId;
   label: string;
+  pinned?: boolean;
+  defaultOpen?: boolean;
   items: ProjectNavItem[];
 }
 
@@ -99,50 +109,44 @@ export function isDefaultProjectNavHidden(
 }
 
 export function flattenProjectNavItems(
-  primary: ProjectNavItem[],
   groups: ProjectNavGroup[],
 ): ProjectNavItem[] {
-  return [...primary, ...groups.flatMap((group) => group.items)];
+  return groups.flatMap((group) => group.items);
 }
 
-export function filterVisibleNavItems<T extends { id: string }>(
-  items: T[],
-  hiddenIds: ReadonlySet<string>,
-): T[] {
-  return items.filter(
-    (item) => isProjectNavPinned(item.id) || !hiddenIds.has(item.id),
-  );
-}
-
-export function filterHiddenNavItems<T extends { id: string }>(
-  items: T[],
-  hiddenIds: ReadonlySet<string>,
-): T[] {
-  return items.filter(
-    (item) => !isProjectNavPinned(item.id) && hiddenIds.has(item.id),
-  );
-}
-
-export function filterHiddenNavGroups(
-  primary: ProjectNavItem[],
+export function filterVisibleNavGroups(
   groups: ProjectNavGroup[],
   hiddenIds: ReadonlySet<string>,
 ): ProjectNavGroup[] {
-  const sections: ProjectNavGroup[] = [
-    {
-      id: "navigate",
-      label: "Navigate",
-      items: filterHiddenNavItems(primary, hiddenIds),
-    },
-    ...groups.map((group) => ({
+  return groups
+    .map((group) => ({
       ...group,
-      items: filterHiddenNavItems(group.items, hiddenIds),
-    })),
-  ];
-  return sections.filter((group) => group.items.length > 0);
+      items: group.items.filter(
+        (item) => isProjectNavPinned(item.id) || !hiddenIds.has(item.id),
+      ),
+    }))
+    .filter((group) => group.items.length > 0);
+}
+
+export function filterHiddenNavGroups(
+  groups: ProjectNavGroup[],
+  hiddenIds: ReadonlySet<string>,
+): ProjectNavGroup[] {
+  return groups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter(
+        (item) => !isProjectNavPinned(item.id) && hiddenIds.has(item.id),
+      ),
+    }))
+    .filter((group) => group.items.length > 0);
 }
 
 export interface ProjectNavPermissions {
+  canProjectData: boolean;
+  canTickets: boolean;
+  canSprints: boolean;
+  canSettings: boolean;
   canQA: boolean;
   canBugs: boolean;
   canIncidents: boolean;
@@ -159,35 +163,40 @@ export interface ProjectNavPermissions {
   canFeedback: boolean;
 }
 
-export function buildPrimaryNav(
-  baseUrl: string,
-  perms: ProjectNavPermissions,
-): ProjectNavItem[] {
-  return [
-    { id: "issues", label: "Issues", href: baseUrl, icon: LayoutGridIcon },
-    { id: "backlog", label: "Backlog", href: `${baseUrl}/backlog`, icon: LayoutListIcon },
-    { id: "mine", label: "My issues", href: `${baseUrl}/my-tickets`, icon: UserIcon },
-    { id: "cycles", label: "Cycles", href: `${baseUrl}/sprints`, icon: Calendar },
-    { id: "epics", label: "Epics", href: `${baseUrl}/epics`, icon: LayersIcon },
-    { id: "timeline", label: "Timeline", href: `${baseUrl}/timeline`, icon: GanttChart },
-    ...(perms.canChat
-      ? [{ id: "chat", label: "Chat", href: `${baseUrl}/chat`, icon: MessageCircleIcon }]
-      : []),
-  ];
-}
-
-export function buildMoreGroups(
+export function buildProjectNavGroups(
   baseUrl: string,
   perms: ProjectNavPermissions,
 ): ProjectNavGroup[] {
+  if (!perms.canProjectData) return [];
+
+  const build: ProjectNavItem[] = perms.canTickets
+    ? [
+        { id: "issues", label: "Issues", href: baseUrl, icon: LayoutGridIcon },
+        { id: "backlog", label: "Backlog", href: `${baseUrl}/backlog`, icon: LayoutListIcon },
+        { id: "mine", label: "My issues", href: `${baseUrl}/my-tickets`, icon: UserIcon },
+      ]
+    : [];
+
   const plan: ProjectNavItem[] = [
+    ...(perms.canSprints
+      ? [{ id: "cycles", label: "Cycles", href: `${baseUrl}/sprints`, icon: Calendar }]
+      : []),
+    ...(perms.canTickets
+      ? [
+          { id: "epics", label: "Epics", href: `${baseUrl}/epics`, icon: LayersIcon },
+          { id: "timeline", label: "Timeline", href: `${baseUrl}/timeline`, icon: GanttChart },
+        ]
+      : []),
     { id: "milestones", label: "Milestones", href: `${baseUrl}/milestones`, icon: Diamond },
-    { id: "releases", label: "Releases", href: `${baseUrl}/releases`, icon: RocketIcon },
-    { id: "cycles-detail", label: "Iterations", href: `${baseUrl}/cycles`, icon: RefreshCcw },
     { id: "workload", label: "Workload", href: `${baseUrl}?view=workload`, icon: UsersIcon },
     ...(perms.canMeetings
       ? [{ id: "meetings", label: "Meetings", href: `${baseUrl}/meetings`, icon: CalendarClock }]
       : []),
+  ];
+
+  const ship: ProjectNavItem[] = [
+    { id: "releases", label: "Releases", href: `${baseUrl}/releases`, icon: RocketIcon },
+    { id: "cycles-detail", label: "Iterations", href: `${baseUrl}/cycles`, icon: RefreshCcw },
     ...(perms.canApprovals
       ? [
           {
@@ -198,9 +207,6 @@ export function buildMoreGroups(
           },
         ]
       : []),
-  ];
-
-  const quality: ProjectNavItem[] = [
     ...(perms.canQA
       ? [{ id: "qa", label: "QA / Tests", href: `${baseUrl}/qa`, icon: FlaskConical }]
       : []),
@@ -217,9 +223,6 @@ export function buildMoreGroups(
           },
         ]
       : []),
-  ];
-
-  const delivery: ProjectNavItem[] = [
     ...(perms.canChangerequests
       ? [
           {
@@ -253,6 +256,14 @@ export function buildMoreGroups(
       : []),
   ];
 
+  const collaborate: ProjectNavItem[] = [
+    ...(perms.canChat
+      ? [{ id: "chat", label: "Chat", href: `${baseUrl}/chat`, icon: MessageCircleIcon }]
+      : []),
+    { id: "wiki", label: "Wiki", href: "/knowledge", icon: BookOpenTextIcon },
+    { id: "whiteboard", label: "Whiteboard", href: `${baseUrl}/whiteboard`, icon: PenTool },
+  ];
+
   const insights: ProjectNavItem[] = [
     { id: "analytics", label: "Analytics", href: `${baseUrl}/analytics`, icon: ChartBarIcon },
     { id: "reports", label: "Agile reports", href: `${baseUrl}/reports`, icon: ActivityIcon },
@@ -267,8 +278,6 @@ export function buildMoreGroups(
 
   const configure: ProjectNavItem[] = [
     { id: "modules", label: "Modules", href: `${baseUrl}/modules`, icon: PackageOpenIcon },
-    { id: "wiki", label: "Wiki", href: "/knowledge", icon: BookOpenTextIcon },
-    { id: "whiteboard", label: "Whiteboard", href: `${baseUrl}/whiteboard`, icon: PenTool },
     { id: "views", label: "Saved views", href: `${baseUrl}/views`, icon: LayoutListIcon },
     ...(perms.canForms
       ? [{ id: "forms", label: "Forms", href: `${baseUrl}/forms`, icon: ClipboardIcon }]
@@ -283,16 +292,22 @@ export function buildMoreGroups(
       : []),
   ];
 
-  return [
-    { id: "plan", label: "Plan", items: plan },
-    { id: "quality", label: "Quality", items: quality },
-    { id: "delivery", label: "Delivery", items: delivery },
-    { id: "insights", label: "Insights", items: insights },
-    { id: "configure", label: "Configure", items: configure },
-  ].filter((g) => g.items.length > 0);
+  const groups: ProjectNavGroup[] = [
+    { id: "build", label: "Build", pinned: true, defaultOpen: true, items: build },
+    { id: "plan", label: "Plan", defaultOpen: true, items: plan },
+    { id: "ship", label: "Ship", defaultOpen: false, items: ship },
+    { id: "collaborate", label: "Collaborate", defaultOpen: true, items: collaborate },
+    { id: "insights", label: "Insights", defaultOpen: false, items: insights },
+    { id: "configure", label: "Configure", defaultOpen: false, items: configure },
+  ];
+  return groups.filter((g) => g.items.length > 0);
 }
 
-export function settingsNavItem(baseUrl: string): ProjectNavItem {
+export function settingsNavItem(
+  baseUrl: string,
+  canSettings: boolean,
+): ProjectNavItem | null {
+  if (!canSettings) return null;
   return {
     id: "settings",
     label: "Settings",

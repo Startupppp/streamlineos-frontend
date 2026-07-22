@@ -1,5 +1,5 @@
 export const TEXT_ONE_LINE =
-  "min-w-0 max-w-full overflow-hidden text-ellipsis line-clamp-1 break-all [overflow-wrap:anywhere] [word-break:break-all]";
+  "min-w-0 max-w-full truncate";
 
 export const TEXT_TWO_LINES =
   "min-w-0 max-w-full line-clamp-2 break-words [overflow-wrap:anywhere]";

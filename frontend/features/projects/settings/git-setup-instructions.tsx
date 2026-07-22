@@ -1,29 +1,76 @@
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { PM_PANEL } from "@/features/projects/shared/pm-chrome";
 
-export function SetupInstructions() {
+type SetupStep = {
+  title: string;
+  body: ReactNode;
+};
+
+const GITHUB_STEPS: SetupStep[] = [
+  {
+    title: "Add a connection",
+    body: "Create a GitHub connection for your repository. We generate a webhook URL and secret for you.",
+  },
+  {
+    title: "Paste the webhook",
+    body: (
+      <>
+        In GitHub, open{" "}
+        <span className="font-mono text-foreground/80">Settings → Webhooks → Add webhook</span>{" "}
+        and paste the webhook URL.
+      </>
+    ),
+  },
+  {
+    title: "Configure the secret",
+    body: (
+      <>
+        Set content type to{" "}
+        <span className="font-mono text-foreground/80">application/json</span>, paste the secret into
+        the <span className="font-mono text-foreground/80">Secret</span> field, and enable push + pull
+        request events.
+      </>
+    ),
+  },
+  {
+    title: "Reference tickets",
+    body: (
+      <>
+        Mention a ticket in a commit message or pull request title using its key (
+        <span className="font-mono text-foreground/80">ABC-12-34</span>) or number (
+        <span className="font-mono text-foreground/80">#34</span>) to link it automatically.
+      </>
+    ),
+  },
+];
+
+export function SetupInstructions({
+  className,
+  compact = false,
+}: {
+  className?: string;
+  compact?: boolean;
+}) {
   return (
-    <div className={cn(PM_PANEL, "border-dashed p-4")}>
-      <h3 className="mb-2 text-sm font-semibold text-foreground">How it works</h3>
-      <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
-        <p>
-          Add a connection, then paste the webhook URL into your repository settings (GitHub:{" "}
-          <span className="font-mono text-foreground/80">Settings → Webhooks</span>, GitLab:{" "}
-          <span className="font-mono text-foreground/80">Settings → Webhooks</span>).
-        </p>
-        <p>
-          For GitHub set the content type to{" "}
-          <span className="font-mono text-foreground/80">application/json</span> and paste the
-          secret into the <span className="font-mono text-foreground/80">Secret</span> field. For
-          GitLab paste the secret into the{" "}
-          <span className="font-mono text-foreground/80">Secret token</span> field.
-        </p>
-        <p>
-          Reference a ticket in a commit message or pull request title using its key (
-          <span className="font-mono text-foreground/80">ABC-12-34</span>) or number (
-          <span className="font-mono text-foreground/80">#34</span>) to link it automatically.
-        </p>
-      </div>
+    <div className={cn(!compact && PM_PANEL, !compact && "p-4 sm:p-5", className)}>
+      <h3 className="mb-1 text-sm font-semibold text-foreground">How it works</h3>
+      <p className="mb-3 text-xs text-muted-foreground">
+        Connect a GitHub repository once, then commits and PRs link to tickets automatically.
+      </p>
+      <ol className="space-y-3">
+        {GITHUB_STEPS.map((step, index) => (
+          <li key={step.title} className="flex gap-3">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary/10 text-xs font-semibold text-foreground">
+              {index + 1}
+            </span>
+            <div className="min-w-0 space-y-0.5 pt-0.5">
+              <p className="text-sm font-medium text-foreground">{step.title}</p>
+              <p className="text-xs leading-relaxed text-muted-foreground">{step.body}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
     </div>
   );
 }

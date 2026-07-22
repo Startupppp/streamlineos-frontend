@@ -1,17 +1,21 @@
 "use client";
 
 import Script from "next/script";
-
-const WIDGET_KEY = "fb_qd_tfFaGhsUVL7QS-DeH-nKWIR46Sq99";
+import {
+  FEEDBUCKET_WIDGET_SCRIPT_PATH,
+  getFeedbucketApiBase,
+  getFeedbucketProjectId,
+} from "@/lib/feedbucket";
 
 export function FeedbucketEmbed() {
-  const apiBase = process.env.NEXT_PUBLIC_API_URL;
-  if (!apiBase) return null;
+  const apiBase = getFeedbucketApiBase();
+  const projectId = getFeedbucketProjectId();
+  if (!apiBase || !projectId) return null;
   return (
     <Script
       id="feedbucket-widget"
-      src="/feedbucket-widget.js?v=11"
-      data-key={WIDGET_KEY}
+      src={FEEDBUCKET_WIDGET_SCRIPT_PATH}
+      data-key={projectId}
       data-api={apiBase}
       strategy="afterInteractive"
     />

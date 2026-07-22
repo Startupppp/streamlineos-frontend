@@ -36,9 +36,9 @@ async function loadEsbuild() {
 }
 
 const apiBase =
-  process.env["WIDGET_API_URL"] ??
-  process.env["NEXT_PUBLIC_API_URL"] ??
-  "http://localhost:1500";
+  process.env["WIDGET_API_URL"]?.trim() ||
+  process.env["NEXT_PUBLIC_API_URL"]?.trim() ||
+  "";
 
 const { build } = await loadEsbuild();
 

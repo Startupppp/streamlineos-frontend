@@ -1,11 +1,10 @@
 import { notFound } from "next/navigation";
-import { cookies } from "next/headers";
-import { ProjectSidebar } from "@/components/layout/project-sidebar";
 import { isApiError } from "@/lib/api-client";
 import { serverApiClient } from "@/lib/api/server-client";
 import type { ProjectWithDetails } from "@/types/projects";
 import { AccessDeniedView } from "@/features/projects/project-detail/access-denied-view";
 import { BackendUnavailableView } from "@/features/projects/project-detail/backend-unavailable-view";
+import { RememberLastProject } from "@/features/projects/sidebar/remember-last-project";
 
 function getApiErrorDetails(error: { details?: unknown }): Record<string, unknown> | undefined {
   const detailsRaw = error.details;
@@ -25,10 +24,6 @@ export default async function ProjectLayout({
   const { projectId } = await params;
   const numId = Number(projectId);
   if (isNaN(numId)) return notFound();
-
-  const cookieStore = await cookies();
-  const defaultCollapsed =
-    cookieStore.get("project-sidebar-collapsed")?.value === "true";
 
   let project: ProjectWithDetails | null = null;
   try {
@@ -59,16 +54,9 @@ export default async function ProjectLayout({
   if (!project) return notFound();
 
   return (
-    <div className="flex flex-col md:flex-row h-full w-full">
-      <ProjectSidebar
-        projectId={projectId}
-        projectName={project.name}
-        projectKey={project.key}
-        defaultCollapsed={defaultCollapsed}
-      />
-      <div className="flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden">
-        {children}
-      </div>
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+      <RememberLastProject projectId={projectId} />
+      {children}
     </div>
   );
 }

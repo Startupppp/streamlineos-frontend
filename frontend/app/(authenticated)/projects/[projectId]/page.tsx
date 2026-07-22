@@ -464,7 +464,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
       subtitle={data.description ?? undefined}
       noInternalScroll
       mobileFiltersInline
-      filtersClassName="!gap-1 !px-3 !pb-1 sm:!gap-1.5 sm:!px-4 lg:!px-6"
+      filtersClassName="!gap-1 !px-3 sm:!gap-1.5 sm:!px-4 lg:!px-6"
       contentClassName="!p-0 flex flex-col"
       className="relative"
       actions={

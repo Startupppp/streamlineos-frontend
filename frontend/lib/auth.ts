@@ -28,6 +28,31 @@ function setSessionDataInStore(key: string, data: SessionData): void {
   sessionDataStore.set(key, { data, expiresAt: Date.now() + SESSION_DATA_TTL_MS });
 }
 
+function invalidateSessionDataInStore(userId: string): void {
+  const prefix = `${userId}:`;
+  for (const key of sessionDataStore.keys()) {
+    if (key === userId || key.startsWith(prefix)) {
+      sessionDataStore.delete(key);
+    }
+  }
+}
+
+function resolveSessionDisplayName(data: {
+  name?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  email?: string | null;
+}): string {
+  const displayName = data.name?.trim();
+  if (displayName) return displayName;
+  const full = `${data.firstName ?? ""} ${data.lastName ?? ""}`.trim();
+  if (full) return full;
+  const email = data.email?.trim();
+  if (!email) return "";
+  const local = email.split("@")[0]?.trim();
+  return local || email;
+}
+
 interface BackendJwtEntry {
   token: string;
   expiresAt: number;
@@ -181,10 +206,7 @@ function buildUserFromSessionData(
   return {
     id: userId,
     email: sessionData.email,
-    name:
-      sessionData.firstName && sessionData.lastName
-        ? `${sessionData.firstName} ${sessionData.lastName}`
-        : (sessionData.name ?? sessionData.email),
+    name: resolveSessionDisplayName(sessionData),
     image: sessionData.image,
     role: sessionData.role ?? undefined,
     isActive: sessionData.isActive,
@@ -287,10 +309,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (sessionId) user.sessionId = sessionId;
         const sessionData = await fetchSessionData(userId);
         if (sessionData) {
-          user.name =
-            sessionData.firstName && sessionData.lastName
-              ? `${sessionData.firstName} ${sessionData.lastName}`
-              : (sessionData.name ?? user.name ?? user.email ?? "");
+          user.name = resolveSessionDisplayName(sessionData) || user.name || user.email || "";
           user.image = sessionData.image ?? user.image;
           user.role = sessionData.role ?? undefined;
           user.isActive = sessionData.isActive;
@@ -312,8 +331,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return true;
     },
 
-    async jwt({ token, user, account, trigger }) {
-      // The cookie carries only identity, auth-flow flags, and the small advisory claims middleware reads; everything else (permissions, modules, plan, branch, image) is resolved live in the session callback.
+    async jwt({ token, user, account, trigger, session }) {
       if (user) {
         token.id = user.id;
         token.email = user.email;
@@ -337,8 +355,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (trigger === "update") {
         const userId = token.id as string | undefined;
         if (userId) {
+          invalidateSessionDataInStore(userId);
           const fresh = await fetchSessionData(userId);
           if (fresh) {
+            token.name = resolveSessionDisplayName(fresh);
             token.orgId = fresh.orgId;
             token.isOrgOwner = fresh.isOrgOwner;
             token.role = fresh.role ?? undefined;
@@ -347,6 +367,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             token.totpEnabled = fresh.totpEnabled;
             token.orgOnboardingCompletedAt = fresh.orgOnboardingCompletedAt;
             token.userOnboardingCompletedAt = fresh.userOnboardingCompletedAt;
+          } else if (
+            session &&
+            typeof session === "object" &&
+            "name" in session &&
+            typeof session.name === "string" &&
+            session.name.trim()
+          ) {
+            token.name = session.name.trim();
           }
         }
       }
@@ -380,6 +408,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (session.user) {
           session.user.id = token.id as string;
           session.user.email = token.email as string;
+          session.user.name = fresh
+            ? resolveSessionDisplayName(fresh)
+            : ((token.name as string | null | undefined) ??
+              session.user.name ??
+              "");
           session.user.role = role;
           session.user.image =
             fresh?.image ?? (token.picture as string | null | undefined) ?? null;
@@ -443,6 +476,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (session.user) {
           session.user.id = token.id as string;
           session.user.email = token.email as string;
+          session.user.name =
+            (token.name as string | null | undefined) ?? session.user.name ?? "";
           session.user.role = (token.role as string | undefined) ?? "";
           session.user.isActive = (token.isActive as boolean | undefined) ?? true;
           session.user.isPlatformAdmin =

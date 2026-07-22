@@ -103,17 +103,17 @@ export function TicketDetailMainSection({
   onDescriptionChange,
 }: TicketDetailMainSectionProps) {
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 sm:space-y-5">
       <Textarea
         value={localTitle}
         onChange={onTitleChange}
         rows={2}
-        className="min-h-0 h-auto max-w-full resize-none break-words border-0 bg-transparent px-0 py-0 text-xl font-semibold shadow-none [overflow-wrap:anywhere] [word-break:break-word] focus-visible:border-0 focus-visible:ring-0 focus-visible:ring-offset-0 hover:border-0"
+        className="h-auto max-w-full min-h-0 resize-none break-words border-0 bg-transparent px-0 py-1 text-lg font-semibold leading-snug shadow-none [overflow-wrap:anywhere] [word-break:break-word] hover:border-0 focus-visible:border-0 focus-visible:ring-0 focus-visible:ring-offset-0 sm:text-xl"
         placeholder="Ticket title"
       />
 
-      <div>
-        <h3 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-2">
+      <div className="min-w-0">
+        <h3 className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
           Description
         </h3>
         <TiptapEditorDynamic
@@ -121,7 +121,7 @@ export function TicketDetailMainSection({
           contentKey={ticketId}
           onChangeHtml={onDescriptionChange}
           output="html"
-          minHeightClassName="min-h-[160px]"
+          minHeightClassName="min-h-[120px] sm:min-h-[160px]"
           placeholder="Add a description..."
         />
       </div>
@@ -135,7 +135,7 @@ export function TicketDetailMainSection({
           <h4 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-2">
             Attachments
           </h4>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {ticket.attachments.map((att) => {
               if (att.mimeType?.startsWith("image/")) {
                 return (

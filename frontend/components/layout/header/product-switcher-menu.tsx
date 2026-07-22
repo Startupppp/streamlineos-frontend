@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
+import { useCan } from "@/hooks/api/access";
 import {
   PRODUCT_DEFINITIONS,
   PRODUCT_DESCRIPTIONS,
@@ -54,12 +55,14 @@ interface ProductTileProps {
   icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
   isActive: boolean;
   isEnabled: boolean;
+  canManageModules: boolean;
   onClose: () => void;
 }
 
 interface ProductGridProps {
   activeProduct: ProductKey;
   enabledModules: string[];
+  canManageModules: boolean;
   onClose: () => void;
   shouldReduceMotion: boolean | null;
 }
@@ -71,6 +74,7 @@ function ProductTile({
   icon: Icon,
   isActive,
   isEnabled,
+  canManageModules,
   onClose,
 }: ProductTileProps) {
   const shouldReduceMotion = useReducedMotion();
@@ -147,6 +151,21 @@ function ProductTile({
   );
 
   if (!isEnabled) {
+    if (!canManageModules) {
+      return (
+        <Tooltip delayDuration={200}>
+          <TooltipTrigger asChild>
+            <div className="flex" aria-label={`${label} — not available`}>
+              {card}
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="text-xs">
+            This product is not available to you.
+          </TooltipContent>
+        </Tooltip>
+      );
+    }
+
     return (
       <Tooltip delayDuration={200}>
         <TooltipTrigger asChild>
@@ -176,6 +195,7 @@ function ProductTile({
 function ProductGrid({
   activeProduct,
   enabledModules,
+  canManageModules,
   onClose,
   shouldReduceMotion,
 }: ProductGridProps) {
@@ -210,6 +230,7 @@ function ProductGrid({
                 icon={product.icon}
                 isActive={isActive}
                 isEnabled={enabled}
+                canManageModules={canManageModules}
                 onClose={onClose}
               />
             </motion.div>
@@ -238,6 +259,7 @@ export function ProductSwitcherMenu({
 
   const activeProduct = getProductFromPathname(pathname);
   const enabledModules = useEnabledModules();
+  const canManageModules = useCan("settings:manage");
 
   const handleOpenChange = useCallback(
     (next: boolean) => {
@@ -373,6 +395,7 @@ export function ProductSwitcherMenu({
           <ProductGrid
             activeProduct={activeProduct}
             enabledModules={enabledModules}
+            canManageModules={canManageModules}
             onClose={handleClose}
             shouldReduceMotion={shouldReduceMotion}
           />
@@ -425,6 +448,7 @@ export function ProductSwitcherMenu({
               <ProductGrid
                 activeProduct={activeProduct}
                 enabledModules={enabledModules}
+                canManageModules={canManageModules}
                 onClose={handleClose}
                 shouldReduceMotion={shouldReduceMotion}
               />

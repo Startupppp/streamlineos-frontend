@@ -2,6 +2,8 @@
 
 import { useSession } from "next-auth/react";
 import { useState, useRef, useCallback } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -17,6 +19,11 @@ import { toast } from "sonner";
 import { resolveImageUrl } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import {
+  DISPLAY_NAME_MAX_LENGTH,
+  settingsDisplayNameSchema,
+  type SettingsDisplayNameValues,
+} from "./settings-profile-schema";
 
 export function SettingsProfile() {
   const { data: session, update: updateSession } = useSession();
@@ -27,8 +34,12 @@ export function SettingsProfile() {
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [editName, setEditName] = useState("");
   const [isEditingName, setIsEditingName] = useState(false);
+
+  const nameForm = useForm<SettingsDisplayNameValues>({
+    resolver: zodResolver(settingsDisplayNameSchema),
+    defaultValues: { name: "" },
+  });
 
   const updateProfile = useUpdateProfile();
 
@@ -127,13 +138,14 @@ export function SettingsProfile() {
     }
   }, [session, updateProfile, updateSession]);
 
-  const handleSaveName = useCallback(() => {
-    if (!session?.user?.id || !editName.trim()) return;
+  const handleSaveName = nameForm.handleSubmit((values) => {
+    if (!session?.user?.id) return;
+    const nextName = values.name.trim();
     updateProfile.mutate(
-      { userId: session.user.id, name: editName.trim() },
+      { userId: session.user.id, name: nextName },
       {
         onSuccess: async () => {
-          await updateSession({});
+          await updateSession({ name: nextName });
           toast.success("Name updated");
           setIsEditingName(false);
         },
@@ -142,32 +154,37 @@ export function SettingsProfile() {
         },
       }
     );
-  }, [session, editName, updateProfile, updateSession]);
+  });
 
   const handleOpenFileInput = useCallback(() => {
     fileInputRef.current?.click();
   }, []);
 
-  const handleEditNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setEditName(e.target.value);
-  }, []);
-
   const handleNameKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") handleSaveName();
+    if (e.key === "Enter") {
+      e.preventDefault();
+      void handleSaveName();
+    }
     if (e.key === "Escape") setIsEditingName(false);
   }, [handleSaveName]);
 
-  const handleCancelEditName = useCallback(() => setIsEditingName(false), []);
+  const handleCancelEditName = useCallback(() => {
+    nameForm.reset({ name: "" });
+    setIsEditingName(false);
+  }, [nameForm]);
 
   const handleStartEditName = useCallback(() => {
-    setEditName(name);
+    nameForm.reset({ name });
     setIsEditingName(true);
-  }, [name]);
+  }, [name, nameForm]);
 
   const handleCropDialogChange = useCallback((open: boolean) => {
     setCropDialogOpen(open);
     if (!open) setCropImageSrc(null);
   }, []);
+
+  const watchedName = nameForm.watch("name");
+  const nameError = nameForm.formState.errors.name?.message;
 
   return (
     <>
@@ -243,40 +260,49 @@ export function SettingsProfile() {
         <div className="space-y-1.5">
           <Label htmlFor="display-name" className="text-[13px] font-medium">Display name</Label>
           {isEditingName ? (
-            <div className="flex gap-1.5">
-              <Input
-                id="display-name"
-                value={editName}
-                onChange={handleEditNameChange}
-                onKeyDown={handleNameKeyDown}
-                placeholder="Your full name"
-                autoFocus
-                className="flex-1"
-              />
-              {isSavingName ? (
-                <Button size="icon" className="h-9 w-9 shrink-0" disabled aria-label="Saving">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                </Button>
-              ) : (
+            <div className="space-y-1">
+              <div className="flex gap-1.5">
+                <Input
+                  id="display-name"
+                  {...nameForm.register("name")}
+                  onKeyDown={handleNameKeyDown}
+                  placeholder="Your full name"
+                  maxLength={DISPLAY_NAME_MAX_LENGTH}
+                  autoFocus
+                  aria-invalid={!!nameError}
+                  aria-describedby={nameError ? "display-name-error" : undefined}
+                  className="flex-1"
+                />
+                {isSavingName ? (
+                  <Button size="icon" className="h-9 w-9 shrink-0" disabled aria-label="Saving">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  </Button>
+                ) : (
+                  <AnimatedIconButton
+                    icon={CheckIcon}
+                    iconSize={14}
+                    size="icon"
+                    className="h-9 w-9 shrink-0"
+                    onClick={handleSaveName}
+                    disabled={!watchedName.trim()}
+                    aria-label="Save name"
+                  />
+                )}
                 <AnimatedIconButton
-                  icon={CheckIcon}
+                  icon={XIcon}
                   iconSize={14}
                   size="icon"
+                  variant="ghost"
                   className="h-9 w-9 shrink-0"
-                  onClick={handleSaveName}
-                  disabled={!editName.trim()}
-                  aria-label="Save name"
+                  onClick={handleCancelEditName}
+                  aria-label="Cancel editing"
                 />
-              )}
-              <AnimatedIconButton
-                icon={XIcon}
-                iconSize={14}
-                size="icon"
-                variant="ghost"
-                className="h-9 w-9 shrink-0"
-                onClick={handleCancelEditName}
-                aria-label="Cancel editing"
-              />
+              </div>
+              {nameError ? (
+                <p id="display-name-error" className="text-[11px] font-medium text-destructive">
+                  {nameError}
+                </p>
+              ) : null}
             </div>
           ) : (
             <button

@@ -129,13 +129,16 @@ export function LabelPicker({
               variant="ghost"
               size="sm"
               aria-label="Add label"
-              className="h-6 w-6 p-0 rounded-full"
+              className="h-9 w-9 touch-manipulation rounded-full p-0 sm:h-7 sm:w-7"
               {...plusHoverHandlers}
             >
               <PlusIcon ref={plusIconRef} size={14} />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-80 p-4" align="start">
+          <PopoverContent
+            className="w-[min(20rem,calc(100vw-2rem))] p-4"
+            align="start"
+          >
             <div className="space-y-4">
               {availableLabels.length > 0 && (
                 <ScrollArea className="max-h-32">

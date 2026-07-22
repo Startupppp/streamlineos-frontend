@@ -7,7 +7,16 @@ import { Search } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
+import {
+  Drawer,
+  DrawerContent,
+  DrawerTitle,
+} from "@/components/ui/drawer"
+import { useIsMobile } from "@/hooks/common/use-mobile"
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
+
+const COMMAND_SURFACE_CLASS =
+  "rounded-none bg-background text-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]]:bg-background [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5"
 
 const Command = React.forwardRef<
   React.ComponentRef<typeof CommandPrimitive>,
@@ -24,9 +33,41 @@ const Command = React.forwardRef<
 ))
 Command.displayName = CommandPrimitive.displayName
 
-function CommandDialog({ children, ...props }: DialogProps) {
+function CommandDialog({ children, open, onOpenChange, ...props }: DialogProps) {
+  const isMobile = useIsMobile()
+
+  const command = (
+    <Command className={COMMAND_SURFACE_CLASS}>{children}</Command>
+  )
+
+  if (isMobile) {
+    return (
+      <Drawer
+        open={open}
+        onOpenChange={onOpenChange}
+        shouldScaleBackground={false}
+        autoFocus
+      >
+        <DrawerContent
+          overlayClassName="z-[100]"
+          className={cn(
+            "z-[100] gap-0 overflow-hidden rounded-t-2xl border border-b-0 bg-background p-0 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-lg",
+            "max-h-[min(92dvh,40rem)]",
+            "motion-reduce:transition-none",
+            "[&>[data-slot=drawer-handle]]:mt-2 [&>[data-slot=drawer-handle]]:mb-1 [&>[data-slot=drawer-handle]]:h-1.5 [&>[data-slot=drawer-handle]]:w-10 [&>[data-slot=drawer-handle]]:bg-muted-foreground/25",
+          )}
+        >
+          <VisuallyHidden>
+            <DrawerTitle>Command Palette</DrawerTitle>
+          </VisuallyHidden>
+          {command}
+        </DrawerContent>
+      </Drawer>
+    )
+  }
+
   return (
-    <Dialog {...props}>
+    <Dialog open={open} onOpenChange={onOpenChange} {...props}>
       <DialogContent
         showCloseButton={false}
         className="gap-0 overflow-hidden border-border bg-background p-0 shadow-lg md:max-w-lg"
@@ -34,9 +75,7 @@ function CommandDialog({ children, ...props }: DialogProps) {
         <VisuallyHidden>
           <DialogTitle>Command Palette</DialogTitle>
         </VisuallyHidden>
-        <Command className="rounded-none bg-background text-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]]:bg-background [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5">
-          {children}
-        </Command>
+        {command}
       </DialogContent>
     </Dialog>
   )

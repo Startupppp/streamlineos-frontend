@@ -45,23 +45,59 @@ export function useHrCheckIn(
 ) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "attendance", "check-in"],
     mutationFn: (data: CheckInInput) =>
       apiClient.post<{ success: boolean }>("/hr/attendance/check-in", data),
     onMutate: async () => {
       await qc.cancelQueries({ queryKey: queryKeys.hr.attendanceStatus() });
       const previous = qc.getQueryData<AttendanceStatusResult>(queryKeys.hr.attendanceStatus());
       if (previous) {
+        const nowIso = new Date().toISOString();
+        const baseLog = previous.todayLog;
         qc.setQueryData<AttendanceStatusResult>(queryKeys.hr.attendanceStatus(), {
           ...previous,
           status: "PRESENT",
+          cooldownRemaining: 0,
+          todayLog: baseLog
+            ? {
+                ...baseLog,
+                checkIn: nowIso,
+                checkOut: null,
+                status: "PRESENT",
+              }
+            : {
+                id: 0,
+                orgId: "",
+                userId: "",
+                date: new Date().toLocaleDateString("en-CA"),
+                checkIn: nowIso,
+                checkOut: null,
+                status: "PRESENT",
+                workHours: null,
+                breakHours: "0",
+                breaks: [],
+                locationData: null,
+                isOvertime: false,
+                autoCheckedOut: false,
+                createdAt: nowIso,
+              },
         });
       }
+      return { previous };
+    },
+    onError: (err, vars, context, mutation) => {
+      if (context?.previous) {
+        qc.setQueryData(queryKeys.hr.attendanceStatus(), context.previous);
+      }
+      options?.onError?.(err, vars, context, mutation);
     },
     onSettled: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.attendanceStatus() });
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.attendanceStatus() });
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.attendanceLogs() });
+      void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "monthlyAttendance"] });
+      void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "attendanceHeatmap"] });
     },
     onSuccess: options?.onSuccess,
-    onError: options?.onError,
   });
 }
 
@@ -70,23 +106,41 @@ export function useHrCheckOut(
 ) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "attendance", "check-out"],
     mutationFn: (data: { localDate?: string }) =>
       apiClient.post<{ success: boolean }>("/hr/attendance/check-out", data),
     onMutate: async () => {
       await qc.cancelQueries({ queryKey: queryKeys.hr.attendanceStatus() });
       const previous = qc.getQueryData<AttendanceStatusResult>(queryKeys.hr.attendanceStatus());
       if (previous) {
+        const nowIso = new Date().toISOString();
         qc.setQueryData<AttendanceStatusResult>(queryKeys.hr.attendanceStatus(), {
           ...previous,
           status: "CHECKED_OUT",
+          todayLog: previous.todayLog
+            ? {
+                ...previous.todayLog,
+                checkOut: nowIso,
+                status: "CHECKED_OUT",
+              }
+            : previous.todayLog,
         });
       }
+      return { previous };
+    },
+    onError: (err, vars, context, mutation) => {
+      if (context?.previous) {
+        qc.setQueryData(queryKeys.hr.attendanceStatus(), context.previous);
+      }
+      options?.onError?.(err, vars, context, mutation);
     },
     onSettled: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.attendanceStatus() });
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.attendanceStatus() });
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.attendanceLogs() });
+      void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "monthlyAttendance"] });
+      void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "attendanceHeatmap"] });
     },
     onSuccess: options?.onSuccess,
-    onError: options?.onError,
   });
 }
 

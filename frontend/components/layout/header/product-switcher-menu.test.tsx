@@ -28,6 +28,10 @@ jest.mock("@/hooks/api/access/org-modules", () => ({
   useEnabledModules: () => [],
 }));
 
+jest.mock("@/hooks/api/access", () => ({
+  useCan: () => false,
+}));
+
 jest.mock("framer-motion", () => {
   const React = jest.requireActual<typeof import("react")>("react");
 

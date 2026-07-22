@@ -15,7 +15,10 @@ export function ClockInWidget() {
   const [now, setNow] = useState(new Date());
   const [localCooldown, setLocalCooldown] = useState(0);
 
-  const { data: statusData, isLoading } = useHrAttendanceStatus();
+  const { data: statusData, isLoading } = useHrAttendanceStatus({
+    refetchInterval: 30_000,
+    staleTime: 15_000,
+  });
 
   const checkInMutation = useHrCheckIn({
     onSuccess: () => {

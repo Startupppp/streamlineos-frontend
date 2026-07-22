@@ -2,10 +2,11 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
-import { AlertCircle, PanelRightOpen, Share2 } from "lucide-react";
+import { AlertCircle, PanelRightOpen } from "lucide-react";
+import { ShareIcon } from "@animateicons/react/lucide";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { isApiError, getApiErrorCode } from "@/lib/api-client";
 import { toast } from "sonner";
@@ -30,33 +31,22 @@ const RIGHT_PANEL_COLLAPSED_KEY = "streamlineos:ticket-detail:right-panel:collap
 
 function DetailSkeleton() {
   return (
-    <div className="flex flex-1 min-h-0 flex-col md:flex-row md:overflow-hidden">
-      <ScrollArea hideScrollbar className="min-h-0 flex-1 md:contents">
-        <div className="order-1 w-full shrink-0 border-b border-border md:order-2 md:w-80 md:border-b-0 md:border-l lg:w-96">
-          <div className="space-y-3 px-4 py-3">
-            <div className="flex gap-2">
-              <Skeleton className="h-5 w-16 rounded-md" />
-              <Skeleton className="h-5 w-20 rounded-md" />
-              <Skeleton className="h-5 w-16 rounded-md" />
-            </div>
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-9 w-full rounded-md" />
-            ))}
-          </div>
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto scrollbar-hide md:flex-row md:overflow-hidden">
+      <div className="min-w-0 shrink-0 space-y-4 bg-card px-4 pb-4 pt-2 pr-12 md:min-h-0 md:flex-1 md:overflow-y-auto md:px-6 md:pb-5 md:pr-6 md:scrollbar-hide">
+        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-40 w-full rounded-lg" />
+        <Skeleton className="h-24 w-full rounded-lg" />
+      </div>
+      <div className="w-full shrink-0 border-t border-border px-4 py-3 pr-12 md:w-96 md:overflow-y-auto md:border-t-0 md:border-l md:pr-4 md:scrollbar-hide xl:w-[26rem]">
+        <div className="mb-3 flex gap-2">
+          <Skeleton className="h-5 w-16 rounded-md" />
+          <Skeleton className="h-5 w-20 rounded-md" />
+          <Skeleton className="h-5 w-16 rounded-md" />
         </div>
-        <div className="order-2 space-y-4 bg-card px-4 pb-4 pt-2 md:hidden">
-          <Skeleton className="h-4 w-3/4" />
-          <Skeleton className="h-40 w-full rounded-lg" />
-          <Skeleton className="h-24 w-full rounded-lg" />
-        </div>
-        <ScrollArea hideScrollbar className="order-2 hidden min-h-0 flex-1 md:order-1 md:flex">
-          <div className="space-y-4 bg-card px-4 pb-4 pt-2 md:px-6 md:pb-5 md:pt-2">
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-40 w-full rounded-lg" />
-            <Skeleton className="h-24 w-full rounded-lg" />
-          </div>
-        </ScrollArea>
-      </ScrollArea>
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Skeleton key={i} className="mb-3 h-9 w-full rounded-md" />
+        ))}
+      </div>
     </div>
   );
 }
@@ -184,24 +174,28 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
     );
   }
 
+  const pageTitle = localTitle || ticket.title;
+
   return (
     <PageWrapper
-      title={localTitle || ticket.title}
+      title={displayKey}
+      subtitle={pageTitle}
       backHref={`/projects/${projectId}`}
       noInternalScroll
+      actionsInline
       className="h-full"
       contentClassName="flex flex-1 min-h-0 flex-col p-0"
       actions={
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           {rightPanelCollapsed && (
             <Button
-              size="icon-sm"
+              size="icon"
               variant="outline"
-              className="border-border/60 bg-card/50 backdrop-blur-sm"
+              className="h-9 w-9 touch-manipulation border-border/60 bg-card/50 backdrop-blur-sm sm:h-8 sm:w-8"
               onClick={handleToggleRightPanel}
               aria-label="Expand details panel"
             >
-              <PanelRightOpen />
+              <PanelRightOpen className="h-4 w-4" />
             </Button>
           )}
           <TicketAiMenu
@@ -210,15 +204,15 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
             currentDescription={ticket.description}
             onApplyDescription={handleApplyAiDescription}
           />
-          <Button
-            size="icon-sm"
+          <AnimatedIconButton
+            size="icon"
             variant="outline"
-            className="border-border/60 bg-card/50 backdrop-blur-sm"
+            icon={ShareIcon}
+            iconSize={16}
+            className="h-9 w-9 touch-manipulation border-border/60 bg-card/50 backdrop-blur-sm sm:h-8 sm:w-8"
             onClick={handleShare}
             aria-label="Copy share link"
-          >
-            <Share2 />
-          </Button>
+          />
           <TicketDetailActions
             onDelete={handleDelete}
             isDeleting={isDeleting}
@@ -226,61 +220,42 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
         </div>
       }
     >
-      <div className="relative flex min-h-0 flex-1 flex-col md:flex-row md:overflow-hidden">
+      <div className="relative flex min-h-0 flex-1 flex-col overflow-y-auto scrollbar-hide md:flex-row md:overflow-hidden">
         <div
           aria-hidden
           className="pointer-events-none absolute -top-6 right-1/3 h-32 w-32 rounded-full bg-primary/[0.05] blur-3xl"
         />
-        <ScrollArea hideScrollbar className="min-h-0 flex-1 md:contents">
-          {!rightPanelCollapsed && (
-            <aside className="order-1 w-full shrink-0 border-b border-border bg-card md:order-2 md:w-80 md:min-h-0 md:border-b-0 md:border-l md:overflow-hidden lg:w-96">
-              <TicketDetailRightPanel
-                displayKey={displayKey}
-                saving={saving}
-                ticket={ticket}
-                ticketId={ticketId}
-                projectId={projectId}
-                members={members}
-                sprints={sprints}
-                statuses={statuses}
-                onAutoSave={autoSave}
-                onToggleCollapse={handleToggleRightPanel}
-              />
-            </aside>
-          )}
 
-          <div className="order-2 min-w-0 flex-1 bg-gradient-to-b from-card/80 to-background/40 px-4 pb-4 pt-2 md:hidden">
-            <TicketDetailMainSection
+        <div className="min-w-0 shrink-0 bg-gradient-to-b from-card/80 to-background/40 px-4 pb-4 pt-2 pr-12 md:min-h-0 md:flex-1 md:overflow-y-auto md:px-6 md:pb-5 md:pr-6 md:scrollbar-hide">
+          <TicketDetailMainSection
+            ticket={ticket}
+            ticketId={ticketId}
+            projectId={projectId}
+            projectKey={projectData?.key}
+            localTitle={localTitle}
+            subtasks={subtasks}
+            members={members}
+            highlightCommentId={highlightCommentId}
+            onTitleChange={handleTitleChange}
+            onDescriptionChange={handleDescriptionEditorChange}
+          />
+        </div>
+
+        {!rightPanelCollapsed && (
+          <aside className="w-full shrink-0 border-t border-border bg-card pr-12 pb-[max(1.25rem,env(safe-area-inset-bottom))] md:min-h-0 md:w-96 md:overflow-y-auto md:border-t-0 md:border-l md:pb-0 md:pr-0 md:scrollbar-hide xl:w-[26rem]">
+            <TicketDetailRightPanel
+              displayKey={displayKey}
+              saving={saving}
               ticket={ticket}
               ticketId={ticketId}
               projectId={projectId}
-              projectKey={projectData?.key}
-              localTitle={localTitle}
-              subtasks={subtasks}
-              members={members}
-              highlightCommentId={highlightCommentId}
-              onTitleChange={handleTitleChange}
-              onDescriptionChange={handleDescriptionEditorChange}
+              sprints={sprints}
+              statuses={statuses}
+              onAutoSave={autoSave}
+              onToggleCollapse={handleToggleRightPanel}
             />
-          </div>
-
-          <ScrollArea hideScrollbar className="order-2 hidden min-h-0 flex-1 md:order-1 md:flex">
-            <div className="min-w-0 bg-gradient-to-b from-card/80 to-background/40 px-4 pb-4 pt-2 md:px-6 md:pb-5 md:pt-2">
-              <TicketDetailMainSection
-                ticket={ticket}
-                ticketId={ticketId}
-                projectId={projectId}
-                projectKey={projectData?.key}
-                localTitle={localTitle}
-                subtasks={subtasks}
-                members={members}
-                highlightCommentId={highlightCommentId}
-                onTitleChange={handleTitleChange}
-                onDescriptionChange={handleDescriptionEditorChange}
-              />
-            </div>
-          </ScrollArea>
-        </ScrollArea>
+          </aside>
+        )}
       </div>
     </PageWrapper>
   );

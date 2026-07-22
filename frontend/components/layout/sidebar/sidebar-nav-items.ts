@@ -1846,12 +1846,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "Projects",
     module: "projects",
-    requiredPermission: [
-      "projects:view",
-      "projects:timesheets:view",
-      "projects:goals:view",
-      "projects:roadmap:view",
-    ],
+    requiredPermission: ["projects:view", "projects:tickets:view"],
     routes: [
       {
         label: "Home",
@@ -1866,17 +1861,33 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "projects:tickets:view",
       },
       {
-        label: "Projects",
-        icon: Briefcase,
-        href: "/projects/all",
-        requiredPermission: "projects:view",
-      },
-      {
-        label: "Inbox",
+        label: "All issues",
         icon: Layers,
         href: "/projects/all-work",
         requiredPermission: "projects:tickets:view",
       },
+      {
+        label: "Projects",
+        icon: Briefcase,
+        href: "/projects",
+        exact: true,
+        requiredPermission: "projects:view",
+      },
+    ],
+  },
+  {
+    label: "More",
+    module: "projects",
+    defaultCollapsed: true,
+    requiredPermission: [
+      "projects:roadmap:view",
+      "projects:goals:view",
+      "projects:portfolios:view",
+      "projects:approvals:view",
+      "projects:create",
+      "settings:manage",
+    ],
+    routes: [
       {
         label: "Roadmap",
         icon: Map,
@@ -2538,7 +2549,7 @@ const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
   home: [],
   crm: ["CRM"],
   hrms: ["HR – People", "Recruitment"],
-  projects: ["Projects"],
+  projects: ["Projects", "More"],
   timesheets: ["Timesheets"],
   inventory: ["Inventory"],
   finance: ["Accounting & Finance"],

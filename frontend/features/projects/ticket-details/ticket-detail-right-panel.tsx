@@ -2,7 +2,6 @@
 
 import { Loader2, PanelRightClose } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { PriorityBadge } from "../shared/priority-badge";
 import { StatusBadge } from "../shared/status-badge";
@@ -10,7 +9,6 @@ import { TicketSidebar } from "./ticket-sidebar";
 import { TicketTimeTracker } from "./ticket-time-tracker";
 import { WatcherList } from "./watcher-list";
 import { TicketGitLinks } from "./ticket-git-links";
-import type { ProjectMember } from "./types";
 import type { RecurrenceRule } from "@/hooks/api/projects/recurring";
 
 interface TicketDetailRightPanelProps {
@@ -61,7 +59,6 @@ interface TicketDetailRightPanelProps {
   };
   ticketId: number;
   projectId: number;
-  members: ProjectMember[];
   sprints: Array<{ id: number; name: string; status?: string | null }>;
   statuses?: Array<{ name: string; id: number }>;
   onAutoSave: (field: Record<string, unknown>) => void;
@@ -74,18 +71,17 @@ export function TicketDetailRightPanel({
   ticket,
   ticketId,
   projectId,
-  members,
   sprints,
   statuses,
   onAutoSave,
   onToggleCollapse,
 }: TicketDetailRightPanelProps) {
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      <div className="shrink-0 border-b border-border bg-card px-4 py-3">
+    <div className="flex flex-col">
+      <div className="sticky top-0 z-10 shrink-0 border-b border-border bg-card px-4 py-3">
         <div className="flex items-start justify-between gap-2">
-          <div className="flex flex-wrap items-center gap-1.5 min-w-0">
-            <Badge variant="outline" className="h-5 px-1.5 font-mono text-[11px]">
+          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+            <Badge variant="outline" className="hidden h-5 px-1.5 font-mono text-[11px] md:inline-flex">
               {displayKey}
             </Badge>
             <StatusBadge status={ticket.status ?? "TODO"} />
@@ -101,7 +97,7 @@ export function TicketDetailRightPanel({
             <Button
               variant="ghost"
               size="icon"
-              className="w-7 shrink-0 text-muted-foreground hover:text-foreground"
+              className="h-9 w-9 shrink-0 touch-manipulation text-muted-foreground hover:text-foreground md:h-8 md:w-8"
               onClick={onToggleCollapse}
               aria-label="Collapse details panel"
             >
@@ -111,29 +107,24 @@ export function TicketDetailRightPanel({
         </div>
       </div>
 
-      <ScrollArea hideScrollbar className="min-h-0 flex-1">
-        <div className="overscroll-contain">
-        <TicketSidebar
-          ticket={ticket}
+      <TicketSidebar
+        ticket={ticket}
+        ticketId={ticketId}
+        projectId={projectId}
+        sprints={sprints}
+        statuses={statuses}
+        onAutoSave={onAutoSave}
+      />
+
+      <div className="space-y-4 border-t border-border bg-card px-4 py-3">
+        <TicketGitLinks projectId={projectId} ticketId={ticketId} />
+        <TicketTimeTracker
           ticketId={ticketId}
           projectId={projectId}
-          members={members}
-          sprints={sprints}
-          statuses={statuses}
-          onAutoSave={onAutoSave}
+          timeSpent={ticket.timeSpent ?? null}
         />
-
-        <div className="space-y-4 border-t border-border bg-card px-4 py-3">
-          <TicketGitLinks projectId={projectId} ticketId={ticketId} />
-          <TicketTimeTracker
-            ticketId={ticketId}
-            projectId={projectId}
-            timeSpent={ticket.timeSpent ?? null}
-          />
-          <WatcherList projectId={projectId} ticketId={ticketId} />
-        </div>
-        </div>
-      </ScrollArea>
+        <WatcherList projectId={projectId} ticketId={ticketId} />
+      </div>
     </div>
   );
 }

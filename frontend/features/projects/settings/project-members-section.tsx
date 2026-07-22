@@ -42,7 +42,7 @@ import {
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useHrEmployees } from "@/hooks/api/hr";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { DeleteProjectDialog } from "@/features/projects/sidebar/delete-project-dialog";
 import type { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 import { updateProjectSettingsInputSchema } from "@/lib/validation/projects";
@@ -288,22 +288,22 @@ export function ReassignDialog({
 }
 
 interface DangerZoneSectionProps {
+  projectId: number;
   projectName: string;
-  isPending: boolean;
-  deleteDialogOpen: boolean;
-  onDeleteClick: () => void;
-  onDeleteDialogChange: (open: boolean) => void;
-  onDeleteConfirm: () => void;
+  onDeleted: () => void;
 }
 
 export const DangerZoneSection = memo(function DangerZoneSection({
+  projectId,
   projectName,
-  isPending,
-  deleteDialogOpen,
-  onDeleteClick,
-  onDeleteDialogChange,
-  onDeleteConfirm,
+  onDeleted,
 }: DangerZoneSectionProps) {
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  const handleDeleteClick = useCallback(() => {
+    setDeleteDialogOpen(true);
+  }, []);
+
   return (
     <Card className="border-destructive/30">
       <CardContent className="pt-5 space-y-4">
@@ -319,21 +319,19 @@ export const DangerZoneSection = memo(function DangerZoneSection({
         <AnimatedIconButton
           variant="destructive"
           size="sm"
-          onClick={onDeleteClick}
+          onClick={handleDeleteClick}
           icon={Trash2Icon}
           iconSize={14}
           iconClassName="mr-1.5"
         >
           Delete Project
         </AnimatedIconButton>
-        <ConfirmDialog
+        <DeleteProjectDialog
           open={deleteDialogOpen}
-          onOpenChange={onDeleteDialogChange}
-          title="Are you absolutely sure?"
-          description={`This action cannot be undone. This will permanently delete "${projectName}" and remove all associated data.`}
-          confirmLabel={isPending ? "Deleting..." : "Delete Project"}
-          destructive
-          onConfirm={onDeleteConfirm}
+          onOpenChange={setDeleteDialogOpen}
+          projectId={projectId}
+          projectName={projectName}
+          onDeleted={onDeleted}
         />
       </CardContent>
     </Card>

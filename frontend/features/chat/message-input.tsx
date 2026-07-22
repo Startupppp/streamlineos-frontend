@@ -28,6 +28,7 @@ import type { Message } from "./chat-types";
 import type { TicketSearchResult } from "@/hooks/api/projects";
 import { TicketMentionPicker } from "./ticket-mention-picker";
 import { EmojiGrid } from "./emoji-grid";
+import { getChatMobileComposerInsetClassName } from "./chat-mobile-chrome-layout";
 type PendingAttachment = {
   fileName: string;
   fileUrl: string;
@@ -278,7 +279,12 @@ export function MessageInput({
         )}
       </AnimatePresence>
 
-      <div className="px-3 sm:px-5 py-2 border-t border-border/40 shrink-0 bg-card/50 relative">
+      <div
+        className={cn(
+          "relative shrink-0 border-t border-border/40 bg-card/50 px-3 pt-2 pb-2 sm:px-5",
+          getChatMobileComposerInsetClassName(),
+        )}
+      >
         <div className="max-w-[900px] mx-auto">
 
           <AnimatePresence>

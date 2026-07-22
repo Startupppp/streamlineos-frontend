@@ -3,7 +3,6 @@
 import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +13,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
-import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
   SelectContent,
@@ -30,26 +28,15 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
 import { useInviteUser } from "@/hooks/api/users";
-import { useOrgBranches, useOrgDepartments } from "@/hooks/api/org-hierarchy";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
-import { CheckCircle2, Mail, ChevronDown } from "lucide-react";
+import { CheckCircle2, Mail } from "lucide-react";
 import { USER_INVITE_ROLES } from "./user-invite-roles";
-
-const inviteSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  role: z.string().min(1, "Please select a role"),
-  employeeId: z.string().optional(),
-  branchId: z.string().optional(),
-  departmentId: z.string().optional(),
-  startDate: z.string().optional(),
-  welcomeMessage: z.string().optional(),
-});
-
-type InviteFormValues = z.infer<typeof inviteSchema>;
+import {
+  inviteUserSchema,
+  type InviteUserFormValues,
+} from "./user-invite-schema";
 
 interface UserInviteDialogProps {
   open: boolean;
@@ -59,21 +46,13 @@ interface UserInviteDialogProps {
 export function UserInviteDialog({ open, onOpenChange }: UserInviteDialogProps) {
   const [invited, setInvited] = useState(false);
   const [wasResent, setWasResent] = useState(false);
-  const [showOptional, setShowOptional] = useState(false);
   const { mutate: inviteUser, isPending } = useInviteUser();
-  const { data: branchesData } = useOrgBranches();
-  const { data: departmentsData } = useOrgDepartments();
 
-  const form = useForm<InviteFormValues>({
-    resolver: zodResolver(inviteSchema),
+  const form = useForm<InviteUserFormValues>({
+    resolver: zodResolver(inviteUserSchema),
     defaultValues: {
       email: "",
       role: "",
-      employeeId: "",
-      branchId: "",
-      departmentId: "",
-      startDate: "",
-      welcomeMessage: "",
     },
   });
 
@@ -82,23 +61,17 @@ export function UserInviteDialog({ open, onOpenChange }: UserInviteDialogProps) 
       form.reset();
       setInvited(false);
       setWasResent(false);
-      setShowOptional(false);
     }
     onOpenChange(isOpen);
   }, [form, onOpenChange]);
 
   const handleCloseDialog = useCallback(() => handleOpenChange(false), [handleOpenChange]);
 
-  function onSubmit(values: InviteFormValues) {
+  function onSubmit(values: InviteUserFormValues) {
     inviteUser(
       {
         email: values.email,
         role: values.role,
-        ...(values.employeeId ? { employeeId: values.employeeId } : {}),
-        ...(values.branchId ? { branchId: Number(values.branchId) } : {}),
-        ...(values.departmentId ? { departmentId: Number(values.departmentId) } : {}),
-        ...(values.startDate ? { startDate: values.startDate } : {}),
-        ...(values.welcomeMessage ? { welcomeMessage: values.welcomeMessage } : {}),
       },
       {
         onSuccess: (result) => {
@@ -117,12 +90,7 @@ export function UserInviteDialog({ open, onOpenChange }: UserInviteDialogProps) 
     form.reset();
     setInvited(false);
     setWasResent(false);
-    setShowOptional(false);
   }, [form]);
-
-  const handleToggleOptional = useCallback(() => {
-    setShowOptional((v) => !v);
-  }, []);
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -198,122 +166,6 @@ export function UserInviteDialog({ open, onOpenChange }: UserInviteDialogProps) 
                   </FormItem>
                 )}
               />
-
-              <button
-                type="button"
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                onClick={handleToggleOptional}
-              >
-                <ChevronDown
-                  className={`h-3.5 w-3.5 transition-transform ${showOptional ? "rotate-180" : ""}`}
-                />
-                {showOptional ? "Hide" : "Show"} optional details
-              </button>
-
-              {showOptional && (
-                <>
-                  <Separator />
-                  <div className="grid grid-cols-2 gap-3">
-                    <FormField
-                      control={form.control}
-                      name="employeeId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs">Employee ID</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="EMP-001" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="startDate"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs">Start Date</FormLabel>
-                          <FormControl>
-                            <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <FormField
-                      control={form.control}
-                      name="branchId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs">Branch</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select..." />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {(branchesData?.data ?? []).map((b) => (
-                                <SelectItem key={b.id} value={String(b.id)}>
-                                  {b.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="departmentId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs">Department</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select..." />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {(departmentsData?.data ?? []).map((d) => (
-                                <SelectItem key={d.id} value={String(d.id)}>
-                                  {d.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <FormField
-                    control={form.control}
-                    name="welcomeMessage"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs">Welcome Message</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            {...field}
-                            placeholder="Optional welcome message..."
-                            className="min-h-[64px] resize-none text-xs"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </>
-              )}
 
               <DialogFooter>
                 <Button

@@ -8,7 +8,7 @@ import { useCan } from "@/hooks/api/access";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 
 interface NewProjectDialogProps {
-  trigger?: ReactNode;
+  trigger?: ReactNode | null;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
@@ -40,14 +40,19 @@ export function NewProjectDialog({
     return null;
   }
 
+  const resolvedTrigger =
+    trigger === undefined ? (
+      <Button size="sm" className="gap-1.5" onClick={handleTriggerClick} {...hoverHandlers}>
+        <PlusIcon ref={iconRef} size={14} />
+        New Project
+      </Button>
+    ) : (
+      trigger
+    );
+
   return (
     <>
-      {trigger ?? (
-        <Button size="sm" className="gap-1.5" onClick={handleTriggerClick} {...hoverHandlers}>
-          <PlusIcon ref={iconRef} size={14} />
-          New Project
-        </Button>
-      )}
+      {resolvedTrigger}
       <ProjectCreateWizard open={open} onOpenChange={handleOpenChange} />
     </>
   );

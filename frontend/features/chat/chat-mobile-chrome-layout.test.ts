@@ -1,5 +1,6 @@
 import {
   getChatMobileBottomNavClassName,
+  getChatMobileComposerInsetClassName,
   getChatMobileContentPaddingClassName,
 } from "./chat-mobile-chrome-layout";
 
@@ -14,7 +15,13 @@ describe("chat mobile chrome layout", () => {
 
   it("keeps safe-area space for the conversation list", () => {
     expect(getChatMobileContentPaddingClassName(false)).toContain(
-      "max-sm:pb-[calc(4rem+env(safe-area-inset-bottom))]",
+      "max-sm:pb-[calc(4rem+0.5rem+env(safe-area-inset-bottom))]",
+    );
+  });
+
+  it("clears the bottom nav under the message composer", () => {
+    expect(getChatMobileComposerInsetClassName()).toBe(
+      "max-sm:pb-[calc(4rem+0.5rem+env(safe-area-inset-bottom))]",
     );
   });
 });

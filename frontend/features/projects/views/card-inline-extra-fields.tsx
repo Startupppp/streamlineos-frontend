@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, memo } from "react";
+import { useState, useEffect, memo } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -10,10 +10,12 @@ import { useProjectLabels } from "@/hooks/api/projects/projects";
 import { useSprints } from "@/hooks/api/projects/sprints";
 import { useCycles } from "@/hooks/api/projects/advanced";
 import { popoverOptionBaseClass, popoverOptionSelectedClass } from "../shared/popover-option-classes";
+import { LabelsSearchCommand } from "../shared/labels-search-command";
 import { typeConfig } from "../shared/types";
 import { TicketTypeIcon } from "../shared/ticket-type-icon";
 import { InlineFieldWrapper } from "./card-inline-fields";
 import { Check, Tag, RefreshCw, Zap } from "lucide-react";
+import type { TicketLabel } from "@/types/projects";
 
 const INLINE_TYPES = ["TASK", "BUG", "STORY", "EPIC"] as const;
 
@@ -86,22 +88,45 @@ export const InlineLabels = memo(function InlineLabels({
   currentLabelIds = [],
 }: InlineLabelsProps) {
   const [open, setOpen] = useState(false);
+  const [optimisticIds, setOptimisticIds] = useState<number[] | null>(null);
   const { data: labels = [] } = useProjectLabels(projectId);
+  const currentIdsKey = currentLabelIds.join(",");
+
+  useEffect(() => {
+    setOptimisticIds(null);
+  }, [currentIdsKey]);
+
+  const selectedIds = optimisticIds ?? currentLabelIds;
+
   const addLabel = useAddLabelToTicket({
-    onError: (e) => toast.error(getErrorMessage(e)),
+    onError: (e) => {
+      setOptimisticIds(null);
+      toast.error(getErrorMessage(e));
+    },
   });
   const removeLabel = useRemoveLabelFromTicket({
-    onError: (e) => toast.error(getErrorMessage(e)),
+    onError: (e) => {
+      setOptimisticIds(null);
+      toast.error(getErrorMessage(e));
+    },
   });
 
-  function makeLabelToggleHandler(labelId: number) {
-    return function toggleLabel() {
-      if (currentLabelIds.includes(labelId)) {
-        removeLabel.mutate({ ticketId, projectId, labelId });
-      } else {
-        addLabel.mutate({ ticketId, projectId, labelId });
-      }
-    };
+  function handleLabelToggle(labelId: number) {
+    const next = selectedIds.includes(labelId)
+      ? selectedIds.filter((id) => id !== labelId)
+      : [...selectedIds, labelId];
+    setOptimisticIds(next);
+    if (selectedIds.includes(labelId)) {
+      removeLabel.mutate({ ticketId, projectId, labelId });
+    } else {
+      addLabel.mutate({ ticketId, projectId, labelId });
+    }
+  }
+
+  function handleLabelCreated(label: TicketLabel) {
+    if (selectedIds.includes(label.id)) return;
+    setOptimisticIds([...selectedIds, label.id]);
+    addLabel.mutate({ ticketId, projectId, labelId: label.id });
   }
 
   return (
@@ -116,36 +141,22 @@ export const InlineLabels = memo(function InlineLabels({
             <Tag
               className={cn(
                 "h-3.5 w-3.5 shrink-0",
-                currentLabelIds.length > 0 ? "text-foreground" : "text-muted-foreground/50",
+                selectedIds.length > 0 ? "text-foreground" : "text-muted-foreground/50",
               )}
             />
-            {currentLabelIds.length > 0 && (
-              <span className="text-[9px] text-muted-foreground font-mono">{currentLabelIds.length}</span>
+            {selectedIds.length > 0 && (
+              <span className="text-[9px] text-muted-foreground font-mono">{selectedIds.length}</span>
             )}
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-44 p-1" align="start">
-          {labels.length === 0 && (
-            <p className="py-2 text-center text-xs text-muted-foreground">No labels</p>
-          )}
-          {labels.map((label) => {
-            const active = currentLabelIds.includes(label.id);
-            return (
-              <button
-                key={label.id}
-                type="button"
-                onClick={makeLabelToggleHandler(label.id)}
-                className={cn(popoverOptionBaseClass, active && popoverOptionSelectedClass)}
-              >
-                <span
-                  className="h-2.5 w-2.5 rounded-full shrink-0 border border-border"
-                  style={{ backgroundColor: label.color ?? undefined }}
-                />
-                <span className="truncate">{label.name}</span>
-                {active && <Check className="ml-auto h-3 w-3 shrink-0" />}
-              </button>
-            );
-          })}
+        <PopoverContent className="w-48 p-1" align="start">
+          <LabelsSearchCommand
+            labels={labels}
+            selectedIds={selectedIds}
+            onToggle={handleLabelToggle}
+            onCreated={handleLabelCreated}
+            open={open}
+          />
         </PopoverContent>
       </Popover>
     </InlineFieldWrapper>

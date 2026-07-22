@@ -297,13 +297,6 @@ export const useUpdateUserPreferences = () => {
 interface InviteUserPayload {
   email: string;
   role: string;
-  employeeId?: string;
-  branchId?: number;
-  departmentId?: number;
-  teamId?: string;
-  managerUserId?: string;
-  startDate?: string;
-  welcomeMessage?: string;
 }
 
 export const useInviteUser = () => {

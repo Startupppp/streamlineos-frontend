@@ -12,7 +12,6 @@ import { useEpics, useModules, useCycles } from "@/hooks/api/projects";
 import { LabelPicker } from "../tickets/label-picker";
 import { RecurrencePicker } from "../tickets/recurrence-picker";
 import { useSetRecurrence, type RecurrenceRule } from "@/hooks/api/projects/recurring";
-import type { ProjectMember } from "./types";
 import { SidebarSelectFields } from "./sidebar-select-fields";
 import { SidebarAssigneeSection, type DisplayedAssignee } from "./sidebar-assignee-section";
 import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
@@ -69,7 +68,6 @@ interface TicketSidebarProps {
   };
   ticketId: number;
   projectId?: number;
-  members: ProjectMember[];
   sprints: Array<{ id: number; name: string; status?: string | null }>;
   statuses?: Array<{ name: string; id: number }>;
   onAutoSave: (field: Record<string, unknown>) => void;
@@ -93,7 +91,6 @@ export function TicketSidebar({
   ticket,
   ticketId,
   projectId,
-  members,
   sprints,
   statuses,
   onAutoSave,
@@ -166,7 +163,7 @@ export function TicketSidebar({
         : [];
 
   return (
-    <div className="px-4 py-3 space-y-3 bg-muted/10">
+    <div className="@container space-y-3 bg-muted/10 px-4 py-3">
       <SidebarSelectFields
         ticket={ticket}
         statuses={statuses}
@@ -184,19 +181,19 @@ export function TicketSidebar({
         onCycleChange={handleCycleChange}
       />
 
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-1 block">
-            <Calendar className="h-3 w-3 inline mr-0.5" />
+      <div className="grid grid-cols-1 gap-3 @[18rem]:grid-cols-2 md:grid-cols-2">
+        <div className="min-w-0">
+          <span className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+            <Calendar className="mr-0.5 inline h-3 w-3" />
             Start date
           </span>
-          <div className="flex items-center gap-1">
+          <div className="flex min-w-0 items-center gap-1">
             <DatePicker
               value={ticket.startDate ?? undefined}
               onChange={handleStartDateChange}
               placeholder="Set start"
               toDate={ticket.dueDate ? new Date(ticket.dueDate) : undefined}
-              className="text-xs"
+              className="min-h-10 min-w-0 flex-1 touch-manipulation text-xs @[18rem]:min-h-9 md:min-h-9"
             />
             {ticket.startDate && (
               <AnimatedIconButton
@@ -206,24 +203,24 @@ export function TicketSidebar({
                 icon={XIcon}
                 iconSize={14}
                 onClick={handleClearStartDate}
-                className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
+                className="h-10 w-10 shrink-0 touch-manipulation text-muted-foreground hover:text-destructive @[18rem]:h-8 @[18rem]:w-8 md:h-8 md:w-8"
                 aria-label="Clear start date"
               />
             )}
           </div>
         </div>
-        <div>
-          <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-1 block">
-            <Calendar className="h-3 w-3 inline mr-0.5" />
+        <div className="min-w-0">
+          <span className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+            <Calendar className="mr-0.5 inline h-3 w-3" />
             Due date
           </span>
-          <div className="flex items-center gap-1">
+          <div className="flex min-w-0 items-center gap-1">
             <DatePicker
               value={ticket.dueDate ?? undefined}
               onChange={handleDueDateChange}
               placeholder="Set due"
               fromDate={ticket.startDate ? new Date(ticket.startDate) : undefined}
-              className="text-xs"
+              className="min-h-10 min-w-0 flex-1 touch-manipulation text-xs @[18rem]:min-h-9 md:min-h-9"
             />
             {ticket.dueDate && (
               <AnimatedIconButton
@@ -233,7 +230,7 @@ export function TicketSidebar({
                 icon={XIcon}
                 iconSize={14}
                 onClick={handleClearDueDate}
-                className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
+                className="h-10 w-10 shrink-0 touch-manipulation text-muted-foreground hover:text-destructive @[18rem]:h-8 @[18rem]:w-8 md:h-8 md:w-8"
                 aria-label="Clear due date"
               />
             )}
@@ -251,7 +248,6 @@ export function TicketSidebar({
       <SidebarAssigneeSection
         projectId={projectId ?? 0}
         displayedAssignees={displayedAssignees}
-        currentAssigneeIds={currentAssigneeIds}
         onAddAssignee={handleAddAssignee}
         onRemoveAssignee={handleRemoveAssignee}
       />
@@ -281,14 +277,14 @@ export function TicketSidebar({
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-2 @[18rem]:grid-cols-2 @[18rem]:gap-3 md:grid-cols-2 md:gap-3">
         <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
           <Calendar className="h-3 w-3 shrink-0" />
-          {ticket.createdAt ? format(new Date(ticket.createdAt), "MMM d, yyyy") : "—"}
+          <span>Created {ticket.createdAt ? format(new Date(ticket.createdAt), "MMM d, yyyy") : "—"}</span>
         </div>
         <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
           <Clock className="h-3 w-3 shrink-0" />
-          {ticket.updatedAt ? format(new Date(ticket.updatedAt), "MMM d, yyyy") : "—"}
+          <span>Updated {ticket.updatedAt ? format(new Date(ticket.updatedAt), "MMM d, yyyy") : "—"}</span>
         </div>
       </div>
 

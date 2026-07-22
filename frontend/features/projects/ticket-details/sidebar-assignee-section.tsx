@@ -17,7 +17,6 @@ export interface DisplayedAssignee {
 interface SidebarAssigneeSectionProps {
   projectId: number;
   displayedAssignees: DisplayedAssignee[];
-  currentAssigneeIds: string[];
   onAddAssignee: (v: string) => void;
   onRemoveAssignee: (personId: string) => void;
 }
@@ -25,7 +24,6 @@ interface SidebarAssigneeSectionProps {
 export function SidebarAssigneeSection({
   projectId,
   displayedAssignees,
-  currentAssigneeIds,
   onAddAssignee,
   onRemoveAssignee,
 }: SidebarAssigneeSectionProps) {
@@ -45,24 +43,24 @@ export function SidebarAssigneeSection({
             return (
               <div
                 key={person.id}
-                className="flex items-center gap-2 rounded-md px-2 py-1.5 bg-muted/50 group"
+                className="group flex min-h-10 items-center gap-2 rounded-md bg-muted/50 px-2 py-1.5"
               >
-                <Avatar className="h-6 w-6 shrink-0">
+                <Avatar className="h-7 w-7 shrink-0">
                   <AvatarImage src={resolveImageUrl(person.image)} />
-                  <AvatarFallback className="text-[8px] bg-primary/10 text-primary">
+                  <AvatarFallback className="bg-primary/10 text-[8px] text-primary">
                     {getUserInitials(person)}
                   </AvatarFallback>
                 </Avatar>
-                <span className="text-xs font-medium truncate flex-1 min-w-0 text-foreground">
+                <span className="min-w-0 flex-1 truncate text-xs font-medium text-foreground">
                   {displayName}
                 </span>
                 <button
                   type="button"
-                  className="text-muted-foreground/50 hover:text-destructive transition-colors leading-none opacity-0 group-hover:opacity-100 shrink-0"
+                  className="flex h-8 w-8 shrink-0 touch-manipulation items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive md:h-6 md:w-6 md:opacity-0 md:group-hover:opacity-100"
                   onClick={() => onRemoveAssignee(person.id)}
                   aria-label={`Remove ${displayName}`}
                 >
-                  <span className="text-xs font-bold">&times;</span>
+                  <span className="text-sm font-bold leading-none">&times;</span>
                 </button>
               </div>
             );

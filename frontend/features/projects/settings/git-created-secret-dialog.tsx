@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { ShieldCheck } from "lucide-react";
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -13,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { CopyButton } from "./git-connection-row";
+import { SetupInstructions } from "./git-setup-instructions";
 import type { CreatedGitConnection } from "@/hooks/api/git-integration";
 
 interface CreatedSecretDialogProps {
@@ -31,10 +33,12 @@ export function CreatedSecretDialog({
     [onClose],
   );
 
+  const isGithub = created.provider === "github";
+
   return (
     <Dialog open onOpenChange={handleOpenChange}>
-      <DialogContent>
-        <DialogHeader>
+      <DialogContent className="flex max-h-[90dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
+        <DialogHeader className="shrink-0 px-6 pt-6 pb-4">
           <DialogTitle className="flex items-center gap-2">
             <ShieldCheck className="h-4.5 w-4.5 text-emerald-500" />
             Connection created
@@ -43,7 +47,7 @@ export function CreatedSecretDialog({
             Copy the webhook secret now. It will not be shown again.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
+        <DialogBody className="space-y-4 px-6 py-2">
           <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground">Webhook URL</Label>
             <div className="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-2.5 py-1.5">
@@ -64,8 +68,14 @@ export function CreatedSecretDialog({
               <CopyButton value={created.webhookSecret} label="Secret" />
             </div>
           </div>
-        </div>
-        <DialogFooter>
+          {isGithub ? (
+            <SetupInstructions
+              compact
+              className="rounded-lg border border-border/60 bg-muted/20 p-3"
+            />
+          ) : null}
+        </DialogBody>
+        <DialogFooter className="shrink-0 border-t border-border/60 px-6 py-4">
           <Button onClick={onClose}>Done</Button>
         </DialogFooter>
       </DialogContent>

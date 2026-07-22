@@ -54,13 +54,22 @@ export function RecurrencePicker({ value, onChange }: RecurrencePickerProps) {
       </div>
 
       {enabled && value && (
-        <div className="pl-10 space-y-3">
-          <div className="flex items-center gap-2">
-            <Label className="text-xs text-muted-foreground w-14 shrink-0">Repeat</Label>
-            <Input type="number" min={1} max={99} value={value.interval} onChange={handleInterval} className="w-16 text-xs text-center" />
+        <div className="space-y-3 pl-0 sm:pl-10">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <Label className="w-14 shrink-0 text-xs text-muted-foreground">Repeat</Label>
+            <Input
+              type="number"
+              min={1}
+              max={99}
+              value={value.interval}
+              onChange={handleInterval}
+              className="h-9 w-16 text-center text-xs touch-manipulation"
+            />
             <Select value={value.frequency} onValueChange={handleFrequency}>
-              <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
-              <SelectContent>
+              <SelectTrigger className="h-9 min-w-[7rem] flex-1 touch-manipulation sm:w-28 sm:flex-none">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                 <SelectItem value="daily" className="text-xs">day(s)</SelectItem>
                 <SelectItem value="weekly" className="text-xs">week(s)</SelectItem>
                 <SelectItem value="monthly" className="text-xs">month(s)</SelectItem>
@@ -69,22 +78,33 @@ export function RecurrencePicker({ value, onChange }: RecurrencePickerProps) {
           </div>
 
           {value.frequency === "weekly" && (
-            <div className="flex items-center gap-1">
+            <div className="flex flex-wrap items-center gap-1.5">
               {DAYS.map((day, i) => (
-                <button key={day} type="button" onClick={() => toggleDay(i)}
-                  className={cn("h-7 w-7 rounded-lg text-[10px] font-medium transition-all border",
+                <button
+                  key={day}
+                  type="button"
+                  onClick={() => toggleDay(i)}
+                  className={cn(
+                    "h-9 w-9 touch-manipulation rounded-lg border text-[10px] font-medium transition-all sm:h-8 sm:w-8",
                     (value.daysOfWeek ?? []).includes(i)
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-background text-muted-foreground border-input hover:border-primary/30")}>
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-input bg-background text-muted-foreground hover:border-primary/30",
+                  )}
+                >
                   {day[0]}
                 </button>
               ))}
             </div>
           )}
 
-          <div className="flex items-center gap-2">
-            <Label className="text-xs text-muted-foreground w-14 shrink-0">End date</Label>
-            <DatePicker value={value.endDate ?? ""} onChange={(v) => onChange({ ...value, endDate: v || null })} placeholder="Pick a date" className="text-xs w-36" />
+          <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
+            <Label className="w-14 shrink-0 text-xs text-muted-foreground">End date</Label>
+            <DatePicker
+              value={value.endDate ?? ""}
+              onChange={(v) => onChange({ ...value, endDate: v || null })}
+              placeholder="Pick a date"
+              className="w-full min-w-0 text-xs sm:w-36"
+            />
           </div>
         </div>
       )}

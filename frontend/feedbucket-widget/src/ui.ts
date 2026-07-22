@@ -2,7 +2,7 @@ import { captureScreenshot, warmScreenshotCache } from "./screenshot";
 import { collectMetadata, getPageUrl } from "./metadata";
 import { getConsoleBuffer } from "./console-capture";
 import { getNetworkLogs } from "./network-capture";
-import { submitFeedback, aiAssistFeedback, unwrapEnvelope, type AiFeedbackType } from "./api";
+import { submitFeedback, aiAssistFeedback, unwrapEnvelope } from "./api";
 import { getStyles } from "./styles";
 import { Annotator, type AnnotationResult } from "./annotator";
 import { ScreenRecorder } from "./recorder";
@@ -11,7 +11,10 @@ import { LOGO_SVG } from "./logo";
 type FeedbackType = "bug" | "idea" | "feature" | "question" | "other";
 type ViewState = "form" | "success" | "error";
 
-const FEEDBACK_TYPES: ReadonlyArray<{ readonly value: FeedbackType; readonly label: string }> = [
+const FEEDBACK_TYPES: ReadonlyArray<{
+  readonly value: FeedbackType;
+  readonly label: string;
+}> = [
   { value: "bug", label: "Bug" },
   { value: "idea", label: "Idea" },
   { value: "feature", label: "Feature" },
@@ -85,6 +88,15 @@ class FeedbucketWidget {
   private dragOffsetY = 0;
   private dragMoved = false;
   private activePointerId: number | null = null;
+  private dragWidth = 0;
+  private dragHeight = 0;
+  private dragBaseLeft = 0;
+  private dragBaseTop = 0;
+  private dragCurrentLeft = 0;
+  private dragCurrentTop = 0;
+  private pendingDragLeft: number | null = null;
+  private pendingDragTop: number | null = null;
+  private dragRafId: number | null = null;
 
   private readonly container: HTMLDivElement;
   private readonly logo: HTMLDivElement;
@@ -110,21 +122,46 @@ class FeedbucketWidget {
     void this.runScreenshotFlow();
   };
   private readonly handleLauncherHover = (): void => {
-    if (this.hoverTimer !== null || this.pendingCapture || this.screenshot || this.busy || this.capturing || this.aiAssisting) return;
+    if (
+      this.dragging ||
+      this.hoverTimer !== null ||
+      this.pendingCapture ||
+      this.screenshot ||
+      this.busy ||
+      this.capturing ||
+      this.aiAssisting
+    ) {
+      return;
+    }
     this.hoverTimer = window.setTimeout(() => {
       this.hoverTimer = null;
-      if (!this.pendingCapture && !this.screenshot && !this.busy && !this.capturing) {
-        this.pendingCapture = captureScreenshot(this.hostEl);
+      if (
+        this.dragging ||
+        this.pendingCapture ||
+        this.screenshot ||
+        this.busy ||
+        this.capturing
+      ) {
+        return;
       }
+      this.pendingCapture = captureScreenshot(this.hostEl);
     }, 180);
   };
   private readonly handleLauncherLeave = (): void => {
+    if (this.dragging) return;
     if (this.hoverTimer !== null) {
       clearTimeout(this.hoverTimer);
       this.hoverTimer = null;
     }
     this.pendingCapture = null;
   };
+
+  private cancelHoverPrefetch(): void {
+    if (this.hoverTimer !== null) {
+      clearTimeout(this.hoverTimer);
+      this.hoverTimer = null;
+    }
+  }
   private readonly handleRecordLauncher = (): void => {
     void this.runRecordFlow();
   };
@@ -139,7 +176,13 @@ class FeedbucketWidget {
     const btn = event.currentTarget;
     if (!(btn instanceof HTMLButtonElement)) return;
     const type = btn.dataset["type"];
-    if (type === "bug" || type === "idea" || type === "feature" || type === "question" || type === "other") {
+    if (
+      type === "bug" ||
+      type === "idea" ||
+      type === "feature" ||
+      type === "question" ||
+      type === "other"
+    ) {
       this.setSelectedType(type);
     }
   };
@@ -170,9 +213,8 @@ class FeedbucketWidget {
   private readonly handleSubmitClick = async (): Promise<void> => {
     const titleVal = this.titleInput.value.trim();
     const descVal = this.messageInput.value.trim();
-    const message = titleVal && descVal
-      ? `${titleVal}\n\n${descVal}`
-      : titleVal || descVal;
+    const message =
+      titleVal && descVal ? `${titleVal}\n\n${descVal}` : titleVal || descVal;
     if ((!message && !this.recording) || this.submitting) return;
     this.submitting = true;
     this.submitBtn.disabled = true;
@@ -216,37 +258,98 @@ class FeedbucketWidget {
   };
 
   private readonly handleDragPointerDown = (event: PointerEvent): void => {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    this.cancelHoverPrefetch();
     this.dragging = true;
     this.dragMoved = false;
     this.activePointerId = event.pointerId;
     const rect = this.container.getBoundingClientRect();
     this.dragOffsetX = event.clientX - rect.left;
     this.dragOffsetY = event.clientY - rect.top;
+    this.dragWidth = rect.width;
+    this.dragHeight = rect.height;
+    this.dragBaseLeft = rect.left;
+    this.dragBaseTop = rect.top;
+    this.dragCurrentLeft = rect.left;
+    this.dragCurrentTop = rect.top;
+    this.pendingDragLeft = null;
+    this.pendingDragTop = null;
+    this.container.classList.add("positioned", "dragging");
+    this.container.style.left = `${rect.left}px`;
+    this.container.style.top = `${rect.top}px`;
+    this.container.style.right = "auto";
+    this.container.style.bottom = "auto";
+    this.container.style.transform = "translate3d(0,0,0)";
     this.logo.setPointerCapture(event.pointerId);
-    this.container.classList.add("dragging");
     event.preventDefault();
   };
 
   private readonly handleDragPointerMove = (event: PointerEvent): void => {
     if (!this.dragging || event.pointerId !== this.activePointerId) return;
+    event.preventDefault();
     this.dragMoved = true;
-    const w = this.container.offsetWidth;
-    const h = this.container.offsetHeight;
-    const left = Math.max(8, Math.min(event.clientX - this.dragOffsetX, window.innerWidth - w - 8));
-    const top = Math.max(8, Math.min(event.clientY - this.dragOffsetY, window.innerHeight - h - 8));
-    this.setPosition(left, top);
+    const left = Math.max(
+      8,
+      Math.min(
+        event.clientX - this.dragOffsetX,
+        window.innerWidth - this.dragWidth - 8,
+      ),
+    );
+    const top = Math.max(
+      8,
+      Math.min(
+        event.clientY - this.dragOffsetY,
+        window.innerHeight - this.dragHeight - 8,
+      ),
+    );
+    this.pendingDragLeft = left;
+    this.pendingDragTop = top;
+    if (this.dragRafId === null) {
+      this.dragRafId = requestAnimationFrame(this.flushDragPosition);
+    }
+  };
+
+  private readonly flushDragPosition = (): void => {
+    this.dragRafId = null;
+    if (this.pendingDragLeft === null || this.pendingDragTop === null) return;
+    const left = this.pendingDragLeft;
+    const top = this.pendingDragTop;
+    this.pendingDragLeft = null;
+    this.pendingDragTop = null;
+    this.dragCurrentLeft = left;
+    this.dragCurrentTop = top;
+    const dx = left - this.dragBaseLeft;
+    const dy = top - this.dragBaseTop;
+    this.container.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
     if (this.isOpen) this.positionPanel();
   };
 
   private readonly handleDragPointerUp = (event: PointerEvent): void => {
     if (!this.dragging || event.pointerId !== this.activePointerId) return;
+    if (this.dragRafId !== null) {
+      cancelAnimationFrame(this.dragRafId);
+      this.dragRafId = null;
+    }
+    if (this.pendingDragLeft !== null && this.pendingDragTop !== null) {
+      this.dragCurrentLeft = this.pendingDragLeft;
+      this.dragCurrentTop = this.pendingDragTop;
+      this.pendingDragLeft = null;
+      this.pendingDragTop = null;
+    }
     this.dragging = false;
     this.activePointerId = null;
     this.container.classList.remove("dragging");
+    this.setPosition(this.dragCurrentLeft, this.dragCurrentTop);
+    if (this.isOpen) this.positionPanel();
     if (this.dragMoved) this.persistPosition();
   };
 
-  constructor(hostEl: HTMLElement, apiBase: string, embedKey: string, aiAssistEnabled: boolean) {
+  constructor(
+    hostEl: HTMLElement,
+    apiBase: string,
+    embedKey: string,
+    aiAssistEnabled: boolean,
+  ) {
     this.hostEl = hostEl;
     this.apiBase = apiBase;
     this.embedKey = embedKey;
@@ -273,7 +376,14 @@ class FeedbucketWidget {
     this.logo.appendChild(this.buildLogoMark());
     const gripOverlay = svgIcon({
       size: 16,
-      circles: [[9, 6, 1], [15, 6, 1], [9, 12, 1], [15, 12, 1], [9, 18, 1], [15, 18, 1]],
+      circles: [
+        [9, 6, 1],
+        [15, 6, 1],
+        [9, 12, 1],
+        [15, 12, 1],
+        [9, 18, 1],
+        [15, 18, 1],
+      ],
     });
     gripOverlay.classList.add("grip-overlay");
     this.logo.appendChild(gripOverlay);
@@ -287,28 +397,38 @@ class FeedbucketWidget {
     divider.className = "launcher-divider";
     launcher.appendChild(divider);
 
-    launcher.appendChild(
-      this.launcherButton("Screenshot & annotate", this.handleScreenshotLauncher, {
-        paths: ["M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"],
+    const screenshotBtn = this.launcherButton(
+      "Screenshot & annotate",
+      this.handleScreenshotLauncher,
+      {
+        paths: [
+          "M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z",
+        ],
         circles: [[12, 13, 4]],
         stroke: true,
-      }),
+      },
     );
+    screenshotBtn.addEventListener("pointerenter", this.handleLauncherHover);
+    screenshotBtn.addEventListener("pointerleave", this.handleLauncherLeave);
+    launcher.appendChild(screenshotBtn);
     launcher.appendChild(
       this.launcherButton("Record screen", this.handleRecordLauncher, {
-        paths: ["M23 7l-7 5 7 5V7z", "M14 5H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"],
+        paths: [
+          "M23 7l-7 5 7 5V7z",
+          "M14 5H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z",
+        ],
         stroke: true,
       }),
     );
     launcher.appendChild(
       this.launcherButton("Send feedback", this.handleCommentLauncher, {
-        paths: ["M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"],
+        paths: [
+          "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z",
+        ],
         stroke: true,
       }),
     );
     this.container.appendChild(launcher);
-    launcher.addEventListener("pointerenter", this.handleLauncherHover);
-    launcher.addEventListener("pointerleave", this.handleLauncherLeave);
 
     this.panel = document.createElement("div");
     this.panel.className = "panel";
@@ -388,7 +508,9 @@ class FeedbucketWidget {
     this.captureBtn.appendChild(
       svgIcon({
         size: 16,
-        paths: ["M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"],
+        paths: [
+          "M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z",
+        ],
         circles: [[12, 13, 4]],
         stroke: true,
       }),
@@ -465,9 +587,23 @@ class FeedbucketWidget {
     this.formView.appendChild(actionsRow);
     this.panel.appendChild(this.formView);
 
-    this.successView = this.resultView("success", "✓", "Thanks for your feedback!", "We received your message and will look into it.", "Done", this.handleDoneClick);
+    this.successView = this.resultView(
+      "success",
+      "✓",
+      "Thanks for your feedback!",
+      "We received your message and will look into it.",
+      "Done",
+      this.handleDoneClick,
+    );
     this.panel.appendChild(this.successView);
-    this.errorView = this.resultView("error", "!", "Something went wrong", "Your feedback could not be submitted. Please try again.", "Try again", this.handleRetryClick);
+    this.errorView = this.resultView(
+      "error",
+      "!",
+      "Something went wrong",
+      "Your feedback could not be submitted. Please try again.",
+      "Try again",
+      this.handleRetryClick,
+    );
     this.errorSubtitle = this.errorView.querySelector(".result-subtitle");
     this.panel.appendChild(this.errorView);
 
@@ -504,9 +640,8 @@ class FeedbucketWidget {
 
     const titleVal = this.titleInput.value.trim();
     const descVal = this.messageInput.value.trim();
-    const message = titleVal && descVal
-      ? `${titleVal}\n\n${descVal}`
-      : titleVal || descVal;
+    const message =
+      titleVal && descVal ? `${titleVal}\n\n${descVal}` : titleVal || descVal;
 
     const result = await aiAssistFeedback({
       apiBase: this.apiBase,
@@ -541,7 +676,13 @@ class FeedbucketWidget {
     }
 
     const suggested = result.suggestedType;
-    const validTypes: ReadonlyArray<string> = ["bug", "idea", "feature", "question", "other"];
+    const validTypes: ReadonlyArray<string> = [
+      "bug",
+      "idea",
+      "feature",
+      "question",
+      "other",
+    ];
     if (validTypes.includes(suggested)) {
       this.setSelectedType(suggested as FeedbackType);
     }
@@ -550,7 +691,11 @@ class FeedbucketWidget {
     if (this.aiNote) this.aiNote.hidden = true;
   }
 
-  private launcherButton(label: string, handler: () => void, icon: IconSpec): HTMLButtonElement {
+  private launcherButton(
+    label: string,
+    handler: () => void,
+    icon: IconSpec,
+  ): HTMLButtonElement {
     const btn = document.createElement("button");
     btn.className = "launcher-btn";
     btn.type = "button";
@@ -562,7 +707,10 @@ class FeedbucketWidget {
   }
 
   private buildLogoMark(): Element {
-    const parsed = new DOMParser().parseFromString(LOGO_SVG, "image/svg+xml").documentElement;
+    const parsed = new DOMParser().parseFromString(
+      LOGO_SVG,
+      "image/svg+xml",
+    ).documentElement;
     const node = document.importNode(parsed, true);
     if (node instanceof Element) {
       node.setAttribute("width", "24");
@@ -608,7 +756,9 @@ class FeedbucketWidget {
     if (this.busy) return;
     this.busy = true;
     try {
-      const shot = this.pendingCapture ? await this.pendingCapture : await captureScreenshot(this.hostEl);
+      const shot = this.pendingCapture
+        ? await this.pendingCapture
+        : await captureScreenshot(this.hostEl);
       this.pendingCapture = null;
       if (!shot) {
         this.openPanel("bug");
@@ -627,7 +777,9 @@ class FeedbucketWidget {
   }
 
   private async submitAnnotated(result: AnnotationResult): Promise<void> {
-    const message = result.description ? `${result.title}\n\n${result.description}` : result.title;
+    const message = result.description
+      ? `${result.title}\n\n${result.description}`
+      : result.title;
     try {
       await submitFeedback({
         apiBase: this.apiBase,
@@ -654,9 +806,10 @@ class FeedbucketWidget {
   }
 
   private showError(err: unknown): void {
-    const msg = err instanceof Error && err.message
-      ? err.message
-      : "Your feedback could not be submitted. Please try again.";
+    const msg =
+      err instanceof Error && err.message
+        ? err.message
+        : "Your feedback could not be submitted. Please try again.";
     if (this.errorSubtitle) this.errorSubtitle.textContent = msg.slice(0, 200);
     this.showView("error");
   }
@@ -752,12 +905,16 @@ class FeedbucketWidget {
     this.container.style.top = `${top}px`;
     this.container.style.right = "auto";
     this.container.style.bottom = "auto";
+    this.container.style.transform = "";
   }
 
   private persistPosition(): void {
     try {
       const rect = this.container.getBoundingClientRect();
-      window.localStorage.setItem(POSITION_KEY, JSON.stringify({ left: rect.left, top: rect.top }));
+      window.localStorage.setItem(
+        POSITION_KEY,
+        JSON.stringify({ left: rect.left, top: rect.top }),
+      );
     } catch {
       return;
     }
@@ -796,12 +953,20 @@ class FeedbucketWidget {
   }
 }
 
-export function mountWidget(hostEl: HTMLElement, apiBase: string, embedKey: string): void {
+export function mountWidget(
+  hostEl: HTMLElement,
+  apiBase: string,
+  embedKey: string,
+): void {
   void bootstrapWidget(hostEl, apiBase, embedKey);
   setTimeout(warmScreenshotCache, 2000);
 }
 
-async function bootstrapWidget(hostEl: HTMLElement, apiBase: string, embedKey: string): Promise<void> {
+async function bootstrapWidget(
+  hostEl: HTMLElement,
+  apiBase: string,
+  embedKey: string,
+): Promise<void> {
   let aiAssistEnabled = false;
   try {
     const res = await fetch(`${apiBase}/public/feedbucket/${embedKey}/config`);

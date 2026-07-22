@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useRef, useCallback, useEffect, useState } from "react"
+import { Fragment, useMemo, useRef, useCallback, useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -19,6 +19,7 @@ import {
 } from "./sidebar/sidebar-nav-items"
 import { SidebarSection } from "./sidebar/sidebar-section"
 import { SidebarWorkspaceRow } from "./sidebar/sidebar-workspace-row"
+import { ProjectNavTree } from "@/features/projects/sidebar/project-nav-tree"
 import { ProductSwitcherMenu } from "./header/product-switcher-menu"
 import { usePermissions } from "@/lib/rbac/hooks"
 import { useCan } from "@/hooks/api/access"
@@ -95,6 +96,10 @@ export function AppSidebar({
   const pathname = usePathname()
   const activeProduct = getProductFromPathname(pathname)
   const accent: ModuleAccent = MODULE_ACCENTS[activeProduct]
+  const activeProjectId = useMemo(() => {
+    const match = /^\/projects\/(\d+)(?:\/|$)/.exec(pathname ?? "")
+    return match ? match[1] : null
+  }, [pathname])
 
   const { permissions } = usePermissions()
   const isAdmin = useCan("settings:manage")
@@ -127,6 +132,20 @@ export function AppSidebar({
         setCollapsedGroups(JSON.parse(stored) as Record<string, boolean>)
     } catch {}
   }, [])
+
+  useEffect(() => {
+    setCollapsedGroups((prev) => {
+      let changed = false
+      const next = { ...prev }
+      for (const group of navGroups) {
+        if (group.defaultCollapsed && !(group.label in next)) {
+          next[group.label] = true
+          changed = true
+        }
+      }
+      return changed ? next : prev
+    })
+  }, [navGroups])
 
   useEffect(() => {
     if (!activeGroupLabel) return
@@ -206,22 +225,35 @@ export function AppSidebar({
             {navGroups.map((group, i) => {
               const multiGroup = navGroups.length > 1
               return (
-                <SidebarSection
-                  key={group.label}
-                  group={group}
-                  groupIndex={i}
-                  isCollapsed={effectiveCollapsed}
-                  showLabel={multiGroup}
-                  isGroupCollapsed={
-                    multiGroup ? (collapsedGroups[group.label] ?? false) : false
-                  }
-                  onToggleGroup={
-                    multiGroup ? () => toggleGroup(group.label) : undefined
-                  }
-                  pendingLeaves={pendingLeaves}
-                  onNavigate={onNavigate}
-                  accent={accent}
-                />
+                <Fragment key={group.label}>
+                  <SidebarSection
+                    group={group}
+                    groupIndex={i}
+                    isCollapsed={effectiveCollapsed}
+                    showLabel={multiGroup}
+                    isGroupCollapsed={
+                      multiGroup
+                        ? (collapsedGroups[group.label] ?? false)
+                        : false
+                    }
+                    onToggleGroup={
+                      multiGroup ? () => toggleGroup(group.label) : undefined
+                    }
+                    pendingLeaves={pendingLeaves}
+                    onNavigate={onNavigate}
+                    accent={accent}
+                  />
+                  {activeProduct === "projects" &&
+                  activeProjectId &&
+                  group.label === "Projects" ? (
+                    <ProjectNavTree
+                      projectId={activeProjectId}
+                      collapsed={effectiveCollapsed}
+                      accent={accent}
+                      onNavigate={onNavigate}
+                    />
+                  ) : null}
+                </Fragment>
               )
             })}
           </nav>

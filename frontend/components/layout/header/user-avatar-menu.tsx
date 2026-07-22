@@ -242,11 +242,14 @@ function UserIdentity({
   className?: string;
 }) {
   return (
-    <div className={cn("px-2 py-1.5", className)}>
-      <TruncatedText text={name} className="text-xs font-semibold text-foreground" />
+    <div className={cn("min-w-0 w-full max-w-full overflow-hidden px-2 py-1.5", className)}>
+      <TruncatedText
+        text={name}
+        className="block w-full min-w-0 text-xs font-semibold text-foreground"
+      />
       <TruncatedText
         text={email}
-        className="text-[11px] text-muted-foreground mt-0.5"
+        className="mt-0.5 block w-full min-w-0 text-[11px] text-muted-foreground"
       />
     </div>
   );
@@ -324,7 +327,7 @@ export function UserAvatarMenu({ variant = "header" }: UserAvatarMenuProps) {
       <Drawer direction="bottom">
         <DrawerTrigger asChild>{trigger}</DrawerTrigger>
         <DrawerContent className="flex max-h-[min(92dvh,40rem)] flex-col gap-0 overflow-hidden rounded-t-xl border bg-card p-0 shadow-2xl">
-          <DrawerHeader className="shrink-0 border-b px-4 py-3 text-left">
+          <DrawerHeader className="min-w-0 shrink-0 overflow-hidden border-b px-4 py-3 text-left">
             <DrawerTitle className="sr-only">Account menu</DrawerTitle>
             <UserIdentity name={name} email={email} className="px-0 py-0" />
           </DrawerHeader>
@@ -372,7 +375,12 @@ export function UserAvatarMenu({ variant = "header" }: UserAvatarMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
-      <DropdownMenuContent align="end" side="bottom" className="w-56" sideOffset={8}>
+      <DropdownMenuContent
+        align="end"
+        side="bottom"
+        className="w-56 max-w-56 min-w-0 overflow-x-hidden"
+        sideOffset={8}
+      >
         <UserIdentity name={name} email={email} />
         {entries.map((entry, index) => {
           if (entry.kind === "separator") {

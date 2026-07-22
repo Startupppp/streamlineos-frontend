@@ -11,7 +11,6 @@ import {
   isToday,
 } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useHrMonthlyAttendance, useHrWfhRequests, useHrHolidaysForCalendar } from "@/hooks/api/hr";
 import { CalendarDays } from "lucide-react";
@@ -70,7 +69,16 @@ export const AttendanceCalendar = memo(function AttendanceCalendar({
     const attendanceMap = new Map<string, string>();
     if (monthlyLogs) {
       for (const log of monthlyLogs) {
-        attendanceMap.set(log.date, log.status || "PRESENT");
+        const previous = attendanceMap.get(log.date);
+        if (previous === "PRESENT" || previous === "ON_BREAK") continue;
+        if (!log.checkOut) {
+          attendanceMap.set(
+            log.date,
+            log.status === "ON_BREAK" ? "ON_BREAK" : "PRESENT",
+          );
+        } else {
+          attendanceMap.set(log.date, "PRESENT");
+        }
       }
     }
 

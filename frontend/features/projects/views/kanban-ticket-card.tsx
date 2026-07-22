@@ -3,12 +3,10 @@
 import { useCallback, memo } from "react";
 import { cn } from "@/lib/utils";
 import type { KanbanTicket, DisplayOptions } from "../shared/types";
-import { motion, useReducedMotion } from "framer-motion";
 import { TicketQuickActions } from "./ticket-quick-actions";
 import { InlinePriority, InlineAssignee, InlineEstimate } from "./card-inline-fields";
 import { InlineType, InlineLabels, InlineCycle } from "./card-inline-extra-fields";
 import { InlineDueDate, InlineStartDate } from "./card-inline-date-fields";
-import { pmSnappy, pmSpring } from "@/features/projects/shared/pm-motion";
 import { TEXT_TWO_LINES } from "@/features/projects/shared/text-overflow";
 
 interface KanbanTicketCardProps {
@@ -18,9 +16,7 @@ interface KanbanTicketCardProps {
   isDragging: boolean;
   dragStartRef: React.MutableRefObject<{ x: number; y: number } | null>;
   onSelect: (id: number) => void;
-  projectStatuses?: Array<{ name: string; color: string | null; type?: string | null }>;
   displayOptions?: DisplayOptions;
-  index?: number;
 }
 
 export const KanbanTicketCard = memo(function KanbanTicketCard({
@@ -31,10 +27,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
   dragStartRef,
   onSelect,
   displayOptions,
-  index = 0,
 }: KanbanTicketCardProps) {
-  const shouldReduceMotion = useReducedMotion();
-
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
       dragStartRef.current = { x: e.clientX, y: e.clientY };
@@ -74,43 +67,15 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
   const points = ticket.points ?? ticket.storyPoints;
 
   return (
-    <motion.div
-      layout={!shouldReduceMotion}
-      layoutId={shouldReduceMotion ? undefined : `ticket-${ticket.id}`}
-      initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 6, scale: 0.98 }}
-      animate={
-        isDragging
-          ? shouldReduceMotion
-            ? { opacity: 1, scale: 1 }
-            : { opacity: 1, y: 0, scale: 1.03, rotate: 0.6 }
-          : shouldReduceMotion
-            ? { opacity: 1 }
-            : { opacity: 1, y: 0, scale: 1, rotate: 0 }
-      }
-      exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96, y: -4 }}
-      whileHover={
-        shouldReduceMotion || isDragging
-          ? undefined
-          : { y: -1, transition: pmSnappy }
-      }
-      whileTap={shouldReduceMotion || isDragging ? undefined : { scale: 0.985 }}
-      transition={
-        shouldReduceMotion
-          ? { duration: 0.12 }
-          : {
-              ...pmSpring,
-              delay: Math.min(index * 0.02, 0.16),
-              layout: { duration: 0.2, ease: [0.22, 1, 0.36, 1] },
-            }
-      }
+    <div
       className={cn(
         "group relative rounded-md border border-border/80 bg-card px-2.5 py-2",
         "cursor-grab active:cursor-grabbing will-change-transform",
         "before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded-full",
         "before:bg-transparent before:transition-colors before:duration-150",
-        "hover:border-primary/25 hover:bg-primary/[0.03] hover:shadow-md hover:before:bg-primary/60",
-        isDragging &&
-          "z-20 border-primary/30 bg-card shadow-xl ring-1 ring-primary/25 before:bg-primary",
+        isDragging
+          ? "z-20 border-primary/30 bg-card opacity-95 shadow-xl ring-1 ring-primary/25 before:bg-primary rotate-1 scale-[1.02]"
+          : "hover:border-primary/25 hover:bg-primary/[0.03] hover:shadow-md hover:before:bg-primary/60",
       )}
       onMouseDown={handleMouseDown}
       onClick={handleClick}
@@ -205,6 +170,6 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
           </div>
         ) : null}
       </div>
-    </motion.div>
+    </div>
   );
 });

@@ -4,9 +4,8 @@ import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { Loader2, MessageSquare, AlertTriangle } from "lucide-react";
+import { MessageSquare, AlertTriangle } from "lucide-react";
 import { SendIcon, XIcon } from "@animateicons/react/lucide";
 import { useAddComment } from "@/hooks/api/projects";
 import { useCreateTicket } from "@/hooks/api/projects/tickets";
@@ -319,7 +318,7 @@ export function ActivityFeed({
                 onCreateIssue={handleCreateIssue}
               />
               {(repliesMap[comment.id]?.length ?? 0) > 0 && (
-                <div className="ml-9 mt-2 space-y-2 border-l border-border pl-3">
+                <div className="ml-4 mt-2 space-y-2 border-l border-border pl-3 sm:ml-9">
                   {[...repliesMap[comment.id]]
                     .sort(
                       (a, b) =>

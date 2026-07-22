@@ -6,7 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   useProject,
   useUpdateProject,
-  useDeleteProject,
 } from "@/hooks/api/projects";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -78,7 +77,6 @@ export default function ProjectSettingsPage({ params }: PageProps) {
   const [activeSection, setActiveSection] = useState<SectionId>("general");
 
   const { data: project, isLoading } = useProject(projectId);
-  const deleteMutation = useDeleteProject();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -102,7 +100,6 @@ export default function ProjectSettingsPage({ params }: PageProps) {
 
   const isOwner = useCan("projects:delete");
   const updateMutation = useUpdateProject();
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const [reassignDialog, setReassignDialog] = useState<{
     memberId: string;
@@ -152,22 +149,9 @@ export default function ProjectSettingsPage({ params }: PageProps) {
     setReassignDialog(null);
   }, []);
 
-  const handleDeleteConfirm = useCallback(() => {
-    deleteMutation.mutate(
-      { projectId },
-      {
-        onSuccess: () => {
-          toast.success("Project deleted successfully");
-          router.push("/projects/all");
-        },
-        onError: (error) => {
-          toast.error(getErrorMessage(error));
-        },
-      }
-    );
-  }, [deleteMutation, projectId, router]);
-
-  const handleDeleteClick = useCallback(() => setDeleteDialogOpen(true), []);
+  const handleDeleteSuccess = useCallback(() => {
+    router.push("/projects");
+  }, [router]);
 
   const handleSubmit = useCallback(
     (values: FormValues) => {
@@ -324,12 +308,9 @@ export default function ProjectSettingsPage({ params }: PageProps) {
                   </p>
                 </div>
                 <DangerZoneSection
+                  projectId={projectId}
                   projectName={project.name}
-                  isPending={deleteMutation.isPending}
-                  deleteDialogOpen={deleteDialogOpen}
-                  onDeleteClick={handleDeleteClick}
-                  onDeleteDialogChange={setDeleteDialogOpen}
-                  onDeleteConfirm={handleDeleteConfirm}
+                  onDeleted={handleDeleteSuccess}
                 />
               </PmPanel>
             ) : null}

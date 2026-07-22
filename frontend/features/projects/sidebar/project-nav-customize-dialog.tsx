@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
+import type { KeyboardEvent } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -32,7 +33,6 @@ import {
 interface ProjectNavCustomizeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  primary: ProjectNavItem[];
   groups: ProjectNavGroup[];
   isVisible: (id: string) => boolean;
   setVisible: (id: string, visible: boolean) => void;
@@ -43,7 +43,6 @@ interface ProjectNavCustomizeDialogProps {
 export function ProjectNavCustomizeDialog({
   open,
   onOpenChange,
-  primary,
   groups,
   isVisible,
   setVisible,
@@ -58,12 +57,9 @@ export function ProjectNavCustomizeDialog({
     onOpenChange(false);
   }, [onOpenChange]);
 
-  const sections: ProjectNavGroup[] = useMemo(
-    () =>
-      [{ id: "navigate", label: "Navigate", items: primary }, ...groups].filter(
-        (section) => section.items.length > 0,
-      ),
-    [groups, primary],
+  const sections = useMemo(
+    () => groups.filter((section) => section.items.length > 0),
+    [groups],
   );
 
   const defaultOpen = useMemo(
@@ -82,8 +78,8 @@ export function ProjectNavCustomizeDialog({
         <DialogHeader className="shrink-0 border-b border-border/60 px-5 pb-3 pt-5 text-left">
           <DialogTitle>Customize sidebar</DialogTitle>
           <DialogDescription>
-            Choose which project tools appear in the sidebar. Issues stays
-            pinned.
+            Choose which tools appear under Build, Plan, Ship, and Collaborate.
+            Issues stays pinned.
           </DialogDescription>
         </DialogHeader>
 
@@ -170,7 +166,7 @@ function CustomizeRow({
   }, [checked, item.id, onCheckedChange, pinned]);
 
   const handleRowKeyDown = useCallback(
-    (event: React.KeyboardEvent<HTMLDivElement>) => {
+    (event: KeyboardEvent<HTMLDivElement>) => {
       if (pinned) return;
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();

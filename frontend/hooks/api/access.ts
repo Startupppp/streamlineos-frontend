@@ -25,7 +25,7 @@ export const useAccess = (
 export function useCan(permissionKey: PermissionKey): boolean {
   const { data } = useAccess();
   if (!data) return false;
-  if (data.isOrgOwner) return true;
+  if (data.isOrgOwner || data.isPlatformAdmin) return true;
   return data.permissions.includes(permissionKey);
 }
 

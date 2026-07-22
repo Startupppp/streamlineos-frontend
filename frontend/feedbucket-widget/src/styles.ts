@@ -16,8 +16,18 @@ export function getStyles(): string {
   color: #0b1220;
 }
 .widget.positioned { transform: none; }
-.widget.dragging { user-select: none; }
-.widget.dragging * { cursor: grabbing !important; }
+.widget.dragging {
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  transition: none !important;
+  will-change: transform;
+}
+.widget.dragging * {
+  cursor: grabbing !important;
+  transition: none !important;
+  touch-action: none;
+}
 
 .launcher {
   display: flex;
