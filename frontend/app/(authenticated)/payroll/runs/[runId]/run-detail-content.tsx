@@ -15,12 +15,14 @@ import { DollarSign, TrendingDown, Users } from "lucide-react";
 import { RunStatusBadge } from "@/features/payroll/runs/run-status-badge";
 import { RunStatusStepper } from "@/features/payroll/runs/run-status-stepper";
 import { RunActionsSlot } from "@/features/payroll/runs/run-actions-slot";
+import { MobileLifecycleBar } from "@/features/payroll/runs/mobile-lifecycle-bar";
 import { ApprovalStagePanel, MarkPaidPanel } from "@/features/payroll/payout";
 import { EmployeesTab } from "@/features/payroll/runs/employees-tab";
 import { ExceptionsTab } from "@/features/payroll/runs/exceptions-tab";
 import { InputsTab } from "@/features/payroll/runs/inputs-tab";
 import { VarianceTab } from "@/features/payroll/runs/variance-tab";
 import { formatMoney, formatMonth } from "@/features/payroll/shared/payroll-format";
+import { ReadinessRail } from "@/features/payroll/shared/readiness-rail";
 import { usePayrollRun } from "@/hooks/api/payroll/runs";
 import { ErrorState } from "@/components/shared";
 
@@ -97,12 +99,50 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
         </span>
       }
       actions={
-        <div className="flex items-center gap-2">
+        <div className="hidden sm:flex items-center gap-2">
           <RunActionsSlot run={run} onChanged={handleChanged} />
         </div>
       }
     >
-      <div className="flex flex-1 min-h-0 flex-col gap-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4 pb-20 sm:pb-0">
+        <ReadinessRail
+          canPay={
+            openExceptions === 0 &&
+            (run.status === "LOCKED" || run.status === "APPROVED" || run.status === "PAID")
+          }
+          blockers={
+            openExceptions > 0
+              ? [
+                  {
+                    id: "exc",
+                    label: `${openExceptions} open exception(s)`,
+                    href: `/payroll/runs/${runId}?tab=exceptions`,
+                  },
+                ]
+              : isLocked
+                ? []
+                : [
+                    {
+                      id: "status",
+                      label: `Run status is ${run.status.replace(/_/g, " ")}`,
+                    },
+                  ]
+          }
+          changes={[]}
+          nextAction={
+            run.status === "EXCEPTIONS_FOUND"
+              ? { label: "Review exceptions", href: `/payroll/runs/${runId}?tab=exceptions` }
+              : run.status === "PREVIEW_READY"
+                ? { label: "Submit for approval", href: `/payroll/runs/${runId}` }
+                : run.status === "LOCKED"
+                  ? { label: "Go to bank transfers", href: `/payroll/bank-transfers?runId=${runId}` }
+                  : run.status === "PAID"
+                    ? { label: "Publish payslips", href: `/payroll/runs/${runId}` }
+                    : { label: "Review employees", href: `/payroll/runs/${runId}?tab=employees` }
+          }
+          summary={`${run.employeeCount} employees · Net ${formatMoney(run.netTotal)} · ${formatMonth(run.month)}`}
+        />
+
         {isLocked && (
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-muted/30 text-[11px] text-muted-foreground">
             <span>🔒</span>
@@ -188,6 +228,8 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
           </TabsContent>
         </Tabs>
       </div>
+
+      <MobileLifecycleBar run={run} onChanged={handleChanged} />
     </PageWrapper>
   );
 }

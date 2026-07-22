@@ -80,14 +80,21 @@ export function ReportSelector({ activeReport, onSelect }: ReportSelectorProps) 
         ))}
       </nav>
 
-      <div className="lg:hidden">
+      <div className="lg:hidden w-full min-w-0 sticky top-0 z-10 bg-background pb-2">
+        <label className="sr-only" htmlFor="payroll-report-type">
+          Report type
+        </label>
         <Select value={activeReport} onValueChange={handleSelectChange}>
-          <SelectTrigger className="w-full">
-            <SelectValue />
+          <SelectTrigger
+            id="payroll-report-type"
+            className="w-full min-h-11 touch-manipulation"
+            aria-label="Select payroll report"
+          >
+            <SelectValue placeholder="Select report" />
           </SelectTrigger>
           <SelectContent>
             {REPORT_OPTIONS.map(({ type, label }) => (
-              <SelectItem key={type} value={type}>
+              <SelectItem key={type} value={type} className="min-h-10">
                 {label}
               </SelectItem>
             ))}

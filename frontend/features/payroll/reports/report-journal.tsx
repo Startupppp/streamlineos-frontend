@@ -114,6 +114,21 @@ export function ReportJournal({ month }: ReportJournalProps) {
         isLoading={isLoading}
         minWidth="700px"
         footer={footerNode}
+        mobileCard={(row) => (
+          <div className="space-y-1">
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-mono text-xs font-medium truncate">{row.account}</span>
+              <span className="font-mono tabular-nums text-xs shrink-0">
+                {row.debit
+                  ? `Dr ${formatMoney(row.debit)}`
+                  : row.credit
+                    ? `Cr ${formatMoney(row.credit)}`
+                    : "—"}
+              </span>
+            </div>
+            <p className="text-[11px] text-muted-foreground line-clamp-2">{row.description}</p>
+          </div>
+        )}
         emptyState={
           <EmptyState
             compact

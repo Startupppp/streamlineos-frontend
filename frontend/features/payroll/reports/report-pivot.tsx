@@ -124,6 +124,20 @@ export function ReportPivot({
         isLoading={isLoading}
         minWidth="800px"
         pagination={{ pageSize: 50 }}
+        mobileCard={(row) => {
+          const amounts = Object.values(row.components ?? {}).filter(Boolean);
+          return (
+            <div className="space-y-1">
+              <p className="text-sm font-medium truncate">{row.name || row.employeeId}</p>
+              <p className="text-[11px] text-muted-foreground truncate">
+                {row.department || "—"} · {row.workerType || "—"}
+              </p>
+              <p className="text-[11px] text-muted-foreground">
+                {amounts.length} component{amounts.length === 1 ? "" : "s"}
+              </p>
+            </div>
+          );
+        }}
         emptyState={
           <EmptyState
             compact
