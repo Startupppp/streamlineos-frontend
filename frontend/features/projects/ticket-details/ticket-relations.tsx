@@ -8,8 +8,8 @@ import {
   useProjectBoardTickets,
 } from "@/hooks/api/projects";
 import type { WorkItemRelationType } from "@/hooks/api/projects";
+import { useProject } from "@/hooks/api";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -20,13 +20,14 @@ import {
   Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
 } from "@/components/ui/command";
 import { toast } from "sonner";
-import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Link2, ArrowRight, ArrowLeft, Copy, Minus } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PlusIcon, XIcon } from "@animateicons/react/lucide";
 import { cn } from "@/lib/utils";
+import { SubtaskRow } from "./subtask-row";
+import type { ProjectStatusRecord } from "@/types/projects";
 
 interface TicketRelationsProps {
   ticketId: number;
@@ -63,13 +64,25 @@ const RELATION_LABELS: Record<WorkItemRelationType, { label: string; icon: React
   },
 };
 
+function stopProp(e: React.MouseEvent | React.KeyboardEvent) {
+  e.preventDefault();
+  e.stopPropagation();
+}
+
 function RemoveRelationButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
+
+  function handleClick(e: React.MouseEvent) {
+    stopProp(e);
+    onClick();
+  }
+
   return (
     <button
       type="button"
-      onClick={onClick}
-      className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive shrink-0"
+      onClick={handleClick}
+      onKeyDown={stopProp}
+      className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive shrink-0 rounded p-0.5 hover:bg-muted/60"
       aria-label="Remove relation"
       {...hoverHandlers}
     >
@@ -79,11 +92,14 @@ function RemoveRelationButton({ onClick }: { onClick: () => void }) {
 }
 
 export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
-  const { iconRef: plusIconRef, hoverHandlers: plusHoverHandlers } = useAnimatedIcon();
   const { data: relations, isLoading } = useTicketRelations(ticketId, projectId);
   const { data: boardTickets } = useProjectBoardTickets(projectId);
+  const { data: projectData } = useProject(projectId);
   const addRelation = useAddTicketRelation(ticketId, projectId);
   const removeRelation = useRemoveTicketRelation(ticketId, projectId);
+
+  const projectKey = projectData?.key ?? null;
+  const projectStatuses: ProjectStatusRecord[] = projectData?.statuses ?? [];
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [selectedType, setSelectedType] = useState<WorkItemRelationType>("relates_to");
@@ -143,9 +159,16 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
         </h4>
         <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
           <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="h-6 text-xs px-2 bg-muted/50 hover:bg-muted" {...plusHoverHandlers}>
-              <PlusIcon ref={plusIconRef} size={12} className="mr-1" />Add
-            </Button>
+            <AnimatedIconButton
+              variant="outline"
+              size="sm"
+              icon={PlusIcon}
+              iconSize={12}
+              iconClassName="mr-1"
+              className="h-8 text-xs px-2 bg-muted/50 hover:bg-muted"
+            >
+              Add
+            </AnimatedIconButton>
           </PopoverTrigger>
           <PopoverContent className="w-80 p-3 space-y-3" align="end">
             <p className="text-xs font-medium">Add Relation</p>
@@ -195,37 +218,47 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
       {(relations ?? []).length === 0 ? (
         <p className="text-xs text-muted-foreground py-1">No relations yet.</p>
       ) : (
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           {RELATION_TYPES.map((type) => {
             const rels = grouped[type];
             const meta = RELATION_LABELS[type];
             if (!rels?.length) return null;
             return (
               <div key={type}>
-                <p className={cn("text-[10px] font-medium flex items-center gap-1 mb-0.5", meta.color)}>
+                <p className={cn("text-[10px] font-medium flex items-center gap-1 mb-1", meta.color)}>
                   {meta.icon}
                   {meta.label}
                 </p>
-                {rels.map((r) => {
-                  const t = r.relatedTicket;
-                  if (!t) return null;
-                  return (
-                    <div key={r.id} className="group flex min-w-0 items-center justify-between gap-2 py-0.5 pl-4">
-                      <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
-                        <span className="shrink-0 font-mono text-[10px] text-muted-foreground">
-                          #{t.ticketNumber}
-                        </span>
-                        <TruncatedText text={t.title} className="min-w-0 flex-1 text-xs" />
-                        {t.status && (
-                          <Badge variant="outline" className="h-4 shrink-0 px-1 text-[9px]">
-                            {t.status}
-                          </Badge>
-                        )}
-                      </div>
-                      <RemoveRelationButton onClick={() => handleRemoveRelation(t.id)} />
-                    </div>
-                  );
-                })}
+                <div className="space-y-1">
+                  {rels.map((r) => {
+                    const t = r.relatedTicket;
+                    if (!t) return null;
+
+                    return (
+                      <SubtaskRow
+                        key={r.id}
+                        subtask={{
+                          id: t.id,
+                          title: t.title,
+                          status: t.status ?? "TODO",
+                          priority: t.priority,
+                          points: t.points,
+                          ticketNumber: t.ticketNumber,
+                          assigneeId: t.assigneeId,
+                          projectId: t.projectId ?? projectId,
+                          project: t.project,
+                          assignee: t.assignee,
+                        }}
+                        projectId={projectId}
+                        projectKey={projectKey}
+                        projectStatuses={projectStatuses}
+                        endAction={
+                          <RemoveRelationButton onClick={() => handleRemoveRelation(t.id)} />
+                        }
+                      />
+                    );
+                  })}
+                </div>
               </div>
             );
           })}

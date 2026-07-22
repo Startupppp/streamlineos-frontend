@@ -492,16 +492,31 @@ export function useBulkUpdateTickets(projectId: number) {
 
 export type WorkItemRelationType = "blocks" | "blocked_by" | "duplicate_of" | "relates_to";
 
+export interface TicketRelationRelatedTicket {
+  id: number;
+  title: string;
+  ticketNumber: number | null;
+  status: string | null;
+  priority: string | null;
+  type: string | null;
+  points: number | null;
+  assigneeId: string | null;
+  projectId: number | null;
+  assignee: {
+    id: string;
+    name: string | null;
+    firstName: string | null;
+    lastName: string | null;
+    email: string | null;
+    image: string | null;
+  } | null;
+  project: { key: string | null } | null;
+}
+
 export interface TicketRelation {
   id: number;
   relationType: WorkItemRelationType;
-  relatedTicket: {
-    id: number;
-    title: string;
-    ticketNumber: number | null;
-    status: string | null;
-    priority: string | null;
-  } | null;
+  relatedTicket: TicketRelationRelatedTicket | null;
   direction: "outgoing" | "incoming";
 }
 

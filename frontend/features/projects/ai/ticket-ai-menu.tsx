@@ -51,9 +51,16 @@ interface TicketAiMenuProps {
   ticketId: number;
   currentDescription?: string | null;
   onApplyDescription?: (html: string) => void;
+  asSubmenu?: boolean;
 }
 
-export function TicketAiMenu({ projectId, ticketId, currentDescription, onApplyDescription }: TicketAiMenuProps) {
+export function TicketAiMenu({
+  projectId,
+  ticketId,
+  currentDescription,
+  onApplyDescription,
+  asSubmenu = false,
+}: TicketAiMenuProps) {
   const canUseAI = useCan("projects:ai:use");
   const summarizeMutation = useTicketAiSummarize(projectId, ticketId);
   const improveMutation = useTicketAiImproveDescription(projectId, ticketId);
@@ -100,6 +107,7 @@ export function TicketAiMenu({ projectId, ticketId, currentDescription, onApplyD
       triggerLabel="AI"
       menuLabel="Ticket AI"
       align="end"
+      asSubmenu={asSubmenu}
     />
   );
 }

@@ -3,10 +3,16 @@
 import { useCallback, useMemo, useState } from "react";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
 import { AlertCircle, PanelRightOpen } from "lucide-react";
-import { ShareIcon } from "@animateicons/react/lucide";
+import { EllipsisIcon, ShareIcon } from "@animateicons/react/lucide";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { isApiError, getApiErrorCode } from "@/lib/api-client";
 import { toast } from "sonner";
@@ -16,11 +22,12 @@ import { useProjectBoardTickets } from "@/hooks/api/projects";
 import { formatTicketKey, parseTicketKey } from "@/features/projects/shared/format-ticket-key";
 import { TicketDetailMainSection } from "./ticket-detail-main-section";
 import { TicketDetailRightPanel } from "./ticket-detail-right-panel";
-import { TicketDetailActions } from "./ticket-detail-actions";
+import { TicketDetailActions, TicketDetailDeleteDialog, TicketDetailDeleteMenuItem } from "./ticket-detail-actions";
 import { TicketParentControl } from "./ticket-parent-control";
 import { useTicketDetail } from "./use-ticket-detail";
 import { resolveTicketId } from "./resolve-ticket-id";
 import { TicketAiMenu } from "@/features/projects/ai/ticket-ai-menu";
+import { useIsMobile } from "@/hooks/common/use-mobile";
 
 
 interface TicketDetailPageProps {
@@ -55,12 +62,14 @@ function DetailSkeleton() {
 export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const isMobile = useIsMobile();
   const commentParam = searchParams.get("comment");
   const highlightCommentId = commentParam ? parseInt(commentParam, 10) : null;
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     return localStorage.getItem(RIGHT_PANEL_COLLAPSED_KEY) === "true";
   });
+  const [overflowDeleteOpen, setOverflowDeleteOpen] = useState(false);
 
   const parsed = useMemo(() => parseTicketKey(ticketKey), [ticketKey]);
   const { data: projectData, isLoading: projectLoading } = useProject(projectId);
@@ -120,6 +129,10 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
 
   function handleExpandRightPanel() {
     handleRightPanelOpenChange(true);
+  }
+
+  function handleOpenOverflowDelete() {
+    setOverflowDeleteOpen(true);
   }
 
   if (!parsed) return notFound();
@@ -209,7 +222,7 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
       contentClassName="flex flex-1 min-h-0 flex-col p-0"
       actions={
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-          {rightPanelCollapsed && (
+          {rightPanelCollapsed ? (
             <Button
               size="icon"
               variant="outline"
@@ -219,26 +232,66 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
             >
               <PanelRightOpen className="h-4 w-4" />
             </Button>
+          ) : null}
+
+          {isMobile ? (
+            <>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <AnimatedIconButton
+                    size="icon"
+                    variant="outline"
+                    icon={EllipsisIcon}
+                    iconSize={16}
+                    className="h-9 w-9 touch-manipulation border-border/60 bg-card/50 backdrop-blur-sm sm:h-8 sm:w-8"
+                    aria-label="More actions"
+                  />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent forceMount align="end" className="w-52">
+                  <TicketAiMenu
+                    projectId={projectId}
+                    ticketId={ticketId}
+                    currentDescription={ticket.description}
+                    onApplyDescription={handleApplyAiDescription}
+                    asSubmenu
+                  />
+                  <DropdownMenuItem onSelect={handleShare} className="gap-2">
+                    <ShareIcon size={14} />
+                    Share
+                  </DropdownMenuItem>
+                  <TicketDetailDeleteMenuItem onRequestDelete={handleOpenOverflowDelete} />
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <TicketDetailDeleteDialog
+                open={overflowDeleteOpen}
+                onOpenChange={setOverflowDeleteOpen}
+                onDelete={handleDelete}
+                isDeleting={isDeleting}
+              />
+            </>
+          ) : (
+            <>
+              <TicketAiMenu
+                projectId={projectId}
+                ticketId={ticketId}
+                currentDescription={ticket.description}
+                onApplyDescription={handleApplyAiDescription}
+              />
+              <AnimatedIconButton
+                size="icon"
+                variant="outline"
+                icon={ShareIcon}
+                iconSize={16}
+                className="h-8 w-8 touch-manipulation border-border/60 bg-card/50 backdrop-blur-sm"
+                onClick={handleShare}
+                aria-label="Copy share link"
+              />
+              <TicketDetailActions
+                onDelete={handleDelete}
+                isDeleting={isDeleting}
+              />
+            </>
           )}
-          <TicketAiMenu
-            projectId={projectId}
-            ticketId={ticketId}
-            currentDescription={ticket.description}
-            onApplyDescription={handleApplyAiDescription}
-          />
-          <AnimatedIconButton
-            size="icon"
-            variant="outline"
-            icon={ShareIcon}
-            iconSize={16}
-            className="h-9 w-9 touch-manipulation border-border/60 bg-card/50 backdrop-blur-sm sm:h-8 sm:w-8"
-            onClick={handleShare}
-            aria-label="Copy share link"
-          />
-          <TicketDetailActions
-            onDelete={handleDelete}
-            isDeleting={isDeleting}
-          />
         </div>
       }
     >

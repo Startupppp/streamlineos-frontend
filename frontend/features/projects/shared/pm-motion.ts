@@ -73,6 +73,24 @@ export const viewSwap: Variants = {
   exit: { opacity: 0 },
 };
 
+export const stepSlide: Variants = {
+  initial: (direction: number) => ({
+    opacity: 0,
+    x: direction * 24,
+  }),
+  animate: { opacity: 1, x: 0 },
+  exit: (direction: number) => ({
+    opacity: 0,
+    x: direction * -24,
+  }),
+};
+
+export const stepSlideReduced: Variants = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 },
+};
+
 export const viewSwapReduced: Variants = {
   initial: { opacity: 0 },
   animate: { opacity: 1 },

@@ -2,10 +2,10 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { formatDistanceToNow } from "date-fns";
-import { Trash2Icon, TrashIcon } from "@animateicons/react/lucide";
+import { TrashIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { useMyCommentDrafts, useDeleteCommentDraft, useDeleteAllCommentDrafts } from "@/hooks/api/projects/comment-drafts";
+import type { CommentDraft } from "@/hooks/api/projects/comment-drafts";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -23,13 +23,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { formatTicketKey, getTicketDetailHref } from "@/features/projects/shared/format-ticket-key";
+import { getTicketDetailHref } from "@/features/projects/shared/format-ticket-key";
 import {
   PmPageShell,
   PmPanel,
   PmSection,
-  PM_ROW,
 } from "@/features/projects/shared/pm-chrome";
+import { CommentDraftRow } from "./comment-draft-row";
 
 function DraftsLoadingSkeleton() {
   return (
@@ -38,13 +38,18 @@ function DraftsLoadingSkeleton() {
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
           <PmPanel solid>
             {[0, 1, 2].map((i) => (
-              <div key={i} className={PM_ROW}>
-                <Skeleton className="h-4 w-20 shrink-0" />
-                <div className="min-w-0 flex-1 space-y-1.5">
-                  <Skeleton className="h-3.5 w-48" />
-                  <Skeleton className="h-3 w-full max-w-xs" />
+              <div
+                key={i}
+                className="flex items-start gap-2 border-b border-border/70 px-3 py-2.5 last:border-b-0 sm:items-center sm:gap-2.5 sm:py-2"
+              >
+                <div className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:gap-2.5">
+                  <Skeleton className="h-5 w-16 shrink-0 rounded-md" />
+                  <div className="min-w-0 flex-1 space-y-1.5">
+                    <Skeleton className="h-3.5 w-48" />
+                    <Skeleton className="h-3 w-full max-w-xs" />
+                  </div>
                 </div>
-                <Skeleton className="h-7 w-7 shrink-0 rounded-md" />
+                <Skeleton className="h-7 w-16 shrink-0 rounded-md" />
               </div>
             ))}
           </PmPanel>
@@ -63,18 +68,17 @@ export function CommentDraftsPage() {
 
   const drafts = useMemo(() => data ?? [], [data]);
 
-  const handleRowClick = useCallback(
-    (ticketId: number, projectId: number | null, projectKey: string | null, ticketNumber: number) => {
+  const handleOpenDraft = useCallback(
+    (draft: CommentDraft) => {
+      const { projectId, projectKey, ticketNumber } = draft.ticket;
       if (!projectId) return;
-      const href = getTicketDetailHref(projectId, projectKey, ticketNumber);
-      router.push(href);
+      router.push(getTicketDetailHref(projectId, projectKey, ticketNumber));
     },
     [router],
   );
 
   const handleDelete = useCallback(
-    (id: number, e: React.MouseEvent) => {
-      e.stopPropagation();
+    (id: number) => {
       deleteDraft.mutate(id, {
         onError: (err) => toast.error(getErrorMessage(err)),
       });
@@ -116,16 +120,18 @@ export function CommentDraftsPage() {
       <PageWrapper
         title="Comment Drafts"
         subtitle="Your saved in-progress ticket comments"
+        actionsInline
         actions={
           drafts.length > 0 ? (
             <AnimatedIconButton
               icon={TrashIcon}
               variant="outline"
               size="sm"
-              className="h-8 gap-1.5 text-xs text-destructive hover:text-destructive"
+              className="h-8 w-8 gap-0 px-0 text-destructive hover:text-destructive sm:w-auto sm:gap-1.5 sm:px-3 sm:text-xs"
               onClick={handleOpenDeleteAll}
+              aria-label="Clear all"
             >
-              Clear all
+              <span className="hidden sm:inline">Clear all</span>
             </AnimatedIconButton>
           ) : undefined
         }
@@ -140,50 +146,14 @@ export function CommentDraftsPage() {
               />
             ) : (
               <PmPanel solid className="overflow-hidden">
-                {drafts.map((draft) => {
-                  const ticketKey = formatTicketKey(draft.ticket.projectKey, draft.ticket.ticketNumber, draft.ticket.id);
-                  const age = formatDistanceToNow(new Date(draft.updatedAt), { addSuffix: true });
-
-                  return (
-                    <button
-                      key={draft.id}
-                      type="button"
-                      className={`${PM_ROW} w-full text-left cursor-pointer`}
-                      onClick={() =>
-                        handleRowClick(
-                          draft.ticket.id,
-                          draft.ticket.projectId,
-                          draft.ticket.projectKey,
-                          draft.ticket.ticketNumber,
-                        )
-                      }
-                    >
-                      <span className="shrink-0 font-mono text-[11px] font-semibold text-primary/80 min-w-[4.5rem]">
-                        {ticketKey}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-[13px] font-medium text-foreground">
-                          {draft.ticket.title}
-                        </p>
-                        <p className="mt-0.5 line-clamp-1 text-[11px] text-muted-foreground">
-                          {draft.body}
-                        </p>
-                      </div>
-                      <span className="shrink-0 text-[10px] text-muted-foreground/70 tabular-nums">
-                        {age}
-                      </span>
-                      <AnimatedIconButton
-                        icon={Trash2Icon}
-                        size="icon-sm"
-                        variant="ghost"
-                        iconSize={13}
-                        className="shrink-0 text-muted-foreground hover:text-destructive"
-                        onClick={(e) => handleDelete(draft.id, e)}
-                        aria-label={`Delete draft for ${ticketKey}`}
-                      />
-                    </button>
-                  );
-                })}
+                {drafts.map((draft) => (
+                  <CommentDraftRow
+                    key={draft.id}
+                    draft={draft}
+                    onOpen={handleOpenDraft}
+                    onDelete={handleDelete}
+                  />
+                ))}
               </PmPanel>
             )}
           </PmSection>

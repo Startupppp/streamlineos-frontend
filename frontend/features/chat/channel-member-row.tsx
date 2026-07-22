@@ -10,6 +10,7 @@ import { resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "./chat-helpers";
 import type { ChannelMember } from "@/types/chat";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { FLEX_TITLE_SLOT } from "@/lib/text-overflow";
 
 const RemoveMemberButton = React.forwardRef<
   HTMLButtonElement,
@@ -50,7 +51,7 @@ export function ChannelMemberRow({
   const canRemove = isMultiMemberChannel && ((isAdmin && !isYou) || isYou);
 
   return (
-    <div className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-muted/30 transition-colors group">
+    <div className="flex min-w-0 items-center gap-2.5 overflow-hidden px-2 py-1.5 rounded-lg hover:bg-muted/30 transition-colors group">
       <div className="relative shrink-0">
         <Avatar className="w-8">
           <AvatarImage src={resolveImageUrl(member.user?.image)} />
@@ -67,15 +68,25 @@ export function ChannelMemberRow({
           </span>
         )}
       </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-[13px] font-medium truncate">
-          {member.user?.name}
-          {isYou && <span className="text-muted-foreground font-normal"> (you)</span>}
-        </p>
-        <TruncatedText text={member.user?.email ?? ""} className="text-[11px] text-muted-foreground" />
+      <div className="min-w-0 flex-1 overflow-hidden">
+        <div className="flex min-w-0 items-center gap-1 overflow-hidden">
+          <div className={FLEX_TITLE_SLOT}>
+            <TruncatedText
+              text={member.user?.name ?? ""}
+              className="w-full text-[13px] font-medium"
+            />
+          </div>
+          {isYou ? (
+            <span className="shrink-0 text-[13px] font-normal text-muted-foreground">(you)</span>
+          ) : null}
+        </div>
+        <TruncatedText
+          text={member.user?.email ?? ""}
+          className="w-full text-[11px] text-muted-foreground"
+        />
       </div>
       {member.role === "ADMIN" && (
-        <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 border-primary/30 text-primary">
+        <Badge variant="outline" className="shrink-0 text-[9px] px-1.5 py-0 h-4 border-primary/30 text-primary">
           Admin
         </Badge>
       )}

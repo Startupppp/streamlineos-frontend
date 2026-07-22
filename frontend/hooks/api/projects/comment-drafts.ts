@@ -4,12 +4,25 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
+export interface CommentDraftAssignee {
+  id: string;
+  name: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  image: string | null;
+}
+
 export interface CommentDraftTicket {
   id: number;
   ticketNumber: number;
   title: string;
+  status: string;
+  priority: string | null;
+  type: string;
   projectId: number | null;
   projectKey: string | null;
+  projectName: string | null;
+  assignee: CommentDraftAssignee | null;
 }
 
 export interface CommentDraft {

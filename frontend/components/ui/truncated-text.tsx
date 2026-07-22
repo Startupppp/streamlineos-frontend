@@ -30,6 +30,21 @@ interface TruncatedTextProps {
   tooltip?: React.ReactNode;
 }
 
+function isOverflowing(node: HTMLSpanElement, lines: ClampLines): boolean {
+  if (lines !== 1) {
+    return node.scrollHeight - node.clientHeight > 1;
+  }
+
+  if (node.scrollWidth - node.clientWidth > 1) return true;
+
+  if (typeof Range === "undefined" || node.clientWidth <= 0) return false;
+
+  const range = document.createRange();
+  range.selectNodeContents(node);
+  const textWidth = range.getBoundingClientRect().width;
+  return textWidth - node.clientWidth > 1;
+}
+
 export function TruncatedText({
   text,
   lines = 1,
@@ -44,14 +59,14 @@ export function TruncatedText({
 
   const measure = React.useCallback(
     (node: HTMLSpanElement) => {
-      const overflow =
-        lines === 1
-          ? node.scrollWidth - node.clientWidth > 1
-          : node.scrollHeight - node.clientHeight > 1;
-      setTruncated(overflow);
+      setTruncated(isOverflowing(node, lines));
     },
     [lines],
   );
+
+  React.useEffect(() => {
+    if (!truncated) setOpen(false);
+  }, [truncated]);
 
   const setNode = React.useCallback(
     (node: HTMLSpanElement | null) => {
@@ -66,33 +81,41 @@ export function TruncatedText({
     [measure],
   );
 
-  if (!truncated) {
-    return (
-      <span ref={setNode} className={cn(CLAMP_CLASS[lines], className)}>
-        {text}
-      </span>
-    );
+  function handleOpenChange(next: boolean) {
+    if (!truncated) {
+      setOpen(false);
+      return;
+    }
+    setOpen(next);
   }
 
   function handlePointerUp(event: React.PointerEvent<HTMLSpanElement>) {
+    if (!truncated) return;
     if (event.pointerType === "touch") setOpen((value) => !value);
   }
 
   return (
-    <Tooltip open={open} onOpenChange={setOpen} delayDuration={200}>
+    <Tooltip open={open} onOpenChange={handleOpenChange} delayDuration={200}>
       <TooltipTrigger asChild>
         <span
           ref={setNode}
-          tabIndex={0}
+          tabIndex={truncated ? 0 : undefined}
           onPointerUp={handlePointerUp}
-          className={cn(CLAMP_CLASS[lines], "cursor-default outline-none", className)}
+          className={cn(
+            CLAMP_CLASS[lines],
+            truncated && "cursor-default outline-none",
+            className,
+          )}
         >
           {text}
         </span>
       </TooltipTrigger>
       <TooltipContent
         side={side}
-        className={cn("max-w-[min(90vw,22rem)] whitespace-normal break-words", tooltipClassName)}
+        className={cn(
+          "max-w-[min(90vw,22rem)] whitespace-normal break-words",
+          tooltipClassName,
+        )}
       >
         {tooltip ?? text}
       </TooltipContent>

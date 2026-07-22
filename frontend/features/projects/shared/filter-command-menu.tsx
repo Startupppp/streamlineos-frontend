@@ -32,6 +32,7 @@ import { ArrowLeft, Search } from "lucide-react";
 import { SlidersHorizontalIcon } from "@animateicons/react/lucide";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/common/use-mobile";
+import { useHorizontalSwipe } from "@/hooks/common/use-horizontal-swipe";
 import {
   FilterCategorySubmenu,
   FILTER_CATEGORY_TITLES,
@@ -47,6 +48,8 @@ import {
   listItem,
   listItemReduced,
   pmSnappy,
+  stepSlide,
+  stepSlideReduced,
 } from "@/features/projects/shared/pm-motion";
 
 interface Member {
@@ -223,6 +226,7 @@ export function FilterCommandMenu({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<FilterCategory | null>(null);
+  const [navDirection, setNavDirection] = useState(1);
   const submenuRef = useRef<HTMLDivElement>(null);
   const categoryListRef = useRef<HTMLDivElement>(null);
   const shouldReduceMotion = useReducedMotion();
@@ -310,6 +314,7 @@ export function FilterCommandMenu({
   }
 
   function handleSelectCategory(key: FilterCategory) {
+    setNavDirection(1);
     setActiveCategory(key);
     setSearch("");
   }
@@ -325,14 +330,57 @@ export function FilterCommandMenu({
   }
 
   function handleSubmenuClose() {
+    setNavDirection(-1);
     setActiveCategory(null);
     categoryListRef.current?.focus();
   }
 
   function handleBackToCategories() {
+    setNavDirection(-1);
     setActiveCategory(null);
     setSearch("");
   }
+
+  const handleSwipeLeft = useCallback(() => {
+    if (search.trim().length > 0) return;
+    if (!activeCategory) {
+      const first = visibleCategories[0];
+      if (!first) return;
+      setNavDirection(1);
+      setActiveCategory(first.key);
+      return;
+    }
+    const idx = visibleCategories.findIndex((c) => c.key === activeCategory);
+    const next = idx >= 0 ? visibleCategories[idx + 1] : undefined;
+    if (!next) return;
+    setNavDirection(1);
+    setActiveCategory(next.key);
+  }, [activeCategory, search, visibleCategories]);
+
+  const handleSwipeRight = useCallback(() => {
+    if (search.trim().length > 0) return;
+    if (!activeCategory) return;
+    const idx = visibleCategories.findIndex((c) => c.key === activeCategory);
+    if (idx <= 0) {
+      setNavDirection(-1);
+      setActiveCategory(null);
+      return;
+    }
+    const prev = visibleCategories[idx - 1];
+    if (!prev) return;
+    setNavDirection(-1);
+    setActiveCategory(prev.key);
+  }, [activeCategory, search, visibleCategories]);
+
+  const swipeHandlers = useHorizontalSwipe({
+    enabled: isMobile && open && search.trim().length === 0,
+    onSwipeLeft: handleSwipeLeft,
+    onSwipeRight: handleSwipeRight,
+  });
+
+  const mobilePanelKey = search.trim().length > 0
+    ? "search"
+    : activeCategory ?? "categories";
 
   const handleToggleStatus = useCallback((v: string) => { onToggleStatus(v); }, [onToggleStatus]);
   const handleTogglePriority = useCallback((v: string) => { onTogglePriority(v); }, [onTogglePriority]);
@@ -434,6 +482,7 @@ export function FilterCommandMenu({
     const drillTitle = activeCategory
       ? FILTER_CATEGORY_TITLES[activeCategory]
       : "Filters";
+    const slideVariants = shouldReduceMotion ? stepSlideReduced : stepSlide;
 
     return (
       <Drawer open={open} onOpenChange={handleOpenChange}>
@@ -466,34 +515,52 @@ export function FilterCommandMenu({
             </div>
           </DrawerHeader>
 
-          {isSearching ? (
-            <div className="min-h-0 flex-1 overflow-hidden">
-              <FilterFlatSearch
-                search={search}
-                onSearchChange={handleSearchChange}
-                showTypeFilter={showTypeFilter}
-                showSprintFilter={showSprintFilter}
-                showAssigneeFilter={showAssigneeFilter}
-                {...sharedProps}
-              />
-            </div>
-          ) : activeCategory ? (
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-              <FilterCategorySubmenu
-                category={activeCategory}
-                onClose={handleBackToCategories}
-                showTitle={false}
-                className="w-full min-w-0"
-                listClassName="max-h-none overflow-visible p-1.5"
-                {...sharedProps}
-              />
-            </div>
-          ) : (
-            <div className="flex min-h-0 flex-1 flex-col pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-              <MobileFilterSearch value={search} onValueChange={handleSearchChange} />
-              {renderCategoryList(false)}
-            </div>
-          )}
+          <div
+            className="flex min-h-0 flex-1 flex-col touch-pan-y"
+            {...swipeHandlers}
+          >
+            <AnimatePresence initial={false} mode="wait" custom={navDirection}>
+              <motion.div
+                key={mobilePanelKey}
+                custom={navDirection}
+                variants={slideVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={pmSnappy}
+                className="flex min-h-0 flex-1 flex-col"
+              >
+                {isSearching ? (
+                  <div className="min-h-0 flex-1 overflow-hidden">
+                    <FilterFlatSearch
+                      search={search}
+                      onSearchChange={handleSearchChange}
+                      showTypeFilter={showTypeFilter}
+                      showSprintFilter={showSprintFilter}
+                      showAssigneeFilter={showAssigneeFilter}
+                      {...sharedProps}
+                    />
+                  </div>
+                ) : activeCategory ? (
+                  <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+                    <FilterCategorySubmenu
+                      category={activeCategory}
+                      onClose={handleBackToCategories}
+                      showTitle={false}
+                      className="w-full min-w-0"
+                      listClassName="max-h-none overflow-visible p-1.5"
+                      {...sharedProps}
+                    />
+                  </div>
+                ) : (
+                  <div className="flex min-h-0 flex-1 flex-col pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+                    <MobileFilterSearch value={search} onValueChange={handleSearchChange} />
+                    {renderCategoryList(false)}
+                  </div>
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </div>
         </DrawerContent>
       </Drawer>
     );

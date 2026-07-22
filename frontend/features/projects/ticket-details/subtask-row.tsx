@@ -1,19 +1,39 @@
 "use client";
 
-import { memo } from "react";
+import { memo, type ReactNode } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { InlineStatus, InlinePriority, InlineAssignee } from "../views/card-inline-fields";
 import { getTicketDetailHref } from "../shared/format-ticket-key";
-import type { Ticket } from "@/types/projects";
 import type { ProjectStatusRecord } from "@/types/projects";
 
+export interface CompactTicketRowData {
+  id: number;
+  title: string;
+  status: string;
+  priority?: string | null;
+  points?: number | null;
+  ticketNumber?: number | null;
+  assigneeId?: string | null;
+  projectId?: number | null;
+  project?: { key?: string | null } | null;
+  assignee?: {
+    id: string;
+    name?: string | null;
+    firstName?: string | null;
+    lastName?: string | null;
+    email?: string | null;
+    image?: string | null;
+  } | null;
+}
+
 interface SubtaskRowProps {
-  subtask: Ticket;
+  subtask: CompactTicketRowData;
   projectId: number;
   projectKey: string | null | undefined;
   projectStatuses: ProjectStatusRecord[];
+  endAction?: ReactNode;
 }
 
 export const SubtaskRow = memo(function SubtaskRow({
@@ -21,32 +41,30 @@ export const SubtaskRow = memo(function SubtaskRow({
   projectId,
   projectKey,
   projectStatuses,
+  endAction,
 }: SubtaskRowProps) {
-  const href = getTicketDetailHref(
-    subtask.projectId ?? projectId,
-    subtask.project?.key ?? projectKey,
-    subtask.ticketNumber,
-  );
+  const resolvedProjectId = subtask.projectId ?? projectId;
+  const resolvedProjectKey = subtask.project?.key ?? projectKey;
+  const href =
+    subtask.ticketNumber != null
+      ? getTicketDetailHref(resolvedProjectId, resolvedProjectKey, subtask.ticketNumber)
+      : null;
 
   const isDone = subtask.status === "DONE";
   const displayKey =
-    subtask.project?.key && subtask.ticketNumber != null
-      ? `${subtask.project.key}-${subtask.ticketNumber}`
+    resolvedProjectKey && subtask.ticketNumber != null
+      ? `${resolvedProjectKey}-${subtask.ticketNumber}`
       : `#${subtask.ticketNumber ?? ""}`;
 
-  return (
-    <Link
-      href={href}
-      className="group flex items-center gap-2 rounded-lg bg-muted/30 px-2 py-1.5 hover:bg-muted/60 transition-colors"
-    >
-      <span
-        className="shrink-0"
-        onClick={stopProp}
-        onKeyDown={stopProp}
-      >
+  const rowClassName =
+    "group flex items-center gap-2 rounded-lg bg-muted/30 px-2 py-1.5 hover:bg-muted/60 transition-colors";
+
+  const rowBody = (
+    <>
+      <span className="shrink-0" onClick={stopProp} onKeyDown={stopProp}>
         <InlineStatus
           ticketId={subtask.id}
-          projectId={subtask.projectId ?? projectId}
+          projectId={resolvedProjectId}
           currentStatus={subtask.status}
           projectStatuses={projectStatuses}
         />
@@ -75,32 +93,36 @@ export const SubtaskRow = memo(function SubtaskRow({
         </Badge>
       )}
 
-      <span
-        className="shrink-0"
-        onClick={stopProp}
-        onKeyDown={stopProp}
-      >
+      <span className="shrink-0" onClick={stopProp} onKeyDown={stopProp}>
         <InlinePriority
           ticketId={subtask.id}
-          projectId={subtask.projectId ?? projectId}
+          projectId={resolvedProjectId}
           currentPriority={subtask.priority}
         />
       </span>
 
-      <span
-        className="shrink-0"
-        onClick={stopProp}
-        onKeyDown={stopProp}
-      >
+      <span className="shrink-0" onClick={stopProp} onKeyDown={stopProp}>
         <InlineAssignee
           ticketId={subtask.id}
-          projectId={subtask.projectId ?? projectId}
+          projectId={resolvedProjectId}
           currentAssigneeId={subtask.assigneeId}
           assignee={subtask.assignee ?? null}
         />
       </span>
-    </Link>
+
+      {endAction}
+    </>
   );
+
+  if (href) {
+    return (
+      <Link href={href} className={rowClassName}>
+        {rowBody}
+      </Link>
+    );
+  }
+
+  return <div className={rowClassName}>{rowBody}</div>;
 });
 
 function stopProp(e: React.MouseEvent | React.KeyboardEvent) {

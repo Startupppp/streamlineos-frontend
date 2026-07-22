@@ -26,7 +26,7 @@ interface TicketParentControlProps {
 }
 
 const FIELD_CONTROL_CLASS =
-  "flex w-full min-h-10 touch-manipulation items-center gap-1.5 rounded-md border border-input bg-background px-3 py-2 text-xs text-left transition-colors hover:bg-accent @[18rem]:min-h-9 md:min-h-9";
+  "flex h-9 w-full touch-manipulation items-center gap-1.5 rounded-md border border-input bg-background px-3 text-xs text-left transition-colors hover:bg-accent";
 
 export function TicketParentControl({
   ticket,

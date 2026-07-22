@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import { XIcon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +17,7 @@ import { useIsMobile } from "@/hooks/common/use-mobile";
 import { cn } from "@/lib/utils";
 import { PriorityBadge } from "../shared/priority-badge";
 import { StatusBadge } from "../shared/status-badge";
+import { pmSnappy } from "../shared/pm-motion";
 import { TicketSidebar } from "./ticket-sidebar";
 import { TicketTimeTracker } from "./ticket-time-tracker";
 import { WatcherList } from "./watcher-list";
@@ -106,8 +108,8 @@ function TicketDetailRightPanelBody({
   hideClose?: boolean;
 }) {
   return (
-    <div className="flex flex-col">
-      <div className="sticky top-0 z-10 shrink-0 border-b border-border bg-card px-4 py-3">
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="shrink-0 border-b border-border bg-card px-4 py-3 md:border md:border-l-0">
         <div className="relative flex items-center justify-center gap-2">
           <div className="flex min-w-0 flex-wrap items-center justify-center gap-1.5">
             <Badge variant="outline" className="hidden h-5 px-1.5 font-mono text-[11px] md:inline-flex">
@@ -137,25 +139,31 @@ function TicketDetailRightPanelBody({
         </div>
       </div>
 
-      <TicketSidebar
-        ticket={ticket}
-        ticketId={ticketId}
-        projectId={projectId}
-        projectKey={projectKey}
-        sprints={sprints}
-        statuses={statuses}
-        onAutoSave={onAutoSave}
-      />
-
-      <div className="space-y-4 bg-card px-4 py-3">
-        <TicketGitLinks projectId={projectId} ticketId={ticketId} />
-        <TicketTimeTracker
+      <ScrollArea
+        fill
+        className="min-h-0 flex-1"
+        viewportClassName="overscroll-contain"
+      >
+        <TicketSidebar
+          ticket={ticket}
           ticketId={ticketId}
           projectId={projectId}
-          timeSpent={ticket.timeSpent ?? null}
+          projectKey={projectKey}
+          sprints={sprints}
+          statuses={statuses}
+          onAutoSave={onAutoSave}
         />
-        <WatcherList projectId={projectId} ticketId={ticketId} />
-      </div>
+
+        <div className="space-y-4 bg-card px-4 py-3">
+          <TicketGitLinks projectId={projectId} ticketId={ticketId} />
+          <TicketTimeTracker
+            ticketId={ticketId}
+            projectId={projectId}
+            timeSpent={ticket.timeSpent ?? null}
+          />
+          <WatcherList projectId={projectId} ticketId={ticketId} />
+        </div>
+      </ScrollArea>
     </div>
   );
 }
@@ -175,6 +183,10 @@ export function TicketDetailRightPanel({
   asideClassName,
 }: TicketDetailRightPanelProps) {
   const isMobile = useIsMobile();
+  const shouldReduceMotion = useReducedMotion();
+  const panelTransition = shouldReduceMotion
+    ? { duration: 0 }
+    : pmSnappy;
 
   const handleClose = useCallback(() => {
     onOpenChange(false);
@@ -212,28 +224,41 @@ export function TicketDetailRightPanel({
           <DrawerHeader className="sr-only">
             <DrawerTitle>Ticket properties</DrawerTitle>
           </DrawerHeader>
-          <ScrollArea
-            fill
-            className="min-h-0 flex-1"
-            viewportClassName="overscroll-contain"
-          >
-            {isMobile ? (
-              <TicketDetailRightPanelBody {...bodyProps} hideClose />
-            ) : null}
-          </ScrollArea>
+          {isMobile ? (
+            <TicketDetailRightPanelBody {...bodyProps} hideClose />
+          ) : null}
         </DrawerContent>
       </Drawer>
 
-      {open ? (
-        <aside
-          className={cn(
-            "hidden min-w-0 shrink-0 border-border bg-card md:block md:min-h-0 md:overflow-y-auto md:border-l md:scrollbar-hide",
-            asideClassName,
-          )}
-        >
-          {!isMobile ? <TicketDetailRightPanelBody {...bodyProps} /> : null}
-        </aside>
-      ) : null}
+      <AnimatePresence initial={false}>
+        {open ? (
+          <motion.aside
+            key="ticket-detail-right-panel"
+            initial={
+              shouldReduceMotion ? false : { width: 0, opacity: 0 }
+            }
+            animate={{ width: "auto", opacity: 1 }}
+            exit={
+              shouldReduceMotion
+                ? { opacity: 0 }
+                : { width: 0, opacity: 0 }
+            }
+            transition={panelTransition}
+            className="hidden shrink-0 overflow-hidden border-border bg-card md:flex md:min-h-0 md:flex-col md:border-l"
+          >
+            <div
+              className={cn(
+                "flex min-h-0 min-w-0 flex-1 flex-col",
+                asideClassName,
+              )}
+            >
+              {!isMobile ? (
+                <TicketDetailRightPanelBody {...bodyProps} />
+              ) : null}
+            </div>
+          </motion.aside>
+        ) : null}
+      </AnimatePresence>
     </>
   );
 }

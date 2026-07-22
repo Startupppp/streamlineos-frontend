@@ -165,10 +165,6 @@ export default function ProjectsPage() {
     setShowGroupingSidebar((prev) => !prev);
   }, []);
 
-  const handleCloseGroupingSidebar = useCallback(() => {
-    setShowGroupingSidebar(false);
-  }, []);
-
   const handleCreateOpenChange = useCallback(
     (open: boolean) => {
       setManualCreateOpen(open);
@@ -394,15 +390,13 @@ export default function ProjectsPage() {
               <div className="flex min-w-0 flex-1 flex-col">
                 <ProjectTable projects={visibleProjects} prefs={prefs} />
               </div>
-              {showGroupingSidebar ? (
-                <GroupingSidebar
-                  projects={allProjects}
-                  activeGroup={activeGroup}
-                  className="hidden lg:flex"
-                  onGroupSelect={setActiveGroup}
-                  onClose={handleCloseGroupingSidebar}
-                />
-              ) : null}
+              <GroupingSidebar
+                open={showGroupingSidebar}
+                onOpenChange={setShowGroupingSidebar}
+                projects={allProjects}
+                activeGroup={activeGroup}
+                onGroupSelect={setActiveGroup}
+              />
             </div>
           )}
 

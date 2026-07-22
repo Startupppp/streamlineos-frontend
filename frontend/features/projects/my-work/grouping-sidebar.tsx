@@ -4,8 +4,15 @@ import { memo, useCallback, useMemo } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useIsMobile } from "@/hooks/common/use-mobile";
 import { cn } from "@/lib/utils";
 import type { AllWorkTicket } from "@/types/projects";
 
@@ -79,17 +86,19 @@ const SidebarRow = memo(function SidebarRow({
   );
 });
 
-interface GroupingSidebarProps {
+interface GroupingSidebarBodyProps {
   tickets: AllWorkTicket[] | undefined;
   isLoading: boolean;
   onClose: () => void;
+  className?: string;
 }
 
-export const GroupingSidebar = memo(function GroupingSidebar({
+function GroupingSidebarBody({
   tickets,
   isLoading,
   onClose,
-}: GroupingSidebarProps) {
+  className,
+}: GroupingSidebarBodyProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -201,7 +210,7 @@ export const GroupingSidebar = memo(function GroupingSidebar({
   }, [tickets]);
 
   return (
-    <aside className="flex h-full w-[220px] shrink-0 flex-col gap-2 overflow-hidden rounded-xl border border-border/80 bg-card/85 shadow-sm backdrop-blur-md supports-[backdrop-filter]:bg-card/75">
+    <div className={cn("flex h-full min-h-0 flex-col gap-2 overflow-hidden", className)}>
       <div className="flex items-center justify-between border-b border-border/50 px-3 py-2">
         <span className="text-xs font-semibold text-foreground">Group by</span>
         <Button
@@ -285,7 +294,68 @@ export const GroupingSidebar = memo(function GroupingSidebar({
           </TabsContent>
         </div>
       </Tabs>
-    </aside>
+    </div>
+  );
+}
+
+interface GroupingSidebarProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  tickets: AllWorkTicket[] | undefined;
+  isLoading: boolean;
+}
+
+export const GroupingSidebar = memo(function GroupingSidebar({
+  open,
+  onOpenChange,
+  tickets,
+  isLoading,
+}: GroupingSidebarProps) {
+  const isMobile = useIsMobile();
+
+  const handleClose = useCallback(() => {
+    onOpenChange(false);
+  }, [onOpenChange]);
+
+  const bodyProps = {
+    tickets,
+    isLoading,
+    onClose: handleClose,
+  };
+
+  return (
+    <>
+      <Drawer
+        open={isMobile && open}
+        onOpenChange={onOpenChange}
+        shouldScaleBackground={false}
+      >
+        <DrawerContent
+          className={cn(
+            "flex max-h-[min(92dvh,40rem)] flex-col gap-0 overflow-hidden rounded-t-xl border border-border bg-card p-0 shadow-lg",
+            "pb-[max(0.5rem,env(safe-area-inset-bottom))]",
+            "motion-reduce:transition-none",
+            "[&>[data-slot=drawer-handle]]:mt-2 [&>[data-slot=drawer-handle]]:mb-1 [&>[data-slot=drawer-handle]]:h-1.5 [&>[data-slot=drawer-handle]]:w-10 [&>[data-slot=drawer-handle]]:bg-muted-foreground/25",
+          )}
+        >
+          <DrawerHeader className="sr-only">
+            <DrawerTitle>Group by</DrawerTitle>
+          </DrawerHeader>
+          {isMobile ? (
+            <GroupingSidebarBody {...bodyProps} className="min-h-0 flex-1" />
+          ) : null}
+        </DrawerContent>
+      </Drawer>
+
+      {open ? (
+        <aside
+          className="hidden h-full w-[220px] shrink-0 flex-col overflow-hidden rounded-xl border border-border/80 bg-card/85 shadow-sm backdrop-blur-md supports-[backdrop-filter]:bg-card/75 md:flex"
+          aria-label="Group by"
+        >
+          {!isMobile ? <GroupingSidebarBody {...bodyProps} /> : null}
+        </aside>
+      ) : null}
+    </>
   );
 });
 

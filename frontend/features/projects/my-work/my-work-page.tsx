@@ -422,13 +422,12 @@ export function MyWorkPage() {
                 )}
               </div>
 
-              {showGroupingSidebar ? (
-                <GroupingSidebar
-                  tickets={activeData?.data}
-                  isLoading={isLoading}
-                  onClose={handleToggleSidebar}
-                />
-              ) : null}
+              <GroupingSidebar
+                open={showGroupingSidebar}
+                onOpenChange={setShowGroupingSidebar}
+                tickets={activeData?.data}
+                isLoading={isLoading}
+              />
             </div>
           </PmSection>
         </PmPageShell>

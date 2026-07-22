@@ -286,7 +286,7 @@ export function ChannelInfoPanel({
       : (channel?.name ?? "Channel");
 
   return (
-    <div className="flex flex-col h-full w-80">
+    <div className="flex h-full w-80 min-w-0 flex-col overflow-hidden">
       <div className="h-[56px] px-4 border-b border-border/40 flex items-center justify-between shrink-0">
         <h3 className="text-[14px] font-bold">Details</h3>
         <div className="flex items-center gap-1">
@@ -308,8 +308,8 @@ export function ChannelInfoPanel({
         </div>
       </div>
 
-      <ScrollArea className="flex-1">
-        <div className="p-4">
+      <ScrollArea className="min-w-0 flex-1">
+        <div className="min-w-0 w-full max-w-full overflow-x-hidden p-4">
           {editing ? (
             <div className="space-y-4 mb-6">
               <div className="flex justify-center">
@@ -627,7 +627,7 @@ export function ChannelInfoPanel({
                             })
                           }
                           disabled={muteChannel.isPending}
-                          className="px-2 rounded-lg border border-border/50 text-[11px] font-medium hover:bg-muted/40 transition-colors disabled:opacity-50"
+                          className="inline-flex h-8 items-center justify-center px-2 rounded-lg border border-border/50 text-[11px] font-medium hover:bg-muted/40 transition-colors disabled:opacity-50"
                         >
                           {opt.label}
                         </button>

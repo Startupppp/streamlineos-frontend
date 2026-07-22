@@ -880,7 +880,7 @@ class FeedbucketWidget {
 
   private positionPanel(): void {
     if (this.isMobileViewport()) {
-      if (this.panel.parentElement !== this.shadowRoot) {
+      if (this.panel.parentNode !== this.shadowRoot) {
         this.shadowRoot.appendChild(this.panel);
       }
       this.panel.classList.add("is-sheet");

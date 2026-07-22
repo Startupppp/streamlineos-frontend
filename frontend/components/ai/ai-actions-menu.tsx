@@ -10,6 +10,9 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -52,6 +55,7 @@ interface AiActionsMenuProps {
   align?: "start" | "end";
   disabled?: boolean;
   className?: string;
+  asSubmenu?: boolean;
 }
 
 type ActionState =
@@ -68,6 +72,7 @@ export function AiActionsMenu({
   align = "end",
   disabled = false,
   className,
+  asSubmenu = false,
 }: AiActionsMenuProps) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   const [open, setOpen] = React.useState(false);
@@ -107,43 +112,64 @@ export function AiActionsMenu({
 
   if (actions.length === 0) return null;
 
+  const actionItems = actions.map((action) => (
+    <DropdownMenuItem
+      key={action.key}
+      disabled={disabled}
+      onSelect={() => {
+        void runAction(action);
+      }}
+      className="flex flex-col items-start gap-0.5"
+    >
+      <span className="text-[13px]">{action.label}</span>
+      {action.description ? (
+        <span className="text-[11px] text-muted-foreground">{action.description}</span>
+      ) : null}
+    </DropdownMenuItem>
+  ));
+
+  const trigger = asSubmenu ? (
+    <DropdownMenuSub>
+      <DropdownMenuSubTrigger disabled={disabled} className={className}>
+        <SparklesIcon ref={iconRef} className="h-3.5 w-3.5 text-primary" />
+        {triggerLabel}
+      </DropdownMenuSubTrigger>
+      <DropdownMenuSubContent className="w-56">
+        <DropdownMenuLabel className="text-[11px] font-medium text-muted-foreground">
+          {menuLabel}
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {actionItems}
+      </DropdownMenuSubContent>
+    </DropdownMenuSub>
+  ) : (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={disabled}
+          className={cn("h-8 gap-1.5 text-xs", className)}
+          {...hoverHandlers}
+        >
+          <SparklesIcon ref={iconRef} className="h-3.5 w-3.5 text-primary" />
+          {triggerLabel}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align={align} className="w-56">
+        <DropdownMenuLabel className="text-[11px] font-medium text-muted-foreground">
+          {menuLabel}
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {actionItems}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={disabled}
-            className={cn("h-8 gap-1.5 text-xs", className)}
-            {...hoverHandlers}
-          >
-            <SparklesIcon ref={iconRef} className="h-3.5 w-3.5 text-primary" />
-            {triggerLabel}
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align={align} className="w-56">
-          <DropdownMenuLabel className="text-[11px] font-medium text-muted-foreground">
-            {menuLabel}
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {actions.map((action) => (
-            <DropdownMenuItem
-              key={action.key}
-              onSelect={() => {
-                void runAction(action);
-              }}
-              className="flex flex-col items-start gap-0.5"
-            >
-              <span className="text-[13px]">{action.label}</span>
-              {action.description && (
-                <span className="text-[11px] text-muted-foreground">{action.description}</span>
-              )}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {trigger}
 
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
