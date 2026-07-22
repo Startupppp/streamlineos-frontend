@@ -55,15 +55,23 @@ interface StageRowProps {
 
 function StageRow({ row, canAct, isActive, runId, onChanged }: StageRowProps) {
   const [rejectOpen, setRejectOpen] = useState(false);
+  const [approveOpen, setApproveOpen] = useState(false);
   const [comment, setComment] = useState("");
   const { mutate: approve, isPending: approvePending } = useApproveStage();
   const { mutate: reject, isPending: rejectPending } = useRejectStage();
 
-  function handleApprove() {
+  function handleApproveOpen() { setApproveOpen(true); }
+  function handleApproveCancel() { setApproveOpen(false); }
+
+  function handleApproveConfirm() {
     approve(
       { runId, approvalId: row.id },
       {
-        onSuccess: () => { toast.success("Stage approved"); onChanged?.(); },
+        onSuccess: () => {
+          setApproveOpen(false);
+          toast.success("Stage approved");
+          onChanged?.();
+        },
         onError: (err) => { toast.error(getErrorMessage(err)); },
       },
     );
@@ -110,7 +118,7 @@ function StageRow({ row, canAct, isActive, runId, onChanged }: StageRowProps) {
 
       {isActive && canAct && row.isCurrentUserApprover !== false && (
         <div className="flex gap-2 pl-9 pt-1">
-          <Button size="sm" variant="outline" className="" onClick={handleApprove} disabled={approvePending}>
+          <Button size="sm" variant="outline" className="" onClick={handleApproveOpen} disabled={approvePending}>
             <CheckCircle2 className="mr-1 h-3.5 w-3.5" /> Approve
           </Button>
           <Button size="sm" variant="outline" className="text-destructive border-destructive/40 hover:bg-destructive/10" onClick={handleRejectOpen} disabled={rejectPending}>
@@ -123,6 +131,23 @@ function StageRow({ row, canAct, isActive, runId, onChanged }: StageRowProps) {
           Waiting on{row.approverName ? ` ${row.approverName}` : " approver"} to act
         </p>
       )}
+
+      <Dialog open={approveOpen} onOpenChange={setApproveOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Approve Stage?</DialogTitle>
+            <DialogDescription>
+              Confirm approval of &quot;{row.stageName}&quot;. This advances the payroll approval chain.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleApproveCancel} disabled={approvePending}>Cancel</Button>
+            <Button onClick={handleApproveConfirm} disabled={approvePending}>
+              {approvePending ? "Approving…" : "Approve"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
         <DialogContent>

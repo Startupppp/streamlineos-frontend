@@ -17,6 +17,7 @@ import { formatMoney, formatMonth } from "@/features/payroll/shared/payroll-form
 import { RunStatusBadge } from "@/features/payroll/runs/run-status-badge";
 import { ChecklistCard } from "@/features/payroll/runs/checklist-card";
 import { CommandCenterPanels } from "@/features/payroll/runs/command-center-panels";
+import { ReadinessRail } from "@/features/payroll/shared/readiness-rail";
 import { EmptyPayroll } from "@/components/illustrations";
 import { useCommandCenter } from "@/hooks/api/payroll/command-center";
 import { useCreateRun } from "@/hooks/api/payroll/runs";
@@ -181,6 +182,85 @@ export default function PayrollCommandCenterPage() {
 
       {!isLoading && data && (
         <div className="flex flex-1 min-h-0 flex-col gap-4">
+          <ReadinessRail
+            canPay={
+              !!header &&
+              header.exceptionCounts.BLOCKER === 0 &&
+              (header.status === "LOCKED" ||
+                header.status === "APPROVED" ||
+                header.status === "PAID")
+            }
+            blockers={[
+              ...(header && header.exceptionCounts.BLOCKER > 0
+                ? [
+                    {
+                      id: "blockers",
+                      label: `${header.exceptionCounts.BLOCKER} blocking exception(s)`,
+                      href: runId ? `/payroll/runs/${runId}?tab=exceptions` : undefined,
+                    },
+                  ]
+                : []),
+              ...(header?.status === "PREPARING" || header?.status === "EXCEPTIONS_FOUND"
+                ? [
+                    {
+                      id: "not-ready",
+                      label: "Run is not approved/locked yet",
+                      href: runId ? `/payroll/runs/${runId}` : undefined,
+                    },
+                  ]
+                : []),
+            ]}
+            changes={
+              data.panels.varianceSummary
+                ? [
+                    {
+                      id: "net-delta",
+                      label: `Net variance ${data.panels.varianceSummary.netDelta} vs prior period`,
+                    },
+                    {
+                      id: "changed",
+                      label: `${data.panels.varianceSummary.changedEmployees} employee(s) changed`,
+                    },
+                  ]
+                : []
+            }
+            nextAction={
+              header?.status === "EXCEPTIONS_FOUND"
+                ? {
+                    label: "Resolve blockers",
+                    href: runId ? `/payroll/runs/${runId}?tab=exceptions` : "/payroll/runs",
+                  }
+                : header?.status === "PREVIEW_READY" || header?.status === "DRAFT"
+                  ? {
+                      label: "Review & submit for approval",
+                      href: runId ? `/payroll/runs/${runId}` : "/payroll/runs",
+                    }
+                  : header?.status === "PENDING_APPROVAL"
+                    ? {
+                        label: "Review approval stages",
+                        href: runId ? `/payroll/runs/${runId}` : "/payroll/runs",
+                      }
+                    : header?.status === "LOCKED"
+                      ? {
+                          label: "Go to bank transfers",
+                          href: `/payroll/bank-transfers?runId=${runId ?? ""}`,
+                        }
+                      : header?.status === "PAID"
+                        ? {
+                            label: "Publish payslips",
+                            href: runId ? `/payroll/runs/${runId}` : "/payroll/payslips",
+                          }
+                        : {
+                            label: "Open run detail",
+                            href: runId ? `/payroll/runs/${runId}` : "/payroll/runs",
+                          }
+            }
+            summary={
+              header
+                ? `${header.employeeCount} employees · Net ${formatMoney(header.netTotal)} · ${excCount} open exception(s)`
+                : undefined
+            }
+          />
           <StatCardGrid cols={5}>
             <StatCard
               label="Net Payable"

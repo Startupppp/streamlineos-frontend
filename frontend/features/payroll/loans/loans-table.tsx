@@ -145,6 +145,24 @@ export function LoansTable() {
         isLoading={isLoading}
         minWidth="780px"
         pagination={{ pageSize: 20 }}
+        mobileCard={(row) => (
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-medium truncate">{row.user.name ?? row.user.email}</p>
+              <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground shrink-0">
+                {row.status}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+              <span className="font-mono tabular-nums text-foreground">
+                ₹{Number(row.amount).toLocaleString("en-IN")}
+              </span>
+              <span>
+                EMI {row.paidEmis ?? 0}/{row.totalEmis ?? "—"}
+              </span>
+            </div>
+          </div>
+        )}
         emptyState={
           <EmptyState
             illustration={<EmptyPersonIllustration />}
