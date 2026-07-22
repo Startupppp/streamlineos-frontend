@@ -247,7 +247,7 @@ export function TeamsListPage() {
   const filtersBar = (
     <div className={FILTER_TOOLBAR_ROW}>
       <SearchInput
-        className="w-52"
+        className="w-full min-w-0 sm:w-52"
         placeholder="Search teams…"
         value={search}
         onValueChange={handleSearchChange}

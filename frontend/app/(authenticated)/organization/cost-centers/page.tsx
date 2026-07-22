@@ -355,7 +355,6 @@ export default function OrgCostCentersPage() {
     <PageWrapper
       title="Cost Centers"
       subtitle="Cost centers for expense tracking."
-      mobileFiltersInline
       actions={
         <div className="flex w-full items-center gap-2 sm:w-auto">
           <Button

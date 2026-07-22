@@ -509,7 +509,6 @@ export default function OrgBranchesPage() {
     <PageWrapper
       title="Branches"
       subtitle="Branches within your organization."
-      mobileFiltersInline
       actions={
         <div className="flex w-full items-center gap-2 sm:w-auto">
           <Button

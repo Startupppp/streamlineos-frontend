@@ -403,7 +403,6 @@ export default function BusinessUnitsPage() {
       <PageWrapper
         title="Business Units"
         subtitle="Top-level divisions of your organization."
-        mobileFiltersInline
         actions={
           <div className="flex w-full items-center gap-2 sm:w-auto">
             <Button

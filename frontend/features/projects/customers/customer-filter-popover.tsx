@@ -129,7 +129,7 @@ export function CustomerFilterPopover({
           variant="outline"
           size="sm"
           className={cn(
-            "h-8 gap-1.5 text-xs",
+            "h-9 gap-1.5 text-xs",
             hasAny && "border-primary/40 bg-primary/5 text-primary",
           )}
         >

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { refineDateOrder, refineNotBeforeToday } from "@/lib/date-constraints";
 
 export const cycleSchema = z.object({
   name: z.string()
@@ -12,12 +13,19 @@ export const cycleSchema = z.object({
   periodEnd: z.string().min(1, "Period end is required"),
   deadline: z.string().min(1, "Deadline is required"),
 }).superRefine((data, ctx) => {
-  if (data.periodStart && data.periodEnd && data.periodEnd <= data.periodStart) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Period end must be after period start", path: ["periodEnd"] });
-  }
-  if (data.periodEnd && data.deadline && data.deadline <= data.periodEnd) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Deadline must be after period end", path: ["deadline"] });
-  }
+  refineNotBeforeToday(data.periodStart, ctx, "periodStart", "Period start cannot be in the past");
+  refineDateOrder(data, ctx, {
+    startKey: "periodStart",
+    endKey: "periodEnd",
+    mode: "after",
+    message: "Period end must be after period start",
+  });
+  refineDateOrder(data, ctx, {
+    startKey: "periodEnd",
+    endKey: "deadline",
+    mode: "after",
+    message: "Deadline must be after period end",
+  });
 });
 
 export type CycleFormValues = z.infer<typeof cycleSchema>;

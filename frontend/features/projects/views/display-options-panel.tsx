@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback } from "react";
+import { memo, useCallback, type MouseEvent as ReactMouseEvent } from "react";
 import { Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -191,7 +191,7 @@ function PropertyChip({ label, active, onToggle }: PropertyChipProps) {
       type="button"
       onClick={onToggle}
       className={cn(
-        "border rounded px-2 py-1 text-xs transition-colors",
+        "flex h-9 items-center justify-center rounded border px-2 text-xs transition-colors",
         active
           ? "bg-primary/10 border-primary/40 text-primary"
           : "border-border text-muted-foreground hover:border-primary/30",
@@ -210,12 +210,21 @@ interface ToggleRowProps {
 }
 
 function ToggleRow({ id, label, checked, onCheckedChange }: ToggleRowProps) {
+  function handleLabelClick(event: ReactMouseEvent<HTMLLabelElement>) {
+    event.preventDefault();
+    onCheckedChange(!checked);
+  }
+
   return (
-    <div className="flex items-center justify-between gap-3 py-1">
-      <Label htmlFor={id} className="cursor-pointer text-xs font-normal">
+    <div className="flex h-9 items-center justify-between gap-3">
+      <Label
+        htmlFor={id}
+        onClick={handleLabelClick}
+        className="cursor-pointer text-xs font-normal"
+      >
         {label}
       </Label>
-      <Switch id={id} checked={checked} onCheckedChange={onCheckedChange} className="scale-75" />
+      <Switch id={id} checked={checked} onCheckedChange={onCheckedChange} />
     </div>
   );
 }
@@ -332,7 +341,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
                 <div className="space-y-1.5">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Columns</p>
                   <Select value={options.columnBy} onValueChange={handleColumnByChange}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="h-9 w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -345,7 +354,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
                 <div className="space-y-1.5">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Rows</p>
                   <Select value={options.rowBy} onValueChange={handleRowByChange}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="h-9 w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -362,7 +371,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
                 <div className="space-y-1.5">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Group by</p>
                   <Select value={options.groupBy} onValueChange={handleGroupByChange}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="h-9 w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -375,7 +384,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
                 <div className="space-y-1.5">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Sub-group</p>
                   <Select value={options.rowBy} onValueChange={handleRowByChange}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="h-9 w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -396,7 +405,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
             <div className="space-y-1.5">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Ordering</p>
               <Select value={options.orderBy} onValueChange={handleOrderByChange}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="h-9 w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -419,7 +428,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
         <div className="space-y-1.5">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Completed issues</p>
           <Select value={options.completedIssues} onValueChange={handleCompletedIssuesChange}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="h-9 w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -433,7 +442,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
         {showShowSection && (
           <>
             <Separator />
-            <div className="space-y-0.5">
+            <div className="space-y-0">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Show</p>
               <ToggleRow id="disp-sub-issues" label="Sub-issues" checked={options.showSubIssues} onCheckedChange={handleShowSubIssues} />
               {isBoard && (
@@ -474,7 +483,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
           variant="ghost"
           size="sm"
           onClick={handleReset}
-          className="w-full h-7 text-xs text-muted-foreground"
+          className="h-9 w-full text-xs text-muted-foreground"
         >
           Reset to defaults
         </Button>

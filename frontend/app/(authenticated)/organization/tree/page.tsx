@@ -250,7 +250,6 @@ export default function OrgTreePage() {
   return (
     <RequireModule module="HR">
       <PageWrapper
-        mobileFiltersInline
         title="Organization Tree"
         subtitle="Full hierarchy from business units down to teams"
         filters={

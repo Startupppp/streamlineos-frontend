@@ -452,7 +452,6 @@ export default function OrgTeamsPage() {
     <PageWrapper
       title="Teams"
       subtitle="Teams within departments."
-      mobileFiltersInline
       actions={
         <div className="flex w-full items-center gap-2 sm:w-auto">
           <Button
@@ -477,7 +476,7 @@ export default function OrgTeamsPage() {
         </div>
       }
       filters={
-        <div className="min-w-0 w-full flex-1 md:min-w-[160px] md:max-w-xs">
+        <div className="min-w-0 w-full flex-1 sm:w-auto sm:min-w-[160px] sm:max-w-xs sm:flex-none">
           <SearchInput placeholder="Search teams…" value={search} onValueChange={handleSearchInputChange} />
         </div>
       }

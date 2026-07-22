@@ -430,7 +430,6 @@ export function UsersPage() {
       <PageWrapper
         title="Users"
         subtitle="Manage members, roles, and access."
-        mobileFiltersInline
         actions={
           <div className="grid w-full grid-cols-3 gap-2 sm:flex sm:w-auto sm:flex-nowrap sm:justify-end">
             <DropdownMenu>

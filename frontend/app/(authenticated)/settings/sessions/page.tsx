@@ -173,7 +173,6 @@ export default function SessionsPage() {
     <PageWrapper
       title="Active Sessions"
       subtitle="Manage where you're signed in. Revoking a session signs you out on that device."
-      mobileFiltersInline
       actions={
         <AnimatedIconButton
           icon={LogoutIcon}

@@ -3,10 +3,14 @@
 import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "sonner";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  clearEndIfInvalid,
+  planningEndPickerProps,
+  planningStartPickerProps,
+} from "@/lib/date-constraints";
 import { useCreateTrainingProgram } from "@/hooks/api/hr/training";
 import {
   Form,
@@ -27,21 +31,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-
-const schema = z.object({
-  name: z.string().min(1, "Name is required"),
-  description: z.string().optional(),
-  type: z.enum(["MANDATORY", "OPTIONAL", "COMPLIANCE"]),
-  format: z.enum(["CLASSROOM", "VIRTUAL", "BLENDED", "SELF_PACED"]),
-  startDate: z.string().min(1, "Start date is required"),
-  endDate: z.string().optional(),
-  venue: z.string().optional(),
-  virtualLink: z.string().optional(),
-  maxCapacity: z.string().optional(),
-  isMandatory: z.boolean(),
-});
-
-type FormValues = z.infer<typeof schema>;
+import {
+  createProgramSchema,
+  type CreateProgramFormValues,
+} from "./create-program-schema";
 
 interface Props {
   open: boolean;
@@ -50,8 +43,8 @@ interface Props {
 
 export function CreateProgramSheet({ open, onOpenChange }: Props) {
   const createProgram = useCreateTrainingProgram();
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+  const form = useForm<CreateProgramFormValues>({
+    resolver: zodResolver(createProgramSchema),
     defaultValues: {
       name: "",
       description: "",
@@ -66,8 +59,24 @@ export function CreateProgramSheet({ open, onOpenChange }: Props) {
     },
   });
 
+  const watchedStartDate = form.watch("startDate");
+  const startBounds = planningStartPickerProps();
+  const endBounds = planningEndPickerProps({
+    startDate: watchedStartDate,
+    mode: "after",
+  });
+
+  function handleStartDateChange(value: string) {
+    form.setValue("startDate", value, { shouldValidate: true });
+    const currentEnd = form.getValues("endDate") ?? "";
+    const nextEnd = clearEndIfInvalid(value, currentEnd, "after");
+    if (nextEnd !== currentEnd) {
+      form.setValue("endDate", nextEnd, { shouldValidate: true });
+    }
+  }
+
   const onSubmit = useCallback(
-    (data: FormValues) => {
+    (data: CreateProgramFormValues) => {
       const maxCapacityNum = data.maxCapacity ? parseInt(data.maxCapacity, 10) : undefined;
       createProgram.mutate(
         {
@@ -209,7 +218,15 @@ export function CreateProgramSheet({ open, onOpenChange }: Props) {
                     Start Date
                   </FormLabel>
                   <FormControl>
-                    <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
+                    <DatePicker
+                      value={field.value ?? ""}
+                      onChange={handleStartDateChange}
+                      placeholder="Pick a date"
+                      className="text-sm"
+                      fromDate={startBounds.fromDate}
+                      fromYear={startBounds.fromYear}
+                      toYear={startBounds.toYear}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -226,7 +243,15 @@ export function CreateProgramSheet({ open, onOpenChange }: Props) {
                     <span className="normal-case font-normal text-muted-foreground tracking-normal">(optional)</span>
                   </FormLabel>
                   <FormControl>
-                    <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
+                    <DatePicker
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                      placeholder="Pick a date"
+                      className="text-sm"
+                      fromDate={endBounds.fromDate}
+                      fromYear={endBounds.fromYear}
+                      toYear={endBounds.toYear}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

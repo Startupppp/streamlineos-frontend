@@ -63,7 +63,6 @@ import {
 } from "@/components/ui/accordion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
-import { EmptyState } from "@/components/ui/empty-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { PM_PANEL, PM_ROW } from "@/features/projects/shared/pm-chrome";
@@ -93,20 +92,29 @@ function tokenStatus(token: AgentToken): "active" | "revoked" | "expired" {
 function StatusBadge({ status }: { status: "active" | "revoked" | "expired" }) {
   if (status === "active") {
     return (
-      <Badge variant="outline" className="border-emerald-500/40 text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20">
+      <Badge
+        variant="outline"
+        className="border-emerald-500/40 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
+      >
         Active
       </Badge>
     );
   }
   if (status === "revoked") {
     return (
-      <Badge variant="outline" className="border-destructive/40 text-red-600 bg-red-50 dark:bg-red-950/20">
+      <Badge
+        variant="outline"
+        className="border-destructive/40 bg-red-50 text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300"
+      >
         Revoked
       </Badge>
     );
   }
   return (
-    <Badge variant="outline" className="border-amber-500/40 text-amber-600 bg-amber-50 dark:bg-amber-950/20">
+    <Badge
+      variant="outline"
+      className="border-amber-500/40 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300"
+    >
       Expired
     </Badge>
   );
@@ -166,20 +174,39 @@ function TokenRow({
 
 function TokenListSkeleton() {
   return (
-    <div className="space-y-0">
-      {Array.from({ length: 8 }).map((_, i) => (
-        <div key={i} className="flex items-center gap-3 py-3 border-b border-border/60 last:border-0">
-          <div className="flex-1 space-y-1.5">
+    <div className="overflow-hidden rounded-lg border border-border/50">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div
+          key={i}
+          className="flex items-center gap-3 border-b border-border/60 px-3 py-3 last:border-0"
+        >
+          <div className="min-w-0 flex-1 space-y-1.5">
             <div className="flex items-center gap-2">
               <Skeleton className="h-4 w-28" />
-              <Skeleton className="h-5 w-20 rounded" />
+              <Skeleton className="h-5 w-16 rounded" />
               <Skeleton className="h-5 w-14 rounded-full" />
             </div>
-            <Skeleton className="h-3 w-48" />
+            <Skeleton className="h-3 w-40 max-w-full" />
           </div>
-          <Skeleton className="h-8 w-14 rounded" />
+          <Skeleton className="h-7 w-14 shrink-0 rounded" />
         </div>
       ))}
+    </div>
+  );
+}
+
+function TokensEmptyHint() {
+  return (
+    <div className="flex items-start gap-3 rounded-lg border border-dashed border-border/70 bg-muted/40 px-3 py-3">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted">
+        <Bot className="h-4 w-4 text-muted-foreground" aria-hidden />
+      </div>
+      <div className="min-w-0 pt-0.5">
+        <p className="text-sm font-medium text-foreground">No tokens yet</p>
+        <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+          Use New token above to connect an AI agent to your projects.
+        </p>
+      </div>
     </div>
   );
 }
@@ -229,20 +256,23 @@ function SetupHelp() {
   const claudeSnippet = `claude mcp add streamlineos -e STREAMLINEOS_TOKEN=<your-token> -e STREAMLINEOS_API_URL=${apiUrl} -- node <repo>/backend/scripts/mcp-server.mjs`;
 
   return (
-    <Accordion type="single" collapsible className="mt-4">
-      <AccordionItem value="setup" className="border border-border/60 rounded-lg px-4">
-        <AccordionTrigger className="text-sm font-medium hover:no-underline py-3">
+    <Accordion type="single" collapsible className="border-t border-border/60">
+      <AccordionItem value="setup" className="border-0">
+        <AccordionTrigger className="py-2.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:no-underline">
           Setup instructions
         </AccordionTrigger>
-        <AccordionContent className="pb-4 space-y-4">
+        <AccordionContent className="space-y-3 pb-1">
           <p className="text-xs text-muted-foreground">
-            Full documentation at{" "}
-            <code className="text-xs bg-muted px-1 rounded">docs/mcp-agent-access.md</code>.
+            See{" "}
+            <code className="rounded bg-muted px-1 text-[11px]">docs/mcp-agent-access.md</code>{" "}
+            for full docs.
           </p>
           <div className="space-y-1.5">
-            <p className="text-xs font-medium">Cursor — <code className="bg-muted px-1 rounded">.cursor/mcp.json</code></p>
-            <div className="relative bg-muted rounded-md p-3">
-              <pre className="text-xs font-mono whitespace-pre-wrap break-all leading-relaxed pr-7">
+            <p className="text-xs font-medium text-foreground">
+              Cursor — <code className="rounded bg-muted px-1 text-[11px]">.cursor/mcp.json</code>
+            </p>
+            <div className="relative rounded-md bg-muted p-3">
+              <pre className="pr-7 font-mono text-xs leading-relaxed break-all whitespace-pre-wrap">
                 {cursorSnippet}
               </pre>
               <div className="absolute top-2 right-2">
@@ -251,9 +281,9 @@ function SetupHelp() {
             </div>
           </div>
           <div className="space-y-1.5">
-            <p className="text-xs font-medium">Claude Code</p>
-            <div className="relative bg-muted rounded-md p-3">
-              <pre className="text-xs font-mono whitespace-pre-wrap break-all leading-relaxed pr-7">
+            <p className="text-xs font-medium text-foreground">Claude Code</p>
+            <div className="relative rounded-md bg-muted p-3">
+              <pre className="pr-7 font-mono text-xs leading-relaxed break-all whitespace-pre-wrap">
                 {claudeSnippet}
               </pre>
               <div className="absolute top-2 right-2">
@@ -472,22 +502,23 @@ export function AgentTokensSection() {
   }, [refetch]);
 
   return (
-    <div className={cn(PM_PANEL, "space-y-5 p-5")}>
-      <div className="flex min-w-0 items-start justify-between gap-4">
-        <div className="min-w-0 space-y-1">
+    <div className={cn(PM_PANEL, "space-y-4 p-4 sm:p-5")}>
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+        <div className="min-w-0 space-y-0.5">
           <div className="flex items-center gap-2">
-            <Bot className="h-4 w-4 shrink-0 text-primary" />
-            <h3 className="text-sm font-semibold">AI Agent Access (MCP)</h3>
+            <Bot className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+            <h3 className="text-sm font-semibold tracking-tight text-foreground">
+              AI Agent Access (MCP)
+            </h3>
           </div>
-          <p className="max-w-lg text-xs leading-relaxed text-muted-foreground">
-            Generate tokens to connect Cursor or Claude Code via the Model Context Protocol.
-            Agents can read tickets, view attached images, post comments, and move tickets to
-            In Review — scoped to your project access only.
+          <p className="max-w-md text-xs leading-relaxed text-muted-foreground">
+            Tokens for Cursor or Claude Code. Agents can read tickets, comment, and move work to
+            In Review — scoped to your access.
           </p>
         </div>
         <AnimatedIconButton
           size="sm"
-          className="shrink-0"
+          className="h-9 w-full shrink-0 sm:h-8 sm:w-auto"
           onClick={handleOpenDialog}
           icon={PlusIcon}
           iconSize={16}
@@ -506,19 +537,14 @@ export function AgentTokensSection() {
           onRetry={handleRetry}
           compact
         />
-      ) : !tokens || tokens.length === 0 ? (
-        <EmptyState
-          compact
-          title="No agent tokens yet"
-          description="Create a token to connect Cursor or Claude Code to your projects."
-          action={{ label: "New token", onClick: handleOpenDialog }}
-        />
-      ) : (
+      ) : tokens && tokens.length > 0 ? (
         <div className="overflow-hidden rounded-lg border border-border/50">
           {tokens.map((token) => (
             <TokenRow key={token.id} token={token} onRevoke={handleRevoke} />
           ))}
         </div>
+      ) : (
+        <TokensEmptyHint />
       )}
 
       <SetupHelp />

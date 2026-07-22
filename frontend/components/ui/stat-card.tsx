@@ -127,11 +127,13 @@ export function StatCardGrid({
     <div
       className={cn(
         "grid w-full min-w-0 shrink-0 gap-3",
-        "[&>*]:min-w-0 [&>*]:h-full",
+        "overflow-x-auto scrollbar-hide touch-pan-x snap-x snap-mandatory",
+        "md:overflow-x-visible md:snap-none",
+        "[&>*]:min-w-0 [&>*]:h-full [&>*]:snap-start",
         className,
       )}
       style={{
-        gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))`,
+        gridTemplateColumns: `repeat(${columnCount}, minmax(10rem, 1fr))`,
       }}
     >
       {children}

@@ -34,7 +34,7 @@ function PmAccessTrigger({
     <LoadingButton
       variant="outline"
       size="sm"
-      className="h-8 gap-1.5 text-xs"
+      className="h-9 min-h-9 gap-1.5 text-xs"
       isPending={isPending}
       loadingText="Setting up…"
       onClick={onClick}

@@ -578,8 +578,6 @@ export default function NotificationEventsPage() {
       title="Event Catalog"
       subtitle="View and configure per-event notification policy for your organization"
       filters={filters}
-      filtersCollapseBreakpoint="md"
-      mobileFiltersInline
     >
       {isLoading ? (
         <div className="rounded-lg border border-border overflow-hidden divide-y divide-border flex-1">

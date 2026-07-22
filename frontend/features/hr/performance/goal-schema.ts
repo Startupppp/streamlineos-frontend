@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { refineDateOrder, refineNotBeforeToday } from "@/lib/date-constraints";
 
 export const goalSchema = z
   .object({
@@ -26,13 +27,12 @@ export const goalSchema = z
     endDate: z.string().min(1, "End date is required"),
   })
   .superRefine((data, ctx) => {
-    if (data.startDate && data.endDate && data.endDate < data.startDate) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "End date must be after start date",
-        path: ["endDate"],
-      });
-    }
+    refineNotBeforeToday(data.startDate, ctx, "startDate", "Start date cannot be in the past");
+    refineNotBeforeToday(data.endDate, ctx, "endDate", "End date cannot be in the past");
+    refineDateOrder(data, ctx, {
+      mode: "after",
+      message: "End date must be after start date",
+    });
   });
 
 export type GoalFormValues = z.infer<typeof goalSchema>;

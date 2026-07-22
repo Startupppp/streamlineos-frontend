@@ -27,6 +27,13 @@ import { useHrGoals, useCreateHrGoal, type HrGoal } from "@/hooks/api/hr";
 import { useUpdateGoal } from "@/hooks/api/hr";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
+import {
+  clearEndIfInvalid,
+  isEndInvalidForStart,
+  planningEndPickerProps,
+  planningStartPickerProps,
+} from "@/lib/date-constraints";
+import { getTodayString } from "@/lib/date-utils";
 
 const STATUS_COLORS: Record<string, string> = {
   IN_PROGRESS: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
@@ -208,11 +215,21 @@ export default function GoalsPage() {
     handleFormChange("type", v);
   }
   function handleStartDateChange(value: string) {
-    handleFormChange("startDate", value);
+    setForm((prev) => ({
+      ...prev,
+      startDate: value,
+      endDate: clearEndIfInvalid(value, prev.endDate, "after"),
+    }));
   }
   function handleEndDateChange(value: string) {
     handleFormChange("endDate", value);
   }
+
+  const goalStartBounds = planningStartPickerProps();
+  const goalEndBounds = planningEndPickerProps({
+    startDate: form.startDate,
+    mode: "after",
+  });
   function handleTargetValueChange(e: ChangeEvent<HTMLInputElement>) {
     handleFormChange("targetValue", e.target.value);
   }
@@ -226,6 +243,15 @@ export default function GoalsPage() {
   async function handleCreate() {
     if (!form.title || !form.startDate || !form.endDate) {
       toast.error("Title, start date, and end date are required");
+      return;
+    }
+    const today = getTodayString();
+    if (form.startDate < today || form.endDate < today) {
+      toast.error("Goal dates cannot be in the past");
+      return;
+    }
+    if (isEndInvalidForStart(form.startDate, form.endDate, "after")) {
+      toast.error("End date must be after start date");
       return;
     }
     try {
@@ -348,11 +374,27 @@ export default function GoalsPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-sm font-medium">Start Date *</Label>
-                  <DatePicker value={form.startDate} onChange={handleStartDateChange} placeholder="Pick a date" className="text-sm" />
+                  <DatePicker
+                    value={form.startDate}
+                    onChange={handleStartDateChange}
+                    placeholder="Pick a date"
+                    className="text-sm"
+                    fromDate={goalStartBounds.fromDate}
+                    fromYear={goalStartBounds.fromYear}
+                    toYear={goalStartBounds.toYear}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-sm font-medium">End Date *</Label>
-                  <DatePicker value={form.endDate} onChange={handleEndDateChange} placeholder="Pick a date" className="text-sm" />
+                  <DatePicker
+                    value={form.endDate}
+                    onChange={handleEndDateChange}
+                    placeholder="Pick a date"
+                    className="text-sm"
+                    fromDate={goalEndBounds.fromDate}
+                    fromYear={goalEndBounds.fromYear}
+                    toYear={goalEndBounds.toYear}
+                  />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">

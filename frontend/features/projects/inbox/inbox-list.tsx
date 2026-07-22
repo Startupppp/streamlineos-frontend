@@ -142,9 +142,9 @@ export function InboxList({
       className="flex h-full min-h-0 flex-col gap-0"
     >
       <div className="flex shrink-0 flex-col gap-2 border border-r-0 border-border px-4 py-2.5">
-        <TabsList className="h-8 min-h-8 w-full p-0.5">
+        <TabsList>
           {SECTION_FILTERS.map(({ label, value }) => (
-            <TabsTrigger key={value} value={value} className="h-7 min-h-7 px-2 text-xs">
+            <TabsTrigger key={value} value={value}>
               {label}
             </TabsTrigger>
           ))}

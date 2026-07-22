@@ -670,7 +670,7 @@ import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 - `href?` — wraps the card in a `<Link>` with `hover:bg-muted/30` for navigable stat tiles.
 - `isLoading?` — shows a matching `<Skeleton>` in place of the value.
 
-**`StatCardGrid` wrapper:** `cols` = `2 | 3 | 4 | 5 | 6` (default 4; used by skeletons / empty fallback). Gap is `gap-3`. Layout is always **one horizontal row** of equal-width cards — `gridTemplateColumns: repeat(N, minmax(0, 1fr))` where `N` is the child count (fallback `cols`), plus `[&>*]:min-w-0 [&>*]:h-full`. Never multi-row responsive breakpoints (`grid-cols-1` / `sm:grid-cols-2` / `xl:grid-cols-*`). Cards share width and shrink on narrow viewports; they must not wrap to a second row.
+**`StatCardGrid` wrapper:** `cols` = `2 | 3 | 4 | 5 | 6` (default 4; used by skeletons / empty fallback). Gap is `gap-3`. Layout is always **one horizontal row** of equal-width cards — `gridTemplateColumns: repeat(N, minmax(10rem, 1fr))` where `N` is the child count (fallback `cols`), plus `[&>*]:min-w-0 [&>*]:h-full`. Never multi-row responsive breakpoints (`grid-cols-1` / `sm:grid-cols-2` / `xl:grid-cols-*`). On mobile the row is horizontally scrollable (`overflow-x-auto scrollbar-hide touch-pan-x`) so cards keep a readable min width; on `md+` they share width equally with no overflow. Never wrap to a second row.
 
 **Delta vs hint:** use `delta` for percentage changes vs. prior period; use `hint` for static context. Never show both.
 

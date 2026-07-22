@@ -1,6 +1,7 @@
 "use client";
 
 import { Switch } from "@/components/ui/switch";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import type { StepSharedProps, WizardDraft } from "../use-project-create";
 
 type ModKey = keyof WizardDraft["modules"];
@@ -107,29 +108,35 @@ function getHandler(
 
 export function StepToggles({ draft, updateDraft }: StepSharedProps) {
   return (
-    <div className="space-y-6">
-      {GROUPS.map((group) => (
-        <div key={group.title} className="space-y-2">
-          <h3 className="text-sm font-semibold">{group.title}</h3>
-          <div className="space-y-2">
-            {group.items.map((item) => {
-              const id = item.kind === "module" ? `mod-${item.key}` : `feat-${item.key}`;
-              return (
-                <div key={id} className="flex items-center justify-between rounded-lg border p-3 bg-card">
-                  <div>
-                    <div className="text-sm font-medium">{item.label}</div>
-                    <div className="text-xs text-muted-foreground">{item.desc}</div>
+    <ScrollArea
+      fill
+      className="min-h-0 flex-1"
+      viewportClassName="overscroll-contain"
+    >
+      <div className="space-y-6 py-4">
+        {GROUPS.map((group) => (
+          <div key={group.title} className="space-y-2">
+            <h3 className="text-sm font-semibold">{group.title}</h3>
+            <div className="space-y-2">
+              {group.items.map((item) => {
+                const id = item.kind === "module" ? `mod-${item.key}` : `feat-${item.key}`;
+                return (
+                  <div key={id} className="flex items-center justify-between rounded-lg border p-3 bg-card">
+                    <div>
+                      <div className="text-sm font-medium">{item.label}</div>
+                      <div className="text-xs text-muted-foreground">{item.desc}</div>
+                    </div>
+                    <Switch
+                      checked={getChecked(item, draft)}
+                      onCheckedChange={getHandler(item, draft, updateDraft)}
+                    />
                   </div>
-                  <Switch
-                    checked={getChecked(item, draft)}
-                    onCheckedChange={getHandler(item, draft, updateDraft)}
-                  />
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
+    </ScrollArea>
   );
 }

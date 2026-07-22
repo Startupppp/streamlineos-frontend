@@ -9,6 +9,10 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { XIcon } from "@animateicons/react/lucide";
 import { format } from "date-fns";
 import { resolveImageUrl } from "@/lib/utils";
+import {
+  planningEndPickerProps,
+  planningStartPickerProps,
+} from "@/lib/date-constraints";
 import { useEpics, useModules, useCycles } from "@/hooks/api/projects";
 import { LabelPicker } from "../tickets/label-picker";
 import { RecurrencePicker } from "../tickets/recurrence-picker";
@@ -268,6 +272,15 @@ export function TicketSidebar({
     onAutoSave({ points: val });
   };
 
+  const startDateBounds = planningStartPickerProps({
+    existingValue: ticket.startDate,
+  });
+  const dueDateBounds = planningEndPickerProps({
+    startDate: ticket.startDate,
+    mode: "onOrAfter",
+    existingValue: ticket.dueDate,
+  });
+
   const timeSpent = ticket.timeSpent ? parseFloat(ticket.timeSpent) : 0;
   const originalEstimate = ticket.originalEstimate
     ? parseFloat(ticket.originalEstimate)
@@ -359,7 +372,10 @@ export function TicketSidebar({
               value={ticket.startDate ?? undefined}
               onChange={handleStartDateChange}
               placeholder="Set start"
-              toDate={ticket.dueDate ? new Date(ticket.dueDate) : undefined}
+              fromDate={startDateBounds.fromDate}
+              fromYear={startDateBounds.fromYear}
+              toYear={startDateBounds.toYear}
+              toDate={ticket.dueDate ? new Date(`${ticket.dueDate}T00:00:00`) : undefined}
               className="min-h-10 min-w-0 flex-1 touch-manipulation text-xs @[18rem]:min-h-9 md:min-h-9"
             />
             {ticket.startDate && (
@@ -386,9 +402,9 @@ export function TicketSidebar({
               value={ticket.dueDate ?? undefined}
               onChange={handleDueDateChange}
               placeholder="Set due"
-              fromDate={
-                ticket.startDate ? new Date(ticket.startDate) : undefined
-              }
+              fromDate={dueDateBounds.fromDate}
+              fromYear={dueDateBounds.fromYear}
+              toYear={dueDateBounds.toYear}
               className="min-h-10 min-w-0 flex-1 touch-manipulation text-xs @[18rem]:min-h-9 md:min-h-9"
             />
             {ticket.dueDate && (

@@ -289,7 +289,6 @@ export function UserInvitationsPanel() {
       <PageWrapper
         title="Invitations"
         subtitle="Manage and track team invitations."
-        mobileFiltersInline
         actions={
           <AnimatedIconButton
             icon={MailIcon}

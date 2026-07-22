@@ -195,7 +195,6 @@ function DelegationsContent() {
     <PageWrapper
       title="Delegations"
       subtitle="Share specific permissions with teammates for a set period."
-      mobileFiltersInline
       actions={
         <AnimatedIconButton
           size="sm"

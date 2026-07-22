@@ -15,13 +15,16 @@ describe("StatCardGrid", () => {
       "grid",
       "min-w-0",
       "shrink-0",
+      "overflow-x-auto",
+      "scrollbar-hide",
+      "touch-pan-x",
+      "md:overflow-x-visible",
       "[&>*]:min-w-0",
       "[&>*]:h-full",
     );
     expect(grid).toHaveStyle({
-      gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+      gridTemplateColumns: "repeat(2, minmax(10rem, 1fr))",
     });
-    expect(grid).not.toHaveClass("overflow-x-auto");
     expect(grid).not.toHaveClass("grid-cols-1");
     expect(grid).not.toHaveClass("sm:grid-cols-2");
   });
@@ -40,7 +43,7 @@ describe("StatCardGrid", () => {
 
     const grid = container.firstElementChild;
     expect(grid).toHaveStyle({
-      gridTemplateColumns: "repeat(6, minmax(0, 1fr))",
+      gridTemplateColumns: "repeat(6, minmax(10rem, 1fr))",
     });
     expect(grid).not.toHaveClass("grid-cols-1");
     expect(grid).not.toHaveClass("sm:grid-cols-2");
@@ -58,9 +61,9 @@ describe("StatCardGrid", () => {
     );
 
     const grid = container.firstElementChild;
-    expect(grid).toHaveClass("shrink-0");
+    expect(grid).toHaveClass("shrink-0", "overflow-x-auto", "md:overflow-x-visible");
     expect(grid).toHaveStyle({
-      gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+      gridTemplateColumns: "repeat(3, minmax(10rem, 1fr))",
     });
     expect(grid).not.toHaveClass("grid-cols-1");
     expect(grid).not.toHaveClass("sm:grid-cols-2");

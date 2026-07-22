@@ -479,7 +479,7 @@ export function CommandCenterPage() {
           </div>
 
           <motion.p
-            className="shrink-0 text-center text-[10px] text-muted-foreground/70"
+            className="hidden shrink-0 text-center text-[10px] text-muted-foreground/70 md:block"
             initial={shouldReduceMotion ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ ...pmSnappy, delay: 0.28 }}

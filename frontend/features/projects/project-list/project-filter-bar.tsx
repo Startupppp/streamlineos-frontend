@@ -1,11 +1,10 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, type ReactNode } from "react";
 import { LayoutGrid, List, PanelRight } from "lucide-react";
 import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import { ViewToggle, type ViewOption } from "@/components/ui/view-toggle";
-import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 import { AddFilterPopover, ActiveFilterChips, type ProjectActiveFilters } from "./add-filter-popover";
 import { DisplayPrefsPopover } from "./display-prefs-popover";
@@ -31,6 +30,7 @@ interface ProjectFilterBarProps {
   leadName?: string;
   showGroupingSidebar?: boolean;
   onToggleGroupingSidebar?: () => void;
+  leading?: ReactNode;
 }
 
 export function ProjectFilterBar({
@@ -46,6 +46,7 @@ export function ProjectFilterBar({
   leadName,
   showGroupingSidebar = false,
   onToggleGroupingSidebar,
+  leading,
 }: ProjectFilterBarProps) {
   const handleRemoveFilter = useCallback(
     (key: keyof ProjectActiveFilters) => {
@@ -61,47 +62,56 @@ export function ProjectFilterBar({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className={cn(FILTER_TOOLBAR_ROW, "gap-1.5 sm:gap-2")}>
-        <div className="w-[200px] max-w-[min(240px,70vw)] sm:w-[240px]">
-          <SearchInput
-            placeholder="Search projects…"
-            value={search}
-            onValueChange={onSearchChange}
-            aria-label="Search projects"
-          />
+      <div className="flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:flex-nowrap sm:items-center sm:gap-2 sm:overflow-x-auto sm:overscroll-x-contain sm:scrollbar-hide sm:touch-pan-x">
+        <div className="flex w-full min-w-0 items-center gap-1.5 sm:contents">
+          {leading ? <div className="shrink-0 sm:hidden">{leading}</div> : null}
+          <div className="shrink-0 sm:order-2">
+            <AddFilterPopover filters={filters} onFiltersChange={onFiltersChange} />
+          </div>
+          <div className="shrink-0 sm:order-3">
+            <DisplayPrefsPopover
+              prefs={prefs}
+              onToggle={onTogglePrefs}
+              onSet={onSetPrefs}
+            />
+          </div>
+          <div className="ml-auto shrink-0 sm:order-4">
+            <ViewToggle
+              value={viewMode}
+              options={VIEW_OPTIONS}
+              onChange={onViewModeChange}
+            />
+          </div>
         </div>
 
-        <AddFilterPopover filters={filters} onFiltersChange={onFiltersChange} />
-
-        <DisplayPrefsPopover
-          prefs={prefs}
-          onToggle={onTogglePrefs}
-          onSet={onSetPrefs}
-        />
-
-        <ViewToggle
-          value={viewMode}
-          options={VIEW_OPTIONS}
-          onChange={onViewModeChange}
-          className="ml-auto shrink-0"
-        />
-
-        {viewMode === "list" && onToggleGroupingSidebar ? (
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className={cn(
-              "size-9 shrink-0",
-              showGroupingSidebar && "border-primary bg-primary/10 text-primary",
-            )}
-            aria-label="Toggle grouping sidebar"
-            aria-pressed={showGroupingSidebar}
-            onClick={onToggleGroupingSidebar}
-          >
-            <PanelRight className="h-3.5 w-3.5" />
-          </Button>
-        ) : null}
+        <div className="flex w-full min-w-0 items-center gap-1.5 sm:contents">
+          <div className="min-w-0 flex-1 sm:order-1 sm:w-[200px] sm:max-w-[min(240px,70vw)] sm:flex-none md:w-[240px]">
+            <SearchInput
+              placeholder="Search projects…"
+              value={search}
+              onValueChange={onSearchChange}
+              aria-label="Search projects"
+            />
+          </div>
+          {viewMode === "list" && onToggleGroupingSidebar ? (
+            <div className="shrink-0 sm:order-5">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className={cn(
+                  "size-9 shrink-0",
+                  showGroupingSidebar && "border-primary bg-primary/10 text-primary",
+                )}
+                aria-label="Toggle grouping sidebar"
+                aria-pressed={showGroupingSidebar}
+                onClick={onToggleGroupingSidebar}
+              >
+                <PanelRight className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          ) : null}
+        </div>
       </div>
 
       {hasChips ? (

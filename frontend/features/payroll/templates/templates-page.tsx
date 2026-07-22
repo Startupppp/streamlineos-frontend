@@ -201,7 +201,6 @@ export function TemplatesPageContent() {
           isLoading ? "Loading…" : `${total} template${total !== 1 ? "s" : ""}`
         }
         filters={filters}
-        filtersCollapseBreakpoint="sm"
       >
         {isError ? (
           <EmptyState

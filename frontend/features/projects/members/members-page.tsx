@@ -33,10 +33,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import {
-  FILTER_SELECT_TRIGGER,
-  FILTER_TOOLBAR_ROW,
-} from "@/components/ui/content-fill-panel";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { useProjectWorkspaceMembers } from "@/hooks/api/projects/workspace-members";
 import type { User } from "@/hooks/api/users";
 import { useCan } from "@/hooks/api/access";
@@ -158,7 +155,7 @@ function DisplayPropsToggle({
         <Button
           variant="outline"
           size="sm"
-          className="h-8 gap-1.5 text-xs shrink-0"
+          className="h-9 min-h-9 gap-1.5 text-xs shrink-0"
           {...hoverHandlers}
         >
           <SlidersHorizontalIcon ref={iconRef} size={13} />
@@ -383,34 +380,50 @@ export function MembersPage() {
       title="Members"
       subtitle="Workspace members and their roles."
       noInternalScroll
-      mobileFiltersInline
-      actions={canManage ? <PmAccessButton /> : undefined}
+      filtersClassName="flex-col items-stretch gap-2 overflow-x-visible"
       filters={
-        <div className={FILTER_TOOLBAR_ROW}>
-          <div className="min-w-[140px] max-w-xs flex-1">
-            <SearchInput
-              placeholder="Search members…"
-              value={search}
-              onValueChange={handleSearchChange}
-            />
+        <div className="flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:flex-nowrap sm:items-center sm:gap-2 sm:overflow-x-auto sm:overscroll-x-contain sm:scrollbar-hide sm:touch-pan-x">
+          <div className="flex w-full min-w-0 items-center gap-1.5 sm:contents">
+            <div className="shrink-0 sm:order-2">
+              <Select value={statusFilter} onValueChange={handleStatusChange}>
+                <SelectTrigger
+                  size="sm"
+                  className={`w-fit min-w-[7.5rem] h-9 min-h-9 text-xs ${FILTER_SELECT_TRIGGER}`}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+                  <SelectItem value="all">All statuses</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="suspended">Suspended</SelectItem>
+                  <SelectItem value="archived">Archived</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="shrink-0 sm:order-3">
+              <DisplayPropsToggle
+                value={displayProps}
+                onChange={handleDisplayChange}
+              />
+            </div>
+            {canManage ? (
+              <div className="ml-auto shrink-0 sm:order-4 sm:ml-0">
+                <PmAccessButton />
+              </div>
+            ) : null}
           </div>
-          <Select value={statusFilter} onValueChange={handleStatusChange}>
-            <SelectTrigger
-              className={`w-32 h-8 text-xs ${FILTER_SELECT_TRIGGER}`}
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-              <SelectItem value="all">All statuses</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="suspended">Suspended</SelectItem>
-              <SelectItem value="archived">Archived</SelectItem>
-            </SelectContent>
-          </Select>
-          <DisplayPropsToggle
-            value={displayProps}
-            onChange={handleDisplayChange}
-          />
+          <div className="flex w-full min-w-0 items-center gap-1.5 sm:contents">
+            <div className="min-w-0 flex-1 sm:order-1 sm:w-[200px] sm:max-w-[min(240px,70vw)] sm:flex-none md:w-[240px]">
+              <SearchInput
+                placeholder="Search members…"
+                value={search}
+                onValueChange={handleSearchChange}
+                aria-label="Search members"
+                className="h-9"
+                inputClassName="h-9 min-h-9"
+              />
+            </div>
+          </div>
         </div>
       }
     >

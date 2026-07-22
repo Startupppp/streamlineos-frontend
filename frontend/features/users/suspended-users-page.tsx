@@ -236,7 +236,6 @@ export function SuspendedUsersPage() {
       <PageWrapper
         title="Suspended Users"
         subtitle="Users whose access has been temporarily suspended."
-        mobileFiltersInline
         filters={
           <div className="min-w-0 w-full flex-1 md:min-w-[160px] md:max-w-xs">
             <SearchInput

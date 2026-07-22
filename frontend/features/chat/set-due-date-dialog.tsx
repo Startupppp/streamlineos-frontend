@@ -211,6 +211,7 @@ export function SetDueDateDialog({
                     value={field.value}
                     onChange={field.onChange}
                     placeholder="Pick a date"
+                    disablePast
                   />
                 )}
               />

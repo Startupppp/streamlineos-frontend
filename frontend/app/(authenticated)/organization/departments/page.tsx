@@ -423,7 +423,6 @@ export default function OrgDepartmentsPage() {
     <PageWrapper
       title="Departments"
       subtitle="Departments organized within branches."
-      mobileFiltersInline
       actions={
         <div className="flex w-full items-center gap-2 sm:w-auto">
           <Button

@@ -1,5 +1,6 @@
 "use client";
 
+import type { MouseEvent as ReactMouseEvent } from "react";
 import { SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,20 +20,21 @@ interface ToggleRowProps {
 }
 
 function ToggleRow({ id, label, checked, onCheckedChange }: ToggleRowProps) {
+  function handleLabelClick(event: ReactMouseEvent<HTMLLabelElement>) {
+    event.preventDefault();
+    onCheckedChange();
+  }
+
   return (
-    <div className="flex items-center justify-between gap-3 py-0.5">
+    <div className="flex h-9 items-center justify-between gap-3">
       <Label
         htmlFor={id}
+        onClick={handleLabelClick}
         className="cursor-pointer text-[13px] font-normal text-foreground"
       >
         {label}
       </Label>
-      <Switch
-        id={id}
-        checked={checked}
-        onCheckedChange={onCheckedChange}
-        className="h-4 w-7 [&_span]:h-3 [&_span]:w-3"
-      />
+      <Switch id={id} checked={checked} onCheckedChange={onCheckedChange} />
     </div>
   );
 }
@@ -64,7 +66,7 @@ export function CustomerDisplayPrefsPopover({
   return (
     <ResponsivePopover>
       <ResponsivePopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
+        <Button variant="outline" size="sm" className="h-9 gap-1.5 text-xs">
           <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
           Display
         </Button>
@@ -77,7 +79,7 @@ export function CustomerDisplayPrefsPopover({
         <p className="mb-3 text-[13px] font-semibold text-foreground">
           Display properties
         </p>
-        <div className="space-y-0.5">
+        <div>
           {PROPERTY_TOGGLES.map((p) => (
             <ToggleRow
               key={p.key}

@@ -10,13 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SearchInput } from "@/components/ui/search-input";
 import { RequireModule } from "@/components/auth/require-module";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTargetIllustration } from "@/components/illustrations";
@@ -40,6 +33,10 @@ import {
   type GoalStatus,
 } from "@/hooks/api/goals";
 import { GoalFormSheet } from "@/features/projects/goals/goal-form-sheet";
+import {
+  GoalFiltersPopover,
+  GoalLevelStatusFilters,
+} from "@/features/projects/goals/goal-filters-popover";
 import {
   STATUS_CONFIG,
   LEVEL_LABEL,
@@ -225,7 +222,19 @@ export default function GoalsPage() {
       <PageWrapper
         title="Goals & OKRs"
         subtitle="Track company, team, and individual objectives and their key results"
-        actions={<NewGoalButton onClick={handleOpenCreate} />}
+        actions={
+          <div className="flex items-center gap-2">
+            <div className="md:hidden">
+              <GoalFiltersPopover
+                levelFilter={levelFilter}
+                statusFilter={statusFilter}
+                onLevelChange={handleLevelFilterChange}
+                onStatusChange={handleStatusFilterChange}
+              />
+            </div>
+            <NewGoalButton onClick={handleOpenCreate} />
+          </div>
+        }
         filters={
           <div className={PM_TOOLBAR}>
             <div className="min-w-[180px] max-w-sm flex-1">
@@ -235,33 +244,13 @@ export default function GoalsPage() {
                 onValueChange={handleSearchChange}
               />
             </div>
-            <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-              <Select value={levelFilter} onValueChange={handleLevelFilterChange}>
-                <SelectTrigger className="w-[130px] text-sm">
-                  <SelectValue placeholder="Level" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Levels</SelectItem>
-                  {LEVEL_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
-                <SelectTrigger className="w-[140px] text-sm">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  {STATUS_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="hidden md:block">
+              <GoalLevelStatusFilters
+                levelFilter={levelFilter}
+                statusFilter={statusFilter}
+                onLevelChange={handleLevelFilterChange}
+                onStatusChange={handleStatusFilterChange}
+              />
             </div>
           </div>
         }

@@ -1,6 +1,5 @@
 "use client";
 
-import { parseISO } from "date-fns";
 import { useState, useCallback, useMemo, memo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,6 +26,11 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  clearEndIfInvalid,
+  planningEndPickerProps,
+  planningStartPickerProps,
+} from "@/lib/date-constraints";
 import { Plus, Trash2, Pencil, Calendar, CheckCircle, Archive } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -157,6 +161,46 @@ export function CyclesTab() {
   const watchedType = cycleForm.watch("type");
   const watchedPeriodStart = cycleForm.watch("periodStart");
   const watchedPeriodEnd = cycleForm.watch("periodEnd");
+  const periodStartBounds = planningStartPickerProps({
+    existingValue: editCycle ? watchedPeriodStart : undefined,
+  });
+  const periodEndBounds = planningEndPickerProps({
+    startDate: watchedPeriodStart,
+    mode: "after",
+    existingValue: editCycle ? watchedPeriodEnd : undefined,
+  });
+  const deadlineBounds = planningEndPickerProps({
+    startDate: watchedPeriodEnd,
+    mode: "after",
+    existingValue: editCycle ? cycleForm.watch("deadline") : undefined,
+  });
+
+  function handlePeriodStartChange(value: string) {
+    cycleForm.setValue("periodStart", value, { shouldValidate: true });
+    const currentEnd = cycleForm.getValues("periodEnd") ?? "";
+    const nextEnd = clearEndIfInvalid(value, currentEnd, "after");
+    if (nextEnd !== currentEnd) {
+      cycleForm.setValue("periodEnd", nextEnd, { shouldValidate: true });
+    }
+    const currentDeadline = cycleForm.getValues("deadline") ?? "";
+    const nextDeadline = clearEndIfInvalid(
+      nextEnd || value,
+      currentDeadline,
+      "after",
+    );
+    if (nextDeadline !== currentDeadline) {
+      cycleForm.setValue("deadline", nextDeadline, { shouldValidate: true });
+    }
+  }
+
+  function handlePeriodEndChange(value: string) {
+    cycleForm.setValue("periodEnd", value, { shouldValidate: true });
+    const currentDeadline = cycleForm.getValues("deadline") ?? "";
+    const nextDeadline = clearEndIfInvalid(value, currentDeadline, "after");
+    if (nextDeadline !== currentDeadline) {
+      cycleForm.setValue("deadline", nextDeadline, { shouldValidate: true });
+    }
+  }
 
   if (isLoading) {
     return <LoadingState variant="list" rows={12} />;
@@ -318,7 +362,15 @@ export function CyclesTab() {
                 <FormItem>
                   <FormLabel>Period Start</FormLabel>
                   <FormControl>
-                    <DatePicker value={field.value} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
+                    <DatePicker
+                      value={field.value}
+                      onChange={handlePeriodStartChange}
+                      placeholder="Pick a date"
+                      className="text-sm"
+                      fromDate={periodStartBounds.fromDate}
+                      fromYear={periodStartBounds.fromYear}
+                      toYear={periodStartBounds.toYear}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -331,7 +383,15 @@ export function CyclesTab() {
                 <FormItem>
                   <FormLabel>Period End</FormLabel>
                   <FormControl>
-                    <DatePicker value={field.value} onChange={field.onChange} fromDate={watchedPeriodStart ? parseISO(watchedPeriodStart) : undefined} placeholder="Pick a date" className="text-sm" />
+                    <DatePicker
+                      value={field.value}
+                      onChange={handlePeriodEndChange}
+                      placeholder="Pick a date"
+                      className="text-sm"
+                      fromDate={periodEndBounds.fromDate}
+                      fromYear={periodEndBounds.fromYear}
+                      toYear={periodEndBounds.toYear}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -345,7 +405,15 @@ export function CyclesTab() {
               <FormItem>
                 <FormLabel>Submission Deadline</FormLabel>
                 <FormControl>
-                  <DatePicker value={field.value} onChange={field.onChange} fromDate={watchedPeriodEnd ? parseISO(watchedPeriodEnd) : undefined} placeholder="Pick a date" className="text-sm" />
+                  <DatePicker
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="Pick a date"
+                    className="text-sm"
+                    fromDate={deadlineBounds.fromDate}
+                    fromYear={deadlineBounds.fromYear}
+                    toYear={deadlineBounds.toYear}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

@@ -453,7 +453,6 @@ export default function AuditLogPage() {
     <PageWrapper
       title="Audit Log"
       subtitle="Track system actions, logins, and changes across your organization."
-      mobileFiltersInline
       noInternalScroll
       filters={
         <>

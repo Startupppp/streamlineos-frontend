@@ -18,6 +18,11 @@ import { format, differenceInDays } from "date-fns";
 import { Plus, Award, Calendar, ExternalLink, AlertTriangle, CheckCircle2, XCircle, User, AlertCircle } from "lucide-react";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
+import {
+  clearEndIfInvalid,
+  planningEndPickerProps,
+  parseDateOnly,
+} from "@/lib/date-constraints";
 
 type CertStatus = "VALID" | "EXPIRING_SOON" | "EXPIRED";
 
@@ -96,8 +101,17 @@ export default function CertificationsPage() {
 
   const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value), []);
   const handleOrgChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setOrg(e.target.value), []);
-  const handleIssueDateChange = useCallback((value: string) => setIssueDate(value), []);
+  const handleIssueDateChange = useCallback((value: string) => {
+    setIssueDate(value);
+    setExpiryDate((prev) => clearEndIfInvalid(value, prev, "after"));
+  }, []);
   const handleExpiryDateChange = useCallback((value: string) => setExpiryDate(value), []);
+  const expiryBounds = planningEndPickerProps({
+    startDate: issueDate,
+    mode: "after",
+    floorDate: parseDateOnly(issueDate),
+    enforceTodayFloor: false,
+  });
   const handleCredentialIdChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setCredentialId(e.target.value), []);
   const handleCredentialUrlChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setCredentialUrl(e.target.value), []);
   const handleSearchChange = useCallback((value: string) => setSearchQuery(value), []);
@@ -375,7 +389,15 @@ export default function CertificationsPage() {
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Expiry Date</label>
-            <DatePicker value={expiryDate ?? ""} onChange={handleExpiryDateChange} placeholder="Pick a date" className="text-sm" />
+            <DatePicker
+              value={expiryDate ?? ""}
+              onChange={handleExpiryDateChange}
+              placeholder="Pick a date"
+              className="text-sm"
+              fromDate={expiryBounds.fromDate}
+              fromYear={expiryBounds.fromYear}
+              toYear={expiryBounds.toYear}
+            />
           </div>
         </div>
         <div className="space-y-1.5">

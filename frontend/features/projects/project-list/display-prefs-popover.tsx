@@ -1,5 +1,6 @@
 "use client";
 
+import type { MouseEvent as ReactMouseEvent } from "react";
 import { SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,12 +39,21 @@ interface ToggleRowProps {
 }
 
 function ToggleRow({ label, checked, onCheckedChange, id }: ToggleRowProps) {
+  function handleLabelClick(event: ReactMouseEvent<HTMLLabelElement>) {
+    event.preventDefault();
+    onCheckedChange();
+  }
+
   return (
-    <div className="flex items-center justify-between gap-3 py-0.5">
-      <Label htmlFor={id} className="cursor-pointer text-[13px] font-normal text-foreground">
+    <div className="flex h-9 items-center justify-between gap-3">
+      <Label
+        htmlFor={id}
+        onClick={handleLabelClick}
+        className="cursor-pointer text-[13px] font-normal text-foreground"
+      >
         {label}
       </Label>
-      <Switch id={id} checked={checked} onCheckedChange={onCheckedChange} className="h-4 w-7 [&_span]:h-3 [&_span]:w-3" />
+      <Switch id={id} checked={checked} onCheckedChange={onCheckedChange} />
     </div>
   );
 }
@@ -107,9 +117,14 @@ export function DisplayPrefsPopover({
   return (
     <ResponsivePopover>
       <ResponsivePopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
+        <Button
+          variant="outline"
+          size="sm"
+          aria-label="Display"
+          className="h-9 gap-1.5 text-xs"
+        >
           <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
-          Display
+          <span className="hidden sm:inline">Display</span>
         </Button>
       </ResponsivePopoverTrigger>
       <ResponsivePopoverContent
@@ -121,7 +136,7 @@ export function DisplayPrefsPopover({
 
         <SectionLabel>Group by</SectionLabel>
         <Select value={prefs.groupBy} onValueChange={handleGroupByChange}>
-          <SelectTrigger className="h-7 text-xs">
+          <SelectTrigger className="h-9 text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -134,9 +149,9 @@ export function DisplayPrefsPopover({
         </Select>
 
         <SectionLabel>Order by</SectionLabel>
-        <div className="flex gap-1.5">
+        <div className="flex flex-col gap-1.5">
           <Select value={prefs.orderBy} onValueChange={handleOrderByChange}>
-            <SelectTrigger className="h-7 flex-1 text-xs">
+            <SelectTrigger className="h-9 w-full text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -148,7 +163,7 @@ export function DisplayPrefsPopover({
             </SelectContent>
           </Select>
           <Select value={prefs.orderDir} onValueChange={handleOrderDirChange}>
-            <SelectTrigger className="h-7 w-[68px] text-xs">
+            <SelectTrigger className="h-9 w-full text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -168,7 +183,7 @@ export function DisplayPrefsPopover({
         />
 
         <SectionLabel>Properties</SectionLabel>
-        <div className="space-y-0.5">
+        <div>
           {PROPERTY_TOGGLES.map((p) => (
             <ToggleRow
               key={p.key}

@@ -3,7 +3,6 @@
 import { memo, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import {
   Sheet,
   SheetContent,
@@ -45,17 +44,16 @@ import {
 } from "@/hooks/api/goals";
 import { useChatOrgUsers } from "@/hooks/api/chat";
 import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  clearEndIfInvalid,
+  planningEndPickerProps,
+  planningStartPickerProps,
+} from "@/lib/date-constraints";
 import { LEVEL_OPTIONS, STATUS_OPTIONS, METRIC_OPTIONS } from "./constants";
-
-const goalSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string(),
-  level: z.enum(["company", "team", "individual"]),
-  status: z.enum(["not_started", "on_track", "at_risk", "off_track", "completed"]),
-  ownerId: z.string(),
-  startDate: z.string(),
-  dueDate: z.string(),
-});
+import {
+  projectGoalFormSchema,
+  type ProjectGoalFormValues,
+} from "./goal-form-schema";
 
 interface GoalFormSheetProps {
   open: boolean;
@@ -164,8 +162,6 @@ const KeyResultRow = memo(function KeyResultRow({ kr, index, onUpdate, onRemove 
   );
 });
 
-type GoalFormValues = z.infer<typeof goalSchema>;
-
 export function GoalFormSheet({
   open,
   onOpenChange,
@@ -179,8 +175,8 @@ export function GoalFormSheet({
   const updateGoal = useUpdateGoal();
   const isPending = createGoal.isPending || updateGoal.isPending;
 
-  const form = useForm<GoalFormValues>({
-    resolver: zodResolver(goalSchema),
+  const form = useForm<ProjectGoalFormValues>({
+    resolver: zodResolver(projectGoalFormSchema),
     defaultValues: {
       title: goal?.title ?? "",
       description: goal?.description ?? "",
@@ -191,6 +187,25 @@ export function GoalFormSheet({
       dueDate: goal?.dueDate ?? "",
     },
   });
+
+  const watchedStartDate = form.watch("startDate");
+  const startBounds = planningStartPickerProps({
+    existingValue: isEdit ? watchedStartDate : undefined,
+  });
+  const dueBounds = planningEndPickerProps({
+    startDate: watchedStartDate,
+    mode: "after",
+    existingValue: isEdit ? form.watch("dueDate") : undefined,
+  });
+
+  function handleStartDateChange(value: string) {
+    form.setValue("startDate", value, { shouldValidate: true });
+    const currentDue = form.getValues("dueDate") ?? "";
+    const nextDue = clearEndIfInvalid(value, currentDue, "after");
+    if (nextDue !== currentDue) {
+      form.setValue("dueDate", nextDue, { shouldValidate: true });
+    }
+  }
 
   function handleAddKeyResult() {
     setKeyResults((prev) => [...prev, { ...EMPTY_KR }]);
@@ -219,7 +234,7 @@ export function GoalFormSheet({
       }));
   }
 
-  function handleSubmit(values: GoalFormValues) {
+  function handleSubmit(values: ProjectGoalFormValues) {
     const resolvedOwner = values.ownerId === "unassigned" ? null : values.ownerId;
 
     if (isEdit) {
@@ -408,9 +423,12 @@ export function GoalFormSheet({
                           <FormControl>
                             <DatePicker
                               value={field.value}
-                              onChange={field.onChange}
+                              onChange={handleStartDateChange}
                               placeholder="Pick a date"
                               className="text-sm"
+                              fromDate={startBounds.fromDate}
+                              fromYear={startBounds.fromYear}
+                              toYear={startBounds.toYear}
                             />
                           </FormControl>
                           <FormMessage className="text-xs" />
@@ -429,6 +447,9 @@ export function GoalFormSheet({
                               onChange={field.onChange}
                               placeholder="Pick a date"
                               className="text-sm"
+                              fromDate={dueBounds.fromDate}
+                              fromYear={dueBounds.fromYear}
+                              toYear={dueBounds.toYear}
                             />
                           </FormControl>
                           <FormMessage className="text-xs" />

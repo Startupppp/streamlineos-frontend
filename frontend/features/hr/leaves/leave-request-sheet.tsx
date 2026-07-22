@@ -28,6 +28,12 @@ import { FileUpload } from "@/components/storage/file-upload";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { AlertCircle } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  clearEndIfInvalid,
+  planningEndPickerProps,
+  parseDateOnly,
+  startOfLocalDay,
+} from "@/lib/date-constraints";
 import { useRequestLeave, useLeavePolicy } from "@/hooks/api/hr";
 import { leaveFormSchema, type LeaveFormValues } from "./leave-request-schema";
 import type {
@@ -105,6 +111,28 @@ export function LeaveRequestSheet({
   const watchedStartDate = form.watch("startDate");
   const watchedEndDate = form.watch("endDate");
   const watchedHalfDay = form.watch("halfDay");
+
+  const leaveStartFloor = parseDateOnly(minDate) ?? startOfLocalDay();
+  const leaveStartBounds = {
+    fromDate: leaveStartFloor,
+    fromYear: leaveStartFloor.getFullYear(),
+    toYear: startOfLocalDay().getFullYear() + 10,
+  };
+  const leaveEndBounds = planningEndPickerProps({
+    startDate: watchedStartDate,
+    mode: "onOrAfter",
+    floorDate: leaveStartFloor,
+    enforceTodayFloor: false,
+  });
+
+  function handleLeaveStartDateChange(value: string) {
+    form.setValue("startDate", value, { shouldValidate: true });
+    const currentEnd = form.getValues("endDate") ?? "";
+    const nextEnd = clearEndIfInvalid(value, currentEnd, "onOrAfter");
+    if (nextEnd !== currentEnd) {
+      form.setValue("endDate", nextEnd, { shouldValidate: true });
+    }
+  }
 
   const { requestedDays, balancePreview } = useMemo(() => {
     if (!watchedLeaveTypeId || !watchedStartDate || !watchedEndDate) {
@@ -270,8 +298,10 @@ export function LeaveRequestSheet({
                     <FormControl>
                       <DatePicker
                         value={field.value}
-                        onChange={field.onChange}
-                        fromDate={minDate ? new Date(minDate) : undefined}
+                        onChange={handleLeaveStartDateChange}
+                        fromDate={leaveStartBounds.fromDate}
+                        fromYear={leaveStartBounds.fromYear}
+                        toYear={leaveStartBounds.toYear}
                         placeholder="Start date"
                         disabledDays={isWeekend}
                       />
@@ -292,13 +322,9 @@ export function LeaveRequestSheet({
                       <DatePicker
                         value={field.value}
                         onChange={field.onChange}
-                        fromDate={
-                          watchedStartDate
-                            ? new Date(watchedStartDate)
-                            : minDate
-                              ? new Date(minDate)
-                              : undefined
-                        }
+                        fromDate={leaveEndBounds.fromDate}
+                        fromYear={leaveEndBounds.fromYear}
+                        toYear={leaveEndBounds.toYear}
                         placeholder="End date"
                         disabledDays={isWeekend}
                       />

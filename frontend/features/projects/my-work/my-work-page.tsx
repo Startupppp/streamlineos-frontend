@@ -319,7 +319,6 @@ export function MyWorkPage() {
         title="My Issues"
         subtitle="Your tickets across all projects"
         noInternalScroll
-        mobileFiltersInline
         filtersClassName="flex-col items-stretch gap-2 overflow-x-visible pb-2 md:w-full md:flex-row md:flex-nowrap md:items-center md:justify-between md:gap-2"
         filters={
           <>

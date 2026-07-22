@@ -14,6 +14,10 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Tag, Clock, Lock, FileText, Video, Plus, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  planningEndPickerProps,
+  planningStartPickerProps,
+} from "@/lib/date-constraints";
 import type { IntegrationConnection } from "@/hooks/api/integrations";
 import type { CalendarOrgMember } from "@/hooks/api/calendar";
 import { EventAttendeesPicker } from "./event-attendees-picker";
@@ -112,6 +116,14 @@ export function EventFormFields({
 }: EventFormFieldsProps) {
   const activeConnections = connections.filter((c) => c.status === "active");
   const selectedToolkit = activeConnections.find((c) => String(c.id) === syncConnectionId)?.toolkit;
+  const startBounds = planningStartPickerProps({
+    existingValue: isEdit ? startDate : undefined,
+  });
+  const endBounds = planningEndPickerProps({
+    startDate,
+    mode: "onOrAfter",
+    existingValue: isEdit ? endDate : undefined,
+  });
 
   return (
     <div className="space-y-2">
@@ -147,6 +159,9 @@ export function EventFormFields({
                 placeholder="Start date"
                 dateFormat="MMM d, yyyy"
                 className="min-w-0 flex-1 text-xs"
+                fromDate={startBounds.fromDate}
+                fromYear={startBounds.fromYear}
+                toYear={startBounds.toYear}
               />
               {!allDay && (
                 <Input
@@ -172,7 +187,9 @@ export function EventFormFields({
                 <DatePicker
                   value={endDate}
                   onChange={onEndDateChange}
-                  fromDate={startDate ? new Date(startDate) : undefined}
+                  fromDate={endBounds.fromDate}
+                  fromYear={endBounds.fromYear}
+                  toYear={endBounds.toYear}
                   placeholder="End date"
                   dateFormat="MMM d, yyyy"
                   className={cn("min-w-0 flex-1 text-xs", dateTimeError && "border-destructive")}

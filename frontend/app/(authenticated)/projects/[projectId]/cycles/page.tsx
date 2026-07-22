@@ -24,6 +24,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import {
+  clearEndIfInvalid,
+  planningEndPickerProps,
+  planningStartPickerProps,
+  refineDateOrder,
+  refineNotBeforeToday,
+} from "@/lib/date-constraints";
 import type { Cycle } from "@/types/projects";
 
 const DESCRIPTION_MAX = 500;
@@ -49,17 +56,12 @@ const createCycleSchema = z
     endDate: z.string().min(1, "End date is required"),
   })
   .superRefine((data, ctx) => {
-    if (data.startDate && data.endDate) {
-      const start = new Date(data.startDate);
-      const end = new Date(data.endDate);
-      if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end < start) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "End date must be on or after start date.",
-          path: ["endDate"],
-        });
-      }
-    }
+    refineNotBeforeToday(data.startDate, ctx, "startDate", "Start date cannot be in the past");
+    refineNotBeforeToday(data.endDate, ctx, "endDate", "End date cannot be in the past");
+    refineDateOrder(data, ctx, {
+      mode: "after",
+      message: "End date must be after start date",
+    });
   });
 
 type CreateCycleForm = z.infer<typeof createCycleSchema>;
@@ -112,15 +114,27 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
   const handleToggleCompleted = useCallback(() => setShowCompleted((v) => !v), []);
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
   const { iconRef: completedChevronRef, hoverHandlers: completedChevronHoverHandlers } = useAnimatedIcon();
+  const watchedStartDate = form.watch("startDate");
+  const startPickerBounds = planningStartPickerProps();
+  const endPickerBounds = planningEndPickerProps({
+    startDate: watchedStartDate,
+    mode: "after",
+  });
+
   const handleSetStartDate = useCallback(
     (v: string) => {
-      form.setValue("startDate", v, { shouldValidate: form.formState.isSubmitted });
+      form.setValue("startDate", v, { shouldValidate: true });
+      const currentEnd = form.getValues("endDate") ?? "";
+      const nextEnd = clearEndIfInvalid(v, currentEnd, "after");
+      if (nextEnd !== currentEnd) {
+        form.setValue("endDate", nextEnd, { shouldValidate: true });
+      }
     },
     [form],
   );
   const handleSetEndDate = useCallback(
     (v: string) => {
-      form.setValue("endDate", v, { shouldValidate: form.formState.isSubmitted });
+      form.setValue("endDate", v, { shouldValidate: true });
     },
     [form],
   );
@@ -226,14 +240,30 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="startDate">Start Date</Label>
-                    <DatePicker id="startDate" value={form.watch("startDate") || ""} onChange={handleSetStartDate} placeholder="Start date" />
+                    <DatePicker
+                      id="startDate"
+                      value={watchedStartDate || ""}
+                      onChange={handleSetStartDate}
+                      placeholder="Start date"
+                      fromDate={startPickerBounds.fromDate}
+                      fromYear={startPickerBounds.fromYear}
+                      toYear={startPickerBounds.toYear}
+                    />
                     {form.formState.errors.startDate && (
                       <p className="text-xs text-destructive mt-1">{form.formState.errors.startDate.message}</p>
                     )}
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="endDate">End Date</Label>
-                    <DatePicker id="endDate" value={form.watch("endDate") || ""} onChange={handleSetEndDate} placeholder="End date" />
+                    <DatePicker
+                      id="endDate"
+                      value={form.watch("endDate") || ""}
+                      onChange={handleSetEndDate}
+                      placeholder="End date"
+                      fromDate={endPickerBounds.fromDate}
+                      fromYear={endPickerBounds.fromYear}
+                      toYear={endPickerBounds.toYear}
+                    />
                     {form.formState.errors.endDate && (
                       <p className="text-xs text-destructive mt-1">{form.formState.errors.endDate.message}</p>
                     )}

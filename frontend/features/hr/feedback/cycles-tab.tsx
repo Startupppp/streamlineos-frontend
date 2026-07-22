@@ -34,6 +34,13 @@ import {
   useUpdateFeedbackCycleStatus,
   type FeedbackCycle,
 } from "@/hooks/api/hr";
+import {
+  clearEndIfInvalid,
+  isEndInvalidForStart,
+  planningEndPickerProps,
+  planningStartPickerProps,
+} from "@/lib/date-constraints";
+import { getTodayString } from "@/lib/date-utils";
 
 const CYCLE_STATUS_STYLES: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground",
@@ -81,6 +88,20 @@ export function CyclesTab() {
     questions: [{ id: crypto.randomUUID(), text: "", type: "rating" }],
   });
 
+  const feedbackStartBounds = planningStartPickerProps();
+  const feedbackEndBounds = planningEndPickerProps({
+    startDate: form.startDate,
+    mode: "after",
+  });
+
+  function handleStartDateChange(value: string) {
+    setForm((prev) => ({
+      ...prev,
+      startDate: value,
+      endDate: clearEndIfInvalid(value, prev.endDate, "after"),
+    }));
+  }
+
   function handleFormChange(field: keyof CycleFormState, value: string | boolean) {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
@@ -111,6 +132,15 @@ export function CyclesTab() {
   async function handleCreate() {
     if (!form.name || !form.startDate || !form.endDate) {
       toast.error("Name, start date, and end date are required");
+      return;
+    }
+    const today = getTodayString();
+    if (form.startDate < today || form.endDate < today) {
+      toast.error("Cycle dates cannot be in the past");
+      return;
+    }
+    if (isEndInvalidForStart(form.startDate, form.endDate, "after")) {
+      toast.error("End date must be after start date");
       return;
     }
     try {
@@ -212,11 +242,27 @@ export function CyclesTab() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label>Start Date *</Label>
-                  <DatePicker value={form.startDate ?? ""} onChange={(v) => handleFormChange("startDate", v)} placeholder="Pick a date" className="text-sm" />
+                  <DatePicker
+                    value={form.startDate ?? ""}
+                    onChange={handleStartDateChange}
+                    placeholder="Pick a date"
+                    className="text-sm"
+                    fromDate={feedbackStartBounds.fromDate}
+                    fromYear={feedbackStartBounds.fromYear}
+                    toYear={feedbackStartBounds.toYear}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label>End Date *</Label>
-                  <DatePicker value={form.endDate ?? ""} onChange={(v) => handleFormChange("endDate", v)} placeholder="Pick a date" className="text-sm" />
+                  <DatePicker
+                    value={form.endDate ?? ""}
+                    onChange={(v) => handleFormChange("endDate", v)}
+                    placeholder="Pick a date"
+                    className="text-sm"
+                    fromDate={feedbackEndBounds.fromDate}
+                    fromYear={feedbackEndBounds.fromYear}
+                    toYear={feedbackEndBounds.toYear}
+                  />
                 </div>
               </div>
               <div className="flex items-center gap-3">

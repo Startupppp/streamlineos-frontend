@@ -2,8 +2,11 @@
 
 import { useCallback, useMemo, useState, useTransition } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { useProjects } from "@/hooks/api/projects";
+import { useCan } from "@/hooks/api/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { RequireModule } from "@/components/auth/require-module";
 import { NewProjectDialog } from "@/features/projects/project-list/new-project-dialog";
 import { ResumeLastProjectAction } from "@/features/projects/project-list/resume-last-project-action";
@@ -146,6 +149,25 @@ function groupProjects(
   return projects;
 }
 
+function NewProjectTrigger({
+  className,
+  onClick,
+}: {
+  className?: string;
+  onClick: () => void;
+}) {
+  return (
+    <AnimatedIconButton
+      icon={PlusIcon}
+      size="sm"
+      className={cn("h-9 gap-1.5", className)}
+      onClick={onClick}
+    >
+      New Project
+    </AnimatedIconButton>
+  );
+}
+
 export default function ProjectsPage() {
   const router = useRouter();
   const pathname = usePathname();
@@ -153,6 +175,7 @@ export default function ProjectsPage() {
   const [, startTransition] = useTransition();
   const shouldReduceMotion = useReducedMotion();
   const { prefs, setPrefs, toggle } = useDisplayPrefs();
+  const canCreate = useCan("projects:create");
 
   const createFromUrl = searchParams.get("create") === "1";
   const [manualCreateOpen, setManualCreateOpen] = useState(false);
@@ -313,16 +336,25 @@ export default function ProjectsPage() {
 
   return (
     <RequireModule module="PROJECTS">
+      {(canCreate || createOpen) && (
+        <NewProjectDialog
+          open={createOpen}
+          onOpenChange={handleCreateOpenChange}
+          trigger={null}
+        />
+      )}
       <PageWrapper
         title="All Projects"
         subtitle="Browse and manage every project in your workspace"
         actions={
           <>
             <ResumeLastProjectAction />
-            <NewProjectDialog
-              open={createOpen}
-              onOpenChange={handleCreateOpenChange}
-            />
+            {canCreate ? (
+              <NewProjectTrigger
+                className="hidden sm:inline-flex"
+                onClick={handleOpenCreate}
+              />
+            ) : null}
           </>
         }
       >
@@ -341,6 +373,11 @@ export default function ProjectsPage() {
               onViewModeChange={handleViewModeChange}
               showGroupingSidebar={showGroupingSidebar}
               onToggleGroupingSidebar={handleToggleGroupingSidebar}
+              leading={
+                canCreate ? (
+                  <NewProjectTrigger onClick={handleOpenCreate} />
+                ) : undefined
+              }
             />
           </PmSection>
 

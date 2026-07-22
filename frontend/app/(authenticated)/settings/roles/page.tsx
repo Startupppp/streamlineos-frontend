@@ -100,7 +100,6 @@ function RolesContent() {
       title="Roles & Permissions"
       subtitle="Configure access controls for each role."
       noInternalScroll
-      mobileFiltersInline
       actions={
         <div className="grid w-full grid-cols-3 gap-2 sm:flex sm:w-auto sm:flex-nowrap sm:justify-end">
           <Button variant="outline" size="sm" asChild className="w-full gap-1.5 sm:w-auto">

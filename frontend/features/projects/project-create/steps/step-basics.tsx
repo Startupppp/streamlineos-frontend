@@ -34,6 +34,11 @@ import {
 } from "@/components/ui/select";
 import { Check, ChevronDown, User } from "lucide-react";
 import { cn, resolveImageUrl } from "@/lib/utils";
+import {
+  clearEndIfInvalid,
+  planningEndPickerProps,
+  planningStartPickerProps,
+} from "@/lib/date-constraints";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { useSimpleClientsList } from "@/hooks/api/crm/clients";
 import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
@@ -160,6 +165,21 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
     function handleClientChange(value: string) {
       form.setValue("clientId", value === NONE_SENTINEL ? undefined : value);
     }
+
+    function handleStartDateChange(value: string) {
+      form.setValue("startDate", value, { shouldValidate: true });
+      const currentEnd = form.getValues("endDate") ?? "";
+      const nextEnd = clearEndIfInvalid(value, currentEnd, "after");
+      if (nextEnd !== currentEnd) {
+        form.setValue("endDate", nextEnd, { shouldValidate: true });
+      }
+    }
+
+    const startPickerBounds = planningStartPickerProps();
+    const endPickerBounds = planningEndPickerProps({
+      startDate: watchedStartDate,
+      mode: "after",
+    });
 
     return (
       <Form {...form}>
@@ -383,9 +403,12 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
                   <FormControl>
                     <DatePicker
                       value={field.value}
-                      onChange={field.onChange}
+                      onChange={handleStartDateChange}
                       placeholder="Start date"
                       dateFormat="dd/MM/yyyy"
+                      fromDate={startPickerBounds.fromDate}
+                      fromYear={startPickerBounds.fromYear}
+                      toYear={startPickerBounds.toYear}
                     />
                   </FormControl>
                   <FormMessage />
@@ -404,11 +427,9 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
                       onChange={field.onChange}
                       placeholder="End date"
                       dateFormat="dd/MM/yyyy"
-                      fromDate={
-                        watchedStartDate
-                          ? new Date(watchedStartDate)
-                          : undefined
-                      }
+                      fromDate={endPickerBounds.fromDate}
+                      fromYear={endPickerBounds.fromYear}
+                      toYear={endPickerBounds.toYear}
                     />
                   </FormControl>
                   <FormMessage />

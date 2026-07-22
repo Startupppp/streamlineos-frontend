@@ -221,7 +221,6 @@ export function ArchivedUsersPage() {
       <PageWrapper
         title="Archived Users"
         subtitle="Archived members no longer have access."
-        mobileFiltersInline
         filters={
           <div className="min-w-0 w-full flex-1 md:min-w-[160px] md:max-w-xs">
             <SearchInput

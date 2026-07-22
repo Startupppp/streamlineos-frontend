@@ -145,7 +145,7 @@ export function AllWorkPage() {
           index={0}
           className={cn(
             PAGE_CHROME_X,
-            "flex min-h-0 flex-1 flex-col gap-3 overflow-hidden pt-2",
+            "flex min-h-0 flex-1 flex-col gap-3 overflow-hidden",
           )}
         >
           <PageTabsToolbar

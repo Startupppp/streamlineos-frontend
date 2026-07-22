@@ -112,7 +112,12 @@ export function ProjectCreateWizard({
           </SheetDescription>
         </SheetHeader>
 
-        <SheetBody className="px-6">
+        <SheetBody
+          className={cn(
+            "px-6",
+            step === 4 && "flex flex-col overflow-hidden",
+          )}
+        >
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
               key={step}
@@ -122,6 +127,7 @@ export function ProjectCreateWizard({
               animate="animate"
               exit="exit"
               transition={{ duration: 0.22, ease: "easeOut" }}
+              className={cn(step === 4 && "flex min-h-0 flex-1 flex-col")}
             >
               {step === 1 && <StepBasics ref={basicsRef} {...sharedProps} />}
               {step === 2 && <StepType {...sharedProps} />}

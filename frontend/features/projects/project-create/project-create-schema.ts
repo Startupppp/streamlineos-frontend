@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { refineDateOrder, refineNotBeforeToday } from "@/lib/date-constraints";
 
 export const PROJECT_NAME_MAX = 100;
 export const PROJECT_KEY_MAX = 10;
@@ -28,12 +29,13 @@ export const basicsSchema = z
     startDate: z.string().optional(),
     endDate: z.string().optional(),
   })
-  .refine(
-    (data) => {
-      if (!data.startDate || !data.endDate) return true;
-      return new Date(data.startDate) <= new Date(data.endDate);
-    },
-    { message: "End date must be on or after start date", path: ["endDate"] }
-  );
+  .superRefine((data, ctx) => {
+    refineNotBeforeToday(data.startDate, ctx, "startDate", "Start date cannot be in the past");
+    refineNotBeforeToday(data.endDate, ctx, "endDate", "End date cannot be in the past");
+    refineDateOrder(data, ctx, {
+      mode: "after",
+      message: "End date must be after start date",
+    });
+  });
 
 export type BasicsValues = z.infer<typeof basicsSchema>;

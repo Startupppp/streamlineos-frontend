@@ -33,6 +33,13 @@ import { toast } from "sonner";
 import { EmojiIconPicker } from "@/components/ui/emoji-icon-picker";
 import { formatModuleName } from "@/features/projects/modules/lib/module-name";
 import {
+  clearEndIfInvalid,
+  planningEndPickerProps,
+  planningStartPickerProps,
+  refineDateOrder,
+  refineNotBeforeToday,
+} from "@/lib/date-constraints";
+import {
   PmPageShell,
   PmSection,
   PmStaggerList,
@@ -63,7 +70,6 @@ const createModuleSchema = z
     startDate: z.string().optional(),
     endDate: z.string().optional(),
     leadId: z.string().optional(),
-    allowPastDates: z.boolean().optional(),
   })
   .superRefine((data, ctx) => {
     const fullName = formatModuleName(data.icon, data.name);
@@ -75,31 +81,12 @@ const createModuleSchema = z
       });
     }
 
-    if (data.startDate && data.endDate) {
-      const start = new Date(data.startDate);
-      const end = new Date(data.endDate);
-      if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end < start) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "End date must be on or after start date.",
-          path: ["endDate"],
-        });
-      }
-    }
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    if (data.startDate && !data.allowPastDates) {
-      const start = new Date(data.startDate);
-      if (!isNaN(start.getTime()) && start < today) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Start date is in the past. Check "Allow past dates" to confirm.',
-          path: ["startDate"],
-        });
-      }
-    }
+    refineNotBeforeToday(data.startDate, ctx, "startDate", "Start date cannot be in the past");
+    refineNotBeforeToday(data.endDate, ctx, "endDate", "End date cannot be in the past");
+    refineDateOrder(data, ctx, {
+      mode: "after",
+      message: "End date must be after start date",
+    });
   });
 
 type CreateModuleForm = z.infer<typeof createModuleSchema>;
@@ -112,7 +99,6 @@ const FORM_DEFAULTS: CreateModuleForm = {
   startDate: "",
   endDate: "",
   leadId: undefined,
-  allowPastDates: false,
 };
 
 function NewModuleButton() {
@@ -145,17 +131,21 @@ export default function ModulesPage({
   const descValue = form.watch("description") ?? "";
   const startDateValue = form.watch("startDate") ?? "";
   const endDateValue = form.watch("endDate") ?? "";
-
-  const startDateInPast = (() => {
-    if (!startDateValue) return false;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const start = new Date(startDateValue);
-    return !isNaN(start.getTime()) && start < today;
-  })();
+  const startPickerBounds = planningStartPickerProps();
+  const endPickerBounds = planningEndPickerProps({
+    startDate: startDateValue,
+    mode: "after",
+  });
 
   const handleSetStartDate = useCallback(
-    (v: string) => form.setValue("startDate", v, { shouldValidate: true }),
+    (v: string) => {
+      form.setValue("startDate", v, { shouldValidate: true });
+      const currentEnd = form.getValues("endDate") ?? "";
+      const nextEnd = clearEndIfInvalid(v, currentEnd, "after");
+      if (nextEnd !== currentEnd) {
+        form.setValue("endDate", nextEnd, { shouldValidate: true });
+      }
+    },
     [form],
   );
   const handleSetEndDate = useCallback(
@@ -179,13 +169,6 @@ export default function ModulesPage({
     [form],
   );
 
-  const handleAllowPastDatesChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      form.setValue("allowPastDates", e.target.checked, { shouldValidate: true });
-    },
-    [form],
-  );
-
   const handleIconChange = useCallback(
     (icon: string | null) => {
       form.setValue("icon", icon ?? undefined, { shouldValidate: true });
@@ -195,7 +178,7 @@ export default function ModulesPage({
 
   const onSubmit = useCallback(
     (data: CreateModuleForm) => {
-      const { icon, allowPastDates: _allowPastDates, ...rest } = data;
+      const { icon, ...rest } = data;
       createMutation.mutate(
         {
           ...rest,
@@ -327,22 +310,14 @@ export default function ModulesPage({
                       value={startDateValue}
                       onChange={handleSetStartDate}
                       placeholder="Start date"
+                      fromDate={startPickerBounds.fromDate}
+                      fromYear={startPickerBounds.fromYear}
+                      toYear={startPickerBounds.toYear}
                     />
                     {form.formState.errors.startDate && (
                       <p className="text-xs text-destructive mt-1">
                         {form.formState.errors.startDate.message}
                       </p>
-                    )}
-                    {startDateInPast && (
-                      <label className="flex items-center gap-1.5 mt-1 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          className="h-3.5 w-3.5"
-                          {...form.register("allowPastDates")}
-                          onChange={handleAllowPastDatesChange}
-                        />
-                        <span className="text-xs text-amber-600">Allow past dates</span>
-                      </label>
                     )}
                   </div>
                   <div className="space-y-1.5">
@@ -352,6 +327,9 @@ export default function ModulesPage({
                       value={endDateValue}
                       onChange={handleSetEndDate}
                       placeholder="End date"
+                      fromDate={endPickerBounds.fromDate}
+                      fromYear={endPickerBounds.fromYear}
+                      toYear={endPickerBounds.toYear}
                     />
                     {form.formState.errors.endDate && (
                       <p className="text-xs text-destructive mt-1">

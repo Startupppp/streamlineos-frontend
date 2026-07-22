@@ -1,5 +1,7 @@
 # Pages
 
+> **PageWrapper mobile Filters chrome removed (2026-07-22)**: `PageWrapper` no longer wraps `filters` in a mobile-only “Filters” popover. Filters (including search-only toolbars) always render inline on all breakpoints with horizontal scroll; dead `mobileFiltersInline` / `filtersCollapseBreakpoint` props removed. Page-owned compact filter popovers (e.g. audit-log selects, project Add Filter) unchanged.
+
 > **Settings → Profile display name persist (2026-07-21)**: Display name save wrote `users.name` but UI stayed stale — NextAuth session callback refreshed `image` from live `/auth/session-data` but never `name` (JWT `token.name` frozen at login); `buildUserFromSessionData` also preferred `firstName+lastName` over `name`. Fixed: resolve display name like `getUserDisplayName` (prefer `name`), set `session.user.name` + refresh `token.name` on `updateSession`, bust FE session-data store + BE `user:session` cache on name/image profile patch. Char-limit work kept (100 chars).
 
 > **Settings → Profile display name limit (2026-07-21)**: Display name capped at 100 chars (matches auth `firstName`/`lastName` max and combined me-profile name parts). FE: Zod + RHF in `settings-profile-schema.ts`, `maxLength` on input, inline error. BE: `updateEmployeeSchema` `name`/`firstName`/`lastName` max 100 on `PATCH /hr/employees/:id`.
@@ -401,7 +403,7 @@ Ordered money-path first. Check off each page after fixing.
 - [x] `/projects/command-center` — Command Center: eyebrow on all states, StatCardGrid + PageSection pattern (reference-aligned); **2026-07-13 quick-nav 404 fix** — pinned links repointed to real workspace routes (my-work/all-work/approvals/roadmap/portfolios), workspace-level "Create Sprint" removed (project-scoped), project-card "New Task" now opens the board create dialog via `?create=1` (wired through `CreateTicketDialog` `externalOpen`); **2026-07-22** platform `StatCardGrid` always single-row equal-width cards (no `sm:` multi-row wrap)
 - [x] `/projects/my-work` — My Work: PmPageShell + glass StatCards, denser tabs, due-bucket PmPanels, WorkItemRow TEXT_ONE_LINE/PM_ROW (Linear-grade polish 2026-07-14)
 - [x] `/projects/all-work` — All Work: PmPageShell + PM_TOOLBAR filters, theme-token Me scope, glass list/board/table sections, overflow-safe titles, polished empty/error/loading + pagination chrome (Linear-grade polish 2026-07-14)
-- [x] `/projects/settings/integrations` — Tabs IA (Connections / Agent access); GitHub-only How it works in add dialog, post-create secret dialog, and GitHub row expand; glass PmPageShell; backed by `/agent-tokens` + `/agent/v1/*` + `mcp-server.mjs` (2026-07-21); Feedbucket tab removed — lives under project Feedback (`/projects/[projectId]/feedbucket`) (2026-07-21)
+- [x] `/projects/settings/integrations` — Tabs IA (Connections / Agent access); GitHub-only How it works in add dialog, post-create secret dialog, and GitHub row expand; glass PmPageShell; backed by `/agent-tokens` + `/agent/v1/*` + `mcp-server.mjs` (2026-07-21); Feedbucket tab removed — lives under project Feedback (`/projects/[projectId]/feedbucket`) (2026-07-21); **AgentTokensSection denser redesign** — single New token CTA, icon-led empty, quieter setup accordion (2026-07-22)
 - [x] `/projects/[projectId]/feedbucket` — Submissions-first Feedback inbox; widget setup (snippet/key/rotate/AI) in Sheet via progressive disclosure; status chips + “Widget setup” in header; embed URLs/keys from env/`lib/feedbucket.ts` + API widget/project name (no localhost/brand hardcodes); empty submissions fill remaining pane via `flex-1 min-h-0 h-full` (2026-07-21)
 - [x] `/projects/portfolio` — Portfolio health view: eyebrow, subtitle, StatCardGrid, filters in PageWrapper, rounded-xl table shell
 - [x] `/projects/[projectId]/releases` — Releases: PmPageShell + glass table panel, overflow-safe names, animated create/delete, getErrorMessage; create/edit Sheet w/ TipTap notes + status badges (Linear-grade polish 2026-07-14)
@@ -617,14 +619,14 @@ All reconciled (hook URLs↔routes, chat signatures, PermissionKeys). Build not 
 - [x] `/settings` — Account settings (profile + security only); notification prefs removed 2026-07-13 — use `/notifications/preferences` (deleted `settings-preferences.tsx` + legacy HR notification hooks)
 - [x] `/settings/organization` — Organization settings
 - [x] `/settings/members` — Members management
-- [x] `/settings/roles` — Roles list; Users-pattern toolbar (`mobileFiltersInline` search, equal-width Audit/Template/New role on mobile, StatCardGrid) 2026-07-21
+- [x] `/settings/roles` — Roles list; Users-pattern toolbar (inline search, equal-width Audit/Template/New role on mobile, StatCardGrid) 2026-07-21
 - [x] `/settings/roles/[roleId]` — Role editor: per-role permission matrix + member list via `useRole`/`useRoleMembers`, gated `settings:rbac:manage`, back button to `/settings/roles`
 - [x] `/settings/roles/simulate` — Permission Simulator — employee combobox, simulates effective permissions via GET /roles/simulate/:targetUserId, grouped by module with expandable rows, scope badges
 - [x] `/settings/modules` — Org module management: enable/disable feature modules via `useOrgModules`/`useToggleOrgModule`, responsive grid with Switch per module, gated `settings:manage`; Feedbucket removed from catalog 2026-07-13 (lives under PM `/projects/[projectId]/feedbucket`); 2026-07-19 cards restyled to product-switcher language (accent icon tile + name + one-line description) via shared `lib/module-catalog.ts` derived from `sidebar-nav-items` sources; Blog removed from org-modules catalog 2026-07-19 (public `/blogs` + RBAC kept — not an org toggle)
 - [x] `/settings/permissions` — Permission Matrix — replaced `DashboardGate allowedRoles` with `permission="settings:rbac:manage"`, added `GET /roles/permissions/matrix` backend endpoint, `useRolePermissionsMatrix()` hook, page now renders live role/permission data with loading skeleton, error state, and empty state
 - [x] `/settings/branches` — Branches (E2E fix: empty state fills content height with in-card primary CTA)
 - [x] `/settings/notifications` — Redirects to `/notifications/preferences`
-- [x] `/settings/audit-log` — Audit log; Users-pattern filters (`mobileFiltersInline` search + Selects/dates, Filters popover in actions, EmptyState) 2026-07-21
+- [x] `/settings/audit-log` — Audit log; Users-pattern filters (inline search + Selects/dates, mobile Selects in page Filters popover, EmptyState) 2026-07-21
 - [x] `/settings/webhooks` — Webhooks (E2E fix: empty state fills content height with in-card primary CTA)
 - [x] `/settings/email-templates` — Email templates
 - [x] `/settings/custom-fields` — Custom fields (E2E fix: empty state fills content height with in-card primary CTA)
@@ -635,7 +637,7 @@ All reconciled (hook URLs↔routes, chat signatures, PermissionKeys). Build not 
 - [x] ~~`/settings/integrations/calendar`~~ — REMOVED 2026-07-05: superseded by the in-calendar accounts sheet on `/calendar` (Composio-managed connections)
 - [x] ~~`/settings/data-hub`~~ — DELETED 2026-07-05: module-owned import/export moved to `/crm/settings/import-export`, `/hr/settings/import-export`, `/payroll/settings/import-export`
 - [x] ~~`/settings/ai`~~ — REDIRECT 2026-07-05 → `/crm/settings/ai`
-- [x] `/projects/settings/integrations` — Integrations: Tabs (Connections · Agent access); GitHub-only How it works (add dialog / post-create / row expand); empty-state illustration; agent tokens; getErrorMessage (2026-07-21)
+- [x] `/projects/settings/integrations` — Integrations: Tabs (Connections · Agent access); GitHub-only How it works (add dialog / post-create / row expand); AgentTokensSection denser empty + single CTA (2026-07-22); getErrorMessage (2026-07-21)
 - [x] `/support/settings/automations` — Support ticket automation rules
 - [x] `/accounting/settings/automations` — Finance automation rules
 - [x] `/settings/api-tokens` — API tokens
@@ -649,7 +651,7 @@ All reconciled (hook URLs↔routes, chat signatures, PermissionKeys). Build not 
 
 ## New Non-HR Feature Pages (added — full vertical: schema → migration → service → API → TanStack hooks → UI)
 - [x] `/projects/[projectId]/reports` — Agile Reporting: velocity, burnup, cumulative-flow (CFD) + on-demand daily snapshots (`project_daily_snapshots`); recharts; per-section loading/empty/error states.
-- [x] `/projects/goal` — Goals & OKRs: PmPageShell glass stats/cards + PM_TOOLBAR filters, TEXT overflow, RequireModule (`/goals` redirects here) (2026-07-14 Linear polish)
+- [x] `/projects/goal` — Goals & OKRs: PmPageShell glass stats/cards + PM_TOOLBAR filters, TEXT overflow, RequireModule (`/goals` redirects here); mobile Level/Status filters in Filters drawer beside New Goal (`md+` keeps inline selects) (2026-07-22)
 - [x] `/projects/goal/[goalId]` — Goal detail: PmPanel sections, LoadingButton check-in/link, backHref, getErrorMessage (`/goals/[goalId]` redirects) (2026-07-14 Linear polish)
 - [x] `/support/kb` — Knowledge Base manager: categories + articles, status/visibility filters, search (`kb_categories`/`kb_articles`/`kb_article_feedback`; subject `support:kb`).
 - [x] `/support/kb/[articleId]` — KB article editor (title/category/excerpt/visibility/status/tags/content) + feedback summary.

@@ -26,6 +26,11 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { toast } from "sonner";
 import { resolveImageUrl, cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  clearEndIfInvalid,
+  planningEndPickerProps,
+  planningStartPickerProps,
+} from "@/lib/date-constraints";
 import { Separator } from "@/components/ui/separator";
 import {
   Plus, Trash2, Pencil,
@@ -179,9 +184,26 @@ export function PIPTab() {
   const handleOpenCreate = useCallback(() => { resetForm(); setSheetOpen(true); }, [resetForm]);
   const handleSheetOpenChange = useCallback((open: boolean) => { if (!open) resetForm(); setSheetOpen(open); }, [resetForm]);
   const handleReasonChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setReason(e.target.value), []);
-  const handleStartDateChange = useCallback((value: string) => setStartDate(value), []);
+  const handleStartDateChange = useCallback((value: string) => {
+    setStartDate(value);
+    setEndDate((prev) => clearEndIfInvalid(value, prev, "after"));
+  }, []);
   const handleEndDateChange = useCallback((value: string) => setEndDate(value), []);
   const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value), []);
+
+  const pipStartBounds = planningStartPickerProps({
+    existingValue: editingPip ? startDate : undefined,
+  });
+  const pipEndBounds = planningEndPickerProps({
+    startDate,
+    mode: "after",
+    existingValue: editingPip ? endDate : undefined,
+  });
+  const objectiveDeadlineBounds = planningEndPickerProps({
+    startDate,
+    mode: "after",
+    existingValue: editingPip ? startDate : undefined,
+  });
 
   if (isLoading) {
     return <LoadingState variant="list" rows={12} />;
@@ -355,11 +377,28 @@ export function PIPTab() {
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Start Date <span className="text-destructive">*</span></label>
-            <DatePicker value={startDate ?? ""} onChange={handleStartDateChange} disabled={!!editingPip} placeholder="Pick a date" className="text-sm" />
+            <DatePicker
+              value={startDate ?? ""}
+              onChange={handleStartDateChange}
+              disabled={!!editingPip}
+              placeholder="Pick a date"
+              className="text-sm"
+              fromDate={pipStartBounds.fromDate}
+              fromYear={pipStartBounds.fromYear}
+              toYear={pipStartBounds.toYear}
+            />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">End Date <span className="text-destructive">*</span></label>
-            <DatePicker value={endDate ?? ""} onChange={handleEndDateChange} placeholder="Pick a date" className="text-sm" />
+            <DatePicker
+              value={endDate ?? ""}
+              onChange={handleEndDateChange}
+              placeholder="Pick a date"
+              className="text-sm"
+              fromDate={pipEndBounds.fromDate}
+              fromYear={pipEndBounds.fromYear}
+              toYear={pipEndBounds.toYear}
+            />
           </div>
         </div>
         <div className="space-y-2">
@@ -382,7 +421,16 @@ export function PIPTab() {
                 </div>
                 <Input placeholder="Goal / objective" value={obj.objective} onChange={(e) => updateObjectiveField(idx, "objective", e.target.value)} className="text-xs" />
                 <Input placeholder="Success metric" value={obj.metric} onChange={(e) => updateObjectiveField(idx, "metric", e.target.value)} className="text-xs" />
-                <DatePicker value={obj.deadline ?? ""} onChange={(v) => updateObjectiveField(idx, "deadline", v)} placeholder="Pick a date" className="text-xs" />
+                <DatePicker
+                  value={obj.deadline ?? ""}
+                  onChange={(v) => updateObjectiveField(idx, "deadline", v)}
+                  placeholder="Pick a date"
+                  className="text-xs"
+                  fromDate={objectiveDeadlineBounds.fromDate}
+                  fromYear={objectiveDeadlineBounds.fromYear}
+                  toYear={objectiveDeadlineBounds.toYear}
+                  toDate={endDate ? new Date(`${endDate}T00:00:00`) : undefined}
+                />
               </div>
             ))}
           </div>

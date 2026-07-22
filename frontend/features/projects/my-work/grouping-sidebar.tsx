@@ -2,8 +2,6 @@
 
 import { memo, useCallback, useMemo } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { X } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
   Drawer,
   DrawerContent,
@@ -89,14 +87,12 @@ const SidebarRow = memo(function SidebarRow({
 interface GroupingSidebarBodyProps {
   tickets: AllWorkTicket[] | undefined;
   isLoading: boolean;
-  onClose: () => void;
   className?: string;
 }
 
 function GroupingSidebarBody({
   tickets,
   isLoading,
-  onClose,
   className,
 }: GroupingSidebarBodyProps) {
   const router = useRouter();
@@ -211,18 +207,8 @@ function GroupingSidebarBody({
 
   return (
     <div className={cn("flex h-full min-h-0 flex-col gap-2 overflow-hidden", className)}>
-      <div className="flex items-center justify-between border-b border-border/50 px-3 py-2">
+      <div className="border-b border-border/50 px-3 py-2">
         <span className="text-xs font-semibold text-foreground">Group by</span>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6 text-muted-foreground"
-          onClick={onClose}
-          aria-label="Close grouping sidebar"
-        >
-          <X className="h-3.5 w-3.5" />
-        </Button>
       </div>
 
       <Tabs defaultValue="priority" className="flex min-h-0 flex-1 flex-col">
@@ -313,14 +299,9 @@ export const GroupingSidebar = memo(function GroupingSidebar({
 }: GroupingSidebarProps) {
   const isMobile = useIsMobile();
 
-  const handleClose = useCallback(() => {
-    onOpenChange(false);
-  }, [onOpenChange]);
-
   const bodyProps = {
     tickets,
     isLoading,
-    onClose: handleClose,
   };
 
   return (
@@ -349,7 +330,7 @@ export const GroupingSidebar = memo(function GroupingSidebar({
 
       {open ? (
         <aside
-          className="hidden h-full w-[220px] shrink-0 flex-col overflow-hidden rounded-xl border border-border/80 bg-card/85 shadow-sm backdrop-blur-md supports-[backdrop-filter]:bg-card/75 md:flex"
+          className="hidden h-full min-w-56 w-60 shrink-0 flex-col overflow-hidden rounded-xl border border-border/80 bg-card/85 shadow-sm backdrop-blur-md supports-[backdrop-filter]:bg-card/75 md:flex"
           aria-label="Group by"
         >
           {!isMobile ? <GroupingSidebarBody {...bodyProps} /> : null}

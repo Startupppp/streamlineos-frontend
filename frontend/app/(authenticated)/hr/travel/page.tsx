@@ -22,6 +22,7 @@ import { useMyTravelRequests, useCreateTravelRequest, type TravelRequest } from 
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { planningEndPickerProps } from "@/lib/date-constraints";
 import { format } from "date-fns";
 
 const MONEY_RE = /^\d+(\.\d{1,2})?$/;
@@ -422,12 +423,13 @@ export default function TravelPage() {
                     field.onChange(value);
                     const currentReturn = form.getValues("returnDate");
                     if (currentReturn && value && currentReturn < value) {
-                      form.setValue("returnDate", value, { shouldValidate: true });
+                      form.setValue("returnDate", "", { shouldValidate: true });
                     }
                     void form.trigger(["departureDate", "returnDate"]);
                   }}
                   placeholder="Pick a date"
                   className="text-sm"
+                  disablePast
                 />
               )}
             />
@@ -444,10 +446,10 @@ export default function TravelPage() {
               control={form.control}
               render={({ field }) => {
                 const departure = form.watch("departureDate");
-                const fromDate =
-                  departure && /^\d{4}-\d{2}-\d{2}$/.test(departure)
-                    ? new Date(`${departure}T00:00:00`)
-                    : undefined;
+                const returnBounds = planningEndPickerProps({
+                  startDate: departure,
+                  mode: "onOrAfter",
+                });
                 return (
                   <DatePicker
                     id="returnDate"
@@ -455,7 +457,9 @@ export default function TravelPage() {
                     onChange={field.onChange}
                     placeholder="Pick a date"
                     className="text-sm"
-                    fromDate={fromDate}
+                    fromDate={returnBounds.fromDate}
+                    fromYear={returnBounds.fromYear}
+                    toYear={returnBounds.toYear}
                   />
                 );
               }}

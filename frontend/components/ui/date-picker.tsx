@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { format, parseISO, isValid } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -8,6 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { FIELD_CONTROL_CLASS } from "@/components/ui/field-control";
+import {
+  resolveDatePickerYearBounds,
+  startOfLocalDay,
+  maxDate,
+} from "@/lib/date-constraints";
 
 interface DatePickerProps {
   value?: string;
@@ -22,6 +27,7 @@ interface DatePickerProps {
   id?: string;
   disabledDays?: (date: Date) => boolean;
   dateFormat?: string;
+  disablePast?: boolean;
 }
 
 function parseDateValue(value: string | undefined): Date | undefined {
@@ -38,14 +44,32 @@ export function DatePicker({
   className,
   fromDate,
   toDate,
-  fromYear = 1950,
-  toYear = new Date().getFullYear() + 5,
+  fromYear,
+  toYear,
   id,
   disabledDays,
   dateFormat = "PPP",
+  disablePast = false,
 }: DatePickerProps) {
   const [open, setOpen] = useState(false);
   const selected = parseDateValue(value);
+
+  const effectiveFromDate = useMemo(() => {
+    if (!disablePast) return fromDate;
+    const today = startOfLocalDay();
+    return maxDate(today, fromDate) ?? today;
+  }, [disablePast, fromDate]);
+
+  const yearBounds = useMemo(
+    () =>
+      resolveDatePickerYearBounds({
+        fromDate: effectiveFromDate,
+        toDate,
+        fromYear,
+        toYear,
+      }),
+    [effectiveFromDate, toDate, fromYear, toYear],
+  );
 
   const handleSelect = useCallback(
     (date: Date | undefined) => {
@@ -54,7 +78,7 @@ export function DatePicker({
         setOpen(false);
       }
     },
-    [onChange]
+    [onChange],
   );
 
   const handleOpenChange = useCallback((o: boolean) => setOpen(o), []);
@@ -84,10 +108,11 @@ export function DatePicker({
           mode="single"
           selected={selected}
           onSelect={handleSelect}
-          fromDate={fromDate}
+          fromDate={effectiveFromDate}
           toDate={toDate}
-          fromYear={fromYear}
-          toYear={toYear}
+          fromYear={yearBounds.fromYear}
+          toYear={yearBounds.toYear}
+          defaultMonth={selected ?? effectiveFromDate}
           initialFocus
           disabled={disabledDays}
         />

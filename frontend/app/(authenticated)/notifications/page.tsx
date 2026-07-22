@@ -253,7 +253,6 @@ export default function NotificationsPage() {
     <PageWrapper
       title="Notifications"
       subtitle="Stay up to date with everything happening in your workspace"
-      mobileFiltersInline
       actions={
         showMarkAllRead ? (
           <LoadingButton

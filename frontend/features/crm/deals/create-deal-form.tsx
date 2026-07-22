@@ -207,6 +207,7 @@ export function CreateDealForm({ employees, onSuccess }: CreateDealFormProps) {
                     value={field.value ?? ""}
                     onChange={field.onChange}
                     placeholder="Select date"
+                    disablePast
                   />
                 </FormControl>
                 <FormMessage />

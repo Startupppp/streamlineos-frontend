@@ -15,7 +15,7 @@ export const FILTER_SELECT_TRIGGER =
   "border-input bg-card text-foreground [&_svg]:text-muted-foreground";
 
 export const FILTER_TOOLBAR_ROW =
-  "flex w-full min-w-0 max-w-full flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain scrollbar-hide touch-pan-x [&>*]:shrink-0";
+  "flex w-full min-w-0 max-w-full flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain scrollbar-hide touch-pan-x [&>*:first-child]:min-w-0 [&>*:first-child]:flex-1 [&>*:not(:first-child)]:shrink-0 sm:[&>*]:shrink-0 sm:[&>*:first-child]:flex-none";
 
 export const CONTENT_PANEL_SOLID =
   "rounded-xl border border-border bg-card shadow-sm";

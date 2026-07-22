@@ -166,6 +166,7 @@ export function MilestoneUpsertSheet({ projectId, milestone, onClose }: Mileston
                           onChange={handleTargetDateChange}
                           placeholder="Pick a date"
                           className="text-sm"
+                          disablePast
                         />
                       </FormControl>
                       <FormMessage />

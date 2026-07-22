@@ -375,7 +375,6 @@ export default function OrgLocationsPage() {
     <PageWrapper
       title="Locations"
       subtitle="Physical work locations and offices."
-      mobileFiltersInline
       actions={
         <div className="flex w-full items-center gap-2 sm:w-auto">
           <Button

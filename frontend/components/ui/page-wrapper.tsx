@@ -3,9 +3,8 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { ArrowLeft, SlidersHorizontal } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PAGE_CHROME_BOTTOM, PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
@@ -18,8 +17,6 @@ interface PageWrapperProps {
   actions?: React.ReactNode;
   filters?: React.ReactNode;
   filtersClassName?: string;
-  filtersCollapseBreakpoint?: "sm" | "md";
-  mobileFiltersInline?: boolean;
   actionsInline?: boolean;
   children: React.ReactNode;
   className?: string;
@@ -37,8 +34,6 @@ export function PageWrapper({
   actions,
   filters,
   filtersClassName,
-  filtersCollapseBreakpoint = "md",
-  mobileFiltersInline = false,
   actionsInline = false,
   children,
   className,
@@ -50,11 +45,6 @@ export function PageWrapper({
     variant === "display"
       ? "font-display text-xl sm:text-2xl lg:text-[1.7rem] font-extrabold tracking-[-0.02em] text-foreground leading-tight"
       : "text-base sm:text-lg font-semibold tracking-tight text-foreground leading-tight";
-
-  const mobileFiltersClass =
-    filtersCollapseBreakpoint === "md" ? "flex md:hidden" : "flex sm:hidden";
-  const desktopFiltersClass =
-    filtersCollapseBreakpoint === "md" ? "hidden md:flex" : "hidden sm:flex";
 
   return (
     <div className={cn("flex flex-col flex-1 min-h-0 min-w-0 overflow-x-hidden", className)}>
@@ -119,7 +109,7 @@ export function PageWrapper({
               className={cn(
                 actionsInline
                   ? "flex shrink-0 items-center gap-2"
-                  : "flex w-full flex-wrap items-center gap-2 sm:w-auto sm:shrink-0 sm:flex-nowrap sm:justify-end",
+                  : "flex w-full flex-col items-stretch gap-2 sm:w-auto sm:shrink-0 sm:flex-row sm:flex-nowrap sm:items-center sm:justify-end [&>*]:w-full sm:[&>*]:w-auto",
               )}
             >
               {actions}
@@ -129,35 +119,14 @@ export function PageWrapper({
       </div>
 
       {filters && (
-        <div className="shrink-0 min-w-0">
-          {!mobileFiltersInline && (
-            <div className={cn(PAGE_CHROME_X, "pb-2.5", mobileFiltersClass, filtersClassName)}>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-9 gap-1.5 text-xs">
-                    <SlidersHorizontal className="h-4 w-4" />
-                    Filters
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent
-                  className="w-[min(22rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] p-3"
-                  align="start"
-                >
-                  <div className="flex flex-col gap-2">{filters}</div>
-                </PopoverContent>
-              </Popover>
-            </div>
+        <div
+          className={cn(
+            "shrink-0 w-full min-w-0 flex flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain scrollbar-hide touch-pan-x pb-3 sm:gap-2.5 [&>*:first-child]:min-w-0 [&>*:first-child]:flex-1 sm:[&>*:first-child]:flex-none",
+            PAGE_CHROME_X,
+            filtersClassName,
           )}
-          <div
-            className={cn(
-              "w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain scrollbar-hide touch-pan-x pb-3 sm:gap-2.5",
-              PAGE_CHROME_X,
-              mobileFiltersInline ? "flex" : desktopFiltersClass,
-              filtersClassName,
-            )}
-          >
-            {filters}
-          </div>
+        >
+          {filters}
         </div>
       )}
 

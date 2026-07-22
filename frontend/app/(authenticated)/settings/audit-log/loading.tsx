@@ -7,7 +7,6 @@ export default function AuditLogLoading() {
     <PageWrapper
       title="Audit Log"
       subtitle="Track all system actions, logins, and changes across your organization."
-      mobileFiltersInline
       filters={
         <>
           <Skeleton className="h-9 w-[5.5rem] shrink-0 rounded-md md:hidden" />

@@ -1,9 +1,7 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
-import { X } from "lucide-react";
+import { useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import {
   Drawer,
   DrawerContent,
@@ -34,7 +32,6 @@ interface GroupingSidebarBodyProps {
   projects: ProjectListItem[];
   activeGroup: string | null;
   onGroupSelect: (key: string | null) => void;
-  onClose?: () => void;
   className?: string;
 }
 
@@ -78,7 +75,6 @@ function GroupingSidebarBody({
   projects,
   activeGroup,
   onGroupSelect,
-  onClose,
   className,
 }: GroupingSidebarBodyProps) {
   const statusGroups = useMemo<GroupRow[]>(() => {
@@ -224,18 +220,6 @@ function GroupingSidebarBody({
             Teams
           </TabsTrigger>
         </TabsList>
-        {onClose ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 shrink-0 text-muted-foreground"
-            onClick={onClose}
-            aria-label="Close grouping sidebar"
-          >
-            <X className="h-3.5 w-3.5" />
-          </Button>
-        ) : null}
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto p-2">
@@ -322,15 +306,10 @@ export function GroupingSidebar({
 }: GroupingSidebarProps) {
   const isMobile = useIsMobile();
 
-  const handleClose = useCallback(() => {
-    onOpenChange(false);
-  }, [onOpenChange]);
-
   const bodyProps = {
     projects,
     activeGroup,
     onGroupSelect,
-    onClose: handleClose,
   };
 
   return (
@@ -361,7 +340,7 @@ export function GroupingSidebar({
         <aside
           className={cn(
             PM_PANEL,
-            "hidden w-52 shrink-0 flex-col overflow-hidden md:flex",
+            "hidden min-w-56 w-60 shrink-0 flex-col overflow-hidden md:flex",
             className,
           )}
           aria-label="Group projects by"

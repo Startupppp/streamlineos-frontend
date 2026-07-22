@@ -9,6 +9,11 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Calendar, FolderKanban } from "lucide-react";
+import {
+  clearEndIfInvalid,
+  planningEndPickerProps,
+  planningStartPickerProps,
+} from "@/lib/date-constraints";
 
 
 interface MeetingDialogProps {
@@ -139,6 +144,8 @@ export function CreateProjectDialog({ open, onOpenChange, defaultName, onSubmit,
   const [name, setName] = useState(defaultName);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const startBounds = planningStartPickerProps();
+  const endBounds = planningEndPickerProps({ startDate, mode: "after" });
 
   const handleSubmit = useCallback(() => {
     onSubmit({
@@ -155,7 +162,10 @@ export function CreateProjectDialog({ open, onOpenChange, defaultName, onSubmit,
 
   const handleCancel = useCallback(() => handleOpenChange(false), [handleOpenChange]);
   const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value), []);
-  const handleStartDateChange = useCallback((value: string) => setStartDate(value), []);
+  const handleStartDateChange = useCallback((value: string) => {
+    setStartDate(value);
+    setEndDate((prev) => clearEndIfInvalid(value, prev, "after"));
+  }, []);
   const handleEndDateChange = useCallback((value: string) => setEndDate(value), []);
 
   return (
@@ -174,11 +184,27 @@ export function CreateProjectDialog({ open, onOpenChange, defaultName, onSubmit,
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Start Date</Label>
-              <DatePicker value={startDate ?? ""} onChange={handleStartDateChange} placeholder="Pick a date" className="text-sm" />
+              <DatePicker
+                value={startDate ?? ""}
+                onChange={handleStartDateChange}
+                placeholder="Pick a date"
+                className="text-sm"
+                fromDate={startBounds.fromDate}
+                fromYear={startBounds.fromYear}
+                toYear={startBounds.toYear}
+              />
             </div>
             <div className="space-y-1.5">
               <Label>End Date</Label>
-              <DatePicker value={endDate ?? ""} onChange={handleEndDateChange} placeholder="Pick a date" className="text-sm" />
+              <DatePicker
+                value={endDate ?? ""}
+                onChange={handleEndDateChange}
+                placeholder="Pick a date"
+                className="text-sm"
+                fromDate={endBounds.fromDate}
+                fromYear={endBounds.fromYear}
+                toYear={endBounds.toYear}
+              />
             </div>
           </div>
         </div>

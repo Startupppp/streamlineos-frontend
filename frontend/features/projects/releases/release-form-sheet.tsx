@@ -217,6 +217,7 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
                           onChange={(val) => field.onChange(val || null)}
                           placeholder="Pick a date"
                           className="text-sm"
+                          disablePast
                         />
                       </FormControl>
                       <FormMessage className="text-xs" />

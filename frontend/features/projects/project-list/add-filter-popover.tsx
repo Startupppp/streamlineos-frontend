@@ -122,13 +122,14 @@ export function AddFilterPopover({ filters, onFiltersChange }: AddFilterPopoverP
         <Button
           variant="outline"
           size="sm"
+          aria-label="Filters"
           className={cn(
-            "h-8 gap-1.5 text-xs",
+            "h-9 gap-1.5 text-xs",
             hasAny && "border-primary/40 bg-primary/5 text-primary",
           )}
         >
           <Filter className="h-3.5 w-3.5" aria-hidden="true" />
-          Filters
+          <span className="hidden sm:inline">Filters</span>
           {hasAny ? (
             <Badge className="ml-0.5 h-4 min-w-4 rounded-full px-1 text-[10px]">
               {activeCount}

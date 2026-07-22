@@ -12,18 +12,44 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/date-picker";
+import {
+  clearEndIfInvalid,
+  planningEndPickerProps,
+  planningStartPickerProps,
+} from "@/lib/date-constraints";
 
 export type SprintFieldShape = { name: string; startDate: string; endDate: string; goal?: string };
 
 interface SprintFormFieldsProps {
   form: UseFormReturn<SprintFieldShape>;
   goalPlaceholder?: string;
+  allowPastStart?: boolean;
 }
 
 export function SprintFormFields({
   form,
   goalPlaceholder = "What do you want to achieve in this sprint?",
+  allowPastStart = false,
 }: SprintFormFieldsProps) {
+  const watchedStartDate = form.watch("startDate");
+  const startBounds = planningStartPickerProps({
+    existingValue: allowPastStart ? watchedStartDate : undefined,
+  });
+  const endBounds = planningEndPickerProps({
+    startDate: watchedStartDate,
+    mode: "after",
+    existingValue: allowPastStart ? form.watch("endDate") : undefined,
+  });
+
+  function handleStartDateChange(value: string) {
+    form.setValue("startDate", value, { shouldValidate: true });
+    const currentEnd = form.getValues("endDate") ?? "";
+    const nextEnd = clearEndIfInvalid(value, currentEnd, "after");
+    if (nextEnd !== currentEnd) {
+      form.setValue("endDate", nextEnd, { shouldValidate: true });
+    }
+  }
+
   return (
     <>
       <FormField
@@ -50,7 +76,13 @@ export function SprintFormFields({
             <FormItem>
               <FormLabel>Start date</FormLabel>
               <FormControl>
-                <DatePicker value={field.value} onChange={field.onChange} />
+                <DatePicker
+                  value={field.value}
+                  onChange={handleStartDateChange}
+                  fromDate={startBounds.fromDate}
+                  fromYear={startBounds.fromYear}
+                  toYear={startBounds.toYear}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -63,7 +95,13 @@ export function SprintFormFields({
             <FormItem>
               <FormLabel>End date</FormLabel>
               <FormControl>
-                <DatePicker value={field.value} onChange={field.onChange} />
+                <DatePicker
+                  value={field.value}
+                  onChange={field.onChange}
+                  fromDate={endBounds.fromDate}
+                  fromYear={endBounds.fromYear}
+                  toYear={endBounds.toYear}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

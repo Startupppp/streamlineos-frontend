@@ -160,7 +160,7 @@ export function ActionItemFormSheet({
                 <FormItem>
                   <FormLabel>Due Date (optional)</FormLabel>
                   <FormControl>
-                    <DatePicker value={field.value} onChange={field.onChange} placeholder="Select due date" className="text-sm" />
+                    <DatePicker value={field.value} onChange={field.onChange} placeholder="Select due date" className="text-sm" disablePast />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

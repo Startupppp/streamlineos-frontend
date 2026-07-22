@@ -205,7 +205,6 @@ export function MyTicketsPage({ params }: PageProps) {
       subtitle="Tickets assigned to or reported by you"
       noInternalScroll
       contentClassName="!p-0"
-      mobileFiltersInline
       filters={
         <TicketFilterBar
           showSprintFilter={false}
