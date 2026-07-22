@@ -15,13 +15,34 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { EmptyPayroll } from "@/components/illustrations";
 import { RunStatusBadge } from "@/features/payroll/runs/run-status-badge";
 import { MonthPicker } from "@/features/payroll/shared/month-picker";
 import { formatMoney, formatMonth } from "@/features/payroll/shared/payroll-format";
-import { usePayrollRuns, useCreateRun } from "@/hooks/api/payroll/runs";
+import {
+  usePayrollRuns,
+  useCreateRun,
+  type PayrollRunType,
+} from "@/hooks/api/payroll/runs";
 import { useCan } from "@/hooks/api/access";
 import type { PayrollRunListItem } from "@/types/payroll/runs";
+
+const RUN_TYPE_OPTIONS: { value: PayrollRunType; label: string; hint: string }[] = [
+  { value: "REGULAR", label: "Regular", hint: "The month's standard payroll run" },
+  { value: "BONUS", label: "Bonus", hint: "Approved variable pay, separate from regular pay" },
+  { value: "OFF_CYCLE", label: "Off-cycle", hint: "Joiner, advance, or special payment" },
+  { value: "CORRECTION", label: "Correction", hint: "Corrects a closed or paid result" },
+  { value: "FINAL_SETTLEMENT", label: "Final settlement", hint: "Termination / F&F run" },
+];
+
+const RUN_TYPES_NEEDING_SOURCE: PayrollRunType[] = ["OFF_CYCLE", "CORRECTION", "FINAL_SETTLEMENT"];
 
 export function RunsPageContent() {
   const router = useRouter();
@@ -31,6 +52,8 @@ export function RunsPageContent() {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   });
+  const [newRunType, setNewRunType] = useState<PayrollRunType>("REGULAR");
+  const [sourceRunId, setSourceRunId] = useState<string>("");
 
   const canManage = useCan("payroll:runs:manage");
   const { data, isLoading } = usePayrollRuns({ page, limit: 20 });
@@ -92,7 +115,18 @@ export function RunsPageContent() {
     router.push(`/payroll/runs/${row.id}`);
   }
 
+  const needsSource = RUN_TYPES_NEEDING_SOURCE.includes(newRunType);
+  const sourceRunOptions = (data?.data ?? []).filter((r) => r.month === newRunMonth);
+  const createDisabled =
+    createMutation.isPending || (needsSource && sourceRunId === "");
+
+  function resetNewRunForm() {
+    setNewRunType("REGULAR");
+    setSourceRunId("");
+  }
+
   function handleNewRunOpen() {
+    resetNewRunForm();
     setShowNewRun(true);
   }
 
@@ -100,17 +134,33 @@ export function RunsPageContent() {
     setShowNewRun(false);
   }
 
+  function handleNewRunTypeChange(value: string) {
+    setNewRunType(value as PayrollRunType);
+    setSourceRunId("");
+  }
+
   function handleNewRunCreate() {
-    createMutation.mutate(newRunMonth, {
-      onSuccess: (res) => {
-        toast.success("Payroll run created");
-        setShowNewRun(false);
-        router.push(`/payroll/runs/${res.runId}`);
+    if (needsSource && sourceRunId === "") {
+      toast.error("Select the source run this run adjusts");
+      return;
+    }
+    createMutation.mutate(
+      {
+        month: newRunMonth,
+        runType: newRunType,
+        ...(needsSource ? { sourceRunId: Number(sourceRunId) } : {}),
       },
-      onError: (err) => {
-        toast.error(getErrorMessage(err));
+      {
+        onSuccess: (res) => {
+          toast.success("Payroll run created");
+          setShowNewRun(false);
+          router.push(`/payroll/runs/${res.runId}`);
+        },
+        onError: (err) => {
+          toast.error(getErrorMessage(err));
+        },
       },
-    });
+    );
   }
 
   return (
@@ -156,26 +206,75 @@ export function RunsPageContent() {
           <DialogHeader>
             <DialogTitle>Start a new payroll run</DialogTitle>
           </DialogHeader>
-          <div className="py-3 space-y-3">
-            <label className="text-[13px] font-medium text-foreground block">
-              Payroll month
-            </label>
-            <MonthPicker
-              value={newRunMonth}
-              onChange={setNewRunMonth}
-              yearRange={[-1, 0]}
-              className="w-full"
-            />
+          <div className="py-3 space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-[13px] font-medium text-foreground block">
+                Run type
+              </label>
+              <Select value={newRunType} onValueChange={handleNewRunTypeChange}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {RUN_TYPE_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground">
+                {RUN_TYPE_OPTIONS.find((o) => o.value === newRunType)?.hint}
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[13px] font-medium text-foreground block">
+                Payroll month
+              </label>
+              <MonthPicker
+                value={newRunMonth}
+                onChange={setNewRunMonth}
+                yearRange={[-1, 0]}
+                className="w-full"
+              />
+            </div>
+
+            {needsSource && (
+              <div className="space-y-1.5">
+                <label className="text-[13px] font-medium text-foreground block">
+                  Source run <span className="text-destructive">*</span>
+                </label>
+                <Select value={sourceRunId} onValueChange={setSourceRunId}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select the run this adjusts" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sourceRunOptions.length === 0 ? (
+                      <div className="px-2 py-1.5 text-[12px] text-muted-foreground">
+                        No runs for {formatMonth(newRunMonth)} to link to
+                      </div>
+                    ) : (
+                      sourceRunOptions.map((r) => (
+                        <SelectItem key={r.id} value={String(r.id)}>
+                          {formatMonth(r.month)} · {r.status.replace(/_/g, " ")}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+                <p className="text-[11px] text-muted-foreground">
+                  Off-cycle, correction, and final-settlement runs link back to the
+                  regular run they adjust.
+                </p>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={handleNewRunClose}>
               Cancel
             </Button>
-            <Button
-              size="sm"
-              onClick={handleNewRunCreate}
-              disabled={createMutation.isPending}
-            >
+            <Button size="sm" onClick={handleNewRunCreate} disabled={createDisabled}>
               Create
             </Button>
           </DialogFooter>

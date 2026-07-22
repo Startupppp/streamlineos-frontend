@@ -35,12 +35,29 @@ export function usePayrollRun(runId: number) {
   });
 }
 
+export type PayrollRunType =
+  | "REGULAR"
+  | "BONUS"
+  | "OFF_CYCLE"
+  | "CORRECTION"
+  | "FINAL_SETTLEMENT";
+
+export interface CreateRunInput {
+  month: string;
+  runType?: PayrollRunType;
+  /** Required for OFF_CYCLE, CORRECTION, and FINAL_SETTLEMENT — links to the source regular run. */
+  sourceRunId?: number;
+}
+
 export function useCreateRun() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["payroll", "runs", "create"],
-    mutationFn: (month: string) =>
-      apiClient.post<{ runId: number }>("/payroll/runs", { month }),
+    mutationFn: (input: string | CreateRunInput) => {
+      const body: CreateRunInput =
+        typeof input === "string" ? { month: input } : input;
+      return apiClient.post<{ runId: number }>("/payroll/runs", body);
+    },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "runs"] });
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.commandCenterAll });
