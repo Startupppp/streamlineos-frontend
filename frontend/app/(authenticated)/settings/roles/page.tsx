@@ -2,16 +2,29 @@
 
 import { useState, useCallback, useMemo } from "react";
 import Link from "next/link";
-import { useRoles, useDeleteRole, useRolesAnalytics, useRolePermissionsMatrix } from "@/hooks/api/roles";
-import { EmptyApprovalIllustration } from "@/components/illustrations";
-import { Loader2, Shield, ClipboardList, ShieldCheck, Users, KeyRound, Layers } from "lucide-react";
+import {
+  Loader2,
+  Shield,
+  ClipboardList,
+  ShieldCheck,
+  Users,
+  KeyRound,
+  Layers,
+} from "lucide-react";
 import { PlusIcon, Trash2Icon, CopyIcon } from "@animateicons/react/lucide";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SearchInput } from "@/components/ui/search-input";
-import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyApprovalIllustration } from "@/components/illustrations";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  useRoles,
+  useDeleteRole,
+  useRolesAnalytics,
+  useRolePermissionsMatrix,
+} from "@/hooks/api/roles";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,9 +35,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  StatCard,
+  StatCardGrid,
+  StatCardGridSkeleton,
+} from "@/components/ui/stat-card";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getApiError } from "@/lib/api-client";
@@ -46,7 +63,12 @@ export default function RolesPage() {
 }
 
 function RolesContent() {
-  const { data: roles, isLoading, isError: rolesError, refetch: refetchRoles } = useRoles();
+  const {
+    data: roles,
+    isLoading,
+    isError: rolesError,
+    refetch: refetchRoles,
+  } = useRoles();
   const { data: analytics, isLoading: analyticsLoading } = useRolesAnalytics();
   const matrixQuery = useRolePermissionsMatrix();
   const permCountByRoleId = useMemo(() => {
@@ -65,7 +87,8 @@ function RolesContent() {
   const [deleteTarget, setDeleteTarget] = useState<Role | null>(null);
   const [search, setSearch] = useState("");
 
-  const selectedRole = roles?.find((role) => role.id === selectedRoleId) ?? null;
+  const selectedRole =
+    roles?.find((role) => role.id === selectedRoleId) ?? null;
 
   const filteredRoles = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -76,10 +99,18 @@ function RolesContent() {
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
   const handleOpenTemplate = useCallback(() => setTemplateOpen(true), []);
   const handleOpenAssignments = useCallback(() => setAssignmentsOpen(true), []);
-  const handleSelectRole = useCallback((roleId: number) => setSelectedRoleId(roleId), []);
+  const handleSelectRole = useCallback(
+    (roleId: number) => setSelectedRoleId(roleId),
+    [],
+  );
   const handleDeleteDialogClose = useCallback(() => setDeleteTarget(null), []);
-  const handleRetryRoles = useCallback(() => { void refetchRoles(); }, [refetchRoles]);
-  const handleSearchChange = useCallback((value: string) => setSearch(value), []);
+  const handleRetryRoles = useCallback(() => {
+    void refetchRoles();
+  }, [refetchRoles]);
+  const handleSearchChange = useCallback(
+    (value: string) => setSearch(value),
+    [],
+  );
 
   const handleDeleteRole = useCallback(() => {
     if (!deleteTarget) return;
@@ -102,7 +133,12 @@ function RolesContent() {
       noInternalScroll
       actions={
         <div className="grid w-full grid-cols-3 gap-2 sm:flex sm:w-auto sm:flex-nowrap sm:justify-end">
-          <Button variant="outline" size="sm" asChild className="w-full gap-1.5 sm:w-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            asChild
+            className="w-full gap-1.5 sm:w-auto"
+          >
             <Link href="/settings/roles/audit">
               <ClipboardList className="h-3.5 w-3.5" />
               <span className="truncate">Audit</span>
@@ -133,103 +169,141 @@ function RolesContent() {
       }
       filters={
         <div className="min-w-0 w-full flex-1 md:min-w-[160px] md:max-w-xs">
-          <SearchInput placeholder="Search roles…" value={search} onValueChange={handleSearchChange} />
+          <SearchInput
+            placeholder="Search roles…"
+            value={search}
+            onValueChange={handleSearchChange}
+          />
         </div>
       }
     >
       <div className="flex flex-1 min-h-0 flex-col gap-3">
-      {metricsLoading ? (
-        <StatCardGridSkeleton cols={4} count={4} />
-      ) : (
-        <StatCardGrid cols={4}>
-          <StatCard label="Total Roles" value={analytics?.totalRoles ?? 0} icon={Layers} />
-          <StatCard label="Custom Roles" value={analytics?.customRoles ?? 0} icon={ShieldCheck} tone="blue" />
-          <StatCard label="Users Assigned" value={analytics?.usersAssigned ?? 0} icon={Users} tone="emerald" />
-          <StatCard label="Total Permissions" value={analytics?.totalPermissions ?? 0} icon={KeyRound} tone="amber" />
-        </StatCardGrid>
-      )}
+        {metricsLoading ? (
+          <StatCardGridSkeleton cols={4} count={4} />
+        ) : (
+          <StatCardGrid cols={4}>
+            <StatCard
+              label="Total Roles"
+              value={analytics?.totalRoles ?? 0}
+              icon={Layers}
+            />
+            <StatCard
+              label="Custom Roles"
+              value={analytics?.customRoles ?? 0}
+              icon={ShieldCheck}
+              tone="blue"
+            />
+            <StatCard
+              label="Users Assigned"
+              value={analytics?.usersAssigned ?? 0}
+              icon={Users}
+              tone="emerald"
+            />
+            <StatCard
+              label="Total Permissions"
+              value={analytics?.totalPermissions ?? 0}
+              icon={KeyRound}
+              tone="amber"
+            />
+          </StatCardGrid>
+        )}
 
-      <div className="grid flex-1 min-h-0 gap-3 lg:grid-cols-[320px_1fr]">
-        <Card className="flex flex-col lg:min-h-0">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <Shield className="h-4 w-4" /> Roles
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0 lg:flex-1 lg:min-h-0">
-            {isLoading ? (
-              <div className="divide-y divide-border/60">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="px-4 py-3 flex items-center justify-between">
-                    <div className="space-y-1.5">
-                      <Skeleton className="h-4 w-28" />
-                      <Skeleton className="h-3 w-16" />
-                    </div>
-                    <Skeleton className="h-4 w-12 rounded-full" />
-                  </div>
-                ))}
-              </div>
-            ) : rolesError ? (
-              <div className="flex flex-col items-center justify-center py-12 gap-3 px-4 text-center">
-                <Shield className="h-10 w-10 text-destructive/50" />
-                <div>
-                  <p className="text-sm font-medium">Failed to load roles</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Something went wrong</p>
-                </div>
-                <Button size="sm" variant="outline" onClick={handleRetryRoles} className="gap-1.5">
-                  Retry
-                </Button>
-              </div>
-            ) : filteredRoles.length === 0 ? (
-              <EmptyState
-                illustrationPreset="security"
-                title={search.trim() ? "No matching roles" : "No roles yet"}
-                description={
-                  search.trim()
-                    ? "Try a different search term."
-                    : "Create a role to manage permissions."
-                }
-                action={
-                  search.trim()
-                    ? undefined
-                    : { label: "New role", onClick: handleOpenCreate }
-                }
-                compact
-                className="border-0 bg-transparent py-10"
-              />
-            ) : (
-              <ScrollArea className="lg:h-full" type="auto">
+        <div className="grid flex-1 min-h-0 gap-3 lg:grid-cols-[320px_1fr]">
+          <Card className="flex flex-col lg:min-h-0">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <Shield className="h-4 w-4" /> Roles
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0 lg:flex-1 lg:min-h-0">
+              {isLoading ? (
                 <div className="divide-y divide-border/60">
-                  {filteredRoles.map((role) => (
-                    <RoleListItem
-                      key={role.id}
-                      role={role}
-                      isSelected={selectedRoleId === role.id}
-                      onSelect={handleSelectRole}
-                      onDelete={setDeleteTarget}
-                      permCount={permCountByRoleId.get(role.id) ?? 0}
-                    />
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="px-4 py-3 flex items-center justify-between"
+                    >
+                      <div className="space-y-1.5">
+                        <Skeleton className="h-4 w-28" />
+                        <Skeleton className="h-3 w-16" />
+                      </div>
+                      <Skeleton className="h-4 w-12 rounded-full" />
+                    </div>
                   ))}
                 </div>
-              </ScrollArea>
-            )}
-          </CardContent>
-        </Card>
-
-        {selectedRole ? (
-          <PermissionMatrix role={selectedRole} onOpenAssignments={handleOpenAssignments} />
-        ) : (
-          <Card className="flex items-center justify-center min-h-[260px] lg:min-h-0 lg:h-full">
-            <div className="text-center px-6">
-              <EmptyApprovalIllustration className="mx-auto mb-3 w-40 h-40" />
-              <p className="text-sm font-medium text-foreground">Select a role</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Choose a role from the list to view and edit permissions
-              </p>
-            </div>
+              ) : rolesError ? (
+                <div className="flex flex-col items-center justify-center py-12 gap-3 px-4 text-center">
+                  <Shield className="h-10 w-10 text-destructive/50" />
+                  <div>
+                    <p className="text-sm font-medium">Failed to load roles</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Something went wrong
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleRetryRoles}
+                    className="gap-1.5"
+                  >
+                    Retry
+                  </Button>
+                </div>
+              ) : filteredRoles.length === 0 ? (
+                <EmptyState
+                  illustrationPreset="security"
+                  title={search.trim() ? "No matching roles" : "No roles yet"}
+                  description={
+                    search.trim()
+                      ? "Try a different search term."
+                      : "Create a role to manage permissions."
+                  }
+                  action={
+                    search.trim()
+                      ? undefined
+                      : { label: "New role", onClick: handleOpenCreate }
+                  }
+                  compact
+                  className="border-0 bg-transparent py-10"
+                />
+              ) : (
+                <ScrollArea className="lg:h-full" type="auto">
+                  <div className="divide-y divide-border/60">
+                    {filteredRoles.map((role) => (
+                      <RoleListItem
+                        key={role.id}
+                        role={role}
+                        isSelected={selectedRoleId === role.id}
+                        onSelect={handleSelectRole}
+                        onDelete={setDeleteTarget}
+                        permCount={permCountByRoleId.get(role.id) ?? 0}
+                      />
+                    ))}
+                  </div>
+                </ScrollArea>
+              )}
+            </CardContent>
           </Card>
-        )}
-      </div>
+
+          {selectedRole ? (
+            <PermissionMatrix
+              role={selectedRole}
+              onOpenAssignments={handleOpenAssignments}
+            />
+          ) : (
+            <Card className="flex items-center justify-center min-h-[260px] lg:min-h-0 lg:h-full">
+              <div className="text-center px-6">
+                <EmptyApprovalIllustration className="mx-auto mb-3 w-40 h-40" />
+                <p className="text-sm font-medium text-foreground">
+                  Select a role
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Choose a role from the list to view and edit permissions
+                </p>
+              </div>
+            </Card>
+          )}
+        </div>
       </div>
 
       <CreateRoleDialog open={createOpen} onOpenChange={setCreateOpen} />
@@ -246,8 +320,8 @@ function RolesContent() {
             <AlertDialogTitle>Delete role</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to delete{" "}
-              <span className="font-semibold">{deleteTarget?.name}</span>? Users with this role will
-              lose their assigned permissions.
+              <span className="font-semibold">{deleteTarget?.name}</span>? Users
+              with this role will lose their assigned permissions.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -257,7 +331,9 @@ function RolesContent() {
               disabled={deleteRole.isPending}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deleteRole.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+              {deleteRole.isPending && (
+                <Loader2 className="h-4 w-4 animate-spin mr-1" />
+              )}
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -267,7 +343,11 @@ function RolesContent() {
   );
 }
 
-function DeleteRoleButton({ onClick }: { onClick: (e: React.MouseEvent) => void }) {
+function DeleteRoleButton({
+  onClick,
+}: {
+  onClick: (e: React.MouseEvent) => void;
+}) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
     <button
@@ -289,8 +369,17 @@ interface RoleListItemProps {
   permCount: number;
 }
 
-function RoleListItem({ role, isSelected, onSelect, onDelete, permCount }: RoleListItemProps) {
-  const handleSelect = useCallback(() => onSelect(role.id), [role.id, onSelect]);
+function RoleListItem({
+  role,
+  isSelected,
+  onSelect,
+  onDelete,
+  permCount,
+}: RoleListItemProps) {
+  const handleSelect = useCallback(
+    () => onSelect(role.id),
+    [role.id, onSelect],
+  );
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent) => {
       if (event.key === "Enter" || event.key === " ") {
@@ -331,9 +420,7 @@ function RoleListItem({ role, isSelected, onSelect, onDelete, permCount }: RoleL
             System
           </Badge>
         )}
-        {!role.isSystem && (
-          <DeleteRoleButton onClick={handleDelete} />
-        )}
+        {!role.isSystem && <DeleteRoleButton onClick={handleDelete} />}
       </div>
     </div>
   );
