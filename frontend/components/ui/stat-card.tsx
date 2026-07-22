@@ -116,11 +116,11 @@ export interface StatCardGridSkeletonProps {
 }
 
 const STAT_GRID_COLS: Record<NonNullable<StatCardGridProps["cols"]>, string> = {
-  2: "grid-cols-[repeat(2,minmax(176px,1fr))]",
-  3: "grid-cols-[repeat(3,minmax(176px,1fr))]",
-  4: "grid-cols-[repeat(4,minmax(176px,1fr))]",
-  5: "grid-cols-[repeat(5,minmax(176px,1fr))]",
-  6: "grid-cols-[repeat(6,minmax(176px,1fr))]",
+  2: "grid-cols-1 sm:grid-cols-2",
+  3: "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3",
+  4: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
+  5: "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5",
+  6: "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6",
 };
 
 export function StatCardGrid({
@@ -131,9 +131,9 @@ export function StatCardGrid({
   return (
     <div
       className={cn(
-        "grid w-full min-w-0 gap-3 overflow-x-auto overscroll-x-contain touch-pan-x scrollbar-hide",
+        "grid w-full min-w-0 shrink-0 gap-3",
         STAT_GRID_COLS[cols],
-        "[&>*]:h-full",
+        "[&>*]:min-w-0 [&>*]:h-full",
         className,
       )}
     >

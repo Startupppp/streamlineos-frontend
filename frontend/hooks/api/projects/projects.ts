@@ -69,6 +69,7 @@ function applyProjectListPatch(project: ProjectListItem, patch: ProjectPatch): P
   if (patch.name !== undefined) next.name = patch.name;
   if (patch.description !== undefined) next.description = patch.description ?? null;
   if (patch.status !== undefined) next.status = patch.status;
+  if (patch.priority !== undefined) next.priority = patch.priority ?? null;
   if (patch.startDate !== undefined) next.startDate = patch.startDate;
   if (patch.endDate !== undefined) next.endDate = patch.endDate;
   return next;
@@ -204,6 +205,35 @@ export function useAddProjectMember(
 }
 
 type RemoveMemberInput = { projectId: number; userId: string };
+
+type UpdateMemberRoleInput = {
+  projectId: number;
+  memberUserId: string;
+  role: "ADMIN" | "MEMBER" | "VIEWER";
+};
+
+export function useUpdateProjectMemberRole(
+  options?: Omit<
+    UseMutationOptions<{ userId: string; role: string | null }, Error, UpdateMemberRoleInput>,
+    "mutationFn"
+  >
+) {
+  const queryClient = useQueryClient();
+  return useMutation<{ userId: string; role: string | null }, Error, UpdateMemberRoleInput>({
+    mutationKey: ["projects", "members", "update-role"],
+    mutationFn: ({ projectId, memberUserId, role }) =>
+      apiClient.patch<{ userId: string; role: string | null }>(
+        `/projects/${projectId}/members/${memberUserId}`,
+        { role },
+      ),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.members(variables.projectId),
+      });
+    },
+    ...options,
+  });
+}
 
 export function useRemoveProjectMember(
   options?: Omit<UseMutationOptions<{ success: boolean }, Error, RemoveMemberInput>, "mutationFn">

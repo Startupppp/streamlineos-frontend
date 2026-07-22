@@ -28,6 +28,7 @@ import {
 } from "@/features/projects/shared/pm-chrome";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { cn } from "@/lib/utils";
 
 type VisibilityTab = "tickets" | "milestones";
 
@@ -52,11 +53,11 @@ function TicketRow({
   }
 
   return (
-    <div className={PM_ROW}>
+    <div className={cn(PM_ROW, "overflow-hidden")}>
       <span className="w-16 shrink-0 font-mono text-[10px] text-muted-foreground">
         #{ticket.ticketNumber}
       </span>
-      <TruncatedText text={ticket.title} className="flex-1 text-[11px]" />
+      <TruncatedText text={ticket.title} className="min-w-0 flex-1 text-[11px]" />
       <Badge variant="outline" className="w-16 shrink-0 justify-center text-[10px] capitalize">
         {ticket.type}
       </Badge>
@@ -87,8 +88,8 @@ function MilestoneRow({
   }
 
   return (
-    <div className={PM_ROW}>
-      <TruncatedText text={milestone.name} className="flex-1 text-[11px]" />
+    <div className={cn(PM_ROW, "overflow-hidden")}>
+      <TruncatedText text={milestone.name} className="min-w-0 flex-1 text-[11px]" />
       <Switch
         checked={milestone.clientVisible}
         onCheckedChange={handleChange}

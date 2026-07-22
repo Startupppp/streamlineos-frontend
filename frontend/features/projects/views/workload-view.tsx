@@ -301,14 +301,14 @@ export const WorkloadView = memo(function WorkloadView({
                       {unassigned.slice(0, 10).map((ticket) => (
                         <div
                           key={ticket.id}
-                          className="group/unassigned flex items-center border-b border-border/40 px-8 py-2 gap-2"
+                          className="group/unassigned flex min-w-0 items-center gap-2 border-b border-border/40 px-8 py-2"
                         >
-                          <span className="text-xs text-muted-foreground font-mono w-12 shrink-0">
+                          <span className="w-12 shrink-0 font-mono text-xs text-muted-foreground">
                             #{ticket.ticketNumber}
                           </span>
-                          <TruncatedText text={ticket.title} className="flex-1 text-xs text-foreground" />
+                          <TruncatedText text={ticket.title} className="min-w-0 flex-1 text-xs text-foreground" />
                           {ticket.points != null && (
-                            <span className="text-[10px] text-muted-foreground shrink-0 tabular-nums">
+                            <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">
                               {ticket.points}pt
                             </span>
                           )}

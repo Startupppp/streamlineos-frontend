@@ -210,14 +210,14 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
                   const t = r.relatedTicket;
                   if (!t) return null;
                   return (
-                    <div key={r.id} className="flex items-center justify-between gap-2 py-0.5 pl-4 group">
-                      <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                        <span className="font-mono text-[10px] text-muted-foreground shrink-0">
+                    <div key={r.id} className="group flex min-w-0 items-center justify-between gap-2 py-0.5 pl-4">
+                      <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
+                        <span className="shrink-0 font-mono text-[10px] text-muted-foreground">
                           #{t.ticketNumber}
                         </span>
                         <TruncatedText text={t.title} className="min-w-0 flex-1 text-xs" />
                         {t.status && (
-                          <Badge variant="outline" className="text-[9px] h-4 px-1 shrink-0">
+                          <Badge variant="outline" className="h-4 shrink-0 px-1 text-[9px]">
                             {t.status}
                           </Badge>
                         )}

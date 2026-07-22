@@ -17,6 +17,7 @@ export interface CrmOrganization {
   createdAt: string | null;
   updatedAt: string | null;
   contacts?: Contact[];
+  openRequestCount?: number;
 }
 
 export interface Contact {

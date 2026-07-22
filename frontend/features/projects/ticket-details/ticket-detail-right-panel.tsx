@@ -1,8 +1,9 @@
 "use client";
 
-import { Loader2, PanelRightClose } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { XIcon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PriorityBadge } from "../shared/priority-badge";
 import { StatusBadge } from "../shared/status-badge";
 import { TicketSidebar } from "./ticket-sidebar";
@@ -93,17 +94,18 @@ export function TicketDetailRightPanel({
               </span>
             )}
           </div>
-          {onToggleCollapse && (
-            <Button
+          {onToggleCollapse ? (
+            <AnimatedIconButton
+              type="button"
               variant="ghost"
               size="icon"
+              icon={XIcon}
+              iconSize={16}
               className="h-9 w-9 shrink-0 touch-manipulation text-muted-foreground hover:text-foreground md:h-8 md:w-8"
               onClick={onToggleCollapse}
-              aria-label="Collapse details panel"
-            >
-              <PanelRightClose className="h-4 w-4" />
-            </Button>
-          )}
+              aria-label="Close details panel"
+            />
+          ) : null}
         </div>
       </div>
 
@@ -116,7 +118,7 @@ export function TicketDetailRightPanel({
         onAutoSave={onAutoSave}
       />
 
-      <div className="space-y-4 border-t border-border bg-card px-4 py-3">
+      <div className="space-y-4 bg-card px-4 py-3">
         <TicketGitLinks projectId={projectId} ticketId={ticketId} />
         <TicketTimeTracker
           ticketId={ticketId}

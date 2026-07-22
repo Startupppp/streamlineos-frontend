@@ -102,7 +102,7 @@ export default function BacklogPage({ params }: PageProps) {
   }, [selectedTicketId, data, tickets, projectId, router]);
 
   const handleBulkUpdate = useCallback(
-    (update: Partial<Pick<BulkUpdateTicketsInput, "assigneeId" | "status" | "sprintId" | "priority">>) => {
+    (update: Partial<Pick<BulkUpdateTicketsInput, "assigneeId" | "status" | "sprintId" | "priority" | "parentTicketId">>) => {
       if (selectedIds.size === 0) { toast.error("No tickets selected"); return; }
       bulkUpdate.mutate(
         { ticketIds: [...selectedIds].map(Number), ...update },
@@ -130,6 +130,10 @@ export default function BacklogPage({ params }: PageProps) {
   const handleBulkAssignee = useCallback((v: string) => handleBulkUpdate({ assigneeId: v }), [handleBulkUpdate]);
   const handleBulkSprint = useCallback(
     (v: string) => handleBulkUpdate({ sprintId: v === "backlog" ? null : Number(v) }),
+    [handleBulkUpdate],
+  );
+  const handleBulkParent = useCallback(
+    (parentTicketId: number | null) => handleBulkUpdate({ parentTicketId }),
     [handleBulkUpdate],
   );
   const handleClearSelection = useCallback(() => setSelectedIds(new Set()), []);
@@ -240,10 +244,13 @@ export default function BacklogPage({ params }: PageProps) {
             selectedCount={selectedIds.size}
             members={members}
             sprints={sprints ?? []}
+            projectId={projectId}
+            excludeIds={selectedIds}
             onBulkStatus={handleBulkStatus}
             onBulkPriority={handleBulkPriority}
             onBulkAssignee={handleBulkAssignee}
             onBulkSprint={handleBulkSprint}
+            onBulkParent={handleBulkParent}
             onClear={handleClearSelection}
           />
         ) : null}

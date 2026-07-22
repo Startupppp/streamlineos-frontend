@@ -256,10 +256,12 @@ export function CommandCenterPage() {
     return (
       <PageWrapper title="Home" noInternalScroll contentClassName="pb-0 sm:pb-0">
         <PmPageShell>
-          <StatCardGridSkeleton cols={3} />
-          <Skeleton className={cn("h-56 rounded-xl", PM_PANEL)} />
-          <Skeleton className={cn("h-48 rounded-xl", PM_PANEL)} />
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="shrink-0">
+            <StatCardGridSkeleton cols={3} />
+          </div>
+          <Skeleton className={cn("h-56 shrink-0 rounded-xl", PM_PANEL)} />
+          <Skeleton className={cn("h-48 shrink-0 rounded-xl", PM_PANEL)} />
+          <div className="grid min-h-0 flex-1 gap-3 overflow-y-auto sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 9 }).map((_, i) => (
               <Skeleton key={i} className={cn("h-28 rounded-xl", PM_PANEL)} />
             ))}

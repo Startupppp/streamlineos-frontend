@@ -7,7 +7,7 @@ import { ListView } from "@/features/projects/views/list-view";
 import { TableView } from "@/features/projects/views/table-view";
 import { DEFAULT_DISPLAY_OPTIONS } from "@/features/projects/views/display-options-panel";
 import { pmSnappy, viewSwap, viewSwapReduced } from "@/features/projects/shared/pm-motion";
-import type { KanbanTicket } from "@/features/projects/shared/types";
+import type { KanbanTicket, DisplayOptions } from "@/features/projects/shared/types";
 import type { MyTicketsView } from "./my-tickets-view";
 
 interface ProjectStatus {
@@ -27,6 +27,7 @@ interface MyTicketsViewBodyProps {
   statuses: ProjectStatus[] | undefined;
   wipLimits: Record<string, number>;
   onTicketSelect: (id: number) => void;
+  displayOptions?: DisplayOptions;
 }
 
 export function MyTicketsViewBody({
@@ -37,6 +38,7 @@ export function MyTicketsViewBody({
   statuses,
   wipLimits,
   onTicketSelect,
+  displayOptions = DEFAULT_DISPLAY_OPTIONS,
 }: MyTicketsViewBodyProps) {
   const shouldReduceMotion = useReducedMotion();
   const swapVariants = shouldReduceMotion ? viewSwapReduced : viewSwap;
@@ -60,7 +62,7 @@ export function MyTicketsViewBody({
             statuses={statuses}
             wipLimits={wipLimits}
             onTicketSelect={onTicketSelect}
-            displayOptions={DEFAULT_DISPLAY_OPTIONS}
+            displayOptions={displayOptions}
           />
         </motion.div>
       ) : null}
@@ -81,7 +83,7 @@ export function MyTicketsViewBody({
                 onTicketClick={onTicketSelect}
                 projectKey={projectKey}
                 projectStatuses={statuses}
-                displayOptions={DEFAULT_DISPLAY_OPTIONS}
+                displayOptions={displayOptions}
                 projectId={projectId}
               />
             </div>
@@ -106,6 +108,7 @@ export function MyTicketsViewBody({
                 projectKey={projectKey}
                 projectId={projectId}
                 projectStatuses={statuses}
+                displayOptions={displayOptions}
               />
             </div>
           </ScrollArea>

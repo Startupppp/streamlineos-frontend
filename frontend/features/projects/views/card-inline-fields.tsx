@@ -205,73 +205,105 @@ export const InlineEstimate = memo(function InlineEstimate({
   projectId,
   currentPoints,
 }: InlineEstimateProps) {
-  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(currentPoints != null ? String(currentPoints) : "");
   const updateTicket = useUpdateTicket(projectId, {
     onError: (e) => toast.error(getErrorMessage(e)),
   });
 
-  function handleOpen(next: boolean) {
-    if (next) setValue(currentPoints != null ? String(currentPoints) : "");
-    setOpen(next);
+  function handleStartEdit() {
+    setValue(currentPoints != null ? String(currentPoints) : "");
+    setEditing(true);
   }
 
   function handleSubmit() {
-    const parsed = value.trim() === "" ? null : parseInt(value, 10);
-    if (value.trim() !== "" && (Number.isNaN(parsed) || (parsed !== null && parsed < 0))) return;
-    updateTicket.mutate({ ticketId, points: parsed ?? undefined });
-    setOpen(false);
+    const trimmed = value.trim();
+    const parsed = trimmed === "" ? null : parseInt(trimmed, 10);
+    if (trimmed !== "" && (Number.isNaN(parsed) || (parsed !== null && parsed < 0))) {
+      setEditing(false);
+      return;
+    }
+    const next = parsed ?? undefined;
+    const prev = currentPoints ?? undefined;
+    if (next !== prev) {
+      updateTicket.mutate({ ticketId, points: next });
+    }
+    setEditing(false);
+  }
+
+  function handleCancel() {
+    setValue(currentPoints != null ? String(currentPoints) : "");
+    setEditing(false);
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter") handleSubmit();
-    if (e.key === "Escape") setOpen(false);
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSubmit();
+    }
+    if (e.key === "Escape") {
+      e.preventDefault();
+      handleCancel();
+    }
   }
 
   function handleValueChange(e: React.ChangeEvent<HTMLInputElement>) {
     setValue(e.target.value);
   }
 
+  function handleInputRef(el: HTMLInputElement | null) {
+    el?.focus();
+    el?.select();
+  }
+
   const display = currentPoints != null && currentPoints > 0 ? currentPoints : null;
+
+  if (editing) {
+    return (
+      <InlineFieldWrapper>
+        <span className="inline-flex h-6 max-w-full items-center gap-1 rounded px-1">
+          <Gauge className="h-3 w-3 shrink-0 text-foreground" />
+          <Input
+            ref={handleInputRef}
+            type="number"
+            min={0}
+            inputMode="numeric"
+            aria-label="Story points"
+            value={value}
+            onChange={handleValueChange}
+            onBlur={handleSubmit}
+            onKeyDown={handleKeyDown}
+            className="h-6 w-12 border-border bg-background px-1.5 py-0 text-[11px] font-mono tabular-nums shadow-none"
+          />
+          <span className="shrink-0 text-[10px] font-mono text-muted-foreground">pts</span>
+        </span>
+      </InlineFieldWrapper>
+    );
+  }
 
   return (
     <InlineFieldWrapper>
-      <Popover open={open} onOpenChange={handleOpen}>
-        <PopoverTrigger asChild>
-          <button
-            type="button"
-            className="inline-flex items-center gap-1 rounded px-1 py-0.5 hover:bg-muted/60 transition-colors"
-            aria-label="Change estimate"
-          >
-            <Gauge
-              className={cn(
-                "h-3 w-3 shrink-0",
-                display != null ? "text-foreground" : "text-muted-foreground/50",
-              )}
-            />
-            <span
-              className={cn(
-                "text-[10px] font-mono",
-                display != null ? "text-foreground" : "text-muted-foreground/50",
-              )}
-            >
-              {display != null ? `${display} pts` : "pts"}
-            </span>
-          </button>
-        </PopoverTrigger>
-        <PopoverContent className="w-28 p-2" align="start">
-          <Input
-            autoFocus
-            type="number"
-            min={0}
-            placeholder="Points"
-            value={value}
-            onChange={handleValueChange}
-            onKeyDown={handleKeyDown}
-            className="text-xs"
-          />
-        </PopoverContent>
-      </Popover>
+      <button
+        type="button"
+        className="inline-flex items-center gap-1 rounded px-1 py-0.5 transition-colors hover:bg-muted/60"
+        aria-label="Change estimate"
+        onClick={handleStartEdit}
+      >
+        <Gauge
+          className={cn(
+            "h-3 w-3 shrink-0",
+            display != null ? "text-foreground" : "text-muted-foreground/50",
+          )}
+        />
+        <span
+          className={cn(
+            "font-mono text-[10px]",
+            display != null ? "text-foreground" : "text-muted-foreground/50",
+          )}
+        >
+          {display != null ? `${display} pts` : "pts"}
+        </span>
+      </button>
     </InlineFieldWrapper>
   );
 });

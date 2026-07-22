@@ -38,7 +38,7 @@ interface PmPageShellProps {
 
 export function PmPageShell({ children, className, withGlow = true }: PmPageShellProps) {
   return (
-    <div className={cn("relative flex min-h-0 flex-1 flex-col gap-4 overflow-hidden", className)}>
+    <div className={cn("relative flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-hidden", className)}>
       {withGlow ? (
         <>
           <div aria-hidden className={PM_GLOW} />

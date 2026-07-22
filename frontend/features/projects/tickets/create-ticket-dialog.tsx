@@ -576,6 +576,8 @@ export function CreateTicketDialog({
                     <TicketRelatedLinksEditor
                       links={relatedLinks}
                       onChange={setRelatedLinks}
+                      projectId={selectedProjectId}
+                      projectKey={project?.key ?? projects.find((p) => p.id === selectedProjectId)?.key}
                     />
                   </div>
                 )}

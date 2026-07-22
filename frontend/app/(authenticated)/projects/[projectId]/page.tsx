@@ -384,7 +384,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
   }, [router, searchParams]);
 
   const handleBulkUpdate = useCallback(
-    (update: Partial<Pick<BulkUpdateTicketsInput, "assigneeId" | "status" | "sprintId" | "priority">>) => {
+    (update: Partial<Pick<BulkUpdateTicketsInput, "assigneeId" | "status" | "sprintId" | "priority" | "parentTicketId">>) => {
       if (selectedIds.size === 0) {
         toast.error("No tickets selected");
         return;
@@ -415,6 +415,10 @@ export default function ProjectBoardPage({ params }: PageProps) {
   const handleBulkAssignee = useCallback((v: string) => handleBulkUpdate({ assigneeId: v }), [handleBulkUpdate]);
   const handleBulkSprint = useCallback(
     (v: string) => handleBulkUpdate({ sprintId: v === "backlog" ? null : Number(v) }),
+    [handleBulkUpdate],
+  );
+  const handleBulkParent = useCallback(
+    (parentTicketId: number | null) => handleBulkUpdate({ parentTicketId }),
     [handleBulkUpdate],
   );
   const handleClearSelection = useCallback(() => setSelectedIds(new Set()), []);
@@ -606,10 +610,13 @@ export default function ProjectBoardPage({ params }: PageProps) {
                         selectedCount={selectedIds.size}
                         members={members}
                         sprints={sprints ?? []}
+                        projectId={projectId}
+                        excludeIds={selectedIds}
                         onBulkStatus={handleBulkStatus}
                         onBulkPriority={handleBulkPriority}
                         onBulkAssignee={handleBulkAssignee}
                         onBulkSprint={handleBulkSprint}
+                        onBulkParent={handleBulkParent}
                         onClear={handleClearSelection}
                       />
                     )}
@@ -619,6 +626,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
                       projectKey={data.key}
                       projectId={projectId}
                       projectStatuses={statuses}
+                      displayOptions={displayOptions}
                       selection={{ selected: selectedIds, onChange: handleSelectionChange }}
                     />
                   </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { XIcon } from "@animateicons/react/lucide";
@@ -11,10 +11,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
 import type { Sprint } from "@/types/projects";
 import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
 import { PM_TOOLBAR } from "@/features/projects/shared/pm-chrome";
 import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { useTicketSearch } from "@/hooks/api/projects/ticket-search";
 import { cn } from "@/lib/utils";
 
 interface Member {
@@ -35,12 +42,103 @@ interface BulkActionBarProps {
   sprints: Sprint[];
   labels?: LabelOption[];
   hideSprint?: boolean;
+  projectId?: number;
+  excludeIds?: Set<string | number>;
   onBulkStatus: (value: string) => void;
   onBulkPriority: (value: string) => void;
   onBulkAssignee: (value: string) => void;
   onBulkSprint: (value: string) => void;
   onBulkLabel?: (value: string) => void;
+  onBulkParent?: (parentTicketId: number | null) => void;
   onClear: () => void;
+}
+
+function ParentPickerPopover({
+  projectId,
+  excludeIds,
+  onPick,
+}: {
+  projectId: number;
+  excludeIds: Set<string | number>;
+  onPick: (id: number | null) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const { data: results } = useTicketSearch(q, {
+    enabled: open,
+  });
+
+  const filtered = (results ?? []).filter(
+    (r) => r.projectId === projectId && !excludeIds.has(r.id),
+  );
+
+  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setQ(e.target.value);
+  }
+
+  function handleOpenChange(next: boolean) {
+    setOpen(next);
+    if (next) {
+      setQ("");
+      setTimeout(() => inputRef.current?.focus(), 50);
+    }
+  }
+
+  function handleRemoveParent() {
+    onPick(null);
+    setOpen(false);
+  }
+
+  function handlePickResult(id: number) {
+    onPick(id);
+    setOpen(false);
+  }
+
+  return (
+    <Popover open={open} onOpenChange={handleOpenChange}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="sm" className="h-8 shrink-0 text-xs">
+          Set parent
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-72 p-2" align="start">
+        <Input
+          ref={inputRef}
+          placeholder="Search tickets…"
+          value={q}
+          onChange={handleInputChange}
+          className="mb-2 h-8 text-xs"
+        />
+        <div className="max-h-52 overflow-y-auto">
+          <button
+            type="button"
+            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-xs text-muted-foreground hover:bg-accent"
+            onClick={handleRemoveParent}
+          >
+            Remove parent
+          </button>
+          {filtered.length === 0 && q.length > 0 ? (
+            <p className="px-2 py-1.5 text-xs text-muted-foreground">No tickets found.</p>
+          ) : null}
+          {filtered.map((r) => (
+            <button
+              key={r.id}
+              type="button"
+              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left hover:bg-accent"
+              onClick={() => handlePickResult(r.id)}
+            >
+              <span className="shrink-0 font-mono text-[10px] text-muted-foreground">
+                {r.projectKey}-{r.ticketNumber}
+              </span>
+              <span className={cn("flex-1 text-xs", TEXT_ONE_LINE)}>{r.title}</span>
+            </button>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
 }
 
 export const BulkActionBar = memo(function BulkActionBar({
@@ -49,13 +147,18 @@ export const BulkActionBar = memo(function BulkActionBar({
   sprints,
   labels,
   hideSprint = false,
+  projectId,
+  excludeIds,
   onBulkStatus,
   onBulkPriority,
   onBulkAssignee,
   onBulkSprint,
   onBulkLabel,
+  onBulkParent,
   onClear,
 }: BulkActionBarProps) {
+  const resolvedExcludeIds = excludeIds ?? new Set<string | number>();
+
   return (
     <div
       className={cn(
@@ -135,6 +238,13 @@ export const BulkActionBar = memo(function BulkActionBar({
                 ))}
             </SelectContent>
           </Select>
+        ) : null}
+        {onBulkParent !== undefined && projectId !== undefined ? (
+          <ParentPickerPopover
+            projectId={projectId}
+            excludeIds={resolvedExcludeIds}
+            onPick={onBulkParent}
+          />
         ) : null}
         <Button
           variant="ghost"

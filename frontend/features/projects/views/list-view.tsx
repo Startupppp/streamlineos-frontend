@@ -103,6 +103,7 @@ const ListViewItem = memo(function ListViewItem({
   const showAssignee = displayOptions?.showAssignee ?? true;
   const showEstimate = displayOptions?.showEstimate ?? true;
   const showLabels = displayOptions?.showLabels ?? true;
+  const showDueDate = displayOptions?.showDueDate ?? true;
 
   const labelIds = ticket.labels
     ?.map((l) => l.label?.id)
@@ -162,7 +163,7 @@ const ListViewItem = memo(function ListViewItem({
         )}
         <button
           onClick={handleClick}
-          className="flex-1 text-left text-sm text-foreground hover:underline underline-offset-2 min-w-0"
+          className="min-w-0 flex-1 overflow-hidden text-left text-sm text-foreground hover:underline underline-offset-2"
         >
           <TruncatedText text={ticket.title} />
         </button>
@@ -191,7 +192,7 @@ const ListViewItem = memo(function ListViewItem({
         ) : showEstimate && ticket.points != null && ticket.points > 0 ? (
           <Badge variant="outline" className="text-xs flex-shrink-0">{ticket.points}pt</Badge>
         ) : null}
-        {hasProjectId && (
+        {showDueDate && hasProjectId && (
           <InlineDueDate
             ticketId={ticket.id}
             projectId={projectId}

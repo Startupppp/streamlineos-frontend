@@ -1,60 +1,67 @@
 "use client";
 
-import { useMemo, useCallback } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { motion, useReducedMotion } from "framer-motion";
+import { useMemo, useCallback, useState } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
-import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { ErrorState } from "@/components/shared/error-state";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import {
-  AlertCircle,
-  CalendarClock,
-  CheckCircle2,
-  Clock,
-} from "lucide-react";
-import { useMyWork } from "@/hooks/api/projects/my-work";
-import type { MyWorkItem } from "@/types/projects/my-work";
-import { isPast, isToday, parseISO } from "date-fns";
-import {
+  PM_TOOLBAR,
   PmPageShell,
-  PmPanel,
   PmSection,
 } from "@/features/projects/shared/pm-chrome";
-import {
-  pmStagger,
-  fadeUp,
-  fadeUpReduced,
-} from "@/features/projects/shared/pm-motion";
-import {
-  type DueBucket,
-  BUCKET_ORDER,
-  AllWorkListSkeleton,
-  BucketSection,
-  CreatedTab,
-  SubscribedTab,
-  RecentTab,
-} from "./my-work-rows";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
+import { TicketFilterBar } from "@/features/projects/shared/ticket-filter-bar";
+import { ViewSwitcher } from "@/features/projects/views/view-switcher";
+import { DisplayOptionsPanel } from "@/features/projects/views/display-options-panel";
+import { useDisplayOptions } from "@/features/projects/views/use-display-options";
+import { Button } from "@/components/ui/button";
+import { PanelRight } from "lucide-react";
+import { useAllWork } from "@/hooks/api/projects/all-work";
+import type { AllWorkTicket } from "@/types/projects";
+import { cn } from "@/lib/utils";
+import { isPast, isToday, parseISO } from "date-fns";
+import { MY_WORK_VIEWS, parseMyWorkView } from "./my-work-view";
+import { MyWorkViewBody } from "./my-work-view-body";
+import { GroupingSidebar } from "./grouping-sidebar";
+import { mapAllWorkTicketToKanban, buildTicketMetaMap } from "./map-all-work-ticket";
+import { BucketSection, AllWorkListSkeleton, BUCKET_ORDER } from "./my-work-rows";
+import type { DueBucket } from "./my-work-rows";
 
-type WorkTab = "assigned" | "created" | "subscribed" | "recent";
+const DISPLAY_STORAGE_ID = -1;
+
+type WorkTab = "assigned" | "created" | "subscribed" | "activity";
 
 const TAB_CONFIG: Record<WorkTab, { label: string }> = {
   assigned: { label: "Assigned" },
   created: { label: "Created" },
   subscribed: { label: "Subscribed" },
-  recent: { label: "Recent" },
+  activity: { label: "Activity" },
 };
 
-const WORK_TABS: readonly WorkTab[] = ["assigned", "created", "subscribed", "recent"];
+const WORK_TABS: readonly WorkTab[] = [
+  "assigned",
+  "created",
+  "subscribed",
+  "activity",
+];
 
-function getDueBucket(item: MyWorkItem): DueBucket {
-  if (!item.dueDate) return "none";
+function parseWorkTab(value: string | null): WorkTab {
+  if (
+    value === "created" ||
+    value === "subscribed" ||
+    value === "activity"
+  )
+    return value;
+  return "assigned";
+}
+
+function getDueBucket(dueDate: string | null): DueBucket {
+  if (!dueDate) return "none";
   try {
-    const d = parseISO(item.dueDate);
+    const d = parseISO(dueDate);
     if (isToday(d)) return "today";
     if (isPast(d)) return "overdue";
     return "upcoming";
@@ -63,20 +70,154 @@ function getDueBucket(item: MyWorkItem): DueBucket {
   }
 }
 
+function buildAllWorkFilters(params: URLSearchParams) {
+  const q = params.get("q") ?? "";
+  const status = params.get("status") ?? "";
+  const priority = params.get("priority") ?? "";
+  const type = params.get("type") ?? "";
+  const assigneeId = params.get("assigneeId") ?? "";
+  const labels = params.get("labels") ?? "";
+  const projectIds = params.get("projectIds") ?? "";
+  return {
+    ...(q ? { search: q } : {}),
+    ...(status ? { status } : {}),
+    ...(priority ? { priority } : {}),
+    ...(type ? { type } : {}),
+    ...(assigneeId ? { assigneeId } : {}),
+    ...(labels ? { labelIds: labels } : {}),
+    ...(projectIds ? { projectIds } : {}),
+  };
+}
+
+function toDueBucketMap(
+  tickets: AllWorkTicket[],
+): Record<DueBucket, AllWorkTicket[]> {
+  const buckets: Record<DueBucket, AllWorkTicket[]> = {
+    overdue: [],
+    today: [],
+    upcoming: [],
+    none: [],
+  };
+  for (const t of tickets) {
+    buckets[getDueBucket(t.dueDate)].push(t);
+  }
+  return buckets;
+}
+
 export function MyWorkPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
-  const shouldReduceMotion = useReducedMotion();
-  const sectionVariants = shouldReduceMotion ? fadeUpReduced : fadeUp;
-  const rawTab = searchParams.get("tab");
-  const activeTab: WorkTab =
-    rawTab === "created" || rawTab === "subscribed" || rawTab === "recent" ? rawTab : "assigned";
 
-  const { data, isLoading, isError, refetch } = useMyWork();
+  const rawTab = searchParams.get("tab");
+  const activeTab = parseWorkTab(rawTab);
+  const rawView = searchParams.get("view");
+  const activeView = parseMyWorkView(rawView);
+
+  const [showGroupingSidebar, setShowGroupingSidebar] = useState(false);
+  const [displayOptions, setDisplayOptions] = useDisplayOptions(DISPLAY_STORAGE_ID);
+
+  const extraFilters = useMemo(
+    () => buildAllWorkFilters(searchParams),
+    [searchParams],
+  );
+
+  const assignedFilters = useMemo(
+    () => ({ scope: "mine" as const, ...extraFilters, limit: 100 }),
+    [extraFilters],
+  );
+  const createdFilters = useMemo(
+    () => ({
+      scope: "created" as const,
+      ...extraFilters,
+      orderBy: "created" as const,
+      orderDir: "desc" as const,
+      limit: 100,
+    }),
+    [extraFilters],
+  );
+  const subscribedFilters = useMemo(
+    () => ({
+      scope: "subscribed" as const,
+      ...extraFilters,
+      orderBy: "updated" as const,
+      orderDir: "desc" as const,
+      limit: 100,
+    }),
+    [extraFilters],
+  );
+  const activityFilters = useMemo(
+    () => ({
+      scope: "mine" as const,
+      ...extraFilters,
+      orderBy: "updated" as const,
+      orderDir: "desc" as const,
+      limit: 100,
+    }),
+    [extraFilters],
+  );
+
+  const {
+    data: assignedData,
+    isLoading: assignedLoading,
+    isError: assignedError,
+    refetch: refetchAssigned,
+  } = useAllWork(assignedFilters, { enabled: activeTab === "assigned" });
+
+  const {
+    data: createdData,
+    isLoading: createdLoading,
+    isError: createdError,
+    refetch: refetchCreated,
+  } = useAllWork(createdFilters, { enabled: activeTab === "created" });
+
+  const {
+    data: subscribedData,
+    isLoading: subscribedLoading,
+    isError: subscribedError,
+    refetch: refetchSubscribed,
+  } = useAllWork(subscribedFilters, { enabled: activeTab === "subscribed" });
+
+  const {
+    data: activityData,
+    isLoading: activityLoading,
+    isError: activityError,
+    refetch: refetchActivity,
+  } = useAllWork(activityFilters, { enabled: activeTab === "activity" });
+
+  const isLoading =
+    activeTab === "assigned"
+      ? assignedLoading
+      : activeTab === "created"
+        ? createdLoading
+        : activeTab === "subscribed"
+          ? subscribedLoading
+          : activityLoading;
+
+  const isError =
+    activeTab === "assigned"
+      ? assignedError
+      : activeTab === "created"
+        ? createdError
+        : activeTab === "subscribed"
+          ? subscribedError
+          : activityError;
+
+  const activeData =
+    activeTab === "assigned"
+      ? assignedData
+      : activeTab === "created"
+        ? createdData
+        : activeTab === "subscribed"
+          ? subscribedData
+          : activityData;
 
   const handleRetry = useCallback(() => {
-    void refetch();
-  }, [refetch]);
+    if (activeTab === "assigned") void refetchAssigned();
+    else if (activeTab === "created") void refetchCreated();
+    else if (activeTab === "subscribed") void refetchSubscribed();
+    else void refetchActivity();
+  }, [activeTab, refetchAssigned, refetchCreated, refetchSubscribed, refetchActivity]);
 
   const handleTabChange = useCallback(
     (value: string) => {
@@ -86,102 +227,127 @@ export function MyWorkPage() {
       } else {
         params.set("tab", value);
       }
-      router.replace(`?${params.toString()}`);
+      params.delete("view");
+      router.replace(
+        params.toString() ? `${pathname}?${params.toString()}` : pathname,
+        { scroll: false },
+      );
     },
-    [router, searchParams],
+    [router, pathname, searchParams],
   );
 
-  const grouped = useMemo(() => {
-    if (!data) return null;
-    const buckets: Record<DueBucket, MyWorkItem[]> = {
-      overdue: [],
-      today: [],
-      upcoming: [],
-      none: [],
-    };
-    for (const item of data) {
-      buckets[getDueBucket(item)].push(item);
-    }
-    return buckets;
-  }, [data]);
-
-  const totalOpen = useMemo(
-    () => data?.filter((i) => i.status !== "DONE" && i.status !== "CANCELLED").length ?? 0,
-    [data],
+  const handleViewChange = useCallback(
+    (next: string) => {
+      if (!MY_WORK_VIEWS.includes(next as (typeof MY_WORK_VIEWS)[number])) return;
+      const params = new URLSearchParams(searchParams.toString());
+      if (next === "list") {
+        params.delete("view");
+      } else {
+        params.set("view", next);
+      }
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    [router, pathname, searchParams],
   );
 
-  const bucketCounts = useMemo(() => {
-    if (!grouped) return { overdue: 0, today: 0, upcoming: 0 };
-    return {
-      overdue: grouped.overdue.length,
-      today: grouped.today.length,
-      upcoming: grouped.upcoming.length,
-    };
-  }, [grouped]);
+  const handleDisplayOptionsChange = useCallback(
+    (opts: typeof displayOptions) => {
+      setDisplayOptions(opts);
+    },
+    [setDisplayOptions],
+  );
+
+  function handleToggleSidebar() {
+    setShowGroupingSidebar((prev) => !prev);
+  }
+
+  const kanbanTickets = useMemo(() => {
+    if (!activeData?.data) return [];
+    return activeData.data.map(mapAllWorkTicketToKanban);
+  }, [activeData]);
+
+  const ticketMeta = useMemo(() => {
+    if (!activeData?.data) return buildTicketMetaMap([]);
+    return buildTicketMetaMap(activeData.data);
+  }, [activeData]);
+
+  const dueBuckets = useMemo(() => {
+    if (activeTab !== "assigned" || activeView !== "list") return null;
+    if (!activeData?.data) return null;
+    return toDueBucketMap(activeData.data);
+  }, [activeTab, activeView, activeData]);
+
+  const showViewSwitcher = activeTab === "assigned";
+  const showBucketList = activeTab === "assigned" && activeView === "list";
+
+  const emptyTitle =
+    activeTab === "created"
+      ? "No tickets created by you"
+      : activeTab === "subscribed"
+        ? "No subscribed tickets"
+        : activeTab === "activity"
+          ? "No recently updated tickets"
+          : "Nothing assigned to you";
+
+  const emptyDescription =
+    activeTab === "created"
+      ? "Tickets you reported or created across all projects will appear here."
+      : activeTab === "subscribed"
+        ? "Tickets you are watching will appear here."
+        : activeTab === "activity"
+          ? "Your recently updated assigned tickets will appear here."
+          : "Tickets assigned to you across all projects will appear here.";
 
   return (
     <PageWrapper
-      title="My Work"
-      subtitle="Your assigned tickets across all projects"
+      title="My Issues"
+      subtitle="Your tickets across all projects"
       noInternalScroll
+      filtersClassName="pb-2"
+      filters={
+        <div className={PM_TOOLBAR}>
+          {showViewSwitcher ? (
+            <ViewSwitcher
+              activeView={activeView}
+              onViewChange={handleViewChange}
+              allowedViews={MY_WORK_VIEWS}
+            />
+          ) : null}
+          <div className="min-w-0 flex-1">
+            <TicketFilterBar
+              showSprintFilter={false}
+              showAssigneeFilter={false}
+              align="end"
+            />
+          </div>
+          {showViewSwitcher ? (
+            <DisplayOptionsPanel
+              viewType={activeView}
+              options={displayOptions}
+              onChange={handleDisplayOptionsChange}
+            />
+          ) : null}
+          <Button
+            variant="outline"
+            size="icon"
+            className={cn(
+              "size-9 shrink-0",
+              showGroupingSidebar && "border-primary bg-primary/10 text-primary",
+            )}
+            aria-label="Toggle grouping sidebar"
+            aria-pressed={showGroupingSidebar}
+            onClick={handleToggleSidebar}
+          >
+            <PanelRight className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      }
     >
-      <PmPageShell className="min-h-0 flex-1 gap-3 overflow-hidden">
-        {activeTab === "assigned" && !isLoading && !isError && data && data.length > 0 ? (
-          <PmSection index={0} className="shrink-0">
-            <StatCardGrid cols={4}>
-              <motion.div
-                variants={sectionVariants}
-                transition={pmStagger(0)}
-                whileHover={shouldReduceMotion ? undefined : { y: -2 }}
-              >
-                <StatCard
-                  label="Open"
-                  value={totalOpen}
-                  icon={CheckCircle2}
-                  tone="default"
-                />
-              </motion.div>
-              <motion.div
-                variants={sectionVariants}
-                transition={pmStagger(1)}
-                whileHover={shouldReduceMotion ? undefined : { y: -2 }}
-              >
-                <StatCard
-                  label="Overdue"
-                  value={bucketCounts.overdue}
-                  icon={AlertCircle}
-                  tone={bucketCounts.overdue > 0 ? "red" : "default"}
-                />
-              </motion.div>
-              <motion.div
-                variants={sectionVariants}
-                transition={pmStagger(2)}
-                whileHover={shouldReduceMotion ? undefined : { y: -2 }}
-              >
-                <StatCard
-                  label="Due Today"
-                  value={bucketCounts.today}
-                  icon={CalendarClock}
-                  tone="amber"
-                />
-              </motion.div>
-              <motion.div
-                variants={sectionVariants}
-                transition={pmStagger(3)}
-                whileHover={shouldReduceMotion ? undefined : { y: -2 }}
-              >
-                <StatCard
-                  label="Upcoming"
-                  value={bucketCounts.upcoming}
-                  icon={Clock}
-                  tone="emerald"
-                />
-              </motion.div>
-            </StatCardGrid>
-          </PmSection>
-        ) : null}
-
-        <PmSection index={1} className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <PmPageShell className="min-h-0 flex-1 overflow-hidden">
+        <PmSection
+          index={0}
+          className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden"
+        >
           <Tabs
             value={activeTab}
             onValueChange={handleTabChange}
@@ -200,39 +366,66 @@ export function MyWorkPage() {
               }
             />
 
-            <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
-              {activeTab === "assigned" ? (
-                isLoading ? (
+            <div className="flex min-h-0 flex-1 gap-3 overflow-hidden">
+              <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+                {isLoading ? (
                   <AllWorkListSkeleton />
                 ) : isError ? (
                   <ErrorState
                     className="min-h-[14rem]"
-                    title="Failed to load your work"
-                    description="Could not fetch your assigned tickets. Please try again."
+                    title="Failed to load your issues"
+                    description="Could not fetch tickets. Please try again."
                     onRetry={handleRetry}
                   />
-                ) : !data || data.length === 0 ? (
+                ) : !activeData?.data || activeData.data.length === 0 ? (
                   <EmptyState
                     illustrationPreset="projects"
-                    title="Nothing assigned to you"
-                    description="Tickets assigned to you across all projects will appear here."
+                    title={emptyTitle}
+                    description={emptyDescription}
                     className={CONTENT_FILL_PANEL}
                   />
-                ) : (
-                  <div className="flex flex-col gap-3">
+                ) : showBucketList ? (
+                  <div className="flex flex-col gap-3 overflow-y-auto">
                     {BUCKET_ORDER.map((bucket) => {
-                      const items = grouped?.[bucket] ?? [];
+                      const items =
+                        dueBuckets?.[bucket]?.map((t) => ({
+                          id: t.id,
+                          projectId: t.projectId,
+                          projectName: t.projectName,
+                          projectKey: t.projectKey,
+                          ticketNumber: t.ticketNumber,
+                          title: t.title,
+                          status: t.status,
+                          priority: t.priority,
+                          type: t.type,
+                          dueDate: t.dueDate,
+                        })) ?? [];
                       if (items.length === 0) return null;
-                      return <BucketSection key={bucket} bucket={bucket} items={items} />;
+                      return (
+                        <BucketSection key={bucket} bucket={bucket} items={items} />
+                      );
                     })}
                   </div>
-                )
-              ) : null}
+                ) : (
+                  <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                    <MyWorkViewBody
+                      view={activeView}
+                      tickets={kanbanTickets}
+                      displayOptions={displayOptions}
+                      ticketMeta={ticketMeta}
+                    />
+                  </div>
+                )}
+              </div>
 
-              {activeTab === "created" ? <CreatedTab /> : null}
-              {activeTab === "subscribed" ? <SubscribedTab /> : null}
-              {activeTab === "recent" ? <RecentTab /> : null}
-            </ScrollArea>
+              {showGroupingSidebar ? (
+                <GroupingSidebar
+                  tickets={activeData?.data}
+                  isLoading={isLoading}
+                  onClose={handleToggleSidebar}
+                />
+              ) : null}
+            </div>
           </Tabs>
         </PmSection>
       </PmPageShell>

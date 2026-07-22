@@ -253,6 +253,99 @@ export const InlineProjectDescription = memo(function InlineProjectDescription({
   );
 });
 
+type ProjectPriorityValue = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+
+const PRIORITY_OPTIONS: { value: ProjectPriorityValue; label: string }[] = [
+  { value: "URGENT", label: "Urgent" },
+  { value: "HIGH", label: "High" },
+  { value: "MEDIUM", label: "Medium" },
+  { value: "LOW", label: "Low" },
+];
+
+const priorityDotColors: Record<ProjectPriorityValue, string> = {
+  URGENT: "bg-red-500",
+  HIGH: "bg-orange-500",
+  MEDIUM: "bg-yellow-500",
+  LOW: "bg-slate-400",
+};
+
+interface InlineProjectPriorityProps extends InlineProjectFieldProps {
+  currentPriority: ProjectPriorityValue | null;
+}
+
+export const InlineProjectPriority = memo(function InlineProjectPriority({
+  projectId,
+  currentPriority,
+}: InlineProjectPriorityProps) {
+  const [open, setOpen] = useState(false);
+  const updateProject = useUpdateProject({
+    onError: (e) => toast.error(getErrorMessage(e)),
+  });
+
+  function makePriorityHandler(priority: ProjectPriorityValue) {
+    return function selectPriority() {
+      updateProject.mutate({ projectId, priority });
+      setOpen(false);
+    };
+  }
+
+  function handleClear() {
+    updateProject.mutate({ projectId, priority: undefined });
+    setOpen(false);
+  }
+
+  const dotColor = currentPriority ? priorityDotColors[currentPriority] : "bg-muted-foreground/30";
+  const label = currentPriority
+    ? (PRIORITY_OPTIONS.find((o) => o.value === currentPriority)?.label ?? currentPriority)
+    : "No priority";
+
+  return (
+    <InlineFieldWrapper>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            className="flex items-center gap-1 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
+            aria-label="Change project priority"
+          >
+            <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", dotColor)} aria-hidden="true" />
+            {label}
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-36 p-1" align="start">
+          {PRIORITY_OPTIONS.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={makePriorityHandler(option.value)}
+              className={cn(
+                popoverOptionBaseClass,
+                option.value === currentPriority && popoverOptionSelectedClass,
+              )}
+            >
+              <span className={cn("h-2 w-2 rounded-full shrink-0", priorityDotColors[option.value])} />
+              {option.label}
+              {option.value === currentPriority && <Check className="ml-auto h-3 w-3" />}
+            </button>
+          ))}
+          {currentPriority ? (
+            <>
+              <div className="my-0.5 border-t border-border" />
+              <button
+                type="button"
+                onClick={handleClear}
+                className={popoverOptionBaseClass}
+              >
+                Clear priority
+              </button>
+            </>
+          ) : null}
+        </PopoverContent>
+      </Popover>
+    </InlineFieldWrapper>
+  );
+});
+
 interface InlineProjectDatesProps extends InlineProjectFieldProps {
   currentStartDate: string | Date | null;
   currentEndDate: string | Date | null;

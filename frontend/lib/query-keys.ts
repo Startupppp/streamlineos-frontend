@@ -421,6 +421,9 @@ export const queryKeys = {
       [...base, "projects", "all-work", filters] as const,
     workspaceViews: () => [...base, "projects", "workspace-views"] as const,
     agentTokens: () => [...base, "projects", "agent-tokens"] as const,
+    commentDrafts: {
+      mine: () => [...base, "projects", "comment-drafts", "mine"] as const,
+    },
   },
 
   chat: {
@@ -869,6 +872,7 @@ export const queryKeys = {
     all: [...base, "kb"] as const,
     kbPages: () => [...base, "kb", "pages"] as const,
     pagesTree: () => [...base, "kb", "pages", "tree"] as const,
+    pagesTreeByProject: (projectId: number) => [...base, "kb", "pages", "tree", "project", projectId] as const,
     pagesRecent: () => [...base, "kb", "pages", "recent"] as const,
     pagesFavorites: () => [...base, "kb", "pages", "favorites"] as const,
     pagesTrash: () => [...base, "kb", "pages", "trash"] as const,

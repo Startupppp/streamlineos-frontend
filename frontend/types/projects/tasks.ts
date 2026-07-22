@@ -113,6 +113,8 @@ export interface Ticket {
   project?: { id: number; name: string; key: string } | null;
   sprint?: { id: number; name: string } | null;
   cycle?: { id: number; name: string; status: string; startDate: string; endDate: string } | null;
+  customerId?: number | null;
+  customer?: { id: number; name: string } | null;
 }
 
 export type Epic = Ticket;
@@ -191,6 +193,8 @@ export interface UpdateTicketInput {
   startDate?: string | null;
   dueDate?: string | null;
   expectedUpdatedAt?: string;
+  customerId?: number | null;
+  parentTicketId?: number | null;
 }
 
 export interface MoveTicketInput {

@@ -26,7 +26,10 @@ import {
   listItemReduced,
   pmSnappy,
 } from "@/features/projects/shared/pm-motion";
-import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import {
+  FLEX_TITLE_SLOT,
+  TEXT_ONE_LINE,
+} from "@/features/projects/shared/text-overflow";
 import { getTicketDetailHref } from "@/features/projects/shared/format-ticket-key";
 
 export type DueBucket = "overdue" | "today" | "upcoming" | "none";
@@ -79,7 +82,7 @@ export const WorkItemRow = memo(function WorkItemRow({
         className={cn(PM_ROW, "gap-2.5")}
       >
         <PriorityBadge priority={item.priority} size="sm" />
-        <div className="min-w-0 flex-1">
+        <div className={FLEX_TITLE_SLOT}>
           <p
             className={cn(
               TEXT_ONE_LINE,
@@ -89,13 +92,13 @@ export const WorkItemRow = memo(function WorkItemRow({
           >
             {item.title}
           </p>
-          <div className="mt-0.5 flex min-w-0 items-center gap-1.5">
+          <div className="mt-0.5 flex min-w-0 items-center gap-1.5 overflow-hidden">
             <span className="shrink-0 font-mono text-[10px] font-medium text-primary/80">
               {item.projectKey}
             </span>
             <span className="shrink-0 text-[10px] text-muted-foreground/70">·</span>
             <span
-              className={cn(TEXT_ONE_LINE, "text-[10px] text-muted-foreground")}
+              className={cn(TEXT_ONE_LINE, "min-w-0 flex-1 text-[10px] text-muted-foreground")}
               title={item.projectName}
             >
               {item.projectName}

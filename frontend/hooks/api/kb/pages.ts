@@ -84,6 +84,7 @@ export type CreateKbPageInput = {
   spaceId?: number | null;
   title?: string;
   templateId?: number | null;
+  projectId?: number | null;
 };
 
 export type UpdateKbPageInput = {
@@ -109,6 +110,15 @@ export function useKbPagesTree() {
     queryKey: queryKeys.kb.pagesTree(),
     queryFn: () => apiClient.get<KbPageTreeNode[]>("/kb/pages/tree"),
     staleTime: 30_000,
+  });
+}
+
+export function useKbProjectPagesTree(projectId: number) {
+  return useQuery({
+    queryKey: queryKeys.kb.pagesTreeByProject(projectId),
+    queryFn: () => apiClient.get<KbPageTreeNode[]>("/kb/pages/tree", { projectId }),
+    staleTime: 30_000,
+    enabled: Number.isFinite(projectId) && projectId > 0,
   });
 }
 

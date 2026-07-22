@@ -9,12 +9,14 @@ import {
   Trash2,
   RotateCcw,
   User,
+  Ticket,
 } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { AvatarStack } from "@/components/ui/avatar-stack";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +29,8 @@ import { cn, resolveImageUrl } from "@/lib/utils";
 import { format, isPast, differenceInDays } from "date-fns";
 import {
   getColorSafe,
+  healthDotColors,
+  healthStatusColors,
   projectStatusColors,
   projectStatusDisplayLabels,
 } from "@/lib/theme-constants";
@@ -36,12 +40,15 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { PmPanel } from "@/features/projects/shared/pm-chrome";
 import { useCan } from "@/hooks/api/access";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import type { ProjectListItem } from "@/types/projects/projects";
+import type { ProjectListItem, ProjectHealth } from "@/types/projects/projects";
+import type { DisplayPrefs } from "./use-display-prefs";
 import { ProjectCardDialogs } from "./project-card-dialogs";
+import { InlineProjectPriority } from "./project-card-inline-fields";
 import { statusDotColors } from "./project-card-utils";
 
 interface ProjectTableProps {
   projects: ProjectListItem[];
+  prefs?: DisplayPrefs;
 }
 
 type ActiveDialog = "edit" | "delete" | "archive" | null;
@@ -163,7 +170,7 @@ function ActionsCell({
   );
 }
 
-export const ProjectTable = React.memo(function ProjectTable({ projects }: ProjectTableProps) {
+export const ProjectTable = React.memo(function ProjectTable({ projects, prefs }: ProjectTableProps) {
   const router = useRouter();
   const [activeProject, setActiveProject] = useState<ProjectListItem | null>(null);
   const [activeDialog, setActiveDialog] = useState<ActiveDialog>(null);
@@ -187,122 +194,259 @@ export const ProjectTable = React.memo(function ProjectTable({ projects }: Proje
     if (!open) setActiveDialog(null);
   }, []);
 
-  const columns = useMemo<DataTableColumn<ProjectListItem>[]>(() => [
-    {
-      key: "name",
-      header: "Name",
-      sortable: true,
-      sortValue: (p) => p.name,
-      className: TABLE_TITLE_CELL,
-      cell: (p) => (
-        <div className={cn(TEXT_FLEX_CHILD, "flex min-w-0 items-center gap-2 overflow-hidden")}>
-          <span
-            className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-[9px] font-bold tracking-tight bg-primary/10 text-primary ring-1 ring-primary/10"
-            aria-hidden="true"
-          >
-            {p.key.slice(0, 2).toUpperCase()}
-          </span>
-          <TruncatedText text={p.name} className="text-[13px] font-medium text-foreground transition-colors group-hover:text-primary" />
-          <span className="hidden shrink-0 font-mono text-[10px] text-muted-foreground/60 sm:inline-block">
-            {p.key}
-          </span>
-        </div>
-      ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      sortable: true,
-      sortValue: (p) => p.status ?? "",
-      className: "w-[100px]",
-      cell: (p) => {
-        const status = p.status ?? "ACTIVE";
-        const displayLabel = projectStatusDisplayLabels[status] ?? status;
-        const statusColor = getColorSafe(projectStatusColors, status);
-        return (
-          <Badge
-            variant="secondary"
-            className={cn(
-              "gap-1 rounded-full border-0 px-1.5 py-0 text-[10px] font-medium",
-              statusColor,
-            )}
-          >
-            <StatusDot status={status} />
-            {displayLabel}
-          </Badge>
-        );
-      },
-    },
-    {
-      key: "lead",
-      header: "Lead",
-      sortable: true,
-      sortValue: (p) => getUserDisplayName(p.manager),
-      headerClassName: "hidden md:table-cell",
-      className: "w-[130px] hidden md:table-cell",
-      cell: (p) => {
-        const leadName = getUserDisplayName(p.manager);
-        const leadInitials = getUserInitials(p.manager);
-        return p.manager ? (
-          <div className={cn(TEXT_FLEX_CHILD, "flex items-center gap-1.5")}>
-            <Avatar className="h-5 w-5 shrink-0">
-              {p.manager.image ? (
-                <AvatarImage src={resolveImageUrl(p.manager.image)} alt={leadName} />
-              ) : null}
-              <AvatarFallback className="text-[9px]">{leadInitials}</AvatarFallback>
-            </Avatar>
-            <TruncatedText text={leadName} className="max-w-[96px] text-xs text-muted-foreground" />
-          </div>
-        ) : (
-          <span className="flex items-center gap-1 text-xs text-muted-foreground/50">
-            <User className="h-3.5 w-3.5" aria-hidden="true" />
-            Unassigned
-          </span>
-        );
-      },
-    },
-    {
-      key: "endDate",
-      header: "Target",
-      sortable: true,
-      sortValue: (p) => (p.endDate ? new Date(p.endDate).getTime() : Infinity),
-      headerClassName: "hidden lg:table-cell",
-      className: "w-[84px] hidden lg:table-cell",
-      cell: (p) => {
-        const status = p.status ?? "ACTIVE";
-        const targetDate = resolveTargetDate(p.endDate, status);
-        return targetDate ? (
-          <div className={cn("flex items-center gap-1 text-xs font-medium", dateToneClasses[targetDate.tone])}>
-            <Calendar className="h-3 w-3 shrink-0" aria-hidden="true" />
-            {targetDate.label}
-          </div>
-        ) : (
-          <span className="text-xs text-muted-foreground/40">—</span>
-        );
-      },
-    },
-    {
-      key: "progress",
-      header: "Progress",
-      sortable: true,
-      sortValue: (p) => p.progress.percentage,
-      headerClassName: "hidden sm:table-cell",
-      className: "w-[110px] hidden sm:table-cell",
-      cell: (p) => {
-        const progressValue = p.progress.total > 0 ? p.progress.percentage : 0;
-        return p.progress.total > 0 ? (
-          <div className="flex items-center gap-2">
-            <Progress value={progressValue} className="h-1 min-w-0 flex-1" />
-            <span className="w-7 shrink-0 text-right text-[10px] tabular-nums text-muted-foreground">
-              {Math.round(progressValue)}%
+  const columns = useMemo<DataTableColumn<ProjectListItem>[]>(() => {
+    const cols: DataTableColumn<ProjectListItem>[] = [
+      {
+        key: "name",
+        header: "Name",
+        sortable: true,
+        sortValue: (p) => p.name,
+        className: TABLE_TITLE_CELL,
+        cell: (p) => (
+          <div className={cn(TEXT_FLEX_CHILD, "flex min-w-0 items-center gap-2 overflow-hidden")}>
+            <span
+              className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-[9px] font-bold tracking-tight bg-primary/10 text-primary ring-1 ring-primary/10"
+              aria-hidden="true"
+            >
+              {p.key.slice(0, 2).toUpperCase()}
+            </span>
+            <TruncatedText text={p.name} className="text-[13px] font-medium text-foreground transition-colors group-hover:text-primary" />
+            <span className="hidden shrink-0 font-mono text-[10px] text-muted-foreground/60 sm:inline-block">
+              {p.key}
             </span>
           </div>
-        ) : (
-          <span className="text-xs text-muted-foreground/40">—</span>
-        );
+        ),
       },
-    },
-    {
+    ];
+
+    if (!prefs || prefs.showSummary) {
+      cols.push({
+        key: "summary",
+        header: "Summary",
+        headerClassName: "hidden xl:table-cell",
+        className: "w-[180px] hidden xl:table-cell",
+        cell: (p) =>
+          p.description ? (
+            <TruncatedText text={p.description} className="text-[11px] text-muted-foreground" />
+          ) : (
+            <span className="text-xs text-muted-foreground/40">—</span>
+          ),
+      });
+    }
+
+    if (!prefs || prefs.showStatus) {
+      cols.push({
+        key: "status",
+        header: "Status",
+        sortable: true,
+        sortValue: (p) => p.status ?? "",
+        className: "w-[100px]",
+        cell: (p) => {
+          const status = p.status ?? "ACTIVE";
+          const displayLabel = projectStatusDisplayLabels[status] ?? status;
+          const statusColor = getColorSafe(projectStatusColors, status);
+          return (
+            <Badge
+              variant="secondary"
+              className={cn(
+                "gap-1 rounded-full border-0 px-1.5 py-0 text-[10px] font-medium",
+                statusColor,
+              )}
+            >
+              <StatusDot status={status} />
+              {displayLabel}
+            </Badge>
+          );
+        },
+      });
+    }
+
+    if (prefs?.showPriority) {
+      cols.push({
+        key: "priority",
+        header: "Priority",
+        sortable: true,
+        sortValue: (p) => {
+          const order: Record<string, number> = { URGENT: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
+          return order[p.priority ?? ""] ?? 4;
+        },
+        headerClassName: "hidden md:table-cell",
+        className: "w-[96px] hidden md:table-cell",
+        cell: (p) => (
+          <InlineProjectPriority projectId={p.id} currentPriority={p.priority} />
+        ),
+      });
+    }
+
+    if (prefs?.showHealth) {
+      cols.push({
+        key: "health",
+        header: "Health",
+        sortable: true,
+        sortValue: (p) => {
+          const order: Record<ProjectHealth, number> = { off_track: 0, at_risk: 1, on_track: 2 };
+          return order[p.health];
+        },
+        headerClassName: "hidden lg:table-cell",
+        className: "w-[96px] hidden lg:table-cell",
+        cell: (p) => {
+          const healthLabels: Record<ProjectHealth, string> = {
+            on_track: "On Track",
+            at_risk: "At Risk",
+            off_track: "Off Track",
+          };
+          const dotColor = getColorSafe(healthDotColors, p.health);
+          const badgeColor = getColorSafe(healthStatusColors, p.health);
+          return (
+            <Badge
+              variant="secondary"
+              className={cn(
+                "gap-1 rounded-full border-0 px-1.5 py-0 text-[10px] font-medium",
+                badgeColor,
+              )}
+            >
+              <span className={cn("inline-block h-1.5 w-1.5 shrink-0 rounded-full", dotColor)} aria-hidden="true" />
+              {healthLabels[p.health]}
+            </Badge>
+          );
+        },
+      });
+    }
+
+    if (!prefs || prefs.showLead) {
+      cols.push({
+        key: "lead",
+        header: "Lead",
+        sortable: true,
+        sortValue: (p) => getUserDisplayName(p.manager),
+        headerClassName: "hidden md:table-cell",
+        className: "w-[130px] hidden md:table-cell",
+        cell: (p) => {
+          const leadName = getUserDisplayName(p.manager);
+          const leadInitials = getUserInitials(p.manager);
+          return p.manager ? (
+            <div className={cn(TEXT_FLEX_CHILD, "flex items-center gap-1.5")}>
+              <Avatar className="h-5 w-5 shrink-0">
+                {p.manager.image ? (
+                  <AvatarImage src={resolveImageUrl(p.manager.image)} alt={leadName} />
+                ) : null}
+                <AvatarFallback className="text-[9px]">{leadInitials}</AvatarFallback>
+              </Avatar>
+              <TruncatedText text={leadName} className="max-w-[96px] text-xs text-muted-foreground" />
+            </div>
+          ) : (
+            <span className="flex items-center gap-1 text-xs text-muted-foreground/50">
+              <User className="h-3.5 w-3.5" aria-hidden="true" />
+              Unassigned
+            </span>
+          );
+        },
+      });
+    }
+
+    if (prefs?.showMembers) {
+      cols.push({
+        key: "members",
+        header: "Members",
+        headerClassName: "hidden lg:table-cell",
+        className: "w-[90px] hidden lg:table-cell",
+        cell: (p) =>
+          p.members.length > 0 ? (
+            <AvatarStack
+              users={p.members}
+              limit={3}
+              className="[&_[data-slot=avatar]]:size-5 [&_[data-slot=avatar]]:text-[8px]"
+            />
+          ) : (
+            <span className="text-xs text-muted-foreground/40">—</span>
+          ),
+      });
+    }
+
+    if (!prefs || prefs.showTargetDate) {
+      cols.push({
+        key: "endDate",
+        header: "Target",
+        sortable: true,
+        sortValue: (p) => (p.endDate ? new Date(p.endDate).getTime() : Infinity),
+        headerClassName: "hidden lg:table-cell",
+        className: "w-[84px] hidden lg:table-cell",
+        cell: (p) => {
+          const status = p.status ?? "ACTIVE";
+          const targetDate = resolveTargetDate(p.endDate, status);
+          return targetDate ? (
+            <div className={cn("flex items-center gap-1 text-xs font-medium", dateToneClasses[targetDate.tone])}>
+              <Calendar className="h-3 w-3 shrink-0" aria-hidden="true" />
+              {targetDate.label}
+            </div>
+          ) : (
+            <span className="text-xs text-muted-foreground/40">—</span>
+          );
+        },
+      });
+    }
+
+    if (prefs?.showStartDate) {
+      cols.push({
+        key: "startDate",
+        header: "Start",
+        sortable: true,
+        sortValue: (p) => (p.startDate ? new Date(p.startDate).getTime() : Infinity),
+        headerClassName: "hidden lg:table-cell",
+        className: "w-[80px] hidden lg:table-cell",
+        cell: (p) =>
+          p.startDate ? (
+            <span className="text-xs text-muted-foreground">
+              {format(new Date(p.startDate), "MMM d")}
+            </span>
+          ) : (
+            <span className="text-xs text-muted-foreground/40">—</span>
+          ),
+      });
+    }
+
+    if (!prefs || prefs.showIssueCount) {
+      cols.push({
+        key: "issues",
+        header: "Issues",
+        sortable: true,
+        sortValue: (p) => p.progress.total,
+        headerClassName: "hidden sm:table-cell",
+        className: "w-[72px] hidden sm:table-cell",
+        cell: (p) => (
+          <div className="flex items-center gap-1 text-xs tabular-nums text-muted-foreground">
+            <Ticket className="h-3 w-3 shrink-0" aria-hidden="true" />
+            <span>{p.progress.total}</span>
+          </div>
+        ),
+      });
+    }
+
+    if (!prefs || prefs.showProgress) {
+      cols.push({
+        key: "progress",
+        header: "Progress",
+        sortable: true,
+        sortValue: (p) => p.progress.percentage,
+        headerClassName: "hidden sm:table-cell",
+        className: "w-[110px] hidden sm:table-cell",
+        cell: (p) => {
+          const progressValue = p.progress.total > 0 ? p.progress.percentage : 0;
+          return p.progress.total > 0 ? (
+            <div className="flex items-center gap-2">
+              <Progress value={progressValue} className="h-1 min-w-0 flex-1" />
+              <span className="w-7 shrink-0 text-right text-[10px] tabular-nums text-muted-foreground">
+                {Math.round(progressValue)}%
+              </span>
+            </div>
+          ) : (
+            <span className="text-xs text-muted-foreground/40">—</span>
+          );
+        },
+      });
+    }
+
+    cols.push({
       key: "actions",
       header: "",
       className: "w-10 pr-2",
@@ -314,8 +458,10 @@ export const ProjectTable = React.memo(function ProjectTable({ projects }: Proje
           onDelete={handleDelete}
         />
       ),
-    },
-  ], [handleEdit, handleArchive, handleDelete]);
+    });
+
+    return cols;
+  }, [prefs, handleEdit, handleArchive, handleDelete]);
 
   const handleRowClick = useCallback(
     (project: ProjectListItem) => {

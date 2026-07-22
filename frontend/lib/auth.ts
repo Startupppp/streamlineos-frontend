@@ -126,6 +126,8 @@ async function fetchSessionData(userId: string): Promise<SessionData | null> {
   return null;
 }
 
+const lastGoodSessionData = new Map<string, SessionData>();
+
 async function fetchSessionDataWithCache(userId: string, orgId: string | null): Promise<SessionData | null> {
   const storeKey = `${userId}:${orgId ?? ""}`;
   if (orgId !== null) {
@@ -136,8 +138,10 @@ async function fetchSessionDataWithCache(userId: string, orgId: string | null): 
   if (data?.orgId) {
     setSessionDataInStore(`${userId}:${data.orgId}`, data);
     if (orgId !== null) setSessionDataInStore(storeKey, data);
+    lastGoodSessionData.set(userId, data);
+    return data;
   }
-  return data;
+  return lastGoodSessionData.get(userId) ?? data;
 }
 
 const fetchSessionDataCached = cache(fetchSessionDataWithCache);

@@ -37,7 +37,7 @@ function DetailSkeleton() {
         <Skeleton className="h-40 w-full rounded-lg" />
         <Skeleton className="h-24 w-full rounded-lg" />
       </div>
-      <div className="w-full shrink-0 border-t border-border px-4 py-3 pr-12 md:w-96 md:overflow-y-auto md:border-t-0 md:border-l md:pr-4 md:scrollbar-hide xl:w-[26rem]">
+      <div className="shrink-0 border-t border-border px-4 py-3 pr-12 md:w-96 md:min-w-96 md:overflow-y-auto md:border-t-0 md:border-l md:pr-4 md:scrollbar-hide xl:w-[26rem] xl:min-w-[26rem]">
         <div className="mb-3 flex gap-2">
           <Skeleton className="h-5 w-16 rounded-md" />
           <Skeleton className="h-5 w-20 rounded-md" />
@@ -220,13 +220,13 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
         </div>
       }
     >
-      <div className="relative flex min-h-0 flex-1 flex-col overflow-y-auto scrollbar-hide md:flex-row md:overflow-hidden">
+      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto scrollbar-hide md:flex-row md:overflow-hidden">
         <div
           aria-hidden
           className="pointer-events-none absolute -top-6 right-1/3 h-32 w-32 rounded-full bg-primary/[0.05] blur-3xl"
         />
 
-        <div className="min-w-0 shrink-0 bg-gradient-to-b from-card/80 to-background/40 px-4 pb-4 pt-2 pr-12 md:min-h-0 md:flex-1 md:overflow-y-auto md:px-6 md:pb-5 md:pr-6 md:scrollbar-hide">
+        <div className="min-w-0 flex-1 bg-gradient-to-b from-card/80 to-background/40 px-4 pb-4 pt-2 pr-12 md:min-h-0 md:overflow-y-auto md:px-6 md:pb-5 md:pr-6 md:scrollbar-hide">
           <TicketDetailMainSection
             ticket={ticket}
             ticketId={ticketId}
@@ -242,7 +242,7 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
         </div>
 
         {!rightPanelCollapsed && (
-          <aside className="w-full shrink-0 border-t border-border bg-card pr-12 pb-[max(1.25rem,env(safe-area-inset-bottom))] md:min-h-0 md:w-96 md:overflow-y-auto md:border-t-0 md:border-l md:pb-0 md:pr-0 md:scrollbar-hide xl:w-[26rem]">
+          <aside className="min-w-0 shrink-0 border-t border-border bg-card pr-12 pb-[max(1.25rem,env(safe-area-inset-bottom))] md:min-h-0 md:w-96 md:min-w-96 md:overflow-y-auto md:border-t-0 md:border-l md:pb-0 md:pr-0 md:scrollbar-hide xl:w-[26rem] xl:min-w-[26rem]">
             <TicketDetailRightPanel
               displayKey={displayKey}
               saving={saving}

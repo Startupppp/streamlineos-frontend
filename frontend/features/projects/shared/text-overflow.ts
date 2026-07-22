@@ -4,5 +4,6 @@ export {
   TEXT_THREE_LINES,
   TEXT_BODY,
   TEXT_FLEX_CHILD,
+  FLEX_TITLE_SLOT,
   TABLE_TITLE_CELL,
 } from "@/lib/text-overflow";

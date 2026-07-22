@@ -189,10 +189,10 @@ const PlanningCard = function PlanningCard({
             {isSelected && <CheckSquare className="h-3 w-3 text-primary-foreground" aria-hidden />}
           </button>
 
-          <div className="flex-1 min-w-0 space-y-1">
-            <div className="flex items-center gap-1 min-w-0">
+          <div className="min-w-0 flex-1 space-y-1 overflow-hidden">
+            <div className="flex min-w-0 items-center gap-1 overflow-hidden">
               {ticket.type && <TicketTypeIcon type={ticket.type} size="sm" />}
-              <span className="font-mono text-[10px] text-muted-foreground shrink-0">{ticketKey}</span>
+              <span className="shrink-0 font-mono text-[10px] text-muted-foreground">{ticketKey}</span>
               <TruncatedText text={ticket.title ?? ""} className="min-w-0 flex-1 font-medium" />
             </div>
             <div className="flex items-center gap-1.5 flex-wrap">

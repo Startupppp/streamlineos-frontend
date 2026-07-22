@@ -1855,9 +1855,21 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "projects:view",
       },
       {
+        label: "Inbox",
+        icon: Inbox,
+        href: "/projects/inbox",
+        requiredPermission: "projects:tickets:view",
+      },
+      {
         label: "My issues",
         icon: CheckSquare,
         href: "/projects/my-work",
+        requiredPermission: "projects:tickets:view",
+      },
+      {
+        label: "Drafts",
+        icon: FileText,
+        href: "/projects/drafts",
         requiredPermission: "projects:tickets:view",
       },
       {
@@ -1872,6 +1884,24 @@ export const NAV_GROUPS: NavGroup[] = [
         href: "/projects",
         exact: true,
         requiredPermission: "projects:view",
+      },
+      {
+        label: "Teams",
+        icon: Network,
+        href: "/projects/teams",
+        requiredPermission: "projects:teams:view",
+      },
+      {
+        label: "Members",
+        icon: Users,
+        href: "/projects/members",
+        requiredPermission: "projects:view",
+      },
+      {
+        label: "Customers",
+        icon: Building2,
+        href: "/projects/customers",
+        requiredPermission: "crm:leads:view",
       },
     ],
   },
@@ -1929,7 +1959,11 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "Support",
     module: "helpdesk",
-    requiredPermission: ["projects:tickets:view", "support:kb:view", "support:portal:tickets:view"],
+    requiredPermission: [
+      "projects:tickets:view",
+      "support:kb:view",
+      "support:portal:tickets:view",
+    ],
     routes: [
       {
         label: "All Tickets",

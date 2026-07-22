@@ -97,6 +97,8 @@ interface User {
   joinedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  lastSeenAt?: string | null;
+  teams?: string[];
 }
 
 interface UsersResponse {
@@ -605,6 +607,7 @@ export const useExportUsers = () => {
 
 export type {
   User,
+  UsersResponse,
   EmergencyContact,
   UserSession,
   UserDevice,

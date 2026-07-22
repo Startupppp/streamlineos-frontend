@@ -26,7 +26,7 @@ import {
   pmSpring,
 } from "@/features/projects/shared/pm-motion";
 import { PM_ROW } from "@/features/projects/shared/pm-chrome";
-import { TEXT_FLEX_CHILD } from "@/features/projects/shared/text-overflow";
+import { FLEX_TITLE_SLOT } from "@/features/projects/shared/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getTicketDetailHref } from "@/features/projects/shared/format-ticket-key";
 
@@ -82,17 +82,20 @@ export const MyWorkRow = memo(function MyWorkRow({
         >
           <PriorityBadge priority={item.priority} size="sm" />
         </motion.div>
-        <div className={cn(TEXT_FLEX_CHILD, "flex-1")}>
+        <div className={FLEX_TITLE_SLOT}>
           <TruncatedText
             text={item.title}
             className="text-[13px] font-medium leading-tight text-foreground transition-colors group-hover:text-primary"
           />
-          <div className="mt-0.5 flex min-w-0 items-center gap-1.5">
+          <div className="mt-0.5 flex min-w-0 items-center gap-1.5 overflow-hidden">
             <span className="shrink-0 font-mono text-[10px] font-medium text-primary/80">
               {item.projectKey}
             </span>
             <span className="shrink-0 text-[10px] text-muted-foreground/70">·</span>
-            <TruncatedText text={item.projectName} className="text-[10px] text-muted-foreground" />
+            <TruncatedText
+              text={item.projectName}
+              className="min-w-0 flex-1 text-[10px] text-muted-foreground"
+            />
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
@@ -166,7 +169,7 @@ export const ProjectCard = memo(function ProjectCard({
         >
           {project.key.substring(0, 2).toUpperCase()}
         </Link>
-        <Link href={base} className={cn(TEXT_FLEX_CHILD, "flex-1")}>
+        <Link href={base} className={FLEX_TITLE_SLOT}>
           <TruncatedText
             text={project.name}
             className="text-[13px] font-medium text-foreground transition-colors group-hover:text-primary"

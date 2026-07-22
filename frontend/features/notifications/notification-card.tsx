@@ -183,24 +183,24 @@ export function NotificationCard({
         <Icon className={cn("h-4 w-4", iconColor)} />
       </div>
 
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5 min-w-0">
+      <div className="min-w-0 flex-1 overflow-hidden">
+        <div className="flex min-w-0 items-center gap-1.5">
           <TruncatedText
             text={title}
             className={cn(
-              "text-sm leading-snug",
+              "min-w-0 flex-1 text-sm leading-snug",
               isUnread && !isArchived ? "font-semibold text-foreground" : "font-medium text-muted-foreground",
             )}
           />
-          {pinned && <Pin className="h-3 w-3 text-amber-500 shrink-0" />}
+          {pinned && <Pin className="h-3 w-3 shrink-0 text-amber-500" />}
           <Badge
             variant="outline"
-            className="shrink-0 text-[10px] h-4 px-1.5 border-border/60 text-muted-foreground hidden sm:inline-flex"
+            className="hidden h-4 shrink-0 px-1.5 text-[10px] border-border/60 text-muted-foreground sm:inline-flex"
           >
             {categoryConfig.label}
           </Badge>
           {sourceModule && (
-            <Badge variant="secondary" className="shrink-0 text-[10px] h-4 px-1.5 hidden md:inline-flex">
+            <Badge variant="secondary" className="hidden h-4 shrink-0 px-1.5 text-[10px] md:inline-flex">
               {sourceModule}
             </Badge>
           )}

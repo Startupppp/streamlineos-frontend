@@ -84,18 +84,18 @@ function PopoverNotificationItem({
       >
         <Icon className={cn("h-3.5 w-3.5", config.color)} />
       </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between gap-2">
+      <div className="min-w-0 flex-1 overflow-hidden">
+        <div className="flex min-w-0 items-center justify-between gap-2">
           <TruncatedText
             text={notification.title}
             className={cn(
-              "text-[13px] leading-snug",
+              "min-w-0 flex-1 text-[13px] leading-snug",
               notification.isRead
                 ? "font-medium text-muted-foreground"
                 : "font-semibold text-foreground",
             )}
           />
-          <span className="text-[11px] text-muted-foreground/50 shrink-0">
+          <span className="shrink-0 text-[11px] text-muted-foreground/50">
             {formatRelativeTime(notification.createdAt)}
           </span>
         </div>

@@ -34,3 +34,5 @@ export * from "./workflow";
 export * from "./import-export";
 export * from "./agent-tokens";
 export * from "./ticket-ai";
+export * from "./teams";
+export * from "./comment-drafts";

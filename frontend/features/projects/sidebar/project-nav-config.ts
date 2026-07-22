@@ -33,6 +33,7 @@ import {
   Gavel,
   GanttChart,
   Inbox,
+  ListChecks,
   MessageSquareText,
   PenTool,
   RefreshCcw,
@@ -65,6 +66,7 @@ export interface ProjectNavGroup {
 export const PINNED_PROJECT_NAV_IDS = new Set<string>(["issues"]);
 
 export const DEFAULT_HIDDEN_PROJECT_NAV_IDS = new Set<string>([
+  "triage",
   "milestones",
   "releases",
   "cycles-detail",
@@ -174,6 +176,7 @@ export function buildProjectNavGroups(
         { id: "issues", label: "Issues", href: baseUrl, icon: LayoutGridIcon },
         { id: "backlog", label: "Backlog", href: `${baseUrl}/backlog`, icon: LayoutListIcon },
         { id: "mine", label: "My issues", href: `${baseUrl}/my-tickets`, icon: UserIcon },
+        { id: "triage", label: "Triage", href: `${baseUrl}/triage`, icon: ListChecks },
       ]
     : [];
 
@@ -260,7 +263,7 @@ export function buildProjectNavGroups(
     ...(perms.canChat
       ? [{ id: "chat", label: "Chat", href: `${baseUrl}/chat`, icon: MessageCircleIcon }]
       : []),
-    { id: "wiki", label: "Wiki", href: "/knowledge", icon: BookOpenTextIcon },
+    { id: "wiki", label: "Wiki", href: `${baseUrl}/wiki`, icon: BookOpenTextIcon },
     { id: "whiteboard", label: "Whiteboard", href: `${baseUrl}/whiteboard`, icon: PenTool },
   ];
 

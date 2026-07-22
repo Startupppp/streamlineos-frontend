@@ -79,12 +79,17 @@ export interface ProjectWithDetails extends Project {
   tickets?: Ticket[];
 }
 
+export type ProjectPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+export type ProjectHealth = "on_track" | "at_risk" | "off_track";
+
 export interface ProjectListItem {
   id: number;
   name: string;
   description: string | null;
   key: string;
   status: ProjectStatusValue | null;
+  priority: ProjectPriority | null;
+  health: ProjectHealth;
   startDate: string | Date | null;
   endDate: string | Date | null;
   manager: {
@@ -214,6 +219,7 @@ export interface CreateProjectInput {
   memberIds?: string[];
   endDate?: Date | string;
   startDate?: Date | string;
+  priority?: ProjectPriority;
   modules?: {
     sprints: boolean;
     epics: boolean;
@@ -230,6 +236,7 @@ export interface UpdateProjectInput {
   name?: string;
   description?: string;
   status?: ProjectStatusValue;
+  priority?: ProjectPriority;
   managerId?: string;
   clientId?: string;
   startDate?: Date | string | null;

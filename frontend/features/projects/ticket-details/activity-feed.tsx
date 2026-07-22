@@ -9,13 +9,26 @@ import { MessageSquare, AlertTriangle } from "lucide-react";
 import { SendIcon, XIcon } from "@animateicons/react/lucide";
 import { useAddComment } from "@/hooks/api/projects";
 import { useCreateTicket } from "@/hooks/api/projects/tickets";
-import { useUpdateComment, useDeleteComment } from "@/hooks/api/projects/comment-mutations";
-import { useAddReaction, useRemoveReaction } from "@/hooks/api/projects/reactions";
+import {
+  useUpdateComment,
+  useDeleteComment,
+} from "@/hooks/api/projects/comment-mutations";
+import {
+  useUpsertCommentDraft,
+  useDeleteCommentDraftByTicket,
+} from "@/hooks/api/projects/comment-drafts";
+import {
+  useAddReaction,
+  useRemoveReaction,
+} from "@/hooks/api/projects/reactions";
 import { useCan } from "@/hooks/api/access";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { TicketComment } from "@/types/projects";
-import { MentionTextarea, type MentionUser } from "@/features/projects/comments/mention-textarea";
+import {
+  MentionTextarea,
+  type MentionUser,
+} from "@/features/projects/comments/mention-textarea";
 import { CommentItem } from "./comment-item";
 import { getTicketDetailHref } from "@/features/projects/shared/format-ticket-key";
 import { queryKeys } from "@/lib/query-keys";
@@ -47,10 +60,16 @@ export function ActivityFeed({
   const [replyText, setReplyText] = useState("");
   const [editingSaveId, setEditingSaveId] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
-  const [commentNotFoundDismissed, setCommentNotFoundDismissed] = useState(false);
+  const [commentNotFoundDismissed, setCommentNotFoundDismissed] =
+    useState(false);
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
   const commentRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  const draftTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const upsertDraft = useUpsertCommentDraft();
+  const deleteDraftByTicket = useDeleteCommentDraftByTicket();
+  const upsertDraftMutateRef = useRef(upsertDraft.mutate);
+  upsertDraftMutateRef.current = upsertDraft.mutate;
   const canManage = useCan("projects:manage");
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -58,7 +77,12 @@ export function ActivityFeed({
   const commentPermalink = useCallback(
     (commentId: number) => {
       if (ticketNumber == null) return undefined;
-      return getTicketDetailHref(projectId, projectKey, ticketNumber, commentId);
+      return getTicketDetailHref(
+        projectId,
+        projectKey,
+        ticketNumber,
+        commentId,
+      );
     },
     [projectId, projectKey, ticketNumber],
   );
@@ -73,10 +97,24 @@ export function ActivityFeed({
     if (!highlightCommentId) return;
     const el = commentRefs.current.get(highlightCommentId);
     if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [highlightCommentId]);
+  }, [highlightCommentId, comments]);
+
+  useEffect(() => {
+    if (draftTimerRef.current) clearTimeout(draftTimerRef.current);
+    if (!newComment.trim()) return;
+    draftTimerRef.current = setTimeout(() => {
+      upsertDraftMutateRef.current({ ticketId, body: newComment });
+    }, 1200);
+    return () => {
+      if (draftTimerRef.current) clearTimeout(draftTimerRef.current);
+    };
+  }, [newComment, ticketId]);
 
   const addComment = useAddComment({
-    onSuccess: () => setNewComment(""),
+    onSuccess: () => {
+      setNewComment("");
+      deleteDraftByTicket.mutate(ticketId);
+    },
     onError: (error) => toast.error(getErrorMessage(error)),
   });
 
@@ -103,7 +141,12 @@ export function ActivityFeed({
     (commentId: number) => {
       const content = replyText.trim();
       if (!content) return;
-      addReply.mutate({ ticketId, projectId, content, parentCommentId: commentId });
+      addReply.mutate({
+        ticketId,
+        projectId,
+        content,
+        parentCommentId: commentId,
+      });
     },
     [replyText, ticketId, projectId, addReply],
   );
@@ -149,13 +192,12 @@ export function ActivityFeed({
   );
 
   const handleReplyKeyDown = useCallback(
-    (parentId: number) =>
-      (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-          e.preventDefault();
-          handleReplySubmit(parentId);
-        }
-      },
+    (parentId: number) => (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        handleReplySubmit(parentId);
+      }
+    },
     [handleReplySubmit],
   );
 
@@ -182,11 +224,16 @@ export function ActivityFeed({
     setReplyText("");
   }, []);
 
-  const handleDismissNotFound = useCallback(() => setCommentNotFoundDismissed(true), []);
+  const handleDismissNotFound = useCallback(
+    () => setCommentNotFoundDismissed(true),
+    [],
+  );
 
   const createTicket = useCreateTicket({
     onSuccess: (ticket) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.ticketActivity.list(ticketId) });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.ticketActivity.list(ticketId),
+      });
       toast.success("Issue created");
       if (ticket.projectId != null && ticket.ticketNumber != null) {
         router.push(
@@ -230,7 +277,8 @@ export function ActivityFeed({
       }, {});
     const sortedTopLevel = [...topLevel].sort(
       (a, b) =>
-        new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime(),
+        new Date(b.createdAt || 0).getTime() -
+        new Date(a.createdAt || 0).getTime(),
     );
     return { repliesMap: built, sortedTopLevel };
   }, [comments]);
@@ -242,7 +290,9 @@ export function ActivityFeed({
           <MessageSquare className="h-3.5 w-3.5" />
           Activity
           {comments.length > 0 && (
-            <span className="text-muted-foreground/70">({comments.length})</span>
+            <span className="text-muted-foreground/70">
+              ({comments.length})
+            </span>
           )}
         </h4>
 
@@ -272,7 +322,9 @@ export function ActivityFeed({
       {commentNotFound && (
         <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/10 px-3 py-2.5 text-xs text-amber-800 dark:text-amber-300">
           <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-amber-500 dark:text-amber-400" />
-          <span className="flex-1">Comment not found — it may have been deleted.</span>
+          <span className="flex-1">
+            Comment not found — it may have been deleted.
+          </span>
           <button
             type="button"
             onClick={handleDismissNotFound}

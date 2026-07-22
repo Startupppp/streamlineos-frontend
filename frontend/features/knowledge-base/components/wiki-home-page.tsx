@@ -15,6 +15,7 @@ import {
   useKbPagesRecent,
   useKbPagesFavorites,
   useKbPagesTree,
+  useKbProjectPagesTree,
   useCreateKbPage,
 } from "@/hooks/api/kb";
 import { useCan } from "@/hooks/api/access";
@@ -47,7 +48,12 @@ interface PageCardProps {
   updatedAt: string;
 }
 
-const PageCard = memo(function PageCard({ id, icon, title, updatedAt }: PageCardProps) {
+const PageCard = memo(function PageCard({
+  id,
+  icon,
+  title,
+  updatedAt,
+}: PageCardProps) {
   return (
     <Link
       href={pageHref(id)}
@@ -55,28 +61,47 @@ const PageCard = memo(function PageCard({ id, icon, title, updatedAt }: PageCard
     >
       <div className="flex items-start gap-3">
         <span className="text-xl shrink-0">
-          {icon ?? <KbFileTextIcon className="h-5 w-5 text-muted-foreground mt-0.5" />}
+          {icon ?? (
+            <KbFileTextIcon className="h-5 w-5 text-muted-foreground mt-0.5" />
+          )}
         </span>
         <div className="min-w-0 flex-1">
-          <TruncatedText text={title || "Untitled"} className="font-medium text-sm" />
-          <p className="text-xs text-muted-foreground mt-0.5">{timeAgo(updatedAt)}</p>
+          <TruncatedText
+            text={title || "Untitled"}
+            className="font-medium text-sm"
+          />
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {timeAgo(updatedAt)}
+          </p>
         </div>
       </div>
     </Link>
   );
 });
 
-export default function WikiHomePage() {
+interface WikiHomePageProps {
+  projectId?: number;
+}
+
+export default function WikiHomePage({ projectId }: WikiHomePageProps) {
   const router = useRouter();
-  const { data: recentPages = [], isLoading: recentLoading } = useKbPagesRecent();
+  const isProjectScoped = projectId !== undefined && projectId > 0;
+
+  const { data: recentPages = [], isLoading: recentLoading } =
+    useKbPagesRecent();
   const { data: favoritePages = [] } = useKbPagesFavorites();
-  const { data: treeNodes = [], isLoading: treeLoading } = useKbPagesTree();
+  const orgTree = useKbPagesTree();
+  const projectTree = useKbProjectPagesTree(projectId ?? 0);
+  const treeQuery = isProjectScoped ? projectTree : orgTree;
+  const treeNodes = treeQuery.data ?? [];
+  const treeLoading = treeQuery.isLoading;
+
   const createPage = useCreateKbPage();
   const canCreate = useCan("kb:pages:create");
   const shouldReduceMotion = useReducedMotion();
 
   const rootPages: KbPageTreeNode[] = treeNodes.filter(
-    (n: KbPageTreeNode) => n.parentPageId === null
+    (n: KbPageTreeNode) => n.parentPageId === null,
   );
   const isLoading = recentLoading || treeLoading;
 
@@ -86,13 +111,13 @@ export default function WikiHomePage() {
 
   const handleNewPage = useCallback(() => {
     createPage.mutate(
-      {},
+      { projectId: isProjectScoped ? projectId : undefined },
       {
         onSuccess: (page) => router.push(pageHref(page.id)),
         onError: () => toast.error("Failed to create page"),
-      }
+      },
     );
-  }, [createPage, router]);
+  }, [createPage, router, projectId, isProjectScoped]);
 
   const newPageAction = canCreate ? (
     <Button onClick={handleNewPage} disabled={createPage.isPending} size="sm">
@@ -109,15 +134,25 @@ export default function WikiHomePage() {
     );
   }
 
-  if (rootPages.length === 0 && recentPages.length === 0) {
+  const emptyCondition = isProjectScoped
+    ? rootPages.length === 0
+    : rootPages.length === 0 && recentPages.length === 0;
+
+  if (emptyCondition) {
     return (
       <PageWrapper title="Wiki" actions={newPageAction}>
         <EmptyState
           illustration={<EmptyKnowledgeIllustration />}
           title="Your wiki starts here"
-          description="Create your first page to build a shared knowledge base for your team."
+          description={
+            isProjectScoped
+              ? "Create your first page to document this project."
+              : "Create your first page to build a shared knowledge base for your team."
+          }
           action={
-            canCreate ? { label: "New page", onClick: handleNewPage } : undefined
+            canCreate
+              ? { label: "New page", onClick: handleNewPage }
+              : undefined
           }
           className={CONTENT_FILL_PANEL}
         />
@@ -126,12 +161,18 @@ export default function WikiHomePage() {
   }
 
   return (
-    <PageWrapper title="Wiki" subtitle="Your team knowledge base" actions={newPageAction}>
-      {recentPages.length > 0 && (
+    <PageWrapper
+      title="Wiki"
+      subtitle="Your team knowledge base"
+      actions={newPageAction}
+    >
+      {!isProjectScoped && recentPages.length > 0 && (
         <section className="mb-4">
           <div className="flex items-center gap-2 mb-3">
             <KbClockIcon className="h-4 w-4 text-muted-foreground" />
-            <h2 className="text-sm font-semibold text-foreground">Recently visited</h2>
+            <h2 className="text-sm font-semibold text-foreground">
+              Recently visited
+            </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {recentPages.slice(0, 6).map((page) => (
@@ -147,7 +188,7 @@ export default function WikiHomePage() {
         </section>
       )}
 
-      {favoritePages.length > 0 && (
+      {!isProjectScoped && favoritePages.length > 0 && (
         <section className="mb-4">
           <div className="flex items-center gap-2 mb-3">
             <KbStarIcon className="h-4 w-4 text-muted-foreground" />
@@ -169,7 +210,9 @@ export default function WikiHomePage() {
 
       {rootPages.length > 0 && (
         <section>
-          <h2 className="text-sm font-semibold text-foreground mb-3">All pages</h2>
+          <h2 className="text-sm font-semibold text-foreground mb-3">
+            All pages
+          </h2>
           <motion.div
             className="space-y-1"
             variants={staggerContainer}
@@ -183,9 +226,14 @@ export default function WikiHomePage() {
                   className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors"
                 >
                   <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center leading-none">
-                    {node.icon ?? <KbFileTextIcon className="h-4 w-4 text-muted-foreground" />}
+                    {node.icon ?? (
+                      <KbFileTextIcon className="h-4 w-4 text-muted-foreground" />
+                    )}
                   </span>
-                  <TruncatedText text={node.title || "Untitled"} className="flex-1 text-sm leading-normal" />
+                  <TruncatedText
+                    text={node.title || "Untitled"}
+                    className="flex-1 text-sm leading-normal"
+                  />
                 </Link>
               </motion.div>
             ))}

@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { Excalidraw, MainMenu } from "@excalidraw/excalidraw";
 import { Minimize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAppTheme } from "@/components/theme/app-theme-provider";
 import type { ExcalidrawProps } from "@excalidraw/excalidraw/types";
 import type { WhiteboardDetail } from "@/hooks/api/projects";
 import { isExcalidrawScene } from "./scene-utils";
@@ -26,6 +27,9 @@ export function ExcalidrawCanvas({
   onSceneChange,
   onExitFullscreen,
 }: ExcalidrawCanvasProps) {
+  const { isDark } = useAppTheme();
+  const theme = isDark ? "dark" : "light";
+
   useEffect(() => {
     if (!isFullscreen) return;
     function handleKeyDown(e: KeyboardEvent) {
@@ -89,6 +93,7 @@ export function ExcalidrawCanvas({
         }
       >
         <Excalidraw
+          theme={theme}
           initialData={initialData}
           onChange={onSceneChange}
           viewModeEnabled={isViewMode}
@@ -96,12 +101,12 @@ export function ExcalidrawCanvas({
             canvasActions: {
               export: isViewMode ? false : undefined,
               loadScene: false,
+              toggleTheme: false,
             },
           }}
         >
           <MainMenu>
             {!isViewMode && <MainMenu.DefaultItems.ClearCanvas />}
-            <MainMenu.DefaultItems.ToggleTheme />
             <MainMenu.DefaultItems.ChangeCanvasBackground />
             <MainMenu.DefaultItems.SaveAsImage />
           </MainMenu>

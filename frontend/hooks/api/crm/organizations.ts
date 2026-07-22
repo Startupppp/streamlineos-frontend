@@ -30,6 +30,20 @@ export function useCrmOrganizations(filters?: CrmOrganizationFilters) {
   });
 }
 
+export function useCrmOrganizationsForPicker(search?: string) {
+  return useQuery({
+    queryKey: queryKeys.crmOrganizations.list({ picker: true, search: search ?? "" }),
+    queryFn: () =>
+      apiClient.get<PaginatedCrmOrganizations>("/crm/organizations", {
+        page: 1,
+        limit: 100,
+        search: search ?? undefined,
+      }),
+    staleTime: 2 * 60_000,
+    placeholderData: keepPreviousData,
+  });
+}
+
 export function useCrmOrganizationDetail(id: number) {
   return useQuery({
     queryKey: queryKeys.crmOrganizations.detail(id),

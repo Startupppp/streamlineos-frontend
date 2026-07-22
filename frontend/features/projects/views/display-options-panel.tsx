@@ -117,9 +117,6 @@ const BOARD_PROPERTIES: PropertyKey[] = [
   "showCycle",
   "showLabels",
   "showDueDate",
-  "showLinks",
-  "showTimeInStatus",
-  "showPRs",
 ];
 
 const LIST_PROPERTIES: PropertyKey[] = [
@@ -128,6 +125,7 @@ const LIST_PROPERTIES: PropertyKey[] = [
   "showAssignee",
   "showEstimate",
   "showLabels",
+  "showDueDate",
 ];
 
 const TABLE_PROPERTIES: PropertyKey[] = [

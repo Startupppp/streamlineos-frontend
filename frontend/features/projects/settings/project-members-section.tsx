@@ -46,8 +46,23 @@ import { DeleteProjectDialog } from "@/features/projects/sidebar/delete-project-
 import type { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 import { updateProjectSettingsInputSchema } from "@/lib/validation/projects";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  useProjectMembers,
+  useUpdateProjectMemberRole,
+} from "@/hooks/api/projects";
+import { useCanManageProject } from "@/hooks/api/projects/use-can-manage-project";
+import {
+  getUserDisplayName,
+  getUserInitials,
+} from "@/features/projects/shared/resolve-user-name";
+import type { ProjectMemberRecord } from "@/types/projects";
 
-export const formSchema = updateProjectSettingsInputSchema.omit({ projectId: true });
+export const formSchema = updateProjectSettingsInputSchema.omit({
+  projectId: true,
+});
 type FormValues = z.infer<typeof formSchema>;
 
 interface MemberItemProps {
@@ -69,7 +84,8 @@ const MemberItem = memo(function MemberItem({
 }: MemberItemProps) {
   function handleClick() {
     if (isSelected) {
-      const applyRemoval = () => onChange(currentIds.filter((id) => id !== emp.id));
+      const applyRemoval = () =>
+        onChange(currentIds.filter((id) => id !== emp.id));
       if (isOriginalMember) {
         onMemberRemoved(emp.id, emp.name ?? emp.email ?? emp.id, applyRemoval);
       } else {
@@ -97,7 +113,9 @@ const MemberItem = memo(function MemberItem({
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{emp.name}</p>
-        <p className="text-[11px] text-muted-foreground truncate">{emp.email}</p>
+        <p className="text-[11px] text-muted-foreground truncate">
+          {emp.email}
+        </p>
       </div>
       {isSelected && <Check className="h-4 w-4 text-primary shrink-0" />}
     </button>
@@ -110,7 +128,7 @@ interface MembersSelectorProps {
   onMemberRemoved: (
     memberId: string,
     memberName: string,
-    applyChange: () => void
+    applyChange: () => void,
   ) => void;
 }
 
@@ -121,8 +139,11 @@ export function MembersSelector({
 }: MembersSelectorProps) {
   const { data: employeesData } = useHrEmployees();
   const employees = useMemo(
-    () => (Array.isArray(employeesData) ? employeesData : (employeesData?.data ?? [])),
-    [employeesData]
+    () =>
+      Array.isArray(employeesData)
+        ? employeesData
+        : (employeesData?.data ?? []),
+    [employeesData],
   );
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -131,14 +152,14 @@ export function MembersSelector({
       employees?.filter(
         (emp) =>
           emp.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          emp.email?.toLowerCase().includes(searchQuery.toLowerCase())
+          emp.email?.toLowerCase().includes(searchQuery.toLowerCase()),
       ),
-    [employees, searchQuery]
+    [employees, searchQuery],
   );
 
   const handleSearchChange = useCallback(
     (value: string) => setSearchQuery(value),
-    []
+    [],
   );
 
   return (
@@ -169,9 +190,9 @@ export function MembersSelector({
                   placeholder="Search by name or email..."
                   value={searchQuery}
                   onValueChange={handleSearchChange}
-                   className="mb-2"
+                  className="mb-2"
                   aria-label="Search team members"
-                 />
+                />
                 <div className="max-h-[200px] overflow-y-auto space-y-0.5">
                   {filteredEmployees?.map((emp) => (
                     <MemberItem
@@ -223,12 +244,19 @@ export function ReassignDialog({
 }: ReassignDialogProps) {
   const { data: employeesData } = useHrEmployees();
   const employees = useMemo(
-    () => (Array.isArray(employeesData) ? employeesData : (employeesData?.data ?? [])),
+    () =>
+      Array.isArray(employeesData)
+        ? employeesData
+        : (employeesData?.data ?? []),
     [employeesData],
   );
 
   const remainingMembers = useMemo(
-    () => employees.filter((emp) => currentMemberIds.includes(emp.id) && emp.id !== removedMemberId),
+    () =>
+      employees.filter(
+        (emp) =>
+          currentMemberIds.includes(emp.id) && emp.id !== removedMemberId,
+      ),
     [employees, currentMemberIds, removedMemberId],
   );
 
@@ -236,7 +264,7 @@ export function ReassignDialog({
     (o: boolean) => {
       if (!o) onCancel();
     },
-    [onCancel]
+    [onCancel],
   );
 
   return (
@@ -291,6 +319,139 @@ interface DangerZoneSectionProps {
   projectId: number;
   projectName: string;
   onDeleted: () => void;
+}
+
+type ProjectMemberRole = "ADMIN" | "MEMBER" | "VIEWER";
+
+const ROLE_OPTIONS: { value: ProjectMemberRole; label: string }[] = [
+  { value: "ADMIN", label: "Admin" },
+  { value: "MEMBER", label: "Member" },
+  { value: "VIEWER", label: "Viewer" },
+];
+
+function normalizeRole(role: string | null | undefined): ProjectMemberRole {
+  if (role === "ADMIN" || role === "MEMBER" || role === "VIEWER") return role;
+  return "MEMBER";
+}
+
+interface MemberRoleRowProps {
+  member: ProjectMemberRecord;
+  projectId: number;
+  canManage: boolean;
+}
+
+const MemberRoleRow = memo(function MemberRoleRow({
+  member,
+  projectId,
+  canManage,
+}: MemberRoleRowProps) {
+  const updateRole = useUpdateProjectMemberRole();
+  const displayName = getUserDisplayName(member);
+  const initials = getUserInitials(member);
+  const currentRole = normalizeRole(member.role);
+
+  function handleRoleChange(value: string) {
+    if (value !== "ADMIN" && value !== "MEMBER" && value !== "VIEWER") return;
+    updateRole.mutate(
+      { projectId, memberUserId: member.id, role: value },
+      {
+        onSuccess: () =>
+          toast.success(`${displayName}'s role updated to ${value}`),
+        onError: (err) => toast.error(getErrorMessage(err)),
+      },
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-3 py-2">
+      <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-[11px] font-medium shrink-0 select-none">
+        {member.image ? (
+          <img
+            src={member.image}
+            alt={displayName}
+            className="h-7 w-7 rounded-full object-cover"
+          />
+        ) : (
+          initials
+        )}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium truncate">{displayName}</p>
+        <p className="text-[11px] text-muted-foreground truncate">
+          {member.email}
+        </p>
+      </div>
+      {canManage ? (
+        <Select
+          value={currentRole}
+          onValueChange={handleRoleChange}
+          disabled={updateRole.isPending}
+        >
+          <SelectTrigger className="h-7 w-[100px] text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+            {ROLE_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ) : (
+        <Badge variant="secondary" className="text-xs font-normal">
+          {currentRole}
+        </Badge>
+      )}
+    </div>
+  );
+});
+
+interface ProjectMemberRolesSectionProps {
+  projectId: number;
+}
+
+export function ProjectMemberRolesSection({
+  projectId,
+}: ProjectMemberRolesSectionProps) {
+  const canManage = useCanManageProject(projectId);
+  const { data: members, isLoading } = useProjectMembers(projectId);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-2 pt-2">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-3 py-2 animate-pulse">
+            <div className="h-7 w-7 rounded-full bg-muted shrink-0" />
+            <div className="flex-1 space-y-1">
+              <div className="h-3 w-24 rounded bg-muted" />
+              <div className="h-2.5 w-32 rounded bg-muted" />
+            </div>
+            <div className="h-7 w-[100px] rounded bg-muted" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (!members?.length) {
+    return (
+      <p className="text-sm text-muted-foreground py-2">No members yet.</p>
+    );
+  }
+
+  return (
+    <div className="divide-y divide-border">
+      {members.map((member) => (
+        <MemberRoleRow
+          key={member.id}
+          member={member}
+          projectId={projectId}
+          canManage={canManage}
+        />
+      ))}
+    </div>
+  );
 }
 
 export const DangerZoneSection = memo(function DangerZoneSection({

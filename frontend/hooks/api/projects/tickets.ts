@@ -150,6 +150,7 @@ function applyTicketPatch(
   if (input.cycleId !== undefined) next.cycleId = input.cycleId;
   if (input.startDate !== undefined) next.startDate = input.startDate;
   if (input.dueDate !== undefined) next.dueDate = input.dueDate;
+  if (input.parentTicketId !== undefined) next.parentTicketId = input.parentTicketId;
   const assigneeId = resolveAssigneeId(input);
   if (assigneeId !== undefined) {
     next.assigneeId = assigneeId;
@@ -469,6 +470,7 @@ export interface BulkUpdateTicketsInput {
   status?: string;
   sprintId?: number | null;
   priority?: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+  parentTicketId?: number | null;
 }
 
 export function useBulkUpdateTickets(projectId: number) {

@@ -187,8 +187,8 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
           ) : (
             <PmPanel>
               {milestones.map((m) => (
-                <div key={m.id} className={PM_ROW}>
-                  <TruncatedText text={m.name} className="flex-1 text-[11px] font-medium" />
+                <div key={m.id} className={cn(PM_ROW, "overflow-hidden")}>
+                  <TruncatedText text={m.name} className="min-w-0 flex-1 text-[11px] font-medium" />
                   {m.dueDate ? (
                     <span className="shrink-0 text-[10px] text-muted-foreground">
                       Due{" "}
@@ -224,11 +224,11 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
           ) : (
             <PmPanel>
               {tasks.map((t) => (
-                <div key={t.id} className={PM_ROW}>
+                <div key={t.id} className={cn(PM_ROW, "overflow-hidden")}>
                   <span className="w-16 shrink-0 font-mono text-[10px] text-muted-foreground">
                     #{t.ticketNumber}
                   </span>
-                  <TruncatedText text={t.title} className="flex-1 text-[11px]" />
+                  <TruncatedText text={t.title} className="min-w-0 flex-1 text-[11px]" />
                   {t.dueDate ? (
                     <span className="hidden shrink-0 text-[10px] text-muted-foreground sm:block">
                       {new Date(t.dueDate).toLocaleDateString("en-IN", {
@@ -261,9 +261,9 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
           ) : (
             <PmPanel>
               {attachments.map((f) => (
-                <div key={f.id} className={PM_ROW}>
+                <div key={f.id} className={cn(PM_ROW, "overflow-hidden")}>
                   <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  <TruncatedText text={f.filename} className="flex-1 text-[11px]" />
+                  <TruncatedText text={f.filename} className="min-w-0 flex-1 text-[11px]" />
                   <DownloadLink href={f.url} />
                 </div>
               ))}
@@ -303,11 +303,11 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
           ) : (
             <PmPanel>
               {changeRequests?.map((cr) => (
-                <div key={cr.id} className={PM_ROW}>
+                <div key={cr.id} className={cn(PM_ROW, "overflow-hidden")}>
                   <span className="w-14 shrink-0 font-mono text-[10px] text-muted-foreground">
                     CR-{cr.crNumber}
                   </span>
-                  <TruncatedText text={cr.title} className="flex-1 text-[11px]" />
+                  <TruncatedText text={cr.title} className="min-w-0 flex-1 text-[11px]" />
                   <Badge
                     variant="outline"
                     className={cn("shrink-0 text-[10px]", CR_STATUS_STYLES[cr.status])}

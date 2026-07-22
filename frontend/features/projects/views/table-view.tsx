@@ -10,6 +10,7 @@ import { InlineType, InlineLabels, InlineCycle, InlineSprint } from "./card-inli
 import { InlineDueDate } from "./card-inline-date-fields";
 import { TABLE_TITLE_CELL } from "@/features/projects/shared/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import type { DisplayOptions } from "../shared/types";
 
 interface Ticket {
   id: number;
@@ -35,6 +36,7 @@ interface TableViewProps {
   projectKey?: string | null;
   projectId?: number;
   projectStatuses?: Array<{ name: string; color: string | null; type?: string | null }>;
+  displayOptions?: DisplayOptions;
   selection?: {
     selected: Set<string | number>;
     onChange: (sel: Set<string | number>) => void;
@@ -50,10 +52,20 @@ function isOverdue(ticket: Ticket): boolean {
   return due < today;
 }
 
-export const TableView = memo(function TableView({ tickets, onTicketClick, projectKey, projectId, projectStatuses, selection }: TableViewProps) {
+export const TableView = memo(function TableView({ tickets, onTicketClick, projectKey, projectId, projectStatuses, displayOptions, selection }: TableViewProps) {
   const hasProjectId = projectId != null;
 
-  const columns = useMemo<DataTableColumn<Ticket>[]>(() => [
+  const showId = displayOptions?.showId ?? true;
+  const showStatus = displayOptions?.showStatus ?? true;
+  const showPriority = displayOptions?.showPriority ?? true;
+  const showEstimate = displayOptions?.showEstimate ?? true;
+  const showAssignee = displayOptions?.showAssignee ?? true;
+  const showLabels = displayOptions?.showLabels ?? true;
+  const showCycle = displayOptions?.showCycle ?? true;
+  const showDueDate = displayOptions?.showDueDate ?? true;
+
+  const columns = useMemo<DataTableColumn<Ticket>[]>(() => {
+    const all: DataTableColumn<Ticket>[] = [
     {
       key: "id",
       header: "ID",
@@ -240,7 +252,33 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
         </div>
       ),
     },
-  ], [projectKey, projectId, projectStatuses, onTicketClick, hasProjectId]);
+    ];
+    const visibility: Record<string, boolean> = {
+      id: showId,
+      status: showStatus,
+      priority: showPriority,
+      points: showEstimate,
+      assignee: showAssignee,
+      labels: showLabels,
+      cycle: showCycle,
+      dueDate: showDueDate,
+    };
+    return all.filter((column) => visibility[column.key] !== false);
+  }, [
+    projectKey,
+    projectId,
+    projectStatuses,
+    onTicketClick,
+    hasProjectId,
+    showId,
+    showStatus,
+    showPriority,
+    showEstimate,
+    showAssignee,
+    showLabels,
+    showCycle,
+    showDueDate,
+  ]);
 
   return (
     <div className="w-full min-w-0">

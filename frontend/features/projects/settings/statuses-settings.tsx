@@ -18,7 +18,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useCan } from "@/hooks/api/access";
+import { useCanManageProject } from "@/hooks/api/projects/use-can-manage-project";
 import { useCustomStates, useCreateCustomState } from "@/hooks/api/projects/custom-states";
 import { ColumnColorPicker } from "@/features/projects/shared/column-color-picker";
 import { DEFAULT_COLUMN_COLOR } from "@/features/projects/shared/column-colors";
@@ -48,7 +48,7 @@ function validateNewName(name: string, existingNames: string[]): string | null {
 }
 
 export function StatusesSettings({ projectId }: { projectId: number }) {
-  const canManage = useCan("projects:manage");
+  const canManage = useCanManageProject(projectId);
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState("");
   const [nameError, setNameError] = useState<string | null>(null);

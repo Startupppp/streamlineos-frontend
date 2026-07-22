@@ -243,7 +243,6 @@ export function AllWorkPage() {
                       animate="animate"
                       exit="exit"
                       transition={pmSnappy}
-                      className="pt-2 pb-0"
                     >
                       <AllWorkListSection groups={projectGroups} />
                     </motion.div>

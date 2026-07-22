@@ -103,7 +103,6 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
   const [statusOpen, setStatusOpen] = useState(false);
   const [priorityOpen, setPriorityOpen] = useState(false);
   const [assigneeOpen, setAssigneeOpen] = useState(false);
-  const [estimateOpen, setEstimateOpen] = useState(false);
   const [labelsOpen, setLabelsOpen] = useState(false);
   const [cycleOpen, setCycleOpen] = useState(false);
   const [estimateInput, setEstimateInput] = useState(value.points !== null ? String(value.points) : "");
@@ -146,19 +145,18 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
     };
   }
 
-  function handleEstimateConfirm() {
-    const parsed = parseInt(estimateInput, 10);
-    onChange({ points: Number.isFinite(parsed) && parsed >= 0 ? parsed : null });
-    setEstimateOpen(false);
-  }
-
-  function handleEstimateKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter") handleEstimateConfirm();
-    if (e.key === "Escape") setEstimateOpen(false);
-  }
-
   function handleEstimateChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setEstimateInput(e.target.value);
+    const next = e.target.value;
+    setEstimateInput(next);
+    const trimmed = next.trim();
+    if (trimmed === "") {
+      onChange({ points: null });
+      return;
+    }
+    const parsed = parseInt(trimmed, 10);
+    if (Number.isFinite(parsed) && parsed >= 0) {
+      onChange({ points: parsed });
+    }
   }
 
   function handleLabelToggle(id: number) {
@@ -184,13 +182,6 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
       onChange({ cycleId: id });
       setCycleOpen(false);
     };
-  }
-
-  function handleEstimateOpenChange(nextOpen: boolean) {
-    if (nextOpen) {
-      setEstimateInput(value.points !== null ? String(value.points) : "");
-    }
-    setEstimateOpen(nextOpen);
   }
 
   const labelsPillText =
@@ -308,41 +299,21 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
           </PopoverContent>
         </Popover>
 
-        <Popover open={estimateOpen} onOpenChange={handleEstimateOpenChange} modal>
-          <PopoverTrigger asChild>
-            <PillButton label="Set estimate">
-              <Zap className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-              {value.points !== null ? (
-                <span>{value.points} pt{value.points !== 1 ? "s" : ""}</span>
-              ) : (
-                <span className="text-muted-foreground">Estimate</span>
-              )}
-            </PillButton>
-          </PopoverTrigger>
-          <PopoverContent className="z-[110] w-36 p-3" align="start">
-            <p className="mb-2 text-xs font-medium text-muted-foreground">Story points</p>
-            <div className="flex gap-2">
-              <Input
-                type="number"
-                min={0}
-                step={1}
-                value={estimateInput}
-                onChange={handleEstimateChange}
-                onKeyDown={handleEstimateKeyDown}
-                placeholder="0"
-                className="text-xs"
-                autoFocus
-              />
-              <button
-                type="button"
-                onClick={handleEstimateConfirm}
-                className="rounded bg-primary px-2 py-1 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
-              >
-                Set
-              </button>
-            </div>
-          </PopoverContent>
-        </Popover>
+        <div className="inline-flex h-7 items-center gap-1 rounded-md border border-border bg-card px-2">
+          <Zap className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+          <Input
+            type="number"
+            min={0}
+            step={1}
+            inputMode="numeric"
+            aria-label="Story points"
+            value={estimateInput}
+            onChange={handleEstimateChange}
+            placeholder="0"
+            className="h-6 w-12 border-0 bg-transparent px-1 py-0 text-xs font-mono tabular-nums shadow-none focus-visible:ring-0"
+          />
+          <span className="shrink-0 text-[10px] text-muted-foreground">pts</span>
+        </div>
 
         <Popover open={labelsOpen} onOpenChange={setLabelsOpen} modal>
           <PopoverTrigger asChild>

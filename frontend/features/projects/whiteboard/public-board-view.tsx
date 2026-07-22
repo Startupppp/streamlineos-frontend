@@ -21,6 +21,7 @@ import {
 } from "@/hooks/api/projects";
 import type { ExcalidrawSceneData } from "@/hooks/api/projects";
 import { isExcalidrawScene } from "./scene-utils";
+import { useWhiteboardTheme } from "./use-whiteboard-theme";
 
 type SaveStatus = "saved" | "saving" | "unsaved";
 
@@ -28,6 +29,7 @@ interface ExcalidrawEditorProps {
   initialData: ExcalidrawInitialDataState | undefined;
   viewMode: boolean;
   allowExport: boolean;
+  theme: "light" | "dark";
   onApiReady: (api: ExcalidrawImperativeAPI) => void;
   onSceneChange: () => void;
 }
@@ -40,19 +42,26 @@ const ExcalidrawEditor = dynamic<ExcalidrawEditorProps>(
       initialData,
       viewMode,
       allowExport,
+      theme,
       onApiReady,
       onSceneChange,
     }: ExcalidrawEditorProps) {
       return (
         <Excalidraw
+          theme={theme}
           initialData={initialData}
           viewModeEnabled={viewMode}
           excalidrawAPI={onApiReady}
           onChange={onSceneChange}
           UIOptions={{
             canvasActions: allowExport
-              ? { loadScene: false }
-              : { loadScene: false, export: false, saveAsImage: false },
+              ? { loadScene: false, toggleTheme: false }
+              : {
+                  loadScene: false,
+                  export: false,
+                  saveAsImage: false,
+                  toggleTheme: false,
+                },
           }}
         />
       );
@@ -79,6 +88,7 @@ interface PublicBoardViewProps {
 }
 
 export function PublicBoardView({ shareToken }: PublicBoardViewProps) {
+  const theme = useWhiteboardTheme();
   const { data, isLoading, isError } = usePublicWhiteboard(shareToken);
   const updateMutation = useUpdatePublicWhiteboard(shareToken);
 
@@ -227,6 +237,7 @@ export function PublicBoardView({ shareToken }: PublicBoardViewProps) {
           initialData={initialData}
           viewMode={isViewOnly}
           allowExport={data.allowExport}
+          theme={theme}
           onApiReady={handleApiReady}
           onSceneChange={handleSceneChange}
         />

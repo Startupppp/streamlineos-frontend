@@ -21,6 +21,7 @@ import {
   MembersSelector,
   ReassignDialog,
   DangerZoneSection,
+  ProjectMemberRolesSection,
 } from "@/features/projects/settings/project-members-section";
 import { CustomFieldsSettings } from "@/features/projects/settings/custom-fields-settings";
 import { LabelsSettings } from "@/features/projects/settings/labels-settings";
@@ -258,25 +259,36 @@ export default function ProjectSettingsPage({ params }: PageProps) {
 
           <PmSection index={1} className="min-w-0 flex-1">
             {activeSection === "general" ? (
-              <PmPanel className="p-4" solid>
-                <div className="mb-3 border-b border-border pb-3">
-                  <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>General</h3>
-                  <p className={cn("mt-0.5 text-xs text-muted-foreground", TEXT_BODY)}>
-                    Project name, description, status, and members.
-                  </p>
-                </div>
-                <ProjectInfoSection
-                  form={form}
-                  isPending={updateMutation.isPending}
-                  originalMemberIds={
-                    project.members?.map((m: { userId: string }) => m.userId) ??
-                    []
-                  }
-                  onMemberRemoved={handleMemberRemoved}
-                  onSubmit={handleSubmit}
-                  MembersSelector={MembersSelector}
-                />
-              </PmPanel>
+              <div className="space-y-4">
+                <PmPanel className="p-4" solid>
+                  <div className="mb-3 border-b border-border pb-3">
+                    <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>General</h3>
+                    <p className={cn("mt-0.5 text-xs text-muted-foreground", TEXT_BODY)}>
+                      Project name, description, status, and members.
+                    </p>
+                  </div>
+                  <ProjectInfoSection
+                    form={form}
+                    isPending={updateMutation.isPending}
+                    originalMemberIds={
+                      project.members?.map((m: { userId: string }) => m.userId) ??
+                      []
+                    }
+                    onMemberRemoved={handleMemberRemoved}
+                    onSubmit={handleSubmit}
+                    MembersSelector={MembersSelector}
+                  />
+                </PmPanel>
+                <PmPanel className="p-4" solid>
+                  <div className="mb-3 border-b border-border pb-3">
+                    <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>Member Roles</h3>
+                    <p className={cn("mt-0.5 text-xs text-muted-foreground", TEXT_BODY)}>
+                      Project-level roles are informational. Access is governed by org-level permissions.
+                    </p>
+                  </div>
+                  <ProjectMemberRolesSection projectId={projectId} />
+                </PmPanel>
+              </div>
             ) : null}
 
             {activeSection === "labels" ? (
