@@ -1,11 +1,11 @@
 "use client";
 
-import { ReactNode, useMemo, useState } from "react";
+import { ReactNode, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Home } from "lucide-react";
 import { format, addDays } from "date-fns";
-import { useHrEmployees, useCreateWfhRequest, unwrapEmployees } from "@/hooks/api/hr";
+import { useCreateWfhRequest, useHrLeaveContext } from "@/hooks/api/hr";
 import { Button } from "@/components/ui/button";
 import { EntityFormSheet } from "@/components/shared";
 import {
@@ -26,7 +26,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/date-picker";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { Employee } from "@/types/hr";
 
 const WFH_REASON_MAX_LENGTH = 1000;
 
@@ -48,17 +47,8 @@ interface RequestWfhDialogProps {
 export function RequestWfhDialog({ trigger }: RequestWfhDialogProps = {}) {
   const [open, setOpen] = useState(false);
   const createWfhRequest = useCreateWfhRequest();
-  const { data: employeesRaw } = useHrEmployees({ limit: 200 });
-
-  const employees = useMemo(
-    () => unwrapEmployees(employeesRaw),
-    [employeesRaw],
-  );
-
-  const approvers = useMemo(
-    () => employees.filter((e) => e.role === "CEO"),
-    [employees],
-  );
+  const { data: leaveContext } = useHrLeaveContext();
+  const approvers = leaveContext?.approvers ?? [];
 
   const handleOpen = () => setOpen(true);
 
@@ -139,34 +129,49 @@ export function RequestWfhDialog({ trigger }: RequestWfhDialogProps = {}) {
                 </FormItem>
               )}
             />
-            {approvers.length > 1 && (
-              <FormField
-                control={form.control}
-                name="approverId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Approver</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select approver" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {approvers.map((u) => (
-                          <SelectItem key={u.id} value={u.id}>
-                            {u.name ||
-                              `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() ||
-                              u.email}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+            <FormField
+              control={form.control}
+              name="approverId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Approver</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    disabled={approvers.length === 0}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue
+                          placeholder={
+                            approvers.length === 0
+                              ? "No approver available"
+                              : "Select approver"
+                          }
+                        />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {approvers.map((u) => (
+                        <SelectItem key={u.id} value={u.id}>
+                          {u.name ||
+                            `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() ||
+                            u.email}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {approvers.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">
+                      No HR or CEO role is assigned in this organization yet, so a WFH
+                      request has no one to approve it.
+                    </p>
+                  ) : (
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
+                  )}
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="reason"
