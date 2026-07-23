@@ -6,7 +6,6 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import {
-  Plus,
   Download,
   Users,
   UserPlus,
@@ -213,9 +212,9 @@ export default function HRDashboardPage() {
         <div className="flex w-full sm:w-auto flex-wrap items-center gap-2">
           <Button size="sm" className="gap-2 h-9 shadow-sm flex-1 sm:flex-none" asChild>
             <Link href="/hr/onboarding">
-              <Plus className="h-4 w-4" aria-hidden="true" />
-              <span className="sm:hidden">Add</span>
-              <span className="hidden sm:inline">Add Employee</span>
+              <UserPlus className="h-4 w-4" aria-hidden="true" />
+              <span className="sm:hidden">Onboard</span>
+              <span className="hidden sm:inline">Onboard employee</span>
             </Link>
           </Button>
           <Button variant="outline" size="sm" className="gap-2 h-9 flex-1 sm:flex-none" onClick={handleExport}>
@@ -268,25 +267,17 @@ export default function HRDashboardPage() {
           title="Build teams. Keep people thriving."
           description="Onboard faster, track leave and attendance, and run the full employee lifecycle from one calm workspace."
           actions={
-            <>
-              <Button size="sm" className="h-9 flex-1 gap-1.5 shadow-sm sm:flex-none" asChild>
-                <Link href="/hr/onboarding">
-                  <UserPlus className="h-3.5 w-3.5" />
-                  Onboard
-                </Link>
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-9 flex-1 gap-1.5 border-blue-200 bg-background/80 text-foreground hover:bg-background sm:flex-none dark:border-blue-500/30"
-                asChild
-              >
-                <Link href="/hr/employees">
-                  <Users className="h-3.5 w-3.5" />
-                  Directory
-                </Link>
-              </Button>
-            </>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-9 flex-1 gap-1.5 border-blue-200 bg-background/80 text-foreground hover:bg-background sm:flex-none dark:border-blue-500/30"
+              asChild
+            >
+              <Link href="/hr/employees">
+                <Users className="h-3.5 w-3.5" />
+                Directory
+              </Link>
+            </Button>
           }
         >
           <div
