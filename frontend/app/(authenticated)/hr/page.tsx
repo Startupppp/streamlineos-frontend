@@ -5,6 +5,16 @@ import Link from "next/link";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { SlidersHorizontalIcon } from "@animateicons/react/lucide";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import {
   Download,
   UserPlus,
@@ -34,6 +44,7 @@ import {
   parseEmployeeListFilters,
   toHrEmployeesApiParams,
   hasActiveEmployeeFilters,
+  countActiveEmployeeFilters,
   employeeFiltersToUrlUpdates,
   DEFAULT_STATUS,
 } from "@/features/hr/employees/employee-list-filters";
@@ -201,6 +212,47 @@ export default function HRDashboardPage() {
   const hasActiveFilters = hasActiveEmployeeFilters(filters, {
     status: DEFAULT_STATUS,
   });
+  const activeFilterCount = countActiveEmployeeFilters(filters, {
+    status: DEFAULT_STATUS,
+  });
+
+  const employeeFilters = (
+    <EmployeesFilters
+      search={searchTerm}
+      departmentId={filters.departmentId}
+      status={filters.status}
+      role={filters.role}
+      showRole
+      departments={departments}
+      hasFilters={hasActiveFilters}
+      onSearchChange={setSearchTermLocal}
+      onDepartmentIdChange={(id) =>
+        updateParams(
+          employeeFiltersToUrlUpdates(
+            { departmentId: id, page: 1 },
+            { size: PAGE_SIZE, status: DEFAULT_STATUS },
+          ),
+        )
+      }
+      onStatusChange={(s) =>
+        updateParams(
+          employeeFiltersToUrlUpdates(
+            { status: s, page: 1 },
+            { size: PAGE_SIZE, status: DEFAULT_STATUS },
+          ),
+        )
+      }
+      onRoleChange={(r) =>
+        updateParams(
+          employeeFiltersToUrlUpdates(
+            { role: r, page: 1 },
+            { size: PAGE_SIZE, status: DEFAULT_STATUS },
+          ),
+        )
+      }
+      onClear={handleClearFilters}
+    />
+  );
 
   return (
     <PageWrapper
@@ -221,43 +273,6 @@ export default function HRDashboardPage() {
             <span className="sm:inline">Export</span>
           </Button>
         </div>
-      }
-      filters={
-        <EmployeesFilters
-          search={searchTerm}
-          departmentId={filters.departmentId}
-          status={filters.status}
-          role={filters.role}
-          showRole
-          departments={departments}
-          hasFilters={hasActiveFilters}
-          onSearchChange={setSearchTermLocal}
-          onDepartmentIdChange={(id) =>
-            updateParams(
-              employeeFiltersToUrlUpdates(
-                { departmentId: id, page: 1 },
-                { size: PAGE_SIZE, status: DEFAULT_STATUS },
-              ),
-            )
-          }
-          onStatusChange={(s) =>
-            updateParams(
-              employeeFiltersToUrlUpdates(
-                { status: s, page: 1 },
-                { size: PAGE_SIZE, status: DEFAULT_STATUS },
-              ),
-            )
-          }
-          onRoleChange={(r) =>
-            updateParams(
-              employeeFiltersToUrlUpdates(
-                { role: r, page: 1 },
-                { size: PAGE_SIZE, status: DEFAULT_STATUS },
-              ),
-            )
-          }
-          onClear={handleClearFilters}
-        />
       }
     >
       <HrPageContent>
@@ -320,6 +335,38 @@ export default function HRDashboardPage() {
             }
             action={{ label: "Full directory", href: "/hr/employees" }}
           />
+
+          <div className="mb-3 flex items-center gap-2">
+            <div className="hidden w-full flex-wrap items-center gap-2 sm:flex">
+              {employeeFilters}
+            </div>
+            <div className="w-full sm:hidden">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <AnimatedIconButton
+                    icon={SlidersHorizontalIcon}
+                    iconSize={14}
+                    variant="outline"
+                    size="sm"
+                    className="relative gap-1.5"
+                  >
+                    Filters
+                    {activeFilterCount > 0 && (
+                      <Badge className="absolute -top-1.5 -right-1.5 h-4 w-4 p-0 flex items-center justify-center text-[9px] bg-primary text-primary-foreground border-0 font-bold">
+                        {activeFilterCount}
+                      </Badge>
+                    )}
+                  </AnimatedIconButton>
+                </SheetTrigger>
+                <SheetContent side="bottom" className="max-h-[85dvh] overflow-y-auto rounded-t-2xl">
+                  <SheetHeader>
+                    <SheetTitle>Filters</SheetTitle>
+                  </SheetHeader>
+                  <div className="flex flex-col gap-3 pt-2">{employeeFilters}</div>
+                </SheetContent>
+              </Sheet>
+            </div>
+          </div>
 
           {isError ? (
             <HrPanel className="text-center py-10">

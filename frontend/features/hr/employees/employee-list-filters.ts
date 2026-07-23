@@ -102,13 +102,21 @@ export function hasActiveEmployeeFilters(
   filters: EmployeeListFilters,
   defaults?: { status?: EmployeeStatusFilter },
 ): boolean {
+  return countActiveEmployeeFilters(filters, defaults) > 0;
+}
+
+/** How many non-default filters are active (for a compact filter-count badge). */
+export function countActiveEmployeeFilters(
+  filters: EmployeeListFilters,
+  defaults?: { status?: EmployeeStatusFilter },
+): number {
   const statusDefault = defaults?.status ?? DEFAULT_STATUS;
-  return (
-    filters.q.trim() !== "" ||
-    filters.departmentId != null ||
-    filters.status !== statusDefault ||
-    filters.role !== "all"
-  );
+  return [
+    filters.q.trim() !== "",
+    filters.departmentId != null,
+    filters.status !== statusDefault,
+    filters.role !== "all",
+  ].filter(Boolean).length;
 }
 
 /** Build URL updates for router; null deletes the key. */
