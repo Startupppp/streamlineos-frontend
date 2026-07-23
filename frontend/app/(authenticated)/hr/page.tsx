@@ -411,6 +411,7 @@ export default function HRDashboardPage() {
               title="No employees yet"
               description="Get started by adding your first team member — or bulk-import a whole cohort."
               action={{ label: "Add Employee", href: "/hr/onboarding" }}
+              actionVariant="outline"
             />
           )}
         </div>

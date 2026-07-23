@@ -21,6 +21,7 @@ interface EmptyStateProps {
   description?: string;
   action?: ActionProps;
   secondaryAction?: ActionProps;
+  actionVariant?: "default" | "outline";
   className?: string;
   compact?: boolean;
 }
@@ -68,6 +69,7 @@ export function EmptyState({
   description,
   action,
   secondaryAction,
+  actionVariant,
   className,
   compact = false,
 }: EmptyStateProps) {
@@ -130,7 +132,7 @@ export function EmptyState({
             <ActionButton
               action={action}
               size={compact ? "sm" : "default"}
-              variant={compact ? "outline" : "default"}
+              variant={actionVariant ?? (compact ? "outline" : "default")}
               className={compact ? "h-7 text-xs" : undefined}
             />
           )}
