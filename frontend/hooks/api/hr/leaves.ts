@@ -247,7 +247,7 @@ export interface LeavePolicyType {
 }
 
 export interface LeavePolicyResponse {
-  wfhMonthlyQuota: number;
+  wfhMonthlyQuota: number | null;
   leaveTypes: LeavePolicyType[];
 }
 
