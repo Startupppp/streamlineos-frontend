@@ -4,6 +4,7 @@ export const queryKeys = {
   hr: {
     all: [...base, "hr"] as const,
     departments: () => [...base, "hr", "departments"] as const,
+    legacyDepartments: () => [...base, "hr", "departments", "legacy"] as const,
     employees: (params?: Record<string, unknown>) =>
       [...base, "hr", "employees", params] as const,
     employee: (id: string) => [...base, "hr", "employees", id] as const,
@@ -121,6 +122,8 @@ export const queryKeys = {
       [...base, "hr", "onboarding", "user", userId] as const,
     onboardingTemplates: () =>
       [...base, "hr", "onboarding", "templates"] as const,
+    onboardingTemplateDepartments: () =>
+      [...base, "hr", "onboarding", "templates", "departments"] as const,
     candidateSla: (candidateId: number) =>
       [...base, "hr", "candidateSla", candidateId] as const,
     atsKanban: () => [...base, "hr", "atsKanban"] as const,
@@ -615,6 +618,7 @@ export const queryKeys = {
       [...base, "roles", "permissions", "matrix"] as const,
     members: (roleId: number) => [...base, "roles", "members", roleId] as const,
     analytics: () => [...base, "roles", "analytics"] as const,
+    departments: () => [...base, "roles", "departments"] as const,
   },
 
   branches: {

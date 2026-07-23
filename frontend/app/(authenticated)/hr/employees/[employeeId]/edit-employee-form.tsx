@@ -40,7 +40,7 @@ const formSchema = z.object({
     .refine((v) => v === "" || hasLetterOrDigit(v), "Designation must contain a letter or number")
     .optional()
     .or(z.literal("")),
-  departmentId: z.number().optional(),
+  departmentId: z.string().optional(),
   phone: z
     .string()
     .refine((val) => {
@@ -101,7 +101,7 @@ export interface EmployeeData {
   email: string;
   role: string | null;
   designation: string | null;
-  departmentId: number | null;
+  orgDepartmentId: string | null;
   phone: string | null;
   gender: "MALE" | "FEMALE" | "OTHER" | null;
   joiningDate: string | Date | null;
@@ -139,7 +139,7 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
       lastName: employee.lastName || "",
       role: employee.role || "ENGINEERING",
       designation: employee.designation || "",
-      departmentId: employee.departmentId || undefined,
+      departmentId: employee.orgDepartmentId || undefined,
       phone: employee.phone || "",
       gender: employee.gender || "MALE",
       joiningDate: employee.joiningDate

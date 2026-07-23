@@ -43,7 +43,7 @@ export const onboardEmployeeInputSchema = z.object({
     .min(1, "Designation is required")
     .max(120, "Designation must be at most 120 characters")
     .refine(hasLetterOrDigit, "Designation must contain a letter or number"),
-  departmentId: z.number().int().positive({ message: "Department is required" }),
+  departmentId: z.string().min(1, "Department is required"),
   role: z.string().min(1),
   employeeId: z
     .string()

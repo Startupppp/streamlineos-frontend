@@ -19,7 +19,7 @@ export type EmployeeStatusFilter = "active" | "inactive" | "all";
 
 export type EmployeeListFilters = {
   q: string;
-  departmentId: number | undefined;
+  departmentId: string | undefined;
   status: EmployeeStatusFilter;
   role: string; // "all" or role key e.g. ENGINEERING
   page: number;
@@ -38,10 +38,9 @@ export function parseStatus(raw: string | null): EmployeeStatusFilter {
   return DEFAULT_STATUS;
 }
 
-export function parseDepartmentId(raw: string | null): number | undefined {
+export function parseDepartmentId(raw: string | null): string | undefined {
   if (!raw || raw === "all" || raw === "All") return undefined;
-  const n = Number(raw);
-  return Number.isFinite(n) && n > 0 ? n : undefined;
+  return raw;
 }
 
 export function parseEmployeeListFilters(
@@ -125,7 +124,7 @@ export function employeeFiltersToUrlUpdates(
     q?: string | null;
     status?: EmployeeStatusFilter | null;
     role?: string | null;
-    departmentId?: number | null;
+    departmentId?: string | null;
     page?: number | null;
     size?: number | null;
   },
@@ -140,10 +139,7 @@ export function employeeFiltersToUrlUpdates(
     out.q = q || null;
   }
   if ("departmentId" in next) {
-    out.dept =
-      next.departmentId != null && next.departmentId > 0
-        ? String(next.departmentId)
-        : null;
+    out.dept = next.departmentId || null;
   }
   if ("status" in next) {
     const s = next.status ?? statusDefault;

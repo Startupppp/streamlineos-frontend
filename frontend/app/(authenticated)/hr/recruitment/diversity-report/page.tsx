@@ -75,7 +75,7 @@ function DeptCheckboxItem({
 }: {
   dept: Department;
   checked: boolean;
-  onToggle: (id: number) => void;
+  onToggle: (id: string) => void;
 }) {
   const handleChange = useCallback(
     () => onToggle(dept.id),
@@ -132,7 +132,7 @@ export default function DiversityReportPage() {
     void refetch();
   }, [refetch]);
 
-  const toggleDept = useCallback((id: number) => {
+  const toggleDept = useCallback((id: string) => {
     setPendingFilters((prev) => ({
       ...prev,
       departmentIds: prev.departmentIds.includes(id)

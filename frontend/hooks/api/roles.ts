@@ -213,3 +213,19 @@ export function useRolesAnalytics(
     ...options,
   });
 }
+
+export interface AssignableDepartment {
+  id: number;
+  name: string;
+}
+
+export function useAssignableDepartments(
+  options?: Omit<UseQueryOptions<AssignableDepartment[], Error>, "queryKey" | "queryFn">
+) {
+  return useQuery<AssignableDepartment[], Error>({
+    queryKey: queryKeys.roles.departments(),
+    queryFn: () => apiClient.get<AssignableDepartment[]>("/roles/departments"),
+    staleTime: 5 * 60_000,
+    ...options,
+  });
+}

@@ -33,7 +33,7 @@ import {
   useUnassignRoleMember,
 } from "@/hooks/api/roles";
 import { useOrgMembers } from "@/hooks/api/organization";
-import { useHrDepartments } from "@/hooks/api/hr/employees";
+import { useAssignableDepartments } from "@/hooks/api/roles";
 import { getInitials } from "@/lib/format-utils";
 import type { Role } from "@/types/organization";
 import {
@@ -93,7 +93,7 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
     debouncedUserSearch.trim() || undefined,
     { placeholderData: keepPreviousData },
   );
-  const departmentsQuery = useHrDepartments();
+  const departmentsQuery = useAssignableDepartments();
   const assign = useAssignRoleMember();
   const unassign = useUnassignRoleMember();
 

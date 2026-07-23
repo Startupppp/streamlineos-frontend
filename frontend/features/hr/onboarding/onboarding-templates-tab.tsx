@@ -20,10 +20,10 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { useHrDepartments } from "@/hooks/api/hr/employees";
 import {
   useHrOnboardingTemplates,
   useCreateHrOnboardingTemplate,
+  useOnboardingTemplateDepartments,
   type OnboardingTemplateStep,
 } from "@/hooks/api/hr/onboarding";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -41,7 +41,7 @@ function CreateTemplateSheet({ open, onOpenChange }: { open: boolean; onOpenChan
   const [description, setDescription] = useState("");
   const [steps, setSteps] = useState<OnboardingTemplateStep[]>([emptyStep()]);
 
-  const { data: departments } = useHrDepartments();
+  const { data: departments } = useOnboardingTemplateDepartments();
   const createTemplate = useCreateHrOnboardingTemplate();
 
   function resetForm() {
@@ -205,7 +205,7 @@ function CreateTemplateSheet({ open, onOpenChange }: { open: boolean; onOpenChan
 
 export function OnboardingTemplatesTab() {
   const { data: templates, isLoading } = useHrOnboardingTemplates();
-  const { data: departments } = useHrDepartments();
+  const { data: departments } = useOnboardingTemplateDepartments();
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const departmentName = (id: number | null) =>

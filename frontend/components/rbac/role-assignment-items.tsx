@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { getInitials } from "@/lib/format-utils";
 import type { OrgMember } from "@/types/organization";
-import type { Department } from "@/types/hr";
+import type { AssignableDepartment } from "@/hooks/api/roles";
 
 export interface AssignableUserItemProps {
   member: OrgMember;
@@ -59,7 +59,7 @@ export function AssignableUserItem({
 }
 
 export interface AssignableDepartmentItemProps {
-  department: Department;
+  department: AssignableDepartment;
   busy: boolean;
   onAdd: (departmentId: number) => void;
 }

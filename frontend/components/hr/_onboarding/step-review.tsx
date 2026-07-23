@@ -9,7 +9,7 @@ import { Check, Lightbulb } from "lucide-react";
 type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
 
 interface Department {
-  id: number;
+  id: string;
   name: string;
 }
 

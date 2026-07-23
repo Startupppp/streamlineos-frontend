@@ -30,11 +30,24 @@ export function useHrDepartments() {
   });
 }
 
+export interface LegacyDepartment {
+  id: number;
+  name: string;
+}
+
+export function useLegacyHrDepartments() {
+  return useQuery({
+    queryKey: queryKeys.hr.legacyDepartments(),
+    queryFn: () => apiClient.get<LegacyDepartment[]>("/hr/departments/legacy"),
+    staleTime: 2 * 60_000,
+  });
+}
+
 export function useCreateDepartment() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: CreateDepartmentInput) =>
-      apiClient.post<{ success: boolean }>("/hr/departments", data),
+      apiClient.post<Department>("/hr/departments", data),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: queryKeys.hr.departments() }),
   });
@@ -44,7 +57,7 @@ export type HrEmployeesParams = {
   page?: number;
   limit?: number;
   search?: string;
-  departmentId?: number;
+  departmentId?: string;
   isActive?: "true" | "false" | "all";
   /** Server-side role filter (users.role). */
   role?: string;

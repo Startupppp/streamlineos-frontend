@@ -111,6 +111,20 @@ export interface CreateOnboardingTemplateInput {
   steps: OnboardingTemplateStep[];
 }
 
+export interface OnboardingTemplateDepartment {
+  id: number;
+  name: string;
+}
+
+export function useOnboardingTemplateDepartments() {
+  return useQuery<OnboardingTemplateDepartment[]>({
+    queryKey: queryKeys.hr.onboardingTemplateDepartments(),
+    queryFn: () =>
+      apiClient.get<OnboardingTemplateDepartment[]>("/onboarding/templates/departments"),
+    staleTime: 5 * 60_000,
+  });
+}
+
 // Named Hr* to avoid collision with hooks/api/crm/clients.ts's client-onboarding
 // useOnboardingTemplates/useCreateOnboardingTemplate (a different feature: CRM client
 // onboarding, /clients/onboarding/templates — unrelated to employee onboarding plans).

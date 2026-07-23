@@ -14,11 +14,8 @@ export type DeviceStatusExtended = "ACTIVE" | "INACTIVE" | "LOST" | "RETURNED";
 export type WorkLogStatus = "PENDING" | "APPROVED" | "REJECTED";
 
 export interface Department {
-  id: number;
-  orgId: string;
+  id: string;
   name: string;
-  managerId: string | null;
-  createdAt: Date | string | null;
 }
 
 export interface Employee {
@@ -31,7 +28,7 @@ export interface Employee {
   designation: string | null;
   employeeId: string | null;
   departmentId: number | null;
-  department?: { id: number; name: string } | null;
+  department?: { id: string; name: string } | null;
   image: string | null;
   isActive: boolean;
   joiningDate: string | null;
@@ -70,7 +67,7 @@ export interface OrgChartNode {
   role: string;
   designation: string | null;
   image: string | null;
-  departmentId: number | null;
+  departmentId: string | number | null;
   departmentName: string | null;
   reportingTo: string | null;
 }
@@ -210,7 +207,7 @@ export interface UpdateProfileInput {
   firstName?: string;
   lastName?: string;
   designation?: string;
-  departmentId?: number;
+  departmentId?: string;
   phone?: string;
   image?: string;
   bio?: string;
@@ -347,7 +344,7 @@ export interface OnboardEmployeeInput {
   whatsappNumber?: string;
   gender?: string;
   designation: string;
-  departmentId?: number;
+  departmentId?: string;
   role: string;
   employeeId?: string;
   joiningDate?: Date | string;
@@ -364,7 +361,7 @@ export interface OnboardEmployeeInput {
   };
 }
 
-/** Spreadsheet row for bulk onboard — department name or numeric id. */
+/** Spreadsheet row for bulk onboard — department name or org department id. */
 export interface BulkOnboardEmployeeRow {
   firstName: string;
   lastName: string;
@@ -374,7 +371,7 @@ export interface BulkOnboardEmployeeRow {
   whatsappNumber?: string;
   gender?: "MALE" | "FEMALE" | "OTHER";
   designation: string;
-  departmentId?: number;
+  departmentId?: string;
   department?: string;
   role?: string;
   employeeId?: string;
