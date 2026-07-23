@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { toast } from "sonner";
 import { useChatChannels } from "@/hooks/api/chat";
+import { useAccess } from "@/hooks/api/access";
 import type { Channel } from "@/types/chat";
 
 export function ChatUnreadNotifications({
@@ -12,10 +13,14 @@ export function ChatUnreadNotifications({
   currentUserId: string;
 }) {
   const pathname = usePathname();
+  const { data: access } = useAccess();
+  const isChatModuleEnabled = access?.modules?.chat !== false;
 
   const isChatPage = pathname === "/chat";
 
-  const { data: rawChannels } = useChatChannels(!isChatPage);
+  const { data: rawChannels } = useChatChannels(
+    !isChatPage && isChatModuleEnabled,
+  );
   const channels = rawChannels as Channel[] | undefined;
 
   const prevUnreadMapRef = useRef<Map<number, number>>(new Map());

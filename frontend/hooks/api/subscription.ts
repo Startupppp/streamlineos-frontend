@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
 
 export type SubscriptionPlan = "STARTER" | "PROFESSIONAL" | "ENTERPRISE";
 type SubscriptionStatus = "TRIAL" | "ACTIVE" | "PAST_DUE" | "CANCELLED" | "EXPIRED";
@@ -75,11 +76,12 @@ const BILLING_SUMMARY_QUERY_KEY = ["billing", "summary"] as const;
 export function useSubscription() {
   const { data: session } = useSession();
   const orgId = session?.orgId;
+  const canViewBilling = useCan("settings:view");
   return useQuery<SubscriptionResponse, Error>({
     queryKey: SUBSCRIPTION_QUERY_KEY,
     queryFn: () => apiClient.get<SubscriptionResponse>("/billing/razorpay"),
     staleTime: 5 * 60_000,
-    enabled: !!orgId,
+    enabled: !!orgId && canViewBilling,
   });
 }
 

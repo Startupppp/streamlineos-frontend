@@ -1,45 +1,45 @@
-"use client"
+"use client";
 
-import { Fragment, useMemo, useCallback, useEffect, useState } from "react"
-import { useSession } from "next-auth/react"
-import { usePathname } from "next/navigation"
-import { cn } from "@/lib/utils"
-import { Skeleton } from "@/components/ui/skeleton"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { TooltipProvider } from "@/components/ui/tooltip"
-import { usePendingApprovals } from "@/hooks/api/dashboard"
-import { useChatUnreadTotal } from "@/hooks/api/chat"
-import { useUnreadNotificationCount } from "@/hooks/api/notifications"
+import { Fragment, useMemo, useCallback, useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { usePendingApprovals } from "@/hooks/api/dashboard";
+import { useChatUnreadTotal } from "@/hooks/api/chat";
+import { useUnreadNotificationCount } from "@/hooks/api/notifications";
 import {
   getNavGroupsForProduct,
   getProductFromPathname,
   flattenNavRoutes,
   MODULE_ACCENTS,
   type ModuleAccent,
-} from "./sidebar/sidebar-nav-items"
-import { SidebarSection } from "./sidebar/sidebar-section"
-import { SidebarWorkspaceRow } from "./sidebar/sidebar-workspace-row"
-import { ProjectNavTree } from "@/features/projects/sidebar/project-nav-tree"
-import { ProductSwitcherMenu } from "./header/product-switcher-menu"
-import { usePermissions } from "@/lib/rbac/hooks"
-import { useAccess, useCan } from "@/hooks/api/access"
-import { useEnabledModules } from "@/hooks/api/access/org-modules"
+} from "./sidebar/sidebar-nav-items";
+import { SidebarSection } from "./sidebar/sidebar-section";
+import { SidebarWorkspaceRow } from "./sidebar/sidebar-workspace-row";
+import { ProjectNavTree } from "@/features/projects/sidebar/project-nav-tree";
+import { ProductSwitcherMenu } from "./header/product-switcher-menu";
+import { usePermissions } from "@/lib/rbac/hooks";
+import { useAccess, useCan } from "@/hooks/api/access";
+import { useEnabledModules } from "@/hooks/api/access/org-modules";
 
 interface AppSidebarProps {
-  isCollapsed?: boolean
-  onNavigate?: () => void
-  onRequestProductSwitcher?: () => void
-  onRequestWorkspaceSwitcher?: () => void
-  isMobile?: boolean
+  isCollapsed?: boolean;
+  onNavigate?: () => void;
+  onRequestProductSwitcher?: () => void;
+  onRequestWorkspaceSwitcher?: () => void;
+  isMobile?: boolean;
 }
 
 interface SidebarSkeletonProps {
-  isCollapsed: boolean
-  isMobile: boolean
+  isCollapsed: boolean;
+  isMobile: boolean;
 }
 
 function SidebarSkeleton({ isCollapsed, isMobile }: SidebarSkeletonProps) {
-  const effectiveCollapsed = isMobile ? false : isCollapsed
+  const effectiveCollapsed = isMobile ? false : isCollapsed;
 
   return (
     <div
@@ -54,10 +54,7 @@ function SidebarSkeleton({ isCollapsed, isMobile }: SidebarSkeletonProps) {
           <div className="space-y-px">
             {Array.from({ length: effectiveCollapsed ? 5 : 6 }).map((_, i) =>
               effectiveCollapsed ? (
-                <Skeleton
-                  key={i}
-                  className="h-8 w-8 rounded-[6px] mx-auto"
-                />
+                <Skeleton key={i} className="h-8 w-8 rounded-[6px] mx-auto" />
               ) : (
                 <div
                   key={i}
@@ -72,7 +69,7 @@ function SidebarSkeleton({ isCollapsed, isMobile }: SidebarSkeletonProps) {
         </div>
       </ScrollArea>
     </div>
-  )
+  );
 }
 
 export function AppSidebar({
@@ -82,111 +79,120 @@ export function AppSidebar({
   onRequestWorkspaceSwitcher,
   isMobile = false,
 }: AppSidebarProps) {
-  const { data: session, status } = useSession()
-  const { data: access } = useAccess()
+  const { data: session, status } = useSession();
+  const { data: access } = useAccess();
   const isOrgOwner =
-    access?.isOrgOwner === true || access?.isPlatformAdmin === true
-  const effectiveRole = isOrgOwner ? "OWNER" : "MEMBER"
+    access?.isOrgOwner === true || access?.isPlatformAdmin === true;
+  const effectiveRole = isOrgOwner ? "OWNER" : "MEMBER";
 
-  const pathname = usePathname()
-  const activeProduct = getProductFromPathname(pathname)
-  const accent: ModuleAccent = MODULE_ACCENTS[activeProduct]
+  const pathname = usePathname();
+  const activeProduct = getProductFromPathname(pathname);
+  const accent: ModuleAccent = MODULE_ACCENTS[activeProduct];
   const activeProjectId = useMemo(() => {
-    const match = /^\/projects\/(\d+)(?:\/|$)/.exec(pathname ?? "")
-    return match ? match[1] : null
-  }, [pathname])
+    const match = /^\/projects\/(\d+)(?:\/|$)/.exec(pathname ?? "");
+    return match ? match[1] : null;
+  }, [pathname]);
 
-  const { permissions } = usePermissions()
-  const isAdmin = useCan("settings:manage")
-  const enabledModules = useEnabledModules()
+  const { permissions } = usePermissions();
+  const canApproveLeaves = useCan("hr:leaves:approve");
+  const enabledModules = useEnabledModules();
+  const isHrModuleEnabled =
+    enabledModules.length === 0 || enabledModules.includes("HR");
 
   const navGroups = useMemo(
-    () => getNavGroupsForProduct(activeProduct, effectiveRole, permissions, enabledModules),
+    () =>
+      getNavGroupsForProduct(
+        activeProduct,
+        effectiveRole,
+        permissions,
+        enabledModules,
+      ),
     [activeProduct, effectiveRole, permissions, enabledModules],
-  )
+  );
 
   const activeGroupLabel = useMemo(() => {
     for (const group of navGroups) {
       const match = flattenNavRoutes(group.routes).some(
         (route) =>
           pathname === route.href || pathname.startsWith(route.href + "/"),
-      )
-      if (match) return group.label
+      );
+      if (match) return group.label;
     }
-    return null
-  }, [navGroups, pathname])
+    return null;
+  }, [navGroups, pathname]);
 
   const [collapsedGroups, setCollapsedGroups] = useState<
     Record<string, boolean>
-  >({})
+  >({});
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem("sidebar-groups")
+      const stored = localStorage.getItem("sidebar-groups");
       if (stored)
-        setCollapsedGroups(JSON.parse(stored) as Record<string, boolean>)
+        setCollapsedGroups(JSON.parse(stored) as Record<string, boolean>);
     } catch {}
-  }, [])
+  }, []);
 
   useEffect(() => {
     setCollapsedGroups((prev) => {
-      let changed = false
-      const next = { ...prev }
+      let changed = false;
+      const next = { ...prev };
       for (const group of navGroups) {
         if (group.defaultCollapsed && !(group.label in next)) {
-          next[group.label] = true
-          changed = true
+          next[group.label] = true;
+          changed = true;
         }
       }
-      return changed ? next : prev
-    })
-  }, [navGroups])
+      return changed ? next : prev;
+    });
+  }, [navGroups]);
 
   useEffect(() => {
-    if (!activeGroupLabel) return
+    if (!activeGroupLabel) return;
     setCollapsedGroups((prev) => {
-      if (prev[activeGroupLabel] === false) return prev
-      const next = { ...prev, [activeGroupLabel]: false }
+      if (prev[activeGroupLabel] === false) return prev;
+      const next = { ...prev, [activeGroupLabel]: false };
       try {
-        localStorage.setItem("sidebar-groups", JSON.stringify(next))
+        localStorage.setItem("sidebar-groups", JSON.stringify(next));
       } catch {}
-      return next
-    })
-  }, [activeGroupLabel])
+      return next;
+    });
+  }, [activeGroupLabel]);
 
   const toggleGroup = useCallback((label: string) => {
     setCollapsedGroups((prev) => {
-      const next = { ...prev, [label]: !prev[label] }
+      const next = { ...prev, [label]: !prev[label] };
       try {
-        localStorage.setItem("sidebar-groups", JSON.stringify(next))
+        localStorage.setItem("sidebar-groups", JSON.stringify(next));
       } catch {}
-      return next
-    })
-  }, [])
+      return next;
+    });
+  }, []);
 
   const { data: pendingApprovalsData } = usePendingApprovals({
-    enabled: isAdmin && !!session?.user,
+    enabled: canApproveLeaves && isHrModuleEnabled && !!session?.user,
     refetchIntervalInBackground: false,
-  })
-  const pendingLeaves = pendingApprovalsData?.pendingLeaves ?? 0
+  });
+  const pendingLeaves = pendingApprovalsData?.pendingLeaves ?? 0;
 
-  const { data: chatUnread } = useChatUnreadTotal()
-  const unreadChatCount = typeof chatUnread === "number" ? chatUnread : 0
+  const isChatModuleEnabled = access?.modules?.chat !== false;
+  const { data: chatUnread } = useChatUnreadTotal(isChatModuleEnabled);
+  const unreadChatCount = typeof chatUnread === "number" ? chatUnread : 0;
 
-  const { data: notifData } = useUnreadNotificationCount()
-  const unreadNotifCount = notifData?.count ?? 0
+  const { data: notifData } = useUnreadNotificationCount();
+  const unreadNotifCount = notifData?.count ?? 0;
 
   useEffect(() => {
-    const base = "StreamlineOS"
-    const total = unreadChatCount + unreadNotifCount
+    const base = "StreamlineOS";
+    const total = unreadChatCount + unreadNotifCount;
     document.title =
-      total > 0 ? `(${total > 99 ? "99+" : total}) ${base}` : base
-  }, [unreadChatCount, unreadNotifCount])
+      total > 0 ? `(${total > 99 ? "99+" : total}) ${base}` : base;
+  }, [unreadChatCount, unreadNotifCount]);
 
-  const effectiveCollapsed = isMobile ? false : isCollapsed
+  const effectiveCollapsed = isMobile ? false : isCollapsed;
 
   if (status === "loading") {
-    return <SidebarSkeleton isCollapsed={isCollapsed} isMobile={isMobile} />
+    return <SidebarSkeleton isCollapsed={isCollapsed} isMobile={isMobile} />;
   }
 
   return (
@@ -194,7 +200,9 @@ export function AppSidebar({
       <div
         className={cn(
           "relative flex min-h-0 flex-col bg-sidebar text-sidebar-foreground",
-          isMobile ? "h-full w-full flex-1 overflow-hidden" : "h-full overflow-visible",
+          isMobile
+            ? "h-full w-full flex-1 overflow-hidden"
+            : "h-full overflow-visible",
           !isMobile && "transition-[width] duration-300 ease-in-out",
           !isMobile && (effectiveCollapsed ? "w-[3.5rem]" : "w-[17rem]"),
         )}
@@ -218,7 +226,7 @@ export function AppSidebar({
         <ScrollArea className="flex-1 min-h-0">
           <nav className={cn("py-2", effectiveCollapsed ? "px-1" : "px-2.5")}>
             {navGroups.map((group, i) => {
-              const multiGroup = navGroups.length > 1
+              const multiGroup = navGroups.length > 1;
               return (
                 <Fragment key={group.label}>
                   <SidebarSection
@@ -249,11 +257,11 @@ export function AppSidebar({
                     />
                   ) : null}
                 </Fragment>
-              )
+              );
             })}
           </nav>
         </ScrollArea>
       </div>
     </TooltipProvider>
-  )
+  );
 }

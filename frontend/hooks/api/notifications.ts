@@ -70,7 +70,7 @@ export const useUnreadNotificationCount = (
     refetchInterval: 60_000,
     refetchIntervalInBackground: false,
     ...options,
-    enabled: !!orgId,
+    enabled: !!orgId && (options?.enabled ?? true),
   });
 };
 

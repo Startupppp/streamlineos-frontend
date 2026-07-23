@@ -50,7 +50,7 @@ export const useDashboardStats = (
     queryFn: () => apiClient.get<DashboardStats>("/dashboard/stats"),
     staleTime: 5 * 60 * 1000,
     ...options,
-    enabled: !!orgId,
+    enabled: !!orgId && (options?.enabled ?? true),
   });
 };
 
@@ -236,7 +236,7 @@ export const useLeavesToday = (
     refetchInterval: 60_000,
     refetchIntervalInBackground: false,
     ...options,
-    enabled: !!orgId,
+    enabled: !!orgId && (options?.enabled ?? true),
   });
 };
 
@@ -273,7 +273,7 @@ export const useBirthdays = (
     staleTime: 5 * 60_000,
     refetchInterval: 60_000,
     ...options,
-    enabled: !!orgId,
+    enabled: !!orgId && (options?.enabled ?? true),
   });
 };
 
@@ -282,14 +282,15 @@ export const usePendingApprovals = (
 ) => {
   const { data: session } = useSession();
   const orgId = session?.orgId ?? "";
+  const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<PendingApprovalsCount, Error>({
     queryKey: hrWidgetKeys(orgId).pendingApprovals,
     queryFn: () => apiClient.get<PendingApprovalsCount>("/dashboard/pending-approvals"),
     staleTime: 65_000,
     refetchInterval: 60_000,
     refetchIntervalInBackground: false,
-    ...options,
-    enabled: !!orgId,
+    ...restOptions,
+    enabled: !!orgId && (enabledOption ?? true),
   });
 };
 
@@ -345,7 +346,7 @@ export const useAnnouncements = (
     queryFn: () => apiClient.get<Announcement[]>("/dashboard/announcements"),
     staleTime: 60_000,
     ...options,
-    enabled: !!orgId,
+    enabled: !!orgId && (options?.enabled ?? true),
   });
 };
 
@@ -387,7 +388,7 @@ export const usePersonalDashboard = (
     queryFn: () => apiClient.get<PersonalDashboard>("/dashboard/personal"),
     staleTime: 2 * 60_000,
     ...options,
-    enabled: !!orgId,
+    enabled: !!orgId && (options?.enabled ?? true),
   });
 };
 
@@ -401,7 +402,7 @@ export const useExecutiveDashboard = (
     queryFn: () => apiClient.get<ExecutiveDashboard>("/dashboard/executive"),
     staleTime: 5 * 60_000,
     ...options,
-    enabled: !!orgId,
+    enabled: !!orgId && (options?.enabled ?? true),
   });
 };
 

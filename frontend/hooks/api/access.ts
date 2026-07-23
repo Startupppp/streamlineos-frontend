@@ -9,16 +9,21 @@ import type { AccessResponse } from "@/types/access";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 
 export const useAccess = (
-  options?: Omit<UseQueryOptions<AccessResponse, Error>, "queryKey" | "queryFn">
+  options?: Omit<
+    UseQueryOptions<AccessResponse, Error>,
+    "queryKey" | "queryFn"
+  >,
 ) => {
   const { data: session } = useSession();
+
   const orgId = session?.orgId;
+
   return useQuery<AccessResponse, Error>({
+    enabled: !!orgId,
+    staleTime: 5 * 60_000,
     queryKey: queryKeys.access.me(),
     queryFn: () => apiClient.get<AccessResponse>("/me/access"),
-    staleTime: 5 * 60_000,
     ...options,
-    enabled: !!orgId,
   });
 };
 
@@ -28,4 +33,3 @@ export function useCan(permissionKey: PermissionKey): boolean {
   if (data.isOrgOwner || data.isPlatformAdmin) return true;
   return data.permissions.includes(permissionKey);
 }
-

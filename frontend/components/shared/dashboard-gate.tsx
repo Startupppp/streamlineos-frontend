@@ -2,9 +2,9 @@
 
 import { useSession } from "next-auth/react";
 import { AccessDenied } from "./access-denied";
-import { AppLoadingScreen } from "@/components/ui/app-loading-screen";
 import { useAccess } from "@/hooks/api/access";
 import type { PermissionKey } from "@/lib/rbac/permissions";
+import { AppLoadingScreen } from "@/components/ui/app-loading-screen";
 
 interface DashboardGateProps {
   allowedRoles?: string[];
@@ -20,27 +20,22 @@ export function DashboardGate({
   const { data: session, status } = useSession();
   const { data: access, isLoading: accessLoading } = useAccess();
 
-  if (status === "loading" || accessLoading) {
-    return <AppLoadingScreen />;
-  }
+  if (status === "loading" || accessLoading) return <AppLoadingScreen />;
 
   const userRole = session?.user?.role;
   const isPlatformAdmin =
     access?.isPlatformAdmin ?? session?.user?.isPlatformAdmin ?? false;
   const isOrgOwner = access?.isOrgOwner ?? session?.user?.isOrgOwner ?? false;
 
-  if (!userRole && !isPlatformAdmin) {
+  if (!userRole && !isPlatformAdmin)
     return (
       <AccessDenied
         currentRole={undefined}
         requiredRoles={allowedRoles ?? []}
       />
     );
-  }
 
-  if (isPlatformAdmin || isOrgOwner) {
-    return <>{children}</>;
-  }
+  if (isPlatformAdmin || isOrgOwner) return <>{children}</>;
 
   if (permission) {
     const perms = Array.isArray(permission) ? permission : [permission];
@@ -51,9 +46,8 @@ export function DashboardGate({
     );
   }
 
-  if (allowedRoles && userRole && allowedRoles.includes(userRole)) {
+  if (allowedRoles && userRole && allowedRoles.includes(userRole))
     return <>{children}</>;
-  }
 
   return (
     <AccessDenied currentRole={userRole} requiredRoles={allowedRoles ?? []} />

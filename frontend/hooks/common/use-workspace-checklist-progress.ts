@@ -18,19 +18,21 @@ export const CHECKLIST_ITEM_IDS = [
 
 export type ChecklistItemId = (typeof CHECKLIST_ITEM_IDS)[number];
 
-export function useWorkspaceChecklistProgress() {
+export function useWorkspaceChecklistProgress(enabled = true) {
   const { data: session } = useSession();
 
   const { data: dashboardStats, isLoading: dashboardLoading } =
-    useDashboardStats();
+    useDashboardStats({ enabled });
   const { data: connections, isLoading: connectionsLoading } =
-    useIntegrationConnections();
+    useIntegrationConnections({ enabled });
   const { data: aiUsage, isLoading: aiUsageLoading } = useAiUsage();
   const { data: leadsData, isLoading: leadsLoading } = useLeads(
     { limit: 1 },
-    { enabled: true },
+    { enabled },
   );
-  const { data: userStats, isLoading: userStatsLoading } = useUserStats();
+  const { data: userStats, isLoading: userStatsLoading } = useUserStats({
+    enabled,
+  });
 
   const completed = useMemo(() => {
     const done = new Set<ChecklistItemId>();

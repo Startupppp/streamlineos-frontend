@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { useDashboardAccess } from "@/features/dashboard/use-dashboard-access";
 import {
   useLeavesToday,
   useUpcomingHolidays,
@@ -200,7 +201,10 @@ export function BirthdaysWidget() {
 }
 
 export function PendingApprovalsWidget() {
-  const { data, isLoading } = usePendingApprovals();
+  const { canApproveLeaves, hrEnabled } = useDashboardAccess();
+  const { data, isLoading } = usePendingApprovals({
+    enabled: canApproveLeaves && hrEnabled,
+  });
 
   return (
     <WidgetCard

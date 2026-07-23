@@ -20,6 +20,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useOrgSettings } from "@/hooks/api/organization";
+import { useAccess } from "@/hooks/api/access";
 import {
   useWorkspaceChecklistProgress,
   type ChecklistItemId,
@@ -303,11 +304,14 @@ function FabProgressRing({ progressFraction }: FabProgressRingProps) {
 }
 
 export function SuccessChecklist() {
-  const { data: org } = useOrgSettings();
   const { data: session } = useSession();
+  const { data: access } = useAccess();
   const orgId = session?.orgId;
-  const canSetUpWorkspace = session?.user?.isOrgOwner || session?.user?.isPlatformAdmin;
-  const { completed, doneCount, isLoading } = useWorkspaceChecklistProgress();
+  const canSetUpWorkspace =
+    access?.isOrgOwner === true || access?.isPlatformAdmin === true;
+  const { data: org } = useOrgSettings({ enabled: canSetUpWorkspace });
+  const { completed, doneCount, isLoading } =
+    useWorkspaceChecklistProgress(canSetUpWorkspace);
   const storedDismissed = useSyncExternalStore(
     subscribeDismissed,
     () => readDismissed(orgId),
