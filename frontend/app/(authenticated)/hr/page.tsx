@@ -7,7 +7,6 @@ import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import {
   Download,
-  Users,
   UserPlus,
   CalendarOff,
   ClipboardList,
@@ -266,19 +265,6 @@ export default function HRDashboardPage() {
           eyebrow="Streamline HRMS"
           title="Build teams. Keep people thriving."
           description="Onboard faster, track leave and attendance, and run the full employee lifecycle from one calm workspace."
-          actions={
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-9 flex-1 gap-1.5 border-blue-200 bg-background/80 text-foreground hover:bg-background sm:flex-none dark:border-blue-500/30"
-              asChild
-            >
-              <Link href="/hr/employees">
-                <Users className="h-3.5 w-3.5" />
-                Directory
-              </Link>
-            </Button>
-          }
         >
           <div
             className={cn(
