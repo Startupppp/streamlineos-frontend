@@ -280,6 +280,7 @@ export default function HRDashboardPage() {
           eyebrow="Streamline HRMS"
           title="Build teams. Keep people thriving."
           description="Onboard faster, track leave and attendance, and run the full employee lifecycle from one calm workspace."
+          hideDescriptionOnMobile
         >
           <div
             className={cn(

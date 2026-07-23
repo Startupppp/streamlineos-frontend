@@ -38,6 +38,7 @@ export function HrHero({
   eyebrow,
   title,
   description,
+  hideDescriptionOnMobile = false,
   actions,
   className,
   children,
@@ -45,6 +46,7 @@ export function HrHero({
   eyebrow?: string;
   title: string;
   description?: string;
+  hideDescriptionOnMobile?: boolean;
   actions?: ReactNode;
   className?: string;
   children?: ReactNode;
@@ -92,7 +94,12 @@ export function HrHero({
               {title}
             </h2>
             {description && (
-              <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed text-pretty max-w-prose">
+              <p
+                className={cn(
+                  "mt-1.5 text-sm text-muted-foreground leading-relaxed text-pretty max-w-prose",
+                  hideDescriptionOnMobile && "hidden sm:block",
+                )}
+              >
                 {description}
               </p>
             )}
