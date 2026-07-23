@@ -211,16 +211,16 @@ export default function HRDashboardPage() {
  variant="display"
       actions={
         <div className="flex w-full sm:w-auto flex-wrap items-center gap-2">
-          <Button variant="outline" size="sm" className="gap-2 h-9 flex-1 sm:flex-none" onClick={handleExport}>
-            <Download className="h-4 w-4" aria-hidden="true" />
-            <span className="sm:inline">Export</span>
-          </Button>
           <Button size="sm" className="gap-2 h-9 shadow-sm flex-1 sm:flex-none" asChild>
             <Link href="/hr/onboarding">
               <Plus className="h-4 w-4" aria-hidden="true" />
               <span className="sm:hidden">Add</span>
               <span className="hidden sm:inline">Add Employee</span>
             </Link>
+          </Button>
+          <Button variant="outline" size="sm" className="gap-2 h-9 flex-1 sm:flex-none" onClick={handleExport}>
+            <Download className="h-4 w-4" aria-hidden="true" />
+            <span className="sm:inline">Export</span>
           </Button>
         </div>
       }
