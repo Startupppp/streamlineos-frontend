@@ -322,8 +322,6 @@ export default function HRDashboardPage() {
           </div>
         </HrHero>
 
-        <HrSetupProgressCard />
-
         <HrDashboardOverview />
 
         <div>
@@ -412,6 +410,7 @@ export default function HRDashboardPage() {
           )}
         </div>
 
+        <HrSetupProgressCard />
       </HrPageContent>
     </PageWrapper>
   );
