@@ -28,9 +28,14 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { Employee } from "@/types/hr";
 
+const WFH_REASON_MAX_LENGTH = 1000;
+
 const wfhFormSchema = z.object({
   date: z.string().min(1, "Date is required"),
-  reason: z.string().optional(),
+  reason: z
+    .string()
+    .max(WFH_REASON_MAX_LENGTH, `Reason must be ${WFH_REASON_MAX_LENGTH} characters or fewer`)
+    .optional(),
   approverId: z.string().min(1, "Approver is required"),
 });
 
@@ -167,12 +172,18 @@ export function RequestWfhDialog({ trigger }: RequestWfhDialogProps = {}) {
               name="reason"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Reason (optional)</FormLabel>
+                  <div className="flex items-baseline justify-between">
+                    <FormLabel>Reason (optional)</FormLabel>
+                    <span className="text-xs text-muted-foreground">
+                      {field.value?.length ?? 0} / {WFH_REASON_MAX_LENGTH}
+                    </span>
+                  </div>
                   <FormControl>
                     <Textarea
                       placeholder="e.g., Internet maintenance at home..."
                       className="resize-none w-full"
                       rows={3}
+                      maxLength={WFH_REASON_MAX_LENGTH}
                       {...field}
                     />
                   </FormControl>

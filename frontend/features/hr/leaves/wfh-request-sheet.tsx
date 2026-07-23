@@ -26,7 +26,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/date-picker";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { wfhFormSchema, type WfhFormValues } from "./wfh-request-schema";
+import { wfhFormSchema, WFH_NOTES_MAX_LENGTH, type WfhFormValues } from "./wfh-request-schema";
 import type { Approver } from "@/features/hr/leaves/components/leaves-shared";
 
 const WFH_REASONS = [
@@ -204,17 +204,23 @@ export function WfhRequestSheet({
             name="notes"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
-                  Notes{" "}
-                  <span className="normal-case font-normal text-muted-foreground tracking-normal">
-                    (optional)
+                <div className="flex items-baseline justify-between">
+                  <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+                    Notes{" "}
+                    <span className="normal-case font-normal text-muted-foreground tracking-normal">
+                      (optional)
+                    </span>
+                  </FormLabel>
+                  <span className="text-xs text-muted-foreground">
+                    {field.value?.length ?? 0} / {WFH_NOTES_MAX_LENGTH}
                   </span>
-                </FormLabel>
+                </div>
                 <FormControl>
                   <Textarea
                     placeholder="Any additional details..."
                     className="resize-none text-sm min-h-[80px]"
                     rows={3}
+                    maxLength={WFH_NOTES_MAX_LENGTH}
                     {...field}
                   />
                 </FormControl>
