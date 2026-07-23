@@ -177,7 +177,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
 
   return (
     <TooltipProvider delayDuration={0}>
-      <div className="flex h-full overflow-hidden bg-background">
+      <div className="flex min-h-0 flex-1 overflow-hidden bg-background">
         <aside
           className={`hidden md:flex flex-col shrink-0 border-r border-border bg-card/50 overflow-hidden transition-[width] duration-300 ease-in-out ${
             collapsed ? "w-10" : "w-[260px]"
@@ -266,9 +266,11 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
           </SheetContent>
         </Sheet>
 
-        <main className="flex-1 min-w-0 flex flex-col overflow-hidden">
+        <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
-            <div className="overscroll-contain">{children}</div>
+            <div className="flex min-h-full flex-1 flex-col overscroll-contain">
+              {children}
+            </div>
           </ScrollArea>
         </main>
 

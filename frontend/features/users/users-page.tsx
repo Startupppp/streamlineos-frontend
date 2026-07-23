@@ -21,7 +21,11 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  ResponsivePopover,
+  ResponsivePopoverContent,
+  ResponsivePopoverTrigger,
+} from "@/components/ui/responsive-popover";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -368,11 +372,21 @@ export function UsersPage() {
     />
   );
 
-  function renderFilterSelects() {
+  function renderFilterSelects(variant: "popover" | "toolbar" = "popover") {
+    const isToolbar = variant === "toolbar";
+    const selectTriggerClass = isToolbar
+      ? `h-9 w-0 min-w-0 flex-1 basis-0 ${FILTER_SELECT_TRIGGER}`
+      : `h-9 w-full ${FILTER_SELECT_TRIGGER}`;
     return (
-      <div className="flex w-full flex-col gap-2 md:contents">
+      <div
+        className={
+          isToolbar
+            ? "hidden min-w-0 flex-[2] basis-0 items-center gap-2 lg:flex"
+            : "flex w-full flex-col gap-2"
+        }
+      >
         <Select value={status} onValueChange={handleStatusChange}>
-          <SelectTrigger className={`w-full md:w-32 ${FILTER_SELECT_TRIGGER}`}>
+          <SelectTrigger className={selectTriggerClass}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
@@ -383,7 +397,7 @@ export function UsersPage() {
           </SelectContent>
         </Select>
         <Select value={role} onValueChange={handleRoleChange}>
-          <SelectTrigger className={`w-full md:w-32 ${FILTER_SELECT_TRIGGER}`}>
+          <SelectTrigger className={selectTriggerClass}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
@@ -396,7 +410,7 @@ export function UsersPage() {
           </SelectContent>
         </Select>
         <Select value={departmentId} onValueChange={handleDeptChange}>
-          <SelectTrigger className={`w-full md:w-36 ${FILTER_SELECT_TRIGGER}`}>
+          <SelectTrigger className={selectTriggerClass}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
@@ -409,7 +423,7 @@ export function UsersPage() {
           </SelectContent>
         </Select>
         <Select value={branchId} onValueChange={handleBranchChange}>
-          <SelectTrigger className={`w-full md:w-32 ${FILTER_SELECT_TRIGGER}`}>
+          <SelectTrigger className={selectTriggerClass}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
@@ -431,7 +445,7 @@ export function UsersPage() {
         title="Users"
         subtitle="Manage members, roles, and access."
         actions={
-          <div className="grid w-full grid-cols-3 gap-2 sm:flex sm:w-auto sm:flex-nowrap sm:justify-end">
+          <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-nowrap sm:justify-end">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <AnimatedIconButton
@@ -464,38 +478,39 @@ export function UsersPage() {
               <UserPlus className="h-3.5 w-3.5 mr-1.5" />
               Invite User
             </Button>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-9 w-full gap-1.5 text-xs md:hidden"
-                  aria-label="Filters"
-                >
-                  <SlidersHorizontal className="h-4 w-4" />
-                  <span className="truncate">Filters</span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent
-                className="w-[min(22rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] p-3"
-                align="end"
-              >
-                {renderFilterSelects()}
-              </PopoverContent>
-            </Popover>
           </div>
         }
         filters={
-          <>
-            <div className="min-w-0 w-full flex-1 md:min-w-[160px] md:max-w-xs">
+          <div className="flex w-full min-w-0 items-center gap-2">
+            <div className="min-w-0 flex-1 basis-0">
               <SearchInput
                 placeholder="Search users..."
                 value={search}
                 onValueChange={handleSearchChange}
               />
             </div>
-            <div className="hidden md:contents">{renderFilterSelects()}</div>
-          </>
+            <ResponsivePopover>
+              <ResponsivePopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 shrink-0 gap-1.5 text-xs lg:hidden"
+                  aria-label="Filters"
+                >
+                  <SlidersHorizontal className="h-4 w-4" />
+                  <span className="hidden sm:inline">Filters</span>
+                </Button>
+              </ResponsivePopoverTrigger>
+              <ResponsivePopoverContent
+                title="Filters"
+                className="w-[min(22rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] p-3"
+                align="end"
+              >
+                {renderFilterSelects()}
+              </ResponsivePopoverContent>
+            </ResponsivePopover>
+            {renderFilterSelects("toolbar")}
+          </div>
         }
       >
         <div className="flex flex-1 min-h-0 flex-col gap-3">

@@ -5,6 +5,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyTimeIllustration } from "@/components/illustrations";
 import { useKbPagesRecent } from "@/hooks/api/kb";
 import {
   pageHref,
@@ -59,7 +60,11 @@ function RecentSkeleton() {
 }
 
 export default function RecentPage() {
-  const { data: pages = [], isLoading, isError } = useKbPagesRecent();
+  const { data: pages = [], isLoading, isError, refetch } = useKbPagesRecent();
+
+  function handleRetry() {
+    void refetch();
+  }
 
   return (
     <PageWrapper title="Recent" subtitle="Pages you have visited recently">
@@ -67,20 +72,17 @@ export default function RecentPage() {
 
       {!isLoading && isError && (
         <EmptyState
-          illustration={
-            <KbClockIcon className="w-8 text-muted-foreground/40" />
-          }
+          illustration={<EmptyTimeIllustration />}
           title="Could not load recent pages"
           description="There was a problem fetching your recently visited pages."
+          action={{ label: "Try again", onClick: handleRetry }}
           className={CONTENT_FILL_PANEL}
         />
       )}
 
       {!isLoading && !isError && pages.length === 0 && (
         <EmptyState
-          illustration={
-            <KbClockIcon className="w-8 text-muted-foreground/40" />
-          }
+          illustration={<EmptyTimeIllustration />}
           title="No recent pages"
           description="Pages you visit will appear here."
           action={{ label: "Browse favorites", href: KB_FAVORITES }}
