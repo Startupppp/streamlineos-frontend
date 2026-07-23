@@ -136,7 +136,7 @@ export function DisplayPrefsPopover({
 
         <SectionLabel>Group by</SectionLabel>
         <Select value={prefs.groupBy} onValueChange={handleGroupByChange}>
-          <SelectTrigger className="h-9 text-xs">
+          <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -151,7 +151,7 @@ export function DisplayPrefsPopover({
         <SectionLabel>Order by</SectionLabel>
         <div className="flex flex-col gap-1.5">
           <Select value={prefs.orderBy} onValueChange={handleOrderByChange}>
-            <SelectTrigger className="h-9 w-full text-xs">
+            <SelectTrigger className="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -163,7 +163,7 @@ export function DisplayPrefsPopover({
             </SelectContent>
           </Select>
           <Select value={prefs.orderDir} onValueChange={handleOrderDirChange}>
-            <SelectTrigger className="h-9 w-full text-xs">
+            <SelectTrigger className="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

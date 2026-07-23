@@ -431,7 +431,7 @@ export default function ValidationRulesPage() {
         <Tabs value={activeTab} onValueChange={handleTabChange}>
           <TabsList className="mb-4">
             {ENTITY_TABS.map((tab) => (
-              <TabsTrigger key={tab.value} value={tab.value} className="text-xs">{tab.label}</TabsTrigger>
+              <TabsTrigger key={tab.value} value={tab.value}>{tab.label}</TabsTrigger>
             ))}
           </TabsList>
           {ENTITY_TABS.map((tab) => (

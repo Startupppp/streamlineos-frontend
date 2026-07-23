@@ -1,6 +1,6 @@
 "use client"
 
-import { Fragment, useMemo, useRef, useCallback, useEffect, useState } from "react"
+import { Fragment, useMemo, useCallback, useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -22,7 +22,7 @@ import { SidebarWorkspaceRow } from "./sidebar/sidebar-workspace-row"
 import { ProjectNavTree } from "@/features/projects/sidebar/project-nav-tree"
 import { ProductSwitcherMenu } from "./header/product-switcher-menu"
 import { usePermissions } from "@/lib/rbac/hooks"
-import { useCan } from "@/hooks/api/access"
+import { useAccess, useCan } from "@/hooks/api/access"
 import { useEnabledModules } from "@/hooks/api/access/org-modules"
 
 interface AppSidebarProps {
@@ -83,15 +83,10 @@ export function AppSidebar({
   isMobile = false,
 }: AppSidebarProps) {
   const { data: session, status } = useSession()
-  const role = session?.user?.role
+  const { data: access } = useAccess()
   const isOrgOwner =
-    session?.user?.isOrgOwner === true ||
-    session?.user?.isPlatformAdmin === true
-
-  const lastKnownRoleRef = useRef<string | undefined>(role)
-  if (role) lastKnownRoleRef.current = role
-  const rawRole = role || lastKnownRoleRef.current
-  const effectiveRole = isOrgOwner ? "OWNER" : rawRole
+    access?.isOrgOwner === true || access?.isPlatformAdmin === true
+  const effectiveRole = isOrgOwner ? "OWNER" : "MEMBER"
 
   const pathname = usePathname()
   const activeProduct = getProductFromPathname(pathname)

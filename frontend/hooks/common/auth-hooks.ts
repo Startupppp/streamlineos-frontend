@@ -1,9 +1,18 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { getSession, signIn, signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { apiClient, clearBackendTokenCache } from "@/lib/api-client";
+import {
+  apiClient,
+  clearBackendTokenCache,
+  setAutoSignOutSuppressed,
+} from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
 async function attemptCredentialsSignIn(magicToken: string): Promise<boolean> {
@@ -13,8 +22,7 @@ async function attemptCredentialsSignIn(magicToken: string): Promise<boolean> {
       redirect: false,
     });
     if (result?.ok && !result.error) return true;
-  } catch {
-  }
+  } catch {}
   try {
     const session = await getSession();
     return Boolean(session?.user);
@@ -23,7 +31,9 @@ async function attemptCredentialsSignIn(magicToken: string): Promise<boolean> {
   }
 }
 
-export async function signInWithMagicToken(magicToken: string): Promise<boolean> {
+export async function signInWithMagicToken(
+  magicToken: string,
+): Promise<boolean> {
   if (!magicToken) return false;
   clearBackendTokenCache();
   if (await attemptCredentialsSignIn(magicToken)) return true;
@@ -33,7 +43,10 @@ export async function signInWithMagicToken(magicToken: string): Promise<boolean>
 export function useVerifyEmail() {
   return useMutation({
     mutationFn: (variables: { token: string }) =>
-      apiClient.post<{ autoLoginToken: string }>("/auth/verify-email", variables),
+      apiClient.post<{ autoLoginToken: string }>(
+        "/auth/verify-email",
+        variables,
+      ),
   });
 }
 
@@ -87,20 +100,22 @@ type OrgSummary = {
 };
 
 export function useGetOrganizations() {
-  const { data: session } = useSession();
-  const orgId = session?.orgId;
+  const { status } = useSession();
   return useQuery<OrgSummary[]>({
     queryKey: queryKeys.organization.all,
     queryFn: () => apiClient.get<OrgSummary[]>("/organization"),
     staleTime: 60_000,
-    enabled: !!orgId,
+    enabled: status === "authenticated",
+    placeholderData: keepPreviousData,
   });
 }
 
 export function useSwitchOrg() {
   const { update } = useSession();
   const queryClient = useQueryClient();
+  const router = useRouter();
   return useMutation({
+    mutationKey: ["organization", "switch"],
     mutationFn: (orgId: string) =>
       apiClient.post<{
         orgId: string;
@@ -108,11 +123,18 @@ export function useSwitchOrg() {
         slug: string;
         role: string;
       }>("/organization/switch", { orgId }),
+    onMutate: () => {
+      setAutoSignOutSuppressed(true);
+    },
     onSuccess: async (data) => {
       clearBackendTokenCache();
       await update({ orgId: data.orgId });
       queryClient.clear();
-      window.location.href = "/dashboard";
+      router.replace("/dashboard");
+      router.refresh();
+    },
+    onSettled: () => {
+      window.setTimeout(() => setAutoSignOutSuppressed(false), 4000);
     },
   });
 }

@@ -549,7 +549,7 @@ export default function ReportsPage() {
               <div className="space-y-1.5">
                 <Label className="text-xs">Entity</Label>
                 <Select value={entity} onValueChange={handleEntitySelectChange}>
-                  <SelectTrigger className="text-xs">
+                  <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

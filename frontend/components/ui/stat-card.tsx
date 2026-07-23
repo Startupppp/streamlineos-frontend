@@ -127,8 +127,7 @@ export function StatCardGrid({
     <div
       className={cn(
         "grid w-full min-w-0 shrink-0 gap-3",
-        "overflow-x-auto scrollbar-hide touch-pan-x snap-x snap-mandatory",
-        "md:overflow-x-visible md:snap-none",
+        "overflow-x-auto scrollbar-hide touch-pan-x snap-x snap-mandatory md:snap-none",
         "[&>*]:min-w-0 [&>*]:h-full [&>*]:snap-start",
         className,
       )}

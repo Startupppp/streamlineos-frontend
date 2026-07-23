@@ -270,7 +270,7 @@ export default function ClientsPage() {
             <SearchInput placeholder="Search clients..." value={rawSearch} onValueChange={handleSearchChange} />
           </div>
           <Select value={statusParam ?? "all"} onValueChange={handleStatusChange}>
-            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "text-xs w-[160px] min-w-0")}>
+            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[160px] min-w-0")}>
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>

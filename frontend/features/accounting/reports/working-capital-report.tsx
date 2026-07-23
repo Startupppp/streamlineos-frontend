@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { DatePicker } from "@/components/ui/date-picker";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared";
@@ -57,15 +57,7 @@ export function WorkingCapitalReport() {
       <div className="flex flex-1 min-h-0 flex-col">
         {isLoading ? (
           <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-              {[0, 1, 2, 3].map((i) => (
-                <div key={i} className="rounded-xl border border-border bg-card p-4 space-y-2">
-                  <Skeleton className="h-3 w-24" />
-                  <Skeleton className="h-7 w-32" />
-                  <Skeleton className="h-3 w-20" />
-                </div>
-              ))}
-            </div>
+            <StatCardGridSkeleton cols={4} />
             <Skeleton className="h-[160px] w-full rounded-xl" />
           </div>
         ) : error ? (

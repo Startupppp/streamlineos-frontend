@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 export default function ChatLoading() {
   return (
-    <PageWrapper title="Chat" subtitle="Opening project conversation">
+    <PageWrapper noInternalScroll>
       <PmPageShell>
         <Skeleton className={cn(PM_PANEL, "h-[200px] w-full")} />
       </PmPageShell>

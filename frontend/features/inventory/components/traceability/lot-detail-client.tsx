@@ -6,7 +6,8 @@ import { ChevronDownIcon, ChevronUpIcon, LockIcon } from "@animateicons/react/lu
 import { motion } from "framer-motion";
 import { PageWrapper, PageSection } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { StatCardGrid, StatCard } from "@/components/ui/stat-card";
 import { ErrorState } from "@/components/shared";
 import { InventoryDetailPageLoading } from "@/features/inventory/components/inventory-detail-page-loading";
 import { fadeUp } from "@/lib/motion-variants";
@@ -119,44 +120,15 @@ export function LotDetailClient({ lotId }: LotDetailClientProps) {
       }
     >
       <motion.div variants={fadeUp} initial="hidden" animate="visible" className="space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <Card>
-            <CardHeader className="pb-1 pt-3 px-3">
-              <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                Expiry Date
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-3 pb-3">
-              <p className={`text-sm font-semibold tabular-nums ${expiryClass}`}>
-                {lot.expiryDate ? new Date(lot.expiryDate).toLocaleDateString() : "No expiry"}
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-1 pt-3 px-3">
-              <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                Current Stock
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-3 pb-3">
-              <p className="text-sm font-semibold text-foreground tabular-nums">
-                {lot.currentStock.toLocaleString()}
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-1 pt-3 px-3">
-              <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                Created
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-3 pb-3">
-              <p className="text-sm font-semibold text-foreground tabular-nums">
-                {new Date(lot.createdAt).toLocaleDateString()}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+        <StatCardGrid>
+          <StatCard
+            label="Expiry Date"
+            value={lot.expiryDate ? new Date(lot.expiryDate).toLocaleDateString() : "No expiry"}
+            tone={expiryClass.includes("red") ? "red" : expiryClass.includes("amber") ? "amber" : "default"}
+          />
+          <StatCard label="Current Stock" value={lot.currentStock.toLocaleString()} />
+          <StatCard label="Created" value={new Date(lot.createdAt).toLocaleDateString()} />
+        </StatCardGrid>
 
         <PageSection title="Stock by Location">
           <LotStockTable stockByLocation={lot.stockByLocation} />

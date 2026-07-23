@@ -317,7 +317,7 @@ export default function DealsPage() {
         <SearchInput value={searchInput} onValueChange={handleSearchChange} placeholder="Search deals..." aria-label="Search deals" />
       </div>
       <Select value={stageFromUrl ?? "all"} onValueChange={handleStageFilterChange}>
-        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[140px] text-xs")}>
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[140px]")}>
           <SelectValue placeholder="All stages" />
         </SelectTrigger>
         <SelectContent>
@@ -329,7 +329,7 @@ export default function DealsPage() {
       </Select>
       {assigneeOptions.length > 0 && (
         <Select value={assigneeFilter ?? "all"} onValueChange={handleAssigneeFilterChange}>
-          <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[140px] text-xs")}>
+          <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[140px]")}>
             <SelectValue placeholder="All assignees" />
           </SelectTrigger>
           <SelectContent>

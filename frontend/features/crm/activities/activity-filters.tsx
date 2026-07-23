@@ -101,7 +101,7 @@ export function ActivityFilters({
         </div>
 
       <Select value={typeFilter || "all"} onValueChange={handleTypeChange}>
-        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[120px] text-xs")}>
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[120px]")}>
           <SelectValue placeholder="All Types" />
         </SelectTrigger>
         <SelectContent>
@@ -115,7 +115,7 @@ export function ActivityFilters({
       </Select>
 
       <Select value={entityTypeFilter || "all"} onValueChange={handleEntityTypeChange}>
-        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[120px] text-xs")}>
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[120px]")}>
           <SelectValue placeholder="All Entities" />
         </SelectTrigger>
         <SelectContent>
@@ -129,7 +129,7 @@ export function ActivityFilters({
       </Select>
 
       <Select value={statusFilter || "all"} onValueChange={handleStatusChange}>
-        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[120px] text-xs")}>
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[120px]")}>
           <SelectValue placeholder="All Status" />
         </SelectTrigger>
         <SelectContent>

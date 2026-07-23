@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { usePermissions } from "@/lib/rbac/hooks";
+import { useAccess } from "@/hooks/api/access";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
 import {
   getNavGroupsForProduct,
@@ -19,20 +20,15 @@ export function useProductSidebarVisibility(): {
   activeProduct: ProductKey;
   isLoading: boolean;
 } {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const pathname = usePathname();
   const { permissions } = usePermissions();
+  const { data: access } = useAccess();
   const enabledModules = useEnabledModules();
 
-  const role = session?.user?.role;
   const isOrgOwner =
-    session?.user?.isOrgOwner === true ||
-    session?.user?.isPlatformAdmin === true;
-
-  const [lastKnownRole, setLastKnownRole] = useState<string | undefined>(role);
-  if (role && role !== lastKnownRole) { setLastKnownRole(role); }
-  const rawRole = role || lastKnownRole;
-  const effectiveRole = isOrgOwner ? "OWNER" : rawRole;
+    access?.isOrgOwner === true || access?.isPlatformAdmin === true;
+  const effectiveRole = isOrgOwner ? "OWNER" : "MEMBER";
 
   const activeProduct = getProductFromPathname(pathname);
 

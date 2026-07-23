@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { ShieldCheck, ShieldOff, UserX, KeyRound, Trash2 } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { useCan } from "@/hooks/api/access";
 
 interface UserActionsMenuProps {
   user: User;
@@ -30,6 +31,8 @@ export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
   const { mutate: deleteUser, isPending: isDeleting } = useDeleteUser();
   const { mutate: resetPassword, isPending: isResettingPassword } =
     useSendSigninLink();
+  const canManage = useCan("hr:employees:manage");
+  const canDelete = useCan("hr:employees:delete");
 
   function handleActivate() {
     updateStatus(
@@ -94,32 +97,38 @@ export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuItem onClick={onView}>View details</DropdownMenuItem>
-        <DropdownMenuSeparator />
-        {!user.isActive && (
+        {canManage && <DropdownMenuSeparator />}
+        {canManage && !user.isActive && (
           <DropdownMenuItem onClick={handleActivate}>
             <ShieldCheck className="h-3.5 w-3.5 mr-2 text-green-600" />
             Activate
           </DropdownMenuItem>
         )}
-        {user.isActive && (
+        {canManage && user.isActive && (
           <DropdownMenuItem onClick={handleSuspend}>
             <ShieldOff className="h-3.5 w-3.5 mr-2 text-yellow-600" />
             Suspend
           </DropdownMenuItem>
         )}
-        <DropdownMenuItem onClick={handleArchive}>
-          <UserX className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-          Archive
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleResetPassword}>
-          <KeyRound className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-          Reset password
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem variant="destructive" onClick={handleDelete}>
-          <Trash2 className="h-3.5 w-3.5 mr-2" />
-          Delete user
-        </DropdownMenuItem>
+        {canManage && (
+          <DropdownMenuItem onClick={handleArchive}>
+            <UserX className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+            Archive
+          </DropdownMenuItem>
+        )}
+        {canManage && (
+          <DropdownMenuItem onClick={handleResetPassword}>
+            <KeyRound className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+            Reset password
+          </DropdownMenuItem>
+        )}
+        {canDelete && <DropdownMenuSeparator />}
+        {canDelete && (
+          <DropdownMenuItem variant="destructive" onClick={handleDelete}>
+            <Trash2 className="h-3.5 w-3.5 mr-2" />
+            Delete user
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

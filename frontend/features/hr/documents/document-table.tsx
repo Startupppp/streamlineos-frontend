@@ -34,6 +34,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { viewFile, downloadFile } from "@/hooks/common/use-file-url";
 import type { Document } from "@/types/hr";
+import { useCan } from "@/hooks/api/access";
 
 const DOCUMENT_TYPES = [
   { value: "CONTRACT", label: "Contract" },
@@ -184,6 +185,7 @@ export function DocumentTable({
   onOpenUpload,
   onSendForSignature,
 }: DocumentTableProps) {
+  const canManageDocs = useCan("hr:documents:manage");
   const [isZipping, setIsZipping] = useState(false);
 
   const filesWithUrl = allFilteredDocuments.filter((d) => !!d.fileUrl);
@@ -429,14 +431,16 @@ export function DocumentTable({
                       History ({doc.version})
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={handleDelete}
-                    className="text-rose-600 focus:text-rose-600 focus:bg-rose-50 dark:focus:bg-rose-950/40"
-                  >
-                    <Trash2 className="mr-2 h-3.5 w-3.5" />
-                    Delete
-                  </DropdownMenuItem>
+                  {canManageDocs && <DropdownMenuSeparator />}
+                  {canManageDocs && (
+                    <DropdownMenuItem
+                      onClick={handleDelete}
+                      className="text-rose-600 focus:text-rose-600 focus:bg-rose-50 dark:focus:bg-rose-950/40"
+                    >
+                      <Trash2 className="mr-2 h-3.5 w-3.5" />
+                      Delete
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -444,7 +448,7 @@ export function DocumentTable({
         },
       },
     ],
-    [onDelete, onEdit, onSendForSignature],
+    [onDelete, onEdit, onSendForSignature, canManageDocs],
   );
 
   const emptyState = (

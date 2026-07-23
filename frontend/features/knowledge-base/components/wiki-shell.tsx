@@ -33,7 +33,6 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
   const { data: treeNodes = [], isLoading: treeLoading } = useKbPagesTree();
   const { data: favorites = [] } = useKbPagesFavorites();
   const createPage = useCreateKbPage();
-  const canCreate = useCan("kb:pages:create");
   const canViewAnalytics = useCan("kb:analytics:view");
   const canViewReviews = useCan("kb:reviews:view");
   const canManageSettings = useCan("kb:settings:manage");
@@ -61,13 +60,12 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (createParamConsumedRef.current) return;
     if (searchParams.get("create") !== "1") return;
-    if (!canCreate) return;
     createParamConsumedRef.current = true;
     const next = new URLSearchParams(searchParams.toString());
     next.delete("create");
     router.replace(`${KNOWLEDGE_BASE}${next.size > 0 ? `?${next.toString()}` : ""}`);
     handleNewPage();
-  }, [searchParams, router, canCreate, handleNewPage]);
+  }, [searchParams, router, handleNewPage]);
 
   const handleOpenQuickFind = useCallback(() => {
     setQuickFindOpen(true);
@@ -159,17 +157,15 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between px-3 py-2 shrink-0">
         <span className="text-sm font-semibold text-foreground">Wiki</span>
-        {canCreate && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6"
-            onClick={handleNewPage}
-            disabled={createPage.isPending}
-          >
-            <KbPlusIcon className="h-4 w-4" />
-          </Button>
-        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6"
+          onClick={handleNewPage}
+          disabled={createPage.isPending}
+        >
+          <KbPlusIcon className="h-4 w-4" />
+        </Button>
       </div>
       {sidebarInner(true)}
     </div>
@@ -200,18 +196,16 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
                   >
                     <KbPanelLeftOpenIcon className="size-4" />
                   </Button>
-                  {canCreate && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="size-7"
-                      onClick={handleNewPage}
-                      disabled={createPage.isPending}
-                      aria-label="New page"
-                    >
-                      <KbPlusIcon className="size-4" />
-                    </Button>
-                  )}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-7"
+                    onClick={handleNewPage}
+                    disabled={createPage.isPending}
+                    aria-label="New page"
+                  >
+                    <KbPlusIcon className="size-4" />
+                  </Button>
                 </>
               ) : (
                 <>
@@ -231,18 +225,16 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
                     >
                       <KbPanelLeftCloseIcon className="size-4" />
                     </Button>
-                    {canCreate && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-6"
-                        onClick={handleNewPage}
-                        disabled={createPage.isPending}
-                        aria-label="New page"
-                      >
-                        <KbPlusIcon className="size-4" />
-                      </Button>
-                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-6"
+                      onClick={handleNewPage}
+                      disabled={createPage.isPending}
+                      aria-label="New page"
+                    >
+                      <KbPlusIcon className="size-4" />
+                    </Button>
                   </div>
                 </>
               )}

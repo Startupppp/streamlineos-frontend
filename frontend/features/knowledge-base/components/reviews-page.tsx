@@ -385,7 +385,7 @@ export default function ReviewsPage() {
   const filters = (
     <>
       <Select value={statusFilter} onValueChange={handleStatusChange}>
-        <SelectTrigger className="text-xs w-[130px]">
+        <SelectTrigger className="w-[130px]">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent>
@@ -396,7 +396,7 @@ export default function ReviewsPage() {
         </SelectContent>
       </Select>
       <Select value={typeFilter} onValueChange={handleTypeChange}>
-        <SelectTrigger className="text-xs w-[130px]">
+        <SelectTrigger className="w-[130px]">
           <SelectValue placeholder="Type" />
         </SelectTrigger>
         <SelectContent>

@@ -163,7 +163,7 @@ function ComposeBar({
         <div className="flex-1 space-y-1">
           <Label className="text-xs text-muted-foreground">Channel</Label>
           <Select value={channel} onValueChange={handleChannelChange}>
-            <SelectTrigger className="text-xs">
+            <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { AccessDenied } from "./access-denied";
-import { Skeleton } from "@/components/ui/skeleton";
+import { AppLoadingScreen } from "@/components/ui/app-loading-screen";
 import { useAccess } from "@/hooks/api/access";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 
@@ -18,24 +18,15 @@ export function DashboardGate({
   children,
 }: DashboardGateProps) {
   const { data: session, status } = useSession();
-  const { data: access } = useAccess();
+  const { data: access, isLoading: accessLoading } = useAccess();
 
-  if (status === "loading") {
-    return (
-      <div className="p-6 space-y-4">
-        <Skeleton className="h-8 w-48" />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Skeleton className="h-32" />
-          <Skeleton className="h-32" />
-          <Skeleton className="h-32" />
-        </div>
-        <Skeleton className="h-64" />
-      </div>
-    );
+  if (status === "loading" || accessLoading) {
+    return <AppLoadingScreen />;
   }
 
   const userRole = session?.user?.role;
-  const isPlatformAdmin = session?.user?.isPlatformAdmin ?? false;
+  const isPlatformAdmin =
+    access?.isPlatformAdmin ?? session?.user?.isPlatformAdmin ?? false;
   const isOrgOwner = access?.isOrgOwner ?? session?.user?.isOrgOwner ?? false;
 
   if (!userRole && !isPlatformAdmin) {

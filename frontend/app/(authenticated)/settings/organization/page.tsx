@@ -262,7 +262,7 @@ export default function OrganizationSettingsPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Organization" subtitle="Manage your organization details and settings">
+      <PageWrapper title="Workspace" subtitle="Manage your workspace profile, branding, and lifecycle settings">
         <Card>
           <CardHeader>
             <Skeleton className="h-8 w-48 mb-2" />
@@ -279,7 +279,7 @@ export default function OrganizationSettingsPage() {
 
   if (!org) {
     return (
-      <PageWrapper title="Organization" subtitle="Manage your organization details and settings">
+      <PageWrapper title="Workspace" subtitle="Manage your workspace profile, branding, and lifecycle settings">
         <Card>
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
@@ -301,7 +301,7 @@ export default function OrganizationSettingsPage() {
   }
 
   return (
-    <PageWrapper title="Organization" subtitle="Manage your organization details and settings">
+    <PageWrapper title="Workspace" subtitle="Manage your workspace profile, branding, and lifecycle settings">
       <div className="space-y-4">
         <OrgProfileSection org={org} canEdit={canEdit} />
 

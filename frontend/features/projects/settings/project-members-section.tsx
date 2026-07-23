@@ -41,7 +41,7 @@ import {
 } from "lucide-react";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { useHrEmployees } from "@/hooks/api/hr";
+import { useProjectWorkspaceMembers } from "@/hooks/api/projects/workspace-members";
 import { DeleteProjectDialog } from "@/features/projects/sidebar/delete-project-dialog";
 import type { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
@@ -137,7 +137,7 @@ export function MembersSelector({
   originalMemberIds,
   onMemberRemoved,
 }: MembersSelectorProps) {
-  const { data: employeesData } = useHrEmployees();
+  const { data: employeesData } = useProjectWorkspaceMembers({ limit: 200 });
   const employees = useMemo(
     () =>
       Array.isArray(employeesData)
@@ -242,7 +242,7 @@ export function ReassignDialog({
   onConfirm,
   onCancel,
 }: ReassignDialogProps) {
-  const { data: employeesData } = useHrEmployees();
+  const { data: employeesData } = useProjectWorkspaceMembers({ limit: 200 });
   const employees = useMemo(
     () =>
       Array.isArray(employeesData)

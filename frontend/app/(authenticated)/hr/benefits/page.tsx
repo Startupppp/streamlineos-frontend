@@ -411,16 +411,16 @@ export default function BenefitsPage() {
  variant="display">
       <Tabs defaultValue="my-benefits" className="flex min-h-0 flex-1 flex-col gap-4">
         <TabsList className="shrink-0">
-          <TabsTrigger value="my-benefits" className="gap-1.5 text-xs">
+          <TabsTrigger value="my-benefits" className="gap-1.5">
             <Shield className="h-3.5 w-3.5" />
             My Benefits
           </TabsTrigger>
-          <TabsTrigger value="claims" className="gap-1.5 text-xs">
+          <TabsTrigger value="claims" className="gap-1.5">
             <FileText className="h-3.5 w-3.5" />
             Claims
           </TabsTrigger>
           {canManage && (
-            <TabsTrigger value="plans" className="gap-1.5 text-xs">
+            <TabsTrigger value="plans" className="gap-1.5">
               <LayoutGrid className="h-3.5 w-3.5" />
               Plans Admin
             </TabsTrigger>

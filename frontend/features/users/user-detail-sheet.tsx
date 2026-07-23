@@ -22,6 +22,7 @@ import { UserDevicesTab } from "./user-devices-tab";
 import { UserPreferencesTab } from "./user-preferences-tab";
 import { UserLoginHistoryTab } from "./user-login-history-tab";
 import { UserMembershipSection } from "./user-membership-section";
+import { UserModuleAccessSection } from "./user-module-access-section";
 import { UserAuditTab } from "./user-audit-tab";
 import {
   Mail,
@@ -126,7 +127,7 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
                       <TabsTrigger
                         key={value}
                         value={value}
-                        className="h-7 min-w-0 flex-1 shrink px-1 truncate text-sm font-medium data-[state=active]:font-semibold"
+                        className="h-7 min-w-0 flex-1 shrink px-1 truncate text-sm font-medium"
                       >
                         {label}
                       </TabsTrigger>
@@ -269,6 +270,9 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
 
                       <Separator />
                       <UserMembershipSection userId={user.id} />
+
+                      <Separator />
+                      <UserModuleAccessSection userId={user.id} />
                     </div>
                   </TabsContent>
 

@@ -195,7 +195,7 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
           <div className="space-y-1">
             <Label className="text-[11px] text-muted-foreground">Type</Label>
             <Select value={fuType} onValueChange={handleFuTypeChange}>
-              <SelectTrigger className="text-xs">
+              <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

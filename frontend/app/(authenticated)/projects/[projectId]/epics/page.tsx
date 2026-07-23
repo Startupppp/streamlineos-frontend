@@ -11,7 +11,7 @@ import {
 import { CreateEpicDialog } from "@/features/projects/epics/create-epic-dialog";
 import { EpicCard } from "@/features/projects/epics/epic-card";
 import { EpicStoryRow } from "@/features/projects/epics/epic-story-row";
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
@@ -98,11 +98,7 @@ export default function EpicsPage({ params }: PageProps) {
       <PageWrapper title="Epics">
         <PmPageShell>
           <div className="space-y-4">
-            <div className="mb-1 grid grid-cols-2 gap-2.5 md:grid-cols-4">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-16 rounded-xl" />
-              ))}
-            </div>
+            <StatCardGridSkeleton cols={4} className="mb-1" />
             <div className="space-y-2.5">
               {Array.from({ length: 3 }).map((_, i) => (
                 <Skeleton key={i} className="h-24 rounded-xl" />

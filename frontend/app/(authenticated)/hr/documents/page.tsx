@@ -542,15 +542,15 @@ function DocumentsExtendedSection() {
       <CardContent className="p-4">
         <Tabs defaultValue="letters">
           <TabsList className="mb-4">
-            <TabsTrigger value="letters" className="text-xs gap-1.5">
+            <TabsTrigger value="letters" className="gap-1.5">
               <Mail className="h-3 w-3" />
               Letters
             </TabsTrigger>
-            <TabsTrigger value="expiring" className="text-xs gap-1.5">
+            <TabsTrigger value="expiring" className="gap-1.5">
               <AlertTriangle className="h-3 w-3" />
               Expiring
             </TabsTrigger>
-            <TabsTrigger value="compliance" className="text-xs gap-1.5">
+            <TabsTrigger value="compliance" className="gap-1.5">
               <CalendarCheck className="h-3 w-3" />
               Calendar
             </TabsTrigger>

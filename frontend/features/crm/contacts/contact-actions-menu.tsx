@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
 import type { LeadEnrichmentResult } from "@/lib/ai/schemas";
 import type { Contact } from "@/types/crm";
+import { useCan } from "@/hooks/api/access";
 
 export function useEnrichContact() {
   return useMutation({
@@ -61,6 +62,7 @@ export function ContactActionsMenu({
   triggerClassName,
 }: ContactActionsMenuProps) {
   const router = useRouter();
+  const canManageContacts = useCan("crm:contacts:manage");
 
   const handleView = useCallback(() => {
     router.push(`/crm/contacts/${contact.id}`);
@@ -113,11 +115,13 @@ export function ContactActionsMenu({
             Merge
           </DropdownMenuItem>
         )}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem variant="destructive" onClick={handleDelete}>
-          <Trash2 className="h-3.5 w-3.5 mr-2" />
-          Delete
-        </DropdownMenuItem>
+        {canManageContacts && <DropdownMenuSeparator />}
+        {canManageContacts && (
+          <DropdownMenuItem variant="destructive" onClick={handleDelete}>
+            <Trash2 className="h-3.5 w-3.5 mr-2" />
+            Delete
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

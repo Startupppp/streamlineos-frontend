@@ -469,6 +469,23 @@ When "all" is selected, the query param is removed from the URL (not set to "all
 - Active filter count badge: if > 2 filters are active simultaneously, show a count badge on the
   filter bar's trigger (relevant for mobile sheet-based filters).
 
+### Lone filter / lone action + mobile overlays (2026-07-23)
+
+- **Single filter fills width on mobile.** When the filter bar has ONE control (typically a
+  search), it fills the full available width on mobile — never collapse a sole search behind a
+  dropdown/Drawer trigger. `PageWrapper` already gives its first `filters` child `flex-1` on
+  mobile (`flex-none` on `sm+`), so put the search first and don't wrap it.
+- **Single primary action fills width on mobile.** When a page has ONE primary action, pass it
+  directly as `PageWrapper`'s `actions` — the wrapper makes a lone action full-width on mobile
+  (`[&>*]:w-full sm:[&>*]:w-auto`). Never wrap it in a grid/flex that defeats this.
+- **Multi-filter bars:** search stays first (fills width on mobile); the remaining filters
+  collapse on mobile into a **Drawer** via `ResponsivePopover`, not a Popover/Sheet.
+- **Mobile overlays are Drawers.** On mobile (`< md`) any filter/display/menu panel that would
+  open as a Popover or Sheet uses a Drawer instead — `ResponsivePopover`
+  (`components/ui/responsive-popover.tsx`) renders a Drawer `< md` and a Popover on desktop.
+  Never a raw `Popover`/`Sheet` for a mobile filter/menu collapse. Desktop/tablet are unchanged;
+  tiny 1–3 item menus and date pickers are exempt.
+
 ---
 
 ## Reference layout recipe (virabha)
@@ -670,7 +687,7 @@ import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 - `href?` — wraps the card in a `<Link>` with `hover:bg-muted/30` for navigable stat tiles.
 - `isLoading?` — shows a matching `<Skeleton>` in place of the value.
 
-**`StatCardGrid` wrapper:** `cols` = `2 | 3 | 4 | 5 | 6` (default 4; used by skeletons / empty fallback). Gap is `gap-3`. Layout is always **one horizontal row** of equal-width cards — `gridTemplateColumns: repeat(N, minmax(10rem, 1fr))` where `N` is the child count (fallback `cols`), plus `[&>*]:min-w-0 [&>*]:h-full`. Never multi-row responsive breakpoints (`grid-cols-1` / `sm:grid-cols-2` / `xl:grid-cols-*`). On mobile the row is horizontally scrollable (`overflow-x-auto scrollbar-hide touch-pan-x`) so cards keep a readable min width; on `md+` they share width equally with no overflow. Never wrap to a second row.
+**`StatCardGrid` wrapper:** `cols` = `2 | 3 | 4 | 5 | 6` (default 4; used by skeletons / empty fallback). Gap is `gap-3`. Layout is always **one horizontal row** of equal-width cards — `gridTemplateColumns: repeat(N, minmax(10rem, 1fr))` where `N` is the child count (fallback `cols`), plus `[&>*]:min-w-0 [&>*]:h-full`. Never multi-row responsive breakpoints (`grid-cols-1` / `sm:grid-cols-2` / `xl:grid-cols-*`). It is a **horizontal-scroll container at every breakpoint** (`overflow-x-auto scrollbar-hide touch-pan-x`, snap on mobile only via `md:snap-none`): the ROW scrolls when the cards don't fit, so the PAGE never scrolls horizontally. **Never `md:overflow-x-visible`** (it lets the row push page-level horizontal scroll on tablet). Never wrap to a second row. Callers MUST use `StatCardGrid` — never a bespoke `grid grid-cols-*` wrapper around stat cards (convert any such grid).
 
 **Delta vs hint:** use `delta` for percentage changes vs. prior period; use `hint` for static context. Never show both.
 

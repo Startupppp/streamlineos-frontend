@@ -302,3 +302,34 @@ export const useTransferOwnership = () => {
     },
   });
 };
+
+export const useLeaveOrg = () => {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: boolean; nextOrgId?: string }, Error, void>({
+    mutationKey: ["organization", "leave"],
+    mutationFn: () =>
+      apiClient.post<{ success: boolean; nextOrgId?: string }>(
+        "/organization/leave",
+        {},
+      ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.organization.all,
+      });
+    },
+  });
+};
+
+export const useDeleteOrg = () => {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: boolean }, Error, { confirmation: string }>({
+    mutationKey: ["organization", "delete"],
+    mutationFn: (data) =>
+      apiClient.delete<{ success: boolean }>("/organization", { data }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.organization.all,
+      });
+    },
+  });
+};

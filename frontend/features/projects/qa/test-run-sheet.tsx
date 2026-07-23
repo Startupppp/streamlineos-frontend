@@ -165,8 +165,8 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
                   <FormLabel className="text-[11px]">Test Selection</FormLabel>
                   <Tabs value={mode} onValueChange={handleModeChange}>
                     <TabsList>
-                      <TabsTrigger value="suite" className="text-[10px]">By Suite</TabsTrigger>
-                      <TabsTrigger value="cases" className="text-[10px]">By Cases</TabsTrigger>
+                      <TabsTrigger value="suite">By Suite</TabsTrigger>
+                      <TabsTrigger value="cases">By Cases</TabsTrigger>
                     </TabsList>
                     <TabsContent value="suite" className="mt-2">
                       <FormField

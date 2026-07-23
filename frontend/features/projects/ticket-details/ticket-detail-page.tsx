@@ -28,6 +28,7 @@ import { useTicketDetail } from "./use-ticket-detail";
 import { resolveTicketId } from "./resolve-ticket-id";
 import { TicketAiMenu } from "@/features/projects/ai/ticket-ai-menu";
 import { useIsMobile } from "@/hooks/common/use-mobile";
+import { useCan } from "@/hooks/api/access";
 
 
 interface TicketDetailPageProps {
@@ -70,6 +71,7 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
     return localStorage.getItem(RIGHT_PANEL_COLLAPSED_KEY) === "true";
   });
   const [overflowDeleteOpen, setOverflowDeleteOpen] = useState(false);
+  const canDeleteTicket = useCan("projects:tickets:delete");
 
   const parsed = useMemo(() => parseTicketKey(ticketKey), [ticketKey]);
   const { data: projectData, isLoading: projectLoading } = useProject(projectId);
@@ -259,15 +261,19 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
                     <ShareIcon size={14} />
                     Share
                   </DropdownMenuItem>
-                  <TicketDetailDeleteMenuItem onRequestDelete={handleOpenOverflowDelete} />
+                  {canDeleteTicket && (
+                    <TicketDetailDeleteMenuItem onRequestDelete={handleOpenOverflowDelete} />
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
-              <TicketDetailDeleteDialog
-                open={overflowDeleteOpen}
-                onOpenChange={setOverflowDeleteOpen}
-                onDelete={handleDelete}
-                isDeleting={isDeleting}
-              />
+              {canDeleteTicket && (
+                <TicketDetailDeleteDialog
+                  open={overflowDeleteOpen}
+                  onOpenChange={setOverflowDeleteOpen}
+                  onDelete={handleDelete}
+                  isDeleting={isDeleting}
+                />
+              )}
             </>
           ) : (
             <>
@@ -286,10 +292,12 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
                 onClick={handleShare}
                 aria-label="Copy share link"
               />
-              <TicketDetailActions
-                onDelete={handleDelete}
-                isDeleting={isDeleting}
-              />
+              {canDeleteTicket && (
+                <TicketDetailActions
+                  onDelete={handleDelete}
+                  isDeleting={isDeleting}
+                />
+              )}
             </>
           )}
         </div>

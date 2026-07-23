@@ -1,17 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { ChevronDownIcon, ChevronUpIcon } from "@animateicons/react/lucide";
 import { motion } from "framer-motion";
 import { PageWrapper, PageSection } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { StatCardGrid, StatCard } from "@/components/ui/stat-card";
 import { ErrorState } from "@/components/shared";
 import { InventoryDetailPageLoading } from "@/features/inventory/components/inventory-detail-page-loading";
 import { fadeUp } from "@/lib/motion-variants";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { TruncatedText } from "@/components/ui/truncated-text";
 import { useSerial, useTraceability } from "@/hooks/api/inventory/traceability";
 import { SERIAL_STATUS_LABEL } from "@/features/inventory/lib";
 import { MovementHistoryTable } from "./movement-history-table";
@@ -76,57 +75,20 @@ export function SerialDetailClient({ serialId }: SerialDetailClientProps) {
       badge={SERIAL_STATUS_LABEL[serial.status]}
     >
       <motion.div variants={fadeUp} initial="hidden" animate="visible" className="space-y-6">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <Card>
-            <CardHeader className="pb-1 pt-3 px-3">
-              <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                Product
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-3 pb-3">
-              <TruncatedText text={serial.productName} className="text-sm font-semibold text-foreground" />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-1 pt-3 px-3">
-              <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                SKU
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-3 pb-3">
-              <p className="text-sm font-semibold text-foreground font-mono break-all">{serial.variantSku}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-1 pt-3 px-3">
-              <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                Location
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-3 pb-3">
-              <TruncatedText text={serial.locationName ?? "—"} className="text-sm font-semibold text-foreground" />
-              {serial.warehouseName && (
-                <TruncatedText text={serial.warehouseName} className="text-[11px] text-muted-foreground mt-0.5" />
-              )}
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-1 pt-3 px-3">
-              <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                Lot #
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-3 pb-3">
-              {serial.lotId && serial.lotNumber ? (
-                <Button variant="link" className="h-auto p-0 text-sm font-semibold font-mono" asChild>
-                  <Link href={`/inventory/lots/${serial.lotId}`}>{serial.lotNumber}</Link>
-                </Button>
-              ) : (
-                <p className="text-sm text-muted-foreground">—</p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+        <StatCardGrid>
+          <StatCard label="Product" value={serial.productName} />
+          <StatCard label="SKU" value={serial.variantSku} />
+          <StatCard
+            label="Location"
+            value={serial.locationName ?? "—"}
+            subtitle={serial.warehouseName ?? undefined}
+          />
+          <StatCard
+            label="Lot #"
+            value={serial.lotNumber ?? "—"}
+            href={serial.lotId ? `/inventory/lots/${serial.lotId}` : undefined}
+          />
+        </StatCardGrid>
 
         <PageSection title="Movement History">
           <MovementHistoryTable movements={serial.movements} />

@@ -54,9 +54,10 @@ async function fetchPageLinks(query: string) {
 
 interface PageDocumentProps {
   pageId: number;
+  onNavigateToPage?: (targetPageId: number) => void;
 }
 
-export default function PageDocument({ pageId }: PageDocumentProps) {
+export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentProps) {
   const router = useRouter();
   const { data: page, isLoading, isError, error, refetch } = useKbPage(pageId);
   const updatePage = useUpdateKbPage();
@@ -98,9 +99,13 @@ export default function PageDocument({ pageId }: PageDocumentProps) {
 
   const handleNavigateToPage = useCallback(
     (targetPageId: number) => {
-      router.push(pageHref(targetPageId));
+      if (onNavigateToPage) {
+        onNavigateToPage(targetPageId);
+      } else {
+        router.push(pageHref(targetPageId));
+      }
     },
-    [router]
+    [router, onNavigateToPage]
   );
 
   const handleUploadFile = useCallback(

@@ -138,7 +138,7 @@ function EmailDraftTab({
         className="min-h-[72px] text-sm resize-none"
       />
       <Select value={tone} onValueChange={handleToneChange}>
-        <SelectTrigger className="text-xs">
+        <SelectTrigger>
           <SelectValue placeholder="Tone" />
         </SelectTrigger>
         <SelectContent>

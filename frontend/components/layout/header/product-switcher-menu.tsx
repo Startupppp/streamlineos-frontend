@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
@@ -25,10 +25,12 @@ import {
 } from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
-import { useCan } from "@/hooks/api/access";
+import { useAccess, useCan } from "@/hooks/api/access";
+import { usePermissions } from "@/lib/rbac/hooks";
 import {
   PRODUCT_DEFINITIONS,
   PRODUCT_DESCRIPTIONS,
+  getNavGroupsForProduct,
   getProductFromPathname,
   isModuleEnabled,
   MODULE_ACCENTS,
@@ -63,6 +65,8 @@ interface ProductGridProps {
   activeProduct: ProductKey;
   enabledModules: string[];
   canManageModules: boolean;
+  permissions: string[];
+  effectiveRole: string;
   onClose: () => void;
   shouldReduceMotion: boolean | null;
 }
@@ -196,16 +200,33 @@ function ProductGrid({
   activeProduct,
   enabledModules,
   canManageModules,
+  permissions,
+  effectiveRole,
   onClose,
   shouldReduceMotion,
 }: ProductGridProps) {
+  const visibleProducts = useMemo(
+    () =>
+      PRODUCT_DEFINITIONS.filter((product) => {
+        const groups = getNavGroupsForProduct(
+          product.key,
+          effectiveRole,
+          permissions,
+          enabledModules,
+        );
+        const hasAccess = groups.some((group) => group.routes.length > 0);
+        return hasAccess || canManageModules;
+      }),
+    [effectiveRole, permissions, enabledModules, canManageModules],
+  );
+
   return (
     <>
       <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-1.5 px-1">
         Products
       </p>
       <div className="grid grid-cols-2 gap-1">
-        {PRODUCT_DEFINITIONS.map((product, index) => {
+        {visibleProducts.map((product, index) => {
           const enabled = isModuleEnabled(product.key, enabledModules);
           const isActive = activeProduct === product.key && enabled;
           return (
@@ -260,6 +281,12 @@ export function ProductSwitcherMenu({
   const activeProduct = getProductFromPathname(pathname);
   const enabledModules = useEnabledModules();
   const canManageModules = useCan("settings:manage");
+  const { permissions } = usePermissions();
+  const { data: access } = useAccess();
+  const effectiveRole =
+    access?.isOrgOwner === true || access?.isPlatformAdmin === true
+      ? "OWNER"
+      : "MEMBER";
 
   const handleOpenChange = useCallback(
     (next: boolean) => {
@@ -396,6 +423,8 @@ export function ProductSwitcherMenu({
             activeProduct={activeProduct}
             enabledModules={enabledModules}
             canManageModules={canManageModules}
+            permissions={permissions}
+            effectiveRole={effectiveRole}
             onClose={handleClose}
             shouldReduceMotion={shouldReduceMotion}
           />
@@ -449,6 +478,8 @@ export function ProductSwitcherMenu({
                 activeProduct={activeProduct}
                 enabledModules={enabledModules}
                 canManageModules={canManageModules}
+                permissions={permissions}
+                effectiveRole={effectiveRole}
                 onClose={handleClose}
                 shouldReduceMotion={shouldReduceMotion}
               />

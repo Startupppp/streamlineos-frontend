@@ -19,14 +19,14 @@ export function ProviderDetail({ provider, environment }: ProviderDetailProps) {
   return (
     <div className="rounded-xl border border-border bg-card p-4">
       <Tabs defaultValue="credentials">
-        <TabsList className="rounded-lg border p-1 bg-muted/40">
-          <TabsTrigger value="credentials" className="px-3 rounded-md">Credentials</TabsTrigger>
-          <TabsTrigger value="webhooks" className="px-3 rounded-md">Webhooks</TabsTrigger>
-          <TabsTrigger value="test-payment" className="px-3 rounded-md">Test Payment</TabsTrigger>
+        <TabsList>
+          <TabsTrigger value="credentials">Credentials</TabsTrigger>
+          <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
+          <TabsTrigger value="test-payment">Test Payment</TabsTrigger>
           {environment === "live" && (
-            <TabsTrigger value="activate" className="px-3 rounded-md">Live Activation</TabsTrigger>
+            <TabsTrigger value="activate">Live Activation</TabsTrigger>
           )}
-          <TabsTrigger value="audit" className="px-3 rounded-md">Audit</TabsTrigger>
+          <TabsTrigger value="audit">Audit</TabsTrigger>
         </TabsList>
 
         <TabsContent value="credentials" className="mt-4">

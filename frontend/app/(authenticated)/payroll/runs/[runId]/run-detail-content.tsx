@@ -155,10 +155,10 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
 
         <Tabs value={activeTab} onValueChange={handleTabChange}>
           <TabsList>
-            <TabsTrigger value="employees" className="text-xs">
+            <TabsTrigger value="employees">
               Employees
             </TabsTrigger>
-            <TabsTrigger value="exceptions" className="text-xs flex items-center gap-1">
+            <TabsTrigger value="exceptions" className="flex items-center gap-1">
               Exceptions
               {openExceptions > 0 && (
                 <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-red-100 text-red-700 text-[9px] font-bold dark:bg-red-500/10 dark:text-red-300">
@@ -166,10 +166,10 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
                 </span>
               )}
             </TabsTrigger>
-            <TabsTrigger value="inputs" className="text-xs">
+            <TabsTrigger value="inputs">
               Inputs
             </TabsTrigger>
-            <TabsTrigger value="variance" className="text-xs">
+            <TabsTrigger value="variance">
               Variance
             </TabsTrigger>
           </TabsList>

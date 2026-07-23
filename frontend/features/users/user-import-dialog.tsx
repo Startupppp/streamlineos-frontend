@@ -16,7 +16,8 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Upload, FileText, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
+import { Upload, FileText, CheckCircle, XCircle, AlertTriangle, Users, UserCheck, UserMinus } from "lucide-react";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { useMutation } from "@tanstack/react-query";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 
@@ -213,20 +214,11 @@ export function UserImportDialog({ open, onOpenChange }: UserImportDialogProps) 
         ) : (
           <>
             <div className="space-y-3">
-              <div className="grid grid-cols-3 gap-2 text-center">
-                <div className="rounded-md border p-2">
-                  <p className="text-lg font-semibold tabular-nums">{importResult.total}</p>
-                  <p className="text-[11px] text-muted-foreground">Total</p>
-                </div>
-                <div className="rounded-md border border-green-200 dark:border-green-500/30 bg-green-50 dark:bg-green-500/10 p-2">
-                  <p className="text-lg font-semibold tabular-nums text-green-700 dark:text-green-300">{importResult.succeeded}</p>
-                  <p className="text-[11px] text-green-600 dark:text-green-400">Invited</p>
-                </div>
-                <div className="rounded-md border border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 p-2">
-                  <p className="text-lg font-semibold tabular-nums text-red-600 dark:text-red-400">{importResult.failed}</p>
-                  <p className="text-[11px] text-red-500 dark:text-red-400">Failed</p>
-                </div>
-              </div>
+              <StatCardGrid cols={3}>
+                <StatCard label="Total" value={importResult.total} icon={Users} tone="default" />
+                <StatCard label="Invited" value={importResult.succeeded} icon={UserCheck} tone="emerald" />
+                <StatCard label="Failed" value={importResult.failed} icon={UserMinus} tone="red" />
+              </StatCardGrid>
 
               {importResult.results.some((r) => !r.success) && (
                 <div className="border rounded-md overflow-hidden max-h-40 overflow-y-auto">

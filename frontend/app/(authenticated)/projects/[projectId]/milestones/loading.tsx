@@ -1,4 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PmPageShell, PmSection } from "@/features/projects/shared/pm-chrome";
 
@@ -11,11 +12,7 @@ export default function MilestonesLoading() {
     >
       <PmPageShell>
         <PmSection index={0}>
-          <div className="grid grid-cols-2 gap-2.5 md:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-16 rounded-xl" />
-            ))}
-          </div>
+          <StatCardGridSkeleton cols={4} />
         </PmSection>
         <PmSection index={1}>
           <div className="space-y-2.5">

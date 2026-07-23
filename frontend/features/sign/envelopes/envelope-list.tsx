@@ -27,6 +27,7 @@ import type { SignEnvelope } from "@/types/sign";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { useCan } from "@/hooks/api/access";
 
 const STATUS_FILTERS = [
   { value: "all", label: "All" },
@@ -42,6 +43,7 @@ const EDITABLE_STATUSES = new Set(["draft", "ready_to_send"]);
 
 export function EnvelopeList() {
   const router = useRouter();
+  const canCreateEnvelope = useCan("sign:envelope:create");
   const [status, setStatus] = useState<string>("all");
   const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } = useQueryParamOpen("create");
   const [editEnvelope, setEditEnvelope] = useState<SignEnvelope | null>(null);
@@ -178,7 +180,7 @@ export function EnvelopeList() {
                     Edit
                   </DropdownMenuItem>
                 )}
-                {canEdit && (
+                {canEdit && canCreateEnvelope && (
                   <DropdownMenuItem
                     variant="destructive"
                     onClick={makeDeleteHandler(envelope)}

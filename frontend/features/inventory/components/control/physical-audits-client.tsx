@@ -212,7 +212,7 @@ export function PhysicalAuditsClient() {
 
   const filtersRow = (
     <Select value={statusFilter} onValueChange={handleStatusChange}>
-      <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[160px] text-xs")}>
+      <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[160px]")}>
         <SelectValue placeholder="All statuses" />
       </SelectTrigger>
       <SelectContent>

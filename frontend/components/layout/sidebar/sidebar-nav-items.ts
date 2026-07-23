@@ -792,62 +792,74 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: LayoutDashboard,
         href: "/hr/recruitment",
         exact: true,
+        requiredPermission: "hr:employees:view",
       },
       {
         label: "Jobs",
         icon: Briefcase,
         href: "/hr/recruitment/jobs",
+        requiredPermission: "hr:employees:view",
       },
       {
         label: "Candidates",
         icon: Users,
         href: "/hr/recruitment/candidates",
         exact: true,
+        requiredPermission: "hr:employees:view",
       },
       {
         label: "Pipeline",
         icon: KanbanSquare,
         href: "/hr/recruitment/pipeline",
+        requiredPermission: "hr:employees:view",
       },
       {
         label: "Intake Inbox",
         icon: Inbox,
         href: "/hr/recruitment/candidates/intake",
+        requiredPermission: "hr:employees:view",
       },
       {
         label: "Interviews",
         icon: Video,
         href: "/hr/recruitment/interviews",
+        requiredPermission: "hr:interviews:view",
       },
       {
         label: "Offers",
         icon: FileCheck,
         href: "/hr/recruitment/offers",
+        requiredPermission: "hr:offers:view",
       },
       {
         label: "Referrals",
         icon: Share2,
         href: "/hr/recruitment/referrals",
+        requiredPermission: "hr:employees:view",
       },
       {
         label: "Vendors",
         icon: Truck,
         href: "/hr/recruitment/vendors",
+        requiredPermission: "hr:employees:view",
       },
       {
         label: "Talent Pools",
         icon: Layers,
         href: "/hr/recruitment/talent-pools",
+        requiredPermission: "hr:employees:view",
       },
       {
         label: "Analytics",
         icon: BarChart3,
         href: "/hr/recruitment/analytics",
+        requiredPermission: "hr:interviews:view",
       },
       {
         label: "Settings",
         icon: SlidersHorizontal,
         href: "/hr/recruitment/settings",
+        requiredPermission: "hr:employees:manage",
       },
     ],
   },
@@ -2126,6 +2138,18 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    label: "Workspace",
+    requiredPermission: "settings:manage",
+    routes: [
+      {
+        label: "Workspace Settings",
+        icon: Building2,
+        href: "/settings/organization",
+        requiredPermission: "settings:manage",
+      },
+    ],
+  },
+  {
     label: "Organization",
     module: "hrms",
     requiredPermission: ["settings:manage", "settings:view"],
@@ -2183,32 +2207,32 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "People",
-    requiredPermission: ["settings:manage", "settings:view"],
+    requiredPermission: "hr:employees:view",
     routes: [
       {
         label: "Users",
         icon: UserCog,
         href: "/users",
         exact: true,
-        requiredPermission: "settings:view",
+        requiredPermission: "hr:employees:view",
       },
       {
         label: "Invitations",
         icon: MailOpen,
         href: "/users/invitations",
-        requiredPermission: "settings:view",
+        requiredPermission: "hr:employees:view",
       },
       {
         label: "Suspended Users",
         icon: ShieldAlert,
         href: "/users/suspended",
-        requiredPermission: "settings:view",
+        requiredPermission: "hr:employees:view",
       },
       {
         label: "Archived Users",
         icon: UserX,
         href: "/users/archived",
-        requiredPermission: "settings:view",
+        requiredPermission: "hr:employees:view",
       },
     ],
   },
@@ -2293,11 +2317,13 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Trusted Devices",
         icon: Smartphone,
         href: "/settings/devices",
+        requiredPermission: "settings:manage",
       },
       {
         label: "Login History",
         icon: History,
         href: "/settings/login-history",
+        requiredPermission: "settings:manage",
       },
       {
         label: "Audit Logs",
@@ -2591,6 +2617,7 @@ const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
   documents: [],
   surveys: ["Surveys"],
   administration: [
+    "Workspace",
     "Organization",
     "People",
     "Access Control",
@@ -2631,13 +2658,11 @@ export function getNavGroupsForProduct(
         label: "Wiki",
         icon: NotebookPen,
         href: "/knowledge",
-        requiredPermission: "kb:pages:view",
       },
       {
         label: "Knowledge Base",
         icon: Library,
         href: "/knowledge-base",
-        requiredPermission: "kb:pages:view",
       },
     ];
     const visibleRoutes = documentRoutes

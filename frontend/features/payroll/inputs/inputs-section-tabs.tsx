@@ -423,12 +423,12 @@ export function InputsSectionTabs({ periodId, isLocked, onCreateAdjustment }: In
   return (
     <Tabs defaultValue="attendance">
       <div className="flex items-center justify-between mb-3">
-        <TabsList className="text-xs">
-          <TabsTrigger value="attendance" className="text-xs">Attendance</TabsTrigger>
-          <TabsTrigger value="leave" className="text-xs">Leave</TabsTrigger>
-          <TabsTrigger value="overtime" className="text-xs">Overtime</TabsTrigger>
-          <TabsTrigger value="reimbursements" className="text-xs">Reimbursements</TabsTrigger>
-          <TabsTrigger value="adjustments" className="text-xs">Adjustments</TabsTrigger>
+        <TabsList>
+          <TabsTrigger value="attendance">Attendance</TabsTrigger>
+          <TabsTrigger value="leave">Leave</TabsTrigger>
+          <TabsTrigger value="overtime">Overtime</TabsTrigger>
+          <TabsTrigger value="reimbursements">Reimbursements</TabsTrigger>
+          <TabsTrigger value="adjustments">Adjustments</TabsTrigger>
         </TabsList>
         {!isLocked && (
           <AnimatedIconButton icon={PlusIcon} iconClassName="mr-1.5" variant="outline" size="sm" className="text-xs" onClick={onCreateAdjustment}>

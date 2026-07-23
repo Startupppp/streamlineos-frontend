@@ -3,7 +3,7 @@
 import { use, useState, useCallback } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
@@ -96,11 +96,7 @@ export default function MilestonesPage({ params }: { params: Promise<{ projectId
       >
         <PmPageShell>
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-2.5 md:grid-cols-4">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-16 rounded-xl" />
-              ))}
-            </div>
+            <StatCardGridSkeleton cols={4} />
             <div className="space-y-2.5">
               {Array.from({ length: 3 }).map((_, i) => (
                 <Skeleton key={i} className="h-20 rounded-xl" />

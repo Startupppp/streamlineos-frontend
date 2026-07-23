@@ -18,6 +18,7 @@ import { PlusIcon, Trash2Icon, CheckIcon, XIcon } from "@animateicons/react/luci
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
 
 interface EditState {
   id: number;
@@ -33,6 +34,7 @@ interface PendingHoliday {
 }
 
 export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
+  const canManageAttendance = useCan("hr:attendance:manage");
   const today = new Date();
   const currentYear = today.getFullYear();
   const [selectedYear, setSelectedYear] = useState(currentYear);
@@ -321,17 +323,19 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
                         >
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="w-7 text-muted-foreground hover:text-destructive duration-200"
-                          onClick={makeDeleteHandler(h.id)}
-                          disabled={deleteMutation.isPending || updateMutation.isPending}
-                          aria-label={`Remove ${h.name}`}
-                        >
-                          <Trash2Icon size={14} />
-                        </Button>
+                        {canManageAttendance && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="w-7 text-muted-foreground hover:text-destructive duration-200"
+                            onClick={makeDeleteHandler(h.id)}
+                            disabled={deleteMutation.isPending || updateMutation.isPending}
+                            aria-label={`Remove ${h.name}`}
+                          >
+                            <Trash2Icon size={14} />
+                          </Button>
+                        )}
                       </div>
                     </>
                   )}

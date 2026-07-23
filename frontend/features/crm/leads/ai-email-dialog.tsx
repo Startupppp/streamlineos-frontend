@@ -162,7 +162,7 @@ export function AIEmailDialog({
             <div className="space-y-1.5">
               <Label className="text-xs">Tone</Label>
               <Select value={tone} onValueChange={handleToneChange}>
-                <SelectTrigger className="text-xs">
+                <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

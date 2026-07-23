@@ -20,15 +20,21 @@ function isPublicPath(path: string): boolean {
 
 let cachedToken: { value: string; expiresAt: number } | null = null;
 let fetchingTokenPromise: Promise<string | null> | null = null;
+let autoSignOutSuppressed = false;
 
 export function clearBackendTokenCache(): void {
   cachedToken = null;
   fetchingTokenPromise = null;
 }
 
+export function setAutoSignOutSuppressed(value: boolean): void {
+  autoSignOutSuppressed = value;
+}
+
 async function getBackendToken(): Promise<string | null> {
   const now = Date.now();
-  if (cachedToken && cachedToken.expiresAt - 30_000 > now) return cachedToken.value;
+  if (cachedToken && cachedToken.expiresAt - 30_000 > now)
+    return cachedToken.value;
   if (fetchingTokenPromise) return fetchingTokenPromise;
   fetchingTokenPromise = (async () => {
     try {
@@ -55,7 +61,11 @@ function requestHost(url: string): string {
   }
 }
 
-export async function authedFetch(url: string, init: RequestInit, path: string): Promise<Response> {
+export async function authedFetch(
+  url: string,
+  init: RequestInit,
+  path: string,
+): Promise<Response> {
   const headers = new Headers(init.headers);
   const isPublic = isPublicPath(path);
 
@@ -74,7 +84,11 @@ export async function authedFetch(url: string, init: RequestInit, path: string):
         headers.set("Authorization", `Bearer ${token}`);
         res = await fetch(url, { ...init, headers, credentials: "omit" });
       }
-      if (res.status === 401 && typeof window !== "undefined") {
+      if (
+        res.status === 401 &&
+        typeof window !== "undefined" &&
+        !autoSignOutSuppressed
+      ) {
         void import("next-auth/react").then(({ signOut }) => {
           void signOut({ callbackUrl: "/signin" });
         });
@@ -91,11 +105,18 @@ export async function authedFetch(url: string, init: RequestInit, path: string):
       );
     }
     if (error instanceof Error) throw error;
-    throw new ApiError("Network error. Check your connection and try again.", undefined, "NETWORK_ERROR");
+    throw new ApiError(
+      "Network error. Check your connection and try again.",
+      undefined,
+      "NETWORK_ERROR",
+    );
   }
 }
 
-export function buildUrl(path: string, params?: Record<string, unknown>): string {
+export function buildUrl(
+  path: string,
+  params?: Record<string, unknown>,
+): string {
   const url = `${BACKEND_API_URL}${path}`;
   if (!params || Object.keys(params).length === 0) return url;
   const search = new URLSearchParams(
@@ -111,7 +132,12 @@ export class ApiError extends Error {
   readonly code?: string;
   readonly details?: unknown;
 
-  constructor(message: string, status?: number, code?: string, details?: unknown) {
+  constructor(
+    message: string,
+    status?: number,
+    code?: string,
+    details?: unknown,
+  ) {
     super(message);
     this.name = "ApiError";
     this.status = status;
@@ -135,25 +161,36 @@ async function parseResponse<T>(res: Response): Promise<T> {
     let details: unknown;
     try {
       const body = (await res.json()) as Record<string, unknown>;
-      if (typeof body?.message === "string" && body.message) message = body.message;
+      if (typeof body?.message === "string" && body.message)
+        message = body.message;
       else if (Array.isArray(body?.message) && body.message.length > 0) {
-        message = body.message.filter((m): m is string => typeof m === "string").join(", ");
-      } else if (typeof body?.error === "string" && body.error) message = body.error;
+        message = body.message
+          .filter((m): m is string => typeof m === "string")
+          .join(", ");
+      } else if (typeof body?.error === "string" && body.error)
+        message = body.error;
       if (typeof body?.code === "string") code = body.code;
       if ("details" in body) details = body.details;
-    } catch {
-    }
+    } catch {}
     throw new ApiError(message, res.status, code, details);
   }
   if (res.status === 204) return undefined as T;
   const body = (await res.json()) as Record<string, unknown>;
-  if (body !== null && typeof body === "object" && body.success === true && "data" in body) {
+  if (
+    body !== null &&
+    typeof body === "object" &&
+    body.success === true &&
+    "data" in body
+  ) {
     return body.data as T;
   }
   return body as T;
 }
 
-async function get<T>(url: string, params?: Record<string, unknown>): Promise<T> {
+async function get<T>(
+  url: string,
+  params?: Record<string, unknown>,
+): Promise<T> {
   const res = await authedFetch(
     buildUrl(url, params),
     { method: "GET", headers: { "Content-Type": "application/json" } },
@@ -162,12 +199,19 @@ async function get<T>(url: string, params?: Record<string, unknown>): Promise<T>
   return parseResponse<T>(res);
 }
 
-async function post<T>(url: string, data?: unknown, config?: { headers?: Record<string, string> }): Promise<T> {
+async function post<T>(
+  url: string,
+  data?: unknown,
+  config?: { headers?: Record<string, string> },
+): Promise<T> {
   const res = await authedFetch(
     buildUrl(url),
     {
       method: "POST",
-      headers: { "Content-Type": "application/json", ...(config?.headers ?? {}) },
+      headers: {
+        "Content-Type": "application/json",
+        ...(config?.headers ?? {}),
+      },
       body: data !== undefined ? JSON.stringify(data) : undefined,
     },
     url,
@@ -215,25 +259,39 @@ async function del<T>(url: string, data?: unknown): Promise<T> {
 }
 
 async function upload<T>(url: string, formData: FormData): Promise<T> {
-  const res = await authedFetch(buildUrl(url), { method: "POST", body: formData }, url);
+  const res = await authedFetch(
+    buildUrl(url),
+    { method: "POST", body: formData },
+    url,
+  );
   return parseResponse<T>(res);
 }
 
-async function download(url: string, params?: Record<string, unknown>): Promise<Blob> {
+async function download(
+  url: string,
+  params?: Record<string, unknown>,
+): Promise<Blob> {
   const res = await authedFetch(buildUrl(url, params), { method: "GET" }, url);
   if (!res.ok) {
     let message = `${res.status} ${res.statusText}`;
     try {
       const body = await res.json();
       if (typeof body?.error === "string") message = body.error;
-    } catch {
-    }
+    } catch {}
     throw new Error(message);
   }
   return res.blob();
 }
 
-export const apiClient = { get, post, put, patch, delete: del, upload, download } as const;
+export const apiClient = {
+  get,
+  post,
+  put,
+  patch,
+  delete: del,
+  upload,
+  download,
+} as const;
 
 export function getApiError(error: unknown): string {
   return getErrorMessage(error);

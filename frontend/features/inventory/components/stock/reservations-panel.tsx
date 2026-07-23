@@ -194,7 +194,7 @@ export function ReservationsPanel() {
     <>
       <div className={`${FILTER_TOOLBAR_ROW} mb-3`}>
         <Select value={statusFilter} onValueChange={handleStatusChange}>
-          <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "text-xs w-[160px]")}>
+          <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[160px]")}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

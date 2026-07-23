@@ -4,6 +4,10 @@ export function pageHref(id: number): string {
   return `${KNOWLEDGE_BASE}/pages/${id}`;
 }
 
+export function projectPageHref(projectId: number, pageId: number): string {
+  return `/projects/${projectId}/wiki/${pageId}`;
+}
+
 export function pageHistoryHref(id: number): string {
   return `${KNOWLEDGE_BASE}/pages/${id}/history`;
 }

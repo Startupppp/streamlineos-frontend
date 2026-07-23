@@ -14,6 +14,10 @@ import { TrialBanner } from "@/components/billing/trial-banner";
 import { ProductSwitcherMenu } from "./header/product-switcher-menu";
 import { WorkspaceSwitcher } from "./header/workspace-switcher";
 import { useProductSidebarVisibility } from "./sidebar/use-product-sidebar-visibility";
+import { useAccess } from "@/hooks/api/access";
+import { AppLoadingScreen } from "@/components/ui/app-loading-screen";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { AskOsProvider } from "@/components/assistant/ask-os-provider";
 import { CommandPaletteProvider } from "@/features/command-palette";
 import { ChatMobileBottomNav } from "@/features/chat/chat-mobile-bottom-nav";
@@ -80,8 +84,18 @@ export function DashboardShell({
   const [productSwitcherOpen, setProductSwitcherOpen] = useState(false);
   const [workspaceSwitcherOpen, setWorkspaceSwitcherOpen] = useState(false);
   const { hideSidebar, navGroups } = useProductSidebarVisibility();
+  const {
+    isLoading: accessLoading,
+    isError: accessError,
+    error: accessErr,
+    refetch: refetchAccess,
+  } = useAccess();
   usePushSubscription(userId);
   const rafIdRef = useRef<number | null>(null);
+
+  const handleRetryAccess = useCallback(() => {
+    void refetchAccess();
+  }, [refetchAccess]);
 
   useEffect(() => {
     return () => {
@@ -160,6 +174,23 @@ export function DashboardShell({
   );
   const showChatBottomNav = isChatRoute && !isChatConversationOpen;
   const showAboveBottomNav = showModuleBottomNav || showChatBottomNav;
+
+  if (hasDashboardAccess && (accessLoading || accessError)) {
+    return (
+      <div className="flex h-dvh flex-col overflow-hidden">
+        {accessError ? (
+          <ErrorState
+            className="flex-1"
+            title="Couldn't load your workspace"
+            description={getErrorMessage(accessErr)}
+            onRetry={handleRetryAccess}
+          />
+        ) : (
+          <AppLoadingScreen className="flex-1" />
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden overscroll-none">

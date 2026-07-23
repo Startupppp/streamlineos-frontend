@@ -187,7 +187,7 @@ export function SerialsClient() {
             onValueChange={handleSearchChange}
           />
           <Select value={status} onValueChange={handleStatusChange}>
-            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "text-xs w-[140px]")}>
+            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[140px]")}>
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>

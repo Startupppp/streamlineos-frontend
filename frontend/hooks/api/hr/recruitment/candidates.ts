@@ -310,15 +310,6 @@ export function useCreateApplication() {
   });
 }
 
-/** @deprecated Prefer useAtsKanban — pipeline returns { stages }, not a stage map. */
-export function useRecruitmentPipeline() {
-  return useQuery({
-    queryKey: queryKeys.hr.recruitmentPipeline(),
-    queryFn: () => apiClient.get<AtsPipelineResponse>("/hr/recruitment/pipeline"),
-    staleTime: 2 * 60_000,
-  });
-}
-
 export function useAtsKanban() {
   return useQuery({
     queryKey: ATS_KANBAN_KEY,

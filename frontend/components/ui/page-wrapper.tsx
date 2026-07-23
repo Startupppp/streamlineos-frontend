@@ -9,7 +9,7 @@ import { PAGE_CHROME_BOTTOM, PAGE_CHROME_X } from "@/components/ui/content-fill-
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface PageWrapperProps {
-  title: React.ReactNode;
+  title?: React.ReactNode;
   subtitle?: React.ReactNode;
   badge?: React.ReactNode;
   backHref?: string;
@@ -46,77 +46,89 @@ export function PageWrapper({
       ? "font-display text-xl sm:text-2xl lg:text-[1.7rem] font-extrabold tracking-[-0.02em] text-foreground leading-tight"
       : "text-base sm:text-lg font-semibold tracking-tight text-foreground leading-tight";
 
+  const showHeader =
+    title != null ||
+    subtitle != null ||
+    badge != null ||
+    backHref != null ||
+    leading != null ||
+    actions != null;
+
   return (
     <div className={cn("flex flex-col flex-1 min-h-0 min-w-0 overflow-x-hidden", className)}>
-      <div
-        className={cn(
-          "shrink-0",
-          PAGE_CHROME_X,
-          actionsInline ? "pt-3.5 pb-2" : "pt-4 pb-3 sm:pt-6 sm:pb-3",
-        )}
-      >
+      {showHeader ? (
         <div
           className={cn(
-            actionsInline
-              ? "flex flex-row items-center justify-between gap-2 sm:gap-3"
-              : "flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-3",
+            "shrink-0",
+            PAGE_CHROME_X,
+            actionsInline ? "pt-3.5 pb-2" : "pt-4 pb-3 sm:pt-6 sm:pb-3",
           )}
         >
           <div
             className={cn(
-              "min-w-0 flex-1 flex gap-1",
-              actionsInline ? "items-center" : "items-start",
+              actionsInline
+                ? "flex flex-row items-center justify-between gap-2 sm:gap-3"
+                : "flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-3",
             )}
           >
-            {leading}
-            {!leading && backHref && (
-              <Button variant="ghost" size="icon" className="w-8 shrink-0 mt-0.5" aria-label="Back" asChild>
-                <Link href={backHref}>
-                  <ArrowLeft className="h-4 w-4" />
-                </Link>
-              </Button>
-            )}
-            <div className="min-w-0 flex-1">
-              <div className="flex min-w-0 items-center gap-2 flex-wrap">
-                {typeof title === "string" ? (
-                  <h1 className={cn(titleClass, "min-w-0 max-w-2xl")}>
-                    <TruncatedText text={title} />
-                  </h1>
-                ) : (
-                  <h1 className={cn(titleClass, "w-fit shrink-0")}>{title}</h1>
-                )}
-                {badge && (
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-primary/10 text-foreground text-[11px] font-medium tabular-nums border border-primary/20">
-                    {badge}
-                  </span>
-                )}
-              </div>
-              {subtitle && typeof subtitle === "string" ? (
-                <TruncatedText
-                  text={subtitle}
-                  className="mt-1 text-[13px] text-muted-foreground leading-snug max-w-2xl"
-                />
-              ) : subtitle ? (
-                <div className="mt-1 text-[13px] text-muted-foreground leading-snug max-w-2xl">
-                  {subtitle}
-                </div>
-              ) : null}
-            </div>
-          </div>
-
-          {actions && (
             <div
               className={cn(
-                actionsInline
-                  ? "flex shrink-0 items-center gap-2"
-                  : "flex w-full flex-col items-stretch gap-2 sm:w-auto sm:shrink-0 sm:flex-row sm:flex-nowrap sm:items-center sm:justify-end [&>*]:w-full sm:[&>*]:w-auto",
+                "min-w-0 flex-1 flex gap-1",
+                actionsInline ? "items-center" : "items-start",
               )}
             >
-              {actions}
+              {leading}
+              {!leading && backHref && (
+                <Button variant="ghost" size="icon" className="w-8 shrink-0 mt-0.5" aria-label="Back" asChild>
+                  <Link href={backHref}>
+                    <ArrowLeft className="h-4 w-4" />
+                  </Link>
+                </Button>
+              )}
+              <div className="min-w-0 flex-1">
+                {(title != null || badge) && (
+                  <div className="flex min-w-0 items-center gap-2 flex-wrap">
+                    {typeof title === "string" ? (
+                      <h1 className={cn(titleClass, "min-w-0 max-w-2xl")}>
+                        <TruncatedText text={title} />
+                      </h1>
+                    ) : title != null ? (
+                      <h1 className={cn(titleClass, "w-fit shrink-0")}>{title}</h1>
+                    ) : null}
+                    {badge && (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-primary/10 text-foreground text-[11px] font-medium tabular-nums border border-primary/20">
+                        {badge}
+                      </span>
+                    )}
+                  </div>
+                )}
+                {subtitle && typeof subtitle === "string" ? (
+                  <TruncatedText
+                    text={subtitle}
+                    className="mt-1 text-[13px] text-muted-foreground leading-snug max-w-2xl"
+                  />
+                ) : subtitle ? (
+                  <div className="mt-1 text-[13px] text-muted-foreground leading-snug max-w-2xl">
+                    {subtitle}
+                  </div>
+                ) : null}
+              </div>
             </div>
-          )}
+
+            {actions && (
+              <div
+                className={cn(
+                  actionsInline
+                    ? "flex shrink-0 items-center gap-2"
+                    : "flex w-full flex-col items-stretch gap-2 sm:w-auto sm:shrink-0 sm:flex-row sm:flex-nowrap sm:items-center sm:justify-end [&>*]:w-full sm:[&>*]:w-auto",
+                )}
+              >
+                {actions}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      ) : null}
 
       {filters && (
         <div

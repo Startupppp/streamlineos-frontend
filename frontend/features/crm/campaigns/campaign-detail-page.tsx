@@ -181,8 +181,8 @@ export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
             <CardContent>
               <Tabs value={attributionTab} onValueChange={handleTabChange}>
                 <TabsList className="mb-4">
-                  <TabsTrigger value="first-touch" className="text-xs">First Touch</TabsTrigger>
-                  <TabsTrigger value="last-touch" className="text-xs">Last Touch</TabsTrigger>
+                  <TabsTrigger value="first-touch">First Touch</TabsTrigger>
+                  <TabsTrigger value="last-touch">Last Touch</TabsTrigger>
                 </TabsList>
                 <TabsContent value={attributionTab} forceMount>
                   {attributionLoading ? (

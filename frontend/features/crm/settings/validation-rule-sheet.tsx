@@ -165,7 +165,7 @@ export function RuleSheet({ open, onOpenChange, editing, entityType, rulesCount,
                     <FormLabel className="text-xs">Entity Type</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange} disabled={!!editing}>
                       <FormControl>
-                        <SelectTrigger className="text-xs"><SelectValue /></SelectTrigger>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {ENTITY_TABS.map((e) => (
@@ -209,7 +209,7 @@ export function RuleSheet({ open, onOpenChange, editing, entityType, rulesCount,
                     <FormLabel className="text-xs">Rule Type</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
-                        <SelectTrigger className="text-xs"><SelectValue /></SelectTrigger>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {RULE_TYPE_GROUPS.map((group) => (
@@ -300,7 +300,7 @@ export function RuleSheet({ open, onOpenChange, editing, entityType, rulesCount,
                 <FormItem>
                   <FormLabel className="text-xs">Pipeline</FormLabel>
                   <Select value={watchedPipelineId ?? ""} onValueChange={handlePipelineChange}>
-                    <SelectTrigger className="text-xs"><SelectValue placeholder="Select pipeline…" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="Select pipeline…" /></SelectTrigger>
                     <SelectContent>
                       {pipelines.map((p) => (
                         <SelectItem key={p.id} value={p.id} className="text-xs">{p.name}</SelectItem>
@@ -347,7 +347,7 @@ export function RuleSheet({ open, onOpenChange, editing, entityType, rulesCount,
                       <FormLabel className="text-xs">Pipeline scope (optional)</FormLabel>
                       <Select value={field.value ?? ""} onValueChange={(v) => { field.onChange(v || null); form.setValue("stageKey", null); }}>
                         <FormControl>
-                          <SelectTrigger className="text-xs"><SelectValue placeholder="Any pipeline" /></SelectTrigger>
+                          <SelectTrigger><SelectValue placeholder="Any pipeline" /></SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="" className="text-xs">Any pipeline</SelectItem>

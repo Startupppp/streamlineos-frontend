@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
@@ -18,10 +18,9 @@ import {
   useKbProjectPagesTree,
   useCreateKbPage,
 } from "@/hooks/api/kb";
-import { useCan } from "@/hooks/api/access";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import type { KbPageTreeNode } from "@/hooks/api/kb/pages";
-import { pageHref } from "@/features/knowledge-base/lib/knowledge-routes";
+import { pageHref, projectPageHref } from "@/features/knowledge-base/lib/knowledge-routes";
 import {
   KbClockIcon,
   KbFileTextIcon,
@@ -46,17 +45,19 @@ interface PageCardProps {
   icon: string | null;
   title: string;
   updatedAt: string;
+  href: string;
 }
 
 const PageCard = memo(function PageCard({
-  id,
+  id: _id,
   icon,
   title,
   updatedAt,
+  href,
 }: PageCardProps) {
   return (
     <Link
-      href={pageHref(id)}
+      href={href}
       className="block p-3 rounded-lg border border-border bg-card shadow-soft hover:bg-muted/50 transition-colors"
     >
       <div className="flex items-start gap-3">
@@ -87,6 +88,12 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
   const router = useRouter();
   const isProjectScoped = projectId !== undefined && projectId > 0;
 
+  const resolvePageHref = useMemo(
+    () => (pageId: number): string =>
+      isProjectScoped ? projectPageHref(projectId, pageId) : pageHref(pageId),
+    [isProjectScoped, projectId],
+  );
+
   const { data: recentPages = [], isLoading: recentLoading } =
     useKbPagesRecent();
   const { data: favoritePages = [] } = useKbPagesFavorites();
@@ -97,7 +104,6 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
   const treeLoading = treeQuery.isLoading;
 
   const createPage = useCreateKbPage();
-  const canCreate = useCan("kb:pages:create");
   const shouldReduceMotion = useReducedMotion();
 
   const rootPages: KbPageTreeNode[] = treeNodes.filter(
@@ -113,18 +119,18 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
     createPage.mutate(
       { projectId: isProjectScoped ? projectId : undefined },
       {
-        onSuccess: (page) => router.push(pageHref(page.id)),
+        onSuccess: (page) => router.push(resolvePageHref(page.id)),
         onError: () => toast.error("Failed to create page"),
       },
     );
-  }, [createPage, router, projectId, isProjectScoped]);
+  }, [createPage, router, projectId, isProjectScoped, resolvePageHref]);
 
-  const newPageAction = canCreate ? (
+  const newPageAction = (
     <Button onClick={handleNewPage} disabled={createPage.isPending} size="sm">
       <KbPlusIcon className="h-4 w-4 mr-1" />
       New page
     </Button>
-  ) : undefined;
+  );
 
   if (isLoading) {
     return (
@@ -149,11 +155,7 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
               ? "Create your first page to document this project."
               : "Create your first page to build a shared knowledge base for your team."
           }
-          action={
-            canCreate
-              ? { label: "New page", onClick: handleNewPage }
-              : undefined
-          }
+          action={{ label: "New page", onClick: handleNewPage }}
           className={CONTENT_FILL_PANEL}
         />
       </PageWrapper>
@@ -182,6 +184,7 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
                 icon={page.icon}
                 title={page.title}
                 updatedAt={page.updatedAt}
+                href={resolvePageHref(page.id)}
               />
             ))}
           </div>
@@ -202,6 +205,7 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
                 icon={page.icon}
                 title={page.title}
                 updatedAt={page.updatedAt}
+                href={resolvePageHref(page.id)}
               />
             ))}
           </div>
@@ -222,7 +226,7 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
             {rootPages.map((node) => (
               <motion.div key={node.id} variants={itemVariants}>
                 <Link
-                  href={pageHref(node.id)}
+                  href={resolvePageHref(node.id)}
                   className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors"
                 >
                   <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center leading-none">

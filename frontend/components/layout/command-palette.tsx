@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useAccess } from "@/hooks/api/access";
 import {
   Contact2,
   Handshake,
@@ -128,8 +128,11 @@ export function CommandPalette() {
   const [isSearching, setIsSearching] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
-  const { data: session } = useSession();
-  const role = session?.user?.role;
+  const { data: access } = useAccess();
+  const role =
+    access?.isOrgOwner === true || access?.isPlatformAdmin === true
+      ? "OWNER"
+      : "MEMBER";
   const { permissions } = usePermissions();
   const enabledModules = useEnabledModules();
   const { paletteOpen, setPaletteOpen, openCreateTicket } = useCommandPalette();

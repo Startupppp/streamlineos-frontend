@@ -84,7 +84,7 @@ export function TestPanel({ blueprintId, stages }: TestPanelProps) {
       <CardContent className="px-4 pb-4 space-y-3">
         <div className="flex items-center gap-2">
           <Select value={fromKey} onValueChange={handleFromChange}>
-            <SelectTrigger className="text-xs flex-1">
+            <SelectTrigger className="flex-1">
               <SelectValue placeholder="From stage" />
             </SelectTrigger>
             <SelectContent>
@@ -97,7 +97,7 @@ export function TestPanel({ blueprintId, stages }: TestPanelProps) {
           </Select>
           <span className="text-muted-foreground text-xs">→</span>
           <Select value={toKey} onValueChange={handleToChange}>
-            <SelectTrigger className="text-xs flex-1">
+            <SelectTrigger className="flex-1">
               <SelectValue placeholder="To stage" />
             </SelectTrigger>
             <SelectContent>

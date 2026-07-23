@@ -388,7 +388,7 @@ export function MembersPage() {
               <Select value={statusFilter} onValueChange={handleStatusChange}>
                 <SelectTrigger
                   size="sm"
-                  className={`w-fit min-w-[7.5rem] h-9 min-h-9 text-xs ${FILTER_SELECT_TRIGGER}`}
+                  className={`w-fit min-w-[7.5rem] ${FILTER_SELECT_TRIGGER}`}
                 >
                   <SelectValue />
                 </SelectTrigger>

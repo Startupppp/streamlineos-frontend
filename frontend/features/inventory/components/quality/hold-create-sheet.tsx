@@ -188,7 +188,7 @@ export function HoldCreateSheet({ open, onOpenChange }: Props) {
                     }}
                   >
                     <FormControl>
-                      <SelectTrigger className="text-xs">
+                      <SelectTrigger>
                         <SelectValue placeholder="Optional" />
                       </SelectTrigger>
                     </FormControl>
@@ -219,7 +219,7 @@ export function HoldCreateSheet({ open, onOpenChange }: Props) {
                     disabled={!warehouseId}
                   >
                     <FormControl>
-                      <SelectTrigger className="text-xs">
+                      <SelectTrigger>
                         <SelectValue placeholder={warehouseId ? "Optional" : "Select warehouse first"} />
                       </SelectTrigger>
                     </FormControl>
@@ -250,7 +250,7 @@ export function HoldCreateSheet({ open, onOpenChange }: Props) {
                     disabled={!variantEnabled || lots.length === 0}
                   >
                     <FormControl>
-                      <SelectTrigger className="text-xs">
+                      <SelectTrigger>
                         <SelectValue placeholder={variantEnabled ? "Optional" : "Select variant first"} />
                       </SelectTrigger>
                     </FormControl>
@@ -281,7 +281,7 @@ export function HoldCreateSheet({ open, onOpenChange }: Props) {
                     disabled={!variantEnabled || serials.length === 0}
                   >
                     <FormControl>
-                      <SelectTrigger className="text-xs">
+                      <SelectTrigger>
                         <SelectValue placeholder={variantEnabled ? "Optional" : "Select variant first"} />
                       </SelectTrigger>
                     </FormControl>

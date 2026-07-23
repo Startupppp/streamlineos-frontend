@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyChartIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared";
@@ -71,15 +71,7 @@ export function BurnRateReport() {
       <div className="flex flex-1 min-h-0 flex-col">
       {isLoading ? (
         <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="rounded-xl border border-border bg-card p-4 space-y-2">
-                <Skeleton className="h-3 w-24" />
-                <Skeleton className="h-7 w-32" />
-                <Skeleton className="h-3 w-20" />
-              </div>
-            ))}
-          </div>
+          <StatCardGridSkeleton cols={3} />
           <Skeleton className="h-[220px] w-full rounded-xl" />
           <div className="space-y-2">
             <Skeleton className="h-9 w-full" />

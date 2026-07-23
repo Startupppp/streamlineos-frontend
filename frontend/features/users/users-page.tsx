@@ -66,6 +66,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { formatDistanceToNow } from "date-fns";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
+import { useCan } from "@/hooks/api/access";
 
 export function UsersPage() {
   const router = useRouter();
@@ -168,6 +169,9 @@ export function UsersPage() {
   const { mutate: bulkSuspend, isPending: isSuspending } = useBulkSuspend();
   const { mutate: bulkArchive, isPending: isArchiving } = useBulkArchive();
   const { mutate: bulkRestore, isPending: isRestoring } = useBulkRestore();
+  const canCreate = useCan("hr:employees:create");
+  const canManage = useCan("hr:employees:manage");
+  const canExport = useCan("hr:export:manage");
 
   const branchMap = useMemo(() => {
     const m = new Map<number, string>();
@@ -446,38 +450,50 @@ export function UsersPage() {
         subtitle="Manage members, roles, and access."
         actions={
           <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-nowrap sm:justify-end">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <AnimatedIconButton
-                  icon={EllipsisIcon}
-                  iconClassName="mr-1.5"
-                  variant="outline"
-                  size="sm"
-                  className="w-full sm:w-auto"
-                >
-                  More
-                </AnimatedIconButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44">
-                <DropdownMenuItem onClick={handleExport} disabled={isExporting}>
-                  <Download className="h-3.5 w-3.5 mr-2" />
-                  Export CSV
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleOpenImport}>
-                  <Upload className="h-3.5 w-3.5 mr-2" />
-                  Import CSV
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleOpenBulkInvite}>
-                  <Users className="h-3.5 w-3.5 mr-2" />
-                  Bulk Invite
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Button size="sm" className="w-full sm:w-auto" onClick={handleOpenInvite}>
-              <UserPlus className="h-3.5 w-3.5 mr-1.5" />
-              Invite User
-            </Button>
+            {(canExport || canCreate) && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <AnimatedIconButton
+                    icon={EllipsisIcon}
+                    iconClassName="mr-1.5"
+                    variant="outline"
+                    size="sm"
+                    className="w-full sm:w-auto"
+                  >
+                    More
+                  </AnimatedIconButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-44">
+                  {canExport && (
+                    <DropdownMenuItem onClick={handleExport} disabled={isExporting}>
+                      <Download className="h-3.5 w-3.5 mr-2" />
+                      Export CSV
+                    </DropdownMenuItem>
+                  )}
+                  {canCreate && (
+                    <DropdownMenuItem onClick={handleOpenImport}>
+                      <Upload className="h-3.5 w-3.5 mr-2" />
+                      Import CSV
+                    </DropdownMenuItem>
+                  )}
+                  {canCreate && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleOpenBulkInvite}>
+                        <Users className="h-3.5 w-3.5 mr-2" />
+                        Bulk Invite
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+            {canCreate && (
+              <Button size="sm" className="w-full sm:w-auto" onClick={handleOpenInvite}>
+                <UserPlus className="h-3.5 w-3.5 mr-1.5" />
+                Invite User
+              </Button>
+            )}
           </div>
         }
         filters={
@@ -522,46 +538,54 @@ export function UsersPage() {
                 {selectedIds.size} selected
               </span>
               <div className="flex items-center gap-1.5 ml-auto flex-wrap">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 text-xs"
-                  onClick={handleBulkSuspend}
-                  disabled={bulkIsPending}
-                >
-                  <ShieldOff className="h-3 w-3 mr-1" />
-                  Suspend
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 text-xs"
-                  onClick={handleBulkArchive}
-                  disabled={bulkIsPending}
-                >
-                  <UserX className="h-3 w-3 mr-1" />
-                  Archive
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 text-xs"
-                  onClick={handleBulkRestore}
-                  disabled={bulkIsPending}
-                >
-                  <RefreshCw className="h-3 w-3 mr-1" />
-                  Restore
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 text-xs"
-                  onClick={handleOpenAssign}
-                  disabled={bulkIsPending}
-                >
-                  <UserCog className="h-3 w-3 mr-1" />
-                  Assign
-                </Button>
+                {canManage && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={handleBulkSuspend}
+                    disabled={bulkIsPending}
+                  >
+                    <ShieldOff className="h-3 w-3 mr-1" />
+                    Suspend
+                  </Button>
+                )}
+                {canManage && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={handleBulkArchive}
+                    disabled={bulkIsPending}
+                  >
+                    <UserX className="h-3 w-3 mr-1" />
+                    Archive
+                  </Button>
+                )}
+                {canManage && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={handleBulkRestore}
+                    disabled={bulkIsPending}
+                  >
+                    <RefreshCw className="h-3 w-3 mr-1" />
+                    Restore
+                  </Button>
+                )}
+                {canManage && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={handleOpenAssign}
+                    disabled={bulkIsPending}
+                  >
+                    <UserCog className="h-3 w-3 mr-1" />
+                    Assign
+                  </Button>
+                )}
                 <Button
                   variant="ghost"
                   size="sm"

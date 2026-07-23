@@ -379,7 +379,7 @@ export default function CrmOptionsPage() {
             <div className="flex-1 min-w-0 space-y-3">
               <div className="md:hidden">
                 <Select value={selectedType} onValueChange={handleMobileTypeSelect}>
-                  <SelectTrigger className="text-xs">
+                  <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

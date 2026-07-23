@@ -87,7 +87,7 @@ export function LeadsToolbar({
       </div>
 
       <Select value={statusFilter || "all"} onValueChange={handleStatusFilter}>
-        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[110px] text-xs")}><SelectValue placeholder="Status" /></SelectTrigger>
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[110px]")}><SelectValue placeholder="Status" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="all" className="text-xs">All Status</SelectItem>
           {statuses.map((s) => (
@@ -97,7 +97,7 @@ export function LeadsToolbar({
       </Select>
 
       <Select value={priorityFilter || "all"} onValueChange={handlePriorityFilter}>
-        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[100px] text-xs")}><SelectValue placeholder="Priority" /></SelectTrigger>
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[100px]")}><SelectValue placeholder="Priority" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="all" className="text-xs">All Priority</SelectItem>
           {priorities.map((p) => (
@@ -107,7 +107,7 @@ export function LeadsToolbar({
       </Select>
 
       <Select value={sourceFilter || "all"} onValueChange={handleSourceFilter}>
-        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[110px] text-xs")}><SelectValue placeholder="Source" /></SelectTrigger>
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[110px]")}><SelectValue placeholder="Source" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="all" className="text-xs">All Sources</SelectItem>
           {sources.map((s) => (

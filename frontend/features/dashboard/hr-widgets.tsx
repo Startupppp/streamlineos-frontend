@@ -16,6 +16,7 @@ import {
   UserCheck,
   UserX,
 } from "lucide-react";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   useLeavesToday,
@@ -244,23 +245,11 @@ export function TeamAttendanceWidget() {
       empty={<EmptyWidget message="No data." />}
     >
       <div>
-        <div className="grid grid-cols-3 gap-2 mb-3">
-          <div className="rounded-lg border border-border/60 p-2 text-center">
-            <UserCheck className="h-3.5 w-3.5 mx-auto text-emerald-500 mb-0.5" />
-            <p className="text-lg font-bold tabular-nums">{data?.present}</p>
-            <p className="text-[10px] text-muted-foreground">Present</p>
-          </div>
-          <div className="rounded-lg border border-border/60 p-2 text-center">
-            <UserX className="h-3.5 w-3.5 mx-auto text-red-500 mb-0.5" />
-            <p className="text-lg font-bold tabular-nums">{data?.absent}</p>
-            <p className="text-[10px] text-muted-foreground">Absent</p>
-          </div>
-          <div className="rounded-lg border border-border/60 p-2 text-center">
-            <Users className="h-3.5 w-3.5 mx-auto text-muted-foreground mb-0.5" />
-            <p className="text-lg font-bold tabular-nums">{data?.total}</p>
-            <p className="text-[10px] text-muted-foreground">Total</p>
-          </div>
-        </div>
+        <StatCardGrid cols={3} className="mb-3">
+          <StatCard label="Present" value={data?.present ?? 0} icon={UserCheck} tone="emerald" />
+          <StatCard label="Absent" value={data?.absent ?? 0} icon={UserX} tone="red" />
+          <StatCard label="Total" value={data?.total ?? 0} icon={Users} tone="default" />
+        </StatCardGrid>
         <div className="h-2 rounded-full bg-muted overflow-hidden">
           <div
             className="h-full rounded-full bg-emerald-500 transition-all"

@@ -17,9 +17,9 @@ export default function HrHelpdeskPage() {
  variant="display">
       <Tabs defaultValue="my-tickets" className="flex flex-1 min-h-0 flex-col gap-4">
         <TabsList>
-          <TabsTrigger value="my-tickets" className="text-xs">My Tickets</TabsTrigger>
+          <TabsTrigger value="my-tickets">My Tickets</TabsTrigger>
           {canManage && (
-            <TabsTrigger value="queue" className="text-xs">Queue</TabsTrigger>
+            <TabsTrigger value="queue">Queue</TabsTrigger>
           )}
         </TabsList>
         <TabsContent value="my-tickets" className="mt-0 flex flex-1 min-h-0 flex-col">

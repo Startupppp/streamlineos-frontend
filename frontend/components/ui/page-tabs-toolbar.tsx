@@ -5,10 +5,10 @@ import { ListFilter } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  ResponsivePopover,
+  ResponsivePopoverContent,
+  ResponsivePopoverTrigger,
+} from "@/components/ui/responsive-popover";
 
 export type PageTabsDensity = "labeled" | "icons";
 
@@ -84,8 +84,8 @@ export function PageTabsToolbar({
             <div className="hidden min-w-0 max-w-full flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide md:flex [&>*]:shrink-0">
               {resolveSlot(filters)}
             </div>
-            <Popover>
-              <PopoverTrigger asChild>
+            <ResponsivePopover>
+              <ResponsivePopoverTrigger asChild>
                 <Button
                   type="button"
                   variant="outline"
@@ -95,16 +95,17 @@ export function PageTabsToolbar({
                 >
                   <ListFilter className="h-4 w-4" />
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent
+              </ResponsivePopoverTrigger>
+              <ResponsivePopoverContent
+                title="Filters"
                 align="end"
                 className="w-[min(18rem,calc(100vw-2rem))] space-y-2 p-3"
               >
                 <div className="flex flex-col gap-2">
                   {resolveSlot(filters)}
                 </div>
-              </PopoverContent>
-            </Popover>
+              </ResponsivePopoverContent>
+            </ResponsivePopover>
           </>
         ) : null}
 

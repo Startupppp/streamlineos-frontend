@@ -200,10 +200,13 @@ export function useCreateKbPage() {
   return useMutation({
     mutationKey: ["kb", "pages", "create"],
     mutationFn: (input: CreateKbPageInput) => apiClient.post<KbPage>("/kb/pages", input),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.kb.pagesTree() });
       qc.invalidateQueries({ queryKey: queryKeys.kb.pagesRecent() });
       qc.invalidateQueries({ queryKey: queryKeys.kb.kbPages() });
+      if (variables.projectId) {
+        qc.invalidateQueries({ queryKey: queryKeys.kb.pagesTreeByProject(variables.projectId) });
+      }
     },
   });
 }

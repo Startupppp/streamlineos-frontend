@@ -137,7 +137,7 @@ export const CandidateProfileCard = memo(function CandidateProfileCard({
             onValueChange={handleValueChange}
             disabled={isUpdating}
           >
-            <SelectTrigger className="text-xs">
+            <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="min-w-[var(--radix-select-trigger-width)]">

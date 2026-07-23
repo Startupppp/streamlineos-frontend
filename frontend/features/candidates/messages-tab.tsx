@@ -93,7 +93,7 @@ export function MessagesTab({
           <div className="flex-1 space-y-1">
             <Label className="text-xs text-muted-foreground">Channel</Label>
             <Select value={channel} onValueChange={(v) => setChannel(v as MessageChannel)}>
-              <SelectTrigger className="text-xs">
+              <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
