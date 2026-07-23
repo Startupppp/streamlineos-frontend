@@ -378,21 +378,26 @@ export default function HRDashboardPage() {
               </Button>
             </HrPanel>
           ) : displayEmployees.length > 0 ? (
-            <HrPanel padded={false} className="overflow-hidden">
-              <HrEmployeeTable
-                employees={displayEmployees}
-                totalCount={totalCount}
-                page={page}
-                pageSize={pageSize}
-                totalPages={totalPages}
-                showFrom={showFrom}
-                showTo={showTo}
-                currentUserId={currentUserId}
-                onPageChange={setPage}
-                onPageSizeChange={handlePageSizeChange}
-                onRequestDelete={handleRequestDelete}
-              />
-            </HrPanel>
+            <>
+              <HrPanel padded={false} className="overflow-hidden">
+                <HrEmployeeTable
+                  employees={displayEmployees}
+                  totalCount={totalCount}
+                  page={page}
+                  pageSize={pageSize}
+                  totalPages={totalPages}
+                  showFrom={showFrom}
+                  showTo={showTo}
+                  currentUserId={currentUserId}
+                  onPageChange={setPage}
+                  onPageSizeChange={handlePageSizeChange}
+                  onRequestDelete={handleRequestDelete}
+                />
+              </HrPanel>
+              <Button variant="outline" size="sm" className="mt-3 w-full sm:hidden" asChild>
+                <Link href="/hr/employees">View full directory</Link>
+              </Button>
+            </>
           ) : hasActiveFilters ? (
             <EmptyState
               illustration={<EmptySearchIllustration className="mb-3" />}
