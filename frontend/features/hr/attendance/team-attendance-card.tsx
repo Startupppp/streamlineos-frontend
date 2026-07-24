@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useMemo, useState, useCallback } from "react";
+import Link from "next/link";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -73,13 +74,19 @@ function StatusBadge({ status }: { status: TeamAttendanceEntry["status"] }) {
 
 function MemberRow({ entry }: { entry: TeamAttendanceEntry }) {
   return (
-    <div className="flex items-center gap-3 rounded-lg px-2.5 py-2 transition-colors hover:bg-muted/50">
+    <Link
+      href={`/hr/employees/${entry.userId}`}
+      className="flex items-center gap-3 rounded-lg px-2.5 py-2 transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
       <Avatar className="h-9 w-9 shrink-0">
         {entry.image && <AvatarImage src={resolveImageUrl(entry.image)} alt="" />}
         <AvatarFallback className="text-xs">{getInitials(entry.name)}</AvatarFallback>
       </Avatar>
       <div className="min-w-0 flex-1">
-        <TruncatedText text={entry.name} className="text-sm font-medium" />
+        <TruncatedText
+          text={entry.name}
+          className="text-sm font-medium hover:underline"
+        />
         <div className="flex min-w-0 items-center gap-1.5 text-[11px] text-muted-foreground">
           {entry.department ? (
             <TruncatedText text={entry.department} className="text-[11px] text-muted-foreground" />
@@ -105,7 +112,7 @@ function MemberRow({ entry }: { entry: TeamAttendanceEntry }) {
           </span>
         )}
       </div>
-    </div>
+    </Link>
   );
 }
 
