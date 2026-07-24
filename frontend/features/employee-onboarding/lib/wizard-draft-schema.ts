@@ -52,7 +52,6 @@ export const wizardDraftSchema = z.object({
     swift: "",
     statutory: {},
   }),
-  docsComplete: z.boolean().catch(false),
 });
 
 export type PersonalDraft = z.infer<typeof personalDraftSchema>;
@@ -87,7 +86,6 @@ export const EMPTY_BANK_DRAFT: BankDraft = {
 export const EMPTY_WIZARD_DRAFT: WizardDraft = {
   personal: { ...EMPTY_PERSONAL_DRAFT },
   bank: { ...EMPTY_BANK_DRAFT },
-  docsComplete: false,
 };
 
 export function parseWizardDraft(value: unknown): WizardDraft {

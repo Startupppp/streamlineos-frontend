@@ -87,7 +87,15 @@ export function OnboardingWizard() {
       role: "ENGINEERING", employeeId: "", joiningDate: new Date(),
       dateOfBirth: undefined,
       taxId: "", monthlySalary: undefined,
-      bankDetails: { accountNumber: "", bankName: "", branch: "", ifsc: "", accountHolder: "", pfUanNumber: "" },
+      bankDetails: {
+        accountNumber: "",
+        bankName: "",
+        branch: "",
+        ifsc: "",
+        accountHolder: "",
+        pfUanNumber: "",
+        esiIpNumber: "",
+      },
     } as DefaultValues<FormValues>,
     mode: "onChange",
   });

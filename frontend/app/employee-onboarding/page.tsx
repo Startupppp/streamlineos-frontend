@@ -13,7 +13,6 @@ import { usePersonalDetailsQuery } from "@/lib/api/hooks/onboarding";
 import { EmployeeOnboardingShell } from "@/features/employee-onboarding/components/employee-onboarding-shell";
 import { StepPersonal } from "@/features/employee-onboarding/components/step-personal";
 import { StepBank } from "@/features/employee-onboarding/components/step-bank";
-import { StepDocuments } from "@/features/employee-onboarding/components/step-documents";
 import { StepReview } from "@/features/employee-onboarding/components/step-review";
 import {
   DATA_STEP_IDS,
@@ -26,7 +25,6 @@ import {
 } from "@/features/employee-onboarding/lib/constants";
 import { toPreviewSnapshot } from "@/features/employee-onboarding/lib/preview-snapshot";
 import { countryNameToCode } from "@/features/employee-onboarding/lib/onboarding-requirements-schema";
-import { useEnsureOnboardingDocuments } from "@/features/employee-onboarding/hooks/use-onboarding-requirements";
 import {
   EMPTY_BANK_DRAFT,
   EMPTY_PERSONAL_DRAFT,
@@ -59,7 +57,6 @@ function draftPayload(draft: WizardDraft): Record<string, unknown> {
   return {
     personal: draft.personal,
     bank: draft.bank,
-    docsComplete: draft.docsComplete,
   };
 }
 
@@ -77,6 +74,7 @@ function resolveStepFromSession(
   currentStep: string | null | undefined,
 ): StepId {
   if (currentStep && isStepId(currentStep)) return currentStep;
+  if (currentStep === "docs") return STEP_IDS.REVIEW;
   return STEP_IDS.PERSONAL;
 }
 
@@ -94,7 +92,6 @@ export default function EmployeeOnboardingPage() {
     useOnboardingSessionQuery();
   const { mutate: patchSession } = usePatchOnboardingSessionMutation();
   const { data: personalDetails } = usePersonalDetailsQuery();
-  const { mutate: ensureDocuments } = useEnsureOnboardingDocuments();
 
   const sessionDraft = useMemo(
     () => (session ? parseWizardDraft(session.data) : EMPTY_WIZARD_DRAFT),
@@ -258,11 +255,10 @@ export default function EmployeeOnboardingPage() {
         currentStep: STEP_IDS.BANK,
         completedSteps: Array.from(nextCompleted),
       });
-      ensureDocuments(countryNameToCode(personal.addressCountry));
       setDirection(1);
       setLocalStep(STEP_IDS.BANK);
     },
-    [flushPersist, localCompleted, sessionCompleted, ensureDocuments],
+    [flushPersist, localCompleted, sessionCompleted],
   );
 
   const handleBankComplete = useCallback(
@@ -274,29 +270,14 @@ export default function EmployeeOnboardingPage() {
       nextCompleted.add(STEP_IDS.BANK);
       setLocalCompleted(nextCompleted);
       flushPersist(nextDraft, {
-        currentStep: STEP_IDS.DOCS,
+        currentStep: STEP_IDS.REVIEW,
         completedSteps: Array.from(nextCompleted),
       });
       setDirection(1);
-      setLocalStep(STEP_IDS.DOCS);
+      setLocalStep(STEP_IDS.REVIEW);
     },
     [flushPersist, localCompleted, sessionCompleted],
   );
-
-  const handleDocsComplete = useCallback(() => {
-    const nextDraft = { ...draftRef.current, docsComplete: true };
-    draftRef.current = nextDraft;
-    setLocalDraft(nextDraft);
-    const nextCompleted = new Set(localCompleted ?? sessionCompleted);
-    nextCompleted.add(STEP_IDS.DOCS);
-    setLocalCompleted(nextCompleted);
-    flushPersist(nextDraft, {
-      currentStep: STEP_IDS.REVIEW,
-      completedSteps: Array.from(nextCompleted),
-    });
-    setDirection(1);
-    setLocalStep(STEP_IDS.REVIEW);
-  }, [flushPersist, localCompleted, sessionCompleted]);
 
   const handlePersonalClear = useCallback(() => {
     const nextDraft = {
@@ -336,10 +317,6 @@ export default function EmployeeOnboardingPage() {
   );
   const handleGoToBank = useCallback(
     () => navigateTo(STEP_IDS.BANK),
-    [navigateTo],
-  );
-  const handleGoToDocs = useCallback(
-    () => navigateTo(STEP_IDS.DOCS),
     [navigateTo],
   );
 
@@ -422,18 +399,11 @@ export default function EmployeeOnboardingPage() {
           defaultValues={wizardDraft.bank}
         />
       ) : null}
-      {activeTab === STEP_IDS.DOCS ? (
-        <StepDocuments
-          countryCode={countryCode}
-          onComplete={handleDocsComplete}
-          onBack={handleGoToBank}
-        />
-      ) : null}
       {activeTab === STEP_IDS.REVIEW ? (
         <StepReview
           completedSteps={completedSteps}
           draft={wizardDraft}
-          onBack={handleGoToDocs}
+          onBack={handleGoToBank}
         />
       ) : null}
     </EmployeeOnboardingShell>

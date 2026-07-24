@@ -11,7 +11,6 @@ export const ONBOARDING_COL_PAD = WIZARD_COL_PAD;
 export const STEP_IDS = {
   PERSONAL: "personal",
   BANK: "bank",
-  DOCS: "docs",
   REVIEW: "finish",
 } as const;
 
@@ -20,21 +19,18 @@ export type StepId = (typeof STEP_IDS)[keyof typeof STEP_IDS];
 export const ONBOARDING_SEQUENCE: readonly StepId[] = [
   STEP_IDS.PERSONAL,
   STEP_IDS.BANK,
-  STEP_IDS.DOCS,
   STEP_IDS.REVIEW,
 ];
 
 export const STEP_TITLES: Record<StepId, string> = {
   personal: "Personal details",
   bank: "Bank & payroll",
-  docs: "ID & documents",
   finish: "Review & submit",
 };
 
 export const STEP_SUBTITLES: Record<StepId, string> = {
   personal: "Phone, date of birth, home address, and emergency contact.",
   bank: "Account details HR needs to process payroll.",
-  docs: "Upload identity and employment documents for verification.",
   finish: "Confirm everything looks right, then send it to HR.",
 };
 
@@ -52,10 +48,6 @@ export const STEP_GUIDE: Record<StepId, StepGuide> = {
     why: "Payroll details stay private — HR sees them on your employee file, not in the directory.",
     minutes: 2,
   },
-  docs: {
-    why: "Uploaded IDs and papers attach to this same profile for verification.",
-    minutes: 3,
-  },
   finish: {
     why: "After you submit, HR reviews this file while you explore the workspace.",
     minutes: 1,
@@ -63,16 +55,14 @@ export const STEP_GUIDE: Record<StepId, StepGuide> = {
 };
 
 export const ESTIMATED_MINUTES_REMAINING: Record<StepId, number> = {
-  personal: 8,
-  bank: 6,
-  docs: 4,
+  personal: 5,
+  bank: 3,
   finish: 1,
 };
 
 export const DATA_STEP_IDS: readonly StepId[] = [
   STEP_IDS.PERSONAL,
   STEP_IDS.BANK,
-  STEP_IDS.DOCS,
 ];
 
 const VALID_STEP_IDS: ReadonlySet<string> = new Set(ONBOARDING_SEQUENCE);
