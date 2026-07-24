@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useTransitionHrTemplate } from "@/hooks/api/hr/hr-templates";
-import type { HrTemplate, HrTemplateStatus } from "@/types/hr/templates";
+import type { HrTemplateListItem, HrTemplateStatus } from "@/types/hr/templates";
 
 const TRANSITIONS: Record<HrTemplateStatus, Array<{ to: HrTemplateStatus; label: string; variant: "default" | "outline" | "destructive" }>> = {
   draft: [{ to: "review", label: "Submit for Review", variant: "default" }],
@@ -33,7 +33,7 @@ const TRANSITIONS: Record<HrTemplateStatus, Array<{ to: HrTemplateStatus; label:
 };
 
 interface TemplateLifecycleActionsProps {
-  template: HrTemplate;
+  template: HrTemplateListItem;
 }
 
 export function TemplateLifecycleActions({ template }: TemplateLifecycleActionsProps) {

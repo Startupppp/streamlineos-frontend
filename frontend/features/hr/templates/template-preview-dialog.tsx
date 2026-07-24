@@ -14,10 +14,10 @@ import {
 import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useRenderHrTemplate } from "@/hooks/api/hr/hr-templates";
-import type { HrTemplate } from "@/types/hr/templates";
+import type { HrTemplateListItem } from "@/types/hr/templates";
 
 interface TemplatePreviewDialogProps {
-  template: HrTemplate;
+  template: HrTemplateListItem;
 }
 
 export function TemplatePreviewDialog({ template }: TemplatePreviewDialogProps) {
