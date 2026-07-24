@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -68,14 +68,14 @@ export function RunActionsSlot({ run }: RunActionsSlotProps) {
 
   const recalcButton = canManage ? (
     <>
-      <Button
+      <LoadingButton
         size="sm"
         variant="outline"
         onClick={handleRecalcRequest}
-        disabled={recalcMutation.isPending}
+        isPending={recalcMutation.isPending}
       >
         Recalculate
-      </Button>
+      </LoadingButton>
       <AlertDialog open={showRecalcConfirm} onOpenChange={setShowRecalcConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -87,11 +87,14 @@ export function RunActionsSlot({ run }: RunActionsSlotProps) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={handleRecalcCancel}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleRecalcConfirm}
-              disabled={recalcMutation.isPending}
-            >
-              Recalculate
+            <AlertDialogAction asChild>
+              <LoadingButton
+                onClick={handleRecalcConfirm}
+                isPending={recalcMutation.isPending}
+                loadingText="Recalculating…"
+              >
+                Recalculate
+              </LoadingButton>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -102,13 +105,14 @@ export function RunActionsSlot({ run }: RunActionsSlotProps) {
   switch (run.status) {
     case "PREPARING":
       return canManage ? (
-        <Button
+        <LoadingButton
           size="sm"
           onClick={handleGenerate}
-          disabled={generateMutation.isPending}
+          isPending={generateMutation.isPending}
+          loadingText="Generating…"
         >
           Generate
-        </Button>
+        </LoadingButton>
       ) : null;
 
     case "DRAFT":

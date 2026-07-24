@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { useCan } from "@/hooks/api/access";
 import { useRunEmployee, useAddAdjustment, useSetEmployeeHold } from "@/hooks/api/payroll/run-employees";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
@@ -304,14 +305,15 @@ export function BreakdownSheet({
               )}
               {canManage &&
                 (data?.holdReason ? (
-                  <Button
+                  <LoadingButton
                     size="sm"
                     variant="outline"
                     onClick={handleRelease}
-                    disabled={holdMutation.isPending}
+                    isPending={holdMutation.isPending}
+                    loadingText="Releasing…"
                   >
                     Release Hold
-                  </Button>
+                  </LoadingButton>
                 ) : (
                   <Button size="sm" variant="outline" onClick={handleHoldOpen}>
                     Hold Salary
@@ -396,9 +398,9 @@ export function BreakdownSheet({
                 <Button type="button" variant="outline" size="sm" onClick={handleAdjustmentClose}>
                   Cancel
                 </Button>
-                <Button type="submit" size="sm" disabled={addAdjustmentMutation.isPending}>
+                <LoadingButton type="submit" size="sm" isPending={addAdjustmentMutation.isPending} loadingText="Adding…">
                   Add
-                </Button>
+                </LoadingButton>
               </DialogFooter>
             </form>
           </Form>
@@ -425,9 +427,9 @@ export function BreakdownSheet({
             <Button type="button" variant="outline" size="sm" onClick={handleHoldClose}>
               Cancel
             </Button>
-            <Button type="button" size="sm" onClick={handleHoldSubmit} disabled={holdMutation.isPending}>
+            <LoadingButton type="button" size="sm" onClick={handleHoldSubmit} isPending={holdMutation.isPending} loadingText="Holding…">
               Hold
-            </Button>
+            </LoadingButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

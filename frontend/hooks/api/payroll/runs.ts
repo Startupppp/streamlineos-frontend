@@ -18,7 +18,11 @@ interface RunDetail {
   payoutHealth: { failedCount: number; heldCount: number } | null;
 }
 
-export function usePayrollRuns(params?: { page?: number; limit?: number }) {
+export function usePayrollRuns(params?: {
+  page?: number;
+  limit?: number;
+  entityId?: number;
+}) {
   return useQuery({
     queryKey: queryKeys.payroll.runs(params as Record<string, unknown> | undefined),
     queryFn: () =>
@@ -47,6 +51,8 @@ export interface CreateRunInput {
   runType?: PayrollRunType;
   /** Required for OFF_CYCLE, CORRECTION, and FINAL_SETTLEMENT — links to the source regular run. */
   sourceRunId?: number;
+  /** Legal entity — scopes period ensure + statutory pack. */
+  entityId?: number;
 }
 
 export function useCreateRun() {

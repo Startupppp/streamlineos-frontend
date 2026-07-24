@@ -31,6 +31,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { useCreateProfile, usePatchProfile } from "@/hooks/api/payroll/employees";
@@ -307,13 +308,15 @@ export function SalaryProfileSheet({
               <Button type="button" variant="outline" size="sm" onClick={onClose}>
                 Cancel
               </Button>
-              <Button
+              <LoadingButton
                 type="submit"
                 size="sm"
-                disabled={isPending || (showPicker && !pickedUserId)}
+                disabled={showPicker && !pickedUserId}
+                isPending={isPending}
+                loadingText={isEdit ? "Updating…" : "Creating…"}
               >
                 {isEdit ? "Update" : "Create"}
-              </Button>
+              </LoadingButton>
             </SheetFooter>
           </form>
         </Form>

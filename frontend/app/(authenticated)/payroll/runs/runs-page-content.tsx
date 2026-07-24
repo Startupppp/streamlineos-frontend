@@ -8,6 +8,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Dialog,
   DialogContent,
@@ -31,6 +32,7 @@ import {
   useCreateRun,
   type PayrollRunType,
 } from "@/hooks/api/payroll/runs";
+import { usePayrollEntities } from "@/hooks/api/payroll/entities";
 import { useCan } from "@/hooks/api/access";
 import type { PayrollRunListItem } from "@/types/payroll/runs";
 
@@ -47,6 +49,7 @@ const RUN_TYPES_NEEDING_SOURCE: PayrollRunType[] = ["OFF_CYCLE", "CORRECTION", "
 export function RunsPageContent() {
   const router = useRouter();
   const [page, setPage] = useState(1);
+  const [filterEntityId, setFilterEntityId] = useState<string>("all");
   const [showNewRun, setShowNewRun] = useState(false);
   const [newRunMonth, setNewRunMonth] = useState(() => {
     const now = new Date();
@@ -54,10 +57,21 @@ export function RunsPageContent() {
   });
   const [newRunType, setNewRunType] = useState<PayrollRunType>("REGULAR");
   const [sourceRunId, setSourceRunId] = useState<string>("");
+  const [newEntityId, setNewEntityId] = useState<string>("");
 
   const canManage = useCan("payroll:runs:manage");
-  const { data, isLoading } = usePayrollRuns({ page, limit: 20 });
+  const { data: entities } = usePayrollEntities();
+  const listParams = {
+    page,
+    limit: 20,
+    ...(filterEntityId !== "all" ? { entityId: Number(filterEntityId) } : {}),
+  };
+  const { data, isLoading } = usePayrollRuns(listParams);
   const createMutation = useCreateRun();
+
+  const entityNameById = new Map(
+    (entities ?? []).map((e) => [e.id, `${e.legalName} (${e.countryCode})`]),
+  );
 
   const columns: DataTableColumn<PayrollRunListItem>[] = [
     {
@@ -65,6 +79,17 @@ export function RunsPageContent() {
       header: "Month",
       cell: (row) => (
         <span className="text-[11px] font-medium">{formatMonth(row.month)}</span>
+      ),
+    },
+    {
+      key: "entity",
+      header: "Entity",
+      cell: (row) => (
+        <span className="text-[11px] text-muted-foreground">
+          {row.entityId != null
+            ? (entityNameById.get(row.entityId) ?? `Entity #${row.entityId}`)
+            : "—"}
+        </span>
       ),
     },
     {
@@ -117,12 +142,12 @@ export function RunsPageContent() {
 
   const needsSource = RUN_TYPES_NEEDING_SOURCE.includes(newRunType);
   const sourceRunOptions = (data?.data ?? []).filter((r) => r.month === newRunMonth);
-  const createDisabled =
-    createMutation.isPending || (needsSource && sourceRunId === "");
+  const createDisabled = needsSource && sourceRunId === "";
 
   function resetNewRunForm() {
     setNewRunType("REGULAR");
     setSourceRunId("");
+    setNewEntityId(entities?.[0] != null ? String(entities[0].id) : "");
   }
 
   function handleNewRunOpen() {
@@ -149,6 +174,7 @@ export function RunsPageContent() {
         month: newRunMonth,
         runType: newRunType,
         ...(needsSource ? { sourceRunId: Number(sourceRunId) } : {}),
+        ...(newEntityId !== "" ? { entityId: Number(newEntityId) } : {}),
       },
       {
         onSuccess: (res) => {
@@ -176,6 +202,31 @@ export function RunsPageContent() {
         ) : undefined
       }
     >
+      {(entities?.length ?? 0) > 0 ? (
+        <div className="mb-2 flex items-center gap-2">
+          <label className="text-[12px] text-muted-foreground">Entity</label>
+          <Select
+            value={filterEntityId}
+            onValueChange={(v) => {
+              setFilterEntityId(v);
+              setPage(1);
+            }}
+          >
+            <SelectTrigger className="h-8 w-[240px]">
+              <SelectValue placeholder="All entities" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All entities</SelectItem>
+              {(entities ?? []).map((e) => (
+                <SelectItem key={e.id} value={String(e.id)}>
+                  {e.legalName} ({e.countryCode})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      ) : null}
+
       <DataTable
         className="flex-1 min-h-0"
         data={data?.data ?? []}
@@ -183,7 +234,7 @@ export function RunsPageContent() {
         getRowKey={(row) => row.id}
         onRowClick={handleRowClick}
         isLoading={isLoading}
-        minWidth="640px"
+        minWidth="720px"
         pagination={{
           mode: "server",
           page,
@@ -240,6 +291,31 @@ export function RunsPageContent() {
               />
             </div>
 
+            {(entities?.length ?? 0) > 0 && (
+              <div className="space-y-1.5">
+                <label className="text-[13px] font-medium text-foreground block">
+                  Legal entity
+                </label>
+                <Select value={newEntityId || undefined} onValueChange={setNewEntityId}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Optional — scopes statutory pack" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(entities ?? []).map((e) => (
+                      <SelectItem key={e.id} value={String(e.id)}>
+                        {e.legalName} ({e.countryCode})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-[11px] text-muted-foreground">
+                  Binds the run to the entity&apos;s country pack and opens the matching
+                  period. One REGULAR run is allowed per entity per month (org-level runs
+                  without an entity remain a separate bucket).
+                </p>
+              </div>
+            )}
+
             {needsSource && (
               <div className="space-y-1.5">
                 <label className="text-[13px] font-medium text-foreground block">
@@ -274,9 +350,15 @@ export function RunsPageContent() {
             <Button variant="outline" size="sm" onClick={handleNewRunClose}>
               Cancel
             </Button>
-            <Button size="sm" onClick={handleNewRunCreate} disabled={createDisabled}>
+            <LoadingButton
+              size="sm"
+              onClick={handleNewRunCreate}
+              disabled={createDisabled}
+              isPending={createMutation.isPending}
+              loadingText="Creating…"
+            >
               Create
-            </Button>
+            </LoadingButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>
