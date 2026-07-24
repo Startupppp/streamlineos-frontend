@@ -47,15 +47,6 @@ export function useUserOnboarding(userId: string) {
   });
 }
 
-export function useOnboardingTasks(userId: string) {
-  return useQuery<OnboardingTask[]>({
-    queryKey: [...queryKeys.hr.onboardingUser(userId), "tasks"] as const,
-    queryFn: () => apiClient.get<OnboardingTask[]>(`/onboarding/${userId}`),
-    enabled: !!userId,
-    staleTime: 30_000,
-  });
-}
-
 
 export function useCompleteOnboardingTask() {
   const qc = useQueryClient();

@@ -101,15 +101,6 @@ export function usePayrollInputPeriods(params?: { page?: number; limit?: number;
   });
 }
 
-export function usePayrollInputPeriod(periodId: number, enabled = true) {
-  return useQuery({
-    queryKey: queryKeys.hrPayrollInputs.period(periodId),
-    queryFn: () => apiClient.get<PayrollInputPeriod>(`/hr/payroll-inputs/periods/${periodId}`),
-    staleTime: 30_000,
-    enabled,
-  });
-}
-
 export function useCreatePayrollInputPeriod() {
   const qc = useQueryClient();
   return useMutation({
