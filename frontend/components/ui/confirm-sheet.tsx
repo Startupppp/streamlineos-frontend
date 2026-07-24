@@ -1,13 +1,13 @@
 "use client";
 
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetFooter,
-} from "@/components/ui/sheet";
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
 
@@ -35,32 +35,41 @@ export function ConfirmSheet({
   onConfirm,
 }: ConfirmSheetProps) {
   return (
-    <Sheet open={open} onOpenChange={isPending ? undefined : onOpenChange}>
-      <SheetContent className="flex flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
-        <SheetHeader className="shrink-0 px-5 pb-5 pt-5 text-left">
-          <SheetTitle className="text-base font-semibold">{title}</SheetTitle>
-          <SheetDescription className="text-sm text-muted-foreground">{description}</SheetDescription>
-        </SheetHeader>
+    <AlertDialog
+      open={open}
+      onOpenChange={isPending ? undefined : onOpenChange}
+    >
+      <AlertDialogContent className="gap-4 p-4 sm:max-w-md sm:p-6">
+        <AlertDialogHeader className="space-y-2 text-left">
+          <AlertDialogTitle className="text-base font-semibold leading-tight">
+            {title}
+          </AlertDialogTitle>
+          <AlertDialogDescription className="text-sm text-muted-foreground">
+            {description}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
 
-        <SheetFooter className="shrink-0 flex-col gap-2 border-t border-border bg-muted/30 px-5 py-4">
-          <LoadingButton
-            variant={destructive ? "destructive" : "default"}
-            className="h-9 w-full gap-1.5 transition-colors duration-200"
-            onClick={onConfirm}
-            isPending={isPending}
-          >
-            {confirmLabel}
-          </LoadingButton>
+        <AlertDialogFooter className="flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button
+            type="button"
             variant="outline"
-            className="h-9 w-full transition-colors duration-200"
+            className="h-10 w-full sm:h-9 sm:w-auto"
             onClick={() => onOpenChange(false)}
             disabled={isPending}
           >
             {cancelLabel}
           </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+          <LoadingButton
+            type="button"
+            variant={destructive ? "destructive" : "default"}
+            className="h-10 w-full gap-1.5 sm:h-9 sm:w-auto"
+            onClick={onConfirm}
+            isPending={isPending}
+          >
+            {confirmLabel}
+          </LoadingButton>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
