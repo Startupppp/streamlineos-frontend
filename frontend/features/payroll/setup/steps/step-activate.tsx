@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Separator } from "@/components/ui/separator";
 import { useActivatePolicy } from "@/hooks/api/payroll";
 import type { SetupDraft } from "@/features/payroll/setup/lib/draft";
@@ -167,13 +168,14 @@ export function StepActivate({ draft, clearAll }: StepActivateProps) {
         </div>
       </div>
 
-      <Button
+      <LoadingButton
         className="w-full"
         onClick={handleActivate}
-        disabled={activate.isPending}
+        isPending={activate.isPending}
+        loadingText="Activating…"
       >
-        {activate.isPending ? "Activating…" : "Activate Payroll"}
-      </Button>
+        Activate Payroll
+      </LoadingButton>
     </div>
   );
 }

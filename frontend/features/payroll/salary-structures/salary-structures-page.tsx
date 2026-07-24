@@ -113,10 +113,10 @@ const TemplateCard = memo(function TemplateCard({ template, index, onEdit, onDel
         <Button
           size="sm"
           variant="ghost"
-          className="px-3 text-xs gap-1.5"
+          className="px-3 text-xs"
           onClick={handleEdit}
         >
-          <Pencil className="h-3 w-3" />
+          <Pencil className="mr-1.5 h-3.5 w-3.5" />
           Edit
         </Button>
         <AnimatedIconButton
@@ -313,10 +313,7 @@ export function SalaryStructuresPageContent() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={handleCancelDelete}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
+            <AlertDialogAction onClick={handleConfirmDelete} variant="destructive">
               Deactivate
             </AlertDialogAction>
           </AlertDialogFooter>

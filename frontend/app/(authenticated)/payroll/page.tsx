@@ -9,6 +9,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertTriangle, DollarSign, Users, TrendingDown } from "lucide-react";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
@@ -42,16 +43,16 @@ function PrimaryAction({
 }) {
   if (!status) {
     return (
-      <Button size="sm" onClick={onCreateRun} disabled={isPending}>
-        Start payroll run
-      </Button>
+      <LoadingButton size="sm" onClick={onCreateRun} isPending={isPending} loadingText="Starting…">
+        Start Payroll Run
+      </LoadingButton>
     );
   }
   if (status === "EXCEPTIONS_FOUND") {
     return (
       <Button size="sm" asChild>
         <Link href={runId ? `/payroll/runs/${runId}?tab=exceptions` : "/payroll/runs"}>
-          Review exceptions
+          Review Exceptions
         </Link>
       </Button>
     );
@@ -60,7 +61,7 @@ function PrimaryAction({
     return (
       <Button size="sm" asChild>
         <Link href={runId ? `/payroll/runs/${runId}` : "/payroll/runs"}>
-          Review & submit
+          Review & Submit
         </Link>
       </Button>
     );
@@ -69,7 +70,7 @@ function PrimaryAction({
     return (
       <Button size="sm" asChild>
         <Link href={runId ? `/payroll/runs/${runId}` : "/payroll/runs"}>
-          Review approval
+          Review Approval
         </Link>
       </Button>
     );
@@ -77,7 +78,7 @@ function PrimaryAction({
   return (
     <Button size="sm" variant="outline" asChild>
       <Link href={runId ? `/payroll/runs/${runId}` : "/payroll/runs"}>
-        View run
+        View Run
       </Link>
     </Button>
   );

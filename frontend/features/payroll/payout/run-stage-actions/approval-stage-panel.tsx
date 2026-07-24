@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -139,9 +140,9 @@ function StageRow({ row, canAct, isActive, runId }: StageRowProps) {
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={handleApproveCancel} disabled={approvePending}>Cancel</Button>
-            <Button onClick={handleApproveConfirm} disabled={approvePending}>
-              {approvePending ? "Approving…" : "Approve"}
-            </Button>
+            <LoadingButton onClick={handleApproveConfirm} isPending={approvePending} loadingText="Approving…">
+              Approve
+            </LoadingButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -160,9 +161,15 @@ function StageRow({ row, canAct, isActive, runId }: StageRowProps) {
           />
           <DialogFooter>
             <Button variant="outline" onClick={handleRejectCancel} disabled={rejectPending}>Cancel</Button>
-            <Button variant="destructive" onClick={handleRejectConfirm} disabled={rejectPending || !comment.trim()}>
-              {rejectPending ? "Rejecting…" : "Reject"}
-            </Button>
+            <LoadingButton
+              variant="destructive"
+              onClick={handleRejectConfirm}
+              isPending={rejectPending}
+              disabled={!comment.trim()}
+              loadingText="Rejecting…"
+            >
+              Reject
+            </LoadingButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

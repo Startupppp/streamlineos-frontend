@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface Props {
@@ -17,7 +18,10 @@ export function MarkPaidPanel({ runId, status }: Props) {
         Payroll is locked and ready for bank transfers.
       </p>
       <Button asChild variant="outline" size="sm">
-        <Link href={`/payroll/bank-transfers?runId=${runId}`}>Go to Bank Transfers →</Link>
+        <Link href={`/payroll/bank-transfers?runId=${runId}`}>
+          Go to Bank Transfers
+          <ArrowRight className="ml-1 h-3.5 w-3.5" />
+        </Link>
       </Button>
     </div>
   );

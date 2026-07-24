@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { LockOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { LockIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Textarea } from "@/components/ui/textarea";
@@ -61,8 +62,10 @@ function LockButton({ runId }: { runId: number }) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm} disabled={isPending}>
-              {isPending ? "Locking…" : "Lock"}
+            <AlertDialogAction asChild>
+              <LoadingButton onClick={handleConfirm} isPending={isPending} loadingText="Locking…">
+                Lock
+              </LoadingButton>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -100,7 +103,7 @@ function ReopenButton({ runId }: { runId: number }) {
   return (
     <>
       <Button size="sm" variant="outline" className="h-9" onClick={handleOpen}>
-        <LockOpen className="mr-2 h-4 w-4" /> Reopen Run
+        <LockOpen className="mr-1.5 h-4 w-4" /> Reopen Run
       </Button>
       <AlertDialog open={open} onOpenChange={handleOpenChange}>
         <AlertDialogContent>
@@ -119,8 +122,15 @@ function ReopenButton({ runId }: { runId: number }) {
           />
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm} disabled={isPending || !reason.trim()}>
-              {isPending ? "Reopening…" : "Reopen"}
+            <AlertDialogAction asChild>
+              <LoadingButton
+                onClick={handleConfirm}
+                isPending={isPending}
+                disabled={!reason.trim()}
+                loadingText="Reopening…"
+              >
+                Reopen
+              </LoadingButton>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -163,8 +173,10 @@ function CloseButton({ runId }: { runId: number }) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm} disabled={isPending}>
-              {isPending ? "Closing…" : "Close Run"}
+            <AlertDialogAction asChild>
+              <LoadingButton onClick={handleConfirm} isPending={isPending} loadingText="Closing…">
+                Close Run
+              </LoadingButton>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

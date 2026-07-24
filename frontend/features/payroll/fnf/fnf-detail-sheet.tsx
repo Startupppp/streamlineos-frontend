@@ -17,6 +17,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCan } from "@/hooks/api/access";
@@ -144,11 +145,7 @@ function FnfDetailSheetInner({ settlementId, onClose }: FnfDetailSheetInnerProps
         {showApprove && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button
-                size="sm"
-                className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                disabled={isLoading}
-              >
+              <Button size="sm" disabled={isLoading}>
                 Approve Settlement
               </Button>
             </AlertDialogTrigger>
@@ -161,13 +158,15 @@ function FnfDetailSheetInner({ settlementId, onClose }: FnfDetailSheetInnerProps
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleApprove}
-                  className="bg-emerald-600 hover:bg-emerald-700"
-                  disabled={approveMutation.isPending}
-                >
-                  {approveMutation.isPending ? "Approving…" : "Confirm Approve"}
+                <AlertDialogCancel disabled={approveMutation.isPending}>Cancel</AlertDialogCancel>
+                <AlertDialogAction asChild>
+                  <LoadingButton
+                    onClick={handleApprove}
+                    isPending={approveMutation.isPending}
+                    loadingText="Approving…"
+                  >
+                    Confirm Approve
+                  </LoadingButton>
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

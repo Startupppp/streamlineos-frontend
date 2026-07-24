@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
   CheckCircle2,
@@ -260,14 +261,16 @@ export function ReadinessRail({
                   <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               ) : (
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={nextAction.onClick}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold payroll-ledger-text hover:underline min-h-9"
+                  className="h-auto min-h-9 px-0 py-0 inline-flex items-center gap-1.5 text-xs font-semibold payroll-ledger-text hover:bg-transparent hover:underline"
                 >
                   {nextAction.label}
                   <ArrowRight className="h-3.5 w-3.5" />
-                </button>
+                </Button>
               )
             ) : (
               <p className="text-xs text-muted-foreground">No action required</p>

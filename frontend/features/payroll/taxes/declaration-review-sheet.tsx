@@ -11,6 +11,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Textarea } from "@/components/ui/textarea";
 import {
   AlertDialog,
@@ -169,15 +170,12 @@ export function DeclarationReviewSheet({ declaration, onClose }: DeclarationRevi
               <>
                 <Button
                   variant="outline"
-                  className="border-red-200 text-red-700 hover:bg-red-50"
+                  className="text-destructive border-destructive/40 hover:bg-destructive/10"
                   onClick={handleRejectClick}
                 >
                   Reject
                 </Button>
-                <Button
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                  onClick={handleApproveClick}
-                >
+                <Button onClick={handleApproveClick}>
                   Approve
                 </Button>
               </>
@@ -199,12 +197,15 @@ export function DeclarationReviewSheet({ declaration, onClose }: DeclarationRevi
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-emerald-600 hover:bg-emerald-700"
-              onClick={handleApproveConfirm}
-            >
-              Approve
+            <AlertDialogCancel disabled={approveMutation.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <LoadingButton
+                onClick={handleApproveConfirm}
+                isPending={approveMutation.isPending}
+                loadingText="Approving…"
+              >
+                Approve
+              </LoadingButton>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -228,12 +229,16 @@ export function DeclarationReviewSheet({ declaration, onClose }: DeclarationRevi
             />
           </div>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-red-600 hover:bg-red-700"
-              onClick={handleRejectConfirm}
-            >
-              Reject
+            <AlertDialogCancel disabled={rejectMutation.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <LoadingButton
+                variant="destructive"
+                onClick={handleRejectConfirm}
+                isPending={rejectMutation.isPending}
+                loadingText="Rejecting…"
+              >
+                Reject
+              </LoadingButton>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

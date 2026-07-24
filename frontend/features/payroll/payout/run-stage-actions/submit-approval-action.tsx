@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { SendIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
@@ -63,7 +64,7 @@ export function SubmitApprovalAction({ runId, status }: Props) {
   return (
     <>
       <AnimatedIconButton icon={SendIcon} iconSize={16} iconClassName="mr-1.5" size="sm" className="h-9" onClick={handleOpen}>
-        Submit for approval
+        Submit for Approval
       </AnimatedIconButton>
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -86,9 +87,9 @@ export function SubmitApprovalAction({ runId, status }: Props) {
             <Button variant="outline" onClick={handleCancel} disabled={isPending}>
               Cancel
             </Button>
-            <Button onClick={handleConfirm} disabled={isPending}>
-              {isPending ? "Submitting…" : "Submit"}
-            </Button>
+            <LoadingButton onClick={handleConfirm} isPending={isPending} loadingText="Submitting…">
+              Submit
+            </LoadingButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

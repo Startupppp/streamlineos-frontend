@@ -87,6 +87,7 @@ function PackStatutorySection({ pack }: { pack: StatutoryPackPreview }) {
           <button
             type="button"
             onClick={() => setChecklistOpen((v) => !v)}
+            aria-expanded={checklistOpen}
             className="flex items-center justify-between w-full px-4 py-3 text-sm font-medium text-foreground hover:bg-muted/30 transition-colors"
           >
             <span>Compliance checklist ({pack.complianceChecklist.length} items)</span>
