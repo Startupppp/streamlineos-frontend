@@ -101,8 +101,8 @@ export function StepBanking({ form }: StepBankingProps) {
         />
       </div>
 
-      <div className="pt-2">
-        <p className="text-sm font-medium text-muted-foreground mb-3">Statutory Details (Optional)</p>
+      <div className="pt-2 space-y-3">
+        <p className="text-sm font-medium text-muted-foreground mb-1">Statutory Details (Optional)</p>
         <FormField
           control={form.control}
           name="bankDetails.pfUanNumber"
@@ -120,7 +120,33 @@ export function StepBanking({ form }: StepBankingProps) {
                   maxLength={12}
                 />
               </FormControl>
-              <p className="text-xs text-muted-foreground mt-1">Optional: Required only if PF is applicable</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                12 digits. Needed for PF ECR export when PF is enabled.
+              </p>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="bankDetails.esiIpNumber"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>ESI IP Number</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="ESIC Insurance Person number"
+                  {...field}
+                  onChange={(e) => {
+                    const v = e.target.value.trim();
+                    if (v.length <= 20) field.onChange(v);
+                  }}
+                  maxLength={20}
+                />
+              </FormControl>
+              <p className="text-xs text-muted-foreground mt-1">
+                Optional until ESI is enabled; used in ESI filing export.
+              </p>
               <FormMessage />
             </FormItem>
           )}

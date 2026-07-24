@@ -122,6 +122,12 @@ export const onboardEmployeeInputSchema = z.object({
         .refine((v) => v === "" || /^\d{12}$/.test(v), "UAN must be exactly 12 digits")
         .optional()
         .or(z.literal("")),
+      esiIpNumber: z
+        .string()
+        .trim()
+        .max(20)
+        .optional()
+        .or(z.literal("")),
     })
     .optional(),
 });

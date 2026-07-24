@@ -41,6 +41,10 @@ const sensitiveSchema = z.object({
   ifscCode: emptyOrValid(
     z.string().regex(/^[A-Za-z]{4}0[A-Za-z0-9]{6}$/, "Invalid IFSC code")
   ),
+  pfUanNumber: emptyOrValid(
+    z.string().regex(/^\d{12}$/, "UAN must be exactly 12 digits")
+  ),
+  esiIpNumber: emptyOrValid(z.string().max(20)),
   taxId: emptyOrValid(z.string().min(1).max(100)),
   panNumber: emptyOrValid(
     z.string().regex(/^[A-Za-z]{5}\d{4}[A-Za-z]$/, "Invalid PAN number")
@@ -58,6 +62,8 @@ function sensitiveToForm(data: HrSensitiveData | undefined): FormValues {
     bankAccountNumber: data?.bankDetails?.accountNumber ?? "",
     bankName: data?.bankDetails?.bankName ?? "",
     ifscCode: data?.bankDetails?.ifsc ?? "",
+    pfUanNumber: data?.bankDetails?.pfUanNumber ?? "",
+    esiIpNumber: data?.bankDetails?.esiIpNumber ?? "",
     taxId: data?.taxId ?? "",
     panNumber: data?.panNumber ?? "",
     passportNumber: data?.passportNumber ?? "",
@@ -72,6 +78,8 @@ function formToSensitive(values: FormValues, existing: HrSensitiveData | undefin
       accountNumber: values.bankAccountNumber || undefined,
       bankName: values.bankName || undefined,
       ifsc: values.ifscCode || undefined,
+      pfUanNumber: values.pfUanNumber || undefined,
+      esiIpNumber: values.esiIpNumber || undefined,
     },
     taxId: values.taxId === "" ? null : values.taxId,
     panNumber: values.panNumber === "" ? null : values.panNumber,
@@ -211,6 +219,8 @@ export function EmployeeSensitiveTab({ userId }: Props) {
     { label: "Bank Account Number", key: "bankAccountNumber" },
     { label: "Bank Name", key: "bankName" },
     { label: "IFSC / Routing Code", key: "ifscCode" },
+    { label: "PF / UAN (12 digits)", key: "pfUanNumber" },
+    { label: "ESI IP Number", key: "esiIpNumber" },
     { label: "Tax ID", key: "taxId" },
     { label: "PAN Number", key: "panNumber" },
     { label: "Passport Number", key: "passportNumber" },

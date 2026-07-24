@@ -358,6 +358,7 @@ export interface OnboardEmployeeInput {
     ifsc?: string;
     accountHolder?: string;
     pfUanNumber?: string;
+    esiIpNumber?: string;
   };
 }
 
@@ -386,6 +387,7 @@ export interface BulkOnboardEmployeeRow {
     ifsc?: string;
     accountHolder?: string;
     pfUanNumber?: string;
+    esiIpNumber?: string;
   };
 }
 
