@@ -184,3 +184,24 @@ export function useBurnoutFlags() {
     staleTime: 120_000,
   });
 }
+
+export interface WellnessPulse {
+  mode: "k_anonymized_pulse";
+  honestyNote: string;
+  windowDays: number;
+  minGroupSize: number;
+  suppressed: boolean;
+  respondents: number | null;
+  avgScore: number | null;
+  checkins: number | null;
+  burnoutThreshold: number;
+}
+
+export function useWellnessPulse(enabled = true) {
+  return useQuery({
+    queryKey: ["hr-safety", "wellness", "pulse"] as const,
+    queryFn: () => apiClient.get<WellnessPulse>("/hr/safety/wellness/pulse"),
+    staleTime: 120_000,
+    enabled,
+  });
+}

@@ -18,7 +18,7 @@ import { StateIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { useCan } from "@/hooks/api/access";
-import { useSafetyIncidents } from "@/hooks/api/hr/safety";
+import { useSafetyIncidents, useWellnessPulse } from "@/hooks/api/hr/safety";
 import type { SafetyIncident, IncidentStatus, IncidentType, IncidentSeverity } from "@/hooks/api/hr/safety";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { IncidentStatusBadge, IncidentSeverityBadge, IncidentTypeLabel } from "./incident-badges";
@@ -64,6 +64,38 @@ const SEVERITY_OPTIONS: { value: IncidentSeverity | typeof SENTINEL; label: stri
 ];
 
 type ActiveTab = "incidents" | "wellness";
+
+function WellnessPulseCard() {
+  const { data, isLoading } = useWellnessPulse(true);
+  if (isLoading) return <Skeleton className="h-24 w-full rounded-lg" />;
+  if (!data) return null;
+  return (
+    <div className="rounded-lg border border-border bg-card p-3 space-y-1.5">
+      <p className="text-[12px] font-semibold">7-day wellness pulse</p>
+      <p className="text-[10px] text-muted-foreground leading-snug">{data.honestyNote}</p>
+      {data.suppressed ? (
+        <p className="text-[12px] text-muted-foreground">
+          Suppressed — fewer than {data.minGroupSize} respondents (k-anonymity).
+        </p>
+      ) : (
+        <div className="flex gap-4 text-[12px] pt-1">
+          <div>
+            <p className="text-muted-foreground text-[10px]">Avg score</p>
+            <p className="font-semibold tabular-nums">{data.avgScore ?? "—"}</p>
+          </div>
+          <div>
+            <p className="text-muted-foreground text-[10px]">Respondents</p>
+            <p className="font-semibold tabular-nums">{data.respondents ?? "—"}</p>
+          </div>
+          <div>
+            <p className="text-muted-foreground text-[10px]">Check-ins</p>
+            <p className="font-semibold tabular-nums">{data.checkins ?? "—"}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function SafetyPageContent() {
   const canManage = useCan("hr:safety:manage");
@@ -194,10 +226,13 @@ export function SafetyPageContent() {
       }
     >
       <div className="flex min-h-0 flex-1 flex-col pb-6">
-        <div className="flex items-center gap-1 border-b mb-4">
+        <div className="flex items-center gap-1 border-b mb-4" role="tablist" aria-label="Safety view">
           {(["incidents", "wellness"] as ActiveTab[]).map((tab) => (
             <button
               key={tab}
+              type="button"
+              role="tab"
+              aria-selected={activeTab === tab}
               onClick={() => setActiveTab(tab)}
               className={`px-3 py-2 text-xs font-medium capitalize border-b-2 transition-colors ${
                 activeTab === tab
@@ -242,6 +277,7 @@ export function SafetyPageContent() {
           <div className="grid gap-4 lg:grid-cols-2">
             <div className="space-y-4">
               <WellnessWidget />
+              {canManage && <WellnessPulseCard />}
             </div>
             <div className="space-y-4">
               <WellnessTrendChart />
