@@ -72,7 +72,10 @@ export function MobileShellFab({
     isPositioned,
     pointerHandlers,
     consumeSuppressClick,
-  } = useMobileShellFabPosition({ onTap: handleToggleFab });
+  } = useMobileShellFabPosition({
+    onTap: handleToggleFab,
+    bottomObstructionPx: showAboveBottomNav ? 76 : 0,
+  });
 
   const handleCloseFab = useCallback(() => {
     setFabOpen(false);

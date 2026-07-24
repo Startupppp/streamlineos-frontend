@@ -58,6 +58,7 @@ function clampCoords(
   top: number,
   width: number,
   height: number,
+  bottomObstructionPx = 0,
 ): FabCoords {
   const insets = readSafeAreaInsets();
   const minLeft = insets.left + EDGE_PADDING_PX;
@@ -68,7 +69,11 @@ function clampCoords(
   );
   const maxTop = Math.max(
     minTop,
-    window.innerHeight - height - insets.bottom - EDGE_PADDING_PX,
+    window.innerHeight -
+      height -
+      insets.bottom -
+      bottomObstructionPx -
+      EDGE_PADDING_PX,
   );
   return {
     left: Math.min(Math.max(left, minLeft), maxLeft),
@@ -126,6 +131,7 @@ function persistPosition(coords: FabCoords): void {
 
 type UseMobileShellFabPositionOptions = {
   onTap?: () => void;
+  bottomObstructionPx?: number;
 };
 
 export function useMobileShellFabPosition(
@@ -138,6 +144,7 @@ export function useMobileShellFabPosition(
   const dragRef = useRef<DragSession | null>(null);
   const onTapRef = useRef(options.onTap);
   onTapRef.current = options.onTap;
+  const bottomObstructionPx = options.bottomObstructionPx ?? 0;
 
   useEffect(() => {
     const stored = loadStoredPosition();
@@ -145,8 +152,10 @@ export function useMobileShellFabPosition(
     const el = containerRef.current;
     const width = el?.offsetWidth || FAB_SIZE_PX;
     const height = el?.offsetHeight || FAB_SIZE_PX;
-    setPosition(clampCoords(stored.left, stored.top, width, height));
-  }, []);
+    setPosition(
+      clampCoords(stored.left, stored.top, width, height, bottomObstructionPx),
+    );
+  }, [bottomObstructionPx]);
 
   useEffect(() => {
     function handleResize() {
@@ -155,17 +164,18 @@ export function useMobileShellFabPosition(
         const el = containerRef.current;
         const width = el?.offsetWidth || FAB_SIZE_PX;
         const height = el?.offsetHeight || FAB_SIZE_PX;
-        return clampCoords(prev.left, prev.top, width, height);
+        return clampCoords(prev.left, prev.top, width, height, bottomObstructionPx);
       });
     }
 
+    handleResize();
     window.addEventListener("resize", handleResize);
     window.visualViewport?.addEventListener("resize", handleResize);
     return () => {
       window.removeEventListener("resize", handleResize);
       window.visualViewport?.removeEventListener("resize", handleResize);
     };
-  }, []);
+  }, [bottomObstructionPx]);
 
   const flushDrag = useCallback(() => {
     const drag = dragRef.current;
@@ -240,6 +250,7 @@ export function useMobileShellFabPosition(
         drag.originTop + (event.clientY - drag.startY),
         drag.width,
         drag.height,
+        bottomObstructionPx,
       );
       drag.pendingLeft = next.left;
       drag.pendingTop = next.top;
@@ -247,7 +258,7 @@ export function useMobileShellFabPosition(
         drag.rafId = requestAnimationFrame(flushDrag);
       }
     },
-    [flushDrag],
+    [flushDrag, bottomObstructionPx],
   );
 
   const endDrag = useCallback(
@@ -279,6 +290,7 @@ export function useMobileShellFabPosition(
           finalTop,
           drag.width,
           drag.height,
+          bottomObstructionPx,
         );
         if (el) {
           el.style.left = `${clamped.left}px`;
@@ -302,7 +314,7 @@ export function useMobileShellFabPosition(
         onTapRef.current?.();
       }
     },
-    [],
+    [bottomObstructionPx],
   );
 
   const handlePointerUp = useCallback(
