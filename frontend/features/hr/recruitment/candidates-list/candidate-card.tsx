@@ -5,8 +5,8 @@ import Link from "next/link";
 import { Mail, Phone, Building2, Clock, Star, Pencil, Trash2 } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { formatDistanceToNow } from "date-fns";
-import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { FilterPill } from "@/components/ui/filter-pill";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -118,16 +118,14 @@ export function StagePillButton({
     onFilter("status", stage.value);
   }
   return (
-    <button
+    <FilterPill
+      active={isActive}
+      dotClassName={stage.dot}
+      activeClassName={cn(stage.activePill, "shadow-sm")}
       onClick={handleClick}
-      className={cn(
-        "px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer flex items-center gap-1.5",
-        isActive ? stage.activePill + " shadow-sm" : "bg-muted text-muted-foreground hover:bg-muted/80",
-      )}
     >
-      <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", isActive ? "bg-current opacity-70" : stage.dot)} />
       {stage.label} · {count}
-    </button>
+    </FilterPill>
   );
 }
 
@@ -191,6 +189,7 @@ export function CandidateCard({
               iconSize={14}
               variant="ghost"
               size="icon"
+              aria-label="Candidate actions"
               className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
             />
           </DropdownMenuTrigger>

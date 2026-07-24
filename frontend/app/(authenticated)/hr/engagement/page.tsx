@@ -18,6 +18,7 @@ import {
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
+import { FilterPill, FilterPillGroup } from "@/components/ui/filter-pill";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { apiClient } from "@/lib/api-client";
@@ -343,23 +344,14 @@ export default function EngagementPage() {
       subtitle="Recognition, mood, communities, and culture"
  variant="display">
       <div className="flex flex-1 min-h-0 flex-col gap-4">
-        <div className="flex items-center gap-1 flex-wrap">
+        <FilterPillGroup className="flex-wrap overflow-x-visible">
           {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full border transition-colors duration-150 ${
-                activeTab === tab.id
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-transparent text-muted-foreground border-border hover:bg-muted"
-              }`}
-            >
+            <FilterPill key={tab.id} active={activeTab === tab.id} onClick={() => setActiveTab(tab.id)}>
               {tab.icon}
               {tab.label}
-            </button>
+            </FilterPill>
           ))}
-        </div>
+        </FilterPillGroup>
 
         <AnimatePresence mode="wait">
           <motion.div

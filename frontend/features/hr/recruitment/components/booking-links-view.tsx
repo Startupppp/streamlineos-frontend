@@ -4,8 +4,9 @@ import { useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
+import { CopyIcon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
@@ -40,11 +41,13 @@ function CopyButton({ text }: { text: string }) {
   }, [text]);
 
   return (
-    <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={handleCopy} title="Copy link">
-      <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-      </svg>
-    </Button>
+    <TooltipIconButton
+      icon={CopyIcon}
+      label="Copy link"
+      iconSize={12}
+      className="h-6 w-6 shrink-0"
+      onClick={handleCopy}
+    />
   );
 }
 

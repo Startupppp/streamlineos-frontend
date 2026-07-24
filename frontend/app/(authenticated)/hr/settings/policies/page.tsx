@@ -3,7 +3,8 @@
 import React, { useState, useCallback } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { motion } from "framer-motion";
-import { Plus, Eye, Pencil } from "lucide-react";
+import { Plus, Pencil } from "lucide-react";
+import { EyeIcon } from "@animateicons/react/lucide";
 import { StateIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -35,6 +36,7 @@ import { PolicyUpsertSheet } from "@/features/hr/policies/policy-upsert-sheet";
 import { PolicyPreviewDialog } from "@/features/hr/policies/policy-preview-dialog";
 import { PolicyVersionHistory } from "@/features/hr/policies/policy-version-history";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 const STATUS_BADGE: Record<string, string> = {
@@ -158,23 +160,20 @@ export default function HrPoliciesPage() {
       header: "",
       cell: (row: HrPolicy) => (
         <div className="flex items-center gap-1 justify-end">
-          <Button
-            variant="ghost"
-            size="icon"
+          <TooltipIconButton
+            icon={EyeIcon}
+            label="Preview"
             className="w-7"
             onClick={() => setPreviewPolicyId(row.id)}
-          >
-            <Eye className="h-3.5 w-3.5" />
-          </Button>
+          />
           {canManage && (
-            <Button
-              variant="ghost"
-              size="icon"
+            <TooltipIconButton
+              label="Edit"
               className="w-7"
               onClick={() => handleOpenEdit(row)}
             >
               <Pencil className="h-3.5 w-3.5" />
-            </Button>
+            </TooltipIconButton>
           )}
         </div>
       ),

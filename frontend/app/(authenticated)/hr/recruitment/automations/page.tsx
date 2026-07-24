@@ -5,6 +5,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
+import { TrashIcon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -144,17 +146,14 @@ function AutomationCard({ auto, onToggle, onSetDeleteId, isTogglePending }: Auto
             >
               {auto.isActive ? "Disable" : "Enable"}
             </Button>
-            <Button
+            <TooltipIconButton
               variant="ghost"
-              size="icon"
+              icon={TrashIcon}
+              iconSize={14}
               className="w-7 text-destructive"
+              label="Delete automation"
               onClick={handleDelete}
-            >
-              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" />
-                <path d="M10 11v6M14 11v6" /><path d="M9 6V4h6v2" />
-              </svg>
-            </Button>
+            />
           </div>
         </div>
       </CardContent>

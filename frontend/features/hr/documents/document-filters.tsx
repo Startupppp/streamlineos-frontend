@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback } from "react";
 import { FileCheck, FileBadge, Shield, FileText, Building2, File } from "lucide-react";
 import { SearchInput } from "@/components/ui/search-input";
 import {
@@ -10,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FilterPill, FilterPillGroup } from "@/components/ui/filter-pill";
 import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 
@@ -32,29 +32,6 @@ export interface DocumentFiltersProps {
   selectedCategory: string;
   onCategoryChange: (value: string) => void;
   categoryTabs: string[];
-}
-
-interface CategoryFilterButtonProps {
-  category: string;
-  isSelected: boolean;
-  onCategoryChange: (value: string) => void;
-}
-
-function CategoryFilterButton({ category, isSelected, onCategoryChange }: CategoryFilterButtonProps) {
-  const handleClick = useCallback(() => onCategoryChange(category), [onCategoryChange, category]);
-  return (
-    <button
-      onClick={handleClick}
-      className={cn(
-        "px-2.5 py-1 rounded-full text-xs font-medium transition-colors duration-200 border",
-        isSelected
-          ? "bg-primary text-primary-foreground border-primary"
-          : "bg-transparent text-muted-foreground border-border hover:bg-muted hover:text-foreground",
-      )}
-    >
-      {category}
-    </button>
-  );
 }
 
 export function DocumentFilters({
@@ -90,16 +67,17 @@ export function DocumentFilters({
         </SelectContent>
       </Select>
 
-      <div className="flex items-center gap-1 ml-1 overflow-x-auto scrollbar-hide flex-nowrap [&>*]:shrink-0">
+      <FilterPillGroup className="ml-1">
         {categoryTabs.map((cat) => (
-          <CategoryFilterButton
+          <FilterPill
             key={cat}
-            category={cat}
-            isSelected={selectedCategory === cat}
-            onCategoryChange={onCategoryChange}
-          />
+            active={selectedCategory === cat}
+            onClick={() => onCategoryChange(cat)}
+          >
+            {cat}
+          </FilterPill>
         ))}
-      </div>
+      </FilterPillGroup>
     </div>
   );
 }

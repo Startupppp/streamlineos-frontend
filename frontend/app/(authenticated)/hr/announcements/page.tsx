@@ -4,6 +4,8 @@ import { useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { FilterPill, FilterPillGroup } from "@/components/ui/filter-pill";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,8 +27,6 @@ import { toast } from "sonner";
 import {
   Pin,
   Pencil,
-  Trash2,
-  Plus,
   ChevronDown,
   ChevronUp,
   Globe,
@@ -36,6 +36,7 @@ import {
   AlertTriangle,
   RefreshCw,
 } from "lucide-react";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useCan } from "@/hooks/api/access";
@@ -150,17 +151,19 @@ function AnnouncementCard({
                     size="icon"
                     className="w-7 text-muted-foreground hover:text-foreground"
                     onClick={handleEdit}
+                    aria-label="Edit announcement"
                   >
                     <Pencil className="h-3.5 w-3.5" />
                   </Button>
-                  <Button
+                  <AnimatedIconButton
+                    icon={Trash2Icon}
+                    iconSize={14}
                     variant="ghost"
                     size="icon"
                     className="w-7 text-muted-foreground hover:text-destructive"
                     onClick={handleDelete}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
+                    aria-label="Delete announcement"
+                  />
                 </>
               )}
             </div>
@@ -185,10 +188,11 @@ function AnnouncementCard({
             >
               {announcement.content}
             </p>
-            <button
+            <Button
               type="button"
+              variant="link"
               onClick={handleToggleExpand}
-              className="mt-1.5 flex items-center gap-1 text-[11px] font-medium text-primary hover:text-primary/80 transition-colors"
+              className="mt-1.5 h-auto p-0 gap-1 text-[11px] font-medium"
             >
               {expanded ? (
                 <>
@@ -201,7 +205,7 @@ function AnnouncementCard({
                   Read more
                 </>
               )}
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -390,42 +394,28 @@ function AnnouncementsContent() {
       badge={undefined}
       actions={
         canManage ? (
-          <Button
+          <AnimatedIconButton
+            icon={PlusIcon}
+            iconSize={14}
             size="sm"
             className="gap-1.5"
-            onClick={handleNewClick}>
-            <Plus className="h-3.5 w-3.5" />
+            onClick={handleNewClick}
+          >
             New Announcement
-          </Button>
+          </AnimatedIconButton>
         ) : undefined
       }
     >
       <div className="space-y-4">
         {canManage && (
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={handleTabPublished}
-              className={`px-3 py-1 text-xs font-medium rounded-full border transition-colors duration-200 ${
-                activeTab === "published"
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-transparent text-muted-foreground border-border hover:bg-muted"
-              }`}
-            >
+          <FilterPillGroup>
+            <FilterPill active={activeTab === "published"} onClick={handleTabPublished}>
               Published
-            </button>
-            <button
-              type="button"
-              onClick={handleTabAll}
-              className={`px-3 py-1 text-xs font-medium rounded-full border transition-colors duration-200 ${
-                activeTab === "all"
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-transparent text-muted-foreground border-border hover:bg-muted"
-              }`}
-            >
+            </FilterPill>
+            <FilterPill active={activeTab === "all"} onClick={handleTabAll}>
               All
-            </button>
-          </div>
+            </FilterPill>
+          </FilterPillGroup>
         )}
 
         {isLoading && (

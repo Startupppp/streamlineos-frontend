@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
+import { Calendar } from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon } from "@animateicons/react/lucide";
 import { format, parseISO } from "date-fns";
-import { Button } from "@/components/ui/button";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useComplianceCalendar } from "@/hooks/api/hr/compliance-calendar";
@@ -45,12 +46,22 @@ export function ComplianceCalendar() {
       <div className="flex items-center justify-between">
         <p className="text-sm font-semibold text-foreground">{monthLabel}</p>
         <div className="flex items-center gap-1">
-          <Button variant="outline" size="icon" className="w-7" onClick={handlePrev}>
-            <ChevronLeft className="h-3.5 w-3.5" />
-          </Button>
-          <Button variant="outline" size="icon" className="w-7" onClick={handleNext}>
-            <ChevronRight className="h-3.5 w-3.5" />
-          </Button>
+          <TooltipIconButton
+            icon={ChevronLeftIcon}
+            label="Previous month"
+            variant="outline"
+            iconSize={14}
+            className="w-7"
+            onClick={handlePrev}
+          />
+          <TooltipIconButton
+            icon={ChevronRightIcon}
+            label="Next month"
+            variant="outline"
+            iconSize={14}
+            className="w-7"
+            onClick={handleNext}
+          />
         </div>
       </div>
 

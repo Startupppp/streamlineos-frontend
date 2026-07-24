@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
@@ -12,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import { FilterPill, FilterPillGroup } from "@/components/ui/filter-pill";
 import { Label } from "@/components/ui/label";
 import {
   Sheet,
@@ -51,6 +53,8 @@ function KpiDeleteButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
     <button
+      type="button"
+      aria-label="Delete KPI"
       onClick={onClick}
       className="ml-2 p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
       {...hoverHandlers}
@@ -156,21 +160,17 @@ export function KpiLibraryTab() {
             value={search}
             onValueChange={setSearch}
           />
-          <div className="flex min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+          <FilterPillGroup className="min-w-0">
             {categories.map((cat) => (
-              <button
+              <FilterPill
                 key={cat}
+                active={categoryFilter === cat}
                 onClick={() => setCategoryFilter(cat)}
-                className={`px-3 py-1 rounded-full text-xs font-medium border transition-all duration-150 ${
-                  categoryFilter === cat
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground dark:hover:border-primary/50"
-                }`}
               >
                 {cat}
-              </button>
+              </FilterPill>
             ))}
-          </div>
+          </FilterPillGroup>
         </div>
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetTrigger asChild>
@@ -212,13 +212,14 @@ export function KpiLibraryTab() {
                 <Input type="number" value={form.weight} onChange={(e) => handleFormChange("weight", e.target.value)} placeholder="1" />
               </div>
               <motion.div whileTap={{ scale: 0.97 }}>
-                <Button
+                <LoadingButton
                   className="w-full"
                   onClick={handleCreate}
-                  disabled={createKpi.isPending}
+                  isPending={createKpi.isPending}
+                  loadingText="Creating…"
                 >
-                  {createKpi.isPending ? "Creating…" : "Create KPI"}
-                </Button>
+                  Create KPI
+                </LoadingButton>
               </motion.div>
             </SheetBody>
           </SheetContent>

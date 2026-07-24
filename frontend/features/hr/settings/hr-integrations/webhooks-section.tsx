@@ -3,13 +3,15 @@
 import { useCallback, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
-import { Pencil, Activity } from "lucide-react";
-import { PlusIcon, Trash2Icon, SendIcon } from "@animateicons/react/lucide";
+import { Pencil } from "lucide-react";
+import { PlusIcon, Trash2Icon, SendIcon, ActivityIcon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -87,44 +89,50 @@ function WebhookRow({
         </p>
       </div>
       <div className="flex items-center gap-1 shrink-0">
-        <Button
-          variant="ghost"
-          size="icon"
+        <TooltipIconButton
+          icon={ActivityIcon}
+          iconSize={14}
+          label="View Deliveries"
           className="w-7"
-          title="View deliveries"
           onClick={() => onViewDeliveries(sub)}
-        >
-          <Activity className="h-3.5 w-3.5" />
-        </Button>
-        <LoadingButton
-          variant="ghost"
-          size="icon"
+        />
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <LoadingButton
+              variant="ghost"
+              size="icon"
+              className="w-7"
+              aria-label="Send Test Payload"
+              isPending={test.isPending}
+              onClick={handleTest}
+            >
+              <SendIcon size={14} />
+            </LoadingButton>
+          </TooltipTrigger>
+          <TooltipContent>Send Test Payload</TooltipContent>
+        </Tooltip>
+        <TooltipIconButton
+          label="Edit"
           className="w-7"
-          title="Send test payload"
-          isPending={test.isPending}
-          onClick={handleTest}
-        >
-          <SendIcon size={14} />
-        </LoadingButton>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="w-7"
-          title="Edit"
           onClick={() => onEdit(sub)}
         >
           <Pencil className="h-3.5 w-3.5" />
-        </Button>
-        <LoadingButton
-          variant="ghost"
-          size="icon"
-          className="w-7 text-destructive hover:text-destructive"
-          title="Delete"
-          isPending={remove.isPending}
-          onClick={() => setConfirmDeleteOpen(true)}
-        >
-          <Trash2Icon size={14} />
-        </LoadingButton>
+        </TooltipIconButton>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <LoadingButton
+              variant="ghost"
+              size="icon"
+              className="w-7 text-destructive hover:text-destructive"
+              aria-label="Delete"
+              isPending={remove.isPending}
+              onClick={() => setConfirmDeleteOpen(true)}
+            >
+              <Trash2Icon size={14} />
+            </LoadingButton>
+          </TooltipTrigger>
+          <TooltipContent>Delete</TooltipContent>
+        </Tooltip>
       </div>
 
       <ConfirmSheet

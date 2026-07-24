@@ -1,11 +1,14 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { CheckIcon, PlusIcon, SendIcon, TrashIcon, XIcon } from "@animateicons/react/lucide";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { OfferNegotiationSheet } from "./offer-negotiation-sheet";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -184,17 +187,12 @@ function OfferCard({
               <p className="text-sm font-medium">{offer.offeredDesignation}</p>
             )}
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
+          <TooltipIconButton
+            icon={TrashIcon}
+            label="Delete offer"
             className="w-7 text-destructive"
             onClick={handleDelete}
-          >
-            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" />
-              <path d="M10 11v6M14 11v6" /><path d="M9 6V4h6v2" />
-            </svg>
-          </Button>
+          />
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs mb-3">
@@ -246,34 +244,27 @@ function OfferCard({
 
         <div className="flex items-center gap-2 flex-wrap">
           {offer.offerStatus === "DRAFT" && (
-            <Button
+            <AnimatedIconButton
+              icon={SendIcon}
+              iconSize={12}
               size="sm"
               variant="outline"
-              className="text-xs"
+              className="text-xs gap-1.5"
               onClick={handleSubmitForApproval}
               disabled={isSubmittingApproval}
             >
-              <svg className="mr-1.5 h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
-              </svg>
               Submit for CEO Approval
-            </Button>
+            </AnimatedIconButton>
           )}
 
           {canApprove && offer.offerStatus === "PENDING_APPROVAL" && (
             <>
-              <Button size="sm" className="text-xs" onClick={handleApprove}>
-                <svg className="mr-1.5 h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
+              <AnimatedIconButton icon={CheckIcon} iconSize={12} size="sm" variant="secondary" className="text-xs gap-1.5" onClick={handleApprove}>
                 Approve
-              </Button>
-              <Button size="sm" variant="destructive" className="text-xs" onClick={handleReject}>
-                <svg className="mr-1.5 h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
+              </AnimatedIconButton>
+              <AnimatedIconButton icon={XIcon} iconSize={12} size="sm" variant="destructive" className="text-xs gap-1.5" onClick={handleReject}>
                 Reject
-              </Button>
+              </AnimatedIconButton>
             </>
           )}
 
@@ -427,6 +418,7 @@ export function OffersTab({ candidateId }: Props) {
   }, []);
 
   function handleOpenCreateSheet() { setSheetOpen(true); }
+  function handleRetry() { void refetch(); }
   function handleCloseCreateSheet() { setSheetOpen(false); }
   function handleOfferedDesignationChange(e: React.ChangeEvent<HTMLInputElement>) { setOfferedDesignation(e.target.value); }
   function handleOfferedSalaryChange(e: React.ChangeEvent<HTMLInputElement>) { setOfferedSalary(e.target.value); }
@@ -442,12 +434,9 @@ export function OffersTab({ candidateId }: Props) {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <p className="text-sm text-muted-foreground">Track offer letters and candidate responses</p>
-        <Button size="sm" onClick={handleOpenCreateSheet}>
-          <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
+        <AnimatedIconButton icon={PlusIcon} size="sm" className="gap-1.5" onClick={handleOpenCreateSheet}>
           Create Offer
-        </Button>
+        </AnimatedIconButton>
       </div>
 
       {isLoading ? (
@@ -458,7 +447,7 @@ export function OffersTab({ candidateId }: Props) {
           <p className="text-xs text-muted-foreground">
             You may not have permission to view offers, or the server returned an unexpected response.
           </p>
-          <Button size="sm" variant="outline" onClick={() => void refetch()}>
+          <Button size="sm" variant="outline" onClick={handleRetry}>
             Try again
           </Button>
         </div>

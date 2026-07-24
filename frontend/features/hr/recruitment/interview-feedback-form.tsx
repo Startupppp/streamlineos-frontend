@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
@@ -23,7 +24,8 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useUpdateInterview } from "@/hooks/api/hr";
-import { Star, Plus, X, ClipboardList, BarChart3, MessageSquare } from "lucide-react";
+import { Star, Plus, ClipboardList, BarChart3, MessageSquare } from "lucide-react";
+import { XIcon } from "@animateicons/react/lucide";
 import { cn } from "@/lib/utils";
 import type { Interview, InterviewResult, InterviewRubricEntry } from "@/types/hr";
 
@@ -96,15 +98,15 @@ function RubricEntryRow({ entry, index, onCategoryNameChange, onScoreChange, onC
             <span className="text-sm font-bold tabular-nums text-foreground w-5 text-center">{entry.score}</span>
             <span className="text-[10px] text-muted-foreground">/{entry.maxScore}</span>
           </div>
-          <Button
+          <TooltipIconButton
             type="button"
             variant="ghost"
-            size="icon"
+            icon={XIcon}
+            iconSize={12}
+            label="Remove category"
             className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive transition-colors duration-200"
             onClick={handleRemoveClick}
-          >
-            <X className="h-3 w-3" />
-          </Button>
+          />
         </div>
         <Slider
           value={[entry.score]}

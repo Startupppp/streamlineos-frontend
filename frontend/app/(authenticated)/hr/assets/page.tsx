@@ -12,13 +12,12 @@ import {
   Wrench,
   Plus,
   Pencil,
-  Trash2,
-  UserPlus,
-  UserMinus,
   Download,
 } from "lucide-react";
+import { Trash2Icon, UserPlusIcon, UserMinusIcon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -261,33 +260,30 @@ function ASSET_COLUMNS(
       className: "text-right",
       cell: (asset: Asset) => (
         <div className="flex items-center justify-end gap-1">
-          <Button
+          <TooltipIconButton
+            icon={asset.assignedTo ? UserMinusIcon : UserPlusIcon}
+            iconSize={14}
             variant="ghost"
-            size="icon"
             className="w-7"
-            title={asset.assignedTo ? "Reassign / Unassign" : "Assign Employee"}
+            label={asset.assignedTo ? "Reassign / Unassign" : "Assign Employee"}
             onClick={(e) => { e.stopPropagation(); onAssign(asset); }}
-          >
-            {asset.assignedTo ? <UserMinus className="h-3.5 w-3.5" /> : <UserPlus className="h-3.5 w-3.5" />}
-          </Button>
-          <Button
+          />
+          <TooltipIconButton
             variant="ghost"
-            size="icon"
             className="w-7"
-            title="Edit asset"
+            label="Edit asset"
             onClick={(e) => { e.stopPropagation(); onEdit(asset); }}
           >
             <Pencil className="h-3.5 w-3.5" />
-          </Button>
-          <Button
+          </TooltipIconButton>
+          <TooltipIconButton
+            icon={Trash2Icon}
+            iconSize={14}
             variant="ghost"
-            size="icon"
             className="w-7 text-destructive hover:text-destructive"
-            title="Retire asset"
+            label="Retire asset"
             onClick={(e) => { e.stopPropagation(); onRetire(asset.id); }}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
+          />
         </div>
       ),
     }] as DataTableColumn<Asset>[] : []),

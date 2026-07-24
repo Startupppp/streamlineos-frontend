@@ -6,6 +6,8 @@ import { useState, useCallback, useMemo } from "react";
 import { useCertifications, useCreateCertification, type Certification } from "@/hooks/api/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { FilterPill, FilterPillGroup } from "@/components/ui/filter-pill";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
@@ -15,7 +17,8 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { format, differenceInDays } from "date-fns";
-import { Plus, Award, Calendar, ExternalLink, AlertTriangle, CheckCircle2, XCircle, User, AlertCircle } from "lucide-react";
+import { Award, Calendar, ExternalLink, AlertTriangle, CheckCircle2, XCircle, User, AlertCircle } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import {
@@ -179,7 +182,7 @@ export default function CertificationsPage() {
             <p className="text-sm font-medium text-foreground">Failed to load certifications</p>
             <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
           </div>
-          <Button size="sm" variant="outline" onClick={handleRetry}>Try again</Button>
+          <Button size="sm" variant="outline" onClick={handleRetry}>Try Again</Button>
         </div>
       </PageWrapper>
     );
@@ -194,10 +197,9 @@ export default function CertificationsPage() {
       title="Certifications"
       subtitle="Track professional certifications and renewals"
       actions={
-        <Button size="sm" className="gap-1.5" onClick={handleOpenSheet}>
-          <Plus className="h-3.5 w-3.5" />
+        <AnimatedIconButton icon={PlusIcon} iconSize={14} size="sm" className="gap-1.5" onClick={handleOpenSheet}>
           Add Certification
-        </Button>
+        </AnimatedIconButton>
       }
     >
       {!certs?.length ? (
@@ -210,56 +212,20 @@ export default function CertificationsPage() {
         <div className="space-y-3">
           <div className={FILTER_TOOLBAR_ROW}>
             <SearchInput placeholder="Search certifications..." value={searchQuery} onValueChange={handleSearchChange} className="w-48" />
-            <div className="flex items-center gap-1 flex-wrap">
-              <button
-                type="button"
-                onClick={handleSetFilterAll}
-                className={cn(
-                  "px-3 py-1 text-xs font-medium rounded-full border transition-colors duration-200",
-                  statusFilter === "ALL"
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-transparent text-muted-foreground border-border hover:bg-muted",
-                )}
-              >
+            <FilterPillGroup className="flex-wrap overflow-x-visible">
+              <FilterPill active={statusFilter === "ALL"} onClick={handleSetFilterAll}>
                 All
-              </button>
-              <button
-                type="button"
-                onClick={handleSetFilterValid}
-                className={cn(
-                  "px-3 py-1 text-xs font-medium rounded-full border transition-colors duration-200",
-                  statusFilter === "VALID"
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-transparent text-muted-foreground border-border hover:bg-muted",
-                )}
-              >
-                Valid ({validCount})
-              </button>
-              <button
-                type="button"
-                onClick={handleSetFilterExpiring}
-                className={cn(
-                  "px-3 py-1 text-xs font-medium rounded-full border transition-colors duration-200",
-                  statusFilter === "EXPIRING_SOON"
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-transparent text-muted-foreground border-border hover:bg-muted",
-                )}
-              >
-                Expiring Soon ({expiringCount})
-              </button>
-              <button
-                type="button"
-                onClick={handleSetFilterExpired}
-                className={cn(
-                  "px-3 py-1 text-xs font-medium rounded-full border transition-colors duration-200",
-                  statusFilter === "EXPIRED"
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-transparent text-muted-foreground border-border hover:bg-muted",
-                )}
-              >
-                Expired ({expiredCount})
-              </button>
-            </div>
+              </FilterPill>
+              <FilterPill active={statusFilter === "VALID"} count={validCount} onClick={handleSetFilterValid}>
+                Valid
+              </FilterPill>
+              <FilterPill active={statusFilter === "EXPIRING_SOON"} count={expiringCount} onClick={handleSetFilterExpiring}>
+                Expiring Soon
+              </FilterPill>
+              <FilterPill active={statusFilter === "EXPIRED"} count={expiredCount} onClick={handleSetFilterExpired}>
+                Expired
+              </FilterPill>
+            </FilterPillGroup>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

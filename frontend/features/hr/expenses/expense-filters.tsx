@@ -4,6 +4,7 @@ import React from "react";
 import { Filter } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { DownloadIcon } from "@animateicons/react/lucide";
+import { FilterPill, FilterPillGroup } from "@/components/ui/filter-pill";
 import {
   Select,
   SelectContent,
@@ -20,49 +21,6 @@ import type {
   ExpenseCategoryRecord as ExpenseCategory,
 } from "@/types/hr/expenses";
 import type { DatePreset } from "@/hooks/common/use-expense-filters";
-
-function StatusFilterButton({
-  filterKey,
-  label,
-  count,
-  isActive,
-  onStatusChange,
-}: {
-  filterKey: StatusFilter;
-  label: string;
-  count: number | null;
-  isActive: boolean;
-  onStatusChange: (status: StatusFilter) => void;
-}) {
-  function handleClick() {
-    onStatusChange(filterKey);
-  }
-  return (
-    <button
-      onClick={handleClick}
-      className={cn(
-        "h-8 px-3 rounded-full text-xs font-medium transition-all duration-200 border inline-flex items-center gap-1.5",
-        isActive
-          ? "bg-primary text-primary-foreground border-primary"
-          : "border-input bg-card text-muted-foreground hover:border-primary/40 hover:bg-muted/50 hover:text-foreground",
-      )}
-    >
-      {label}
-      {count !== null && (
-        <span
-          className={cn(
-            "text-[10px] font-semibold px-1.5 py-0.5 rounded-full min-w-[18px] text-center",
-            isActive
-              ? "bg-white/20 dark:bg-black/20"
-              : "bg-muted text-muted-foreground",
-          )}
-        >
-          {count}
-        </span>
-      )}
-    </button>
-  );
-}
 
 function MemberStatusTab({
   status,
@@ -139,7 +97,7 @@ export function AdminExpenseFilters({
 
   return (
     <div className={cn(FILTER_TOOLBAR_ROW, "justify-between")}>
-      <div className="flex items-center gap-1.5 flex-nowrap overflow-x-auto [&>*]:shrink-0">
+      <FilterPillGroup>
         {[
           { key: "ALL" as StatusFilter, label: "All Claims", count: null },
           {
@@ -150,16 +108,16 @@ export function AdminExpenseFilters({
           { key: "APPROVED" as StatusFilter, label: "Approved", count: null },
           { key: "REJECTED" as StatusFilter, label: "Rejected", count: null },
         ].map((item) => (
-          <StatusFilterButton
+          <FilterPill
             key={item.key}
-            filterKey={item.key}
-            label={item.label}
+            active={statusFilter === item.key}
             count={item.count}
-            isActive={statusFilter === item.key}
-            onStatusChange={onStatusChange}
-          />
+            onClick={() => onStatusChange(item.key)}
+          >
+            {item.label}
+          </FilterPill>
         ))}
-      </div>
+      </FilterPillGroup>
       {employees.length > 0 && onUserChange && (
         <Select
           value={selectedUserId || "all"}

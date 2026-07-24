@@ -31,11 +31,12 @@ import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { ExternalBoardsSheet } from "@/features/hr/recruitment/jobs/external-boards-sheet";
 import { toast } from "sonner";
 import {
-  Plus, Trash2, Play, Pause, Share2, Loader2, Copy,
+  Plus, Trash2, Play, Pause, Share2, Loader2,
   ExternalLink, MapPin, Users, Briefcase, Building2, Pencil, ListChecks, CopyPlus,
 } from "lucide-react";
-import { EllipsisIcon } from "@animateicons/react/lucide";
+import { EllipsisIcon, CopyIcon, ExternalLinkIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import type { JobPostingStatus } from "@/types/hr";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
@@ -79,13 +80,22 @@ function ShareLinkRow({ link, onCopy }: ShareLinkRowProps) {
     <div className="flex items-center gap-2 rounded-xl border px-3 py-2.5 hover:bg-muted/30 transition-colors">
       <span className="w-6 text-center text-xs font-bold text-muted-foreground">{PLATFORM_ICONS[link.platform] ?? link.platform[0]}</span>
       <span className="flex-1 text-sm font-medium">{link.name}</span>
-      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleCopyUtm}>
-        <Copy className="h-3 w-3" />
-      </Button>
+      <TooltipIconButton
+        icon={CopyIcon}
+        iconSize={12}
+        label="Copy link"
+        className="h-6 w-6"
+        onClick={handleCopyUtm}
+      />
       <a href={link.url} target="_blank" rel="noopener noreferrer">
-        <Button variant="ghost" size="icon" className="h-6 w-6">
-          <ExternalLink className="h-3 w-3" />
-        </Button>
+        <AnimatedIconButton
+          icon={ExternalLinkIcon}
+          iconSize={12}
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6"
+          aria-label="Open link"
+        />
       </a>
     </div>
   );
@@ -123,9 +133,13 @@ function ShareJobDialog({ jobId, onClose }: { jobId: number; onClose: () => void
           <div className="space-y-3">
             <div className="flex items-center gap-2 rounded-xl border px-3 py-2.5 bg-muted/40">
               <span className="flex-1 text-xs text-muted-foreground truncate">{data.directLink}</span>
-              <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={handleCopyDirectLink}>
-                <Copy className="h-3 w-3" />
-              </Button>
+              <TooltipIconButton
+                icon={CopyIcon}
+                iconSize={12}
+                label="Copy link"
+                className="h-6 w-6 shrink-0"
+                onClick={handleCopyDirectLink}
+              />
             </div>
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Share on</p>
             <div className="space-y-2">
@@ -247,13 +261,13 @@ function JobCard({
                     <Play className="mr-2 h-3.5 w-3.5" /> Resume
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleClose}>
-                    Close job
+                    Close Job
                   </DropdownMenuItem>
                 </>
               )}
               {(job.status === "OPEN") && (
                 <DropdownMenuItem onClick={handleClose}>
-                  Close job
+                  Close Job
                 </DropdownMenuItem>
               )}
               {(job.status === "CLOSED" || job.status === "FILLED") && (

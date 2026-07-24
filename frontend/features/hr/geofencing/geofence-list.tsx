@@ -2,12 +2,11 @@
 
 import { motion } from "framer-motion";
 import { Edit2 } from "lucide-react";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Trash2Icon } from "@animateicons/react/lucide";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api-client";
@@ -68,16 +67,17 @@ export function GeofenceList({ canManage, onEdit }: Props) {
             </div>
             {canManage && (
               <div className="flex items-center gap-1 shrink-0">
-                <Button
+                <TooltipIconButton
+                  label={`Edit ${fence.name}`}
                   variant="ghost"
                   size="icon"
                   className="w-7"
                   onClick={() => onEdit(fence)}
-                  aria-label={`Edit ${fence.name}`}
                 >
                   <Edit2 className="h-3.5 w-3.5" />
-                </Button>
-                <AnimatedIconButton
+                </TooltipIconButton>
+                <TooltipIconButton
+                  label="Delete"
                   icon={Trash2Icon}
                   iconSize={14}
                   variant="ghost"
