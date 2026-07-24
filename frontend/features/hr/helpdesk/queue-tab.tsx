@@ -60,6 +60,7 @@ function DeleteRoutingButton({ isPending, onClick }: { isPending: boolean; onCli
     <LoadingButton
       variant="ghost"
       size="icon"
+      aria-label="Delete routing rule"
       className="h-6 w-6 text-destructive hover:text-destructive"
       isPending={isPending}
       onClick={onClick}

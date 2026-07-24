@@ -333,6 +333,7 @@ export function FormBuilder({ form, onSave, isPending }: FormBuilderProps) {
                         variant="ghost"
                         size="icon"
                         className="h-6 w-6"
+                        aria-label="Move field up"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleMoveField(idx, -1);
@@ -345,6 +346,7 @@ export function FormBuilder({ form, onSave, isPending }: FormBuilderProps) {
                         variant="ghost"
                         size="icon"
                         className="h-6 w-6"
+                        aria-label="Move field down"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleMoveField(idx, 1);
@@ -401,6 +403,7 @@ export function FormBuilder({ form, onSave, isPending }: FormBuilderProps) {
                         variant="ghost"
                         size="icon"
                         className="h-6 w-6"
+                        aria-label="Move field up"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleMoveField(idx, -1);
@@ -413,6 +416,7 @@ export function FormBuilder({ form, onSave, isPending }: FormBuilderProps) {
                         variant="ghost"
                         size="icon"
                         className="h-6 w-6"
+                        aria-label="Move field down"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleMoveField(idx, 1);

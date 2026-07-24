@@ -66,6 +66,7 @@ function RemoveOptionButton({ onClick }: { onClick: () => void }) {
       size="icon"
       className="w-7 text-muted-foreground hover:text-destructive shrink-0"
       onClick={onClick}
+      aria-label="Remove option"
       {...hoverHandlers}
     >
       <XIcon ref={iconRef} size={14} />

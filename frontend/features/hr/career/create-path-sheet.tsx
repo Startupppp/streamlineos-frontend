@@ -206,6 +206,7 @@ export function CreatePathSheet({ open, onOpenChange }: Props) {
                       className="w-7 shrink-0 text-muted-foreground hover:text-destructive"
                       onClick={() => remove(idx)}
                       type="button"
+                      aria-label={`Remove level ${idx + 1}`}
                     />
                   )}
                 </div>

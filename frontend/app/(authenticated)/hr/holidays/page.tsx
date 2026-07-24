@@ -134,7 +134,7 @@ function HolidayItem({
       )}
       {canManage && (
         <div className="flex gap-1 shrink-0">
-          <Button variant="ghost" size="icon" className="w-7" onClick={handleEditClick}>
+          <Button variant="ghost" size="icon" className="w-7" aria-label={`Edit ${holiday.name}`} onClick={handleEditClick}>
             <Pencil className="h-3.5 w-3.5" />
           </Button>
           <AnimatedIconButton
@@ -143,6 +143,7 @@ function HolidayItem({
             size="icon"
             className="w-7 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
             iconSize={14}
+            aria-label={`Delete ${holiday.name}`}
             onClick={handleDeleteClick}
           />
         </div>
@@ -189,9 +190,9 @@ function CalendarView({
     <div className="space-y-4">
       <div className="bg-card border border-border rounded-lg shadow-sm p-4">
         <div className="flex items-center justify-between mb-4">
-          <AnimatedIconButton icon={ChevronLeftIcon} variant="ghost" size="icon" iconSize={16} onClick={onPrev} />
+          <AnimatedIconButton icon={ChevronLeftIcon} variant="ghost" size="icon" iconSize={16} aria-label="Previous month" onClick={onPrev} />
           <h2 className="text-lg font-semibold text-foreground">{format(viewDate, "MMMM yyyy")}</h2>
-          <AnimatedIconButton icon={ChevronRightIcon} variant="ghost" size="icon" iconSize={16} onClick={onNext} />
+          <AnimatedIconButton icon={ChevronRightIcon} variant="ghost" size="icon" iconSize={16} aria-label="Next month" onClick={onNext} />
         </div>
         <div className="grid grid-cols-7 gap-1">
           {WEEKDAYS.map((day) => (

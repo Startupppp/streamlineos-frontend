@@ -414,7 +414,7 @@ export function PIPTab() {
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium text-muted-foreground">Objective {idx + 1}</span>
                   {objectives.length > 1 && (
-                    <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => removeObjective(idx)}>
+                    <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => removeObjective(idx)} aria-label={`Remove objective ${idx + 1}`}>
                       <Trash2 className="h-3 w-3" />
                     </Button>
                   )}

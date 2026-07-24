@@ -209,7 +209,7 @@ export default function WorkflowSettingsPage() {
                   {(canManage || canView) && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="w-7 shrink-0">
+                        <Button variant="ghost" size="icon" className="w-7 shrink-0" aria-label="Workflow Actions">
                           <Settings2 className="h-3.5 w-3.5" />
                         </Button>
                       </DropdownMenuTrigger>

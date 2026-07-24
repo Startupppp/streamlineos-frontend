@@ -31,7 +31,7 @@ function getRowKey(row: HrCustomFieldDefinition) {
 function DeleteFieldButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
-    <Button variant="ghost" size="icon" className="w-7 text-destructive" onClick={onClick} {...hoverHandlers}>
+    <Button variant="ghost" size="icon" className="w-7 text-destructive" onClick={onClick} aria-label="Delete field" {...hoverHandlers}>
       <Trash2Icon ref={iconRef} size={14} />
     </Button>
   );
@@ -115,7 +115,7 @@ export function CustomFieldsDataTable({ entityType, fields }: CustomFieldsDataTa
       headerClassName: "w-20",
       cell: (row) => (
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="w-7" onClick={() => handleEditClick(row)}>
+          <Button variant="ghost" size="icon" className="w-7" onClick={() => handleEditClick(row)} aria-label="Edit field">
             <Pencil className="h-3.5 w-3.5" />
           </Button>
           <DeleteFieldButton onClick={() => handleDelete(row.id)} />

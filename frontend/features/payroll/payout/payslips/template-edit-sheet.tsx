@@ -216,7 +216,7 @@ export function TemplateEditSheet({ open, onOpenChange, template }: TemplateEdit
                             aria-label={`Color ${preset}`}
                             onClick={() => field.onChange(preset)}
                             className={cn(
-                              "h-6 w-6 rounded-full border-2 transition-all",
+                              "h-6 w-6 rounded-full border-2 transition-all outline-none focus-visible:ring-1 focus-visible:ring-ring",
                               field.value === preset
                                 ? "border-foreground ring-2 ring-foreground ring-offset-2"
                                 : "border-transparent hover:border-muted-foreground",

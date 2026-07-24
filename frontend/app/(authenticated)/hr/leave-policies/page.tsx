@@ -85,7 +85,7 @@ function PolicyCard({
         </div>
         {canManage && (
           <div className="flex gap-1">
-            <Button variant="ghost" size="icon" className="w-7" onClick={handleEditClick}>
+            <Button variant="ghost" size="icon" className="w-7" aria-label={`Edit ${policy.name}`} onClick={handleEditClick}>
               <Pencil className="h-3.5 w-3.5" />
             </Button>
             <AnimatedIconButton
@@ -94,6 +94,7 @@ function PolicyCard({
               size="icon"
               className="w-7 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
               iconSize={14}
+              aria-label={`Delete ${policy.name}`}
               onClick={handleDeleteClick}
             />
           </div>

@@ -68,6 +68,7 @@ function RosterCard({ roster, canManage }: RosterCardProps) {
             size="icon"
             className="w-7"
             onClick={handleToggle}
+            aria-label={expanded ? `Collapse ${roster.name}` : `Expand ${roster.name}`}
           />
         </div>
       </div>
