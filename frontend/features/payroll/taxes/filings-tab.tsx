@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { Download, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -23,21 +24,28 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
+import { MonthPicker } from "@/features/payroll/shared/month-picker";
 import {
   usePayrollFilings,
+  useFilingCapabilities,
   usePrepareFilingExport,
   useAttachAcknowledgement,
+  downloadFilingExport,
   type PayrollFiling,
   type FilingType,
   type FilingStatus,
 } from "@/hooks/api/payroll/filings";
+
+const FALLBACK_HONESTY_LABEL = "Export prepared — external filing required";
+const FALLBACK_CAPABILITY_NOTE =
+  "StreamlineOS prepares statutory export artifacts and tracks challan/acknowledgement references. Filing with EPFO/ESIC/tax portals is not automatic until a provider is connected.";
 
 const FILING_TYPE_LABEL: Record<FilingType, string> = {
   PF_ECR: "PF ECR",
   ESI: "ESI",
   PT: "Professional Tax",
   TDS_24Q: "TDS (Form 24Q)",
-  FORM16: "Form 16 / 130",
+  FORM16: "Form 16 (summary only)",
   LWF: "Labour Welfare Fund",
 };
 
@@ -74,6 +82,13 @@ function getCurrentFY(): string {
     : `${year - 1}-${String(year).slice(2)}`;
 }
 
+function getDefaultMonth(): string {
+  const now = new Date();
+  // Prefer previous month for payroll filings
+  const d = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
 function StatusBadge({ status }: { status: FilingStatus }) {
   return (
     <span
@@ -87,29 +102,56 @@ function StatusBadge({ status }: { status: FilingStatus }) {
 export function FilingsTab() {
   const canManage = useCan("payroll:tax:manage");
   const { data, isLoading } = usePayrollFilings();
+  const { data: capability } = useFilingCapabilities();
   const prepareMutation = usePrepareFilingExport();
   const ackMutation = useAttachAcknowledgement();
 
+  const honestyLabel = capability?.honestyLabel ?? FALLBACK_HONESTY_LABEL;
+  const capabilityNote = capability?.note ?? FALLBACK_CAPABILITY_NOTE;
+  const supportedTypes = capability?.supportedTypes ?? FILING_TYPE_OPTIONS;
+  const ruleBundle = capability?.ruleBundleVersion;
+
   const [showExport, setShowExport] = useState(false);
   const [exportType, setExportType] = useState<FilingType>("PF_ECR");
+  const [exportMonth, setExportMonth] = useState(getDefaultMonth);
   const [ackTarget, setAckTarget] = useState<PayrollFiling | null>(null);
   const [challanRef, setChallanRef] = useState("");
   const [ackRef, setAckRef] = useState("");
+  const [downloadingId, setDownloadingId] = useState<number | null>(null);
 
   function handleExportConfirm() {
     prepareMutation.mutate(
-      { filingType: exportType, fiscalYear: getCurrentFY() },
       {
-        onSuccess: () => {
-          toast.success("Export prepared — external filing required", {
-            description:
-              "The filing file is ready. Submit it to the statutory portal, then record the acknowledgement here.",
-          });
+        filingType: exportType,
+        fiscalYear: getCurrentFY(),
+        month: exportMonth,
+      },
+      {
+        onSuccess: (row) => {
+          const summary = row.exportSummary;
+          const rowNote =
+            summary != null
+              ? `${summary.rowCount} employee row(s) from ${summary.periodMonth ?? exportMonth} (rule ${summary.ruleBundleVersion}).`
+              : "Submit the export on the statutory portal, then record the acknowledgement here.";
+          toast.success(honestyLabel, { description: rowNote });
           setShowExport(false);
         },
         onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
+  }
+
+  async function handleDownload(filing: PayrollFiling) {
+    if (downloadingId != null) return;
+    setDownloadingId(filing.id);
+    try {
+      await downloadFilingExport(filing.id);
+      toast.success("CSV export downloaded");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setDownloadingId(null);
+    }
   }
 
   function handleAckOpen(filing: PayrollFiling) {
@@ -156,6 +198,9 @@ export function FilingsTab() {
       cell: (row: PayrollFiling) => (
         <span className="text-[12px] text-muted-foreground tabular-nums">
           {row.fiscalYear ?? "—"}
+          {row.ruleVersion ? (
+            <span className="ml-1 text-[10px] opacity-80">· {row.ruleVersion}</span>
+          ) : null}
         </span>
       ),
     },
@@ -183,22 +228,59 @@ export function FilingsTab() {
     {
       key: "actions",
       header: "",
-      cell: (row: PayrollFiling) =>
-        canManage && row.status !== "ACKNOWLEDGED" && row.status !== "RECONCILED" ? (
-          <Button size="sm" variant="outline" onClick={() => handleAckOpen(row)}>
-            Record acknowledgement
-          </Button>
-        ) : null,
+      cell: (row: PayrollFiling) => (
+        <div className="flex flex-wrap items-center justify-end gap-1.5">
+          {row.status !== "DRAFT" && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => void handleDownload(row)}
+              disabled={downloadingId === row.id}
+            >
+              <Download className="mr-1 h-3.5 w-3.5" />
+              {downloadingId === row.id ? "…" : "CSV"}
+            </Button>
+          )}
+          {canManage && row.status !== "ACKNOWLEDGED" && row.status !== "RECONCILED" ? (
+            <Button size="sm" variant="outline" onClick={() => handleAckOpen(row)}>
+              Record acknowledgement
+            </Button>
+          ) : null}
+        </div>
+      ),
     },
   ];
 
   return (
     <div className="flex flex-1 min-h-0 flex-col gap-3">
+      <div
+        role="status"
+        className="flex gap-2.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 dark:border-amber-500/30 dark:bg-amber-500/10"
+      >
+        <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-700 dark:text-amber-300" />
+        <div className="min-w-0 space-y-0.5">
+          <p className="text-[12px] font-medium text-amber-900 dark:text-amber-100">
+            {honestyLabel}
+            {ruleBundle ? (
+              <span className="ml-1.5 font-normal text-amber-800/80 dark:text-amber-200/70">
+                · rule {ruleBundle}
+              </span>
+            ) : null}
+          </p>
+          <p className="text-[11px] leading-snug text-amber-800/90 dark:text-amber-200/80">
+            {capabilityNote}
+            {capability && !capability.automaticFiling && !capability.automaticRemittance
+              ? " Automatic filing and remittance are not available."
+              : null}
+          </p>
+        </div>
+      </div>
+
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-[12px] text-muted-foreground">
-          PayrollOS prepares statutory filing exports; it does not file returns or pay
-          challans on your behalf. Submit each export on the relevant government portal,
-          then record the acknowledgement to mark it complete.
+          Build CSV exports from a payroll run month, submit them on the government portal,
+          then record the acknowledgement. StreamlineOS does not file returns or pay
+          challans on your behalf.
         </p>
         {canManage && (
           <Button size="sm" className="shrink-0" onClick={() => setShowExport(true)}>
@@ -229,23 +311,36 @@ export function FilingsTab() {
               <span>{row.fiscalYear ?? "—"}</span>
               <span>{row.acknowledgementRef ?? row.challanRef ?? "No ref"}</span>
             </div>
-            {canManage && row.status !== "ACKNOWLEDGED" && row.status !== "RECONCILED" && (
-              <Button
-                size="sm"
-                variant="outline"
-                className="mt-1 w-full"
-                onClick={() => handleAckOpen(row)}
-              >
-                Record acknowledgement
-              </Button>
-            )}
+            <div className="mt-1 flex gap-1.5">
+              {row.status !== "DRAFT" && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => void handleDownload(row)}
+                  disabled={downloadingId === row.id}
+                >
+                  Download CSV
+                </Button>
+              )}
+              {canManage && row.status !== "ACKNOWLEDGED" && row.status !== "RECONCILED" && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => handleAckOpen(row)}
+                >
+                  Record ack
+                </Button>
+              )}
+            </div>
           </div>
         )}
         emptyState={
           <EmptyState
             illustration={<EmptyApprovalIllustration />}
             title="No filings prepared"
-            description="Prepare a statutory filing export to track its submission and acknowledgement here."
+            description="Prepare a statutory filing export from a payroll month to track submission and acknowledgement."
             action={
               canManage
                 ? { label: "Prepare filing export", onClick: () => setShowExport(true) }
@@ -260,25 +355,40 @@ export function FilingsTab() {
           <DialogHeader>
             <DialogTitle>Prepare filing export</DialogTitle>
           </DialogHeader>
-          <div className="py-3 space-y-3">
-            <label className="text-[13px] font-medium text-foreground block">
-              Filing type
-            </label>
-            <Select value={exportType} onValueChange={(v) => setExportType(v as FilingType)}>
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {FILING_TYPE_OPTIONS.map((t) => (
-                  <SelectItem key={t} value={t}>
-                    {FILING_TYPE_LABEL[t]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="space-y-3 py-3">
+            <div className="space-y-1.5">
+              <label className="block text-[13px] font-medium text-foreground">
+                Filing type
+              </label>
+              <Select value={exportType} onValueChange={(v) => setExportType(v as FilingType)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {supportedTypes.map((t) => (
+                    <SelectItem key={t} value={t}>
+                      {FILING_TYPE_LABEL[t] ?? t}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="block text-[13px] font-medium text-foreground">
+                Payroll month
+              </label>
+              <MonthPicker value={exportMonth} onChange={setExportMonth} className="w-full" />
+              <p className="text-[11px] text-muted-foreground">
+                Uses the REGULAR run for this month when present. Empty CSV if no run/lines
+                match.
+              </p>
+            </div>
             <p className="text-[11px] text-muted-foreground">
-              Financial year {getCurrentFY()}. The export is prepared for external
-              filing — no return is submitted automatically.
+              Financial year {getCurrentFY()}
+              {ruleBundle ? ` · rule ${ruleBundle}` : ""}. {honestyLabel}.
+              {exportType === "FORM16"
+                ? " Form 16 full certificate is not generated — period summary only."
+                : ""}
             </p>
           </div>
           <DialogFooter>
@@ -297,14 +407,13 @@ export function FilingsTab() {
           <DialogHeader>
             <DialogTitle>Record acknowledgement</DialogTitle>
           </DialogHeader>
-          <div className="py-3 space-y-3">
+          <div className="space-y-3 py-3">
             <p className="text-[12px] text-muted-foreground">
-              {ackTarget ? FILING_TYPE_LABEL[ackTarget.filingType] : ""} — enter the
-              portal challan and/or acknowledgement reference to mark this filing
-              acknowledged.
+              {ackTarget ? FILING_TYPE_LABEL[ackTarget.filingType] : ""} — enter the portal
+              challan and/or acknowledgement reference to mark this filing acknowledged.
             </p>
             <div className="space-y-1.5">
-              <label className="text-[13px] font-medium text-foreground block">
+              <label className="block text-[13px] font-medium text-foreground">
                 Challan reference
               </label>
               <Input
@@ -315,7 +424,7 @@ export function FilingsTab() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[13px] font-medium text-foreground block">
+              <label className="block text-[13px] font-medium text-foreground">
                 Acknowledgement reference
               </label>
               <Input

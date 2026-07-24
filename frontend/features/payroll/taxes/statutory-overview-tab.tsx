@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { usePayrollPolicyCurrent } from "@/hooks/api/payroll/policies";
+import { useFilingCapabilities } from "@/hooks/api/payroll/filings";
 import type { ToggleKey } from "@/types/payroll/setup";
 
 interface StatutoryRowConfig {
@@ -39,6 +40,7 @@ function EnabledBadge({ enabled }: { enabled: boolean }) {
 
 export function StatutoryOverviewTab() {
   const { data, isLoading } = usePayrollPolicyCurrent();
+  const { data: filingCapability } = useFilingCapabilities();
 
   if (isLoading) {
     return (
@@ -79,6 +81,33 @@ export function StatutoryOverviewTab() {
 
   return (
     <div className="space-y-2">
+      {filingCapability && (
+        <div className="rounded-lg border border-border bg-card px-4 py-3 space-y-1">
+          <p className="text-[12px] font-medium text-foreground">
+            India rule pack{" "}
+            <span className="tabular-nums text-muted-foreground">
+              {filingCapability.ruleBundleVersion ?? "IN-2025.04"}
+            </span>
+            {filingCapability.ruleEffectiveFrom ? (
+              <span className="font-normal text-muted-foreground">
+                {" "}
+                · effective {filingCapability.ruleEffectiveFrom}
+              </span>
+            ) : null}
+          </p>
+          <p className="text-[11px] text-muted-foreground leading-snug">
+            Production calc baseline (code registry). Not a legal-reviewed compliance pack.
+            Filing exports are{" "}
+            <span className="font-medium text-foreground">
+              {filingCapability.honestyLabel ?? "export-only"}
+            </span>
+            {filingCapability.formLabels?.annualCertificate
+              ? ` · ${filingCapability.formLabels.annualCertificate} full certificate not implemented`
+              : null}
+            .
+          </p>
+        </div>
+      )}
       {isNonIN && pack ? (
         <Card className="overflow-hidden py-0">
           <CardContent className="p-0">

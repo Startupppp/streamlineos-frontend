@@ -26,10 +26,37 @@ export interface PayrollFiling {
   challanRef: string | null;
   acknowledgementRef: string | null;
   createdAt: string;
+  exportSummary?: FilingExportSummary;
+}
+
+export interface FilingExportSummary {
+  rowCount: number;
+  totals: Record<string, string>;
+  missingIdentifiers: string[];
+  notes: string[];
+  periodMonth: string | null;
+  runId: number | null;
+  ruleBundleVersion: string;
+}
+
+/** Backend honesty contract — filings are export-only until a provider is connected. */
+export interface FilingCapability {
+  mode: "export_only";
+  automaticFiling: boolean;
+  automaticRemittance: boolean;
+  providerDependent: boolean;
+  honestyLabel: string;
+  supportedTypes: FilingType[];
+  note: string;
+  ruleBundleVersion?: string;
+  ruleEffectiveFrom?: string;
+  artifactFormat?: "csv";
+  formLabels?: { quarterlyReturn: string; annualCertificate: string };
 }
 
 export const filingsKeys = {
   all: ["payroll", "filings"] as const,
+  capabilities: ["payroll", "filings", "capabilities"] as const,
 };
 
 export function usePayrollFilings() {
@@ -40,12 +67,24 @@ export function usePayrollFilings() {
   });
 }
 
+export function useFilingCapabilities() {
+  return useQuery({
+    queryKey: filingsKeys.capabilities,
+    queryFn: () => apiClient.get<FilingCapability>("/payroll/filings/capabilities"),
+    staleTime: 5 * 60_000,
+  });
+}
+
 export function usePrepareFilingExport() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["payroll", "filings", "export"],
-    mutationFn: (body: { filingType: FilingType; fiscalYear?: string }) =>
-      apiClient.post<PayrollFiling>("/payroll/filings/export", body),
+    mutationFn: (body: {
+      filingType: FilingType;
+      fiscalYear?: string;
+      month?: string;
+      runId?: number;
+    }) => apiClient.post<PayrollFiling>("/payroll/filings/export", body),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: filingsKeys.all });
     },
@@ -73,4 +112,16 @@ export function useAttachAcknowledgement() {
       void qc.invalidateQueries({ queryKey: filingsKeys.all });
     },
   });
+}
+
+export async function downloadFilingExport(filingId: number): Promise<void> {
+  const blob = await apiClient.download(`/payroll/filings/${filingId}/export`);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `filing_${filingId}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
