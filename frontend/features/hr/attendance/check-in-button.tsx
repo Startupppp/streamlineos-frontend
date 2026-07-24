@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef, memo } from "react";
 import { format, getDay } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -25,7 +25,6 @@ import {
   Coffee,
   LogIn,
   LogOut,
-  Loader2,
   Play,
   Pause,
   Timer,
@@ -124,7 +123,6 @@ export const TimerCard = memo(function TimerCard() {
       : statusData?.status === "ON_BREAK";
   const isActive = isCheckedIn || isOnBreak;
   const isInCooldown = localCooldown > 0;
-  const isPending = checkInMutation.isPending || checkOutMutation.isPending;
 
   const [breakStart, setBreakStart] = useState<number | null>(null);
   const [localExtraBreakMs, setLocalExtraBreakMs] = useState(0);
@@ -329,9 +327,10 @@ export const TimerCard = memo(function TimerCard() {
           <div className={isActive ? "grid grid-cols-2 gap-3" : "flex"}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
+                <LoadingButton
                   onClick={handleCheckIn}
-                  disabled={isActive || isPending || isInCooldown || isBlockedDay}
+                  disabled={isActive || isInCooldown || isBlockedDay || checkOutMutation.isPending}
+                  isPending={checkInMutation.isPending}
                   variant={isActive ? "secondary" : "default"}
                   className={cn(
                     "font-semibold flex-1 gap-1.5 h-9 duration-200",
@@ -341,15 +340,11 @@ export const TimerCard = memo(function TimerCard() {
                       "bg-emerald-600 hover:bg-emerald-700 text-white",
                   )}
                 >
-                  {checkInMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <LogIn className="h-4 w-4" />
-                  )}
+                  <LogIn className="h-4 w-4" />
                   {isInCooldown
                     ? `Wait ${Math.floor(localCooldown / 60)}:${String(localCooldown % 60).padStart(2, "0")}`
                     : "Check In"}
-                </Button>
+                </LoadingButton>
               </TooltipTrigger>
               {isBlockedDay && <TooltipContent>{blockedReason}</TooltipContent>}
             </Tooltip>
@@ -357,18 +352,15 @@ export const TimerCard = memo(function TimerCard() {
             {isActive && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button
+                  <LoadingButton
                     onClick={handleClockAction}
-                    disabled={isPending || isBlockedDay}
+                    disabled={isBlockedDay || checkInMutation.isPending}
+                    isPending={checkOutMutation.isPending}
                     className="font-semibold gap-1.5 h-9 bg-rose-600 hover:bg-rose-700 text-white duration-200"
                   >
-                    {checkOutMutation.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <LogOut className="h-4 w-4" />
-                    )}
+                    <LogOut className="h-4 w-4" />
                     Check Out
-                  </Button>
+                  </LoadingButton>
                 </TooltipTrigger>
                 {isBlockedDay && <TooltipContent>{blockedReason}</TooltipContent>}
               </Tooltip>
@@ -377,21 +369,20 @@ export const TimerCard = memo(function TimerCard() {
         </TooltipProvider>
 
         {isActive && (
-          <Button
+          <LoadingButton
             variant="outline"
             onClick={handleBreakToggle}
-            disabled={breakMutation.isPending || isBlockedDay}
+            disabled={isBlockedDay}
+            isPending={breakMutation.isPending}
             className="w-full gap-1.5 h-9 border-amber-200 text-amber-700 hover:bg-amber-50 dark:border-amber-800 dark:text-amber-300 dark:hover:bg-amber-950/20 duration-200"
           >
-            {breakMutation.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : isOnBreak ? (
+            {isOnBreak ? (
               <Play className="h-4 w-4" />
             ) : (
               <Pause className="h-4 w-4" />
             )}
             {isOnBreak ? "Resume Work" : "Take Break"}
-          </Button>
+          </LoadingButton>
         )}
 
         {dailyStats && (
