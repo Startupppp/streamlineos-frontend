@@ -7,3 +7,5 @@ export { EssTaxSection } from "./components/ess-tax-section";
 export { EssLoansSection } from "./components/ess-loans-section";
 export { EssBankSection } from "./components/ess-bank-section";
 export { EssFnfSection } from "./components/ess-fnf-section";
+export { EssTotalRewardsSection } from "./components/ess-total-rewards-section";
+export { EssDisciplinarySection } from "./components/ess-disciplinary-section";

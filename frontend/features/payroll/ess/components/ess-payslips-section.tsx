@@ -101,10 +101,19 @@ const ExplainMenu = memo(function ExplainMenu({ payslip }: ExplainMenuProps) {
     {
       key: "explain-payslip",
       label: "Explain this payslip",
-      description: "Plain-language breakdown of your earnings & deductions",
+      description:
+        "Plain-language breakdown of engine figures only — AI never changes pay",
       run: async () => {
         const result = await mutateAsync();
-        return { text: result.explanation };
+        const citations = (result.citations ?? []).slice(0, 12).map((c, i) => ({
+          id: c.path || i,
+          title: c.label,
+          snippet:
+            c.value != null
+              ? `${c.path}: ${typeof c.value === "string" ? c.value : String(c.value)}`
+              : c.path,
+        }));
+        return { text: result.explanation, citations };
       },
     },
   ];
