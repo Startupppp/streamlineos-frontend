@@ -265,7 +265,7 @@ export function CreateJobForm({ job }: CreateJobFormProps) {
             />
             <div className="w-px h-5 bg-border/60 shrink-0" />
             {isEdit ? (
-              <LoadingButton size="sm" onClick={handleSaveDraft} isPending={isPending} loadingText="Saving…" className="gap-1.5">
+              <LoadingButton variant="outline" size="sm" onClick={handleSaveDraft} isPending={isPending} loadingText="Saving…" className="gap-1.5">
                 <Save className="h-3.5 w-3.5" />
                 Save Changes
               </LoadingButton>
@@ -275,7 +275,7 @@ export function CreateJobForm({ job }: CreateJobFormProps) {
                   <Save className="h-3.5 w-3.5" />
                   Save Draft
                 </LoadingButton>
-                <AnimatedIconButton icon={SendIcon} size="sm" onClick={handlePublish} disabled={isPending} className="gap-1.5">
+                <AnimatedIconButton icon={SendIcon} variant="outline" size="sm" onClick={handlePublish} disabled={isPending} className="gap-1.5">
                   Publish Job
                 </AnimatedIconButton>
               </>

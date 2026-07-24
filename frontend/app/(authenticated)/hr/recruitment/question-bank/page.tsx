@@ -10,6 +10,7 @@ import {
 } from "@/hooks/api/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { SearchInput } from "@/components/ui/search-input";
 import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
@@ -23,7 +24,7 @@ import {
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { ErrorState } from "@/components/shared/error-state";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 import { QuestionList } from "@/features/hr/recruitment/question-bank/question-list";
@@ -121,10 +122,9 @@ export default function QuestionBankPage() {
             onClose={handleCloseSheet}
             roleOptions={roleOptions}
           >
-            <Button size="sm" onClick={handleOpenCreateSheet}>
-              <Plus className="mr-2 h-4 w-4" />
+            <AnimatedIconButton icon={PlusIcon} iconSize={16} size="sm" onClick={handleOpenCreateSheet}>
               Add Question
-            </Button>
+            </AnimatedIconButton>
           </QuestionFormDialog>
         </div>
       }

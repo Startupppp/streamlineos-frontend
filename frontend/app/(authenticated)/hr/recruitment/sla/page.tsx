@@ -16,9 +16,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { toast } from "sonner";
-import { Plus, Pencil, Clock, AlertCircle } from "lucide-react";
+import { Pencil, Clock, AlertCircle } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
 import Link from "next/link";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -78,9 +80,15 @@ function SlaConfigureButton({ stage, onNew }: { stage: CandidateStage; onNew: (s
     onNew(stage);
   }
   return (
-    <Button variant="ghost" size="sm" className="w-7 p-0" aria-label={`Configure SLA for ${stage}`} onClick={handleClick}>
-      <Plus className="h-3.5 w-3.5" />
-    </Button>
+    <AnimatedIconButton
+      icon={PlusIcon}
+      iconSize={14}
+      variant="ghost"
+      size="sm"
+      className="w-7 p-0"
+      aria-label={`Configure SLA for ${stage}`}
+      onClick={handleClick}
+    />
   );
 }
 

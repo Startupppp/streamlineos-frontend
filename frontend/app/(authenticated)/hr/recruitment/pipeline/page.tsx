@@ -7,14 +7,23 @@ import { useAtsKanban, useUpdateCandidateStage } from "@/hooks/api/hr";
 import { ErrorState } from "@/components/shared/error-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PipelineKanban } from "@/components/hr/recruitment/pipeline-kanban";
 import { PipelineTable } from "@/components/hr/recruitment/pipeline-table";
 import { AddCandidateSheet } from "@/features/hr/recruitment/candidates-list/add-candidate-sheet";
+import { ViewToggle, type ViewOption } from "@/components/ui/view-toggle";
 import { toast } from "sonner";
 import Link from "next/link";
-import { ArrowLeft, UserPlus, KanbanSquare, TableIcon } from "lucide-react";
+import { ArrowLeft, KanbanSquare, TableIcon } from "lucide-react";
+import { UserPlusIcon } from "@animateicons/react/lucide";
 import type { CandidateStatus } from "@/types/hr";
-import { cn } from "@/lib/utils";
+
+type PipelineViewMode = "kanban" | "table";
+
+const PIPELINE_VIEW_OPTIONS: ViewOption<PipelineViewMode>[] = [
+  { value: "kanban", icon: KanbanSquare, label: "Kanban" },
+  { value: "table", icon: TableIcon, label: "Table" },
+];
 
 export default function PipelinePage() {
   const router = useRouter();
@@ -54,9 +63,6 @@ export default function PipelinePage() {
     [router, searchParams],
   );
 
-  function handleViewKanban() { handleViewChange("kanban"); }
-  function handleViewTable() { handleViewChange("table"); }
-
   if (isError) {
     return (
       <PageWrapper
@@ -78,30 +84,12 @@ export default function PipelinePage() {
       subtitle="Drag candidates between stages to update their status"
       noInternalScroll
       filters={
-        <div className="flex items-center gap-0.5 rounded-lg border border-border p-0.5">
-          <button
-            type="button"
-            onClick={handleViewKanban}
-            className={cn(
-              "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors",
-              view === "kanban" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <KanbanSquare className="h-3.5 w-3.5" />
-            Kanban
-          </button>
-          <button
-            type="button"
-            onClick={handleViewTable}
-            className={cn(
-              "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors",
-              view === "table" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <TableIcon className="h-3.5 w-3.5" />
-            Table
-          </button>
-        </div>
+        <ViewToggle<PipelineViewMode>
+          value={view}
+          options={PIPELINE_VIEW_OPTIONS}
+          onChange={handleViewChange}
+          showLabel
+        />
       }
       actions={
         <div className="flex items-center gap-2">
@@ -111,10 +99,9 @@ export default function PipelinePage() {
               Back
             </Link>
           </Button>
-          <Button size="sm" onClick={handleOpenAdd}>
-            <UserPlus className="mr-1.5 h-3.5 w-3.5" />
+          <AnimatedIconButton icon={UserPlusIcon} iconSize={14} size="sm" onClick={handleOpenAdd}>
             New Candidate
-          </Button>
+          </AnimatedIconButton>
         </div>
       }
     >

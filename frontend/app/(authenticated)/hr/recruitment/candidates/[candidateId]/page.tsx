@@ -225,6 +225,7 @@ export default function CandidateDetailPage() {
 
   const handleInterviewOpen = useCallback(() => setInterviewOpen(true), []);
   const handleApplyOpen = useCallback(() => setApplyOpen(true), []);
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   const displayAiScore: AiScoreResult | null = useMemo(() => {
     if (latestAiScore) return latestAiScore;
@@ -264,7 +265,7 @@ export default function CandidateDetailPage() {
         <ErrorState
           title="Unable to load candidate"
           description="This candidate may no longer exist, or you do not have permission to view them. Try again."
-          onRetry={() => void refetch()}
+          onRetry={handleRetry}
         />
       </PageWrapper>
     );

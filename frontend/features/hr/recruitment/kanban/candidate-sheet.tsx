@@ -9,6 +9,7 @@ import {
   SheetTitle,
   SheetBody,
 } from "@/components/ui/sheet";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Briefcase,
   MailIcon,
@@ -51,12 +52,8 @@ export const CandidateSheet = memo(function CandidateSheet({
 
   const stageConfig = currentStage ? COLUMNS.find((col) => col.id === currentStage) : undefined;
 
-  function handleTabOverview() {
-    setActiveTab("overview");
-  }
-
-  function handleTabResume() {
-    setActiveTab("resume");
+  function handleTabChange(value: string) {
+    setActiveTab(value as ActiveTab);
   }
 
   return (
@@ -105,32 +102,12 @@ export const CandidateSheet = memo(function CandidateSheet({
         </SheetHeader>
 
         <div className="shrink-0 px-5 pt-3 pb-3 border-b border-border/60">
-          <div className="rounded-lg border border-border p-1 inline-flex gap-1">
-            <button
-              type="button"
-              onClick={handleTabOverview}
-              className={cn(
-                "px-3 py-1 rounded-md text-xs font-semibold transition-colors duration-200",
-                activeTab === "overview"
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-              )}
-            >
-              Overview
-            </button>
-            <button
-              type="button"
-              onClick={handleTabResume}
-              className={cn(
-                "px-3 py-1 rounded-md text-xs font-semibold transition-colors duration-200",
-                activeTab === "resume"
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-              )}
-            >
-              Resume
-            </button>
-          </div>
+          <Tabs value={activeTab} onValueChange={handleTabChange}>
+            <TabsList className="w-fit">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="resume">Resume</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
 
         {activeTab === "overview" && (

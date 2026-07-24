@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { Plus } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { ErrorState } from "@/components/shared/error-state";
@@ -245,6 +246,8 @@ function RejectDialog({ requestId, onClose }: RejectDialogProps) {
 function RequestCard({
   req,
   isHr,
+  isApproving,
+  isCreatingJob,
   onEdit,
   onApprove,
   onReject,
@@ -252,6 +255,8 @@ function RequestCard({
 }: {
   req: HeadcountRequest;
   isHr: boolean;
+  isApproving: boolean;
+  isCreatingJob: boolean;
   onEdit: (r: HeadcountRequest) => void;
   onApprove: (id: number) => void;
   onReject: (id: number) => void;
@@ -292,12 +297,16 @@ function RequestCard({
           )}
           {isHr && req.status === "SUBMITTED" && (
             <>
-              <Button size="sm" onClick={handleApprove}>Approve</Button>
+              <LoadingButton size="sm" variant="outline" onClick={handleApprove} isPending={isApproving} loadingText="Approving...">
+                Approve
+              </LoadingButton>
               <Button size="sm" variant="destructive" onClick={handleReject}>Reject</Button>
             </>
           )}
           {isHr && req.status === "APPROVED" && !req.linkedJobPostingId && (
-            <Button size="sm" onClick={handleCreateJob}>Create Job Posting</Button>
+            <LoadingButton size="sm" variant="outline" onClick={handleCreateJob} isPending={isCreatingJob} loadingText="Creating...">
+              Create Job Posting
+            </LoadingButton>
           )}
         </div>
       </CardContent>
@@ -391,9 +400,7 @@ export default function HeadcountPage() {
       subtitle="Submit and track headcount requests for new hires"
       actions={
         <Button size="sm" onClick={handleNewRequest}>
-          <svg className="mr-1.5 h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
+          <Plus className="mr-1.5 h-3.5 w-3.5" />
           New Request
         </Button>
       }
@@ -413,6 +420,8 @@ export default function HeadcountPage() {
                 key={req.id}
                 req={req}
                 isHr={isHr}
+                isApproving={approve.isPending}
+                isCreatingJob={createJob.isPending}
                 onEdit={handleEdit}
                 onApprove={handleApprove}
                 onReject={handleReject}

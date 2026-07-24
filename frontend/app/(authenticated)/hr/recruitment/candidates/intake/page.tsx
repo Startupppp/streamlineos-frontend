@@ -262,6 +262,7 @@ export default function IntakeInboxPage() {
         description="This will notify each candidate and remove them from active consideration."
         confirmLabel="Reject"
         destructive
+        isPending={bulkReject.isPending}
         onConfirm={handleBulkReject}
       />
 
