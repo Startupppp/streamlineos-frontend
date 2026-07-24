@@ -24,10 +24,18 @@ export interface EmployeeDocSummary {
   onboardingDocStatus: string | null;
 }
 
+interface ReviewTablePagination {
+  page: number;
+  pageSize: number;
+  total: number;
+  onPageChange: (page: number) => void;
+}
+
 interface ReviewTableProps {
   list: EmployeeDocSummary[];
   canReview: boolean;
   onOpenReview: (emp: EmployeeDocSummary) => void;
+  pagination?: ReviewTablePagination;
 }
 
 function getInitials(name: string | null): string {
@@ -118,7 +126,7 @@ function ReviewActionButton({ label, emp, onOpenReview }: { label: string; emp: 
   );
 }
 
-export function ReviewTable({ list, canReview, onOpenReview }: ReviewTableProps) {
+export function ReviewTable({ list, canReview, onOpenReview, pagination }: ReviewTableProps) {
   const columns = useMemo<DataTableColumn<EmployeeDocSummary>[]>(() => [
     {
       key: "employee",
@@ -188,6 +196,7 @@ export function ReviewTable({ list, canReview, onOpenReview }: ReviewTableProps)
       emptyState={emptyState}
       minWidth="640px"
       className="flex-1 min-h-0"
+      pagination={pagination ? { mode: "server", ...pagination } : undefined}
     />
   );
 }

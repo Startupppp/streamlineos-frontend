@@ -64,12 +64,24 @@ interface ReviewSheetProps {
   onClose: () => void;
 }
 
-function useEmployeeOnboardingDocs(userId: string | null) {
-  return useQuery<OnboardingDoc[]>({
-    queryKey: queryKeys.hr.onboardingDocs(userId ?? undefined),
+const DOCS_PAGE_SIZE = 20;
+
+interface OnboardingDocsResponse {
+  data: OnboardingDoc[];
+  pagination: { page: number; limit: number; total: number; totalPages: number };
+}
+
+function useEmployeeOnboardingDocs(userId: string | null, page: number) {
+  return useQuery<OnboardingDocsResponse>({
+    queryKey: queryKeys.hr.onboardingDocs({ userId: userId ?? undefined, page, limit: DOCS_PAGE_SIZE }),
     queryFn: () =>
-      apiClient.get<OnboardingDoc[]>("/hr/onboarding-docs", { params: { userId } }),
+      apiClient.get<OnboardingDocsResponse>("/hr/onboarding-docs", {
+        userId,
+        page,
+        limit: DOCS_PAGE_SIZE,
+      }),
     enabled: !!userId,
+    staleTime: 30_000,
   });
 }
 
@@ -84,8 +96,7 @@ function useUploadOnboardingDoc() {
       mimeType?: string;
       targetUserId: string;
     }) => apiClient.post("/hr/onboarding-docs", data),
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.onboardingDocs(variables.targetUserId) });
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.onboardingDocsAll });
     },
   });
@@ -272,8 +283,12 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
   const reviewMutation = useReviewDocument();
   const uploadDocMutation = useUploadOnboardingDoc();
   const uploadFileMutation = useUploadFile();
-  const { data: employeeDocs, isLoading: docsLoading } = useEmployeeOnboardingDocs(userId);
+  const [docsPage, setDocsPage] = useState(1);
+  const { data: docsData, isLoading: docsLoading } = useEmployeeOnboardingDocs(userId, docsPage);
   const { data: documentTypes } = useHrDocumentTypes();
+
+  const employeeDocs = docsData?.data;
+  const docsTotalPages = docsData?.pagination.totalPages ?? 1;
 
   const [reuploadDoc, setReuploadDoc] = useState<OnboardingDoc | null>(null);
   const [reuploadRemarks, setReuploadRemarks] = useState("");
@@ -287,10 +302,21 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
 
   const handleSheetOpenChange = useCallback(
     (open: boolean) => {
-      if (!open) onClose();
+      if (!open) {
+        setDocsPage(1);
+        onClose();
+      }
     },
     [onClose],
   );
+
+  const handlePrevDocsPage = useCallback(() => {
+    setDocsPage((prev) => Math.max(1, prev - 1));
+  }, []);
+
+  const handleNextDocsPage = useCallback(() => {
+    setDocsPage((prev) => prev + 1);
+  }, []);
 
   const handleSetApproveDoc = useCallback((doc: OnboardingDoc) => setApproveDoc(doc), []);
 
@@ -478,15 +504,44 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
                   compact
                 />
               ) : (
-                employeeDocs.map((doc) => (
-                  <DocCard
-                    key={doc.id}
-                    doc={doc}
-                    canReview={canReview}
-                    onApprove={handleSetApproveDoc}
-                    onRequestReupload={handleOpenReupload}
-                  />
-                ))
+                <>
+                  {employeeDocs.map((doc) => (
+                    <DocCard
+                      key={doc.id}
+                      doc={doc}
+                      canReview={canReview}
+                      onApprove={handleSetApproveDoc}
+                      onRequestReupload={handleOpenReupload}
+                    />
+                  ))}
+                  {docsTotalPages > 1 && (
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="text-[11px] text-muted-foreground">
+                        Page {docsPage} of {docsTotalPages}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs"
+                          disabled={docsPage <= 1}
+                          onClick={handlePrevDocsPage}
+                        >
+                          Previous
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs"
+                          disabled={docsPage >= docsTotalPages}
+                          onClick={handleNextDocsPage}
+                        >
+                          Next
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </ScrollArea>

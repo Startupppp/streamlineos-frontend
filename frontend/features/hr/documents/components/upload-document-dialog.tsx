@@ -65,7 +65,7 @@ export function UploadDocumentDialog({
   const [isDragOver, setIsDragOver] = useState(false);
   const titleAutoPopulated = useRef(false);
 
-  const { employees } = useHrEmployeeOptions({ limit: 200 });
+  const { employees } = useHrEmployeeOptions();
   const createDocumentMutation = useCreateDocument();
   const uploadFileMutation = useUploadFile();
 
