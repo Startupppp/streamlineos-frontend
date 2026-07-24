@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
@@ -20,8 +20,12 @@ const STATUS_VARIANTS: Record<string, "default" | "secondary" | "destructive" | 
   REJECTED: "destructive",
 };
 
+const PAGE_SIZE = 20;
+
 export function OvertimeList({ canManage }: Props) {
-  const { data: requests, isLoading } = useOvertimeRequests();
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useOvertimeRequests({ page, pageSize: PAGE_SIZE });
+  const requests = data?.items;
   const approve = useApproveOvertime();
   const reject = useRejectOvertime();
 
@@ -125,6 +129,13 @@ export function OvertimeList({ canManage }: Props) {
       columns={columns}
       getRowKey={(req) => req.id}
       isLoading={isLoading}
+      pagination={{
+        mode: "server",
+        page,
+        pageSize: PAGE_SIZE,
+        total: data?.total ?? 0,
+        onPageChange: setPage,
+      }}
       emptyState={
         <EmptyState
           illustrationPreset="approval"
