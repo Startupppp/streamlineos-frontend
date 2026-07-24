@@ -86,7 +86,7 @@ export function TicketAiMenu({
   }, [handoffMutation]);
 
   const actions: AiAction[] = useMemo(() => [
-    { key: "summarize", label: "Summarize", description: "Key points, blockers, current state", run: runSummarize },
+    { key: "summarize", label: "Summarize", description: "Key points, blockers, current state", run: runSummarize, surface: "popover" },
     {
       key: "improve-description",
       label: "Improve description",
@@ -94,9 +94,10 @@ export function TicketAiMenu({
       run: runImprove,
       onApply: onApplyDescription,
       applyLabel: "Apply description",
+      surface: "popover",
     },
-    { key: "suggest-subtasks", label: "Suggest subtasks", description: "Breakdown into actionable steps", run: runSubtasks },
-    { key: "handoff", label: "Handoff summary", description: "State, decisions, next action", run: runHandoff },
+    { key: "suggest-subtasks", label: "Suggest subtasks", description: "Breakdown into actionable steps", run: runSubtasks, surface: "popover" },
+    { key: "handoff", label: "Handoff summary", description: "State, decisions, next action", run: runHandoff, surface: "sheet" },
   ], [runSummarize, runImprove, runSubtasks, runHandoff, onApplyDescription]);
 
   if (!canUseAI) return null;

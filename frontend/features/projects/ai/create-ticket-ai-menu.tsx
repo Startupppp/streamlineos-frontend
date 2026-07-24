@@ -2,7 +2,12 @@
 
 import { useCallback, useMemo, useRef } from "react";
 import { useCan } from "@/hooks/api/access";
-import { AiActionsMenu, type AiAction, type AiActionResult } from "@/components/ai";
+import {
+  AiFieldTrigger,
+  type AiActionResult,
+  type AiInlineSession,
+  useAiInlineAction,
+} from "@/components/ai";
 import {
   useTicketDraftSuggestTitle,
   useTicketDraftImproveDescription,
@@ -17,19 +22,59 @@ export interface CreateTicketAiFieldPatch {
   labelIds?: number[];
 }
 
-interface CreateTicketAiMenuProps {
+interface CreateTicketAiContext {
   projectId: number | null;
   title: string;
   description: string;
   onApplyTitle: (title: string) => void;
   onApplyDescription: (html: string) => void;
   onApplyFields: (patch: CreateTicketAiFieldPatch) => void;
+  onTitleInlineChange: (session: AiInlineSession | null) => void;
+  onDescriptionInlineChange: (session: AiInlineSession | null) => void;
+  onFieldsInlineChange: (session: AiInlineSession | null) => void;
   disabled?: boolean;
 }
 
-function hasDraftContent(title: string, description: string): boolean {
-  const plain = description.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
-  return title.trim().length > 0 || plain.length > 0;
+function getPlainDescriptionText(description: string): string {
+  return description.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function getProjectDisabledReason(projectId: number | null): string | undefined {
+  if (projectId == null) return "Select a project first";
+  return undefined;
+}
+
+function getSuggestTitleDisabledReason(
+  projectId: number | null,
+  description: string,
+): string | undefined {
+  const projectReason = getProjectDisabledReason(projectId);
+  if (projectReason) return projectReason;
+  if (getPlainDescriptionText(description).length === 0) {
+    return "Add a description first";
+  }
+  return undefined;
+}
+
+function getImproveDescriptionDisabledReason(
+  projectId: number | null,
+  title: string,
+  description: string,
+): string | undefined {
+  const projectReason = getProjectDisabledReason(projectId);
+  if (projectReason) return projectReason;
+  if (title.trim().length === 0 && getPlainDescriptionText(description).length === 0) {
+    return "Add a title or description first";
+  }
+  return undefined;
+}
+
+function getSuggestFieldsDisabledReason(
+  projectId: number | null,
+  title: string,
+  description: string,
+): string | undefined {
+  return getImproveDescriptionDisabledReason(projectId, title, description);
 }
 
 function formatSuggestedFields(data: TicketSuggestFieldsResult): AiActionResult {
@@ -46,15 +91,18 @@ function formatSuggestedFields(data: TicketSuggestFieldsResult): AiActionResult 
   return { text: lines.join("\n") };
 }
 
-export function CreateTicketAiMenu({
+export function useCreateTicketAi({
   projectId,
   title,
   description,
   onApplyTitle,
   onApplyDescription,
   onApplyFields,
+  onTitleInlineChange,
+  onDescriptionInlineChange,
+  onFieldsInlineChange,
   disabled = false,
-}: CreateTicketAiMenuProps) {
+}: CreateTicketAiContext) {
   const canUseAI = useCan("projects:ai:use");
   const resolvedProjectId = projectId ?? 0;
   const suggestTitleMutation = useTicketDraftSuggestTitle(resolvedProjectId);
@@ -71,40 +119,34 @@ export function CreateTicketAiMenu({
     };
   }, [title, description]);
 
+  const suggestTitleDisabledReason = getSuggestTitleDisabledReason(projectId, description);
+  const improveDescriptionDisabledReason = getImproveDescriptionDisabledReason(
+    projectId,
+    title,
+    description,
+  );
+  const suggestFieldsDisabledReason = getSuggestFieldsDisabledReason(
+    projectId,
+    title,
+    description,
+  );
+
   const runSuggestTitle = useCallback((): Promise<AiActionResult> => {
-    if (projectId == null) {
-      return Promise.reject(new Error("Select a project first"));
-    }
-    if (!hasDraftContent(title, description)) {
-      return Promise.reject(new Error("Add a title or description first"));
-    }
     return suggestTitleMutation.mutateAsync(draftInput()).then((d) => ({ text: d.title }));
-  }, [projectId, title, description, suggestTitleMutation, draftInput]);
+  }, [suggestTitleMutation, draftInput]);
 
   const runImprove = useCallback((): Promise<AiActionResult> => {
-    if (projectId == null) {
-      return Promise.reject(new Error("Select a project first"));
-    }
-    if (!hasDraftContent(title, description)) {
-      return Promise.reject(new Error("Add a title or description first"));
-    }
     return improveMutation.mutateAsync(draftInput()).then((d) => ({ text: d.description }));
-  }, [projectId, title, description, improveMutation, draftInput]);
+  }, [improveMutation, draftInput]);
 
   const runSuggestFields = useCallback((): Promise<AiActionResult> => {
-    if (projectId == null) {
-      return Promise.reject(new Error("Select a project first"));
-    }
-    if (!hasDraftContent(title, description)) {
-      return Promise.reject(new Error("Add a title or description first"));
-    }
     return suggestFieldsMutation.mutateAsync(draftInput()).then((data) => {
       lastFieldsRef.current = data;
       return formatSuggestedFields(data);
     });
-  }, [projectId, title, description, suggestFieldsMutation, draftInput]);
+  }, [suggestFieldsMutation, draftInput]);
 
-  const handleApplyFields = useCallback(() => {
+  const handleApplyFieldsFromText = useCallback((_text: string) => {
     const data = lastFieldsRef.current;
     if (!data) return;
     onApplyFields({
@@ -114,45 +156,80 @@ export function CreateTicketAiMenu({
     });
   }, [onApplyFields]);
 
-  const actions: AiAction[] = useMemo(
-    () => [
-      {
-        key: "suggest-title",
+  const titleAction = useAiInlineAction({
+    actionKey: "suggest-title",
+    run: runSuggestTitle,
+    onApply: onApplyTitle,
+    onSessionChange: onTitleInlineChange,
+  });
+
+  const descriptionAction = useAiInlineAction({
+    actionKey: "improve-description",
+    run: runImprove,
+    onApply: onApplyDescription,
+    onSessionChange: onDescriptionInlineChange,
+  });
+
+  const fieldsAction = useAiInlineAction({
+    actionKey: "suggest-fields",
+    run: runSuggestFields,
+    onApply: handleApplyFieldsFromText,
+    onSessionChange: onFieldsInlineChange,
+  });
+
+  return useMemo(
+    () => ({
+      canUseAI,
+      titleTrigger: {
         label: "Suggest title",
-        description: "Generate a title from the description",
-        run: runSuggestTitle,
-        onApply: onApplyTitle,
-        applyLabel: "Use this title",
+        disabledReason: suggestTitleDisabledReason,
+        disabled,
+        isPending: titleAction.isPending || suggestTitleMutation.isPending,
+        onClick: titleAction.run,
       },
-      {
-        key: "improve-description",
+      descriptionTrigger: {
         label: "Improve description",
-        description: "AI-polished HTML description, draft first",
-        run: runImprove,
-        onApply: onApplyDescription,
-        applyLabel: "Apply description",
+        disabledReason: improveDescriptionDisabledReason,
+        disabled,
+        isPending: descriptionAction.isPending || improveMutation.isPending,
+        onClick: descriptionAction.run,
       },
-      {
-        key: "suggest-fields",
-        label: "Suggest priority & labels",
-        description: "Priority, estimate, and matching labels",
-        run: runSuggestFields,
-        onApply: handleApplyFields,
-        applyLabel: "Apply suggestions",
+      fieldsTrigger: {
+        label: "Suggest priority and labels",
+        disabledReason: suggestFieldsDisabledReason,
+        disabled,
+        isPending: fieldsAction.isPending || suggestFieldsMutation.isPending,
+        onClick: fieldsAction.run,
       },
+    }),
+    [
+      canUseAI,
+      suggestTitleDisabledReason,
+      improveDescriptionDisabledReason,
+      suggestFieldsDisabledReason,
+      disabled,
+      titleAction.isPending,
+      titleAction.run,
+      descriptionAction.isPending,
+      descriptionAction.run,
+      fieldsAction.isPending,
+      fieldsAction.run,
+      suggestTitleMutation.isPending,
+      improveMutation.isPending,
+      suggestFieldsMutation.isPending,
     ],
-    [runSuggestTitle, runImprove, runSuggestFields, onApplyTitle, onApplyDescription, handleApplyFields],
   );
+}
 
-  if (!canUseAI) return null;
+interface CreateTicketAiFieldTriggerProps {
+  label: string;
+  disabledReason?: string;
+  disabled?: boolean;
+  isPending?: boolean;
+  onClick: () => void;
+  className?: string;
+}
 
-  return (
-    <AiActionsMenu
-      actions={actions}
-      triggerLabel="AI"
-      menuLabel="Issue AI"
-      align="end"
-      disabled={disabled || projectId == null}
-    />
-  );
+export function CreateTicketAiFieldTrigger(props: CreateTicketAiFieldTriggerProps) {
+  return <AiFieldTrigger {...props} />;
 }

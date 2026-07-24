@@ -37,9 +37,11 @@ import { PlusIcon, PaperclipIcon, XIcon, LinkIcon } from "@animateicons/react/lu
 import { useProjects } from "@/hooks/api/projects/projects";
 import { useTicketSearch } from "@/hooks/api/projects/ticket-search";
 import {
-  CreateTicketAiMenu,
+  useCreateTicketAi,
+  CreateTicketAiFieldTrigger,
   type CreateTicketAiFieldPatch,
 } from "@/features/projects/ai/create-ticket-ai-menu";
+import { AiInlinePreview, type AiInlineSession } from "@/components/ai";
 import { useCreateTicketForm } from "./use-create-ticket-form";
 import { TicketCreateProperties } from "./ticket-create-properties";
 import { TicketRelatedLinksEditor } from "./ticket-related-links-editor";
@@ -211,6 +213,9 @@ export function CreateTicketDialog({
 
   const [showLinksEditor, setShowLinksEditor] = useState(false);
   const [descriptionEditorKey, setDescriptionEditorKey] = useState(0);
+  const [titleInlineSession, setTitleInlineSession] = useState<AiInlineSession | null>(null);
+  const [descriptionInlineSession, setDescriptionInlineSession] = useState<AiInlineSession | null>(null);
+  const [fieldsInlineSession, setFieldsInlineSession] = useState<AiInlineSession | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrls, setPreviewUrls] = useState<(string | null)[]>([]);
@@ -246,6 +251,19 @@ export function CreateTicketDialog({
     },
     [handlePropertiesChange],
   );
+
+  const createTicketAi = useCreateTicketAi({
+    projectId: selectedProjectId,
+    title: watchedTitle,
+    description: watchedDescription,
+    onApplyTitle: handleApplyAiTitle,
+    onApplyDescription: handleApplyAiDescription,
+    onApplyFields: handleApplyAiFields,
+    onTitleInlineChange: setTitleInlineSession,
+    onDescriptionInlineChange: setDescriptionInlineSession,
+    onFieldsInlineChange: setFieldsInlineSession,
+    disabled: isPending || isUploading,
+  });
 
   useEffect(() => {
     if (lockedProjectId != null) {
@@ -285,13 +303,28 @@ export function CreateTicketDialog({
   const handleOpenTrigger = useCallback(() => setOpen(true), [setOpen]);
   const handleOpenChange = useCallback(
     (v: boolean) => {
+      if (!v) {
+        titleInlineSession?.reject();
+        descriptionInlineSession?.reject();
+        fieldsInlineSession?.reject();
+        setTitleInlineSession(null);
+        setDescriptionInlineSession(null);
+        setFieldsInlineSession(null);
+      }
       setOpen(v);
       onExternalOpenChange?.(v);
       if (!v && !projectLocked) {
         setSelectedProjectId(null);
       }
     },
-    [setOpen, onExternalOpenChange, projectLocked],
+    [
+      setOpen,
+      onExternalOpenChange,
+      projectLocked,
+      titleInlineSession,
+      descriptionInlineSession,
+      fieldsInlineSession,
+    ],
   );
 
   const handleProjectChange = useCallback((value: string) => {
@@ -423,43 +456,32 @@ export function CreateTicketDialog({
       <Dialog open={resolvedOpen} onOpenChange={handleOpenChange}>
         <DialogContent className="flex h-auto max-h-[min(720px,calc(100dvh-100px))] flex-col gap-0 overflow-hidden p-0 md:flex md:h-auto md:max-h-[min(720px,calc(100dvh-100px))] md:max-w-2xl md:overflow-hidden md:sm:max-w-2xl">
           <DialogHeader className="shrink-0 border-b border-border/60 px-5 pb-3 pt-4">
-            <div className="flex items-center justify-between gap-3 pr-8">
-              <div className="flex min-w-0 items-center gap-2">
-                <Select
-                  value={projectSelectValue}
-                  onValueChange={handleProjectChange}
-                  disabled={projectLocked || projectsLoading}
+            <div className="flex min-w-0 items-center gap-2 pr-8">
+              <Select
+                value={projectSelectValue}
+                onValueChange={handleProjectChange}
+                disabled={projectLocked || projectsLoading}
+              >
+                <SelectTrigger
+                  aria-label="Select project"
+                  className="w-auto max-w-[220px] gap-1.5 border-border bg-card px-2 text-xs font-medium shadow-sm disabled:opacity-100"
                 >
-                  <SelectTrigger
-                    aria-label="Select project"
-                    className="w-auto max-w-[220px] gap-1.5 border-border bg-card px-2 text-xs font-medium shadow-sm disabled:opacity-100"
-                  >
-                    <SelectValue placeholder={projectTriggerLabel} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {projects.map((p) => (
-                      <SelectItem key={p.id} value={String(p.id)} className="text-xs">
-                        <span className="mr-1.5 font-mono text-[10px] text-muted-foreground">
-                          {p.key}
-                        </span>
-                        {p.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <DialogTitle className="text-sm font-medium text-muted-foreground">
-                  New Issue
-                </DialogTitle>
-              </div>
-              <CreateTicketAiMenu
-                projectId={selectedProjectId}
-                title={watchedTitle}
-                description={watchedDescription}
-                onApplyTitle={handleApplyAiTitle}
-                onApplyDescription={handleApplyAiDescription}
-                onApplyFields={handleApplyAiFields}
-                disabled={isPending || isUploading}
-              />
+                  <SelectValue placeholder={projectTriggerLabel} />
+                </SelectTrigger>
+                <SelectContent>
+                  {projects.map((p) => (
+                    <SelectItem key={p.id} value={String(p.id)} className="text-xs">
+                      <span className="mr-1.5 font-mono text-[10px] text-muted-foreground">
+                        {p.key}
+                      </span>
+                      {p.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <DialogTitle className="text-sm font-medium text-muted-foreground">
+                New Issue
+              </DialogTitle>
             </div>
           </DialogHeader>
 
@@ -478,22 +500,38 @@ export function CreateTicketDialog({
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormControl>
-                        <input
-                          {...field}
-                          ref={(el) => {
-                            field.ref(el);
-                            titleRef.current = el;
-                          }}
-                          autoFocus
-                          autoCapitalize="off"
-                          autoCorrect="off"
-                          spellCheck={false}
-                          placeholder="Issue title"
-                          className="w-full border-0 bg-transparent p-0 text-lg font-semibold leading-tight text-foreground outline-none placeholder:text-muted-foreground/50 focus:ring-0"
-                        />
-                      </FormControl>
+                      <div className="flex items-start gap-1.5">
+                        <FormControl>
+                          <input
+                            {...field}
+                            ref={(el) => {
+                              field.ref(el);
+                              titleRef.current = el;
+                            }}
+                            autoFocus
+                            autoCapitalize="off"
+                            autoCorrect="off"
+                            spellCheck={false}
+                            placeholder="Issue title"
+                            className="min-w-0 flex-1 border-0 bg-transparent p-0 text-lg font-semibold leading-tight text-foreground outline-none placeholder:text-muted-foreground/50 focus:ring-0"
+                          />
+                        </FormControl>
+                        {createTicketAi.canUseAI ? (
+                          <CreateTicketAiFieldTrigger
+                            {...createTicketAi.titleTrigger}
+                            className="mt-0.5"
+                          />
+                        ) : null}
+                      </div>
                       <FormMessage className="text-xs" />
+                      {titleInlineSession ? (
+                        <AiInlinePreview
+                          session={titleInlineSession}
+                          applyLabel="Replace"
+                          previewMode="title"
+                          className="mt-2"
+                        />
+                      ) : null}
                       {duplicates.length > 0 && (
                         <div className="mt-1 flex items-start gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-2 dark:border-amber-500/30 dark:bg-amber-500/10">
                           <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500 dark:text-amber-400" />
@@ -538,7 +576,14 @@ export function CreateTicketDialog({
                     }
                     return (
                       <FormItem className="min-h-[120px]">
-                        <div className="min-h-[120px] cursor-text">
+                        <div className="relative min-h-[120px] cursor-text">
+                          {createTicketAi.canUseAI ? (
+                            <div className="absolute right-0 top-0 z-10">
+                              <CreateTicketAiFieldTrigger
+                                {...createTicketAi.descriptionTrigger}
+                              />
+                            </div>
+                          ) : null}
                           <TiptapEditorDynamic
                             content={field.value ?? ""}
                             contentKey={descriptionEditorKey}
@@ -550,6 +595,14 @@ export function CreateTicketDialog({
                           />
                         </div>
                         <FormMessage className="text-xs" />
+                        {descriptionInlineSession ? (
+                          <AiInlinePreview
+                            session={descriptionInlineSession}
+                            applyLabel="Replace"
+                            previewMode="description"
+                            className="mt-2"
+                          />
+                        ) : null}
                       </FormItem>
                     );
                   }}
@@ -590,14 +643,32 @@ export function CreateTicketDialog({
               </ScrollArea>
 
               <div className="relative z-10 shrink-0 border-t border-border bg-background px-5 py-3">
-                <TicketCreateProperties
-                  value={properties}
-                  onChange={handlePropertiesChange}
-                  projectStatuses={projectStatuses}
-                  members={members}
-                  labels={labels}
-                  cycles={cycles}
-                />
+                {fieldsInlineSession ? (
+                  <AiInlinePreview
+                    session={fieldsInlineSession}
+                    applyLabel="Apply suggestions"
+                    previewMode="fields"
+                    className="mb-3"
+                  />
+                ) : null}
+                <div className="flex items-start gap-2">
+                  <div className="min-w-0 flex-1">
+                    <TicketCreateProperties
+                      value={properties}
+                      onChange={handlePropertiesChange}
+                      projectStatuses={projectStatuses}
+                      members={members}
+                      labels={labels}
+                      cycles={cycles}
+                    />
+                  </div>
+                  {createTicketAi.canUseAI ? (
+                    <CreateTicketAiFieldTrigger
+                      {...createTicketAi.fieldsTrigger}
+                      className="mt-0.5 shrink-0"
+                    />
+                  ) : null}
+                </div>
               </div>
 
               <div className="relative z-10 grid shrink-0 grid-cols-[1fr_auto] items-center gap-x-3 gap-y-2 border-t border-border bg-background px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] [grid-template-areas:'tools_more'_'submit_submit'] md:flex md:justify-between md:gap-3 md:pb-3">

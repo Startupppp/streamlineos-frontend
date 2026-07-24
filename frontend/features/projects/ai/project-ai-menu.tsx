@@ -93,10 +93,10 @@ export function ProjectAiMenu({ projectId }: ProjectAiMenuProps) {
   }, [askMutation]);
 
   const actions: AiAction[] = useMemo(() => [
-    { key: "summary", label: "Health summary", description: "Overall status, highlights & risk level", run: runSummary },
-    { key: "risks", label: "Detect risks", description: "Surface blockers and risk factors", run: runRisks },
-    { key: "weekly-update", label: "Weekly update draft", description: "Ready-to-share progress report", run: runWeeklyUpdate },
-    { key: "ask", label: "Ask about this project", description: "What needs attention right now?", run: runAsk },
+    { key: "summary", label: "Health summary", description: "Overall status, highlights & risk level", run: runSummary, surface: "sheet" },
+    { key: "risks", label: "Detect risks", description: "Surface blockers and risk factors", run: runRisks, surface: "sheet" },
+    { key: "weekly-update", label: "Weekly update draft", description: "Ready-to-share progress report", run: runWeeklyUpdate, surface: "sheet" },
+    { key: "ask", label: "Ask about this project", description: "What needs attention right now?", run: runAsk, surface: "popover" },
   ], [runSummary, runRisks, runWeeklyUpdate, runAsk]);
 
   if (!canUseAI) return null;

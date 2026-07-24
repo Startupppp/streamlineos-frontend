@@ -3,62 +3,20 @@
 import { memo, type MutableRefObject } from "react";
 import {
   Droppable,
-  Draggable,
   type DraggableProvidedDragHandleProps,
   type DraggableProvidedDraggableProps,
 } from "@hello-pangea/dnd";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { KanbanTicketCard } from "./kanban-ticket-card";
 import { QuickAddInput } from "./kanban-quick-add";
 import { KanbanColumnHeader } from "./kanban-column-header";
+import {
+  KanbanVirtualTicketList,
+  TICKET_DND_TYPE,
+} from "./kanban-virtual-ticket-list";
 import type { KanbanTicket, KanbanColumn, DisplayOptions } from "../shared/types";
 
-export const TICKET_DND_TYPE = "TICKET";
-
-interface KanbanTicketDraggableProps {
-  ticket: KanbanTicket;
-  index: number;
-  projectId: number;
-  projectKey?: string;
-  dragStartRef: MutableRefObject<{ x: number; y: number } | null>;
-  onSelect: (id: number) => void;
-  displayOptions?: DisplayOptions;
-}
-
-const KanbanTicketDraggable = memo(function KanbanTicketDraggable({
-  ticket,
-  index,
-  projectId,
-  projectKey,
-  dragStartRef,
-  onSelect,
-  displayOptions,
-}: KanbanTicketDraggableProps) {
-  return (
-    <Draggable draggableId={String(ticket.id)} index={index}>
-      {(provided, snapshot) => (
-        <div
-          ref={provided.innerRef}
-          {...provided.draggableProps}
-          {...provided.dragHandleProps}
-          style={provided.draggableProps.style}
-          className={cn(snapshot.isDragging && "z-20")}
-        >
-          <KanbanTicketCard
-            ticket={ticket}
-            projectId={projectId}
-            projectKey={projectKey}
-            isDragging={snapshot.isDragging}
-            dragStartRef={dragStartRef}
-            onSelect={onSelect}
-            displayOptions={displayOptions}
-          />
-        </div>
-      )}
-    </Draggable>
-  );
-});
+export { TICKET_DND_TYPE };
 
 export interface KanbanBoardColumnProps {
   column: KanbanColumn;
@@ -134,48 +92,54 @@ export const KanbanBoardColumn = memo(function KanbanBoardColumn({
         }
         dragHandleProps={dragHandleProps}
       />
-      <Droppable droppableId={droppableId} type={TICKET_DND_TYPE}>
-        {(provided, snapshot) => (
-          <div
-            ref={provided.innerRef}
-            {...provided.droppableProps}
-            className={cn(
-              stretch ? "min-h-0 flex-1" : "",
-              "space-y-1.5 overflow-y-auto rounded-b-lg px-2 pb-2 scrollbar-hide",
-              minHeightClass,
-              "transition-[background-color,box-shadow] duration-150 ease-out",
-              snapshot.isDraggingOver && "bg-primary/[0.07] ring-1 ring-inset ring-primary/15",
-            )}
-          >
-            {tickets.length === 0 && !snapshot.isDraggingOver ? (
-              <div
-                className={cn(
-                  "flex flex-col items-center justify-center text-center",
-                  minHeightClass === "min-h-[60px]" ? "py-6" : "py-8",
-                )}
-              >
-                <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-muted/50">
-                  <Plus className="h-4 w-4 text-muted-foreground/50" />
+
+      {tickets.length === 0 ? (
+        <Droppable droppableId={droppableId} type={TICKET_DND_TYPE}>
+          {(provided, snapshot) => (
+            <div
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+              className={cn(
+                stretch ? "min-h-0 flex-1" : "",
+                "space-y-1.5 overflow-y-auto rounded-b-lg px-2 pb-2 scrollbar-hide",
+                minHeightClass,
+                "transition-[background-color,box-shadow] duration-150 ease-out",
+                snapshot.isDraggingOver && "bg-primary/[0.07] ring-1 ring-inset ring-primary/15",
+              )}
+            >
+              {!snapshot.isDraggingOver ? (
+                <div
+                  className={cn(
+                    "flex flex-col items-center justify-center text-center",
+                    minHeightClass === "min-h-[60px]" ? "py-6" : "py-8",
+                  )}
+                >
+                  <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-muted/50">
+                    <Plus className="h-4 w-4 text-muted-foreground/50" />
+                  </div>
+                  <p className="text-xs text-muted-foreground">Drop tickets here</p>
                 </div>
-                <p className="text-xs text-muted-foreground">Drop tickets here</p>
-              </div>
-            ) : null}
-            {tickets.map((ticket, index) => (
-              <KanbanTicketDraggable
-                key={ticket.id}
-                ticket={ticket}
-                index={index}
-                projectId={projectId}
-                projectKey={projectKey}
-                dragStartRef={dragStartRef}
-                onSelect={onSelect}
-                displayOptions={displayOptions}
-              />
-            ))}
-            {provided.placeholder}
-          </div>
-        )}
-      </Droppable>
+              ) : null}
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
+      ) : (
+        <div className={cn(stretch ? "min-h-0 flex-1" : "", "flex flex-col")}>
+          <KanbanVirtualTicketList
+            tickets={tickets}
+            projectId={projectId}
+            projectKey={projectKey}
+            droppableId={droppableId}
+            displayOptions={displayOptions}
+            stretch={stretch}
+            minHeightClass={minHeightClass}
+            onSelect={onSelect}
+            dragStartRef={dragStartRef}
+          />
+        </div>
+      )}
+
       {showQuickAdd ? (
         <div className="border-t">
           <QuickAddInput columnId={column.id} projectId={projectId} />

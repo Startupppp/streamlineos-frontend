@@ -98,6 +98,17 @@ claude mcp list
 | `move_ticket_status` | Update a ticket's status. Standard value after completing a fix: `IN_REVIEW`. Statuses are project-specific — if a transition is rejected the backend message explains the allowed transitions. |
 | `add_ticket_comment` | Post a comment on a ticket (plain text or markdown). Use this to record your fix summary and PR link before moving to In Review. |
 
+### Create APIs (HTTP; not yet exposed as MCP tools)
+
+The MCP stdio server only lists/gets/comments/moves. Bulk create uses the same agent bearer token against:
+
+| Method | Path | Permission |
+|--------|------|------------|
+| `POST` | `/agent/v1/projects` | `projects:create` |
+| `POST` | `/agent/v1/projects/:projectId/tickets` | `projects:tickets:create` |
+
+Body for tickets matches `createTicketSchema` (`title`, optional `description`, `type`, `priority`, `points`, `originalEstimate`, …).
+
 ---
 
 ## 5. Recommended Fix → Review Workflow

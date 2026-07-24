@@ -210,7 +210,14 @@ export function TicketDetailHeader({ ticket, onBack, onInsertReply, replyDraftCo
               SLA Breached
             </Badge>
           )}
-          {canViewTicket && <AiActionsMenu actions={aiActions} menuLabel="AI assist" align="end" />}
+          {canViewTicket && (
+            <AiActionsMenu
+              actions={aiActions}
+              menuLabel="AI assist"
+              align="end"
+              defaultSurface="popover"
+            />
+          )}
           <Select value={ticket.queueId ? String(ticket.queueId) : "none"} onValueChange={handleQueueValueChange}>
             <SelectTrigger className="h-9 text-sm w-[130px]">
               <SelectValue placeholder="Queue" />

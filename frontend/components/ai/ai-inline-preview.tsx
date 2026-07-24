@@ -1,0 +1,112 @@
+"use client";
+
+import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { AiQuotaEmptyState } from "./ai-quota-empty-state";
+import { AiPermissionDenied } from "./ai-permission-denied";
+import { AiUsageChip } from "./ai-usage-chip";
+import { TruncatedText } from "@/components/ui/truncated-text";
+import type { AiActionResult } from "./ai-action-result-body";
+import { cn } from "@/lib/utils";
+
+export interface AiInlineSession {
+  actionKey: string;
+  status: "loading" | "ready" | "quota" | "denied" | "error";
+  result?: AiActionResult;
+  errorMessage?: string;
+  deniedReason?: string;
+  apply: () => void;
+  reject: () => void;
+  retry: () => void;
+}
+
+type AiInlinePreviewMode = "title" | "description" | "fields";
+
+interface AiInlinePreviewProps {
+  session: AiInlineSession;
+  applyLabel?: string;
+  previewMode?: AiInlinePreviewMode;
+  className?: string;
+}
+
+export function AiInlinePreview({
+  session,
+  applyLabel = "Replace",
+  previewMode = "fields",
+  className,
+}: AiInlinePreviewProps) {
+  const usage = session.result?.aiUsage;
+
+  return (
+    <div
+      className={cn(
+        "rounded-lg border border-primary/20 bg-primary/5 px-3 py-2.5 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200",
+        className,
+      )}
+    >
+      {session.status === "loading" && (
+        <div className="space-y-1.5">
+          <Skeleton className="h-3 w-3/4" />
+          <Skeleton className="h-3 w-full" />
+          <Skeleton className="h-3 w-2/3" />
+        </div>
+      )}
+
+      {session.status === "quota" && <AiQuotaEmptyState variant="compact" />}
+
+      {session.status === "denied" && (
+        <AiPermissionDenied reason={session.deniedReason ?? "Permission denied"} />
+      )}
+
+      {session.status === "error" && (
+        <div className="flex flex-col items-start gap-2">
+          <p className="text-[12px] text-muted-foreground">{session.errorMessage}</p>
+          <Button type="button" variant="outline" size="sm" onClick={session.retry} className="h-7 text-xs">
+            Retry
+          </Button>
+        </div>
+      )}
+
+      {session.status === "ready" && session.result && (
+        <>
+          {previewMode === "title" ? (
+            <TruncatedText
+              text={session.result.text}
+              className="text-[13px] font-medium leading-snug text-foreground"
+            />
+          ) : previewMode === "description" ? (
+            <div
+              className="max-h-32 overflow-y-auto text-[12px] leading-relaxed text-foreground [&_p]:mb-1 [&_ul]:list-disc [&_ul]:pl-4"
+              dangerouslySetInnerHTML={{ __html: session.result.text }}
+            />
+          ) : (
+            <p className="whitespace-pre-wrap text-[12px] leading-relaxed text-foreground">
+              {session.result.text}
+            </p>
+          )}
+          {usage ? (
+            <div className="mt-2">
+              <AiUsageChip usage={usage} />
+            </div>
+          ) : null}
+        </>
+      )}
+
+      {(session.status === "ready" || session.status === "loading") && (
+        <div className="mt-2 flex items-center gap-1.5">
+          {session.status === "ready" ? (
+            <>
+              <LoadingButton size="sm" onClick={session.apply} className="h-7 text-xs">
+                {applyLabel}
+              </LoadingButton>
+              <Button type="button" variant="ghost" size="sm" onClick={session.reject} className="h-7 text-xs text-muted-foreground">
+                Reject
+              </Button>
+            </>
+          ) : null}
+        </div>
+      )}
+    </div>
+  );
+}

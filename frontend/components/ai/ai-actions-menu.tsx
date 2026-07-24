@@ -5,6 +5,13 @@ import { SparklesIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Button } from "@/components/ui/button";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -16,28 +23,30 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  ResponsivePopover,
+  ResponsivePopoverContent,
+  ResponsivePopoverTrigger,
+} from "@/components/ui/responsive-popover";
+import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Skeleton } from "@/components/ui/skeleton";
-import { AiDraftCard } from "./ai-draft-card";
-import { AiQuotaEmptyState } from "./ai-quota-empty-state";
-import { AiPermissionDenied } from "./ai-permission-denied";
-import type { Citation } from "./ai-citation-chips";
-import type { AiUsageMeta } from "./ai-usage-chip";
+import {
+  AiActionResultBody,
+  type AiActionResult,
+  type AiActionResultState,
+} from "./ai-action-result-body";
+import type { AiInlineSession } from "./ai-inline-preview";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isApiError } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 
-export interface AiActionResult {
-  text: string;
-  citations?: Citation[];
-  confidence?: number;
-  aiUsage?: AiUsageMeta | null;
-}
+export type { AiActionResult } from "./ai-action-result-body";
+
+export type AiResultSurface = "inline" | "popover" | "sheet" | "dialog";
 
 export interface AiAction {
   key: string;
@@ -46,6 +55,9 @@ export interface AiAction {
   run: () => Promise<AiActionResult>;
   onApply?: (text: string) => void;
   applyLabel?: string;
+  surface?: AiResultSurface;
+  disabledReason?: string;
+  onInlineChange?: (session: AiInlineSession | null) => void;
 }
 
 interface AiActionsMenuProps {
@@ -56,14 +68,44 @@ interface AiActionsMenuProps {
   disabled?: boolean;
   className?: string;
   asSubmenu?: boolean;
+  defaultSurface?: AiResultSurface;
 }
 
-type ActionState =
-  | { status: "loading" }
-  | { status: "ready"; result: AiActionResult; aiUsage?: AiUsageMeta | null }
-  | { status: "quota" }
-  | { status: "denied"; reason: string }
-  | { status: "error"; message: string };
+function resolveSurface(
+  action: AiAction,
+  defaultSurface?: AiResultSurface,
+): AiResultSurface {
+  return action.surface ?? defaultSurface ?? "sheet";
+}
+
+function toInlineStatus(state: AiActionResultState): AiInlineSession["status"] {
+  if (state.status === "loading") return "loading";
+  if (state.status === "ready") return "ready";
+  if (state.status === "quota") return "quota";
+  if (state.status === "denied") return "denied";
+  return "error";
+}
+
+function buildInlineSession(
+  action: AiAction,
+  state: AiActionResultState,
+  handlers: {
+    apply: () => void;
+    reject: () => void;
+    retry: () => void;
+  },
+): AiInlineSession {
+  return {
+    actionKey: action.key,
+    status: toInlineStatus(state),
+    result: state.status === "ready" ? state.result : undefined,
+    errorMessage: state.status === "error" ? state.message : undefined,
+    deniedReason: state.status === "denied" ? state.reason : undefined,
+    apply: handlers.apply,
+    reject: handlers.reject,
+    retry: handlers.retry,
+  };
+}
 
 export function AiActionsMenu({
   actions,
@@ -73,30 +115,127 @@ export function AiActionsMenu({
   disabled = false,
   className,
   asSubmenu = false,
+  defaultSurface,
 }: AiActionsMenuProps) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
-  const [open, setOpen] = React.useState(false);
   const [active, setActive] = React.useState<AiAction | null>(null);
-  const [state, setState] = React.useState<ActionState>({ status: "loading" });
+  const [state, setState] = React.useState<AiActionResultState>({
+    status: "loading",
+  });
+  const [overlayOpen, setOverlayOpen] = React.useState(false);
+  const [popoverOpen, setPopoverOpen] = React.useState(false);
 
-  const runAction = React.useCallback(async (action: AiAction) => {
-    setActive(action);
-    setOpen(true);
-    setState({ status: "loading" });
-    try {
-      const result = await action.run();
-      setState({ status: "ready", result, aiUsage: result.aiUsage });
-    } catch (error) {
-      if (isApiError(error) && error.status === 402) {
-        setState({ status: "quota" });
+  const activeRef = React.useRef<AiAction | null>(null);
+  const stateRef = React.useRef<AiActionResultState>({ status: "loading" });
+  const inlineActionRef = React.useRef<AiAction | null>(null);
+
+  React.useEffect(() => {
+    activeRef.current = active;
+  }, [active]);
+
+  React.useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
+  const pushInlineSession = React.useCallback(
+    (action: AiAction, nextState: AiActionResultState) => {
+      if (!action.onInlineChange) return;
+
+      const handlers = {
+        apply: () => {
+          const currentAction = activeRef.current;
+          const currentState = stateRef.current;
+          if (currentAction?.onApply && currentState.status === "ready") {
+            currentAction.onApply(currentState.result.text);
+          }
+          action.onInlineChange?.(null);
+          inlineActionRef.current = null;
+        },
+        reject: () => {
+          action.onInlineChange?.(null);
+          inlineActionRef.current = null;
+        },
+        retry: () => {
+          void runActionRef.current(action);
+        },
+      };
+
+      if (nextState.status === "loading") {
+        action.onInlineChange(buildInlineSession(action, nextState, handlers));
         return;
       }
-      if (isApiError(error) && error.status === 403) {
-        setState({ status: "denied", reason: getErrorMessage(error) });
-        return;
+
+      action.onInlineChange(buildInlineSession(action, nextState, handlers));
+    },
+    [],
+  );
+
+  const runActionRef = React.useRef<(action: AiAction) => Promise<void>>(
+    async () => {},
+  );
+
+  const runAction = React.useCallback(
+    async (action: AiAction) => {
+      const surface = resolveSurface(action, defaultSurface);
+
+      if (surface === "inline") {
+        if (!action.onInlineChange) {
+          if (process.env.NODE_ENV === "development") {
+            console.error(
+              `AiActionsMenu: inline action "${action.key}" missing onInlineChange`,
+            );
+          }
+          return;
+        }
+        inlineActionRef.current = action;
+        setActive(action);
+        setState({ status: "loading" });
+        pushInlineSession(action, { status: "loading" });
+      } else if (surface === "popover") {
+        setActive(action);
+        setState({ status: "loading" });
+        setPopoverOpen(true);
+      } else {
+        setActive(action);
+        setState({ status: "loading" });
+        setOverlayOpen(true);
       }
-      setState({ status: "error", message: getErrorMessage(error) });
-    }
+
+      try {
+        const result = await action.run();
+        const nextState: AiActionResultState = {
+          status: "ready",
+          result,
+          aiUsage: result.aiUsage,
+        };
+        setState(nextState);
+        if (surface === "inline") {
+          pushInlineSession(action, nextState);
+        }
+      } catch (error) {
+        let nextState: AiActionResultState;
+        if (isApiError(error) && error.status === 402) {
+          nextState = { status: "quota" };
+        } else if (isApiError(error) && error.status === 403) {
+          nextState = { status: "denied", reason: getErrorMessage(error) };
+        } else {
+          nextState = { status: "error", message: getErrorMessage(error) };
+        }
+        setState(nextState);
+        if (surface === "inline") {
+          pushInlineSession(action, nextState);
+        }
+      }
+    },
+    [defaultSurface, pushInlineSession],
+  );
+
+  runActionRef.current = runAction;
+
+  React.useEffect(() => {
+    return () => {
+      inlineActionRef.current?.onInlineChange?.(null);
+    };
   }, []);
 
   const handleRetry = React.useCallback(() => {
@@ -106,119 +245,222 @@ export function AiActionsMenu({
   const handleApply = React.useCallback(() => {
     if (active?.onApply && state.status === "ready") {
       active.onApply(state.result.text);
-      setOpen(false);
     }
+    setOverlayOpen(false);
+    setPopoverOpen(false);
   }, [active, state]);
+
+  const handleOverlayOpenChange = React.useCallback((open: boolean) => {
+    setOverlayOpen(open);
+    if (!open) {
+      setActive(null);
+      setState({ status: "loading" });
+    }
+  }, []);
+
+  const handlePopoverOpenChange = React.useCallback((open: boolean) => {
+    setPopoverOpen(open);
+    if (!open) {
+      setActive(null);
+      setState({ status: "loading" });
+    }
+  }, []);
 
   if (actions.length === 0) return null;
 
-  const actionItems = actions.map((action) => (
-    <DropdownMenuItem
-      key={action.key}
-      disabled={disabled}
-      onSelect={() => {
-        void runAction(action);
-      }}
-      className="flex flex-col items-start gap-0.5"
-    >
-      <span className="text-[13px]">{action.label}</span>
-      {action.description ? (
-        <span className="text-[11px] text-muted-foreground">{action.description}</span>
-      ) : null}
-    </DropdownMenuItem>
-  ));
+  const activeSurface = active ? resolveSurface(active, defaultSurface) : null;
 
-  const trigger = asSubmenu ? (
-    <DropdownMenuSub>
-      <DropdownMenuSubTrigger disabled={disabled} className={className}>
-        <SparklesIcon ref={iconRef} className="h-3.5 w-3.5 text-primary" />
-        {triggerLabel}
-      </DropdownMenuSubTrigger>
-      <DropdownMenuSubContent className="w-56">
-        <DropdownMenuLabel className="text-[11px] font-medium text-muted-foreground">
-          {menuLabel}
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        {actionItems}
-      </DropdownMenuSubContent>
-    </DropdownMenuSub>
-  ) : (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={disabled}
-          className={cn("h-8 gap-1.5 text-xs", className)}
-          {...hoverHandlers}
-        >
-          <SparklesIcon ref={iconRef} className="h-3.5 w-3.5 text-primary" />
-          {triggerLabel}
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align={align} className="w-56">
-        <DropdownMenuLabel className="text-[11px] font-medium text-muted-foreground">
-          {menuLabel}
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        {actionItems}
-      </DropdownMenuContent>
-    </DropdownMenu>
+  const resultBody = (
+    <AiActionResultBody
+      state={state}
+      onApply={active?.onApply ? handleApply : undefined}
+      applyLabel={active?.applyLabel ?? "Apply"}
+      onRetry={handleRetry}
+    />
   );
+
+  const actionItems = actions.map((action) => {
+    const itemDisabled = disabled || Boolean(action.disabledReason);
+    const secondaryText = action.disabledReason ?? action.description;
+    return (
+      <DropdownMenuItem
+        key={action.key}
+        disabled={itemDisabled}
+        onSelect={() => {
+          if (action.disabledReason) return;
+          void runAction(action);
+        }}
+        className="flex flex-col items-start gap-0.5"
+      >
+        <span className="text-[13px]">{action.label}</span>
+        {secondaryText ? (
+          <span className="text-[11px] text-muted-foreground">
+            {secondaryText}
+          </span>
+        ) : null}
+      </DropdownMenuItem>
+    );
+  });
+
+  const menuContent = (
+    <>
+      <DropdownMenuLabel className="text-[11px] font-medium text-muted-foreground">
+        {menuLabel}
+      </DropdownMenuLabel>
+      <DropdownMenuSeparator />
+      {actionItems}
+    </>
+  );
+
+  const popoverResult =
+    activeSurface === "popover" && popoverOpen ? (
+      <ResponsivePopoverContent
+        title={active?.label ?? "AI assist"}
+        align={align}
+        className="w-[min(24rem,calc(100vw-2rem))] max-h-[min(24rem,70vh)] overflow-y-auto p-4"
+      >
+        {resultBody}
+      </ResponsivePopoverContent>
+    ) : null;
+
+  if (asSubmenu) {
+    return (
+      <>
+        <ResponsivePopover
+          open={popoverOpen}
+          onOpenChange={handlePopoverOpenChange}
+        >
+          <DropdownMenuSub>
+            <ResponsivePopoverTrigger asChild>
+              <DropdownMenuSubTrigger disabled={disabled} className={className}>
+                <SparklesIcon
+                  ref={iconRef}
+                  className="h-3.5 w-3.5 text-primary"
+                />
+                {triggerLabel}
+              </DropdownMenuSubTrigger>
+            </ResponsivePopoverTrigger>
+            <DropdownMenuSubContent className="w-56">
+              {menuContent}
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+          {popoverResult}
+        </ResponsivePopover>
+
+        <Sheet
+          open={overlayOpen && activeSurface === "sheet"}
+          onOpenChange={handleOverlayOpenChange}
+        >
+          <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
+            <SheetHeader className="shrink-0 border-b border-border px-6 py-4">
+              <SheetTitle className="text-base font-semibold">
+                {active?.label ?? "AI assist"}
+              </SheetTitle>
+              <SheetDescription className="text-[13px] text-muted-foreground">
+                AI-generated draft grounded in this record. Review before you
+                use it.
+              </SheetDescription>
+            </SheetHeader>
+            <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
+              {resultBody}
+            </div>
+          </SheetContent>
+        </Sheet>
+
+        <Dialog
+          open={overlayOpen && activeSurface === "dialog"}
+          onOpenChange={handleOverlayOpenChange}
+        >
+          <DialogContent className="flex max-h-[min(640px,calc(100dvh-2rem))] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
+            <DialogHeader className="shrink-0 border-b border-border px-6 py-4">
+              <DialogTitle className="text-base font-semibold">
+                {active?.label ?? "AI assist"}
+              </DialogTitle>
+              <DialogDescription className="text-[13px] text-muted-foreground">
+                AI-generated draft grounded in this record. Review before you
+                use it.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
+              {resultBody}
+            </div>
+          </DialogContent>
+        </Dialog>
+      </>
+    );
+  }
 
   return (
     <>
-      {trigger}
+      <ResponsivePopover
+        open={popoverOpen}
+        onOpenChange={handlePopoverOpenChange}
+      >
+        <DropdownMenu>
+          <ResponsivePopoverTrigger asChild>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={disabled}
+                className={cn("h-8 gap-1.5 text-xs", className)}
+                {...hoverHandlers}
+              >
+                <SparklesIcon
+                  ref={iconRef}
+                  className="h-3.5 w-3.5 text-primary"
+                />
+                {triggerLabel}
+              </Button>
+            </DropdownMenuTrigger>
+          </ResponsivePopoverTrigger>
+          <DropdownMenuContent align={align} className="w-56">
+            {menuContent}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        {popoverResult}
+      </ResponsivePopover>
 
-      <Sheet open={open} onOpenChange={setOpen}>
+      <Sheet
+        open={overlayOpen && activeSurface === "sheet"}
+        onOpenChange={handleOverlayOpenChange}
+      >
         <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
           <SheetHeader className="shrink-0 border-b border-border px-6 py-4">
-            <SheetTitle className="text-base font-semibold">{active?.label ?? "AI assist"}</SheetTitle>
+            <SheetTitle className="text-base font-semibold">
+              {active?.label ?? "AI assist"}
+            </SheetTitle>
             <SheetDescription className="text-[13px] text-muted-foreground">
-              AI-generated draft grounded in this record. Review before you use it.
+              AI-generated draft grounded in this record. Review before you use
+              it.
             </SheetDescription>
           </SheetHeader>
-
           <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
-            {state.status === "loading" && (
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-5/6" />
-                <Skeleton className="h-4 w-2/3" />
-              </div>
-            )}
-
-            {state.status === "quota" && <AiQuotaEmptyState variant="fill" />}
-
-            {state.status === "denied" && <AiPermissionDenied reason={state.reason} />}
-
-            {state.status === "error" && (
-              <div className="flex flex-col items-start gap-3 py-6">
-                <p className="text-sm text-muted-foreground">{state.message}</p>
-                <Button type="button" variant="outline" size="sm" onClick={handleRetry} className="h-8 text-xs">
-                  Retry
-                </Button>
-              </div>
-            )}
-
-            {state.status === "ready" && (
-              <AiDraftCard
-                citations={state.result.citations}
-                confidence={state.result.confidence}
-                usage={state.aiUsage}
-                onAccept={active?.onApply ? handleApply : undefined}
-                acceptLabel={active?.applyLabel ?? "Apply"}
-              >
-                <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-foreground">
-                  {state.result.text}
-                </p>
-              </AiDraftCard>
-            )}
+            {resultBody}
           </div>
         </SheetContent>
       </Sheet>
+
+      <Dialog
+        open={overlayOpen && activeSurface === "dialog"}
+        onOpenChange={handleOverlayOpenChange}
+      >
+        <DialogContent className="flex max-h-[min(640px,calc(100dvh-2rem))] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
+          <DialogHeader className="shrink-0 border-b border-border px-6 py-4">
+            <DialogTitle className="text-base font-semibold">
+              {active?.label ?? "AI assist"}
+            </DialogTitle>
+            <DialogDescription className="text-[13px] text-muted-foreground">
+              AI-generated draft grounded in this record. Review before you use
+              it.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
+            {resultBody}
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
