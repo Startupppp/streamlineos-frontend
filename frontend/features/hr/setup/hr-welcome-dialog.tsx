@@ -10,6 +10,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { WelcomeIllustration } from "@/components/illustrations";
 import { useCan } from "@/hooks/api/access";
 import { useModuleChecklist, useGuidedTours, useDismissTour } from "@/hooks/api/onboarding-flow";
@@ -71,25 +72,25 @@ export function HrWelcomeDialog() {
         </p>
         <DialogFooter className="flex-col gap-2 sm:flex-col">
           <Button className="w-full" onClick={handleStart}>
-            Start setup
+            Start Setup
           </Button>
           <div className="flex w-full gap-2">
-            <Button
+            <LoadingButton
               variant="outline"
               className="flex-1"
-              disabled={dismissTour.isPending}
+              isPending={dismissTour.isPending}
               onClick={handleDismiss}
             >
-              Remind me later
-            </Button>
-            <Button
+              Remind Me Later
+            </LoadingButton>
+            <LoadingButton
               variant="ghost"
               className="flex-1 text-muted-foreground"
-              disabled={dismissTour.isPending}
+              isPending={dismissTour.isPending}
               onClick={handleDismiss}
             >
               Skip
-            </Button>
+            </LoadingButton>
           </div>
         </DialogFooter>
       </DialogContent>

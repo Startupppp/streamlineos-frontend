@@ -119,15 +119,15 @@ export function RetentionPoliciesTab() {
       header: "",
       cell: (row) =>
         canManage ? (
-          <Button
+          <LoadingButton
             variant="ghost"
             size="sm"
             className="text-destructive hover:text-destructive"
             onClick={() => handleDelete(row.id)}
-            disabled={deletePolicy.isPending}
+            isPending={deletePolicy.isPending}
           >
             Delete
-          </Button>
+          </LoadingButton>
         ) : null,
     },
   ];

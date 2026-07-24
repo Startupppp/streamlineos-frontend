@@ -155,24 +155,24 @@ export function DataRequestsTab() {
         canManage ? (
           <div className="flex items-center gap-2">
             {row.status === "pending" && (
-              <Button
+              <LoadingButton
                 variant="outline"
                 size="sm"
                 onClick={() => handleApprove(row.id)}
-                disabled={approveRequest.isPending}
+                isPending={approveRequest.isPending}
               >
                 Approve
-              </Button>
+              </LoadingButton>
             )}
             {row.status === "approved" && (
-              <Button
+              <LoadingButton
                 size="sm"
                 onClick={() => handleProcess(row.id)}
-                disabled={processRequest.isPending}
+                isPending={processRequest.isPending}
                 className="bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 Process
-              </Button>
+              </LoadingButton>
             )}
           </div>
         ) : null,

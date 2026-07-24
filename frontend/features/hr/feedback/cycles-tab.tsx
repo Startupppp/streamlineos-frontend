@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PlusIcon, XIcon } from "@animateicons/react/lucide";
@@ -13,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Sheet,
   SheetContent,
@@ -67,7 +69,13 @@ interface CycleFormState {
 function RemoveQuestionButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
-    <button onClick={onClick} className="text-muted-foreground hover:text-red-500" {...hoverHandlers}>
+    <button
+      type="button"
+      aria-label="Remove question"
+      onClick={onClick}
+      className="text-muted-foreground hover:text-red-500"
+      {...hoverHandlers}
+    >
       <XIcon ref={iconRef} size={14} />
     </button>
   );
@@ -266,19 +274,10 @@ export function CyclesTab() {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => handleFormChange("isAnonymous", !form.isAnonymous)}
-                  className={`w-10 h-5 rounded-full transition-colors relative ${
-                    form.isAnonymous ? "bg-primary" : "bg-border"
-                  }`}
-                >
-                  <span
-                    className={`absolute top-0.5 w-4 h-4 bg-card rounded-full shadow transition-all ${
-                      form.isAnonymous ? "left-5" : "left-0.5"
-                    }`}
-                  />
-                </button>
+                <Switch
+                  checked={form.isAnonymous}
+                  onCheckedChange={(v) => handleFormChange("isAnonymous", v)}
+                />
                 <Label className="cursor-pointer">Anonymous responses</Label>
               </div>
               <div className="space-y-3">
@@ -317,13 +316,14 @@ export function CyclesTab() {
                 ))}
               </div>
               <motion.div whileTap={{ scale: 0.97 }}>
-                <Button
+                <LoadingButton
                   className="w-full"
                   onClick={handleCreate}
-                  disabled={createCycle.isPending}
+                  isPending={createCycle.isPending}
+                  loadingText="Creating…"
                 >
-                  {createCycle.isPending ? "Creating…" : "Create Cycle"}
-                </Button>
+                  Create Cycle
+                </LoadingButton>
               </motion.div>
             </SheetBody>
           </SheetContent>

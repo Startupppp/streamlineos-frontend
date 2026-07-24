@@ -10,6 +10,7 @@ import { useHrEmployees } from "@/hooks/api/hr";
 import { useBgvComplianceDashboard, type BgvComplianceRow } from "@/hooks/api/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
@@ -233,19 +234,19 @@ function buildBgvColumns(
         <div className="flex gap-1 justify-end">
           {(bgv.status === "PENDING" || bgv.status === "IN_PROGRESS") && (
             <>
-              <Button
+              <LoadingButton
                 size="sm"
                 className="gap-1 text-xs"
                 onClick={(e) => {
                   e.stopPropagation();
                   onUpdateStatus(bgv.id, "PASSED");
                 }}
-                disabled={isPending}
+                isPending={isPending}
               >
                 <CheckCircle2 className="h-3 w-3" />
                 Pass
-              </Button>
-              <Button
+              </LoadingButton>
+              <LoadingButton
                 size="sm"
                 variant="outline"
                 className="gap-1 text-xs"
@@ -253,11 +254,11 @@ function buildBgvColumns(
                   e.stopPropagation();
                   onUpdateStatus(bgv.id, "FAILED");
                 }}
-                disabled={isPending}
+                isPending={isPending}
               >
                 <XCircle className="h-3 w-3" />
                 Fail
-              </Button>
+              </LoadingButton>
             </>
           )}
           <Button

@@ -3,7 +3,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api-client";
@@ -97,24 +97,26 @@ export function OvertimeList({ canManage }: Props) {
         cell: (req): ReactNode =>
           req.status === "PENDING" ? (
             <div className="flex items-center gap-2">
-              <Button
+              <LoadingButton
                 size="sm"
                 variant="outline"
                 className="text-xs"
                 onClick={() => handleApprove(req.id)}
-                disabled={approve.isPending || reject.isPending}
+                disabled={reject.isPending}
+                isPending={approve.isPending}
               >
                 Approve
-              </Button>
-              <Button
+              </LoadingButton>
+              <LoadingButton
                 size="sm"
                 variant="outline"
                 className="text-xs text-destructive hover:text-destructive"
                 onClick={() => handleReject(req.id)}
-                disabled={approve.isPending || reject.isPending}
+                disabled={approve.isPending}
+                isPending={reject.isPending}
               >
                 Reject
-              </Button>
+              </LoadingButton>
             </div>
           ) : null,
       });

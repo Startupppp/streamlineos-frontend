@@ -129,7 +129,14 @@ function MaskedField({ label, value, editMode, fieldName, control }: MaskedField
                   )}
                 </span>
                 {value && (
-                  <Button variant="ghost" size="icon" className="w-8 shrink-0" onClick={handleToggle} type="button">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="w-8 shrink-0"
+                    onClick={handleToggle}
+                    type="button"
+                    aria-label={revealed ? `Hide ${label}` : `Reveal ${label}`}
+                  >
                     {revealed ? <EyeOffIcon size={14} /> : <EyeIcon size={14} />}
                   </Button>
                 )}

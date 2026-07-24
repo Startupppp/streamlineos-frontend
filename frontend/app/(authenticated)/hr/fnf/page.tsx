@@ -9,6 +9,7 @@ import { useHrEmployees,
   unwrapEmployees} from "@/hooks/api/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -154,16 +155,16 @@ function FnfCard({ item, onMarkPaid, isPending }: FnfCardProps) {
           </div>
 
           {item.status !== "PAID" && (
-            <Button
+            <LoadingButton
               size="sm"
               variant="outline"
               className="text-xs shrink-0 gap-1.5 duration-200"
               onClick={handleMarkPaid}
-              disabled={isPending}
+              isPending={isPending}
             >
               <CheckCircle2 className="h-3 w-3" />
               Mark Paid
-            </Button>
+            </LoadingButton>
           )}
         </div>
       </CardContent>

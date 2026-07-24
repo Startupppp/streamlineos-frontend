@@ -4,12 +4,14 @@ import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { Upload, FileText, FileSpreadsheet, FileImage, X, File } from "lucide-react";
+import { Upload, FileText, FileSpreadsheet, FileImage, File } from "lucide-react";
+import { XIcon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { Form } from "@/components/ui/form";
 import { toast } from "sonner";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useCreateDocument, useHrEmployeeOptions } from "@/hooks/api/hr";
 import { useUploadFile } from "@/hooks/api/use-upload-file";
 import {
@@ -46,6 +48,30 @@ function getFileTypeConfig(file: File): { icon: React.ComponentType<{ className?
 function formatBytes(bytes: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function RemoveFileButton({
+  index,
+  onClick,
+}: {
+  index: number;
+  onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
+}) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      className="h-6 w-6 shrink-0 text-muted-foreground hover:text-foreground"
+      data-index={index}
+      onClick={onClick}
+      aria-label="Remove file"
+      {...hoverHandlers}
+    >
+      <XIcon ref={iconRef} size={12} />
+    </Button>
+  );
 }
 
 export function UploadDocumentDialog({
@@ -365,17 +391,7 @@ export function UploadDocumentDialog({
                           <span className="text-[10px] text-muted-foreground">{formatBytes(f.size)}</span>
                         </div>
                       </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 shrink-0 text-muted-foreground hover:text-foreground"
-                        data-index={i}
-                        onClick={handleRemoveFileAtIndex}
-                        aria-label="Remove file"
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
+                      <RemoveFileButton index={i} onClick={handleRemoveFileAtIndex} />
                     </div>
                   );
                 })}

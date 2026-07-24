@@ -5,9 +5,9 @@ import { PageWrapper, PageSection } from "@/components/ui/page-wrapper";
 import { ImportExportGrid } from "@/features/shared/import-export/import-export-grid";
 import { HR_IMPORT_EXPORT_ENTITIES } from "@/features/hr/settings/import-export-entities";
 import { Badge } from "@/components/ui/badge";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Users, BarChart2, Package, FileText, Briefcase } from "lucide-react";
 import { UploadIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { cn } from "@/lib/utils";
 import { type HrImportEntity } from "@/hooks/api/hr/import-export";
 import { ImportWizardSheet } from "./import-wizard-sheet";
@@ -72,8 +72,6 @@ interface ImportCardProps {
 }
 
 function ImportCard({ config, onImport }: ImportCardProps) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-
   const handleClick = useCallback(() => {
     onImport(config.id);
   }, [config.id, onImport]);
@@ -101,15 +99,16 @@ function ImportCard({ config, onImport }: ImportCardProps) {
       </div>
       <TruncatedText text={config.description} lines={2} className="text-[12px] text-muted-foreground leading-snug" />
       <div className="mt-auto">
-        <button
-          type="button"
+        <AnimatedIconButton
+          icon={UploadIcon}
+          iconSize={14}
+          variant="outline"
+          size="sm"
+          className="w-full text-xs"
           onClick={handleClick}
-          className="w-full flex items-center justify-center gap-1.5 h-8 rounded-md border border-border text-xs font-medium hover:bg-muted/50 transition-colors"
-          {...hoverHandlers}
         >
-          <UploadIcon ref={iconRef} size={14} />
           Import CSV
-        </button>
+        </AnimatedIconButton>
       </div>
     </div>
   );

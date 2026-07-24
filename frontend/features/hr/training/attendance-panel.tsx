@@ -2,7 +2,7 @@
 
 import { Star } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
@@ -104,24 +104,24 @@ export function AttendancePanel({ programId, canManage }: Props) {
           </div>
           {canManage && attendee.status === "ENROLLED" && (
             <div className="flex items-center gap-1.5 shrink-0">
-              <Button
+              <LoadingButton
                 size="sm"
                 variant="outline"
                 className="text-xs text-emerald-700 border-emerald-200 hover:bg-emerald-50 dark:text-emerald-300 dark:border-emerald-500/30 dark:hover:bg-emerald-500/10"
                 onClick={() => handleMarkAttended(attendee.userId)}
-                disabled={markAttendance.isPending}
+                isPending={markAttendance.isPending}
               >
                 Attended
-              </Button>
-              <Button
+              </LoadingButton>
+              <LoadingButton
                 size="sm"
                 variant="outline"
                 className="text-xs text-red-700 border-red-200 hover:bg-red-50 dark:text-red-300 dark:border-red-500/30 dark:hover:bg-red-500/10"
                 onClick={() => handleMarkAbsent(attendee.userId)}
-                disabled={markAttendance.isPending}
+                isPending={markAttendance.isPending}
               >
                 Absent
-              </Button>
+              </LoadingButton>
             </div>
           )}
         </div>

@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { BookOpen, Clock, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -229,14 +229,15 @@ export function CourseCatalog({ canManage }: Props) {
                 </div>
 
                 <motion.div whileTap={{ scale: 0.97 }}>
-                  <Button
+                  <LoadingButton
                     size="sm"
                     className="w-full h-8 text-xs"
                     onClick={() => handleEnroll(course.id)}
-                    disabled={enroll.isPending || course.status !== "PUBLISHED"}
+                    disabled={course.status !== "PUBLISHED"}
+                    isPending={enroll.isPending}
                   >
                     {course.status === "PUBLISHED" ? "Enroll" : "Not Available"}
-                  </Button>
+                  </LoadingButton>
                 </motion.div>
               </div>
             </motion.div>

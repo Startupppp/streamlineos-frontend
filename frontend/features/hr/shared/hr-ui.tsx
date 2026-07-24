@@ -78,7 +78,7 @@ export function HrHero({
         className="pointer-events-none absolute -bottom-8 right-20 h-24 w-24 rounded-full border border-sky-200/40 dark:border-sky-400/10"
       />
 
-      <div className="relative p-4 sm:p-5 md:p-6 lg:p-7">
+      <div className="relative p-4 sm:p-5">
         {/*
           Stack header until lg: with the app sidebar, sm/md widths (~700–900px
           content) are too tight for title + actions side-by-side.
@@ -110,7 +110,7 @@ export function HrHero({
             </div>
           )}
         </div>
-        {children && <div className="relative mt-4 sm:mt-5 min-w-0">{children}</div>}
+        {children && <div className="relative mt-3 sm:mt-4 min-w-0">{children}</div>}
       </div>
     </div>
   );
@@ -181,21 +181,30 @@ export function HrSectionHeader({
   description,
   action,
   className,
+  size = "sm",
 }: {
   title: string;
   description?: string;
   action?: { label: string; href: string } | ReactNode;
   className?: string;
+  size?: "sm" | "lg";
 }) {
   return (
     <div
       className={cn(
-        "flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3 mb-3",
+        "flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3 mb-2.5",
         className,
       )}
     >
       <div className="min-w-0">
-        <h2 className="text-sm font-semibold tracking-tight text-foreground">{title}</h2>
+        <h2
+          className={cn(
+            "font-semibold tracking-tight text-foreground",
+            size === "lg" ? "text-base" : "text-sm",
+          )}
+        >
+          {title}
+        </h2>
         {description && (
           <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">{description}</p>
         )}
@@ -341,7 +350,7 @@ export function HrPageContent({
   return (
     <div
       className={cn(
-        "flex w-full min-w-0 flex-col gap-4 sm:gap-5 overflow-x-hidden [&>*]:shrink-0",
+        "flex w-full min-w-0 flex-col gap-3 sm:gap-4 overflow-x-hidden [&>*]:shrink-0",
         className,
       )}
     >

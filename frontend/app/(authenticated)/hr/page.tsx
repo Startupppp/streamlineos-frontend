@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/sheet";
 import {
   Download,
+  Upload,
   UserPlus,
   CalendarOff,
   ClipboardList,
@@ -49,7 +50,8 @@ import {
   DEFAULT_STATUS,
 } from "@/features/hr/employees/employee-list-filters";
 import { HrEmployeeTable } from "@/features/hr/employees/hr-employee-table";
-import { HrDashboardOverview } from "@/features/hr/hr-dashboard-overview";
+import { SearchInput } from "@/components/ui/search-input";
+import { HrDashboardOverview, HrDashboardWidgets } from "@/features/hr/hr-dashboard-overview";
 import { HrSetupProgressCard } from "@/features/hr/setup/hr-setup-progress-card";
 import {
   HrHero,
@@ -264,14 +266,33 @@ export default function HRDashboardPage() {
           <Button size="sm" className="gap-2 h-9 shadow-sm flex-1 sm:flex-none" asChild>
             <Link href="/hr/onboarding">
               <UserPlus className="h-4 w-4" aria-hidden="true" />
-              <span className="sm:hidden">Onboard</span>
-              <span className="hidden sm:inline">Onboard employee</span>
+              <span className="sm:hidden">Add</span>
+              <span className="hidden sm:inline">Add Employee</span>
             </Link>
           </Button>
-          <Button variant="outline" size="sm" className="gap-2 h-9 flex-1 sm:flex-none" onClick={handleExport}>
-            <Download className="h-4 w-4" aria-hidden="true" />
-            <span className="sm:inline">Export</span>
-          </Button>
+          <div className="flex flex-1 items-center gap-px overflow-hidden rounded-md border border-input shadow-xs sm:flex-none">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-9 flex-1 gap-2 rounded-none border-0 sm:flex-none"
+              asChild
+            >
+              <Link href="/hr/settings/import-export">
+                <Upload className="h-4 w-4" aria-hidden="true" />
+                Import
+              </Link>
+            </Button>
+            <div className="h-5 w-px shrink-0 bg-border" aria-hidden="true" />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-9 flex-1 gap-2 rounded-none border-0 sm:flex-none"
+              onClick={handleExport}
+            >
+              <Download className="h-4 w-4" aria-hidden="true" />
+              Export
+            </Button>
+          </div>
         </div>
       }
     >
@@ -326,20 +347,28 @@ export default function HRDashboardPage() {
 
         <div>
           <HrSectionHeader
+            size="lg"
             title="Employee directory"
             description={
               isFetching && !isLoading
                 ? "Updating results…"
                 : `${totalCount.toLocaleString()} people · page ${page} of ${totalPages}`
             }
-            action={{ label: "Full directory", href: "/hr/employees" }}
+            action={{ label: "View all", href: "/hr/employees" }}
           />
 
-          <div className="mb-3 flex items-center gap-2">
+          <div className="mb-2.5 flex items-center gap-2">
             <div className="hidden w-full flex-wrap items-center gap-2 sm:flex">
               {employeeFilters}
             </div>
-            <div className="w-full sm:hidden">
+            <div className="flex w-full items-center gap-2 sm:hidden">
+              <SearchInput
+                value={searchTerm}
+                onValueChange={setSearchTermLocal}
+                placeholder="Search people…"
+                aria-label="Search employees"
+                className="min-w-0 flex-1"
+              />
               <Sheet>
                 <SheetTrigger asChild>
                   <AnimatedIconButton
@@ -347,7 +376,7 @@ export default function HRDashboardPage() {
                     iconSize={14}
                     variant="outline"
                     size="sm"
-                    className="relative gap-1.5"
+                    className="relative shrink-0 gap-1.5"
                   >
                     Filters
                     {activeFilterCount > 0 && (
@@ -394,8 +423,8 @@ export default function HRDashboardPage() {
                   onRequestDelete={handleRequestDelete}
                 />
               </HrPanel>
-              <Button variant="outline" size="sm" className="mt-3 w-full sm:hidden" asChild>
-                <Link href="/hr/employees">View full directory</Link>
+              <Button variant="outline" size="sm" className="mt-2.5 w-full sm:hidden" asChild>
+                <Link href="/hr/employees">View all employees</Link>
               </Button>
             </>
           ) : hasActiveFilters ? (
@@ -415,6 +444,8 @@ export default function HRDashboardPage() {
             />
           )}
         </div>
+
+        <HrDashboardWidgets />
 
         <HrSetupProgressCard />
       </HrPageContent>

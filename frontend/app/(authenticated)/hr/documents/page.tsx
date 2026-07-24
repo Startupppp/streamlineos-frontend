@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -270,6 +271,7 @@ export default function DocumentsPage() {
     <div className="flex items-center gap-2">
       <div className="rounded-lg border border-border p-1 flex items-center gap-0.5">
         <button
+          type="button"
           onClick={handleViewList}
           className={cn(
             "h-7 w-7 rounded-md flex items-center justify-center transition-colors duration-200",
@@ -282,6 +284,7 @@ export default function DocumentsPage() {
           <List className="h-3.5 w-3.5" />
         </button>
         <button
+          type="button"
           onClick={handleViewGrid}
           className={cn(
             "h-7 w-7 rounded-md flex items-center justify-center transition-colors duration-200",
@@ -468,16 +471,16 @@ function RichDocumentRow({ doc, onDelete, isDeletePending }: RichDocumentRowProp
             <Pencil className="h-3.5 w-3.5" />
           </Link>
         </Button>
-        <Button
+        <LoadingButton
           variant="ghost"
           size="icon"
           className="w-7 text-muted-foreground hover:text-rose-600"
           onClick={handleDelete}
-          disabled={isDeletePending}
+          isPending={isDeletePending}
           aria-label="Delete document"
         >
-          <Trash2 className="h-3.5 w-3.5" />
-        </Button>
+          {!isDeletePending && <Trash2 className="h-3.5 w-3.5" />}
+        </LoadingButton>
       </div>
     </div>
   );

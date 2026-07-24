@@ -29,7 +29,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -287,13 +287,14 @@ export function MyCareerPlan() {
               )}
             />
 
-            <Button
+            <LoadingButton
               type="submit"
-              disabled={savePlan.isPending}
+              isPending={savePlan.isPending}
+              loadingText="Saving..."
               className="w-full sm:w-auto"
             >
               Save Plan
-            </Button>
+            </LoadingButton>
           </form>
         </Form>
       </motion.div>

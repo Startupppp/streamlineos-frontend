@@ -185,15 +185,15 @@ export function LegalHoldSheet({ open, onClose, hold }: LegalHoldSheetProps) {
                         <span className="font-mono text-xs">{item.itemRef}</span>
                       </div>
                       {hold.status === "active" && (
-                        <Button
+                        <LoadingButton
                           variant="ghost"
                           size="sm"
                           className="text-destructive hover:text-destructive h-6 px-2 text-xs"
                           onClick={() => handleDetach(item.id)}
-                          disabled={detachItem.isPending}
+                          isPending={detachItem.isPending}
                         >
                           Remove
-                        </Button>
+                        </LoadingButton>
                       )}
                     </li>
                   ))}

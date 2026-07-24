@@ -7,6 +7,7 @@ import { useRichDocument, useUpdateRichDocument, usePublishRichDocument } from "
 import { TiptapEditor } from "@/components/editor/tiptap-editor";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -108,14 +109,14 @@ export default function DocumentEditorPage() {
           {isDirty && (
             <Badge variant="outline" className="text-amber-600">Unsaved</Badge>
           )}
-          <Button variant="outline" size="sm" onClick={handlePublish} disabled={publishDoc.isPending}>
-            {doc.isPublished ? <GlobeLock className="mr-1 h-4 w-4" /> : <Globe className="mr-1 h-4 w-4" />}
+          <LoadingButton variant="outline" size="sm" onClick={handlePublish} isPending={publishDoc.isPending}>
+            {!publishDoc.isPending && (doc.isPublished ? <GlobeLock className="mr-1 h-4 w-4" /> : <Globe className="mr-1 h-4 w-4" />)}
             {doc.isPublished ? "Unpublish" : "Publish"}
-          </Button>
-          <Button size="sm" onClick={handleSave} disabled={!isDirty || updateDoc.isPending}>
+          </LoadingButton>
+          <LoadingButton size="sm" onClick={handleSave} disabled={!isDirty} isPending={updateDoc.isPending} loadingText="Saving...">
             <Save className="mr-1 h-4 w-4" />
-            {updateDoc.isPending ? "Saving..." : "Save"}
-          </Button>
+            Save
+          </LoadingButton>
         </div>
       }
     >

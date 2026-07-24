@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PlusIcon, XIcon } from "@animateicons/react/lucide";
@@ -74,7 +74,13 @@ interface CompetencyFormState {
 function RemoveLevelButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
-    <button onClick={onClick} className="text-muted-foreground hover:text-destructive" {...hoverHandlers}>
+    <button
+      type="button"
+      aria-label="Remove level"
+      onClick={onClick}
+      className="text-muted-foreground hover:text-destructive"
+      {...hoverHandlers}
+    >
       <XIcon ref={iconRef} size={14} />
     </button>
   );
@@ -242,13 +248,14 @@ export function CompetencyFrameworksTab() {
                 ))}
               </div>
               <motion.div whileTap={{ scale: 0.97 }}>
-                <Button
+                <LoadingButton
                   className="w-full"
                   onClick={handleCreateFramework}
-                  disabled={createFramework.isPending}
+                  isPending={createFramework.isPending}
+                  loadingText="Creating…"
                 >
-                  {createFramework.isPending ? "Creating…" : "Create Framework"}
-                </Button>
+                  Create Framework
+                </LoadingButton>
               </motion.div>
             </SheetBody>
           </SheetContent>
@@ -360,13 +367,14 @@ export function CompetencyFrameworksTab() {
                             />
                           </div>
                           <motion.div whileTap={{ scale: 0.97 }}>
-                            <Button
+                            <LoadingButton
                               className="w-full"
                               onClick={() => handleCreateCompetency(framework.id)}
-                              disabled={createCompetency.isPending}
+                              isPending={createCompetency.isPending}
+                              loadingText="Adding…"
                             >
-                              {createCompetency.isPending ? "Adding…" : "Add Competency"}
-                            </Button>
+                              Add Competency
+                            </LoadingButton>
                           </motion.div>
                         </div>
                       </DialogContent>

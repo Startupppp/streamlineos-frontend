@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { CheckCircle2, XCircle, MapPin, Calendar, DollarSign, Plane, User } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -117,14 +118,15 @@ function RejectInline({
         onChange={handleReasonChange}
         autoFocus
       />
-      <Button
+      <LoadingButton
         size="sm"
         className="text-xs shrink-0 bg-rose-600 hover:bg-rose-700 text-white"
         onClick={handleConfirm}
-        disabled={!reason.trim() || isRejecting}
+        disabled={!reason.trim()}
+        isPending={isRejecting}
       >
         Confirm
-      </Button>
+      </LoadingButton>
       <Button size="sm" variant="ghost" className="text-xs shrink-0" onClick={handleCancel}>
         Cancel
       </Button>
@@ -210,25 +212,25 @@ const TravelApprovalCard = memo(function TravelApprovalCard({
             </div>
             <div className="flex items-center gap-2 shrink-0">
               {section === "manager" ? (
-                <Button
+                <LoadingButton
                   size="sm"
                   className="gap-1 text-xs"
                   onClick={handleManagerApprove}
-                  disabled={isManagerApproving}
+                  isPending={isManagerApproving}
                 >
                   <CheckCircle2 className="h-3.5 w-3.5" />
                   Approve
-                </Button>
+                </LoadingButton>
               ) : (
-                <Button
+                <LoadingButton
                   size="sm"
                   className="gap-1 text-xs"
                   onClick={handleFinanceApprove}
-                  disabled={isFinanceApproving}
+                  isPending={isFinanceApproving}
                 >
                   <CheckCircle2 className="h-3.5 w-3.5" />
                   Finance Approve
-                </Button>
+                </LoadingButton>
               )}
               <RejectInline id={request.id} onReject={onReject} isRejecting={isRejecting} />
             </div>

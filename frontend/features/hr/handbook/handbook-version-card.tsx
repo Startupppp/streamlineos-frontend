@@ -2,9 +2,10 @@
 
 import { useCallback } from "react";
 import { format } from "date-fns";
-import { FileText, Pencil, Globe } from "lucide-react";
-import { Trash2Icon, ExternalLinkIcon, EyeOffIcon } from "@animateicons/react/lucide";
+import { FileText, Pencil } from "lucide-react";
+import { Trash2Icon, ExternalLinkIcon, EyeOffIcon, GlobeIcon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -46,6 +47,8 @@ export function HandbookVersionCard({
   const handleDelete = useCallback(() => onDelete(v.id), [v.id, onDelete]);
   const handleDocLinkClick = useCallback((e: React.MouseEvent) => e.stopPropagation(), []);
   const { iconRef: extLinkRef, hoverHandlers: extLinkHoverHandlers } = useAnimatedIcon();
+  const { iconRef: publishIconRef, hoverHandlers: publishHoverHandlers } = useAnimatedIcon();
+  const { iconRef: unpublishIconRef, hoverHandlers: unpublishHoverHandlers } = useAnimatedIcon();
 
   return (
     <div
@@ -132,29 +135,29 @@ export function HandbookVersionCard({
             </Button>
           )}
           {!isPublished ? (
-            <Button
+            <LoadingButton
               size="sm"
               variant="outline"
               className="text-xs gap-1.5 transition-colors duration-200"
               onClick={handlePublish}
-              disabled={isUpdating}
+              isPending={isUpdating}
+              {...publishHoverHandlers}
             >
-              <Globe className="h-3 w-3" />
+              <GlobeIcon ref={publishIconRef} size={12} />
               Publish
-            </Button>
+            </LoadingButton>
           ) : (
-            <AnimatedIconButton
-              icon={EyeOffIcon}
-              iconSize={12}
-              iconClassName="mr-1"
+            <LoadingButton
               size="sm"
               variant="outline"
               className="text-xs gap-1.5 transition-colors duration-200"
               onClick={handleUnpublish}
-              disabled={isUpdating}
+              isPending={isUpdating}
+              {...unpublishHoverHandlers}
             >
+              <EyeOffIcon ref={unpublishIconRef} size={12} />
               Unpublish
-            </AnimatedIconButton>
+            </LoadingButton>
           )}
           <AnimatedIconButton
             icon={Trash2Icon}

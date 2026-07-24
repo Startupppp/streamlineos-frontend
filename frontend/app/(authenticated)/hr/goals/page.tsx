@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { Plus, Calendar, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -425,13 +426,14 @@ export default function GoalsPage() {
                   placeholder="Select assignee"
                 />
               </div>
-              <Button
+              <LoadingButton
                 className="w-full"
                 onClick={handleCreate}
-                disabled={createGoal.isPending}
+                isPending={createGoal.isPending}
+                loadingText="Creating…"
               >
-                {createGoal.isPending ? "Creating…" : "Create Goal"}
-              </Button>
+                Create Goal
+              </LoadingButton>
             </SheetBody>
           </SheetContent>
         </Sheet>
@@ -504,13 +506,14 @@ export default function GoalsPage() {
                   style={{ width: `${progressValue}%` }}
                 />
               </div>
-              <Button
+              <LoadingButton
                 className="w-full"
                 onClick={handleSaveProgress}
-                disabled={updateGoal.isPending}
+                isPending={updateGoal.isPending}
+                loadingText="Saving…"
               >
-                {updateGoal.isPending ? "Saving…" : "Save Progress"}
-              </Button>
+                Save Progress
+              </LoadingButton>
             </div>
           )}
         </DialogContent>
