@@ -20,6 +20,7 @@ export type ToggleKey =
   | "multiCurrency"
   | "employeeDeclarations"
   | "payrollVarianceWarnings"
+  | "requireLockedPayrollInputs"
   | "countryComplianceChecklist"
   | "globalPaymentReport"
   | "bankPayoutFile"
