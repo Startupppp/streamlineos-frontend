@@ -1,12 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { useActivatePolicy, useArchivePolicy, useCreatePolicyVersion } from "@/hooks/api/hr/policies";
+import {
+  useActivatePolicy,
+  useArchivePolicy,
+  useCreatePolicyVersion,
+  usePolicyConflicts,
+} from "@/hooks/api/hr/policies";
 import type { HrPolicy } from "@/types/hr/policies";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { PolicyConflictBanner } from "./policy-conflict-banner";
 
 const STATUS_COLORS: Record<string, string> = {
   draft: "bg-muted text-muted-foreground border-border",
@@ -23,6 +29,8 @@ export function PolicyVersionHistory({ policy, canManage }: Props) {
   const createVersion = useCreatePolicyVersion();
   const activate = useActivatePolicy();
   const archive = useArchivePolicy();
+  const conflicts = usePolicyConflicts(policy.status === "draft" ? policy.id : 0);
+  const [forceArmed, setForceArmed] = useState(false);
 
   function handleCreateVersion() {
     createVersion.mutate(policy.id, {
@@ -31,11 +39,23 @@ export function PolicyVersionHistory({ policy, canManage }: Props) {
     });
   }
 
-  function handleActivate() {
-    activate.mutate(policy.id, {
-      onSuccess: () => toast.success("Policy activated"),
-      onError: (err) => toast.error(getErrorMessage(err)),
-    });
+  function handleActivate(force = false) {
+    activate.mutate(
+      { policyId: policy.id, force },
+      {
+        onSuccess: () => {
+          toast.success(force ? "Policy force-activated" : "Policy activated");
+          setForceArmed(false);
+        },
+        onError: (err) => {
+          const message = getErrorMessage(err);
+          toast.error(message);
+          if (message.toLowerCase().includes("conflict")) {
+            setForceArmed(true);
+          }
+        },
+      },
+    );
   }
 
   function handleArchive() {
@@ -45,52 +65,72 @@ export function PolicyVersionHistory({ policy, canManage }: Props) {
     });
   }
 
-  return (
-    <div className="flex items-center gap-2">
-      <Badge
-        variant="outline"
-        className={`text-xs px-2 py-0.5 ${STATUS_COLORS[policy.status] ?? ""}`}
-      >
-        {policy.status}
-      </Badge>
-      <span className="text-xs text-muted-foreground">v{policy.version}</span>
+  const canActivateSafely = conflicts.data?.canActivate !== false;
 
-      {canManage && (
-        <div className="flex items-center gap-1 ml-auto">
-          {policy.status === "active" && (
-            <LoadingButton
-              variant="outline"
-              size="sm"
-              className="text-xs"
-              isPending={createVersion.isPending}
-              onClick={handleCreateVersion}
-            >
-              New Version
-            </LoadingButton>
-          )}
-          {policy.status === "draft" && (
-            <LoadingButton
-              size="sm"
-              className="text-xs"
-              isPending={activate.isPending}
-              onClick={handleActivate}
-            >
-              Activate
-            </LoadingButton>
-          )}
-          {policy.status !== "archived" && (
-            <LoadingButton
-              variant="outline"
-              size="sm"
-              className="text-xs text-muted-foreground"
-              isPending={archive.isPending}
-              onClick={handleArchive}
-            >
-              Archive
-            </LoadingButton>
-          )}
-        </div>
-      )}
+  return (
+    <div className="space-y-2">
+      {policy.status === "draft" && <PolicyConflictBanner policyId={policy.id} />}
+
+      <div className="flex items-center gap-2">
+        <Badge
+          variant="outline"
+          className={`text-xs px-2 py-0.5 ${STATUS_COLORS[policy.status] ?? ""}`}
+        >
+          {policy.status}
+        </Badge>
+        <span className="text-xs text-muted-foreground">v{policy.version}</span>
+
+        {canManage && (
+          <div className="flex items-center gap-1 ml-auto flex-wrap justify-end">
+            {policy.status === "active" && (
+              <LoadingButton
+                variant="outline"
+                size="sm"
+                className="text-xs"
+                isPending={createVersion.isPending}
+                onClick={handleCreateVersion}
+              >
+                New Version
+              </LoadingButton>
+            )}
+            {policy.status === "draft" && (
+              <>
+                <LoadingButton
+                  size="sm"
+                  className="text-xs"
+                  isPending={activate.isPending}
+                  onClick={() => handleActivate(false)}
+                  disabled={conflicts.isLoading}
+                >
+                  Activate
+                </LoadingButton>
+                {forceArmed && !canActivateSafely && (
+                  <LoadingButton
+                    size="sm"
+                    variant="destructive"
+                    className="text-xs"
+                    isPending={activate.isPending}
+                    onClick={() => handleActivate(true)}
+                  >
+                    Force activate
+                  </LoadingButton>
+                )}
+              </>
+            )}
+            {policy.status !== "archived" && (
+              <LoadingButton
+                variant="outline"
+                size="sm"
+                className="text-xs text-muted-foreground"
+                isPending={archive.isPending}
+                onClick={handleArchive}
+              >
+                Archive
+              </LoadingButton>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
