@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
@@ -41,10 +40,6 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
   const run = data?.run;
 
   const isLocked = run ? LOCKED_STATUSES.has(run.status) : false;
-
-  const handleChanged = useCallback(() => {
-    refetch();
-  }, [refetch]);
 
   function handleTabChange(tab: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -100,7 +95,7 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
       }
       actions={
         <div className="hidden sm:flex items-center gap-2">
-          <RunActionsSlot run={run} onChanged={handleChanged} />
+          <RunActionsSlot run={run} />
         </div>
       }
     >
@@ -177,8 +172,8 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
           <RunStatusStepper status={run.status} />
         </div>
 
-        <ApprovalStagePanel runId={runId} status={run.status} onChanged={handleChanged} />
-        <MarkPaidPanel runId={runId} status={run.status} onChanged={handleChanged} />
+        <ApprovalStagePanel runId={runId} status={run.status} />
+        <MarkPaidPanel runId={runId} status={run.status} />
 
         <StatCardGrid cols={4}>
           <StatCard
@@ -237,7 +232,7 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
         </Tabs>
       </div>
 
-      <MobileLifecycleBar run={run} onChanged={handleChanged} />
+      <MobileLifecycleBar run={run} />
     </PageWrapper>
   );
 }

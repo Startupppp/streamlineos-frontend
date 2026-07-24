@@ -22,7 +22,6 @@ import type { PayrollApprovalRow } from "@/types/payroll";
 interface Props {
   runId: number;
   status: string;
-  onChanged?: () => void;
 }
 
 const VISIBLE_STATUSES = new Set([
@@ -50,10 +49,9 @@ interface StageRowProps {
   canAct: boolean;
   isActive: boolean;
   runId: number;
-  onChanged?: () => void;
 }
 
-function StageRow({ row, canAct, isActive, runId, onChanged }: StageRowProps) {
+function StageRow({ row, canAct, isActive, runId }: StageRowProps) {
   const [rejectOpen, setRejectOpen] = useState(false);
   const [approveOpen, setApproveOpen] = useState(false);
   const [comment, setComment] = useState("");
@@ -70,7 +68,6 @@ function StageRow({ row, canAct, isActive, runId, onChanged }: StageRowProps) {
         onSuccess: () => {
           setApproveOpen(false);
           toast.success("Stage approved");
-          onChanged?.();
         },
         onError: (err) => { toast.error(getErrorMessage(err)); },
       },
@@ -85,7 +82,7 @@ function StageRow({ row, canAct, isActive, runId, onChanged }: StageRowProps) {
     reject(
       { runId, approvalId: row.id, comment: comment.trim() },
       {
-        onSuccess: () => { setRejectOpen(false); setComment(""); toast.success("Stage rejected"); onChanged?.(); },
+        onSuccess: () => { setRejectOpen(false); setComment(""); toast.success("Stage rejected"); },
         onError: (err) => { toast.error(getErrorMessage(err)); },
       },
     );
@@ -173,13 +170,13 @@ function StageRow({ row, canAct, isActive, runId, onChanged }: StageRowProps) {
   );
 }
 
-export function ApprovalStagePanel({ runId, status, onChanged }: Props) {
+export function ApprovalStagePanel({ runId, status }: Props) {
   const canView = useCan("payroll:runs:view");
   const canApprove = useCan("payroll:runs:approve");
-  const { data, isLoading } = useRunApprovals(runId);
+  const visible = VISIBLE_STATUSES.has(status) && canView;
+  const { data, isLoading } = useRunApprovals(runId, { enabled: visible });
 
-  if (!VISIBLE_STATUSES.has(status)) return null;
-  if (!canView) return null;
+  if (!visible) return null;
 
   return (
     <div className="bg-card border border-border rounded-xl p-4 space-y-3">
@@ -204,7 +201,6 @@ export function ApprovalStagePanel({ runId, status, onChanged }: Props) {
           canAct={canApprove}
           isActive={row.status === "PENDING" && status === "PENDING_APPROVAL"}
           runId={runId}
-          onChanged={onChanged}
         />
       ))}
     </div>

@@ -20,12 +20,11 @@ import { getErrorMessage } from "@/lib/get-error-message";
 interface Props {
   runId: number;
   status: string;
-  onChanged?: () => void;
 }
 
 const SUBMIT_STATUSES = new Set(["PREVIEW_READY", "EXCEPTIONS_FOUND"]);
 
-export function SubmitApprovalAction({ runId, status, onChanged }: Props) {
+export function SubmitApprovalAction({ runId, status }: Props) {
   const canUpdate = useCan("payroll:runs:update");
   const [open, setOpen] = useState(false);
   const { mutate, isPending } = useSubmitApproval();
@@ -48,7 +47,6 @@ export function SubmitApprovalAction({ runId, status, onChanged }: Props) {
         onSuccess: () => {
           setOpen(false);
           toast.success("Submitted for approval");
-          onChanged?.();
         },
         onError: (err) => {
           const msg = getErrorMessage(err);

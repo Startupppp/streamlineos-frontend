@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 interface Props {
   runId: number;
   status: string;
-  onChanged?: () => void;
 }
 
 export function MarkPaidPanel({ runId, status }: Props) {

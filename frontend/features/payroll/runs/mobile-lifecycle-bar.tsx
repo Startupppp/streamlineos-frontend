@@ -6,7 +6,6 @@ import type { PayrollRun } from "@/types/payroll/runs";
 
 interface MobileLifecycleBarProps {
   run: PayrollRun;
-  onChanged: () => void;
   className?: string;
 }
 
@@ -14,7 +13,7 @@ interface MobileLifecycleBarProps {
  * Sticky bottom action bar for high-risk lifecycle controls on phones (375–390px).
  * Desktop continues to use the page header actions; this is sm-and-below only.
  */
-export function MobileLifecycleBar({ run, onChanged, className }: MobileLifecycleBarProps) {
+export function MobileLifecycleBar({ run, className }: MobileLifecycleBarProps) {
   return (
     <div
       className={cn(
@@ -26,7 +25,7 @@ export function MobileLifecycleBar({ run, onChanged, className }: MobileLifecycl
       role="toolbar"
       aria-label="Payroll lifecycle actions"
     >
-      <RunActionsSlot run={run} onChanged={onChanged} />
+      <RunActionsSlot run={run} />
     </div>
   );
 }

@@ -25,10 +25,9 @@ import type { PayrollRun } from "@/types/payroll/runs";
 
 interface RunActionsSlotProps {
   run: PayrollRun;
-  onChanged: () => void;
 }
 
-export function RunActionsSlot({ run, onChanged }: RunActionsSlotProps) {
+export function RunActionsSlot({ run }: RunActionsSlotProps) {
   const [showRecalcConfirm, setShowRecalcConfirm] = useState(false);
   const canManage = useCan("payroll:runs:manage");
 
@@ -39,7 +38,6 @@ export function RunActionsSlot({ run, onChanged }: RunActionsSlotProps) {
     generateMutation.mutate(run.id, {
       onSuccess: () => {
         toast.success("Payroll generated successfully");
-        onChanged();
       },
       onError: (err) => {
         toast.error(getErrorMessage(err));
@@ -52,7 +50,6 @@ export function RunActionsSlot({ run, onChanged }: RunActionsSlotProps) {
       onSuccess: () => {
         toast.success("Payroll recalculated");
         setShowRecalcConfirm(false);
-        onChanged();
       },
       onError: (err) => {
         toast.error(getErrorMessage(err));
@@ -123,7 +120,7 @@ export function RunActionsSlot({ run, onChanged }: RunActionsSlotProps) {
       return (
         <>
           {recalcButton}
-          <SubmitApprovalAction runId={run.id} status={run.status} onChanged={onChanged} />
+          <SubmitApprovalAction runId={run.id} status={run.status} />
         </>
       );
 
@@ -133,10 +130,10 @@ export function RunActionsSlot({ run, onChanged }: RunActionsSlotProps) {
     case "APPROVED":
     case "LOCKED":
     case "PAYSLIPS_PUBLISHED":
-      return <LockActions runId={run.id} status={run.status} onChanged={onChanged} />;
+      return <LockActions runId={run.id} status={run.status} />;
 
     case "PAID":
-      return <PublishPayslipsAction runId={run.id} status={run.status} onChanged={onChanged} />;
+      return <PublishPayslipsAction runId={run.id} status={run.status} />;
 
     case "CLOSED":
     default:
