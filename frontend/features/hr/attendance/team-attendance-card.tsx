@@ -17,7 +17,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Users, Wifi, WifiOff, Coffee, LogOut } from "lucide-react";
-import { useHrTeamAttendanceStatus } from "@/hooks/api/hr";
+import { Button } from "@/components/ui/button";
+import { useHrTeamAttendanceStatus, useHrDepartments } from "@/hooks/api/hr";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { resolveImageUrl, cn } from "@/lib/utils";
 import { getInitials } from "@/lib/format-utils";
 import type { TeamAttendanceEntry } from "@/types/hr";
@@ -107,53 +109,52 @@ function MemberRow({ entry }: { entry: TeamAttendanceEntry }) {
   );
 }
 
+const PAGE_SIZE = 50;
+
 export const TeamAttendanceCard = memo(function TeamAttendanceCard({
   expanded = false,
 }: {
   expanded?: boolean;
 }) {
-  const { data, isLoading } = useHrTeamAttendanceStatus();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
   const [departmentFilter, setDepartmentFilter] = useState("ALL");
+  const [page, setPage] = useState(1);
+  const debouncedSearch = useDebouncedValue(search.trim(), 300);
 
-  const handleSearchChange = useCallback((value: string) => setSearch(value), []);
-  const handleDepartmentChange = useCallback((value: string) => setDepartmentFilter(value), []);
+  const { data, isLoading } = useHrTeamAttendanceStatus({
+    page,
+    limit: PAGE_SIZE,
+    search: debouncedSearch || undefined,
+    status: statusFilter === "ALL" ? undefined : statusFilter,
+    departmentId: departmentFilter === "ALL" ? undefined : Number(departmentFilter),
+  });
+  const { data: departmentsData } = useHrDepartments();
 
-  const departments = useMemo(() => {
-    const set = new Set<string>();
-    for (const e of data ?? []) {
-      if (e.department) set.add(e.department);
-    }
-    return [...set].sort((a, b) => a.localeCompare(b));
-  }, [data]);
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
+    setPage(1);
+  }, []);
+  const handleDepartmentChange = useCallback((value: string) => {
+    setDepartmentFilter(value);
+    setPage(1);
+  }, []);
+  const handleStatusChange = useCallback((status: TeamAttendanceEntry["status"]) => {
+    setStatusFilter((prev) => (prev === status ? "ALL" : status));
+    setPage(1);
+  }, []);
+  const handlePrevPage = useCallback(() => setPage((p) => Math.max(1, p - 1)), []);
+  const handleNextPage = useCallback(() => setPage((p) => p + 1), []);
 
-  const counts = useMemo(() => {
-    const acc: Record<TeamAttendanceEntry["status"], number> = {
-      PRESENT: 0,
-      ON_BREAK: 0,
-      CHECKED_OUT: 0,
-      OFFLINE: 0,
-    };
-    for (const e of data ?? []) acc[e.status] += 1;
-    return acc;
-  }, [data]);
+  const departments = useMemo(
+    () => [...(departmentsData ?? [])].sort((a, b) => a.name.localeCompare(b.name)),
+    [departmentsData],
+  );
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return (data ?? []).filter((e) => {
-      if (statusFilter !== "ALL" && e.status !== statusFilter) return false;
-      if (departmentFilter !== "ALL" && (e.department ?? "") !== departmentFilter) {
-        return false;
-      }
-      if (!q) return true;
-      return (
-        e.name.toLowerCase().includes(q) ||
-        (e.department ?? "").toLowerCase().includes(q) ||
-        e.email.toLowerCase().includes(q)
-      );
-    });
-  }, [data, search, statusFilter, departmentFilter]);
+  const entries = data?.data ?? [];
+  const counts = data?.counts;
+  const pagination = data?.pagination;
+  const totalPages = pagination?.totalPages ?? 1;
 
   const listMaxClass = expanded ? "max-h-[min(70dvh,36rem)]" : "max-h-72";
 
@@ -165,9 +166,9 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
             <Users className="h-4 w-4 text-primary" />
           </div>
           Team Attendance — Today
-          {data && (
+          {pagination && (
             <span className="ml-auto text-xs font-medium tabular-nums text-muted-foreground">
-              {filtered.length}/{data.length}
+              {pagination.total} member{pagination.total === 1 ? "" : "s"}
             </span>
           )}
         </CardTitle>
@@ -181,7 +182,7 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
               </div>
             ))}
           </div>
-        ) : data ? (
+        ) : counts ? (
           <div className="mt-2 grid grid-cols-2 gap-1.5 rounded-xl bg-muted/30 p-1.5 md:grid-cols-4">
             {(
               [
@@ -196,9 +197,7 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
                 <button
                   key={status}
                   type="button"
-                  onClick={() =>
-                    setStatusFilter((prev) => (prev === status ? "ALL" : status))
-                  }
+                  onClick={() => handleStatusChange(status)}
                   className={cn(
                     "flex flex-col items-center gap-0.5 rounded-lg px-2 py-2 transition-colors",
                     active
@@ -229,7 +228,7 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <SearchInput
             className="min-w-0 flex-1"
-            placeholder="Search name, email, or department…"
+            placeholder="Search name or email…"
             value={search}
             onValueChange={handleSearchChange}
           />
@@ -240,8 +239,8 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
             <SelectContent>
               <SelectItem value="ALL">All departments</SelectItem>
               {departments.map((dept) => (
-                <SelectItem key={dept} value={dept}>
-                  {dept}
+                <SelectItem key={dept.id} value={String(dept.id)}>
+                  {dept.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -254,7 +253,7 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
               <Skeleton key={i} className="h-14 w-full rounded-lg" />
             ))}
           </div>
-        ) : filtered.length === 0 ? (
+        ) : entries.length === 0 ? (
           <EmptyState
             illustrationPreset="team"
             title="No teammates match"
@@ -266,13 +265,44 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
             compact
           />
         ) : (
-          <ScrollArea className={cn("rounded-xl border border-border/60", listMaxClass)}>
-            <div className="divide-y divide-border/60 p-1">
-              {filtered.map((entry) => (
-                <MemberRow key={entry.userId} entry={entry} />
-              ))}
-            </div>
-          </ScrollArea>
+          <>
+            <ScrollArea className={cn("rounded-xl border border-border/60", listMaxClass)}>
+              <div className="divide-y divide-border/60 p-1">
+                {entries.map((entry) => (
+                  <MemberRow key={entry.userId} entry={entry} />
+                ))}
+              </div>
+            </ScrollArea>
+            {pagination && totalPages > 1 && (
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs text-muted-foreground tabular-nums">
+                  {(pagination.page - 1) * pagination.limit + 1}–
+                  {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
+                  {pagination.total}
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8"
+                    disabled={pagination.page <= 1}
+                    onClick={handlePrevPage}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8"
+                    disabled={pagination.page >= totalPages}
+                    onClick={handleNextPage}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </CardContent>
     </Card>

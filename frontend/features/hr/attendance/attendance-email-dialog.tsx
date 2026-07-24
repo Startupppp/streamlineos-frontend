@@ -213,7 +213,7 @@ export function AttendanceEmailDialog() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  const { data: employeesData } = useHrEmployees({ limit: 200 });
+  const { data: employeesData } = useHrEmployees({ limit: 100 });
   const allUsers = useMemo<UserOption[]>(() => {
     const raw = employeesData
       ? unwrapEmployees(employeesData)

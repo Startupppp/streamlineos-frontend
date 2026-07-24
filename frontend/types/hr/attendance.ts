@@ -190,3 +190,22 @@ export interface TeamAttendanceEntry {
   checkOut: string | null;
   workHours: string | null;
 }
+
+export interface TeamAttendanceStatusQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: TeamAttendanceEntry["status"];
+  departmentId?: number;
+}
+
+export interface TeamAttendanceStatusResponse {
+  data: TeamAttendanceEntry[];
+  counts: Record<TeamAttendanceEntry["status"], number>;
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}

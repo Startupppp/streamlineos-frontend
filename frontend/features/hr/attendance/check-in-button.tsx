@@ -32,7 +32,7 @@ import {
   Utensils,
 } from "lucide-react";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { formatDuration, formatTimerSegment } from "./attendance-utils";
+import { attendancePollInterval, formatDuration, formatTimerSegment } from "./attendance-utils";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -47,7 +47,7 @@ export const TimerCard = memo(function TimerCard() {
   const isSundayToday = getDay(today) === 0;
 
   const { data: statusData, isLoading } = useHrAttendanceStatus({
-    refetchInterval: 60000,
+    refetchInterval: (query) => attendancePollInterval(query.state.data),
     staleTime: 30000,
   });
   const { data: holidaysList } = useHrHolidaysForCalendar({

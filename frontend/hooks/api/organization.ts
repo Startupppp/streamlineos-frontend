@@ -53,6 +53,28 @@ export const useOrgMembers = (
   });
 };
 
+export const useOrgMembersByIds = (
+  userIds: string[],
+  options?: Omit<
+    UseQueryOptions<MembersResponse, Error>,
+    "queryKey" | "queryFn"
+  >,
+) => {
+  const ids = [...userIds].sort();
+  return useQuery<MembersResponse, Error>({
+    queryKey: [...queryKeys.organization.members(), { userIds: ids }] as const,
+    queryFn: () =>
+      apiClient.get<MembersResponse>("/organization/members", {
+        page: "1",
+        limit: String(Math.min(Math.max(ids.length, 1), 50)),
+        userIds: ids.join(","),
+      }),
+    staleTime: 5 * 60_000,
+    enabled: ids.length > 0,
+    ...options,
+  });
+};
+
 export const useInvitations = (
   options?: Omit<UseQueryOptions<Invitation[], Error>, "queryKey" | "queryFn">,
 ) => {
