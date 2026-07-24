@@ -12,6 +12,7 @@ import {
   Landmark,
   BarChart2,
   BookOpen,
+  Scale,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -42,6 +43,7 @@ const REPORT_OPTIONS: ReportOption[] = [
   { type: "bank-payout", label: "Bank Payout", icon: Landmark },
   { type: "variance", label: "Variance", icon: BarChart2 },
   { type: "journal", label: "Journal", icon: BookOpen },
+  { type: "pay-compression", label: "Pay Compression", icon: Scale },
 ];
 
 interface ReportSelectorProps {

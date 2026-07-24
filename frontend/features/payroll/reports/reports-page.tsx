@@ -22,11 +22,12 @@ import { ReportPivot } from "./report-pivot";
 import { ReportBankPayout } from "./report-bank-payout";
 import { ReportVariance } from "./report-variance";
 import { ReportJournal } from "./report-journal";
+import { ReportPayCompression } from "./report-pay-compression";
 
 const VALID_REPORT_TYPES: PayrollReportType[] = [
   "summary", "register", "department-cost", "cost-center",
   "earnings", "deductions", "reimbursements", "tax",
-  "bank-payout", "variance", "journal",
+  "bank-payout", "variance", "journal", "pay-compression",
 ];
 
 const REPORT_TYPE_SET = new Set<string>(VALID_REPORT_TYPES);
@@ -80,6 +81,8 @@ function ActiveReport({
       return <ReportVariance month={month} />;
     case "journal":
       return <ReportJournal month={month} />;
+    case "pay-compression":
+      return <ReportPayCompression />;
   }
 }
 

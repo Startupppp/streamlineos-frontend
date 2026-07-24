@@ -9,7 +9,8 @@ export type PayrollReportType =
   | "tax"
   | "bank-payout"
   | "variance"
-  | "journal";
+  | "journal"
+  | "pay-compression";
 
 export interface PayrollSummaryReport {
   run: {
