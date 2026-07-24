@@ -125,6 +125,13 @@ export function InboxTicketPreview({
     ticketId: resolvedTicketId,
   });
 
+  const handleApplyAiDescription = useCallback(
+    (html: string) => {
+      autoSave({ description: html });
+    },
+    [autoSave],
+  );
+
   const resolving = target.ticketId == null && (projectLoading || boardLoading);
   const isLoading = resolving || (resolvedTicketId != null && ticketLoading);
   const displayKey = formatTicketKey(
@@ -253,6 +260,7 @@ export function InboxTicketPreview({
             members={members}
             highlightCommentId={target.commentId}
             variant="preview"
+            onApplyDescription={handleApplyAiDescription}
             onTitleChange={handleTitleChange}
             onDescriptionChange={handleDescriptionEditorChange}
           />

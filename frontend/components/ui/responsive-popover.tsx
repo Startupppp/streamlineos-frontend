@@ -90,6 +90,7 @@ interface ResponsivePopoverContentProps
   extends React.ComponentPropsWithoutRef<typeof PopoverContent> {
   title?: string;
   drawerClassName?: string;
+  stickyFooter?: boolean;
 }
 
 const ResponsivePopoverContent = React.forwardRef<
@@ -100,6 +101,7 @@ const ResponsivePopoverContent = React.forwardRef<
     className,
     title = "Options",
     drawerClassName,
+    stickyFooter = false,
     children,
     align = "center",
     sideOffset = 4,
@@ -126,7 +128,9 @@ const ResponsivePopoverContent = React.forwardRef<
         </DrawerHeader>
         <div
           className={cn(
-            "min-h-0 flex-1 overflow-y-auto overscroll-contain",
+            stickyFooter
+              ? "flex min-h-0 flex-1 flex-col overflow-hidden"
+              : "min-h-0 flex-1 overflow-y-auto overscroll-contain",
             className,
             "w-full max-w-none",
           )}

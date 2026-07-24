@@ -1,10 +1,12 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AiDraftCard } from "./ai-draft-card";
 import { AiQuotaEmptyState } from "./ai-quota-empty-state";
 import { AiPermissionDenied } from "./ai-permission-denied";
+import { AiFieldPopoverFooter } from "./ai-field-popover-layout";
 import type { Citation } from "./ai-citation-chips";
 import type { AiUsageMeta } from "./ai-usage-chip";
 
@@ -28,6 +30,7 @@ interface AiActionResultBodyProps {
   applyLabel?: string;
   onRetry?: () => void;
   compact?: boolean;
+  contentOnly?: boolean;
 }
 
 export function AiActionResultBody({
@@ -36,6 +39,7 @@ export function AiActionResultBody({
   applyLabel = "Apply",
   onRetry,
   compact = false,
+  contentOnly = false,
 }: AiActionResultBodyProps) {
   if (state.status === "loading") {
     return (
@@ -56,6 +60,10 @@ export function AiActionResultBody({
   }
 
   if (state.status === "error") {
+    if (contentOnly) {
+      return <p className="text-sm text-muted-foreground">{state.message}</p>;
+    }
+
     return (
       <div className="flex flex-col items-start gap-3 py-3">
         <p className="text-sm text-muted-foreground">{state.message}</p>
@@ -73,8 +81,9 @@ export function AiActionResultBody({
       citations={state.result.citations}
       confidence={state.result.confidence}
       usage={state.aiUsage}
-      onAccept={onApply}
+      onAccept={contentOnly ? undefined : onApply}
       acceptLabel={applyLabel}
+      hideFooter={contentOnly}
       className={compact ? "shadow-none" : undefined}
     >
       <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-foreground">
@@ -82,4 +91,50 @@ export function AiActionResultBody({
       </p>
     </AiDraftCard>
   );
+}
+
+interface AiActionResultFooterProps {
+  state: AiActionResultState;
+  onApply?: () => void;
+  applyLabel?: string;
+  onRetry?: () => void;
+}
+
+export function AiActionResultFooter({
+  state,
+  onApply,
+  applyLabel = "Apply",
+  onRetry,
+}: AiActionResultFooterProps) {
+  if (state.status === "error" && onRetry) {
+    return (
+      <AiFieldPopoverFooter>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={onRetry}
+          className="h-8 w-full text-xs"
+        >
+          Retry
+        </Button>
+      </AiFieldPopoverFooter>
+    );
+  }
+
+  if (state.status === "ready" && onApply) {
+    return (
+      <AiFieldPopoverFooter>
+        <LoadingButton
+          size="sm"
+          onClick={onApply}
+          className="h-8 w-full text-xs"
+        >
+          {applyLabel}
+        </LoadingButton>
+      </AiFieldPopoverFooter>
+    );
+  }
+
+  return null;
 }

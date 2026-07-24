@@ -26,7 +26,6 @@ import { TicketDetailActions, TicketDetailDeleteDialog, TicketDetailDeleteMenuIt
 import { TicketParentControl } from "./ticket-parent-control";
 import { useTicketDetail } from "./use-ticket-detail";
 import { resolveTicketId } from "./resolve-ticket-id";
-import { TicketAiMenu } from "@/features/projects/ai/ticket-ai-menu";
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import { useCan } from "@/hooks/api/access";
 
@@ -250,13 +249,6 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
                   />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent forceMount align="end" className="w-52">
-                  <TicketAiMenu
-                    projectId={projectId}
-                    ticketId={ticketId}
-                    currentDescription={ticket.description}
-                    onApplyDescription={handleApplyAiDescription}
-                    asSubmenu
-                  />
                   <DropdownMenuItem onSelect={handleShare} className="gap-2">
                     <ShareIcon size={14} />
                     Share
@@ -277,12 +269,6 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
             </>
           ) : (
             <>
-              <TicketAiMenu
-                projectId={projectId}
-                ticketId={ticketId}
-                currentDescription={ticket.description}
-                onApplyDescription={handleApplyAiDescription}
-              />
               <AnimatedIconButton
                 size="icon"
                 variant="outline"
@@ -319,6 +305,7 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
             subtasks={subtasks}
             members={members}
             highlightCommentId={highlightCommentId}
+            onApplyDescription={handleApplyAiDescription}
             onTitleChange={handleTitleChange}
             onDescriptionChange={handleDescriptionEditorChange}
           />

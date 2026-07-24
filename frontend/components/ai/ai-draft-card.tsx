@@ -22,6 +22,7 @@ interface AiDraftCardProps {
   onDiscard?: () => void;
   acceptLabel?: string;
   isAcceptPending?: boolean;
+  hideFooter?: boolean;
   className?: string;
 }
 
@@ -37,9 +38,10 @@ export function AiDraftCard({
   onDiscard,
   acceptLabel = "Accept",
   isAcceptPending = false,
+  hideFooter = false,
   className,
 }: AiDraftCardProps) {
-  const hasFooter = onAccept || onEdit || onDiscard;
+  const hasFooter = !hideFooter && (onAccept || onEdit || onDiscard);
   const hasCitations = citations && citations.length > 0;
 
   return (

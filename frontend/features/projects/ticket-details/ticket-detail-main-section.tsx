@@ -10,7 +10,11 @@ import { TicketActivityLog } from "@/features/projects/tickets/ticket-activity-l
 import { TicketChecklists } from "./ticket-checklists";
 import { TicketCustomFields } from "./ticket-custom-fields";
 import { AttachmentImage } from "./attachment-image";
-import { TicketAiSection } from "./ticket-ai-section";
+import {
+  TicketDetailAiDescription,
+  TicketDetailAiActivityActions,
+  useTicketDetailAi,
+} from "@/features/projects/ai/ticket-detail-ai";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,6 +45,7 @@ interface TicketDetailMainSectionProps {
   members: ProjectMember[];
   highlightCommentId?: number | null;
   variant?: "full" | "preview";
+  onApplyDescription: (html: string) => void;
   onTitleChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onDescriptionChange: (html: string) => void;
 }
@@ -101,10 +106,19 @@ export function TicketDetailMainSection({
   members,
   highlightCommentId,
   variant = "full",
+  onApplyDescription,
   onTitleChange,
   onDescriptionChange,
 }: TicketDetailMainSectionProps) {
   const isPreview = variant === "preview";
+  const ticketDetailAi = useTicketDetailAi({
+    projectId,
+    ticketId,
+    ticket,
+    localTitle,
+    commentCount: ticket.comments?.length ?? 0,
+    onApplyDescription,
+  });
 
   return (
     <div className="min-w-0 max-w-full space-y-4 sm:space-y-5">
@@ -119,9 +133,19 @@ export function TicketDetailMainSection({
       </div>
 
       <div className="min-w-0">
-        <h3 className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-          Description
-        </h3>
+        {isPreview ? (
+          <h3 className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            Description
+          </h3>
+        ) : (
+          <TicketDetailAiDescription
+            canUseAI={ticketDetailAi.canUseAI}
+            summarizeDisabledReason={ticketDetailAi.summarizeDisabledReason}
+            runSummarize={ticketDetailAi.runSummarize}
+            descriptionTrigger={ticketDetailAi.descriptionTrigger}
+            descriptionInlineSession={ticketDetailAi.descriptionInlineSession}
+          />
+        )}
         <TiptapEditorDynamic
           content={ticket.description ?? ""}
           contentKey={ticketId}
@@ -134,8 +158,12 @@ export function TicketDetailMainSection({
 
       {!isPreview && (
         <>
-          <TicketAiSection ticket={ticket} ticketId={ticketId} projectId={projectId} />
-          <TicketSubtasks ticketId={ticketId} projectId={projectId} subtasks={subtasks} />
+          <TicketSubtasks
+            ticketId={ticketId}
+            projectId={projectId}
+            subtasks={subtasks}
+            canUseAI={ticketDetailAi.canUseAI}
+          />
           {ticket.attachments && ticket.attachments.length > 0 && (
             <div>
               <h4 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-2">
@@ -172,7 +200,12 @@ export function TicketDetailMainSection({
               </div>
             </div>
           )}
-          <TicketChecklists projectId={projectId} ticketId={ticketId} />
+          <TicketChecklists
+            projectId={projectId}
+            ticketId={ticketId}
+            canUseAI={ticketDetailAi.canUseAI}
+            generateChecklistDisabledReason={ticketDetailAi.generateChecklistDisabledReason}
+          />
           <TicketCustomFields projectId={projectId} ticketId={ticketId} />
           <TicketRelations ticketId={ticketId} projectId={projectId} />
         </>
@@ -186,6 +219,16 @@ export function TicketDetailMainSection({
         comments={ticket.comments || []}
         members={members.map((m) => ({ id: m.id, name: m.name, email: m.email }))}
         highlightCommentId={highlightCommentId}
+        activityAiActions={
+          !isPreview ? (
+            <TicketDetailAiActivityActions
+              canUseAI={ticketDetailAi.canUseAI}
+              summarizeCommentsDisabledReason={ticketDetailAi.summarizeCommentsDisabledReason}
+              runSummarizeComments={ticketDetailAi.runSummarizeComments}
+              runHandoff={ticketDetailAi.runHandoff}
+            />
+          ) : null
+        }
       />
       <TicketActivityLog ticketId={ticketId} projectId={projectId} />
     </div>

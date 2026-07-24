@@ -33,6 +33,7 @@ import {
 import { ProjectViewsToolbar } from "@/features/projects/views/project-views-toolbar";
 import { hydrateDisplayOptions, useDisplayOptions } from "@/features/projects/views/use-display-options";
 import { CreateTicketDialog } from "@/features/projects/tickets/create-ticket-dialog";
+import { ProjectAiMenu } from "@/features/projects/ai/project-ai-menu";
 import { SaveViewDialog, type SaveViewMeta } from "@/features/projects/views/save-view-dialog";
 import { buildTicketDetailUrl } from "@/features/projects/ticket-details/build-ticket-detail-url";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -56,7 +57,6 @@ import {
   viewSwapReduced,
 } from "@/features/projects/shared/pm-motion";
 import { PM_PANEL } from "@/features/projects/shared/pm-chrome";
-import { ProjectAiMenu } from "@/features/projects/ai/project-ai-menu";
 import { cn } from "@/lib/utils";
 
 interface PageProps {

@@ -11,6 +11,12 @@ export interface TicketSummaryResult {
   blockers: string[];
 }
 
+export interface TicketCommentsSummaryResult {
+  summary: string;
+  themes: string[];
+  openQuestions: string[];
+}
+
 export interface TicketImproveDescriptionResult {
   description: string;
 }
@@ -21,6 +27,15 @@ export interface TicketSuggestedSubtask {
 
 export interface TicketSuggestSubtasksResult {
   subtasks: TicketSuggestedSubtask[];
+}
+
+export interface TicketSuggestedChecklistItem {
+  text: string;
+}
+
+export interface TicketGenerateChecklistResult {
+  title: string;
+  items: TicketSuggestedChecklistItem[];
 }
 
 export interface TicketDraftInput {
@@ -50,6 +65,16 @@ export function useTicketAiSummarize(projectId: number, ticketId: number) {
   });
 }
 
+export function useTicketAiSummarizeComments(projectId: number, ticketId: number) {
+  return useMutation({
+    mutationKey: ["projects", projectId, "tickets", ticketId, "ai", "summarize-comments"],
+    mutationFn: () =>
+      apiClient.post<TicketCommentsSummaryResult>(
+        `/ai/tickets/${projectId}/${ticketId}/summarize-comments`,
+      ),
+  });
+}
+
 export function useTicketAiImproveDescription(projectId: number, ticketId: number) {
   return useMutation({
     mutationKey: ["projects", projectId, "tickets", ticketId, "ai", "improve-description"],
@@ -67,6 +92,16 @@ export function useTicketAiSuggestSubtasks(projectId: number, ticketId: number) 
     mutationFn: () =>
       apiClient.post<TicketSuggestSubtasksResult>(
         `/ai/tickets/${projectId}/${ticketId}/suggest-subtasks`,
+      ),
+  });
+}
+
+export function useTicketAiGenerateChecklist(projectId: number, ticketId: number) {
+  return useMutation({
+    mutationKey: ["projects", projectId, "tickets", ticketId, "ai", "generate-checklist"],
+    mutationFn: () =>
+      apiClient.post<TicketGenerateChecklistResult>(
+        `/ai/tickets/${projectId}/${ticketId}/generate-checklist`,
       ),
   });
 }

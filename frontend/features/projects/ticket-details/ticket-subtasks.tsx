@@ -7,6 +7,7 @@ import { ListChecks } from "lucide-react";
 import { useProject } from "@/hooks/api";
 import { SubtaskRow } from "./subtask-row";
 import { SubtaskComposer } from "./subtask-composer";
+import { TicketAiSuggestSubtasksAction } from "@/features/projects/ai/ticket-detail-ai";
 import type { Ticket } from "@/types/projects";
 import type { ProjectStatusRecord } from "@/types/projects";
 
@@ -14,9 +15,15 @@ interface TicketSubtasksProps {
   ticketId: number;
   projectId: number;
   subtasks: Ticket[];
+  canUseAI?: boolean;
 }
 
-export function TicketSubtasks({ ticketId, projectId, subtasks }: TicketSubtasksProps) {
+export function TicketSubtasks({
+  ticketId,
+  projectId,
+  subtasks,
+  canUseAI = false,
+}: TicketSubtasksProps) {
   const { data: projectData, isLoading: projectLoading } = useProject(projectId);
 
   const projectKey = projectData?.key ?? null;
@@ -28,7 +35,7 @@ export function TicketSubtasks({ ticketId, projectId, subtasks }: TicketSubtasks
 
   return (
     <div className="pt-2">
-      <div className="flex items-center gap-2 mb-3">
+      <div className="mb-3 flex w-full items-center gap-2">
         <ListChecks className="h-4 w-4 text-primary" />
         <h4 className="text-sm font-semibold">Subtasks</h4>
         {subtasksTotal > 0 && (
@@ -36,6 +43,11 @@ export function TicketSubtasks({ ticketId, projectId, subtasks }: TicketSubtasks
             {subtasksDone}/{subtasksTotal}
           </Badge>
         )}
+        <TicketAiSuggestSubtasksAction
+          projectId={projectId}
+          ticketId={ticketId}
+          canUseAI={canUseAI}
+        />
       </div>
 
       {subtasksTotal > 0 && (

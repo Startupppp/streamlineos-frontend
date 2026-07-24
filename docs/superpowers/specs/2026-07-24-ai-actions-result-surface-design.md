@@ -182,25 +182,11 @@ Field-level sparkles at end of title, description editor, and properties row. He
 
 ---
 
-## Project AI — surface selection rule
+## Project AI — header dropdown removed
 
-**Host:** `project-ai-menu.tsx`. Page has no competing create Dialog.
+**Previous host:** `project-ai-menu.tsx` (deleted). The project board/detail header **no longer** shows an AI dropdown — users reach project AI via the dedicated **AI Assistant** page (`/projects/[projectId]/ai`, sidebar nav under Configure).
 
-| Action | Surface | Rationale |
-|--------|---------|-----------|
-| Health summary | `sheet` | Multi-section; may be long |
-| Detect risks | `sheet` | Multi-risk list |
-| Weekly update draft | `sheet` | Share-ready; longest |
-| Ask about this project | `popover` | Typically short Q&A answer |
-
-Use `dialog` instead of `sheet` only if a future Project surface already opens from inside a Sheet (avoid Sheet-on-Sheet). For the project detail page header today, always `sheet` for the three long actions.
-
-Rule of thumb for future Project actions (caller declares; never auto-measure length at runtime):
-
-- Single short paragraph / ≤ ~6 lines, no section headers → `popover`.
-- Sections, lists, citations, or share-ready drafts → `sheet`.
-
-Project actions today are read-only (no `onApply`). Result surfaces show `AiDraftCard` without Accept; Discard/close dismisses the overlay. No new Copy button in this slice.
+Ticket detail still uses `TicketAiMenu` (popover/sheet per action). Out of scope for this slice: re-surface Project AI actions elsewhere.
 
 ---
 

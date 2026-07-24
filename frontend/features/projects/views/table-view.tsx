@@ -287,6 +287,7 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
         columns={columns}
         getRowKey={(ticket) => ticket.id}
         selection={selection}
+        pagination={{ pageSize: 50 }}
         minWidth="640px"
         className="w-full min-w-0 overflow-hidden"
         emptyState={<div className="text-center py-4 text-muted-foreground text-sm">No work items found</div>}

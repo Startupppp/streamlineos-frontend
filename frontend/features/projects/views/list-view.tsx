@@ -325,6 +325,8 @@ function encodeNestedAccordionValue(outerKey: string, innerKey: string): string 
 
 const DROPPABLE_MODES = new Set(["status", "priority", "assignee"]);
 
+const LIST_RENDER_PAGE_SIZE = 100;
+
 type GroupFieldPatch = Pick<UpdateTicketInput, "status" | "priority" | "assigneeId" | "assigneeIds">;
 
 const VALID_PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
@@ -551,11 +553,17 @@ export const ListView = memo(function ListView({
   const shouldReduceMotion = useReducedMotion();
   const queryClient = useQueryClient();
   const [optimisticTickets, setOptimisticTickets] = useState(tickets);
+  const [visibleFlatCount, setVisibleFlatCount] = useState(LIST_RENDER_PAGE_SIZE);
   const prevTicketsRef = useRef(tickets);
   if (prevTicketsRef.current !== tickets) {
     prevTicketsRef.current = tickets;
     setOptimisticTickets(tickets);
+    setVisibleFlatCount(LIST_RENDER_PAGE_SIZE);
   }
+
+  const handleShowMoreFlat = useCallback(() => {
+    setVisibleFlatCount((count) => count + LIST_RENDER_PAGE_SIZE);
+  }, []);
 
   const isDnDMode = !hasRowBy && !!groupBy && groupBy !== "none" && DROPPABLE_MODES.has(groupBy) && projectId != null;
 
@@ -828,18 +836,32 @@ export const ListView = memo(function ListView({
           ))}
         </Accordion>
       ) : (
-        <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm divide-y divide-border">
-          {optimisticTickets.map((ticket) => (
-            <ListViewItem
-              key={ticket.id}
-              ticket={ticket}
-              projectKey={projectKey}
-              projectId={projectId}
-              projectStatuses={projectStatuses}
-              onClick={onTicketClick}
-              displayOptions={displayOptions}
-            />
-          ))}
+        <div className="flex flex-col gap-2">
+          <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm divide-y divide-border">
+            {optimisticTickets.slice(0, visibleFlatCount).map((ticket) => (
+              <ListViewItem
+                key={ticket.id}
+                ticket={ticket}
+                projectKey={projectKey}
+                projectId={projectId}
+                projectStatuses={projectStatuses}
+                onClick={onTicketClick}
+                displayOptions={displayOptions}
+              />
+            ))}
+          </div>
+          {optimisticTickets.length > visibleFlatCount && (
+            <button
+              type="button"
+              onClick={handleShowMoreFlat}
+              className="mx-auto rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+            >
+              Show {Math.min(LIST_RENDER_PAGE_SIZE, optimisticTickets.length - visibleFlatCount)} more
+              <span className="ml-1 tabular-nums opacity-70">
+                ({visibleFlatCount} of {optimisticTickets.length})
+              </span>
+            </button>
+          )}
         </div>
       )}
       {tickets.length === 0 && (

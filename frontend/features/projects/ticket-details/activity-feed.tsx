@@ -41,6 +41,7 @@ interface ActivityFeedProps {
   comments: TicketComment[];
   members?: MentionUser[];
   highlightCommentId?: number | null;
+  activityAiActions?: React.ReactNode;
 }
 
 const noopVoid = () => {};
@@ -54,6 +55,7 @@ export function ActivityFeed({
   comments,
   members = [],
   highlightCommentId,
+  activityAiActions,
 }: ActivityFeedProps) {
   const [newComment, setNewComment] = useState("");
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
@@ -286,14 +288,15 @@ export function ActivityFeed({
   return (
     <div className="w-full space-y-4">
       <div className="flex w-full flex-1 min-w-0 flex-col gap-2">
-        <h4 className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium flex items-center gap-1.5">
-          <MessageSquare className="h-3.5 w-3.5" />
-          Activity
+        <h4 className="flex min-w-0 flex-1 items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+          <MessageSquare className="h-3.5 w-3.5 shrink-0" />
+          <span className="truncate">Activity</span>
           {comments.length > 0 && (
-            <span className="text-muted-foreground/70">
+            <span className="shrink-0 text-muted-foreground/70">
               ({comments.length})
             </span>
           )}
+          {activityAiActions}
         </h4>
 
         <div className="flex w-full min-w-0 flex-row items-end gap-2">

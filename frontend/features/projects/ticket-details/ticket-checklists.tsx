@@ -17,6 +17,7 @@ import {
   useUpdateChecklistItem,
   useDeleteChecklistItem,
 } from "@/hooks/api/projects/checklists";
+import { TicketAiGenerateChecklistAction } from "@/features/projects/ai/ticket-detail-ai";
 import type { Checklist, ChecklistItem } from "@/types/projects";
 
 function DeleteItemButton({ onClick }: { onClick: () => void }) {
@@ -52,6 +53,8 @@ function DeleteChecklistButton({ onClick }: { onClick: () => void }) {
 interface TicketChecklistsProps {
   projectId: number;
   ticketId: number;
+  canUseAI?: boolean;
+  generateChecklistDisabledReason?: string;
 }
 
 const ChecklistItemRow = memo(function ChecklistItemRow({
@@ -375,7 +378,12 @@ function ChecklistSection({
   );
 }
 
-export function TicketChecklists({ projectId, ticketId }: TicketChecklistsProps) {
+export function TicketChecklists({
+  projectId,
+  ticketId,
+  canUseAI = false,
+  generateChecklistDisabledReason,
+}: TicketChecklistsProps) {
   const { data: checklists = [], isLoading } = useChecklists(
     projectId,
     ticketId,
@@ -400,6 +408,17 @@ export function TicketChecklists({ projectId, ticketId }: TicketChecklistsProps)
 
   return (
     <div className="space-y-4">
+      <div className="flex w-full items-center gap-2">
+        <CheckSquare className="h-4 w-4 text-primary shrink-0" />
+        <h4 className="text-sm font-semibold">Checklists</h4>
+        <TicketAiGenerateChecklistAction
+          projectId={projectId}
+          ticketId={ticketId}
+          canUseAI={canUseAI}
+          disabledReason={generateChecklistDisabledReason}
+        />
+      </div>
+
       <AnimatePresence initial={false}>
         {checklists.map((checklist) => (
           <motion.div

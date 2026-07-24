@@ -1,6 +1,15 @@
 "use client";
 
-import { memo, useCallback, useMemo, type CSSProperties, type MutableRefObject } from "react";
+import {
+  memo,
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  type CSSProperties,
+  type MutableRefObject,
+  type ReactNode,
+} from "react";
 import {
   Droppable,
   Draggable,
@@ -86,6 +95,27 @@ function getRowKey(index: number, data: KanbanVirtualRowData): string | number {
   return data.tickets[index]?.id ?? `placeholder-${index}`;
 }
 
+interface VirtualDroppableShellProps {
+  innerRef: (element: HTMLElement | null) => void;
+  children: ReactNode;
+}
+
+function VirtualDroppableShell({ innerRef, children }: VirtualDroppableShellProps) {
+  const shellRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const element = shellRef.current?.firstElementChild ?? null;
+    innerRef(element instanceof HTMLElement ? element : null);
+    return () => innerRef(null);
+  });
+
+  return (
+    <div ref={shellRef} style={{ display: "contents" }}>
+      {children}
+    </div>
+  );
+}
+
 interface KanbanVirtualTicketListProps {
   tickets: KanbanTicket[];
   projectId: number;
@@ -169,27 +199,26 @@ export const KanbanVirtualTicketList = memo(function KanbanVirtualTicketList({
         const rowCount = snapshot.isUsingPlaceholder ? tickets.length + 1 : tickets.length;
 
         return (
-          <List<KanbanVirtualRowData>
-            {...provided.droppableProps}
-            listRef={(api) => {
-              provided.innerRef(api?.element ?? null);
-            }}
-            className={cn(
-              "scrollbar-hide rounded-b-lg px-2 pb-2",
-              stretch ? "min-h-0" : "",
-              minHeightClass,
-              "transition-[background-color,box-shadow] duration-150 ease-out",
-              snapshot.isDraggingOver && "bg-primary/[0.07] ring-1 ring-inset ring-primary/15",
-            )}
-            style={{ height: "100%" }}
-            defaultHeight={320}
-            rowCount={rowCount}
-            rowHeight={rowHeight}
-            rowComponent={KanbanVirtualRow}
-            rowProps={rowProps}
-            rowKey={getRowKey}
-            overscanCount={OVERSCAN_COUNT}
-          />
+          <VirtualDroppableShell innerRef={provided.innerRef}>
+            <List<KanbanVirtualRowData>
+              {...provided.droppableProps}
+              className={cn(
+                "scrollbar-hide rounded-b-lg px-2 pb-2",
+                stretch ? "min-h-0" : "",
+                minHeightClass,
+                "transition-[background-color,box-shadow] duration-150 ease-out",
+                snapshot.isDraggingOver && "bg-primary/[0.07] ring-1 ring-inset ring-primary/15",
+              )}
+              style={{ height: "100%" }}
+              defaultHeight={320}
+              rowCount={rowCount}
+              rowHeight={rowHeight}
+              rowComponent={KanbanVirtualRow}
+              rowProps={rowProps}
+              rowKey={getRowKey}
+              overscanCount={OVERSCAN_COUNT}
+            />
+          </VirtualDroppableShell>
         );
       }}
     </Droppable>
