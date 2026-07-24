@@ -30,8 +30,8 @@ interface InboxTicketPreviewProps {
 
 function PreviewSkeleton() {
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto scrollbar-hide lg:flex-row lg:overflow-hidden">
-      <div className="min-w-0 flex-1 space-y-4 overflow-hidden px-4 pb-4 pt-3 lg:min-h-0 lg:overflow-y-auto lg:px-5 lg:scrollbar-hide">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
+      <div className="min-h-0 min-w-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4 pt-3 scrollbar-hide lg:px-5">
         <Skeleton className="h-6 w-2/3" />
         <Skeleton className="h-4 w-1/3" />
         <Skeleton className="h-32 w-full rounded-lg" />
@@ -54,9 +54,11 @@ function PreviewSkeleton() {
 function PreviewError({
   title,
   description,
+  onClose,
 }: {
   title: string;
   description: string;
+  onClose?: () => void;
 }) {
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col items-center justify-center px-6 py-16 text-center">
@@ -65,6 +67,18 @@ function PreviewError({
       </div>
       <p className="mb-1 font-medium text-foreground">{title}</p>
       <p className="text-sm text-muted-foreground">{description}</p>
+      {onClose ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="mt-6 h-8 gap-1.5 text-xs lg:hidden"
+          onClick={onClose}
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Back to inbox
+        </Button>
+      ) : null}
     </div>
   );
 }
@@ -147,6 +161,7 @@ export function InboxTicketPreview({
       <PreviewError
         title="Ticket not found"
         description="This notification no longer points to a resolvable ticket."
+        onClose={onClose}
       />
     );
 
@@ -158,6 +173,7 @@ export function InboxTicketPreview({
       <PreviewError
         title="Restricted access"
         description="You can only view details of tickets assigned to you."
+        onClose={onClose}
       />
     );
 
@@ -169,6 +185,7 @@ export function InboxTicketPreview({
       <PreviewError
         title="Ticket not found"
         description="This ticket may have been deleted."
+        onClose={onClose}
       />
     );
 
@@ -177,79 +194,84 @@ export function InboxTicketPreview({
       <PreviewError
         title="Ticket not found"
         description="Unable to load this ticket preview."
+        onClose={onClose}
       />
     );
 
   return (
     <div className="flex h-full min-h-0 min-w-0 w-full flex-col overflow-hidden">
-      <div className="flex shrink-0 items-center justify-between gap-3 border-y border-border px-4 py-2.5 md:px-5">
-        <div className="flex min-w-0 flex-1 items-center gap-2">
+      <div className="flex shrink-0 items-center gap-2 border-b border-border bg-card px-3 py-2 md:px-4">
+        <div className="flex min-w-0 flex-1 items-center gap-1.5">
           {onClose ? (
             <Button
               type="button"
               size="icon"
               variant="ghost"
-              className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground lg:hidden"
+              className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground lg:hidden"
               onClick={onClose}
               aria-label="Back to inbox"
             >
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft className="h-3.5 w-3.5" />
             </Button>
           ) : null}
-          <div className="min-w-0 flex-1">
-            <TruncatedText
-              text={ticket.title}
-              className="text-sm font-semibold tracking-tight text-foreground leading-tight"
-            />
-            <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
-              <span className="shrink-0 font-mono text-[11px] font-medium text-muted-foreground leading-snug">
+          <div className="min-w-0 flex-1 overflow-hidden">
+            <div className="flex min-w-0 items-center gap-1.5">
+              <span className="shrink-0 font-mono text-[11px] font-medium tabular-nums text-muted-foreground">
                 {displayKey}
               </span>
-              {ticket.parentTicketId != null ? (
-                <>
-                  <span className="shrink-0 text-muted-foreground/40" aria-hidden>
-                    ·
-                  </span>
-                  <TicketParentLink
-                    parentTicketId={ticket.parentTicketId}
-                    projectId={target.projectId}
-                    projectKey={detailProject?.key ?? projectData?.key}
-                    density="compact"
-                  />
-                </>
-              ) : null}
+              <span
+                className="shrink-0 text-[10px] text-muted-foreground/35"
+                aria-hidden
+              >
+                ·
+              </span>
+              <TruncatedText
+                text={ticket.title}
+                className="min-w-0 flex-1 text-[13px] font-medium leading-snug text-foreground"
+              />
             </div>
+            {ticket.parentTicketId != null ? (
+              <div className="mt-0.5 min-w-0 overflow-hidden">
+                <TicketParentLink
+                  parentTicketId={ticket.parentTicketId}
+                  projectId={target.projectId}
+                  projectKey={detailProject?.key ?? projectData?.key}
+                  density="compact"
+                  className="max-w-full px-0 py-0 hover:bg-transparent"
+                />
+              </div>
+            ) : null}
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-1.5">
+        <div className="flex shrink-0 items-center gap-1">
           {rightPanelCollapsed ? (
             <Button
               type="button"
               size="icon"
               variant="outline"
-              className="h-8 w-8"
+              className="h-7 w-7"
               onClick={handleExpandRightPanel}
               aria-label="Expand details panel"
             >
-              <PanelRightOpen className="h-4 w-4" />
+              <PanelRightOpen className="h-3.5 w-3.5" />
             </Button>
           ) : null}
           <Button
             asChild
             variant="outline"
             size="sm"
-            className="h-8 gap-1.5 text-xs"
+            className="h-7 w-7 gap-0 px-0 text-xs lg:h-8 lg:w-auto lg:gap-1.5 lg:px-2.5"
           >
-            <Link href={openHref}>
+            <Link href={openHref} aria-label="Open ticket">
               <ExternalLink className="h-3.5 w-3.5" />
-              Open ticket
+              <span className="hidden lg:inline">Open ticket</span>
             </Link>
           </Button>
         </div>
       </div>
 
-      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto scrollbar-hide lg:flex-row lg:overflow-hidden">
-        <div className="min-w-0 flex-1 basis-0 overflow-hidden bg-gradient-to-b from-card/80 to-background/40 px-4 pb-4 pt-2 lg:min-h-0 lg:overflow-y-auto lg:px-5 lg:pb-5 lg:scrollbar-hide">
+      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden lg:flex-row">
+        <div className="min-h-0 min-w-0 flex-1 basis-0 overflow-y-auto bg-gradient-to-b from-card/80 to-background/40 px-4 pb-4 pt-2 scrollbar-hide lg:px-5 lg:pb-5">
           <TicketDetailMainSection
             ticket={ticket}
             ticketId={resolvedTicketId}

@@ -243,6 +243,7 @@ export interface TicketFilters {
 
 export interface AllWorkFilters extends TicketFilters {
   projectIds?: string;
+  excludeStatus?: string;
   scope?: "all" | "mine" | "created" | "subscribed";
 }
 

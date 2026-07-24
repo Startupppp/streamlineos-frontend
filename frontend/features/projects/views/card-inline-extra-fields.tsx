@@ -3,6 +3,7 @@
 import { useState, useEffect, memo } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { INLINE_POPOVER_MIN_CLASS } from "@/components/ui/field-control";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useUpdateTicket, useAddLabelToTicket, useRemoveLabelFromTicket } from "@/hooks/api/projects/tickets";
@@ -54,7 +55,7 @@ export const InlineType = memo(function InlineType({
             <TicketTypeIcon type={currentType ?? "TASK"} size="sm" />
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-32 p-1" align="start">
+        <PopoverContent className={cn("p-1", INLINE_POPOVER_MIN_CLASS, "min-w-32")} align="start">
           {INLINE_TYPES.map((t) => (
             <button
               key={t}
@@ -149,7 +150,7 @@ export const InlineLabels = memo(function InlineLabels({
             )}
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-48 p-1" align="start">
+        <PopoverContent className={cn("p-1", INLINE_POPOVER_MIN_CLASS, "min-w-48")} align="start">
           <LabelsSearchCommand
             labels={labels}
             selectedIds={selectedIds}
@@ -214,7 +215,7 @@ export const InlineCycle = memo(function InlineCycle({
             </span>
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-44 p-1" align="start">
+        <PopoverContent className={cn("p-1", INLINE_POPOVER_MIN_CLASS, "min-w-44")} align="start">
           <button
             type="button"
             onClick={makeCycleHandler(null)}
@@ -292,7 +293,7 @@ export const InlineSprint = memo(function InlineSprint({
             </span>
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-44 p-1" align="start">
+        <PopoverContent className={cn("p-1", INLINE_POPOVER_MIN_CLASS, "min-w-44")} align="start">
           <button
             type="button"
             onClick={makeSprintHandler(null)}

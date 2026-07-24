@@ -8,3 +8,15 @@ export const FIELD_CONTROL_HOVER_CLASS = "hover:border-primary/40";
 
 export const FIELD_CONTROL_DISABLED_CLASS =
   "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-muted";
+
+export const FIELD_SELECT_CONTENT_CLASS = "min-w-[var(--radix-select-trigger-width)]";
+
+export const FIELD_POPOVER_CONTENT_CLASS = "w-[var(--radix-popover-trigger-width)]";
+
+export const FIELD_SEARCH_POPOVER_CONTENT_CLASS =
+  "min-w-[var(--radix-popover-trigger-width)] w-[var(--radix-popover-trigger-width)]";
+
+export const FIELD_DATE_POPOVER_CONTENT_CLASS =
+  "min-w-[var(--radix-popover-trigger-width)] w-auto";
+
+export const INLINE_POPOVER_MIN_CLASS = "min-w-[var(--radix-popover-trigger-width)]";

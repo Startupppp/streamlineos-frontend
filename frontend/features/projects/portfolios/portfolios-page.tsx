@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { toast } from "sonner";
 import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -106,7 +107,8 @@ export function PortfoliosPage() {
 
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } =
+    useQueryParamOpen("create");
   const [editTarget, setEditTarget] = useState<Portfolio | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Portfolio | null>(null);
 
@@ -136,7 +138,7 @@ export function PortfoliosPage() {
     createPortfolio.mutate(input, {
       onSuccess: () => {
         toast.success("Portfolio created");
-        setSheetOpen(false);
+        setCreateOpen(false);
       },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
@@ -172,16 +174,19 @@ export function PortfoliosPage() {
     setSearch("");
   }
 
-  function handleOpenCreate() {
-    setSheetOpen(true);
-  }
+  const handleOpenCreate = useCallback(() => {
+    openCreate();
+  }, [openCreate]);
 
-  function handleSheetOpenChange(open: boolean) {
-    if (!open) {
-      setSheetOpen(false);
-      setEditTarget(null);
-    }
-  }
+  const handleSheetOpenChange = useCallback(
+    (open: boolean) => {
+      if (!open) {
+        setCreateOpen(false);
+        setEditTarget(null);
+      }
+    },
+    [setCreateOpen],
+  );
 
   function handleDeleteDialogChange(open: boolean) {
     if (!open) setDeleteTarget(null);
@@ -339,7 +344,7 @@ export function PortfoliosPage() {
       </PmPageShell>
 
       <PortfolioFormSheet
-        open={sheetOpen || !!editTarget}
+        open={createOpen || !!editTarget}
         onOpenChange={handleSheetOpenChange}
         mode={editTarget ? "edit" : "create"}
         defaultValues={editTarget ?? undefined}

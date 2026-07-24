@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, type ReactNode } from "react";
 import { Check, User } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -15,9 +15,14 @@ import {
 } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn, resolveImageUrl } from "@/lib/utils";
-import { FIELD_CONTROL_CLASS } from "@/components/ui/field-control";
+import {
+  FIELD_CONTROL_CLASS,
+  FIELD_SEARCH_POPOVER_CONTENT_CLASS,
+} from "@/components/ui/field-control";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { useProjectMembers } from "@/hooks/api/projects/projects";
+import { useProjectWorkspaceMembers } from "@/hooks/api/projects/workspace-members";
+import { useCan } from "@/hooks/api/access";
 import {
   getUserDisplayName,
   getUserInitials,
@@ -37,6 +42,9 @@ interface MemberPickerBaseProps {
   disabled?: boolean;
   className?: string;
   excludeUserId?: string;
+  trigger?: ReactNode;
+  contentAlign?: "start" | "center" | "end";
+  contentClassName?: string;
 }
 
 interface MemberPickerSingleProps extends MemberPickerBaseProps {
@@ -60,10 +68,20 @@ interface MemberPickerMultiProps extends MemberPickerBaseProps {
 export type MemberPickerProps = MemberPickerSingleProps | MemberPickerMultiProps;
 
 function useMemberOptions(projectId?: number): MemberOption[] {
+  const canViewOrgMembers = useCan("settings:view");
+  const canViewProjectWorkspaceMembers = useCan("projects:members:view");
+  const useOrgDirectory = projectId === undefined && canViewOrgMembers;
+  const useWorkspaceDirectory =
+    projectId === undefined && !canViewOrgMembers && canViewProjectWorkspaceMembers;
+
   const { data: orgData } = useOrgMembers(1, 200, undefined, {
-    enabled: projectId === undefined,
+    enabled: useOrgDirectory,
     staleTime: 30_000,
   });
+  const { data: workspaceData } = useProjectWorkspaceMembers(
+    { limit: 200 },
+    { enabled: useWorkspaceDirectory, staleTime: 30_000 },
+  );
   const { data: projectMembers = [] } = useProjectMembers(projectId ?? 0);
 
   return useMemo(() => {
@@ -77,15 +95,31 @@ function useMemberOptions(projectId?: number): MemberOption[] {
         image: m.image,
       }));
     }
-    return (orgData?.data ?? []).map((m) => ({
-      id: m.userId,
+    if (useOrgDirectory) {
+      return (orgData?.data ?? []).map((m) => ({
+        id: m.userId,
+        name: m.name,
+        firstName: null,
+        lastName: null,
+        email: m.email,
+        image: m.image,
+      }));
+    }
+    return (workspaceData?.data ?? []).map((m) => ({
+      id: m.id,
       name: m.name,
-      firstName: null,
-      lastName: null,
+      firstName: m.firstName,
+      lastName: m.lastName,
       email: m.email,
       image: m.image,
     }));
-  }, [projectId, orgData?.data, projectMembers]);
+  }, [
+    projectId,
+    useOrgDirectory,
+    orgData?.data,
+    workspaceData?.data,
+    projectMembers,
+  ]);
 }
 
 function filterMembers(members: MemberOption[], search: string, excludeUserId?: string) {
@@ -122,6 +156,9 @@ export function MemberPicker(props: MemberPickerProps) {
     disabled,
     className,
     excludeUserId,
+    trigger,
+    contentAlign = "start",
+    contentClassName,
   } = props;
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -135,6 +172,8 @@ export function MemberPicker(props: MemberPickerProps) {
     setSearch(v);
   }, []);
 
+  const popoverContentClass = cn(FIELD_SEARCH_POPOVER_CONTENT_CLASS, "p-0", contentClassName);
+
   if (props.mode === "multi") {
     const { values = [], onToggle } = props;
     const selectedMembers = members.filter((m) => values.includes(m.id));
@@ -143,9 +182,22 @@ export function MemberPicker(props: MemberPickerProps) {
       onToggle?.(userId);
     }
 
+    const multiTrigger = trigger ?? (
+      <Button
+        type="button"
+        variant="outline"
+        role="combobox"
+        disabled={disabled}
+        className={cn(TRIGGER_CLASS, "text-muted-foreground font-normal")}
+      >
+        <User className="h-3.5 w-3.5 shrink-0" />
+        <span>{placeholder}</span>
+      </Button>
+    );
+
     return (
-      <div className={cn("space-y-1.5", className)}>
-        {selectedMembers.length > 0 && (
+      <div className={cn(!trigger && "space-y-1.5", className)}>
+        {!trigger && selectedMembers.length > 0 ? (
           <div className="flex flex-wrap gap-1">
             {selectedMembers.map((m) => (
               <Badge key={m.id} variant="secondary" className="gap-1.5 pl-0.5 pr-1.5 py-0.5">
@@ -162,21 +214,12 @@ export function MemberPicker(props: MemberPickerProps) {
               </Badge>
             ))}
           </div>
-        )}
+        ) : null}
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
-            <Button
-              type="button"
-              variant="outline"
-              role="combobox"
-              disabled={disabled}
-              className={cn(TRIGGER_CLASS, "text-muted-foreground font-normal")}
-            >
-              <User className="h-3.5 w-3.5 shrink-0" />
-              <span>{placeholder}</span>
-            </Button>
+            {multiTrigger}
           </PopoverTrigger>
-          <PopoverContent className="w-56 p-0" align="start">
+          <PopoverContent className={popoverContentClass} align={contentAlign}>
             <Command shouldFilter={false}>
               <CommandInput
                 placeholder="Search members…"
@@ -214,35 +257,39 @@ export function MemberPicker(props: MemberPickerProps) {
     setSearch("");
   }
 
+  const singleTrigger = trigger ?? (
+    <Button
+      type="button"
+      variant="outline"
+      role="combobox"
+      disabled={disabled}
+      className={cn(
+        TRIGGER_CLASS,
+        "font-normal",
+        !selected && "text-muted-foreground",
+        className,
+      )}
+    >
+      {selected ? (
+        <>
+          <MemberAvatar member={selected} />
+          <TruncatedText text={getUserDisplayName(selected)} />
+        </>
+      ) : (
+        <>
+          <User className="h-3.5 w-3.5 shrink-0" />
+          <span>{placeholder}</span>
+        </>
+      )}
+    </Button>
+  );
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          role="combobox"
-          disabled={disabled}
-          className={cn(
-            TRIGGER_CLASS,
-            "font-normal",
-            !selected && "text-muted-foreground",
-            className,
-          )}
-        >
-          {selected ? (
-            <>
-              <MemberAvatar member={selected} />
-              <TruncatedText text={getUserDisplayName(selected)} />
-            </>
-          ) : (
-            <>
-              <User className="h-3.5 w-3.5 shrink-0" />
-              <span>{placeholder}</span>
-            </>
-          )}
-        </Button>
+        {singleTrigger}
       </PopoverTrigger>
-      <PopoverContent className="w-56 p-0" align="start">
+      <PopoverContent className={popoverContentClass} align={contentAlign}>
         <Command shouldFilter={false}>
           <CommandInput
             placeholder="Search members…"

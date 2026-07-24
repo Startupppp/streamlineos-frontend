@@ -237,7 +237,7 @@ export interface UpdateProjectInput {
   description?: string;
   status?: ProjectStatusValue;
   priority?: ProjectPriority;
-  managerId?: string;
+  managerId?: string | null;
   clientId?: string;
   startDate?: Date | string | null;
   endDate?: Date | string | null;

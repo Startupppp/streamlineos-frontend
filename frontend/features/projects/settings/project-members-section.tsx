@@ -25,12 +25,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import {
   Check,
@@ -41,10 +35,7 @@ import {
 } from "lucide-react";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { useProjectWorkspaceMembers } from "@/hooks/api/projects/workspace-members";
 import { DeleteProjectDialog } from "@/features/projects/sidebar/delete-project-dialog";
-import type { UseFormReturn } from "react-hook-form";
-import { z } from "zod";
 import { updateProjectSettingsInputSchema } from "@/lib/validation/projects";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -54,16 +45,54 @@ import {
   useUpdateProjectMemberRole,
 } from "@/hooks/api/projects";
 import { useCanManageProject } from "@/hooks/api/projects/use-can-manage-project";
+import { useOrgMembers } from "@/hooks/api/organization";
+import { useProjectWorkspaceMembers } from "@/hooks/api/projects/workspace-members";
+import { useCan } from "@/hooks/api/access";
 import {
   getUserDisplayName,
   getUserInitials,
 } from "@/features/projects/shared/resolve-user-name";
 import type { ProjectMemberRecord } from "@/types/projects";
 
+type DirectoryPerson = {
+  id: string;
+  name: string | null;
+  email: string;
+};
+
+function useWorkspaceDirectoryPeople(enabled = true): DirectoryPerson[] {
+  const canViewOrgMembers = useCan("settings:view");
+  const canViewProjectWorkspaceMembers = useCan("projects:members:view");
+  const useOrg = enabled && canViewOrgMembers;
+  const useWorkspace = enabled && !canViewOrgMembers && canViewProjectWorkspaceMembers;
+
+  const { data: orgMembersData } = useOrgMembers(1, 200, undefined, {
+    enabled: useOrg,
+  });
+  const { data: workspaceData } = useProjectWorkspaceMembers(
+    { limit: 200 },
+    { enabled: useWorkspace },
+  );
+
+  return useMemo(() => {
+    if (useOrg) {
+      return (orgMembersData?.data ?? []).map((m) => ({
+        id: m.userId,
+        name: m.name,
+        email: m.email,
+      }));
+    }
+    return (workspaceData?.data ?? []).map((m) => ({
+      id: m.id,
+      name: m.name,
+      email: m.email,
+    }));
+  }, [useOrg, orgMembersData?.data, workspaceData?.data]);
+}
+
 export const formSchema = updateProjectSettingsInputSchema.omit({
   projectId: true,
 });
-type FormValues = z.infer<typeof formSchema>;
 
 interface MemberItemProps {
   emp: { id: string; name?: string | null; email?: string | null };
@@ -123,7 +152,8 @@ const MemberItem = memo(function MemberItem({
 });
 
 interface MembersSelectorProps {
-  form: UseFormReturn<FormValues>;
+  memberIds: string[];
+  onMemberIdsChange: (ids: string[]) => void;
   originalMemberIds: string[];
   onMemberRemoved: (
     memberId: string,
@@ -133,18 +163,12 @@ interface MembersSelectorProps {
 }
 
 export function MembersSelector({
-  form,
+  memberIds,
+  onMemberIdsChange,
   originalMemberIds,
   onMemberRemoved,
 }: MembersSelectorProps) {
-  const { data: employeesData } = useProjectWorkspaceMembers({ limit: 200 });
-  const employees = useMemo(
-    () =>
-      Array.isArray(employeesData)
-        ? employeesData
-        : (employeesData?.data ?? []),
-    [employeesData],
-  );
+  const employees = useWorkspaceDirectoryPeople();
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredEmployees = useMemo(
@@ -163,61 +187,50 @@ export function MembersSelector({
   );
 
   return (
-    <FormField
-      control={form.control}
-      name="memberIds"
-      render={({ field }) => (
-        <FormItem>
-          <FormControl>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full justify-between text-left font-normal"
-                  role="combobox"
-                >
-                  {field.value?.length && field.value.length > 0
-                    ? `${field.value.length} member${field.value.length > 1 ? "s" : ""} selected`
-                    : "Select members"}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent
-                className="w-[var(--radix-popover-trigger-width)] p-2"
-                align="start"
-              >
-                <SearchInput
-                  placeholder="Search by name or email..."
-                  value={searchQuery}
-                  onValueChange={handleSearchChange}
-                  className="mb-2"
-                  aria-label="Search team members"
-                />
-                <div className="max-h-[200px] overflow-y-auto space-y-0.5">
-                  {filteredEmployees?.map((emp) => (
-                    <MemberItem
-                      key={emp.id}
-                      emp={emp}
-                      isSelected={field.value?.includes(emp.id) ?? false}
-                      isOriginalMember={originalMemberIds.includes(emp.id)}
-                      currentIds={field.value || []}
-                      onChange={field.onChange}
-                      onMemberRemoved={onMemberRemoved}
-                    />
-                  ))}
-                  {!filteredEmployees?.length && (
-                    <p className="text-sm text-center py-4 text-muted-foreground">
-                      No employees found
-                    </p>
-                  )}
-                </div>
-              </PopoverContent>
-            </Popover>
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          className="w-full justify-between text-left font-normal"
+          role="combobox"
+        >
+          {memberIds.length > 0
+            ? `${memberIds.length} member${memberIds.length > 1 ? "s" : ""} selected`
+            : "Select members"}
+          <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="w-[var(--radix-popover-trigger-width)] p-2"
+        align="start"
+      >
+        <SearchInput
+          placeholder="Search by name or email..."
+          value={searchQuery}
+          onValueChange={handleSearchChange}
+          className="mb-2"
+          aria-label="Search team members"
+        />
+        <div className="max-h-[200px] overflow-y-auto space-y-0.5">
+          {filteredEmployees?.map((emp) => (
+            <MemberItem
+              key={emp.id}
+              emp={emp}
+              isSelected={memberIds.includes(emp.id)}
+              isOriginalMember={originalMemberIds.includes(emp.id)}
+              currentIds={memberIds}
+              onChange={onMemberIdsChange}
+              onMemberRemoved={onMemberRemoved}
+            />
+          ))}
+          {!filteredEmployees?.length && (
+            <p className="text-sm text-center py-4 text-muted-foreground">
+              No employees found
+            </p>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -242,14 +255,7 @@ export function ReassignDialog({
   onConfirm,
   onCancel,
 }: ReassignDialogProps) {
-  const { data: employeesData } = useProjectWorkspaceMembers({ limit: 200 });
-  const employees = useMemo(
-    () =>
-      Array.isArray(employeesData)
-        ? employeesData
-        : (employeesData?.data ?? []),
-    [employeesData],
-  );
+  const employees = useWorkspaceDirectoryPeople(open);
 
   const remainingMembers = useMemo(
     () =>

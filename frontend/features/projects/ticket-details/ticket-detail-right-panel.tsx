@@ -12,7 +12,6 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import { cn } from "@/lib/utils";
 import { PriorityBadge } from "../shared/priority-badge";
@@ -108,7 +107,7 @@ function TicketDetailRightPanelBody({
   hideClose?: boolean;
 }) {
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
       <div className="shrink-0 border-b border-border bg-card px-4 py-3 md:border md:border-l-0">
         <div className="relative flex items-center justify-center gap-2">
           <div className="flex min-w-0 flex-wrap items-center justify-center gap-1.5">
@@ -139,11 +138,7 @@ function TicketDetailRightPanelBody({
         </div>
       </div>
 
-      <ScrollArea
-        fill
-        className="min-h-0 flex-1"
-        viewportClassName="overscroll-contain"
-      >
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-hide">
         <TicketSidebar
           ticket={ticket}
           ticketId={ticketId}
@@ -163,7 +158,7 @@ function TicketDetailRightPanelBody({
           />
           <WatcherList projectId={projectId} ticketId={ticketId} />
         </div>
-      </ScrollArea>
+      </div>
     </div>
   );
 }
@@ -215,7 +210,7 @@ export function TicketDetailRightPanel({
         <DrawerContent
           overlayClassName="z-[110]"
           className={cn(
-            "z-[110] flex max-h-[min(92dvh,40rem)] flex-col gap-0 overflow-hidden rounded-t-xl border border-border bg-card p-0 shadow-lg",
+            "z-[110] flex h-[min(92dvh,40rem)] min-h-0 flex-col gap-0 overflow-hidden rounded-t-xl border border-border bg-card p-0 shadow-lg",
             "pb-[max(0.5rem,env(safe-area-inset-bottom))]",
             "motion-reduce:transition-none",
             "[&>[data-slot=drawer-handle]]:mt-2 [&>[data-slot=drawer-handle]]:mb-1 [&>[data-slot=drawer-handle]]:h-1.5 [&>[data-slot=drawer-handle]]:w-10 [&>[data-slot=drawer-handle]]:bg-muted-foreground/25",
@@ -225,7 +220,9 @@ export function TicketDetailRightPanel({
             <DrawerTitle>Ticket properties</DrawerTitle>
           </DrawerHeader>
           {isMobile ? (
-            <TicketDetailRightPanelBody {...bodyProps} hideClose />
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+              <TicketDetailRightPanelBody {...bodyProps} hideClose />
+            </div>
           ) : null}
         </DrawerContent>
       </Drawer>
@@ -244,11 +241,11 @@ export function TicketDetailRightPanel({
                 : { width: 0, opacity: 0 }
             }
             transition={panelTransition}
-            className="hidden shrink-0 overflow-hidden border-border bg-card md:flex md:min-h-0 md:flex-col md:border-l"
+            className="hidden h-full min-h-0 shrink-0 self-stretch overflow-hidden border-border bg-card md:flex md:flex-col md:border-l"
           >
             <div
               className={cn(
-                "flex min-h-0 min-w-0 flex-1 flex-col",
+                "flex h-full min-h-0 min-w-0 flex-1 flex-col",
                 asideClassName,
               )}
             >

@@ -2,15 +2,29 @@
 
 import { useState, memo } from "react";
 import { format, parseISO, isValid } from "date-fns";
-import { Check, Calendar } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Check, Calendar, User } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { AvatarStack } from "@/components/ui/avatar-stack";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { cn, resolveImageUrl } from "@/lib/utils";
+import { MemberPicker } from "@/components/members/member-picker";
+import {
+  getUserDisplayName,
+  getUserInitials,
+} from "@/features/projects/shared/resolve-user-name";
+import { TruncatedText } from "@/components/ui/truncated-text";
+import { TEXT_FLEX_CHILD } from "@/features/projects/shared/text-overflow";
+import type { ProjectListItem } from "@/types/projects/projects";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useUpdateProject } from "@/hooks/api/projects";
@@ -19,13 +33,27 @@ import {
   projectStatusColors,
   projectStatusDisplayLabels,
 } from "@/lib/theme-constants";
-import { popoverOptionBaseClass, popoverOptionSelectedClass } from "@/features/projects/shared/popover-option-classes";
-import { TEXT_ONE_LINE, TEXT_TWO_LINES } from "@/features/projects/shared/text-overflow";
+import {
+  popoverOptionBaseClass,
+  popoverOptionSelectedClass,
+} from "@/features/projects/shared/popover-option-classes";
+import {
+  TEXT_ONE_LINE,
+  TEXT_TWO_LINES,
+} from "@/features/projects/shared/text-overflow";
 import { InlineFieldWrapper } from "@/features/projects/views/card-inline-fields";
-import { dateToneClasses, resolveDateMeta, statusDotColors } from "./project-card-utils";
+import {
+  dateToneClasses,
+  resolveDateMeta,
+  statusDotColors,
+} from "./project-card-utils";
 import type { ProjectStatusValue } from "@/types/projects";
 
-const PROJECT_STATUSES: ProjectStatusValue[] = ["ACTIVE", "COMPLETED", "ARCHIVED"];
+const PROJECT_STATUSES: ProjectStatusValue[] = [
+  "ACTIVE",
+  "COMPLETED",
+  "ARCHIVED",
+];
 
 interface InlineProjectFieldProps {
   projectId: number;
@@ -56,7 +84,10 @@ export const InlineProjectTitle = memo(function InlineProjectTitle({
       setOpen(false);
       return;
     }
-    updateProject.mutate({ projectId, name: trimmed }, { onSuccess: () => setOpen(false) });
+    updateProject.mutate(
+      { projectId, name: trimmed },
+      { onSuccess: () => setOpen(false) },
+    );
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -74,7 +105,10 @@ export const InlineProjectTitle = memo(function InlineProjectTitle({
         <PopoverTrigger asChild>
           <button
             type="button"
-            className={cn("w-full text-left text-[13px] font-semibold text-foreground transition-colors hover:text-primary", TEXT_ONE_LINE)}
+            className={cn(
+              "w-full text-left text-[13px] font-semibold text-foreground transition-colors hover:text-primary",
+              TEXT_ONE_LINE,
+            )}
             aria-label="Edit project name"
             title={currentName}
           >
@@ -118,7 +152,8 @@ export const InlineProjectStatus = memo(function InlineProjectStatus({
   const updateProject = useUpdateProject({
     onError: (e) => toast.error(getErrorMessage(e)),
   });
-  const displayLabel = projectStatusDisplayLabels[currentStatus] ?? currentStatus;
+  const displayLabel =
+    projectStatusDisplayLabels[currentStatus] ?? currentStatus;
   const statusColor = getColorSafe(projectStatusColors, currentStatus);
   const statusDot = getColorSafe(statusDotColors, currentStatus);
 
@@ -142,7 +177,10 @@ export const InlineProjectStatus = memo(function InlineProjectStatus({
                 statusColor,
               )}
             >
-              <span className={cn("h-1 w-1 shrink-0 rounded-full", statusDot)} aria-hidden="true" />
+              <span
+                className={cn("h-1 w-1 shrink-0 rounded-full", statusDot)}
+                aria-hidden="true"
+              />
               {displayLabel}
             </Badge>
           </button>
@@ -163,7 +201,9 @@ export const InlineProjectStatus = memo(function InlineProjectStatus({
               >
                 <span className={cn("h-2 w-2 rounded-full shrink-0", dot)} />
                 {label}
-                {status === currentStatus && <Check className="ml-auto h-3 w-3" />}
+                {status === currentStatus && (
+                  <Check className="ml-auto h-3 w-3" />
+                )}
               </button>
             );
           })}
@@ -294,9 +334,12 @@ export const InlineProjectPriority = memo(function InlineProjectPriority({
     setOpen(false);
   }
 
-  const dotColor = currentPriority ? priorityDotColors[currentPriority] : "bg-muted-foreground/30";
+  const dotColor = currentPriority
+    ? priorityDotColors[currentPriority]
+    : "bg-muted-foreground/30";
   const label = currentPriority
-    ? (PRIORITY_OPTIONS.find((o) => o.value === currentPriority)?.label ?? currentPriority)
+    ? (PRIORITY_OPTIONS.find((o) => o.value === currentPriority)?.label ??
+      currentPriority)
     : "No priority";
 
   return (
@@ -308,7 +351,10 @@ export const InlineProjectPriority = memo(function InlineProjectPriority({
             className="flex items-center gap-1 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
             aria-label="Change project priority"
           >
-            <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", dotColor)} aria-hidden="true" />
+            <span
+              className={cn("h-1.5 w-1.5 shrink-0 rounded-full", dotColor)}
+              aria-hidden="true"
+            />
             {label}
           </button>
         </PopoverTrigger>
@@ -323,9 +369,16 @@ export const InlineProjectPriority = memo(function InlineProjectPriority({
                 option.value === currentPriority && popoverOptionSelectedClass,
               )}
             >
-              <span className={cn("h-2 w-2 rounded-full shrink-0", priorityDotColors[option.value])} />
+              <span
+                className={cn(
+                  "h-2 w-2 rounded-full shrink-0",
+                  priorityDotColors[option.value],
+                )}
+              />
               {option.label}
-              {option.value === currentPriority && <Check className="ml-auto h-3 w-3" />}
+              {option.value === currentPriority && (
+                <Check className="ml-auto h-3 w-3" />
+              )}
             </button>
           ))}
           {currentPriority ? (
@@ -352,7 +405,9 @@ interface InlineProjectDatesProps extends InlineProjectFieldProps {
   currentStatus: string;
 }
 
-function parseDateValue(value: string | Date | null | undefined): Date | undefined {
+function parseDateValue(
+  value: string | Date | null | undefined,
+): Date | undefined {
   if (!value) return undefined;
   const d = value instanceof Date ? value : parseISO(String(value));
   return isValid(d) ? d : undefined;
@@ -371,7 +426,11 @@ export const InlineProjectDates = memo(function InlineProjectDates({
 
   const startParsed = parseDateValue(currentStartDate);
   const endParsed = parseDateValue(currentEndDate);
-  const dateMeta = resolveDateMeta(currentEndDate, currentStartDate, currentStatus);
+  const dateMeta = resolveDateMeta(
+    currentEndDate,
+    currentStartDate,
+    currentStatus,
+  );
 
   function handleStartSelect(date: Date | undefined) {
     if (!date) return;
@@ -401,7 +460,9 @@ export const InlineProjectDates = memo(function InlineProjectDates({
             type="button"
             className={cn(
               "flex shrink-0 items-center gap-0.5 text-[9px] font-medium transition-colors hover:opacity-80",
-              dateMeta ? dateToneClasses[dateMeta.tone] : "text-muted-foreground/60",
+              dateMeta
+                ? dateToneClasses[dateMeta.tone]
+                : "text-muted-foreground/60",
             )}
             aria-label="Edit project dates"
           >
@@ -412,8 +473,15 @@ export const InlineProjectDates = memo(function InlineProjectDates({
         <PopoverContent className="w-auto p-0" align="end">
           <div className="flex divide-x divide-border">
             <div className="p-2">
-              <p className="mb-1.5 px-1 text-[10px] font-medium text-muted-foreground">Start</p>
-              <CalendarComponent mode="single" selected={startParsed} onSelect={handleStartSelect} compact />
+              <p className="mb-1.5 px-1 text-[10px] font-medium text-muted-foreground">
+                Start
+              </p>
+              <CalendarComponent
+                mode="single"
+                selected={startParsed}
+                onSelect={handleStartSelect}
+                compact
+              />
               {startParsed && (
                 <Button
                   variant="ghost"
@@ -426,8 +494,15 @@ export const InlineProjectDates = memo(function InlineProjectDates({
               )}
             </div>
             <div className="p-2">
-              <p className="mb-1.5 px-1 text-[10px] font-medium text-muted-foreground">End</p>
-              <CalendarComponent mode="single" selected={endParsed} onSelect={handleEndSelect} compact />
+              <p className="mb-1.5 px-1 text-[10px] font-medium text-muted-foreground">
+                End
+              </p>
+              <CalendarComponent
+                mode="single"
+                selected={endParsed}
+                onSelect={handleEndSelect}
+                compact
+              />
               {endParsed && (
                 <Button
                   variant="ghost"
@@ -442,6 +517,128 @@ export const InlineProjectDates = memo(function InlineProjectDates({
           </div>
         </PopoverContent>
       </Popover>
+    </InlineFieldWrapper>
+  );
+});
+
+type ProjectPerson = ProjectListItem["manager"];
+type ProjectMember = ProjectListItem["members"][number];
+
+interface InlineProjectLeadProps extends InlineProjectFieldProps {
+  manager: ProjectPerson;
+}
+
+export const InlineProjectLead = memo(function InlineProjectLead({
+  projectId,
+  manager,
+}: InlineProjectLeadProps) {
+  const updateProject = useUpdateProject({
+    onError: (e) => toast.error(getErrorMessage(e)),
+  });
+
+  const currentManagerId = manager?.id ?? undefined;
+  const leadName = getUserDisplayName(manager);
+
+  function handleLeadChange(userId: string | null) {
+    updateProject.mutate({
+      projectId,
+      managerId: userId,
+    });
+  }
+
+  const trigger = (
+    <button
+      type="button"
+      className="w-full text-left transition-colors hover:opacity-80"
+      aria-label="Change project lead"
+    >
+      {manager ? (
+        <div className={cn(TEXT_FLEX_CHILD, "flex items-center gap-1.5")}>
+          <Avatar className="h-5 w-5 shrink-0">
+            {manager.image ? (
+              <AvatarImage src={resolveImageUrl(manager.image)} alt={leadName} />
+            ) : null}
+            <AvatarFallback className="text-[9px]">
+              {getUserInitials(manager)}
+            </AvatarFallback>
+          </Avatar>
+          <TruncatedText
+            text={leadName}
+            className="max-w-[96px] text-xs text-muted-foreground"
+          />
+        </div>
+      ) : (
+        <span className="flex items-center gap-1 text-xs text-muted-foreground/50">
+          <User className="h-3.5 w-3.5" aria-hidden="true" />
+          Unassigned
+        </span>
+      )}
+    </button>
+  );
+
+  return (
+    <InlineFieldWrapper>
+      <MemberPicker
+        value={currentManagerId}
+        onChange={handleLeadChange}
+        allowUnassigned
+        placeholder="Unassigned"
+        trigger={trigger}
+        contentAlign="start"
+      />
+    </InlineFieldWrapper>
+  );
+});
+
+interface InlineProjectMembersProps extends InlineProjectFieldProps {
+  members: ProjectMember[];
+}
+
+export const InlineProjectMembers = memo(function InlineProjectMembers({
+  projectId,
+  members,
+}: InlineProjectMembersProps) {
+  const updateProject = useUpdateProject({
+    onError: (e) => toast.error(getErrorMessage(e)),
+  });
+
+  const currentIds = members.map((m) => m.id);
+
+  function handleToggle(userId: string) {
+    const nextIds = currentIds.includes(userId)
+      ? currentIds.filter((id) => id !== userId)
+      : [...currentIds, userId];
+    updateProject.mutate({ projectId, memberIds: nextIds });
+  }
+
+  const trigger = (
+    <button
+      type="button"
+      className="transition-opacity hover:opacity-80"
+      aria-label="Manage project members"
+    >
+      {members.length > 0 ? (
+        <AvatarStack
+          users={members}
+          limit={3}
+          className="[&_[data-slot=avatar]]:size-5 [&_[data-slot=avatar]]:text-[8px]"
+        />
+      ) : (
+        <span className="text-xs text-muted-foreground/40">Add members</span>
+      )}
+    </button>
+  );
+
+  return (
+    <InlineFieldWrapper>
+      <MemberPicker
+        mode="multi"
+        values={currentIds}
+        onToggle={handleToggle}
+        placeholder="Add members"
+        trigger={trigger}
+        contentAlign="start"
+      />
     </InlineFieldWrapper>
   );
 });

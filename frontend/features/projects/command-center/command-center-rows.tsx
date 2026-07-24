@@ -155,7 +155,7 @@ export const ProjectCard = memo(function ProjectCard({
     >
       <div
         className={cn(
-          "relative flex min-w-0 items-center gap-2.5 rounded-lg border border-border/60 bg-card/60 px-2.5 py-2",
+          "relative flex w-full min-w-0 items-center gap-2.5 rounded-lg border border-border/60 bg-card/60 px-2.5 py-2",
           "shadow-sm backdrop-blur-sm supports-[backdrop-filter]:bg-card/45",
           "transition-[border-color,box-shadow,background-color] duration-150",
           "hover:border-primary/25 hover:bg-primary/[0.03] hover:shadow-md",
@@ -180,34 +180,34 @@ export const ProjectCard = memo(function ProjectCard({
             <p className="font-mono text-[10px] text-muted-foreground/80">{project.key}</p>
           )}
         </Link>
-        <div className="flex shrink-0 items-center gap-1.5">
-          {project.progress.total > 0 ? (
-            <div className="hidden items-center gap-1.5 sm:flex">
-              <div className="h-1 w-14 overflow-hidden rounded-full bg-muted">
-                <motion.div
-                  className="h-full rounded-full bg-primary"
-                  initial={shouldReduceMotion ? false : { width: 0 }}
-                  animate={{ width: `${progress}%` }}
-                  transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1], delay: 0.12 }}
-                />
-              </div>
-              <span className="w-7 text-right text-[10px] tabular-nums text-muted-foreground">
-                {progress}%
-              </span>
+        {project.progress.total > 0 ? (
+          <div className="hidden shrink-0 items-center gap-1.5 sm:flex">
+            <div className="h-1 w-14 overflow-hidden rounded-full bg-muted">
+              <motion.div
+                className="h-full rounded-full bg-primary"
+                initial={shouldReduceMotion ? false : { width: 0 }}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1], delay: 0.12 }}
+              />
             </div>
-          ) : null}
+            <span className="w-7 text-right text-[10px] tabular-nums text-muted-foreground">
+              {progress}%
+            </span>
+          </div>
+        ) : null}
+        <div className="ml-auto flex shrink-0 items-center justify-end">
           {project.status ? (
             <Badge
               variant="outline"
               className={cn(
-                "h-4 max-w-[5.5rem] truncate px-1.5 py-0 text-[10px]",
+                "h-4 max-w-[5.5rem] truncate px-1.5 py-0 text-[10px] group-hover:hidden",
                 STATUS_COLOR[project.status] ?? "",
               )}
             >
               {project.status.replace(/_/g, " ")}
             </Badge>
           ) : null}
-          <div className="ml-0.5 flex items-center gap-0.5 opacity-0 transition-all duration-150 group-hover:opacity-100">
+          <div className="hidden items-center gap-0.5 group-hover:flex">
             <TooltipProvider delayDuration={0}>
               <Tooltip>
                 <TooltipTrigger asChild>

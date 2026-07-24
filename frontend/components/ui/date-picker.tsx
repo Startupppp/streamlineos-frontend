@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { FIELD_CONTROL_CLASS } from "@/components/ui/field-control";
+import { FIELD_CONTROL_CLASS, FIELD_DATE_POPOVER_CONTENT_CLASS } from "@/components/ui/field-control";
 import {
   resolveDatePickerYearBounds,
   startOfLocalDay,
@@ -103,7 +103,7 @@ export function DatePicker({
           </span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
+      <PopoverContent className={cn(FIELD_DATE_POPOVER_CONTENT_CLASS, "p-0")} align="start">
         <Calendar
           mode="single"
           selected={selected}

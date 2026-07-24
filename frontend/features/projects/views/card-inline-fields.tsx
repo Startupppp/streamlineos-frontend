@@ -15,6 +15,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { cn, resolveImageUrl } from "@/lib/utils";
+import {
+  FIELD_POPOVER_CONTENT_CLASS,
+  INLINE_POPOVER_MIN_CLASS,
+} from "@/components/ui/field-control";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useUpdateTicket } from "@/hooks/api/projects/tickets";
@@ -85,7 +89,7 @@ export const InlinePriority = memo(function InlinePriority({
             <PriorityBadge priority={currentPriority} />
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-36 p-1" align="start">
+        <PopoverContent className={cn("p-1", INLINE_POPOVER_MIN_CLASS, "min-w-36")} align="start">
           {PRIORITIES.map(({ value, label, Icon }) => (
             <button
               key={value}
@@ -164,7 +168,7 @@ export const InlineAssignee = memo(function InlineAssignee({
             {trigger}
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-52 p-0" align="end">
+        <PopoverContent className={cn("p-0", INLINE_POPOVER_MIN_CLASS, "min-w-52")} align="end">
           <Command>
             <CommandInput placeholder="Search members..." className="text-xs" />
             <CommandList className="max-h-48">
@@ -358,7 +362,7 @@ export const InlineStatus = memo(function InlineStatus({
             <span className="text-[10px] text-muted-foreground">{currentEntry.label}</span>
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-44 p-1" align="start">
+        <PopoverContent className={cn("p-1", INLINE_POPOVER_MIN_CLASS, "min-w-44")} align="start">
           {statusList.map((status) => {
             const entry = getStatusEntry(resolvedConfig, status);
             return (
@@ -441,7 +445,7 @@ export const InlineTitle = memo(function InlineTitle({
             {currentTitle}
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-64 p-2" align="start">
+        <PopoverContent className={cn("p-2", FIELD_POPOVER_CONTENT_CLASS)} align="start">
           <Input
             autoFocus
             value={value}
@@ -521,7 +525,7 @@ export const InlineDescription = memo(function InlineDescription({
             {preview || "Add description…"}
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-72 p-2" align="start">
+        <PopoverContent className={cn("p-2", FIELD_POPOVER_CONTENT_CLASS)} align="start">
           <Textarea
             autoFocus
             value={value}

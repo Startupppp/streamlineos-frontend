@@ -13,6 +13,10 @@ import { useCan } from "@/hooks/api/access";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
+import {
+  FIELD_SEARCH_POPOVER_CONTENT_CLASS,
+  INLINE_POPOVER_MIN_CLASS,
+} from "@/components/ui/field-control";
 import { TicketParentLink } from "./ticket-parent-link";
 import type { Ticket } from "@/types/projects";
 
@@ -81,7 +85,15 @@ export function TicketParentControl({
   }
 
   const picker = (
-    <PopoverContent align="start" className="w-80 p-0">
+    <PopoverContent
+      align="start"
+      className={cn(
+        "p-0",
+        hasParent
+          ? cn(INLINE_POPOVER_MIN_CLASS, "min-w-64 w-[var(--radix-popover-trigger-width)]")
+          : FIELD_SEARCH_POPOVER_CONTENT_CLASS,
+      )}
+    >
       <div className="flex items-center gap-2 border-b px-2.5 py-2">
         <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
         <Input

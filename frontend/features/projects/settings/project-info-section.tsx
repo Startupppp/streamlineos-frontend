@@ -2,7 +2,6 @@
 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -28,7 +27,8 @@ export const formSchema = updateProjectSettingsInputSchema.omit({ projectId: tru
 type FormValues = z.infer<typeof formSchema>;
 
 interface MembersSelectorProps {
-  form: UseFormReturn<FormValues>;
+  memberIds: string[];
+  onMemberIdsChange: (ids: string[]) => void;
   originalMemberIds: string[];
   onMemberRemoved: (
     memberId: string,
@@ -128,7 +128,8 @@ export function ProjectInfoSection({
             Team Members
           </div>
           <MembersSelector
-            form={form}
+            memberIds={form.watch("memberIds") ?? []}
+            onMemberIdsChange={(ids) => form.setValue("memberIds", ids, { shouldDirty: true })}
             originalMemberIds={originalMemberIds}
             onMemberRemoved={onMemberRemoved}
           />

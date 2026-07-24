@@ -36,6 +36,24 @@ function isMentionNotification(n: Notification): boolean {
   return typeof n.eventKey === "string" && n.eventKey.includes("mention");
 }
 
+const DESKTOP_INBOX_MEDIA = "(min-width: 1024px)";
+
+function useDesktopInboxViewport(): boolean {
+  const [isDesktop, setIsDesktop] = React.useState(false);
+
+  React.useEffect(() => {
+    const mql = window.matchMedia(DESKTOP_INBOX_MEDIA);
+    function handleChange() {
+      setIsDesktop(mql.matches);
+    }
+    mql.addEventListener("change", handleChange);
+    handleChange();
+    return () => mql.removeEventListener("change", handleChange);
+  }, []);
+
+  return isDesktop;
+}
+
 function InboxListSkeleton() {
   return (
     <div className="flex flex-col">
@@ -67,6 +85,7 @@ export function InboxList({
   onClearSelection,
   onFilterChange,
 }: InboxListProps) {
+  const isDesktopInbox = useDesktopInboxViewport();
   const [activeTab, setActiveTab] = React.useState<InboxTab>("UNREAD");
 
   const querySection: NotificationSection = activeTab === "MENTIONS" ? "ALL" : activeTab;
@@ -123,12 +142,14 @@ export function InboxList({
       onClearSelectionRef.current?.();
       return;
     }
+    if (!isDesktopInbox) return;
     if (selectedId != null || selectionDismissed) return;
     const first = firstNotificationRef.current;
     if (first) onSelectRef.current(first);
   }, [
     isLoading,
     isError,
+    isDesktopInbox,
     selectedId,
     selectedStillVisible,
     selectionDismissed,
@@ -141,8 +162,8 @@ export function InboxList({
       onValueChange={handleTabChange}
       className="flex h-full min-h-0 flex-col gap-0"
     >
-      <div className="flex shrink-0 flex-col gap-2 border border-r-0 border-border px-4 py-2.5">
-        <TabsList>
+      <div className="flex shrink-0 items-center justify-between gap-2 border border-r-0 border-border px-4 py-2">
+        <TabsList className="min-w-0 flex-1">
           {SECTION_FILTERS.map(({ label, value }) => (
             <TabsTrigger key={value} value={value}>
               {label}
@@ -154,25 +175,30 @@ export function InboxList({
             icon={CheckCheckIcon}
             iconSize={14}
             variant="ghost"
-            size="sm"
-            className="h-7 self-end px-2.5 text-xs font-medium text-muted-foreground hover:text-foreground"
+            size="icon"
+            className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
             disabled={isMarkingAll}
             onClick={handleMarkAll}
-          >
-            Mark all read
-          </AnimatedIconButton>
+            aria-label="Mark all read"
+            title="Mark all read"
+          />
         ) : null}
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto border-l border-border scrollbar-hide">
-        {isLoading && <InboxListSkeleton />}
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto border-l border-border scrollbar-hide">
+        {isLoading && (
+          <div className="flex min-h-full flex-col">
+            <InboxListSkeleton />
+          </div>
+        )}
 
         {!isLoading && isError && (
-          <div className="p-4">
+          <div className="flex min-h-full flex-1 flex-col items-center justify-center p-4">
             <ErrorState
               description={getErrorMessage(error)}
               onRetry={handleRetry}
               compact
+              className="min-h-full w-full flex-1"
             />
           </div>
         )}

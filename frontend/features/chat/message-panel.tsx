@@ -1091,6 +1091,8 @@ export function MessagePanel({
               className={cn("w-8 rounded-lg", showInfoPanel && "bg-muted")}
               onClick={onToggleInfo}
               aria-label="Toggle member info"
+              aria-pressed={showInfoPanel}
+              aria-expanded={showInfoPanel}
             />
           </div>
         </div>

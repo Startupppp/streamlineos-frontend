@@ -1,20 +1,26 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useState } from "react";
+import { SparklesIcon } from "@animateicons/react/lucide";
 import { useCan } from "@/hooks/api/access";
-import { AiActionsMenu, type AiAction, type AiActionResult } from "@/components/ai";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import {
-  useProjectAiSummary,
-  useProjectAiRisks,
-  useWeeklyUpdate,
-  useAskProjectAi,
-} from "@/hooks/api/projects/ai";
-import type {
-  ProjectSummaryResult,
-  ProjectRisksResult,
-  WeeklyUpdateResult,
-  AskResult,
-} from "@/types/projects/ai";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import {
+  AiActionResultBody,
+  type AiActionResult,
+  type AiActionResultState,
+} from "@/components/ai";
+import { useProjectAiSummary } from "@/hooks/api/projects/ai";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-client";
+import type { ProjectSummaryResult } from "@/types/projects/ai";
 
 interface ProjectAiMenuProps {
   projectId: number;
@@ -30,83 +36,77 @@ function formatSummary(data: ProjectSummaryResult): AiActionResult {
   return { text: lines.join("\n") };
 }
 
-function formatRisks(data: ProjectRisksResult): AiActionResult {
-  if (data.risks.length === 0) return { text: "No significant risks detected at this time." };
-  const lines: string[] = [];
-  for (const r of data.risks) {
-    lines.push(`[${r.severity.toUpperCase()}] ${r.title}`);
-    lines.push(`  ${r.rationale}`);
-    lines.push(`  Mitigation: ${r.mitigation}`);
-    lines.push("");
-  }
-  return { text: lines.join("\n").trimEnd() };
-}
-
-function formatWeeklyUpdate(data: WeeklyUpdateResult): AiActionResult {
-  const lines: string[] = [data.headline, ""];
-  if (data.completedHighlights.length > 0) {
-    lines.push("Completed:");
-    for (const c of data.completedHighlights) lines.push(`• ${c}`);
-    lines.push("");
-  }
-  if (data.upcomingFocus.length > 0) {
-    lines.push("Coming up:");
-    for (const u of data.upcomingFocus) lines.push(`• ${u}`);
-    lines.push("");
-  }
-  if (data.blockers.length > 0) {
-    lines.push("Blockers:");
-    for (const b of data.blockers) lines.push(`• ${b}`);
-  }
-  const citations = data.citations.map((c, i) => ({ id: i, title: c.label }));
-  return { text: lines.join("\n").trimEnd(), citations: citations.length > 0 ? citations : undefined };
-}
-
-function formatAsk(data: AskResult): AiActionResult {
-  return {
-    text: data.answer,
-    confidence: data.confidence === "high" ? 0.9 : data.confidence === "medium" ? 0.65 : 0.4,
-  };
-}
-
 export function ProjectAiMenu({ projectId }: ProjectAiMenuProps) {
   const canUseAI = useCan("projects:ai:use");
   const summaryMutation = useProjectAiSummary(projectId);
-  const risksMutation = useProjectAiRisks(projectId);
-  const weeklyMutation = useWeeklyUpdate(projectId);
-  const askMutation = useAskProjectAi(projectId);
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [state, setState] = useState<AiActionResultState>({ status: "loading" });
 
-  const runSummary = useCallback((): Promise<AiActionResult> => {
-    return summaryMutation.mutateAsync(undefined).then(formatSummary);
+  const runSummary = useCallback(async () => {
+    setSheetOpen(true);
+    setState({ status: "loading" });
+    try {
+      const data = await summaryMutation.mutateAsync(undefined);
+      const result = formatSummary(data);
+      setState({ status: "ready", result, aiUsage: result.aiUsage });
+    } catch (error) {
+      if (isApiError(error) && error.status === 402) {
+        setState({ status: "quota" });
+      } else if (isApiError(error) && error.status === 403) {
+        setState({ status: "denied", reason: getErrorMessage(error) });
+      } else {
+        setState({ status: "error", message: getErrorMessage(error) });
+      }
+    }
   }, [summaryMutation]);
 
-  const runRisks = useCallback((): Promise<AiActionResult> => {
-    return risksMutation.mutateAsync(undefined).then(formatRisks);
-  }, [risksMutation]);
+  const handleSummarizeClick = useCallback(() => {
+    void runSummary();
+  }, [runSummary]);
 
-  const runWeeklyUpdate = useCallback((): Promise<AiActionResult> => {
-    return weeklyMutation.mutateAsync(undefined).then(formatWeeklyUpdate);
-  }, [weeklyMutation]);
+  const handleRetry = useCallback(() => {
+    void runSummary();
+  }, [runSummary]);
 
-  const runAsk = useCallback((): Promise<AiActionResult> => {
-    return askMutation.mutateAsync({ question: "What is the current status and what needs attention?" }).then(formatAsk);
-  }, [askMutation]);
-
-  const actions: AiAction[] = useMemo(() => [
-    { key: "summary", label: "Health summary", description: "Overall status, highlights & risk level", run: runSummary, surface: "sheet" },
-    { key: "risks", label: "Detect risks", description: "Surface blockers and risk factors", run: runRisks, surface: "sheet" },
-    { key: "weekly-update", label: "Weekly update draft", description: "Ready-to-share progress report", run: runWeeklyUpdate, surface: "sheet" },
-    { key: "ask", label: "Ask about this project", description: "What needs attention right now?", run: runAsk, surface: "popover" },
-  ], [runSummary, runRisks, runWeeklyUpdate, runAsk]);
+  const handleSheetOpenChange = useCallback((open: boolean) => {
+    setSheetOpen(open);
+    if (!open) {
+      setState({ status: "loading" });
+    }
+  }, []);
 
   if (!canUseAI) return null;
 
   return (
-    <AiActionsMenu
-      actions={actions}
-      triggerLabel="AI"
-      menuLabel="Project AI"
-      align="end"
-    />
+    <>
+      <LoadingButton
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={handleSummarizeClick}
+        isPending={summaryMutation.isPending}
+        loadingText="Summarizing…"
+        className="h-8 gap-1.5 text-xs"
+        {...hoverHandlers}
+      >
+        <SparklesIcon ref={iconRef} className="h-3.5 w-3.5 text-primary" />
+        Summarize
+      </LoadingButton>
+
+      <Sheet open={sheetOpen} onOpenChange={handleSheetOpenChange}>
+        <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
+          <SheetHeader className="shrink-0 border-b border-border px-6 py-4">
+            <SheetTitle className="text-base font-semibold">Health summary</SheetTitle>
+            <SheetDescription className="text-[13px] text-muted-foreground">
+              AI-generated draft grounded in this record. Review before you use it.
+            </SheetDescription>
+          </SheetHeader>
+          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
+            <AiActionResultBody state={state} onRetry={handleRetry} />
+          </div>
+        </SheetContent>
+      </Sheet>
+    </>
   );
 }

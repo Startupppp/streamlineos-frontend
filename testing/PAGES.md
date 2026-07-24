@@ -7,7 +7,7 @@
 
 | # | Route | Page file (under frontend/app/(authenticated)/) | Group | Status | Result |
 |---|-------|--------------------------------------------------|-------|--------|--------|
-| 1 | /projects | projects/page.tsx | G4 | ✅ | animated icons + fills; portfolios 400 was backend route shadowing (fixed) |
+| 1 | /projects | projects/page.tsx | G4 | ✅ | table Lead/Members inline assign + edit sheet full fields (2026-07-24) |
 | 2 | /projects/all | projects/all/page.tsx | G4 | ✅ | animated icons + fills; portfolios 400 was backend route shadowing (fixed) |
 | 3 | /projects/all-work | projects/all-work/page.tsx | G2 | ✅ | fills + states; planning panel split partially regressed (636L) |
 | 4 | /projects/my-work | projects/my-work/page.tsx | G2 | ✅ | fills + states; planning panel split partially regressed (636L) |

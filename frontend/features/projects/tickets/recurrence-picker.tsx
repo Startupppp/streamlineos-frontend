@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
@@ -69,7 +70,7 @@ export function RecurrencePicker({ value, onChange }: RecurrencePickerProps) {
               <SelectTrigger className="h-9 min-w-[7rem] flex-1 touch-manipulation sm:w-28 sm:flex-none">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+              <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
                 <SelectItem value="daily" className="text-xs">day(s)</SelectItem>
                 <SelectItem value="weekly" className="text-xs">week(s)</SelectItem>
                 <SelectItem value="monthly" className="text-xs">month(s)</SelectItem>

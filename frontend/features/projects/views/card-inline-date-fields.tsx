@@ -5,6 +5,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { FIELD_DATE_POPOVER_CONTENT_CLASS } from "@/components/ui/field-control";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useUpdateTicket } from "@/hooks/api/projects/tickets";
@@ -72,7 +73,7 @@ export const InlineDueDate = memo(function InlineDueDate({
             </span>
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
+        <PopoverContent className={cn(FIELD_DATE_POPOVER_CONTENT_CLASS, "p-0")} align="start">
           <Calendar
             mode="single"
             selected={parsedDate}
@@ -157,7 +158,7 @@ export const InlineStartDate = memo(function InlineStartDate({
             </span>
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
+        <PopoverContent className={cn(FIELD_DATE_POPOVER_CONTENT_CLASS, "p-0")} align="start">
           <Calendar
             mode="single"
             selected={parsedDate}

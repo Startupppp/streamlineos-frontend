@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
@@ -160,7 +161,8 @@ export default function GoalsPage() {
   const debouncedSearch = useDebouncedValue(search, 300);
   const [statusFilter, setStatusFilter] = useState<GoalStatus | "all">("all");
   const [levelFilter, setLevelFilter] = useState<GoalLevel | "all">("all");
-  const [createOpen, setCreateOpen] = useState(false);
+  const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } =
+    useQueryParamOpen("create");
   const shouldReduceMotion = useReducedMotion();
   const sectionVariants = shouldReduceMotion ? fadeUpReduced : fadeUp;
 
@@ -187,9 +189,9 @@ export default function GoalsPage() {
 
   const hasGoals = (goals?.length ?? 0) > 0;
 
-  function handleOpenCreate() {
-    setCreateOpen(true);
-  }
+  const handleOpenCreate = useCallback(() => {
+    openCreate();
+  }, [openCreate]);
 
   function handleSearchChange(value: string) {
     setSearch(value);

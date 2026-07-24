@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { toast } from "sonner";
 import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -93,7 +94,8 @@ export function TeamsListPage() {
 
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } =
+    useQueryParamOpen("create");
   const [editTarget, setEditTarget] = useState<ProjectTeam | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ProjectTeam | null>(null);
 
@@ -113,7 +115,7 @@ export function TeamsListPage() {
     createTeam.mutate(input, {
       onSuccess: () => {
         toast.success("Team created");
-        setSheetOpen(false);
+        setCreateOpen(false);
       },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
@@ -150,16 +152,19 @@ export function TeamsListPage() {
     setPage(1);
   }
 
-  function handleOpenCreate() {
-    setSheetOpen(true);
-  }
+  const handleOpenCreate = useCallback(() => {
+    openCreate();
+  }, [openCreate]);
 
-  function handleSheetOpenChange(open: boolean) {
-    if (!open) {
-      setSheetOpen(false);
-      setEditTarget(null);
-    }
-  }
+  const handleSheetOpenChange = useCallback(
+    (open: boolean) => {
+      if (!open) {
+        setCreateOpen(false);
+        setEditTarget(null);
+      }
+    },
+    [setCreateOpen],
+  );
 
   function handleDeleteDialogChange(open: boolean) {
     if (!open) setDeleteTarget(null);
@@ -322,7 +327,7 @@ export function TeamsListPage() {
       </PmPageShell>
 
       <TeamFormSheet
-        open={sheetOpen || !!editTarget}
+        open={createOpen || !!editTarget}
         onOpenChange={handleSheetOpenChange}
         mode={editTarget ? "edit" : "create"}
         defaultValues={editTarget ?? undefined}

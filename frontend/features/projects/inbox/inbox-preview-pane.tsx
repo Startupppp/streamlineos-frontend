@@ -13,6 +13,7 @@ import {
   Info,
   AlertTriangle,
   ExternalLink,
+  ArrowLeft,
 } from "lucide-react";
 import { XIcon } from "@animateicons/react/lucide";
 import { cn } from "@/lib/utils";
@@ -92,6 +93,18 @@ function NotificationFallbackPreview({
     <div className="flex h-full min-h-0 min-w-0 w-full flex-col overflow-y-auto scrollbar-hide">
       <div className="shrink-0 border-y border-border px-4 pb-4 pt-4 md:px-6 md:pt-6">
         <div className="flex items-start gap-3">
+          {onClose ? (
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              className="mt-0.5 h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground lg:hidden"
+              onClick={onClose}
+              aria-label="Back to inbox"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          ) : null}
           <div
             className={cn(
               "mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-muted",
@@ -132,7 +145,7 @@ function NotificationFallbackPreview({
               variant="ghost"
               icon={XIcon}
               iconSize={16}
-              className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
+              className="hidden h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground lg:inline-flex"
               onClick={onClose}
               aria-label="Close preview"
             />

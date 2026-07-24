@@ -35,11 +35,11 @@ function SearchButton() {
       type="button"
       onClick={handleClick}
       aria-label="Search (⌘K)"
-      className="flex items-center gap-2 h-8 w-full max-w-xs px-3 rounded-lg border border-sidebar-border text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-[color,background-color]"
+      className="flex min-w-0 w-full max-w-full items-center gap-2 overflow-hidden h-8 px-3 rounded-lg border border-sidebar-border text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-[color,background-color]"
     >
       <Search className="h-4 w-4 shrink-0" />
-      <span className="flex-1 text-left text-xs">Search…</span>
-      <kbd className="hidden sm:inline-flex h-4 items-center rounded border border-sidebar-border bg-sidebar px-1 font-mono text-[9px] text-sidebar-foreground/50">
+      <span className="min-w-0 flex-1 truncate text-left text-xs">Search…</span>
+      <kbd className="hidden shrink-0 lg:inline-flex h-4 items-center rounded border border-sidebar-border bg-sidebar px-1 font-mono text-[9px] text-sidebar-foreground/50">
         ⌘K
       </kbd>
     </button>
@@ -97,8 +97,10 @@ function DesktopHeader({
         <WorkspaceSwitcher variant="header" />
       </div>
 
-      <div className="flex-1 flex justify-center min-w-0 px-4">
-        <SearchButton />
+      <div className="flex min-w-0 flex-1 justify-center px-4">
+        <div className="w-full min-w-0 max-w-xs">
+          <SearchButton />
+        </div>
       </div>
 
       <div className="flex items-center gap-1 shrink-0">

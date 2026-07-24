@@ -34,8 +34,14 @@ import {
   projectStatusColors,
   projectStatusDisplayLabels,
 } from "@/lib/theme-constants";
-import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
-import { TABLE_TITLE_CELL, TEXT_FLEX_CHILD } from "@/features/projects/shared/text-overflow";
+import {
+  getUserDisplayName,
+  getUserInitials,
+} from "@/features/projects/shared/resolve-user-name";
+import {
+  TABLE_TITLE_CELL,
+  TEXT_FLEX_CHILD,
+} from "@/features/projects/shared/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { PmPanel } from "@/features/projects/shared/pm-chrome";
 import { useCan } from "@/hooks/api/access";
@@ -43,7 +49,11 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import type { ProjectListItem, ProjectHealth } from "@/types/projects/projects";
 import type { DisplayPrefs } from "./use-display-prefs";
 import { ProjectCardDialogs } from "./project-card-dialogs";
-import { InlineProjectPriority } from "./project-card-inline-fields";
+import {
+  InlineProjectLead,
+  InlineProjectMembers,
+  InlineProjectPriority,
+} from "./project-card-inline-fields";
 import { statusDotColors } from "./project-card-utils";
 
 interface ProjectTableProps {
@@ -56,7 +66,10 @@ type ActiveDialog = "edit" | "delete" | "archive" | null;
 function StatusDot({ status }: { status: string }) {
   const dotColor = getColorSafe(statusDotColors, status);
   return (
-    <span className={cn("inline-block h-1.5 w-1.5 shrink-0 rounded-full", dotColor)} aria-hidden="true" />
+    <span
+      className={cn("inline-block h-1.5 w-1.5 shrink-0 rounded-full", dotColor)}
+      aria-hidden="true"
+    />
   );
 }
 
@@ -158,7 +171,10 @@ function ActionsCell({
           {canDelete ? (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuItem variant="destructive" onClick={handleDeleteClick}>
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={handleDeleteClick}
+              >
                 <Trash2 className="mr-2 h-3.5 w-3.5" />
                 Delete project
               </DropdownMenuItem>
@@ -170,9 +186,17 @@ function ActionsCell({
   );
 }
 
-export const ProjectTable = React.memo(function ProjectTable({ projects, prefs }: ProjectTableProps) {
+export const ProjectTable = React.memo(function ProjectTable({
+  projects,
+  prefs,
+}: ProjectTableProps) {
   const router = useRouter();
-  const [activeProject, setActiveProject] = useState<ProjectListItem | null>(null);
+  const canUpdate = useCan("projects:update");
+  const canManage = useCan("projects:manage");
+  const canEdit = canUpdate || canManage;
+  const [activeProject, setActiveProject] = useState<ProjectListItem | null>(
+    null,
+  );
   const [activeDialog, setActiveDialog] = useState<ActiveDialog>(null);
 
   const handleEdit = useCallback((p: ProjectListItem) => {
@@ -203,14 +227,22 @@ export const ProjectTable = React.memo(function ProjectTable({ projects, prefs }
         sortValue: (p) => p.name,
         className: TABLE_TITLE_CELL,
         cell: (p) => (
-          <div className={cn(TEXT_FLEX_CHILD, "flex min-w-0 items-center gap-2 overflow-hidden")}>
+          <div
+            className={cn(
+              TEXT_FLEX_CHILD,
+              "flex min-w-0 items-center gap-2 overflow-hidden",
+            )}
+          >
             <span
               className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-[9px] font-bold tracking-tight bg-primary/10 text-primary ring-1 ring-primary/10"
               aria-hidden="true"
             >
               {p.key.slice(0, 2).toUpperCase()}
             </span>
-            <TruncatedText text={p.name} className="text-[13px] font-medium text-foreground transition-colors group-hover:text-primary" />
+            <TruncatedText
+              text={p.name}
+              className="text-[13px] font-medium text-foreground transition-colors group-hover:text-primary"
+            />
             <span className="hidden shrink-0 font-mono text-[10px] text-muted-foreground/60 sm:inline-block">
               {p.key}
             </span>
@@ -227,7 +259,10 @@ export const ProjectTable = React.memo(function ProjectTable({ projects, prefs }
         className: "w-[180px] hidden xl:table-cell",
         cell: (p) =>
           p.description ? (
-            <TruncatedText text={p.description} className="text-[11px] text-muted-foreground" />
+            <TruncatedText
+              text={p.description}
+              className="text-[11px] text-muted-foreground"
+            />
           ) : (
             <span className="text-xs text-muted-foreground/40">—</span>
           ),
@@ -267,13 +302,21 @@ export const ProjectTable = React.memo(function ProjectTable({ projects, prefs }
         header: "Priority",
         sortable: true,
         sortValue: (p) => {
-          const order: Record<string, number> = { URGENT: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
+          const order: Record<string, number> = {
+            URGENT: 0,
+            HIGH: 1,
+            MEDIUM: 2,
+            LOW: 3,
+          };
           return order[p.priority ?? ""] ?? 4;
         },
         headerClassName: "hidden md:table-cell",
         className: "w-[96px] hidden md:table-cell",
         cell: (p) => (
-          <InlineProjectPriority projectId={p.id} currentPriority={p.priority} />
+          <InlineProjectPriority
+            projectId={p.id}
+            currentPriority={p.priority}
+          />
         ),
       });
     }
@@ -284,7 +327,11 @@ export const ProjectTable = React.memo(function ProjectTable({ projects, prefs }
         header: "Health",
         sortable: true,
         sortValue: (p) => {
-          const order: Record<ProjectHealth, number> = { off_track: 0, at_risk: 1, on_track: 2 };
+          const order: Record<ProjectHealth, number> = {
+            off_track: 0,
+            at_risk: 1,
+            on_track: 2,
+          };
           return order[p.health];
         },
         headerClassName: "hidden lg:table-cell",
@@ -305,7 +352,13 @@ export const ProjectTable = React.memo(function ProjectTable({ projects, prefs }
                 badgeColor,
               )}
             >
-              <span className={cn("inline-block h-1.5 w-1.5 shrink-0 rounded-full", dotColor)} aria-hidden="true" />
+              <span
+                className={cn(
+                  "inline-block h-1.5 w-1.5 shrink-0 rounded-full",
+                  dotColor,
+                )}
+                aria-hidden="true"
+              />
               {healthLabels[p.health]}
             </Badge>
           );
@@ -321,26 +374,33 @@ export const ProjectTable = React.memo(function ProjectTable({ projects, prefs }
         sortValue: (p) => getUserDisplayName(p.manager),
         headerClassName: "hidden md:table-cell",
         className: "w-[130px] hidden md:table-cell",
-        cell: (p) => {
-          const leadName = getUserDisplayName(p.manager);
-          const leadInitials = getUserInitials(p.manager);
-          return p.manager ? (
+        cell: (p) =>
+          canEdit ? (
+            <InlineProjectLead projectId={p.id} manager={p.manager} />
+          ) : p.manager ? (
             <div className={cn(TEXT_FLEX_CHILD, "flex items-center gap-1.5")}>
               <Avatar className="h-5 w-5 shrink-0">
                 {p.manager.image ? (
-                  <AvatarImage src={resolveImageUrl(p.manager.image)} alt={leadName} />
+                  <AvatarImage
+                    src={resolveImageUrl(p.manager.image)}
+                    alt={getUserDisplayName(p.manager)}
+                  />
                 ) : null}
-                <AvatarFallback className="text-[9px]">{leadInitials}</AvatarFallback>
+                <AvatarFallback className="text-[9px]">
+                  {getUserInitials(p.manager)}
+                </AvatarFallback>
               </Avatar>
-              <TruncatedText text={leadName} className="max-w-[96px] text-xs text-muted-foreground" />
+              <TruncatedText
+                text={getUserDisplayName(p.manager)}
+                className="max-w-[96px] text-xs text-muted-foreground"
+              />
             </div>
           ) : (
             <span className="flex items-center gap-1 text-xs text-muted-foreground/50">
               <User className="h-3.5 w-3.5" aria-hidden="true" />
               Unassigned
             </span>
-          );
-        },
+          ),
       });
     }
 
@@ -351,7 +411,9 @@ export const ProjectTable = React.memo(function ProjectTable({ projects, prefs }
         headerClassName: "hidden lg:table-cell",
         className: "w-[90px] hidden lg:table-cell",
         cell: (p) =>
-          p.members.length > 0 ? (
+          canEdit ? (
+            <InlineProjectMembers projectId={p.id} members={p.members} />
+          ) : p.members.length > 0 ? (
             <AvatarStack
               users={p.members}
               limit={3}
@@ -368,14 +430,20 @@ export const ProjectTable = React.memo(function ProjectTable({ projects, prefs }
         key: "endDate",
         header: "Target",
         sortable: true,
-        sortValue: (p) => (p.endDate ? new Date(p.endDate).getTime() : Infinity),
+        sortValue: (p) =>
+          p.endDate ? new Date(p.endDate).getTime() : Infinity,
         headerClassName: "hidden lg:table-cell",
         className: "w-[84px] hidden lg:table-cell",
         cell: (p) => {
           const status = p.status ?? "ACTIVE";
           const targetDate = resolveTargetDate(p.endDate, status);
           return targetDate ? (
-            <div className={cn("flex items-center gap-1 text-xs font-medium", dateToneClasses[targetDate.tone])}>
+            <div
+              className={cn(
+                "flex items-center gap-1 text-xs font-medium",
+                dateToneClasses[targetDate.tone],
+              )}
+            >
               <Calendar className="h-3 w-3 shrink-0" aria-hidden="true" />
               {targetDate.label}
             </div>
@@ -391,7 +459,8 @@ export const ProjectTable = React.memo(function ProjectTable({ projects, prefs }
         key: "startDate",
         header: "Start",
         sortable: true,
-        sortValue: (p) => (p.startDate ? new Date(p.startDate).getTime() : Infinity),
+        sortValue: (p) =>
+          p.startDate ? new Date(p.startDate).getTime() : Infinity,
         headerClassName: "hidden lg:table-cell",
         className: "w-[80px] hidden lg:table-cell",
         cell: (p) =>
@@ -431,7 +500,8 @@ export const ProjectTable = React.memo(function ProjectTable({ projects, prefs }
         headerClassName: "hidden sm:table-cell",
         className: "w-[110px] hidden sm:table-cell",
         cell: (p) => {
-          const progressValue = p.progress.total > 0 ? p.progress.percentage : 0;
+          const progressValue =
+            p.progress.total > 0 ? p.progress.percentage : 0;
           return p.progress.total > 0 ? (
             <div className="flex items-center gap-2">
               <Progress value={progressValue} className="h-1 min-w-0 flex-1" />
@@ -461,7 +531,7 @@ export const ProjectTable = React.memo(function ProjectTable({ projects, prefs }
     });
 
     return cols;
-  }, [prefs, handleEdit, handleArchive, handleDelete]);
+  }, [prefs, canEdit, handleEdit, handleArchive, handleDelete]);
 
   const handleRowClick = useCallback(
     (project: ProjectListItem) => {
@@ -480,7 +550,9 @@ export const ProjectTable = React.memo(function ProjectTable({ projects, prefs }
         rowClassName={() => "group h-9 hover:bg-primary/[0.035]"}
         className="min-h-0 flex-1 rounded-none border-0 bg-transparent shadow-none"
         emptyState={
-          <div className="py-4 text-center text-sm text-muted-foreground">No projects found</div>
+          <div className="py-4 text-center text-sm text-muted-foreground">
+            No projects found
+          </div>
         }
       />
       {activeProject ? (

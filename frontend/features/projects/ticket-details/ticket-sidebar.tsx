@@ -8,7 +8,7 @@ import { Clock, User, Calendar, Building2, X } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { XIcon } from "@animateicons/react/lucide";
 import { format } from "date-fns";
-import { resolveImageUrl } from "@/lib/utils";
+import { resolveImageUrl, cn } from "@/lib/utils";
 import {
   planningEndPickerProps,
   planningStartPickerProps,
@@ -46,6 +46,7 @@ import {
 } from "@/components/ui/command";
 import { useCrmOrganizationsForPicker } from "@/hooks/api/crm";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { FIELD_SEARCH_POPOVER_CONTENT_CLASS } from "@/components/ui/field-control";
 
 interface CustomerPickerProps {
   customerId: number | null | undefined;
@@ -98,7 +99,7 @@ function CustomerPicker({
               )}
             </button>
           </PopoverTrigger>
-          <PopoverContent className="w-64 p-0" align="start">
+          <PopoverContent className={cn(FIELD_SEARCH_POPOVER_CONTENT_CLASS, "p-0")} align="start">
             <Command shouldFilter={false}>
               <CommandInput
                 placeholder="Search customers..."
@@ -361,7 +362,7 @@ export function TicketSidebar({
         onChange={handleCustomerChange}
       />
 
-      <div className="grid grid-cols-1 gap-3 @[18rem]:grid-cols-2 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 @[18rem]:grid-cols-2">
         <div className="min-w-0">
           <span className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
             <Calendar className="mr-0.5 inline h-3 w-3" />
@@ -470,7 +471,7 @@ export function TicketSidebar({
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-2 @[18rem]:grid-cols-2 @[18rem]:gap-3 md:grid-cols-2 md:gap-3">
+      <div className="grid grid-cols-1 gap-2 @[18rem]:grid-cols-2 @[18rem]:gap-3">
         <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
           <Calendar className="h-3 w-3 shrink-0" />
           <span>

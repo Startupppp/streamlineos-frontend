@@ -16,7 +16,6 @@ import { NewGroupDialog } from "@/features/chat/new-group-dialog";
 import { ChatAblyProvider } from "@/features/chat/ably-provider";
 import { useChatSidebarCollapse } from "@/features/chat/chat-shell";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { useIsChatMobile } from "@/features/chat/use-chat-mobile";
 
 function ChatNotifications({
   activeChannelId,
@@ -50,7 +49,6 @@ export default function ChatPage() {
   const [emptyGroupOpen, setEmptyGroupOpen] = useState(false);
   const [showSearchFocus, setShowSearchFocus] = useState(false);
   const { sidebarCollapsed, handleToggleSidebar } = useChatSidebarCollapse();
-  const isChatMobile = useIsChatMobile();
 
   const heartbeat = useChatHeartbeat();
   const heartbeatRef = useRef(heartbeat);
@@ -237,9 +235,9 @@ export default function ChatPage() {
           )}
         </AnimatePresence>
 
-        {isChatMobile && activeChannelId && (
+        {activeChannelId && (
           <Sheet open={showInfoPanel} onOpenChange={setShowInfoPanel}>
-            <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:hidden">
+            <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 lg:hidden">
               <ChannelInfoPanel
                 channelId={activeChannelId}
                 currentUserId={currentUserId ?? ""}

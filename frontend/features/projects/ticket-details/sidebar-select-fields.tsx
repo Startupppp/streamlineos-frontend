@@ -7,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { Input } from "@/components/ui/input";
 import {
   Circle,
@@ -73,8 +74,7 @@ export interface SidebarSelectFieldsProps {
   onCycleChange: (v: string) => void;
 }
 
-const FIELD_GRID = "grid grid-cols-1 gap-3 @[18rem]:grid-cols-2 md:grid-cols-2";
-const SELECT_CONTENT_CLASS = "min-w-[var(--radix-select-trigger-width)]";
+const FIELD_GRID = "grid grid-cols-1 gap-3 @[18rem]:grid-cols-2";
 const CONTROL_CLASS =
   "w-full min-h-10 touch-manipulation @[18rem]:min-h-9 md:min-h-9";
 
@@ -111,7 +111,7 @@ export function SidebarSelectFields({
             <SelectTrigger className={CONTROL_CLASS}>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className={SELECT_CONTENT_CLASS}>
+            <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
               {statuses?.map((s) => (
                 <SelectItem key={s.id} value={s.name}>
                   {s.name.replace(/_/g, " ")}
@@ -149,7 +149,7 @@ export function SidebarSelectFields({
             <SelectTrigger className={CONTROL_CLASS}>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className={SELECT_CONTENT_CLASS}>
+            <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
               <SelectItem value="LOW">Low</SelectItem>
               <SelectItem value="MEDIUM">Medium</SelectItem>
               <SelectItem value="HIGH">High</SelectItem>
@@ -166,7 +166,7 @@ export function SidebarSelectFields({
             <SelectTrigger className={CONTROL_CLASS}>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className={SELECT_CONTENT_CLASS}>
+            <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
               <SelectItem value="TASK">Task</SelectItem>
               <SelectItem value="BUG">Bug</SelectItem>
               <SelectItem value="STORY">Story</SelectItem>
@@ -197,7 +197,7 @@ export function SidebarSelectFields({
             <SelectTrigger className={CONTROL_CLASS}>
               <SelectValue placeholder="None" />
             </SelectTrigger>
-            <SelectContent className={SELECT_CONTENT_CLASS}>
+            <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
               <SelectItem value="none">None</SelectItem>
               {sprints?.map((s) => (
                 <SelectItem key={s.id} value={s.id.toString()}>
@@ -217,7 +217,7 @@ export function SidebarSelectFields({
             <SelectTrigger className={CONTROL_CLASS}>
               <SelectValue placeholder="None" />
             </SelectTrigger>
-            <SelectContent className={SELECT_CONTENT_CLASS}>
+            <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
               <SelectItem value="none">None</SelectItem>
               {epics.map((epic) => (
                 <SelectItem key={epic.id} value={epic.id.toString()}>
@@ -239,7 +239,7 @@ export function SidebarSelectFields({
             <SelectTrigger className={CONTROL_CLASS}>
               <SelectValue placeholder="None" />
             </SelectTrigger>
-            <SelectContent className={SELECT_CONTENT_CLASS}>
+            <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
               <SelectItem value="none">None</SelectItem>
               {modules.map((mod) => (
                 <SelectItem key={mod.id} value={mod.id.toString()}>
@@ -258,7 +258,7 @@ export function SidebarSelectFields({
             <SelectTrigger className={CONTROL_CLASS}>
               <SelectValue placeholder="None" />
             </SelectTrigger>
-            <SelectContent className={SELECT_CONTENT_CLASS}>
+            <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
               <SelectItem value="none">None</SelectItem>
               {cycles.map((cycle) => (
                 <SelectItem key={cycle.id} value={cycle.id.toString()}>
