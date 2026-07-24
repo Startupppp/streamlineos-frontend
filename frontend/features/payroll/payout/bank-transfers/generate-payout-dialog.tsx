@@ -1,7 +1,7 @@
 "use client";
 
 import { toast } from "sonner";
-import { Loader2, Download, ExternalLink } from "lucide-react";
+import { Download, ExternalLink } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Label } from "@/components/ui/label";
 import { useCreatePayoutBatch } from "@/hooks/api/payroll/payout-batches";
 import { usePayrollPolicyCurrent } from "@/hooks/api/payroll/policies";
@@ -135,12 +136,13 @@ export function GeneratePayoutDialog({
             {fileUrl ? "Close" : "Cancel"}
           </Button>
           {!fileUrl && (
-            <Button onClick={handleGenerate} disabled={createMutation.isPending}>
-              {createMutation.isPending && (
-                <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
-              )}
+            <LoadingButton
+              onClick={handleGenerate}
+              isPending={createMutation.isPending}
+              loadingText="Generating…"
+            >
               Generate
-            </Button>
+            </LoadingButton>
           )}
         </DialogFooter>
       </DialogContent>

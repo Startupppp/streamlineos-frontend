@@ -134,6 +134,38 @@ export function useMarkItemFailed() {
   });
 }
 
+export interface BankReturnImportResult {
+  success: boolean;
+  paid: number;
+  failed: number;
+  skipped: number;
+  parseErrors: { line: number; message: string }[];
+  honestyNote: string;
+  mode: "export_manual";
+}
+
+export function useImportBankReturn() {
+  const qc = useQueryClient();
+  return useMutation<
+    BankReturnImportResult,
+    Error,
+    { batchId: number; csv: string; runId?: number }
+  >({
+    mutationKey: ["payroll", "import-bank-return"],
+    mutationFn: ({ batchId, csv }) =>
+      apiClient.post<BankReturnImportResult>(
+        `/payroll/payout/batches/${batchId}/import-return`,
+        { csv },
+      ),
+    onSuccess: (_data, { batchId, runId }) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.bankBatch(batchId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.bankBatches(runId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId ?? 0) });
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.journalBatchesAll });
+    },
+  });
+}
+
 export function useEmployeeBankDetails(employeeUserId: string, enabled = false) {
   return useQuery<EmployeeBankDetails>({
     queryKey: queryKeys.payroll.employeeBank(employeeUserId),

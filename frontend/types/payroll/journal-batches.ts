@@ -49,3 +49,54 @@ export interface CreateJournalBatchInput {
   allowProvisional?: boolean;
   note?: string;
 }
+
+export interface PeriodReconCheck {
+  key: string;
+  label: string;
+  ok: boolean;
+  severity: "blocker" | "warning" | "info";
+  detail: string;
+  expected?: string;
+  actual?: string;
+  delta?: string;
+}
+
+export interface PeriodReconciliationReport {
+  periodKey: string;
+  mode: "export_manual";
+  honestyNote: string;
+  run: {
+    id: number;
+    status: string;
+    netTotal: string;
+    grossTotal: string;
+    employeeCount: number | null;
+  } | null;
+  payout: {
+    batchCount: number;
+    totalPaid: string;
+    totalPending: string;
+    totalFailed: string;
+    batches: {
+      id: number;
+      batchNumber: string;
+      status: string;
+      totalAmount: string;
+      itemCount: number;
+    }[];
+  };
+  journal: {
+    batchId: number;
+    version: number;
+    status: string;
+    reconciliationStatus: string;
+    totalDebits: string;
+    totalCredits: string;
+    lineCount: number;
+    provisional: boolean;
+  } | null;
+  checks: PeriodReconCheck[];
+  overallOk: boolean;
+  blockerCount: number;
+  warningCount: number;
+}

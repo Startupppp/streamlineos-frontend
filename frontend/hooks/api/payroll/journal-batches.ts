@@ -9,6 +9,7 @@ import type {
   JournalReconStatus,
   PaginatedJournalBatches,
   CreateJournalBatchInput,
+  PeriodReconciliationReport,
 } from "@/types/payroll/journal-batches";
 
 export function useJournalBatches(params?: { periodKey?: string; page?: number; limit?: number }) {
@@ -20,6 +21,19 @@ export function useJournalBatches(params?: { periodKey?: string; page?: number; 
         params as Record<string, string | number> | undefined,
       ),
     staleTime: 60_000,
+  });
+}
+
+export function usePeriodReconciliation(periodKey: string, enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.payroll.periodReconciliation(periodKey),
+    queryFn: () =>
+      apiClient.get<PeriodReconciliationReport>(
+        "/payroll/accounting/journal-batches/period-reconciliation",
+        { periodKey },
+      ),
+    enabled: enabled && /^\d{4}-\d{2}$/.test(periodKey),
+    staleTime: 30_000,
   });
 }
 
