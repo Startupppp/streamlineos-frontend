@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Download, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -35,6 +36,7 @@ import {
   type FilingType,
   type FilingStatus,
 } from "@/hooks/api/payroll/filings";
+import { usePayrollEntities } from "@/hooks/api/payroll/entities";
 
 const FALLBACK_HONESTY_LABEL = "Export prepared — external filing required";
 const FALLBACK_CAPABILITY_NOTE =
@@ -103,6 +105,7 @@ export function FilingsTab() {
   const canManage = useCan("payroll:tax:manage");
   const { data, isLoading } = usePayrollFilings();
   const { data: capability } = useFilingCapabilities();
+  const { data: entities } = usePayrollEntities();
   const prepareMutation = usePrepareFilingExport();
   const ackMutation = useAttachAcknowledgement();
 
@@ -110,10 +113,12 @@ export function FilingsTab() {
   const capabilityNote = capability?.note ?? FALLBACK_CAPABILITY_NOTE;
   const supportedTypes = capability?.supportedTypes ?? FILING_TYPE_OPTIONS;
   const ruleBundle = capability?.ruleBundleVersion;
+  const indiaEntities = (entities ?? []).filter((e) => e.countryCode.toUpperCase() === "IN");
 
   const [showExport, setShowExport] = useState(false);
   const [exportType, setExportType] = useState<FilingType>("PF_ECR");
   const [exportMonth, setExportMonth] = useState(getDefaultMonth);
+  const [exportEntityId, setExportEntityId] = useState<string>("");
   const [ackTarget, setAckTarget] = useState<PayrollFiling | null>(null);
   const [challanRef, setChallanRef] = useState("");
   const [ackRef, setAckRef] = useState("");
@@ -125,6 +130,7 @@ export function FilingsTab() {
         filingType: exportType,
         fiscalYear: getCurrentFY(),
         month: exportMonth,
+        ...(exportEntityId !== "" ? { entityId: Number(exportEntityId) } : {}),
       },
       {
         onSuccess: (row) => {
@@ -201,6 +207,9 @@ export function FilingsTab() {
           {row.ruleVersion ? (
             <span className="ml-1 text-[10px] opacity-80">· {row.ruleVersion}</span>
           ) : null}
+          {row.entityId != null ? (
+            <span className="ml-1 text-[10px] opacity-80">· entity #{row.entityId}</span>
+          ) : null}
         </span>
       ),
     },
@@ -231,15 +240,15 @@ export function FilingsTab() {
       cell: (row: PayrollFiling) => (
         <div className="flex flex-wrap items-center justify-end gap-1.5">
           {row.status !== "DRAFT" && (
-            <Button
+            <LoadingButton
               size="sm"
               variant="outline"
               onClick={() => void handleDownload(row)}
-              disabled={downloadingId === row.id}
+              isPending={downloadingId === row.id}
             >
               <Download className="mr-1 h-3.5 w-3.5" />
-              {downloadingId === row.id ? "…" : "CSV"}
-            </Button>
+              CSV
+            </LoadingButton>
           )}
           {canManage && row.status !== "ACKNOWLEDGED" && row.status !== "RECONCILED" ? (
             <Button size="sm" variant="outline" onClick={() => handleAckOpen(row)}>
@@ -313,15 +322,15 @@ export function FilingsTab() {
             </div>
             <div className="mt-1 flex gap-1.5">
               {row.status !== "DRAFT" && (
-                <Button
+                <LoadingButton
                   size="sm"
                   variant="outline"
                   className="flex-1"
                   onClick={() => void handleDownload(row)}
-                  disabled={downloadingId === row.id}
+                  isPending={downloadingId === row.id}
                 >
                   Download CSV
-                </Button>
+                </LoadingButton>
               )}
               {canManage && row.status !== "ACKNOWLEDGED" && row.status !== "RECONCILED" && (
                 <Button
@@ -383,6 +392,32 @@ export function FilingsTab() {
                 match.
               </p>
             </div>
+            {indiaEntities.length > 0 && (
+              <div className="space-y-1.5">
+                <label className="block text-[13px] font-medium text-foreground">
+                  Legal entity (India)
+                </label>
+                <Select
+                  value={exportEntityId || undefined}
+                  onValueChange={setExportEntityId}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Optional — prefer entity run" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {indiaEntities.map((e) => (
+                      <SelectItem key={e.id} value={String(e.id)}>
+                        {e.legalName} ({e.countryCode})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-[11px] text-muted-foreground">
+                  India PF/ESI/TDS export builders only. Non-IN entities are blocked on the
+                  server.
+                </p>
+              </div>
+            )}
             <p className="text-[11px] text-muted-foreground">
               Financial year {getCurrentFY()}
               {ruleBundle ? ` · rule ${ruleBundle}` : ""}. {honestyLabel}.
@@ -395,9 +430,14 @@ export function FilingsTab() {
             <Button variant="outline" size="sm" onClick={() => setShowExport(false)}>
               Cancel
             </Button>
-            <Button size="sm" onClick={handleExportConfirm} disabled={prepareMutation.isPending}>
-              {prepareMutation.isPending ? "Preparing…" : "Prepare export"}
-            </Button>
+            <LoadingButton
+              size="sm"
+              onClick={handleExportConfirm}
+              isPending={prepareMutation.isPending}
+              loadingText="Preparing…"
+            >
+              Prepare export
+            </LoadingButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -439,9 +479,14 @@ export function FilingsTab() {
             <Button variant="outline" size="sm" onClick={() => setAckTarget(null)}>
               Cancel
             </Button>
-            <Button size="sm" onClick={handleAckConfirm} disabled={ackMutation.isPending}>
-              {ackMutation.isPending ? "Saving…" : "Record acknowledgement"}
-            </Button>
+            <LoadingButton
+              size="sm"
+              onClick={handleAckConfirm}
+              isPending={ackMutation.isPending}
+              loadingText="Saving…"
+            >
+              Record acknowledgement
+            </LoadingButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

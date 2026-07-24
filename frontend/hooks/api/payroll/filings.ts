@@ -37,6 +37,7 @@ export interface FilingExportSummary {
   periodMonth: string | null;
   runId: number | null;
   ruleBundleVersion: string;
+  entityId?: number | null;
 }
 
 /** Backend honesty contract — filings are export-only until a provider is connected. */
@@ -84,6 +85,7 @@ export function usePrepareFilingExport() {
       fiscalYear?: string;
       month?: string;
       runId?: number;
+      entityId?: number;
     }) => apiClient.post<PayrollFiling>("/payroll/filings/export", body),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: filingsKeys.all });
