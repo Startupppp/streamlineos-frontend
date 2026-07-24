@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import Link from "next/link";
-import { useInterviews } from "@/hooks/api/hr";
+import { useInterviews, useInterviewStats } from "@/hooks/api/hr";
 import type { Interview } from "@/types/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -50,6 +50,7 @@ export default function InterviewsPage() {
   const { data: interviews, isLoading, isError, refetch } = useInterviews({
     pageSize: 100,
   });
+  const { data: stats } = useInterviewStats();
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [feedbackInterview, setFeedbackInterview] = useState<Interview | null>(
@@ -59,12 +60,12 @@ export default function InterviewsPage() {
   const [calView, setCalView] = useState<View>("month");
   const [calDate, setCalDate] = useState(new Date());
 
-  const interviewStats = useMemo(() => ({
-    total: interviews?.length ?? 0,
-    pending: interviews?.filter((i) => i.result === "PENDING").length ?? 0,
-    passed: interviews?.filter((i) => i.result === "PASSED").length ?? 0,
-    failed: interviews?.filter((i) => i.result === "FAILED").length ?? 0,
-  }), [interviews]);
+  const interviewStats = {
+    total: stats?.total ?? 0,
+    pending: stats?.pending ?? 0,
+    passed: stats?.passed ?? 0,
+    failed: stats?.failed ?? 0,
+  };
 
   const calEvents = useMemo(
     () =>

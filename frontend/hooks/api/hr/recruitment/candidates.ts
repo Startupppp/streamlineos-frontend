@@ -342,13 +342,24 @@ export function useUpdateCandidateStage() {
       if (previous) {
         const next: AtsPipelineResponse = {
           stages: previous.stages.map((s) => {
+            const hadCandidate = s.candidates.some((c) => c.id === candidateId);
             const withoutCandidate = s.candidates.filter((c) => c.id !== candidateId);
-            if (s.stage !== stage) return { ...s, candidates: withoutCandidate };
+            if (s.stage !== stage) {
+              return {
+                ...s,
+                candidates: withoutCandidate,
+                total: hadCandidate ? Math.max(0, s.total - 1) : s.total,
+              };
+            }
             const moved = previous.stages
               .flatMap((st) => st.candidates)
               .find((c) => c.id === candidateId);
             return moved
-              ? { ...s, candidates: [moved, ...withoutCandidate] }
+              ? {
+                  ...s,
+                  candidates: [moved, ...withoutCandidate],
+                  total: hadCandidate ? s.total : s.total + 1,
+                }
               : { ...s, candidates: withoutCandidate };
           }),
         };

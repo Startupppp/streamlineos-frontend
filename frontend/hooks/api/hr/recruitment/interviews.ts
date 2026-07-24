@@ -191,6 +191,22 @@ export interface BookingLinkResponse {
 
 const INTERVIEW_SLAS_KEY = queryKeys.hr.interviewSlas();
 const SLA_REPORT_KEY = queryKeys.hr.slaReport();
+const INTERVIEW_STATS_KEY = [...queryKeys.hr.all, "interviewStats"] as const;
+
+export interface InterviewStats {
+  total: number;
+  pending: number;
+  passed: number;
+  failed: number;
+}
+
+export function useInterviewStats() {
+  return useQuery({
+    queryKey: INTERVIEW_STATS_KEY,
+    queryFn: () => apiClient.get<InterviewStats>("/hr/recruitment/interviews/stats"),
+    staleTime: 2 * 60_000,
+  });
+}
 
 export type InterviewsParams = {
   candidateId?: number;
@@ -263,6 +279,7 @@ export function useCreateInterview() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.interviews() });
       qc.invalidateQueries({ queryKey: queryKeys.hr.recruitmentStats() });
+      qc.invalidateQueries({ queryKey: INTERVIEW_STATS_KEY });
     },
   });
 }
@@ -272,8 +289,10 @@ export function useUpdateInterview() {
   return useMutation({
     mutationFn: ({ id, ...data }: UpdateInterviewInput & { id: number }) =>
       apiClient.patch<{ success: boolean }>(`/hr/recruitment/interviews/${id}`, data),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.interviews() }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.hr.interviews() });
+      qc.invalidateQueries({ queryKey: INTERVIEW_STATS_KEY });
+    },
   });
 }
 
@@ -282,8 +301,10 @@ export function useDeleteInterview() {
   return useMutation({
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/recruitment/interviews/${id}`),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.interviews() }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.hr.interviews() });
+      qc.invalidateQueries({ queryKey: INTERVIEW_STATS_KEY });
+    },
   });
 }
 
@@ -371,6 +392,7 @@ export function useScheduleInterview() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.interviews() });
       qc.invalidateQueries({ queryKey: queryKeys.hr.recruitmentStats() });
+      qc.invalidateQueries({ queryKey: INTERVIEW_STATS_KEY });
     },
   });
 }

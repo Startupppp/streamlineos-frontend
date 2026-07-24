@@ -1,8 +1,12 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import {
+  normalizeRecruitmentList,
+  type RecruitmentListResponse,
+} from "./list-response";
 
 export interface CandidateOffer {
   id: number;
@@ -71,11 +75,29 @@ export interface OfferNegotiation {
   createdAt: string;
 }
 
-export function useAllOffers() {
+export type AllOffersParams = {
+  page?: number;
+  pageSize?: number;
+  status?: OfferListItem["offerStatus"];
+};
+
+export function useAllOffers(params?: AllOffersParams) {
+  const page = params?.page ?? 1;
+  const pageSize = params?.pageSize ?? 20;
+  const queryParams: Record<string, unknown> = { page, pageSize };
+  if (params?.status) queryParams.status = params.status;
+
   return useQuery({
-    queryKey: [...queryKeys.hr.all, "allOffers"] as const,
-    queryFn: () => apiClient.get<OfferListItem[]>("/hr/recruitment/offers"),
+    queryKey: [...queryKeys.hr.all, "allOffers", queryParams] as const,
+    queryFn: async (): Promise<RecruitmentListResponse<OfferListItem>> => {
+      const res = await apiClient.get<OfferListItem[] | RecruitmentListResponse<OfferListItem>>(
+        "/hr/recruitment/offers",
+        queryParams,
+      );
+      return normalizeRecruitmentList(res, pageSize);
+    },
     staleTime: 60_000,
+    placeholderData: keepPreviousData,
   });
 }
 
