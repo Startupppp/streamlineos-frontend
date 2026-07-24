@@ -35,7 +35,7 @@ interface Props {
 }
 
 export function DelegationSettings({ open, onOpenChange }: Props) {
-  const { data: delegations, isLoading } = useMyDelegations();
+  const { data: delegations, isLoading } = useMyDelegations({ enabled: open });
   const create = useCreateDelegation();
   const remove = useDeleteDelegation();
 

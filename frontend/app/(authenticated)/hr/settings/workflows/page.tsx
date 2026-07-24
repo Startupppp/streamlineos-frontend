@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Play, Archive, Copy, Trash2, Settings2 } from "lucide-react";
+import { Plus, Play, Archive, Copy, Trash2, Settings2, FlaskConical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ import {
   useDeleteWorkflow,
 } from "@/hooks/api/hr/hr-workflows";
 import { WorkflowUpsertSheet } from "@/features/hr/workflows/workflow-upsert-sheet";
+import { WorkflowSimulateDialog } from "@/features/hr/workflows/workflow-simulate-dialog";
 import {
   HR_WORKFLOW_OBJECT_TYPES,
   HR_WORKFLOW_OBJECT_TYPE_LABELS,
@@ -28,7 +29,7 @@ import {
   type HrWorkflowObjectType,
   type HrWorkflowStatus,
 } from "@/types/hr/workflows";
-import { getErrorMessage } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   DropdownMenu,
@@ -46,8 +47,10 @@ const STATUS_BADGE: Record<HrWorkflowStatus, { label: string; className: string 
 
 export default function WorkflowSettingsPage() {
   const canManage = useCan("hr:workflows:manage");
+  const canView = useCan("hr:workflows:view");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editDefinition, setEditDefinition] = useState<HrWorkflowDefinition | null>(null);
+  const [simulateTarget, setSimulateTarget] = useState<HrWorkflowDefinition | null>(null);
   const [filterObjectType, setFilterObjectType] = useState<HrWorkflowObjectType | "all">("all");
   const [filterStatus, setFilterStatus] = useState<HrWorkflowStatus | "all">("all");
 
@@ -203,7 +206,7 @@ export default function WorkflowSettingsPage() {
                     </div>
                   </div>
 
-                  {canManage && (
+                  {(canManage || canView) && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="w-7 shrink-0">
@@ -211,28 +214,36 @@ export default function WorkflowSettingsPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="text-sm">
-                        {def.status === "draft" && (
+                        {canView && (
+                          <DropdownMenuItem onClick={() => setSimulateTarget(def)}>
+                            <FlaskConical className="h-3.5 w-3.5 mr-2" />
+                            Simulate
+                          </DropdownMenuItem>
+                        )}
+                        {canManage && def.status === "draft" && (
                           <DropdownMenuItem onClick={() => handleEdit(def)}>
                             Edit
                           </DropdownMenuItem>
                         )}
-                        {def.status === "draft" && (
+                        {canManage && def.status === "draft" && (
                           <DropdownMenuItem onClick={() => handleActivate(def.id)}>
                             <Play className="h-3.5 w-3.5 mr-2" />
                             Activate
                           </DropdownMenuItem>
                         )}
-                        {def.status === "active" && (
+                        {canManage && def.status === "active" && (
                           <DropdownMenuItem onClick={() => handleArchive(def.id)}>
                             <Archive className="h-3.5 w-3.5 mr-2" />
                             Archive
                           </DropdownMenuItem>
                         )}
-                        <DropdownMenuItem onClick={() => handleDuplicate(def.id)}>
-                          <Copy className="h-3.5 w-3.5 mr-2" />
-                          Duplicate
-                        </DropdownMenuItem>
-                        {def.status !== "active" && (
+                        {canManage && (
+                          <DropdownMenuItem onClick={() => handleDuplicate(def.id)}>
+                            <Copy className="h-3.5 w-3.5 mr-2" />
+                            Duplicate
+                          </DropdownMenuItem>
+                        )}
+                        {canManage && def.status !== "active" && (
                           <>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
@@ -258,6 +269,15 @@ export default function WorkflowSettingsPage() {
         open={sheetOpen}
         onOpenChange={setSheetOpen}
         editDefinition={editDefinition}
+      />
+
+      <WorkflowSimulateDialog
+        workflowId={simulateTarget?.id ?? null}
+        workflowName={simulateTarget?.name}
+        open={simulateTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setSimulateTarget(null);
+        }}
       />
     </PageWrapper>
   );
