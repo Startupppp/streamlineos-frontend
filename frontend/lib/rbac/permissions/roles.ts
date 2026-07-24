@@ -110,6 +110,7 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     "payroll:tax:manage",
     "payroll:reports:view",
     "payroll:reports:export",
+    "payroll:accounting:view",
     "payroll:fnf:view",
     "payroll:fnf:manage",
   ],

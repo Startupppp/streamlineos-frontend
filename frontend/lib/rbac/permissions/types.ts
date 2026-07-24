@@ -306,6 +306,8 @@ export type PermissionKey =
   | "payroll:fnf:manage"
   | "payroll:reports:view"
   | "payroll:reports:export"
+  | "payroll:accounting:view"
+  | "payroll:accounting:manage"
   | "payroll:settings:manage"
   | "payroll:policies:manage"
   | "payroll:policies:view"

@@ -134,6 +134,18 @@ export const PAYROLL_PERMISSIONS: Permission[] = [
     description: "Export payroll reports",
   },
   {
+    name: "payroll:accounting:view",
+    resource: "payroll:accounting",
+    action: "view",
+    description: "View payroll journal batches and accounting reconciliation",
+  },
+  {
+    name: "payroll:accounting:manage",
+    resource: "payroll:accounting",
+    action: "manage",
+    description: "Create, post, reverse, and reconcile payroll journal batches",
+  },
+  {
     name: "payroll:settings:manage",
     resource: "payroll:settings",
     action: "manage",

@@ -8,9 +8,11 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { usePayrollJournal } from "@/hooks/api/payroll/reports";
+import { useCan } from "@/hooks/api/access";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { AccountingMappingsSheet } from "./accounting-mappings-sheet";
+import { JournalBatchesSheet } from "./journal-batches-sheet";
 import type { JournalLine } from "@/types/payroll/reports";
 
 interface ReportJournalProps {
@@ -59,6 +61,8 @@ const COLUMNS: DataTableColumn<JournalLine>[] = [
 
 export function ReportJournal({ month }: ReportJournalProps) {
   const [mappingSheetOpen, setMappingSheetOpen] = useState(false);
+  const [batchesSheetOpen, setBatchesSheetOpen] = useState(false);
+  const canViewBatches = useCan("payroll:accounting:view");
   const { data, isLoading } = usePayrollJournal(month);
 
   const lines = data?.lines ?? [];
@@ -83,8 +87,24 @@ export function ReportJournal({ month }: ReportJournalProps) {
     setMappingSheetOpen(true);
   }
 
+  function handleOpenBatchesSheet() {
+    setBatchesSheetOpen(true);
+  }
+
   return (
     <div className="flex flex-1 min-h-0 flex-col gap-3">
+      {canViewBatches && (
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-[11px] text-muted-foreground">
+            This is the live journal. Posting it to the ledger creates an immutable, versioned
+            batch you can reverse and reconcile.
+          </p>
+          <Button size="sm" variant="outline" className="h-7 px-2.5 text-xs" onClick={handleOpenBatchesSheet}>
+            Journal batches
+          </Button>
+        </div>
+      )}
+
       {unmappedCodes.length > 0 && (
         <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
@@ -142,6 +162,12 @@ export function ReportJournal({ month }: ReportJournalProps) {
       <AccountingMappingsSheet
         open={mappingSheetOpen}
         onOpenChange={setMappingSheetOpen}
+      />
+
+      <JournalBatchesSheet
+        open={batchesSheetOpen}
+        onOpenChange={setBatchesSheetOpen}
+        month={month}
       />
     </div>
   );

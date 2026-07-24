@@ -15,6 +15,7 @@ describe("payroll permission catalog", () => {
       "payroll:bank",
       "payroll:tax",
       "payroll:reports",
+      "payroll:accounting",
       "payroll:settings",
       "payroll:fnf",
     ];
