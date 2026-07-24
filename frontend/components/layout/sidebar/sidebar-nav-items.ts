@@ -555,6 +555,12 @@ export const NAV_GROUPS: NavGroup[] = [
         ],
         children: [
           {
+            label: "Service Delivery",
+            icon: LifeBuoy,
+            href: "/hr/service-delivery",
+            requiredPermission: ["hr:cases:view", "hr:helpdesk:view"],
+          },
+          {
             label: "Employee Relations",
             icon: Scale,
             href: "/hr/cases",
@@ -865,6 +871,12 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: Wallet,
         href: "/payroll/me",
         requiredPermission: ["self:payroll", "self:payslips"],
+      },
+      {
+        label: "Team Payroll",
+        icon: Users,
+        href: "/payroll/team",
+        requiredPermission: "self:payroll",
       },
       {
         label: "Command Center",

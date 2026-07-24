@@ -1539,6 +1539,8 @@ export const queryKeys = {
       [...base, "payroll", "reports", kind, params] as const,
     journal: (month: string) => [...base, "payroll", "journal", month] as const,
     journalBatchesAll: [...base, "payroll", "journal-batches"] as const,
+    periodReconciliation: (periodKey: string) =>
+      [...base, "payroll", "period-reconciliation", periodKey] as const,
     journalBatches: (params?: Record<string, unknown>) =>
       [...base, "payroll", "journal-batches", "list", params] as const,
     journalBatch: (batchId: number) =>
