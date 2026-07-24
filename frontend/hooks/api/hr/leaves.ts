@@ -143,11 +143,12 @@ export function useHrLeaveContext() {
   });
 }
 
-export function useHrLeaveApprovals() {
+export function useHrLeaveApprovals(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: queryKeys.hr.leavesTeam(),
     queryFn: () => apiClient.get<LeaveApprovalsResult>("/hr/leaves/team"),
     staleTime: 2 * 60_000,
+    enabled: options?.enabled ?? true,
   });
 }
 
@@ -202,7 +203,12 @@ export function useAddLegacyHoliday() {
   return useMutation({
     mutationFn: (data: AddHolidayInput) =>
       apiClient.post<{ success: boolean }>("/hr/holidays", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.all }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "holidaysYear"] });
+      void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "holidaysCalendar"] });
+      void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "monthlyAttendance"] });
+      void qc.invalidateQueries({ queryKey: ["hr", "holidays"] });
+    },
   });
 }
 
@@ -211,7 +217,12 @@ export function useDeleteLegacyHoliday() {
   return useMutation({
     mutationFn: ({ holidayId }: DeleteHolidayInput) =>
       apiClient.delete<{ success: boolean }>(`/hr/holidays/${holidayId}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.all }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "holidaysYear"] });
+      void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "holidaysCalendar"] });
+      void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "monthlyAttendance"] });
+      void qc.invalidateQueries({ queryKey: ["hr", "holidays"] });
+    },
   });
 }
 
@@ -220,7 +231,12 @@ export function useUpdateLegacyHoliday() {
   return useMutation({
     mutationFn: ({ holidayId, ...data }: UpdateHolidayInput) =>
       apiClient.patch<{ success: boolean }>(`/hr/holidays/${holidayId}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.all }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "holidaysYear"] });
+      void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "holidaysCalendar"] });
+      void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "monthlyAttendance"] });
+      void qc.invalidateQueries({ queryKey: ["hr", "holidays"] });
+    },
   });
 }
 

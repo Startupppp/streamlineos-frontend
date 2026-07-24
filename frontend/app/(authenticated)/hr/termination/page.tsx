@@ -46,7 +46,7 @@ export default function TerminationPage() {
   const isCEO = canApproveExit;
 
   const { data: terminations, isLoading, isError, refetch } = useTerminations();
-  const { data: employeesData } = useHrEmployees({ limit: 500 });
+  const { data: employeesData } = useHrEmployees({ limit: 100 });
   const createTermination = useCreateTermination();
   const submitTermination = useSubmitTermination();
   const ceoReview = useCeoReviewTermination();

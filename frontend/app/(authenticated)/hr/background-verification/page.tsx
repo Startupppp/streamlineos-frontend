@@ -283,7 +283,7 @@ function BGVContent() {
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
-  const { data: employeesRaw } = useHrEmployees({ limit: 200 });
+  const { data: employeesRaw } = useHrEmployees({ limit: 100 });
   const update = useUpdateBackgroundVerification();
 
   const employees = useMemo<Employee[]>(() => {

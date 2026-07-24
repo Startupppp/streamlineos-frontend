@@ -60,8 +60,10 @@ export function useDeleteTemplate() {
     mutationKey: ["payroll", "templates", "delete"],
     mutationFn: (templateId: number) =>
       apiClient.delete<void>(`/payroll/templates/${templateId}`),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.payroll.all }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "templates"] });
+      void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "template"] });
+    },
   });
 }
 
@@ -74,7 +76,8 @@ export function useDuplicateTemplate() {
         `/payroll/templates/${templateId}/duplicate`,
         { name, description },
       ),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.payroll.all }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "templates"] });
+    },
   });
 }

@@ -71,7 +71,7 @@ import { goalSchema, type GoalFormValues } from "./goal-schema";
 
 export function GoalsTab() {
   const { data: goals, isLoading } = useHrGoals();
-  const { data: employeesRaw } = useHrEmployees({ limit: 200 });
+  const { data: employeesRaw } = useHrEmployees({ limit: 100 });
   const createGoal = useCreateGoal();
   const updateGoal = useUpdateGoal();
   const deleteGoal = useDeleteGoal();

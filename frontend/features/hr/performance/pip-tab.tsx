@@ -45,7 +45,7 @@ import type { Employee } from "@/types/hr";
 
 export function PIPTab() {
   const { data: pips, isLoading } = usePIPs();
-  const { data: employeesRaw } = useHrEmployees({ limit: 200 });
+  const { data: employeesRaw } = useHrEmployees({ limit: 100 });
   const createPIP = useCreatePIP();
   const updatePIP = useUpdatePIP();
   const [sheetOpen, setSheetOpen] = useState(false);

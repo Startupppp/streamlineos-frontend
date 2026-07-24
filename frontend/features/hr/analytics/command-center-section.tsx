@@ -132,7 +132,7 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
   const { data: engagement, isLoading: engagementLoading } = useHrEngagement();
   const { data: perfDist, isLoading: perfLoading } = useHrPerformanceDist();
   const { data: complianceGaps, isLoading: complianceLoading } = useHrComplianceGaps(departmentId);
-  const { data: payrollCost, isLoading: payrollLoading } = useHrPayrollCost();
+  const { data: payrollCost, isLoading: payrollLoading } = useHrPayrollCost({ enabled: canViewPayroll });
 
   const [drilldown, setDrilldown] = useState<DrilldownState>({
     open: false,

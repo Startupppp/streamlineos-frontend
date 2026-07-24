@@ -39,10 +39,10 @@ function useReport(reportType: PivotReportType, params: {
   costCenter?: string;
   workerType?: string;
 }) {
-  const earnings = usePayrollEarnings(params);
-  const deductions = usePayrollDeductions(params);
-  const reimbursements = usePayrollReimbursementsReport(params);
-  const tax = usePayrollTaxReport(params);
+  const earnings = usePayrollEarnings(params, { enabled: reportType === "earnings" });
+  const deductions = usePayrollDeductions(params, { enabled: reportType === "deductions" });
+  const reimbursements = usePayrollReimbursementsReport(params, { enabled: reportType === "reimbursements" });
+  const tax = usePayrollTaxReport(params, { enabled: reportType === "tax" });
 
   if (reportType === "earnings") return earnings;
   if (reportType === "deductions") return deductions;

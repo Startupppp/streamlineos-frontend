@@ -171,11 +171,12 @@ export interface HrPayrollCostData {
   monthly: { month: string; grossTotal: number }[];
 }
 
-export function useHrPayrollCost() {
+export function useHrPayrollCost(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: [...queryKeys.hr.all, "payrollCost"] as const,
     queryFn: () => apiClient.get<HrPayrollCostData>("/hr/analytics-plus/payroll-cost"),
     staleTime: 10 * 60_000,
+    enabled: options?.enabled ?? true,
   });
 }
 

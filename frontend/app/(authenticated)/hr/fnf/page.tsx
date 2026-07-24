@@ -197,7 +197,9 @@ function FnfContent() {
     onSuccess: () => qc.invalidateQueries({ queryKey: fnfKeys.list() }),
   });
 
-  const { data: employeesRaw } = useHrEmployees({ limit: 200 });
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  const { data: employeesRaw } = useHrEmployees({ limit: 100 }, { enabled: sheetOpen });
   const employees = useMemo<Employee[]>(() => {
     return unwrapEmployees(employeesRaw);
   }, [employeesRaw]);
@@ -213,7 +215,6 @@ function FnfContent() {
     [employees],
   );
 
-  const [sheetOpen, setSheetOpen] = useState(false);
   const [completeId, setCompleteId] = useState<number | null>(null);
   const [userId, setUserId] = useState("");
   const [basicDues, setBasicDues] = useState("");

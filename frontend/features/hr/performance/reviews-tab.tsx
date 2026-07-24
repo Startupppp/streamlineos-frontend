@@ -39,7 +39,7 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 
 export function ReviewsTab() {
   const { data: reviews, isLoading } = useHrPerformanceReviews();
-  const { data: employeesRaw } = useHrEmployees({ limit: 200 });
+  const { data: employeesRaw } = useHrEmployees({ limit: 100 });
   const { data: cycles } = useReviewCycles();
   const createReview = useCreatePerformanceReview();
   const updateReview = useUpdatePerformanceReview();

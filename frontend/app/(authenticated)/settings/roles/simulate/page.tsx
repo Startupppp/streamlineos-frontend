@@ -83,7 +83,7 @@ function SimulateContent() {
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
 
-  const employeesQuery = useHrEmployees({ limit: 200 });
+  const employeesQuery = useHrEmployees({ limit: 100 });
   const simulateQuery = useSimulateAccess(selectedEmployee?.id);
 
   const employees = useMemo<Employee[]>(() => {

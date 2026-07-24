@@ -38,7 +38,7 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 
 export function MeetingsTab() {
   const { data: meetings, isLoading } = useOneOnOneMeetings();
-  const { data: employeesRaw } = useHrEmployees({ limit: 200 });
+  const { data: employeesRaw } = useHrEmployees({ limit: 100 });
   const createMeeting = useCreateOneOnOne();
   const updateMeeting = useUpdateOneOnOne();
   const deleteMeeting = useDeleteOneOnOne();
