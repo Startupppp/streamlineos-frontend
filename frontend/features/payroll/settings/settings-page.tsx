@@ -9,6 +9,7 @@ import { ToggleSettingsSection } from "./toggle-settings-section";
 import { VersionHistorySection } from "./version-history-section";
 import { CalendarSection } from "./calendar-section";
 import { FxRatesSection } from "./fx-rates-section";
+import { EntitiesSection } from "./entities-section";
 
 export function SettingsPageContent() {
   const { data, isLoading, isError, refetch } = usePayrollPolicyCurrent();
@@ -62,6 +63,7 @@ export function SettingsPageContent() {
         )}
         <VersionHistorySection policyId={data.policy.id} />
         <CalendarSection />
+        <EntitiesSection />
       </div>
     </PageWrapper>
   );
