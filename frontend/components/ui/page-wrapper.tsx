@@ -142,17 +142,13 @@ export function PageWrapper({
           {children}
         </div>
       ) : (
-        <div
-          className={cn(
-            "min-h-0 flex-1 overflow-y-auto scrollbar-hide",
-            contentClassName,
-          )}
-        >
+        <div className="min-h-0 flex-1 overflow-y-auto scrollbar-hide">
           <div
             className={cn(
               "flex min-h-full w-full flex-col overscroll-contain",
               PAGE_CHROME_X,
               PAGE_CHROME_BOTTOM,
+              contentClassName,
             )}
           >
             {children}

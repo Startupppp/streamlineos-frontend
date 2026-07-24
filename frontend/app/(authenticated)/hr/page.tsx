@@ -21,6 +21,7 @@ import {
   UserPlus,
   CalendarOff,
   ClipboardList,
+  ClipboardCheck,
   Briefcase,
 } from "lucide-react";
 import {
@@ -264,7 +265,7 @@ export default function HRDashboardPage() {
       actions={
         <div className="flex w-full sm:w-auto flex-wrap items-center gap-2">
           <Button size="sm" className="gap-2 h-9 shadow-sm flex-1 sm:flex-none" asChild>
-            <Link href="/hr/onboarding">
+            <Link href="/hr/onboarding?tab=wizard">
               <UserPlus className="h-4 w-4" aria-hidden="true" />
               <span className="sm:hidden">Add</span>
               <span className="hidden sm:inline">Add Employee</span>
@@ -313,10 +314,10 @@ export default function HRDashboardPage() {
             )}
           >
             <HrQuickAction
-              href="/hr/onboarding"
-              icon={UserPlus}
+              href="/hr/onboarding?tab=workflow"
+              icon={ClipboardCheck}
               label="Onboarding"
-              description="Single or bulk hire"
+              description="Track new-hire checklists"
               tone="blue"
             />
             <HrQuickAction
@@ -439,7 +440,7 @@ export default function HRDashboardPage() {
               illustration={<EmptyTeamIllustration className="mb-3" />}
               title="No employees yet"
               description="Get started by adding your first team member — or bulk-import a whole cohort."
-              action={{ label: "Add Employee", href: "/hr/onboarding" }}
+              action={{ label: "Add Employee", href: "/hr/onboarding?tab=wizard" }}
               actionVariant="outline"
             />
           )}

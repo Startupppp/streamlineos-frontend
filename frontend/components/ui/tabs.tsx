@@ -55,7 +55,7 @@ function TabsTrigger({
 }
 
 export const TABS_CONTENT_PAGE_BODY_CLASS =
-  "mt-0 flex min-h-0 flex-1 flex-col data-[state=inactive]:hidden";
+  "mt-0 min-h-0 data-[state=inactive]:hidden data-[state=active]:flex data-[state=active]:flex-1 data-[state=active]:flex-col";
 
 function TabsContent({
   className,
@@ -65,7 +65,9 @@ function TabsContent({
     <TabsPrimitive.Content
       data-slot="tabs-content"
       className={cn(
-        "flex min-h-0 flex-1 flex-col outline-none data-[state=inactive]:hidden",
+        // Only apply flex when active — unconditional `flex` can override the
+        // HTML `hidden` attribute and stack inactive panels under the tab list.
+        "min-h-0 outline-none data-[state=inactive]:hidden data-[state=active]:flex data-[state=active]:flex-1 data-[state=active]:flex-col",
         className,
       )}
       {...props}

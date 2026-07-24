@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -55,37 +56,49 @@ export function HrWelcomeDialog() {
 
   return (
     <Dialog open onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-sm">
-        <div className="flex justify-center pt-2">
-          <WelcomeIllustration className="h-32 w-32" />
-        </div>
-        <DialogHeader className="text-center sm:text-center">
-          <DialogTitle>Welcome to HRMS</DialogTitle>
-          <DialogDescription>
-            Let&apos;s get your HR workspace ready — organization profile, departments,
-            leave policies, holidays, and more. It takes about 10 minutes, and you can
-            pick up right where you left off.
-          </DialogDescription>
-        </DialogHeader>
-        <p className="text-center text-xs font-medium text-muted-foreground tabular-nums">
-          {completed} of {total} completed
-        </p>
-        <DialogFooter className="flex-col gap-2 sm:flex-col">
-          <Button className="w-full" onClick={handleStart}>
+      <DialogContent
+        className="max-h-[min(92dvh,40rem)] gap-0 p-0 sm:max-w-sm md:max-h-[90dvh] md:p-0"
+        showCloseButton={false}
+      >
+        <DialogBody className="flex flex-col gap-3 px-4 pb-2 pt-1 sm:gap-4 sm:px-6 sm:pt-2">
+          <div className="flex justify-center">
+            <WelcomeIllustration className="h-20 w-20 sm:h-28 sm:w-28 md:h-32 md:w-32" />
+          </div>
+          <DialogHeader className="gap-1.5 text-center sm:gap-2 sm:text-center">
+            <DialogTitle className="text-base sm:text-lg">Welcome to HRMS</DialogTitle>
+            <DialogDescription className="text-pretty text-sm leading-relaxed">
+              <span className="sm:hidden">
+                Set up your org profile, departments, leave policies, and holidays.
+                About 10 minutes — you can resume anytime.
+              </span>
+              <span className="hidden sm:inline">
+                Let&apos;s get your HR workspace ready — organization profile, departments,
+                leave policies, holidays, and more. It takes about 10 minutes, and you can
+                pick up right where you left off.
+              </span>
+            </DialogDescription>
+          </DialogHeader>
+          <p className="text-center text-xs font-medium tabular-nums text-muted-foreground">
+            {completed} of {total} completed
+          </p>
+        </DialogBody>
+
+        <DialogFooter className="flex-col gap-2 border-t border-border/60 bg-muted/20 px-4 py-3 pb-[max(0.75rem,calc(env(safe-area-inset-bottom)+3.75rem))] sm:flex-col sm:px-6 sm:pb-4 md:pb-4">
+          <Button className="h-11 w-full sm:h-10" onClick={handleStart}>
             Start Setup
           </Button>
           <div className="flex w-full gap-2">
             <LoadingButton
               variant="outline"
-              className="flex-1"
+              className="h-11 min-w-0 flex-1 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm"
               isPending={dismissTour.isPending}
               onClick={handleDismiss}
             >
-              Remind Me Later
+              <span className="truncate">Remind Me Later</span>
             </LoadingButton>
             <LoadingButton
               variant="ghost"
-              className="flex-1 text-muted-foreground"
+              className="h-11 min-w-0 flex-1 px-2 text-xs text-muted-foreground sm:h-9 sm:px-3 sm:text-sm"
               isPending={dismissTour.isPending}
               onClick={handleDismiss}
             >
