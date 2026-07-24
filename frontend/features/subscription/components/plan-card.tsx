@@ -4,6 +4,7 @@ import { Check, Zap } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { cn } from "@/lib/utils";
 import type { SubscriptionPlan, BillingCycle } from "@/hooks/api/subscription";
+import { PRICING } from "@/lib/pricing";
 
 interface PlanConfig {
   monthlyPrice: number;
@@ -30,7 +31,7 @@ interface PlanCardProps {
 }
 
 function getAnnualMonthlyPrice(monthlyPrice: number) {
-  return Math.round(monthlyPrice * 0.8);
+  return Math.round(monthlyPrice * (1 - PRICING.annualDiscountPct / 100));
 }
 
 export function PlanCard({

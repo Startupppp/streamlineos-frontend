@@ -118,6 +118,8 @@ export interface PlanDefinition {
   name: string;
   monthlyPrice: number;
   annualPrice: number;
+  /** Monthly price in paise when returned by the catalog API. */
+  monthlyPricePaise?: number;
   features: string[];
   maxEmployees: number | null;
 }

@@ -90,15 +90,15 @@ const pricingFaqs = [
   },
   {
     question: "Do you offer discounts for non-profits or startups?",
-    answer: `Registered non-profits get 50% off Startup and Growth. YC, Sequoia Surge, and Antler portfolio startups get 12 months free on Startup. Email ${BRAND_SUPPORT_EMAIL} with proof.`,
+    answer: `Registered non-profits get 50% off Starter and Professional. YC, Sequoia Surge, and Antler portfolio startups get 12 months free on Starter. Email ${BRAND_SUPPORT_EMAIL} with proof.`,
   },
 ];
 
 const highlights = [
   {
     icon: Sparkles,
-    label: `${cheapestAnnualLabel()} / seat`,
-    detail: "on annual billing",
+    label: `${cheapestAnnualLabel()} / mo`,
+    detail: "Starter on annual billing",
   },
   {
     icon: BadgeCheck,

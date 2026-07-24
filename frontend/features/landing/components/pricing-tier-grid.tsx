@@ -18,29 +18,29 @@ import { EASE_OUT } from "./motion/variants";
 const fmt = (n: number) => `${PRICING.currency}${n.toLocaleString("en-IN")}`;
 
 const TIER_SUMMARY: Record<PricingTier["id"], string[]> = {
-  starter: [
+  free: [
     "All core apps",
-    `Up to ${PRICING.starterSeatLimit} seats`,
+    `Up to ${PRICING.freeSeatLimit} seats`,
     "StreamlineOS Cloud",
     "Community support",
   ],
-  startup: [
+  starter: [
     "All apps",
-    "Unlimited seats",
-    "Workflow automation",
+    "Up to 10 seats",
+    "Payroll & leave",
     "Email support",
   ],
-  growth: [
+  professional: [
     "All apps",
     "AI assistance",
-    "Multi-org & multi-branch",
+    "CRM & recruitment",
     "Priority support",
   ],
   enterprise: [
     "All apps",
-    "Dedicated infrastructure",
+    "Negotiated seats",
     "Custom SLA & compliance",
-    "Self-hosting option",
+    "Dedicated CSM",
   ],
 };
 
