@@ -15,6 +15,7 @@ import {
   useDirectReports,
   useManagerScorecard,
   useEmployeeAvailability,
+  useEmployeeEmployment,
 } from "@/hooks/api/hr";
 import { EmployeeProjectsList } from "@/components/hr/employee-projects-list";
 import { EmployeeTicketsList } from "@/components/hr/employee-tickets-list";
@@ -312,6 +313,59 @@ function ManagerScorecardSection({ employeeId }: { employeeId: string }) {
   );
 }
 
+const LIFECYCLE_BADGE: Record<string, { label: string; className: string }> = {
+  CANDIDATE: {
+    label: "Candidate",
+    className:
+      "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30",
+  },
+  PRE_JOINING: {
+    label: "Pre-joining",
+    className:
+      "bg-sky-100 text-sky-700 border-sky-200 dark:bg-sky-500/10 dark:text-sky-300 dark:border-sky-500/30",
+  },
+  ONBOARDING: {
+    label: "Onboarding",
+    className:
+      "bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-500/10 dark:text-violet-300 dark:border-violet-500/30",
+  },
+  ACTIVE: {
+    label: "Active",
+    className:
+      "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  },
+  PROBATION: {
+    label: "Probation",
+    className:
+      "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  },
+  CONFIRMED: {
+    label: "Confirmed",
+    className:
+      "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  },
+  NOTICE: {
+    label: "Notice",
+    className:
+      "bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/30",
+  },
+  EXITED: {
+    label: "Exited",
+    className:
+      "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30",
+  },
+  ALUMNI: {
+    label: "Alumni",
+    className:
+      "bg-muted text-muted-foreground border-border",
+  },
+  SUSPENDED: {
+    label: "Suspended",
+    className:
+      "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30",
+  },
+};
+
 export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
   const hydrated = useHydrated();
   const { data: stats, isLoading: statsLoading } = useHrEmployeeStats(
@@ -319,6 +373,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
   );
   const { data: projects } = useHrEmployeeProjects(employee.id);
   const { data: ticketsResult } = useHrEmployeeTickets(employee.id);
+  const { data: employmentRecord } = useEmployeeEmployment(employee.id);
   const router = useRouter();
   const { data: session } = useSession();
   const canManageEmployees = useCan("hr:employees:manage");
@@ -338,6 +393,37 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
 
   const { pct: completeness, missing: missingFields } =
     profileCompletenessScore(employee);
+
+  const nestedEmployment =
+    employee.employment && typeof employee.employment === "object"
+      ? (employee.employment as {
+          lifecycleStatus?: string;
+          employeeNumber?: string | null;
+          workerType?: string | null;
+        })
+      : null;
+  const lifecycleStatus =
+    employmentRecord?.lifecycleStatus ??
+    nestedEmployment?.lifecycleStatus ??
+    (typeof employee.employmentStatus === "string" ? employee.employmentStatus : null);
+  const rawEmployeeNumber =
+    employmentRecord?.employeeNumber ??
+    nestedEmployment?.employeeNumber ??
+    (typeof employee.employeeId === "string" ? employee.employeeId : null);
+  const employeeNumber =
+    typeof rawEmployeeNumber === "string" && rawEmployeeNumber.trim()
+      ? rawEmployeeNumber
+      : null;
+  const workerType =
+    employmentRecord?.workerType ??
+    nestedEmployment?.workerType ??
+    null;
+  const lifecycleBadge = lifecycleStatus
+    ? LIFECYCLE_BADGE[lifecycleStatus] ?? {
+        label: lifecycleStatus,
+        className: "bg-muted text-muted-foreground border-border",
+      }
+    : null;
 
   const handleTerminateClick = useCallback(() => {
     router.push(`/hr/termination?employeeId=${employee.id}`);
@@ -502,6 +588,27 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                     )}
                   </div>
                   <div className="flex items-center gap-1.5 flex-wrap">
+                    {lifecycleBadge && !isAlreadyTerminated && (
+                      <span
+                        className={cn(
+                          "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+                          lifecycleBadge.className,
+                        )}
+                      >
+                        <Tag className="h-3 w-3" />
+                        {lifecycleBadge.label}
+                      </span>
+                    )}
+                    {employeeNumber && (
+                      <span className="inline-flex items-center text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border">
+                        {employeeNumber}
+                      </span>
+                    )}
+                    {workerType && (
+                      <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border">
+                        {workerType.replaceAll("_", " ")}
+                      </span>
+                    )}
                     {isAlreadyTerminated ? (
                       <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30">
                         <XCircle className="h-3 w-3" />
