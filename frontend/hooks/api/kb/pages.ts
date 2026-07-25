@@ -25,6 +25,8 @@ export type KbPage = {
   updatedAt: string;
 };
 
+export type KbPageListItem = Omit<KbPage, "content" | "contentText">;
+
 export type KbPageDetail = KbPage & {
   ancestors: Array<{ id: number; title: string }>;
   isFavorite: boolean;
@@ -130,7 +132,7 @@ export function useKbPagesRecent() {
   const canView = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.pagesRecent(),
-    queryFn: () => apiClient.get<KbPage[]>("/kb/pages/recent"),
+    queryFn: () => apiClient.get<KbPageListItem[]>("/kb/pages/recent"),
     staleTime: 30_000,
     enabled: canView,
   });
@@ -140,7 +142,7 @@ export function useKbPagesFavorites() {
   const canView = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.pagesFavorites(),
-    queryFn: () => apiClient.get<KbPage[]>("/kb/pages/favorites"),
+    queryFn: () => apiClient.get<KbPageListItem[]>("/kb/pages/favorites"),
     staleTime: 30_000,
     enabled: canView,
   });

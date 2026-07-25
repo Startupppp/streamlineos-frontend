@@ -11,7 +11,7 @@ import {
   pageHref,
   KB_FAVORITES,
 } from "@/features/knowledge-base/lib/knowledge-routes";
-import type { KbPage } from "@/hooks/api/kb/pages";
+import type { KbPageListItem } from "@/hooks/api/kb/pages";
 import {
   KbClockIcon,
   KbFileTextIcon,
@@ -19,7 +19,7 @@ import {
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { kbTimeAgo } from "@/features/knowledge-base/lib/kb-date-utils";
 
-function RecentRow({ page }: { page: KbPage }) {
+function RecentRow({ page }: { page: KbPageListItem }) {
   return (
     <Link
       href={pageHref(page.id)}

@@ -19,7 +19,6 @@ import {
   KNOWLEDGE_BASE,
   pageHref,
 } from "@/features/knowledge-base/lib/knowledge-routes";
-import type { KbPage } from "@/hooks/api/kb/pages";
 import {
   KbPanelLeftCloseIcon,
   KbPanelLeftOpenIcon,
@@ -121,7 +120,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
                 <p className="px-2 py-1 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Favorites
                 </p>
-                {favorites.map((page: KbPage) => (
+                {favorites.map((page) => (
                   <a
                     key={page.id}
                     href={pageHref(page.id)}
